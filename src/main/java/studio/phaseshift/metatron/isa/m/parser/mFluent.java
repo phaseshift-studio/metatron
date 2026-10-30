@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -72,6 +72,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         super(value, tid, vid);
     }
 
+    @Override
     public F addInst(final Inst inst) {
         final Poly<?, ?> polyArgs = inst.args().isLst() ?
                 lst(inst.args().lstValue().stream().map(mFluent::simplify).toList()) :

@@ -58,8 +58,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**

@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="../../js/metatron.js" type="text/javascript"></script>
     
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../instset/m.html"><img
                             src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dckr.html"><img
-                            src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_ai_llm.html"><img
+                                src="../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_db_dcmnt.html"><img
                             src="../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_db_grph.html"><img
                             src="../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_db_tble.html"><img
+                                src="../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_db_vec.html"><img
+                            src="../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_dev_dckr.html"><img
+                            src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_dev_ide.html"><img
                             src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../instset/m_iot.html"><img
                             src="../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_llm.html"><img
-                            src="../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_mach.html"><img
-                            src="../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_mach_ui.html"><img
-                            src="../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math.html"><img
-                            src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_math_cat.html"><img
-                            src="../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_sys.html"><img
-                            src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_tble.html"><img
-                            src="../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_vec.html"><img
-                            src="../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/m_web.html"><img
-                            src="../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../instset/m_mach.html"><img
+                                src="../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../instset/m_math.html"><img
+                                src="../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_math_cat.html"><img
+                                src="../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../instset/m_sys.html"><img
+                                src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_sys_ui.html"><img
+                                src="../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../instset/m_web.html"><img
+                                src="../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -884,10 +906,10 @@ implicit ancestor casts.</li>
 <li><a href="references/web-instset-mtron.html">web instruction set</a> -- <code>/m/web</code>: the protocol surfaces and MIME document types,
 <code>route::T</code> mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server-&gt;client
 notifications over a <code>?subq</code> envelope, tool registration, and what is not available yet.</li>
-<li><a href="references/tble-instset-mtron.html">tble instruction set</a> -- <code>/m/tble</code> and <code>tblespace::T</code>: a JDBC database as a space
+<li><a href="references/tble-instset-mtron.html">tble instruction set</a> -- <code>/m/db/tble</code> and <code>tblespace::T</code>: a JDBC database as a space
 -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
 backend, the key/value fall-through, <code>!*</code> foreign keys, and native <code>sql()</code>.</li>
-<li><a href="references/ui-instset-mtron.html">ui instruction set</a> -- <code>/m/mach/ui</code>: a widget as a rec whose state is its own
+<li><a href="references/ui-instset-mtron.html">ui instruction set</a> -- <code>/m/sys/ui</code>: a widget as a rec whose state is its own
 map, <code>as?str&lt;=widget(str::T)</code> to render one inline anywhere a str fits, the <code>style::T</code> keys (border, width,
 anchor, <code>top</code>/<code>left</code>, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
 marker to reshape), and the three insts <code>display</code>/<code>nano</code>/<code>less</code>.</li>
@@ -899,7 +921,7 @@ prefixes from <code>*/sys/space/...</code>, <code>!*</code> lazy references, val
 </ul>
 <p><strong>Protocol &amp; services</strong></p>
 <ul>
-<li><a href="references/llm-instset-mtron.html">llm instruction set</a> -- <code>/m/llm</code>: agents, models, features, skills and tools, and
+<li><a href="references/llm-instset-mtron.html">llm instruction set</a> -- <code>/m/ai/llm</code>: agents, models, features, skills and tools, and
 the Model Context Protocol on both sides -- <code>mcp_client::T</code> over streamable-http + sse, websockets or stdio, and
 <code>mcp_server::T</code> carried by http, ws or the process's own stdio (<code>bin/metatron --mcp</code>).</li>
 <li><a href="references/dsh-mtron.html">DSH Memory Bus</a> -- the first inter-harness memory adapter: a DSH zstd JSONL transcript

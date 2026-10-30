@@ -38,12 +38,102 @@ mtron> """
                 headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron],
                 host=><http://127.0.0.1:64342/stream>,
                 status=>!λstatus?bool<=(){<j>},
-                tool=>[execute_tool=>tool::[
-                 inst=>inst(command=>'Command-line string with tool name and arguments'){<j>},
-                 name=>execute_tool,
-                 desc=>'Universal tool executor that can i...',
-                 arg=>[command=>'Command-line string with tool name...']]],
-                inst=>[/m/llm/tool/execute_tool=>inst(command=>'Command-line string with tool name and arguments'){<j>}]]
+                tool=>[
+                 execute_run_configuration=>tool::[
+                  inst=>inst(configurationName=>'Name of the existing run configuration to execute',
+                             filePath=>"File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.",
+                             line=>"1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.",
+                             timeout=>'Timeout in milliseconds',
+                             waitForExit=>"Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.",
+                             programArguments=>'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             workingDirectory=>'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             envs=>'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){<j>},
+                  name=>execute_run_configuration,
+                  desc=>'Run either an existing run configu...',
+                  arg=>[
+                   configurationName=>'Name of the existing run configura...',
+                   filePath=>'File path relative to the project ...',
+                   line=>"1-based line number for `filePath`...",
+                   timeout=>'Timeout in milliseconds',
+                   waitForExit=>'Whether to wait for process termin...',
+                   programArguments=>'Optional program arguments overrid...',
+                   workingDirectory=>'Optional working directory overrid...',
+                   ...(1 more)]],
+                 get_run_configurations=>tool::[
+                  inst=>inst(filePath=>'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){<j>},
+                  name=>get_run_configurations,
+                  desc=>'Returns either project run configu...',
+                  arg=>[filePath=>'Optional file path relative to the...']],
+                 analyze_calls=>tool::[
+                  inst=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
+                             analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                             depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                             maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
+                             maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
+                             treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
+                             childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>analyze_calls,
+                  desc=>'Builds the IDE Call Hierarchy tree...',
+                  arg=>[
+                   symbolFqn=>'Plain fully qualified symbol name,...',
+                   analysisKind=>"Call analysis direction. Use `INCO...",
+                   depth=>'Maximum number of call levels to r...',
+                   maxChildren=>'Maximum number of direct children ...',
+                   maxNodes=>'Maximum total number of rendered c...',
+                   treePath=>'Optional path to a subtree root, c...',
+                   childOffset=>'Offset for paging direct children ...',
+                   ...(1 more)]],
+                 build_project=>tool::[
+                  inst=>inst(rebuild=>"Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.",
+                             filesToRebuild=>'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>build_project,
+                  desc=>'Triggers building of the project o...',
+                  arg=>[
+                   rebuild=>'Whether to perform full rebuild th...',
+                   filesToRebuild=>'If specified, only compile files w...',
+                   timeout=>'Timeout in milliseconds']],
+                 get_file_problems=>tool::[
+                  inst=>inst(filePath=>'Path relative to the project root',
+                             errorsOnly=>'Whether to include only errors or include both errors and warnings',
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>get_file_problems,
+                  desc=>'Analyzes the specified file for er...',
+                  arg=>[
+                   filePath=>'Path relative to the project root',
+                   errorsOnly=>'Whether to include only errors or ...',
+                   timeout=>'Timeout in milliseconds']],
+                 get_project_dependencies=>tool::[
+                  inst=>inst(){<j>},
+                  name=>get_project_dependencies,
+                  desc=>'Get a list of all dependencies def...',
+                  arg=>[=>]],
+                 get_project_modules=>tool::[
+                  inst=>inst(){<j>},
+                  name=>get_project_modules,
+                  desc=>'Get a list of all modules in the p...',
+                  arg=>[=>]],
+                 ...(49 more)],
+                inst=>[
+                 /m/ai/llm/tool/execute_run_configuration=>inst(configurationName=>'Name of the existing run configuration to execute',
+                                                                filePath=>"File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.",
+                                                                line=>"1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.",
+                                                                timeout=>'Timeout in milliseconds',
+                                                                waitForExit=>"Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.",
+                                                                programArguments=>'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                workingDirectory=>'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                envs=>'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){<j>},
+                 /m/ai/llm/tool/get_run_configurations=>inst(filePath=>'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){<j>},
+                 /m/ai/llm/tool/analyze_calls=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
+                                                    analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                                                    depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                                                    maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
+                                                    maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
+                                                    treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
+                                                    childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                                                    timeout=>'Timeout in milliseconds'){<j>},
+   ...
 ```
 Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
 
@@ -79,120 +169,9 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
-==>mcp_client::[host=>http://localhost:8777/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',
-                             native=>'/m/bool'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',native=>'/m/bool']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'returns a rec identifying all acti...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'returns what the running machine i...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'returns a lst of all instruction p...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                    previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
-                                                                  native=>'/m/bool'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                 dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                 rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                      on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(1 more)]]@a
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]
 mtron> *a>>tool
-==>[m_web_mcp_mcp_mtron_write_memory=>tool::[
-     inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-     name=>m_web_mcp_mcp_mtron_write_memory,
-     desc=>'(experimental) returns a memory re...',
-     arg=>[
-      current_memory=>'the memory to remember -- e.g. a s...',
-      previous_memory=>'a previous memory vid to chain cur...']],
-    m_web_mcp_mcp_mtron_read_memory=>tool::[
-     inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-     name=>m_web_mcp_mcp_mtron_read_memory,
-     desc=>'(experimental) returns the result ...',
-     arg=>[memory_vid=>'the vid of the memory to read']],
-    m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-     inst=>inst(code=>'/m/code',
-                native=>'/m/bool'){<j>},
-     name=>m_web_mcp_mcp_mtron_eval_mtron,
-     desc=>'<no description>',
-     arg=>[code=>'/m/code',native=>'/m/bool']],
-    m_web_mcp_mcp_mtron_list_space=>tool::[
-     inst=>inst(){<j>},
-     name=>m_web_mcp_mcp_mtron_list_space,
-     desc=>'returns a rec identifying all acti...',
-     arg=>[=>]],
-    m_web_mcp_mcp_mtron_machine_info=>tool::[
-     inst=>inst(){<j>},
-     name=>m_web_mcp_mcp_mtron_machine_info,
-     desc=>'returns what the running machine i...',
-     arg=>[=>]],
-    m_web_mcp_mcp_mtron_find_inst=>tool::[
-     inst=>inst(pattern=>'the inst tid to match',
-                dom=>'the dom of inst to match (can be added to pattern arg)',
-                rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-     name=>m_web_mcp_mcp_mtron_find_inst,
-     desc=>'returns a lst of all instruction p...',
-     arg=>[
-      pattern=>'the inst tid to match',
-      dom=>'the dom of inst to match (can be a...',
-      rng=>'the rng of inst to match (can be a...']],
-    m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-     inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                on_message=>'the function to evaluate on every received message'){<j>},
-     name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-     desc=>'create a websocket client with pro...',
-     arg=>[
-      host=>'the full ws:// uri of the websocke...',
-      on_message=>'the function to evaluate on every ...']],
-    ...(1 more)]
 mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
 mtron> [-- invoke a tool by applying its inst field --]
 mtron> a/tool/m_inst_eval_mtron/inst("1+2")

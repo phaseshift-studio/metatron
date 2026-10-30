@@ -1,0 +1,309 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.type;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.util.CommonUtil;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.*;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public final class mcpMetatronBuilder {
+
+    private static final GraphittyLogger LOG = Graphitty.log(mcpMetatronBuilder.class);
+
+    private static final int LARGE_RESOURCE_THRESHOLD = 262_144; // 256 KB — above this, expose a reference, not inline content
+
+    private mcpMetatronBuilder() {
+        // do nothing
+    }
+
+    /**
+     * The single transport-agnostic MCP server type exposing the metatron-native
+     * tools ({@code eval_mtron}, {@code list_space}, {@code machine_info}, …).
+     * Both {@code http_server} and {@code ws_server} wrap this {@link mcpServer} in
+     * their respective transport handler ({@code mcp_httpHandler} /
+     * {@code mcp_wsHandler}).
+     */
+    public static final fURI MCP_MTRON_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_mtron");
+    public static final Type MCP_MTRON_SERVER_TYPE = mcpMetatronBuilder.server();
+
+    public static Type server() {
+        return Type.Builder.build()
+                .tid(MCP_SERVER_TID)
+                .vid(MCP_MTRON_SERVER_TID)
+                .isaPredicate(rec(
+                        uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                        uri(RESOURCE).maybe().asUri(), T(ALL),
+                        uri(PROMPT).maybe().asUri(), T(ALL)))
+                .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(MCP_MTRON_SERVER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                    final Rec config = inst.arg(0).asRec();
+                    return new mcpServer(build(config.jvm(), config.vid()), MCP_SERVER_TID, config.vid());
+                })).create();
+    }
+
+    /**
+     * The unique instruction tid for a metatron-native tool.  Tools live under
+     * the {@code /m/inst} instruction namespace (disambiguated by name) so that
+     * {@code mTool} can map tid → name → docs without collision, and so the
+     * docq QProc mounted on the instruction space resolves them.
+     */
+    private static fURI toolTid(final String name) {
+        return MCP_MTRON_SERVER_TID.extend(name);
+    }
+
+    // ========================================
+    // Shared metatron-native tool definitions
+    // ========================================
+
+    /**
+     * Build the metatron-native MCP tool definitions and merge them into the
+     * supplied jvm map.  Caller-supplied entries always win — this method
+     * never overwrites existing keys.
+     * <p>
+     * Shared by the transport-agnostic {@code mcp_mtron} server (wrapped by
+     * {@code mcp_httpHandler} / {@code mcp_wsHandler} at the space level).
+     *
+     * @param base the caller-supplied jvm map (may contain tools/resources/prompts)
+     * @param vid  the type VID for tool TID namespacing
+     * @return a new map with metatron-native tools merged in
+     */
+    public static Map<Obj, Obj> build(final Map<Obj, Obj> base, final fURI vid) {
+        final Map<Obj, Obj> jvm = new LinkedHashMap<>(base);
+
+        // ── tools ────────────────────────────────────────────────────────────
+        if (!jvm.containsKey(uri(TOOL))) {
+            final Rec tools = rec(mutableMap());
+            tools.at(uri(mTool.toolName(toolTid("write_memory"))), docWrap(instC(toolTid("write_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
+                            rec(uri("current_memory"), ALL_TYPE,
+                                    uri("previous_memory").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
+                                final Obj previousMemory = Machine.read(inst.arg(f("previous_memory"), 1).uriValue());
+                                final fURI memoryBasePath = previousMemory.vid().retract(1).basePath();
+                                final Obj currentMemory = inst.arg(f("current_memory"), 0).vid(CommonUtil.mintShortUUID(memoryBasePath, true));
+                                return rel(previousMemory, currentMemory, REL_TID, CommonUtil.mintShortUUID(memoryBasePath, true));
+                            }), "noobj lhs", "an memory chain relation (previous => current)@<vid> w/ id for future lookup",
+                    Map.of(uri("current_memory"), "the memory to remember -- e.g. a str::T, a markdown::T, etc.",
+                            uri("previous_memory"), "a previous memory vid to chain current memory to"),
+                    "(experimental) returns a memory relation of the form (current@<vid> => previous@<vid>)@<vid>"), MUTABLE);
+            tools.at(uri(mTool.toolName(toolTid("read_memory"))), docWrap(instC(toolTid("read_memory").dom(ALL.maybe()).rng(ALL.maybeSome()),
+                            rec(uri("memory_vid").maybe().asUri(), URI_TYPE), (lhs, inst) -> {
+                                final Obj memId = inst.arg(f("memory_vid"), 0);
+                                if (!memId.isNoObj())
+                                    return Machine.read(memId.uriValue());
+                                else
+                                    return noobj();
+                            }), "noobj lhs", "the memory fragment by vid which can then be walked with >>",
+                    Map.of(uri("memory_vid"), "the vid of the memory to read"),
+                    "(experimental) returns the result of reading the provided memory"), MUTABLE);
+            // eval_mtron — the foundational tool: evaluate metatron expressions
+            tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
+                            f(mTool.toolName(toolTid("eval_mtron"))).dom(ALL.maybe()).rng(ALL.maybeSome()),
+                            rec(uri(CODE), CODE_TYPE, uri(MIMEQ_TID).maybe().asUri(), MIME_OBJ_TYPE), (lhs, inst) -> {
+                                // code arrives already parsed to code::T by the schema-aware JSON
+                                // layer — no JSON-massaging here; just evaluate it.
+                                try {
+                                    Obj result = inst.arg(CODE, 0);
+                                    // surface evaluation failures as a fail (so callers can
+                                    // report an MCP error) rather than flattening them to text
+                                    if (result.isFail())
+                                        return result;
+                                    // mimeq picks the rendering: application/x-mtron → native, anything else → JSON
+                                    final MIME.MIMEType mime = MIME.MIMEType.of(inst.arg(MIMEQ_TID, 1).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)).uriValue().toString(), MIME.MIMEType.APPLICATION_MTRON);
+                                    return !mime.isJson() ? str(new String(mime.serializer().outputBytes(result).array(), StandardCharsets.UTF_8)) : result;
+                                } catch (final Exception e) {
+                                    return fail(e);
+                                }
+
+                            }), "noobj lhs", "the result of the code evaluation",
+                    Map.of(uri(CODE), "mtron code to evaluate",
+                            uri(MIMEQ_TID).maybe(), "result mime type (default application/x-mtron); common: application/x-mtron, application/json, application/x-mtron-ui, text/plain"),
+                    "returns the result of evaluating the provided mtron expression"), MUTABLE);
+            // list_space — return an index of currently accessible spaces
+            tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
+                            toolTid("list_space").dom(ALL.maybe()).rng(ALL.maybe()),
+                            lst(), (lhs, inst) -> {
+                                final Map<Obj, Obj> spaces = new LinkedHashMap<>();
+                                Machine.current().memory().spaces().jvm().entrySet().forEach(kv -> {
+                                    spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
+                                });
+                                return rec(spaces);
+                            }), "noobj lhs", "a rec index of currently accessible spaces",
+                    Map.of(), "returns a rec identifying all active metatron spaces"), MUTABLE);
+
+            // machine_info — THE ORIENTATION TOOL: what VM am I in, and what does it call things?
+            tools.at(uri(mTool.toolName(toolTid("machine_info"))), docWrap(instC(
+                            toolTid("machine_info").dom(ALL.maybe()).rng(ALL.maybe()),
+                            lst(), (lhs, inst) -> {
+                                if (!Machine.loaded()) return str("no machine loaded");
+                                final Machine machine = Machine.current();
+                                // COUNTS AND NAMES, NEVER THE TABLES. 500+ redirect rows in a tool result would burn an
+                                // agent's whole budget; the actionable facts are the spellings it may write and the short
+                                // names that are AMBIGUOUS, because those are the ones that bite.
+                                final Obj isaPrefix = Machine.read(f("/instset/prefix"));
+                                final Obj redirect = Machine.read(f("/memory/redirect"));
+                                return rec(
+                                        uri(MACHINE), rec(uri(VID), uri(machine.vid()), uri(TID), uri(machine.tid())),
+                                        uri("spaces"), jnt(machine.memory().spaces().jvm().size()),
+                                        // the spellings the vocabulary answers to (math:cos, web:…), and their homes
+                                        uri(PREFIX), isaPrefix.isRec() ? isaPrefix : rec(),
+                                        // the peers this machine can NAME instead of dial (//ginger/a) — the SPELLING, so a
+                                        // reader copies a name it may write rather than the key the table stores
+                                        uri(PEER), machine.network().prefixes(),
+                                        // the name index: how big, and which names denote more than one home
+                                        uri(REDIRECT), rec(
+                                                uri("rows"), jnt(redirect.isRec() ? redirect.asRec().jvm().size() : 0),
+                                                uri("ambiguous"), lst(redirect.isRec()
+                                                        ? redirect.asRec().jvm().entrySet().stream()
+                                                        .filter(e -> e.getValue().stream().count() > 1)
+                                                        .map(e -> str(e.getKey().uriValue().name()))
+                                                        .toList().toArray(Obj[]::new)
+                                                        : new Obj[0])),
+                                        uri("io_stats"), machine.memory().stats().ioStats());
+                            }), "noobj lhs", "the machine's vid and tid, its spaces, and the three naming tables it answers to",
+                    Map.of(uri(MACHINE), "the frame you are standing in: vid and tid",
+                            uri("spaces"), "how many spaces are mounted",
+                            uri(PREFIX), "the instruction sets' short names: <name> => the vid it denotes",
+                            uri(PEER), "the network's names for peers: <label> => the origin, usable as //label/path",
+                            uri(REDIRECT), "the name index: row count, and the short names that denote more than one home",
+                            uri("io_stats"), "read and write byte counters"),
+                    "returns what the running machine is, what it is called, and what it calls things"), MUTABLE);
+
+            // find_inst — gets lst of loaded /m instructions and documentation
+            tools.at(uri(mTool.toolName(toolTid("find_inst"))), docWrap(instC(
+                            toolTid("find_inst").dom(ALL.maybe()).rng(ALL.maybe()),
+                            rec(uri(PATTERN), URI_TYPE,
+                                    uri(DOM).maybe(), URI_TYPE,
+                                    uri(RNG).maybe(), URI_TYPE), (lhs, inst) -> {
+                                fURI pattern = inst.arg(f(PATTERN), 0).uriValue();
+                                if (inst.args().has(DOM))
+                                    pattern = pattern.dom(inst.arg(f(DOM), 1).uriValue());
+                                if (inst.args().has(RNG))
+                                    pattern = pattern.rng(inst.arg(f(RNG), 2).uriValue());
+                                return lst(Machine.current().memory().read(pattern.addQ(DOCQ))
+                                        .stream()
+                                        .map(Obj::asRec)
+                                        .filter(o -> o.at(OBJ).isInst())
+                                        .map(o -> o));
+                            }), "maybe an obj", "lst of inst matching arg specification",
+                    Map.of(uri(PATTERN), "the inst tid to match",
+                            uri(DOM), "the dom of inst to match (can be added to pattern arg)",
+                            uri(RNG), "the rng of inst to match (can be added to pattern arg"),
+                    "returns a lst of all instruction pattern matches w/ documentation",
+                    "find_inst(plus,int,int)",
+                    "find_inst(plus?int<=int)"), MUTABLE);
+            // spawn_wsclient — create a websocket client
+            tools.at(uri(mTool.toolName(toolTid("spawn_wsclient"))), docWrap(instC(
+                            toolTid("spawn_wsclient").dom(ALL.maybe()).rng(WS_CLIENT_TID),
+                            rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> new WebSocketRecClient(
+                                    new WebSocketRec(
+                                            new LinkedHashMap<>(inst.args().jvm()),
+                                            vid.extend("wsclient"), CommonUtil.mintShortUUID(vid, true)))),
+                    "noobj lhs",
+                    "the created websocket client",
+                    Map.of(uri(HOST), "the full ws:// uri of the websocket server to connect to",
+                            uri(ON_MESSAGE), "the function to evaluate on every received message"),
+                    "create a websocket client with provided on_message behavior"), MUTABLE);
+
+            // spawn_wshandler — create a websocket handler
+            tools.at(uri(mTool.toolName(toolTid("spawn_wshandler"))), docWrap(instC(
+                            toolTid("spawn_wshandler").dom(ALL.maybe()).rng(WS_HANDLER_TID),
+                            rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> {
+                                final WebSocketRec server = new WebSocketRec(
+                                        new LinkedHashMap<>(inst.args().jvm()),
+                                        vid.extend("wsserver"), CommonUtil.mintShortUUID(vid, true));
+                                Machine.write(server);
+                                return server;
+                            }),
+                    "noobj lhs",
+                    "the created websocket handler",
+                    Map.of(uri(HOST), "the full ws:// uri of the websocket handler to expose",
+                            uri(ON_MESSAGE), "the function to evaluate on every received message"),
+                    "create a websocket handler with provided on_message behavior"), MUTABLE);
+
+            jvm.put(uri(TOOL), tools);
+        }
+
+        // ── resources ──────────────────────────────────────────────────────────
+        if (!jvm.containsKey(uri(RESOURCE))) {
+            final Rec resources = rec(mutableMap());
+            final Path skillDir = Path.of(".metatron/skills/mtron");
+            mSkill.of(skillDir.toFile()).toSkill().resources().stream()
+                    .filter(sr -> sr.relativePath().endsWith("md")) // for now, only allow markdown files
+                    .forEach(sr -> {
+                        try {
+                            final Map<String, List<String>> frontMatter = mSkill.parseFrontMatter(sr.content());
+                            final List<String> descriptionList = frontMatter.getOrDefault("description", List.of("no description"));
+                            final Rec resource = rec(
+                                    uri(URI), uri(sr.relativePath()),
+                                    uri(NAME), str(frontMatter.getOrDefault(NAME, List.of(Path.of(sr.relativePath()).getFileName().toString())).getFirst()),
+                                    uri(DESC), str(descriptionList.isEmpty() ? "no description" : descriptionList.getFirst()));
+                            if (sr.content().length() > LARGE_RESOURCE_THRESHOLD) {
+                                // large resource — expose a reference to the file, not its inline content
+                                resource.at(uri(REFERENCE), str(skillDir.resolve(sr.relativePath()).toAbsolutePath().toString()), MUTABLE);
+                            } else {
+                                resource.at(uri(TEXT), str(sr.content()), MUTABLE);
+                            }
+                            resources.jvm().put(uri(sr.relativePath()), resource);
+                        } catch (final Exception e) {
+                            LOG.warn("unable to build resource %s: %s", sr.relativePath(), e);
+                        }
+                    });
+            jvm.put(uri(RESOURCE), resources);
+        }
+        return jvm;
+    }
+}

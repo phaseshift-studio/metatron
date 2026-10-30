@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
 
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TID;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.FILE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
     
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="instset/m.html"><img
                             src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dckr.html"><img
-                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_ai_llm.html"><img
+                                src="images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_dcmnt.html"><img
                             src="images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_grph.html"><img
                             src="images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_db_tble.html"><img
+                                src="images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_vec.html"><img
+                            src="images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_dev_dckr.html"><img
+                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_dev_ide.html"><img
                             src="images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="instset/m_iot.html"><img
                             src="images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_llm.html"><img
-                            src="images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach.html"><img
-                            src="images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach_ui.html"><img
-                            src="images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math.html"><img
-                            src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math_cat.html"><img
-                            src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_sys.html"><img
-                            src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_tble.html"><img
-                            src="images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_vec.html"><img
-                            src="images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_web.html"><img
-                            src="images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_mach.html"><img
+                                src="images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_math.html"><img
+                                src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_math_cat.html"><img
+                                src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_sys.html"><img
+                                src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_sys_ui.html"><img
+                                src="images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_web.html"><img
+                                src="images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -1730,7 +1752,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
 ...
-mtron&gt; import(/m/llm)
+mtron&gt; import(/m/ai/llm)
 ...
 mtron&gt; import(/m/math)
 ...
@@ -1739,12 +1761,8 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
-                        q        =&gt; [mimeq::[=&gt;]],
-                        pattern  =&gt; &lt;http://#&gt;,
-                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                      /       =&gt; &lt;&gt;]]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -1822,7 +1840,7 @@ MCP servers and their tools offer numerous ways by which LLMs can interact with 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |/m/llm/model::T</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |/m/ai/llm/model::T</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1895,7 +1913,7 @@ This expression makes two Ollama API calls:</p>
 <td class="content">
 There are two expressions in the example below that are bound by an intermediate
 <code>ollama_model</code> stack reference.
-The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a <code>model::T</code> ready for use in the <code>/m/llm</code> instruction set.
+The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a <code>model::T</code> ready for use in the <code>/m/ai/llm</code> instruction set.
 </td>
 </tr>
 </table>
@@ -2065,7 +2083,7 @@ mtron> *<fs:agent.mtron/feature>     ​2​
 -->
 <h3 id="sec-agents" class="discrete">Agents</h3>
 <div class="paragraph">
-<p>The most important type in <code>/m/llm</code> is <code>agent::T</code>.
+<p>The most important type in <code>/m/ai/llm</code> is <code>agent::T</code>.
 While a <code>model::T</code> represents the gateway to a particular data structure and inferencing engine, an <code>agent::T</code> subsumes one or more <code>model::T</code> in its functioning.
 Along with models, and agent can be equipped with other data structures and processes that provide a richer, more intelligent entity within metatron.
 These supplemental structures and processes are collectively known as <strong>features</strong>.
@@ -2168,7 +2186,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
 </div>
 <h4 id="sec-features" class="discrete">Features</h4>
 <div class="paragraph">
-<p>The following subsections focus on a particular <code>/m/llm</code> <strong>feature</strong>.</p>
+<p>The following subsections focus on a particular <code>/m/ai/llm</code> <strong>feature</strong>.</p>
 </div>
 <!--
 
@@ -2247,71 +2265,8 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>mcp_client::[host=>ws://localhost:8555/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',
-                             native=>'/m/bool'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',native=>'/m/bool']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'returns a rec identifying all acti...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'returns what the running machine i...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'returns a lst of all instruction p...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                    previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
-                                                                  native=>'/m/bool'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                 dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                 rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                      on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(1 more)]]@/usr/ai/mcp/mtron
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
@@ -3304,7 +3259,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}m{{b}}E{{g}}t{{r}}A{{b}}t{{g}}r{{c}}O{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{g}}e{{y}}T{{c}}a{{r}}T{{m}}r{{b}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4268,7 +4223,7 @@ mtron&gt; memspace::[
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; console::[=&gt;]@/usr/ui/console     ​1​
-==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/mach/ui/console/command_palette::[
+==&gt;console::[menu=&gt;[console=&gt;console::[command_palette=&gt;/m/sys/ui/console/command_palette::[
     console=&gt;!*/usr/ui/console,
     help=&gt;inst?noobj{0}&lt;=(){&lt;j&gt;},
     redirect=&gt;[input=&gt;λ(){&lt;j&gt;}],
@@ -5618,7 +5573,7 @@ mtron&gt; */usr/notes/#?subq
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/iot)
-mtron&gt; import(/m/llm)
+mtron&gt; import(/m/ai/llm)
 ...</code></pre>
 </div>
 </div>
@@ -5712,7 +5667,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 </div>
 <h3 id="sec-building-a-home-automation-system" class="discrete">building a home automation system</h3>
 <div class="paragraph">
-<p>metatron provides all the necessary (digital) plumbing to create a home automation system. With the inclusion of the <code>/m/llm</code> instruction set, a world of opportunities presents itself.</p>
+<p>metatron provides all the necessary (digital) plumbing to create a home automation system. With the inclusion of the <code>/m/ai/llm</code> instruction set, a world of opportunities presents itself.</p>
 </div>
 </div>
 <div class="collapse position-relative" id="card-12">
@@ -5805,7 +5760,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
           args=&gt;[0=&gt;'/m/bytes'],
           desc=&gt;'&lt;no description&gt;']
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
-==&gt;fail::[inst apply failure: unable to convert qcollection$docs to widget (at /m/inst/as) [uiInstSet&lt;386&gt;]][unable to convert qcollection$docs to widget [uiInstSet&lt;386&gt;]]</code></pre>
+==&gt;fail::[inst apply failure: unable to convert qcollection$docs to widget (at /m/inst/as) [uiInstSet&lt;387&gt;]][unable to convert qcollection$docs to widget [uiInstSet&lt;387&gt;]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5850,16 +5805,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       6600   6349252   1% /run'
+==&gt;'tmpfs                    6355852       6560   6349292   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  579920808 331037016  64% /'
-==&gt;'tmpfs                   31779244       1056  31778188   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2         959786032  586598404 324359420  65% /'
+==&gt;'tmpfs                   31779244      15408  31763836   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        268   6355580   1% /run/user/1000'
+==&gt;'tmpfs                    6355848        256   6355592   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1288933784 632274760  68% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1288852908 632355636  68% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -5869,7 +5824,6 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;dist
 ==&gt;docs
 ==&gt;dsh-plugins
-==&gt;'dsh-usage-boot.log'
 ==&gt;dsh-usage-data
 ==&gt;'language.properties'
 ==&gt;LICENSE
@@ -5885,7 +5839,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;target
 ==&gt;'TRACTATUS-LOSS-NOTES.md'
 mtron&gt; bin:bash('-c','ls -all').split(' ').count()
-==&gt;86</code></pre>
+==&gt;82</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6073,7 +6027,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.10:3003/35/41/524?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.10:3016/21/20/430?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -6185,11 +6139,11 @@ mtron&gt; '2024-12-25T09:00:00Z'.as(datetime::T)&gt;&gt;{year,month,day}     ​
 </ul>
 </div>
 <details>
-<summary class="title">/m/grph instset import</summary>
+<summary class="title">/m/db/grph instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/grph)</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/db/grph)</code></pre>
 </div>
 </div>
 </div>
@@ -6227,7 +6181,7 @@ As such, property graphs are useful when modeling multi-relational environments,
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerpop.apache.org">Apache TinkerPop</a> as it&#8217;s underlying storage framework.
+The <code>graphspace</code> of <code>/m/db/grph</code> uses <a href="http://tinkerpop.apache.org">Apache TinkerPop</a> as it&#8217;s underlying storage framework.
 While useful for the time being, once metatron&#8217;s approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient.
 When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron.
 This fluidity, a naturalness of form, permeates throughout.
@@ -6428,13 +6382,13 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN
 </div>
 </div>
 <div class="paragraph">
-<p>With respects to the traversal instructions of <code>/m/grph</code>, the instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code>, etc. — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a> that map to standard metatron URI fragments.</p>
+<p>With respects to the traversal instructions of <code>/m/db/grph</code>, the instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code>, etc. — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a> that map to standard metatron URI fragments.</p>
 </div>
 </div>
 </div>
 <h3 id="sec-a-graph-instruction-set" class="discrete">A Graph Instruction Set</h3>
 <div class="paragraph">
-<p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions.
+<p>The <code>/m/db/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions.
 These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
@@ -6730,7 +6684,7 @@ For the following example, a tp3 (graph database) and mariadb (relational databa
  [pattern =&gt; g:#,
   route   =&gt; [g:V =&gt; V,
               g:E =&gt; E,
-              g:S =&gt; /m/grph/inst/schema/modern],
+              g:S =&gt; /m/db/grph/inst/schema/modern],
   native  =&gt; [factory =&gt; mfactory::[=&gt;],
               gremlin =&gt;
                 graph =&gt; &lt;org.apache..TinkerGraph&gt;
@@ -7914,7 +7868,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.10:3003/35/43/095?tz=-0600&gt;,
+             time=&gt;datetime::&lt;//2026.10:3016/21/22/245?tz=-0600&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7933,7 +7887,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.10:3003/35/43/095?tz=-0600&gt;,
+             time=&gt;datetime::&lt;//2026.10:3016/21/22/245?tz=-0600&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8025,7 +7979,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.10:3003/35/26/963?tz=-0600&gt;,
+          time=&gt;datetime::&lt;//2026.10:3016/20/49/963?tz=-0600&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[desc=&gt;'no documentation available',
@@ -8034,7 +7988,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.10:3003/35/26/963?tz=-0600&gt;,
+           time=&gt;datetime::&lt;//2026.10:3016/20/49/963?tz=-0600&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main]</code></pre>
 </div>
@@ -8062,7 +8016,7 @@ mtron&gt; */sys/thread/main?docq
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
 ...
-mtron&gt; import(/m/llm)
+mtron&gt; import(/m/ai/llm)
 ...</code></pre>
 </div>
 </div>
@@ -8192,23 +8146,23 @@ mtron&gt; *&lt;http://localhost:11434/api/tags&gt;.as(rec::T)     ​4​</code>
 <div class="paragraph">
 <p>Once the desired REST resource has been accessed, it&#8217;s possible to map the resource into a form that meets the structural requirements of an mtron <code>type</code>.
 In doing so, the resource then acquires the behaviors defined in the type&#8217;s respective <code>instset</code>.
-For this example, that <code>instset</code> is <code>/m/llm</code>.</p>
+For this example, that <code>instset</code> is <code>/m/ai/llm</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
-mtron&gt; */m/llm/inst/+?dom=model</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/ai/llm/model
+mtron&gt; */m/ai/llm/inst/+?dom=model</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The <code>model::T</code> type in <code>/m/llm</code>.</td>
+<td>The <code>model::T</code> type in <code>/m/ai/llm</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>The <code>/m/llm</code> instructions with a domain of <code>model::T</code>  (an object oriented perspective&#8201;&#8212;&#8201;<code>obj.f()</code>).</td>
+<td>The <code>/m/ai/llm</code> instructions with a domain of <code>model::T</code>  (an object oriented perspective&#8201;&#8212;&#8201;<code>obj.f()</code>).</td>
 </tr>
 </table>
 </div>
@@ -8361,11 +8315,11 @@ This triggers Predicate validation (e.g., <code>html::T</code> validates the str
 </ul>
 </div>
 <details>
-<summary class="title">/m/dcmnt instset import</summary>
+<summary class="title">/m/db/dcmnt instset import</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/dcmnt)</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/db/dcmnt)</code></pre>
 </div>
 </div>
 </div>
@@ -8436,7 +8390,7 @@ This triggers Predicate validation (e.g., <code>html::T</code> validates the str
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/db/dcmnt/space/dcmntspace</code></pre>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered center">
@@ -8465,10 +8419,10 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; animal    -&gt; rec::T[?[name=&gt;str::T,  age=&gt;int::T]]@animal     ​1​
 mtron&gt; chicken   -&gt; animal::T@chicken     ​2​
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     ​3​
-mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     ​4​
+mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/db/dcmnt/schema/farmset     ​4​
 ==&gt;farmset::[type=&gt;[rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal,
                     rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment,
-                    animal::T@chicken]]@/m/dcmnt/schema/farmset</code></pre>
+                    animal::T@chicken]]@/m/db/dcmnt/schema/farmset</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8715,7 +8669,7 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/tble)</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/db/tble)</code></pre>
 </div>
 </div>
 </div>
@@ -8756,11 +8710,9 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
 ==&gt;'grant'
-==&gt;'alex'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;3
 ==&gt;2</code></pre>
 </div>
 </div>
@@ -8805,21 +8757,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8829,21 +8767,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
@@ -8922,7 +8846,7 @@ mtron&gt; *lite:kv/nest/a/b/d
 </div>
 <h3 id="sec-relational-database-rewrites" class="discrete">Relational Database Rewrites</h3>
 <div class="paragraph">
-<p>Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  <code>aggregate</code>, <code>filter</code>, <code>project</code>, <code>update</code>, etc. type operations. The universality of these operations across programming and query languages ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it&#8217;s best to leverage the backend&#8217;s SQL-query engine whenever possible. The <a href="https://en.wikipedia.org/wiki/Rewriting">rewrite</a> <code>insts</code> of  <code>/m/tble</code> do just that. In general, all rewrites are instructions of the form:</p>
+<p>Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  <code>aggregate</code>, <code>filter</code>, <code>project</code>, <code>update</code>, etc. type operations. The universality of these operations across programming and query languages ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it&#8217;s best to leverage the backend&#8217;s SQL-query engine whenever possible. The <a href="https://en.wikipedia.org/wiki/Rewriting">rewrite</a> <code>insts</code> of  <code>/m/db/tble</code> do just that. In general, all rewrites are instructions of the form:</p>
 </div>
 <div class="paragraph">
 <p>\[
@@ -9543,16 +9467,16 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
      "\n{{r}}------------{{X}}\n");
 [== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
-import(/m/mach/io);
+import(/m/web);
 import(/m/math,math:);
 import(/m/web,web:);
 import(/m/iot);
 import(/m/iot/haos);
 import(/m/iot/miot);
-import(/m/grph);
-import(/m/llm);
-import(/m/tble);
-import(/m/dcmnt);
+import(/m/db/grph);
+import(/m/ai/llm);
+import(/m/db/tble);
+import(/m/db/dcmnt);
 [== store global settings in boot ==]
 *&lt;boot/script&gt;.else(boot/script -&gt;
  [sh     =&gt; /bin/sh,
@@ -9577,7 +9501,7 @@ graphdb::[pattern  =&gt; /h/#,
 graphdb::[pattern =&gt; g:#,
           route   =&gt; [&lt;g:V&gt;=&gt;&lt;V&gt;,
                       &lt;g:E&gt;=&gt;&lt;E&gt;,
-                      &lt;g:S&gt;=&gt;/m/grph/schema/modern],
+                      &lt;g:S&gt;=&gt;/m/db/grph/schema/modern],
         native  =&gt; [factory  =&gt; mfactory::[=&gt;],
                      load     =&gt; modern]]@/sys/space/modern;
 mqtt::[pattern =&gt; &lt;mqtt:#&gt;,
@@ -9585,15 +9509,15 @@ mqtt::[pattern =&gt; &lt;mqtt:#&gt;,
        route   =&gt; [mqtt:=&gt;&lt;&gt;]]@/sys/space/mqtt;
 miot::[pattern    =&gt; &lt;mtron:#&gt;,
        host       =&gt; !*boot/args/mqtt/broker,
-       serializer =&gt; !*&lt;/m/mach/io/serializer/json/simple&gt;,
+       serializer =&gt; !*&lt;/m/web/serializer/json/simple&gt;,
        route      =&gt; [mtron:=&gt;metatron/]]@/sys/space/mqtt/metatron;
 mqtt::[pattern    =&gt; &lt;z2m:#&gt;,
        host       =&gt; !*boot/args/mqtt/broker,
-       serializer =&gt; !*&lt;/m/mach/io/serializer/json/simple&gt;,
+       serializer =&gt; !*&lt;/m/web/serializer/json/simple&gt;,
        route      =&gt; [z2m:=&gt;zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
 haos::[pattern       =&gt; &lt;ha:#&gt;,
        host          =&gt; !*boot/args/mqtt/broker,
-       serializer    =&gt; !*&lt;/m/mach/io/serializer/json/simple&gt;,
+       serializer    =&gt; !*&lt;/m/web/serializer/json/simple&gt;,
        command_topic =&gt; inst?uri&lt;=rec(){
                           to(a).map(z2m:).mult(*a&gt;&gt;friendly_name).mult(set/state)
                         },
@@ -9620,14 +9544,14 @@ catalog::[host    =&gt; &lt;https://api.openai.com/v1&gt;,
         host       =&gt;
          &lt;mariadb://localhost:3306/netflix?user=mtron&amp;password=mtron&gt;,
         route      =&gt; [&lt;netflix:&gt;=&gt;&lt;&gt;],
-        serializer =&gt; !*&lt;/m/mach/io/serializer/json/simple&gt;,
+        serializer =&gt; !*&lt;/m/web/serializer/json/simple&gt;,
         table      =&gt; [,],
         driver     =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/netflix;
  tabledb::[pattern    =&gt; acme:#,
         host       =&gt;
           &lt;mariadb://localhost:3306/classicmodels?user=mtron&amp;password=mtron&gt;,
         route      =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],
-        serializer =&gt; !*&lt;/m/mach/io/serializer/string/clean&gt;,
+        serializer =&gt; !*&lt;/m/web/serializer/string/clean&gt;,
         table      =&gt; [,],
         driver     =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;
  tabledb::[pattern    =&gt; db:#,
@@ -9637,7 +9561,7 @@ catalog::[host    =&gt; &lt;https://api.openai.com/v1&gt;,
         driver     =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/db;
  docdb::[pattern     =&gt; mongo:#,
        host        =&gt; &lt;mongodb://localhost:27017/mflix&gt;,
-       serializer  =&gt; !*&lt;/m/mach/io/serializer/bson&gt;,
+       serializer  =&gt; !*&lt;/m/web/serializer/bson&gt;,
        collection  =&gt; [,],
        route       =&gt; [mongo:=&gt;&lt;&gt;]]@/sys/space/mongo;
  mcp::[host      =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron;

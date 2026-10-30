@@ -146,7 +146,7 @@ public class MarkdownRunnerTest {
     @ParameterizedTest
     @CsvSource(value = {
             "description: operator fidelity%description%operator fidelity%a one-line plain scalar",
-            "'description:\n  The /m/tble instruction set:\n    a JDBC database as a space.'%description%The /m/tble instruction set: a JDBC database as a space.%a plain scalar wrapped onto deeper lines folds to one line",
+            "'description:\n  The /m/db/tble instruction set:\n    a JDBC database as a space.'%description%The /m/db/tble instruction set: a JDBC database as a space.%a plain scalar wrapped onto deeper lines folds to one line",
             "'description: |\n  one\n  two'%description%'one\ntwo'%a literal block keeps its line breaks",
             "'description: |-\n  one\n  two'%description%'one\ntwo'%literal with strip chomping",
             "'description: >\n  one\n  two'%description%one two%a folded block folds its breaks to spaces",
@@ -177,7 +177,7 @@ public class MarkdownRunnerTest {
                 ---
                 name: tble instruction set
                 description:
-                  The /m/tble instruction set and the tblespace::T it belongs to:
+                  The /m/db/tble instruction set and the tblespace::T it belongs to:
                     a JDBC database mounted as a metatron space.
                   TRIGGER: when a read may be pushed down into SQL.
                 ---
@@ -189,7 +189,7 @@ public class MarkdownRunnerTest {
 
         assertTrue(MarkdownRunner.renderSiteHtml(tmp.resolve("skills")) >= 1, "a new page must be written");
         final String html = Files.readString(references.resolve("tble.html"));
-        assertTrue(html.contains("<small>The /m/tble instruction set and the tblespace::T it belongs to: "
+        assertTrue(html.contains("<small>The /m/db/tble instruction set and the tblespace::T it belongs to: "
                         + "a JDBC database mounted as a metatron space. TRIGGER: when a read may be pushed down into SQL.</small>"),
                 "the whole description must reach the page chrome, not its first line: " + html);
     }

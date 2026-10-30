@@ -1,0 +1,102 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.db.vec;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
+import studio.phaseshift.metatron.util.MTronException;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.mult_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/*
+@author Marko A. Rodriguez (http://markorodriguez.com)
+*/
+@JREService(vid = "/m/db/vec")
+public class vecInstSet extends AbstractInstSet {
+
+    public static final fURI VEC_ISA_TID = DB_ISA_TID.extend("vec");
+    public static final fURI VEC_TID = VEC_ISA_TID.extend("vec");
+    //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
+    public static final fURI MTRX_TID = VEC_ISA_TID.extend("mtrx");
+    public static final fURI CMPLX_TID = VEC_ISA_TID.extend("cmplx");
+    public static final fURI IMAGINARY_TID = VEC_ISA_TID.extend("imaginary");
+    public static final fURI VEC_EMBEDDING_TID = VEC_ISA_TID.extend("embedding");
+    /// ////////////////////////////////////////////////////////////
+    public static final fURI INST_TID = VEC_ISA_TID.extend("inst");
+    public static final fURI DOT_TID = INST_TID.extend("dot");
+    public static final fURI TRANSPOSE_INST_TID = INST_TID.extend("transpose");
+    public static final fURI SQRT_TID = INST_TID.extend("sqrt");
+
+
+    public static final Type VEC_TYPE = Type.Builder.build().tid(LST_TID).vid(VEC_TID).create();
+    public static final Type CMPLX_TYPE = Type.Builder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
+    public static final Type MTRX_TYPE = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(MTRX_TID)
+            .create();
+    public static Type VEC_EMBEDDING_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(VEC_EMBEDDING_TID)
+            .isaPredicate(rec(
+                    uri(OBJ), ALL_TYPE,
+                    uri(EMBED), LST_TYPE,
+                    uri(META).maybe(), REC_TYPE.maybe()))
+            .create();
+
+
+    public vecInstSet() {
+        super(mutableMap(uri(PATTERN), uri(VEC_ISA_TID.extend(ALL))), INSTSET_TID, VEC_ISA_TID);
+    }
+
+    @Override
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(CONST), lst(real(Math.sqrt(-1.0d), IMAGINARY_TID, IMAGINARY_TID)),
+                uri(INST), lst(
+                        instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
+                        instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(VEC_TYPE), (lhs, inst) -> {
+                                    Obj result = null;
+                                    if (lhs.<Lst>as().count() != inst.arg(0).<Lst>as().count())
+                                        throw MTronException.of("dot product requires equal length vecs: %d != %d", lhs.<Lst>as().count(), inst.arg(0).<Lst>as().count());
+                                    for (int i = 0; i < lhs.lstValue().size(); i++) {
+                                        Obj pairwise = mult_(inst.arg(0).lstValue().get(i)).apply(lhs.lstValue().get(i));
+                                        result = result == null ? pairwise : plus_(result).apply(pairwise);
+                                    }
+                                    return result;
+                                }
+                        )),
+                uri(TYPE), lst(
+                        VEC_EMBEDDING_TYPE, VEC_TYPE, CMPLX_TYPE, MTRX_TYPE, vecSpace.VCTR_SPACE_TYPE)));
+        super.setup();
+    }
+}

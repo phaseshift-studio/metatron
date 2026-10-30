@@ -1,0 +1,646 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.dev.dckr;
+
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet.DCKR_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+/**
+ * Tests for {@link dckrSpace}.
+ * <p>
+ * Type-matching and TopicTrie-backed tests run unconditionally.
+ * Tests that shell out to the Docker daemon are guarded by
+ * {@link #assumeDockerAvailable()} and are silently skipped when
+ * Docker is absent.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+//@Execution(ExecutionMode.SAME_THREAD)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class dckrSpaceTest extends AbstractSpaceTest {
+
+    private static boolean dockerAvailable;
+
+    public dckrSpaceTest() {
+        super(() -> {
+            return dckrSpace.of(rec(
+                    uri(PATTERN), uri("dtest:#"),
+                    uri(ROUTE), rec(uri("dtest:"), uri(""))), f("/sys/space/docker_test"));
+        });
+        dockerAvailable = probeDocker();
+    }
+
+    @Override
+    public void testRshiftUriGraphSpine(final String a, final String b) {
+    }
+
+    @BeforeAll
+    public static void setupInstSet() throws Exception {
+        InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(DCKR_ISA_TID, f("d"));
+    }
+
+    // ===================================================================
+    // Docker availability probe
+    // ===================================================================
+
+    private static boolean probeDocker() {
+        try {
+            final Process p = new ProcessBuilder("docker", "version", "--format", "{{.Client.Version}}")
+                    .redirectErrorStream(true).start();
+            final String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            p.waitFor(5, TimeUnit.SECONDS);
+            STATIC_LOG.info("docker probe: {{b}}%s{{X}}", out.trim());
+            return p.exitValue() == 0;
+        } catch (final Exception e) {
+            STATIC_LOG.warn("docker not available — daemon tests will be skippe %s", e.getMessage());
+            return false;
+        }
+    }
+
+    private static void assumeDockerAvailable() {
+        Assumptions.assumeTrue(dockerAvailable, "Docker daemon not available");
+    }
+
+    @AfterAll
+    public static void cleanupDockerResources() throws Exception {
+        if (!dockerAvailable)
+            return;
+        // Remove test containers
+        execDocker("rm -f $(docker ps -a --filter name=mtron-test- -q) 2>/dev/null || true");
+        // Remove test volumes
+        execDocker("volume rm $(docker volume ls --filter name=mtron-test- -q) 2>/dev/null || true");
+        // Remove test networks (compose creates them)
+        execDocker("network prune -f --filter name=mtron-test- 2>/dev/null || true");
+        STATIC_LOG.info("cleaned up docker test resources");
+    }
+
+    private static void execDocker(final String args) throws Exception {
+        final Process p = new ProcessBuilder("/bin/sh", "-c", "docker " + args)
+                .redirectErrorStream(true).start();
+        p.waitFor(10, TimeUnit.SECONDS);
+    }
+
+    /**
+     * The non-blank output lines of a docker command — an id/name list for assertions that must see
+     * the daemon directly rather than through the space under test.
+     */
+    private static List<String> dockerLines(final String args) throws Exception {
+        final Process p = new ProcessBuilder("/bin/sh", "-c", "docker " + args)
+                .redirectErrorStream(true).start();
+        final List<String> lines = new ArrayList<>();
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null)
+                if (!line.isBlank()) lines.add(line.trim());
+        }
+        p.waitFor(10, TimeUnit.SECONDS);
+        return lines;
+    }
+
+    // ===================================================================
+    // Type matching — docker type hierarchy
+    // ===================================================================
+
+    @Override
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+
+    }
+
+    @Override
+    public void testMonoRootlessReadWrites() {
+
+    }
+
+    @Override
+    public void testMonoUpdate() {
+
+    }
+
+    @Override
+    public void testMonoDepth(final String writeExpression, final String readExpression) {
+
+    }
+
+    @Override
+    public void testUpdateWrite(final UpdateTestCase tc) {
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            // resource
+            "[id => abc, created => <2024-01-01>]                              % resource::T    % true  % resource matches itself",
+            "[id => 'abc']                                                     % resource::T    % false % id type not a resource",
+            "[=>]                                                              % resource::T    % false % empty rec not a resource",
+            // image
+            //  "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % image::T       % true  % image matches image",
+            //        "[id => abc, repo_tags => 5, size => mB::142.0]                     % image::T       % true  % bad repo_tags ignored by maybe",
+            "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % resource::T    % true  % image is a resource",
+            "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % container::T   % false % image not a container",
+            "[id => abc, repo_tags => [nginx:latest], size => mB::142.0]        % d:compose::T     % false % image not compose",
+            // container
+            "[id => def, image => nginx, state => running, ports => [<8080:80>]] % container::T   % true  % container matches container",
+            "[id => def, image => nginx, state => running, ports => [<8080:80>]] % resource::T    % true  % container is a resource",
+            "[id => def, image => nginx, state => running]                       % container::T   % true  % ports optional",
+            "[id => def, image => nginx, state => stopped]                       % container::T   % false % stopped not in state union",
+            // container state union
+            "running                                                                   % container_state::T % true  % running is valid state",
+            "exited                                                                    % container_state::T % true  % exited is valid state",
+            "paused                                                                    % container_state::T % true  % paused is valid state",
+            "dead                                                                      % container_state::T % true  % dead is valid state",
+            "stopped                                                                   % container_state::T % false % stopped not valid",
+            // compose
+            "[services => [web => [image => nginx]]]                               % compose::T     % true  % compose matches compose",
+            "[services => [web => [image => nginx]]]                               % resource::T    % false % compose missing id",
+            //"[services => [web => [image => nginx]]]                               % image::T       % false % compose missing id",
+            //"[repo_tags => [nginx:latest], services => [web => [image => nginx]]]  % image::T       % false % compose missing id",
+            // volume
+            "[id => v1, driver => local, mountpoint => /var/lib/docker/volumes]     % volume::T      % true  % volume matches volume",
+            "[id => v1]                                                             % volume::T      % true  % driver and mountpoint optional",
+            // network
+            "[id => <n1>, driver => bridge, scope => local]                          % network::T     % true  % network matches network",
+            "[id => <n1>, driver => bridge, scope => local]                          % resource::T    % true  % network is a resource",
+    }, delimiter = '%')
+    void testTypeMatching(final String objExpr, final String typeExpr,
+                          final boolean shouldMatch, final String description) {
+        checkMatches(LOG, objExpr, typeExpr, shouldMatch);
+    }
+
+    // ===================================================================
+    // Image size — dimensional data type
+    // ===================================================================
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "[id => abc, size => bB::142000000.0] % image::T % true  % bytes match",
+            "[id => abc, size => kB::142000.0]  % image::T % true  % kilobytes match",
+            "[id => abc, size => mB::142.0]     % image::T % true  % megabytes match",
+            "[id => abc, size => gB::0.142]     % image::T % true  % gigabytes match",
+            "[id => abc, size => tB::0.000142]  % image::T % true  % terabytes match",
+            "[id => abc, size => 142.0]         % image::T % true  % plain real ignored by maybe",
+            "[id => abc, size => 142]           % image::T % true  % plain int ignored by maybe",
+    }, delimiter = '%')
+    void testImageSizeTypes(final String objExpr, final String typeExpr,
+                            final boolean shouldMatch, final String description) {
+        // checkMatches(LOG, objExpr, typeExpr, shouldMatch);
+    }
+
+    // ===================================================================
+    // TopicTrie-backed write + read (no Docker daemon needed)
+    // ===================================================================
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "dtest:image/nginx -> [id => abc, repo_tags => [nginx:latest], size => mB::142.0] % [id => abc, repo_tags => [nginx:latest], size => mB::142.0] % writes and reads back",
+            "dtest:image/nginx/nginx:latest -> [disk_usage => mB::777.0, id => <9a4b30ea58d6>]    % [disk_usage => mB::777.0, id => <9a4b30ea58d6>] % tag-level metadata",
+    }, delimiter = '%')
+    void testImageWriteRead(final String writeExpr, final String readExpr, final String description) {
+        checkCodeParseApply(LOG, writeExpr, readExpr);
+    }
+
+    @ParameterizedTest()
+    @CsvSource(value = {
+            "*dtest:image/nginx/nginx:latest/id  %  <9a4b30ea58d6>  % nested field read",
+            "*dtest:image/nginx/nginx:latest/disk_usage  %  mB::777.0  % nested field read",
+    }, delimiter = '%')
+    @TestData(value = {
+            "dtest:image/nginx/nginx:latest -> [disk_usage => mB::777.0, id => <9a4b30ea58d6>]"
+    })
+    void testRecSubPathRead(final String readPath, final String expected, final String description) {
+        checkCodeParseApply(LOG, readPath, expected);
+    }
+
+    // ===================================================================
+    // Compose config write + sub-path read (pure TopicTrie, no Docker)
+    // ===================================================================
+
+    @ParameterizedTest(name = "[{index}] {4}")
+    @CsvSource(value = {
+            "% *dtest:compose/my-stack/services/web % [image => nginx, ports => [<8080:80>]] % service-level access",
+            "% *dtest:compose/my-stack/services/web/image % nginx % deep field access",
+            "% *dtest:compose/my-stack/services/web/ports/0 % <8080:80> % list element access",
+    }, delimiter = '%')
+    @TestData(value = {
+            "dtest:compose/my-stack -> [services => [web => [image => nginx, ports => [<8080:80>]]]]"
+    })
+    void testComposeRecNavigation(final String ignore, final String readPath,
+                                  final String expected, final String description) {
+        checkCodeParseApply(LOG, readPath, expected);
+    }
+
+    // ===================================================================
+    // Docker daemon integration (skipped when Docker absent)
+    // ===================================================================
+
+    @Test
+    @Order(1)
+    void testComposeUpDown() {
+        assumeDockerAvailable();
+        final String stackName = "mtron-test-cud-" + System.currentTimeMillis() % 100000;
+
+        // The healthcheck exercises the compose `up -d --wait` path: the write
+        // must block until the service reports healthy before returning.
+        final Obj config = rec(uri("services"),
+                rec(uri("nginx"), rec(
+                        uri("image"), str("nginx:alpine"),
+                        uri("healthcheck"), rec(
+                                uri("test"), lst(str("CMD"), str("nginx"), str("-v")),
+                                uri("interval"), str("2s"),
+                                uri("retries"), jnt(30),
+                                uri("start_period"), str("2s")))));
+        space.write(f("dtest:compose/" + stackName), config);
+
+        final Path yamlFile = Path.of("/tmp", "metatron-docker", stackName, "docker-compose.yml");
+        assertTrue(Files.exists(yamlFile), "compose file written");
+
+        // read back running containers
+        final Obj containers = space.read(f("dtest:container/+"));
+        assertFalse(containers.isNoObj());
+
+        // down
+        space.write(f("dtest:compose/" + stackName),
+                noobj());
+        assertFalse(Files.exists(yamlFile), "compose file cleaned up");
+    }
+
+    /**
+     * A stack outlives the compose file that described it: {@code /tmp/metatron-docker} is wiped by
+     * a VM restart, and inside a container it belongs to that container.  {@code docker:compose/<name>
+     * -> noobj} must still tear the stack down (it did report {@code noobj} while leaving the
+     * containers running, which is how orphaned stacks accumulate), so it falls back to the
+     * {@code com.docker.compose.project} labels compose stamped on the objects.
+     */
+    @Test
+    @Order(4)
+    void testComposeDownWithoutComposeFile() throws Exception {
+        assumeDockerAvailable();
+        final String stackName = "mtron-test-cdn-" + System.currentTimeMillis() % 100000;
+
+        space.write(f("dtest:compose/" + stackName), rec(uri("services"),
+                rec(uri("nginx"), rec(uri("image"), str("nginx:alpine")))));
+
+        final Path yamlFile = Path.of("/tmp", "metatron-docker", stackName, "docker-compose.yml");
+        assertTrue(Files.exists(yamlFile), "compose file written");
+        assertFalse(dockerLines("ps -aq --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "stack container is up");
+
+        // what a restart leaves behind: no compose file, the objects still labelled
+        Files.delete(yamlFile);
+        Files.delete(yamlFile.getParent());
+
+        space.write(f("dtest:compose/" + stackName), noobj());
+
+        assertTrue(dockerLines("ps -aq --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "no container of the stack survives a down with no compose file");
+        assertTrue(dockerLines("network ls -q --filter label=com.docker.compose.project=" + stackName).isEmpty(),
+                "no network of the stack survives a down with no compose file");
+    }
+
+    /**
+     * The declared {@code on_close} instruction is applied when the space closes — the hook every
+     * reaper is written against.  Deliberately docker-free: the contract is that the instruction
+     * runs, and that it runs <em>before</em> the space is released (so it can still route through
+     * it).  The probe lives in its own memSpace because the bare VM the harness boots
+     * ({@code BootLoader.load(rec())}) mounts neither {@code /sys} nor {@code /usr} for writing.
+     */
+    @Test
+    @Order(6)
+    void testOnCloseRunsWhenTheSpaceCloses() {
+        memSpace.of(f("dtocprobe:#"), f("/sys/space/dtocprobe"));
+        final dckrSpace closing = dckrSpace.of(rec(
+                        uri(PATTERN), uri("dtoc:#"),
+                        uri(ROUTE), rec(uri("dtoc:"), uri("")),
+                        uri(ON_CLOSE), mParser.parse("dtocprobe:reaped -> 42")),
+                f("/sys/space/docker_onclose"));
+
+        closing.close();
+
+        checkCodeParseApply(LOG, "*dtocprobe:reaped", "42");
+    }
+
+    /**
+     * An {@code owner} on the space is stamped on everything it creates, and the declared
+     * {@code on_close} reaps what that owner marks.  This is the whole point of the label: the
+     * question "what belongs to me?" is answered by the daemon, not by the VM's short-lived cache.
+     */
+    @Test
+    @Order(5)
+    void testOwnerLabelAndReapOnClose() throws Exception {
+        assumeDockerAvailable();
+        final String stack = "mtron-test-reap-" + System.currentTimeMillis() % 100000;
+        final String owner = "/usr/mtron-test";
+        final dckrSpace owned = dckrSpace.of(rec(
+                        uri(PATTERN), uri("ddown:#"),
+                        uri(ROUTE), rec(uri("ddown:"), uri("")),
+                        uri("owner"), uri(owner),
+                        uri(ON_CLOSE), mParser.parse("ddown:compose/" + stack + " -> noobj")),
+                f("/sys/space/docker_owned"));
+
+        owned.write(f("ddown:compose/" + stack), rec(uri("services"),
+                rec(uri("probe"), rec(uri("image"), str("alpine:latest"),
+                        uri("command"), lst(str("sleep"), str("60"))))));
+
+        assertFalse(dockerLines("ps -aq --filter label=" + dckrSpace.OWNER_LABEL + "=" + owner).isEmpty(),
+                "a service of the stack carries the owner label");
+        // compose would name this …-probe-1; a single-service stack is named after the stack instead, so a
+        // boot's `from(docker:container/<stack>).else(… up …)` guard adopts it rather than re-upping (and
+        // re-upping is the Recreate path a second concurrent compose run deadlocks on)
+        assertTrue(dockerLines("ps -a --format {{.Names}}").contains(stack),
+                "a single-service stack's container is named the stack");
+
+        owned.close();
+
+        assertTrue(dockerLines("ps -aq --filter label=" + dckrSpace.OWNER_LABEL + "=" + owner).isEmpty(),
+                "on_close reaps the stack the owner label marks");
+    }
+
+    @Test
+    @Order(2)
+    void testContainerRunStop() {
+        assumeDockerAvailable();
+        final String name = "mtron-test-run-" + System.currentTimeMillis() % 100000;
+
+        final Obj runConfig = rec(uri("image"), str("nginx:alpine"));
+        space.write(f("dtest:container/" + name), runConfig);
+
+        final Obj containers = space.read(f("dtest:container/+"));
+        assertTrue(containers.stream().anyMatch(x -> {
+            final Obj n = x.asRec().at(uri("names"));
+            return !n.isNoObj() && (n.isStr() ? n.strValue() : n.uriValue().name()).equals(name);
+        }), "container should be listed");
+
+        final Obj inspected = space.read(f("dtest:container/" + name));
+        assertFalse(inspected.isNoObj());
+        LOG.info("inspected {{b}}%s", inspected);
+
+        // stop + rm
+        space.write(f("dtest:container/" + name),
+                noobj());
+    }
+
+    @Test
+    @Order(3)
+    void testContainerRunWithPortsAndEnv() {
+        assumeDockerAvailable();
+        final String name = "mtron-test-env-" + System.currentTimeMillis() % 100000;
+
+        final Obj runConfig = rec(
+                uri("image"), str("nginx:alpine"),
+                uri("ports"), lst(str("0:80")),
+                uri("environment"), rec(uri("NGINX_HOST"), str("example.com")));
+        Machine.write(f("dtest:container/" + name), runConfig);
+
+        final Obj inspected = space.read(f("dtest:container/" + name));
+        assertFalse(inspected.isNoObj());
+
+        Machine.write(f("dtest:container/" + name),
+                noobj());
+    }
+
+    @Test
+    @Order(5)
+    void testDockerGraphLinks() {
+        assumeDockerAvailable();
+        final long now = System.currentTimeMillis() % 100000;
+        final String name1 = "mtron-test-g1-" + now;
+        final String name2 = "mtron-test-g2-" + now;
+
+        // -- Run two containers from the same image --
+        final Obj runConfig = rec(uri("image"), str("nginx:alpine"));
+        space.write(f("dtest:container/" + name1), runConfig);
+        space.write(f("dtest:container/" + name2), runConfig);
+
+        try {
+            // -- Image-side: container field is a list of URIs --
+            final Obj image = space.read(f("dtest:image/nginx:alpine"));
+            assertFalse(image.isNoObj(), "image should be addressable by repository:tag");
+            LOG.info("image {{b}}%s", image);
+
+            final Obj imageContainers = image.asRec().at(uri("container"));
+            assertFalse(imageContainers.isNoObj(),
+                    "image.container should not be noobj (Docker 'Containers' count should be overwritten)");
+            assertTrue(imageContainers.isLst(),
+                    "image.containers should be a list, got: " + imageContainers);
+            assertTrue(imageContainers.asLst().count() >= 2,
+                    "image.containers should have at least 2 entries, got: " + imageContainers.asLst().count());
+
+            // Each entry should be a URI pointing to a container
+            imageContainers.asLst().lstValue().forEach(ref -> {
+                assertTrue(Obj.Helper.isAutoPointer(ref),
+                        "each containers entry should be a !*, got: " + ref);
+                final String refStr = ref.asInst().arg(0).toString();
+                assertTrue(refStr.startsWith("dtest:container/"),
+                        "ref should be under dtest:container/, got: " + refStr);
+            });
+
+            // Verify both containers are in the list
+            final List<String> refStrings = imageContainers.asLst().lstValue().stream()
+                    .map(ref -> ref.asInst().arg(0).uriValue().toString())
+                    .toList();
+            assertTrue(refStrings.stream().anyMatch(s -> s.contains(name1)),
+                    "containers should include " + name1 + ", got: " + refStrings);
+            assertTrue(refStrings.stream().anyMatch(s -> s.contains(name2)),
+                    "containers should include " + name2 + ", got: " + refStrings);
+
+            // -- Container-side: image field is a URI into dckrSpace --
+            for (final String name : List.of(name1, name2)) {
+                final Obj container = space.read(f("dtest:container/" + name));
+                assertFalse(container.isNoObj(), "container " + name + " should exist");
+
+                final Obj imageField = container.asRec().jvm().get(uri("image"));
+                assertFalse(imageField.isNoObj(),
+                        "container.image should not be noobj");
+                assertTrue(Obj.Helper.isAutoPointer(imageField),
+                        "container.image should be a !*, got: " + imageField);
+                final String imageRef = imageField.asInst().arg(0).uriValue().toString();
+                assertTrue(imageRef.contains("nginx:alpine"),
+                        "container.image URI should reference nginx:alpine, got: " + imageRef);
+                LOG.info("container {{b}}%s{{X}} -> image ref {{y}}%s", name, imageRef);
+            }
+
+            // -- Direct image lookup by repo:tag vs hash works --
+            final Obj imageByTag = space.read(f("dtest:image/nginx:alpine"));
+            assertFalse(imageByTag.isNoObj(), "image lookup by repo:tag should work");
+            final String imageHash = imageByTag.asRec().at(uri("id")).isNoObj()
+                    ? null : imageByTag.asRec().at(uri("id")).toString();
+            if (imageHash != null) {
+                final Obj imageByHash = space.read(f("dtest:image/" + imageHash));
+                // May or may not exist depending on key strategy; at minimum tag-lookup works
+                LOG.info("image by hash {{b}}%s{{X}}: %s", imageHash,
+                        imageByHash.isNoObj() ? "not found" : "found");
+            }
+        } finally {
+            // Clean up both containers
+            space.write(f("dtest:container/" + name1), noobj());
+            space.write(f("dtest:container/" + name2), noobj());
+        }
+    }
+
+    @Test
+    @Order(6)
+    void testNetworkGraphLinks() {
+        assumeDockerAvailable();
+        final long now = System.currentTimeMillis() % 100000;
+        final String name = "mtron-test-net-" + now;
+
+        // Run a container on the default bridge network
+        final Obj runConfig = rec(uri("image"), str("nginx:alpine"));
+        space.write(f("dtest:container/" + name), runConfig);
+
+        try {
+            // -- Network-side: containers field is a list --
+            final Obj network = space.read(f("dtest:network/bridge"));
+            assertFalse(network.isNoObj(), "bridge network should exist");
+            LOG.info("bridge network {{b}}%s", network);
+
+            final Obj netContainers = network.asRec().at(uri("container"));
+            assertFalse(netContainers.isNoObj(),
+                    "network.container should not be noobj");
+            assertTrue(netContainers.isLst(),
+                    "network.container should be a list, got: " + netContainers);
+            assertTrue(netContainers.asLst().count() >= 1,
+                    "network.container should have at least 1 entry");
+
+            // Each entry is a URI
+            netContainers.asLst().lstValue().forEach(ref -> {
+                assertTrue(Obj.Helper.isAutoPointer(ref),
+                        "each network.containers entry should be an auto_from, got: " + ref);
+                assertTrue(ref.asInst().arg(0).uriValue().toString().startsWith("dtest:container/"),
+                        "ref should be under dtest:container/, got: " + ref.asInst().arg(0).toString());
+            });
+
+            // Our container should be in the list
+            final boolean found = netContainers.asLst().lstValue().stream()
+                    .anyMatch(ref -> ref.asInst().arg(0).toString().contains(name));
+            assertTrue(found, "network.container should include " + name);
+
+            // -- Container-side: network field is a !* ref --
+            final Obj container = space.read(f("dtest:container/" + name));
+            final Obj netField = container.asRec().jvm().get(uri("network"));
+            assertFalse(netField.isNoObj(), "container.network should not be noobj");
+            assertTrue(Obj.Helper.isAutoPointer(netField),
+                    "container.network should be a !*, got: " + netField);
+            assertTrue(netField.asInst().arg(0).uriValue().toString().contains("bridge"),
+                    "container.network should reference bridge, got: " + netField);
+            LOG.info("container {{b}}%s{{X}} -> network ref {{y}}%s", name, netField);
+
+            // -- Direct network lookup works --
+            final Obj bridge = space.read(f("dtest:network/bridge"));
+            assertFalse(bridge.isNoObj(), "network lookup by name should work");
+            assertTrue(bridge.asRec().at(uri("name")).toString().contains("bridge"),
+                    "network should have name=bridge");
+        } finally {
+            space.write(f("dtest:container/" + name), noobj());
+        }
+    }
+
+    @Test
+    @Order(7)
+    void testVolumeGraphLinks() {
+        assumeDockerAvailable();
+        final long now = System.currentTimeMillis() % 100000;
+        final String volName = "mtron-test-vol-" + now;
+        final String containerName = "mtron-test-volc-" + now;
+
+        // Create a named volume and run a container with it mounted
+        space.write(f("dtest:volume/" + volName), rec());
+        space.write(f("dtest:container/" + containerName),
+                rec(uri("image"), str("nginx:alpine"),
+                        uri("volumes"), lst(str(volName + ":/data"))));
+
+        try {
+            // -- Volume-side: containers field is a list --
+            final Obj volume = space.read(f("dtest:volume/" + volName));
+            assertFalse(volume.isNoObj(), "volume should exist");
+
+            final Obj volContainers = volume.asRec().at(uri("container"));
+            assertFalse(volContainers.isNoObj(),
+                    "volume.containers should not be noobj");
+            assertTrue(volContainers.isLst(),
+                    "volume.containers should be a list, got: " + volContainers);
+            assertTrue(volContainers.asLst().count() >= 1,
+                    "volume.containers should have at least 1 entry");
+
+            volContainers.asLst().elements().forEach(ref -> {
+                assertTrue(ref.isUri(),
+                        "each volume.container entry should be a URI, got: " + ref);
+                assertTrue(ref.uriValue().toString().startsWith("dtest:container/"),
+                        "ref should be under dtest:container/");
+            });
+
+            final boolean found = volContainers.asLst().elements()
+                    .anyMatch(ref -> ref.isUri() && ref.uriValue().toString().contains(containerName));
+            assertTrue(found, "volume.container should include " + containerName);
+
+            // -- Container-side: mount field is a list of !* refs --
+            final Obj container = space.read(f("dtest:container/" + containerName));
+            final Obj mountsField = container.asRec().at(uri("mount"));
+            assertFalse(mountsField.isNoObj(), "container.mount should not be noobj");
+            assertTrue(mountsField.isLst(),
+                    "container.mount should be a list, got: " + mountsField);
+
+            final boolean volRefFound = mountsField.asLst().lstValue().stream()
+                    .anyMatch(ref -> {
+                        if (!ref.isInst()) return false;
+                        final String refUri = ref.asInst().arg(0).uriValue().toString();
+                        return refUri.contains(volName);
+                    });
+            assertTrue(volRefFound,
+                    "container.mount should contain a ref to " + volName + ", got: " + mountsField);
+            LOG.info("container {{b}}%s{{X}} -> volume refs {{y}}%s", containerName, mountsField);
+
+            // -- Direct volume lookup works --
+            final Obj volDirect = space.read(f("dtest:volume/" + volName));
+            assertFalse(volDirect.isNoObj(), "volume lookup by name should work");
+        } finally {
+            space.write(f("dtest:container/" + containerName), noobj());
+            space.write(f("dtest:volume/" + volName), noobj());
+        }
+    }
+}

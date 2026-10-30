@@ -23,11 +23,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
  * <h3>Usage</h3>
  * <pre>
  * java ...InstSetDocGenerator /m/mach -o docs/website/instset --website-template
- * java ...InstSetDocGenerator /m /m/mach /m/tble -o target/instsets
+ * java ...InstSetDocGenerator /m /m/mach /m/db/tble -o target/instsets
  * </pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -118,9 +118,9 @@ public class InstSetDocGenerator {
 
         if (!anyVid) {
             instsetVids.addAll(List.of(
-                    "/m", "/m/sys", "/m/dckr", "/m/mach", "/m/math", "/m/math/cat", "/m/web", "/m/iot",
-                    "/m/llm", "/m/tble", "/m/dcmnt", "/m/grph",
-                    "/m/vec"
+                    "/m", "/m/sys", "/m/dev/dckr", "/m/mach", "/m/math", "/m/math/cat", "/m/web", "/m/iot",
+                    "/m/ai/llm", "/m/db/tble", "/m/db/dcmnt", "/m/db/grph",
+                    "/m/db/vec"
             ));
         }
 
@@ -161,7 +161,7 @@ public class InstSetDocGenerator {
                     // Types, insts, rewrites, consts come directly from the
                     // instset's own tables.  However, checkPattern permits child-
                     // instset items when patterns overlap (e.g. /m/* matches
-                    // /m/tble/rrow).  Filter to only items whose most-specific
+                    // /m/db/tble/rrow).  Filter to only items whose most-specific
                     // matching instset prefix is the current one.
                     final fURI spacePattern = f(vid + "/space/#");
                     final Set<Type> types = is.types().stream()
@@ -1382,7 +1382,7 @@ public class InstSetDocGenerator {
      * Return true when {@code instsetVid} is the longest matching prefix
      * of {@code itemVid} among all known instset VIDs.
      * <p>
-     * Example: item "/m/tble/rrow" owns to "/m/tble", not "/m".
+     * Example: item "/m/db/tble/rrow" owns to "/m/db/tble", not "/m".
      */
     private static boolean owns(final String itemVid, final String instsetVid,
                                 final Collection<String> allInstsetVids) {

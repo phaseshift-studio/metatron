@@ -1,0 +1,260 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.space.http.handler;
+
+import com.sun.net.httpserver.HttpExchange;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.web.space.http.HttpRec;
+import studio.phaseshift.metatron.isa.m.web.space.http.SseStream;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.type.MIME.MIMEType.APPLICATION_JSON;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.MCP_TID;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/**
+ * Streamable HTTP MCP transport handler. Composes a {@link mcpServer} for JSON-RPC
+ * protocol dispatch and implements the MCP Streamable HTTP transport over
+ * {@link com.sun.net.httpserver.HttpServer}.
+ * <p>
+ * Session management via {@code Mcp-Session-Id} header — a new session is created
+ * on the first {@code initialize} request and used for subsequent requests.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class mcp_httpHandler extends HttpRec {
+
+    public static final fURI HTTP_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_http");
+
+    public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
+            .tid(MCP_TID)
+            .vid(HTTP_MCP_HANDLER_TID)
+            .isaPredicate(rec(
+                    uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                    uri(RESOURCE).maybe().asUri(), T(ALL),
+                    uri(PROMPT).maybe().asUri(), T(ALL)))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(HTTP_MCP_HANDLER_TID), lst(T(REC_TID)),
+                    (lhs, inst) -> new mcp_httpHandler(mutableMap(inst.arg(0).asRec().jvm()), HTTP_MCP_HANDLER_TID, inst.arg(0).vid())))
+            .create();
+
+    // Transport-agnostic protocol handler (composition)
+    private final mcpServer mcp;
+
+    /**
+     * Interval between SSE heartbeats — keeps the stream alive past idle proxies/timeouts.
+     */
+    private static final long HEARTBEAT_MS = 15_000L;
+
+    // Session registry: sessionId → session metadata. A request's own session id is a local of the method serving it,
+    // never a field: one handler serves every request on its mount concurrently, so a field would hand one client
+    // another's session.
+    private final Map<String, fURI> sessions = new ConcurrentHashMap<>();
+
+    public mcp_httpHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        this.mcp = new mcpServer(jvm, tid, vid);
+    }
+
+    public mcp_httpHandler(final Rec recClone) {
+        this(mutableMap(recClone.jvm()), recClone.tid(), recClone.vid());
+    }
+
+    // ========================================
+    // Streamable HTTP: POST (JSON-RPC)
+    // ========================================
+
+    @Override
+    protected void doPost(final HttpExchange exchange) throws IOException {
+        final String body = readBody(exchange);
+        LOG.debug("mcp http POST %s: %s", exchange.getRequestURI(), body.length() > 200 ? body.substring(0, 200) + "..." : body);
+
+        // Parse incoming JSON-RPC
+        final Obj request;
+        try {
+            request = APPLICATION_JSON.fromBytes(body);
+        } catch (final Exception e) {
+            LOG.warn("failed to parse JSON-RPC body: %s", e.getMessage());
+            sendError(400, "Invalid JSON-RPC body");
+            return;
+        }
+
+        if (!request.isRec()) {
+            sendError(400, "JSON-RPC request must be an object");
+            return;
+        }
+
+        // initialize opens a new session; any other request continues the one its header names
+        final Rec json = request.asRec();
+        final String method = json.at(uri("method")).isNoObj() ? "" : json.at(uri("method")).toCleanString();
+        final boolean initialize = "initialize".equals(method);
+        final String sessionId = initialize
+                ? java.util.UUID.randomUUID().toString()
+                : exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
+        if (initialize) {
+            // a session's notifications are its server's outbox: the handler is no address of its own
+            sessions.put(sessionId, this.mcp.outbox());
+            LOG.status(DEBUG, "created mcp session: %s", sessionId);
+        }
+
+        // Dispatch to protocol handler — reuse the already-parsed `request` for the
+        // blind pass and hand the raw body so the schema-aware argument parse can run
+        final Obj result = this.mcp.handleMessage(request, body);
+
+        if (result.isNoObj()) {
+            // Notification — 202 Accepted, no body
+            exchange.getResponseHeaders().set("Mcp-Session-Id", sessionId != null ? sessionId : "default");
+            exchange.sendResponseHeaders(202, -1);
+        } else {
+            // Response
+            final String jsonStr = JSON.write(result).toString();
+            final byte[] bytes = jsonStr.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, APPLICATION_JSON.value);
+            if (sessionId != null) {
+                exchange.getResponseHeaders().set("Mcp-Session-Id", sessionId);
+            }
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (final OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        }
+    }
+
+    // ========================================
+    // Streamable HTTP: GET (SSE stub)
+    // ========================================
+
+    @Override
+    protected void doGet(final HttpExchange exchange) throws IOException {
+        // The Streamable-HTTP GET is the SSE notification channel, opened only when the client
+        // accepts text/event-stream. A GET without it must not hold a socket open indefinitely.
+        final String accept = exchange.getRequestHeaders().getFirst("Accept");
+        if (null == accept || !accept.toLowerCase().contains("text/event-stream")) {
+            sendError(405, "mcp streamable-http GET requires Accept: text/event-stream");
+            return;
+        }
+        final SseStream sse = this.openSse();
+        // drain the outbox the server writes its notifications to
+        final fURI outbox = this.mcp.outbox();
+        try {
+            // 1 — drain notifications already fired (between subscriptions/listen and this GET)
+            this.drainOutbox(sse, outbox);
+            // 2 — live push: wake on each notification the server writes to its outbox
+            Machine.current().memory().write(outbox.extend("#").addQ(SUBQ),
+                    rec(mutableMap(
+                                    uri(TARGET), uri(outbox.extend("#")),
+                                    uri(CODE), instC(f("mcp_sse_push").dom(LST_TID).rng(NOOBJ_TID), lst(),
+                                            (lhs, inst) -> {
+                                                try {
+                                                    sse.send("message", this.JSON.write(lhs.asLst().at(1)).toString());
+                                                } catch (final IOException e) {
+                                                    // client gone — the heartbeat loop below notices and closes
+                                                }
+                                                return noobj();
+                                            })),
+                            SUBQ_SUB_TID, null));
+            // 3 — hold the stream open, heartbeat until the client disconnects
+            while (!sse.isClosed()) {
+                try {
+                    Thread.sleep(HEARTBEAT_MS);
+                    sse.comment("ping");
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (final IOException e) {
+                    break; // client disconnected
+                }
+            }
+            // the stream is ending — drop the live-push subscription
+            Machine.current().memory().write(outbox.extend("#").addQ(SUBQ), noobj());
+        } finally {
+            sse.close();
+        }
+    }
+
+    /**
+     * Stream any notifications already sitting in this server's subscription outbox — they
+     * fired between a {@code subscriptions/listen} POST and this GET, so they would otherwise
+     * be stranded. Each is framed as an MCP {@code event: message}.
+     */
+    private void drainOutbox(final SseStream sse, final fURI outbox) {
+        if (!Machine.loaded())
+            return;
+        final Obj pending = Machine.read(outbox.extend("#"));
+        if (pending.isNoObj())
+            return;
+        pending.stream().forEach(notification -> {
+            try {
+                sse.send("message", this.JSON.write(notification).toString());
+            } catch (final IOException e) {
+                LOG.warn("client gone while draining mcp notifications: %s", e.getMessage());
+            }
+        });
+    }
+
+    // ========================================
+    // Streamable HTTP: HEAD (endpoint probe)
+    // ========================================
+
+    @Override
+    protected void doHead(final HttpExchange exchange) throws IOException {
+        // MCP SDKs probe the endpoint with HEAD before POSTing. Answer with
+        // headers only — no body, no content-length — so the JDK server
+        // doesn't warn about a content length on a HEAD request.
+        exchange.getResponseHeaders().set(MIME.MIMEType.VALUE, APPLICATION_JSON.value);
+        exchange.sendResponseHeaders(204, -1);
+        exchange.close();
+    }
+
+    // ========================================
+    // Streamable HTTP: DELETE (session teardown)
+    // ========================================
+
+    @Override
+    protected void doDelete(final HttpExchange exchange) throws IOException {
+        final String sessionId = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+            LOG.info("removed mcp session: %s", sessionId);
+        }
+        exchange.sendResponseHeaders(204, -1);
+    }
+}

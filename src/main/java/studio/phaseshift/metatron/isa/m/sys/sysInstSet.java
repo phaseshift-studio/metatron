@@ -1,0 +1,385 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.sys;
+
+import org.buildobjects.process.ProcBuilder;
+import org.buildobjects.process.ProcResult;
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.m.sys.space.serialSpace;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.ImageUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.sys.space.fsSpace.makeFile;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+
+/**
+ * The system instruction set — the machine bridge: spawn processes, touch the environment, and do raw
+ * terminal I/O. Instructions live under {@code /m/sys/inst/...}.
+ *
+ * <h3>future ideas</h3>
+ * <p>Process instructions that would round out the bridge, each following the {@code bash} pattern — typed
+ * args, an optional timeout, and {@code allow}/{@code reject}/{@code env}/{@code dir} as q-params:
+ * <ul>
+ *   <li>{@code exec} — non-shell exec. {@code exec(cmd=>str::T, args=>lst[str::T], timeout?=>time::T) →
+ *       lst[str::T]}: argv as literal tokens, so no shell metacharacter interpretation (a {@code ;} or
+ *       {@code &&} is data, not control). The corrected {@code native}.</li>
+ *   <li>{@code pwd} — {@code pwd() → uri}: read the current working directory, the read counterpart to
+ *       {@code bash}'s {@code dir} modulator.</li>
+ *   <li>{@code which} — {@code which(cmd=>str::T) → uri}: resolve a command name to its absolute path, so a
+ *       caller can inspect what {@code exec}/{@code bash} will actually run.</li>
+ * </ul>
+ */
+@InstSet.JREService(vid = "/m/sys")
+public class sysInstSet extends AbstractInstSet {
+    public static final fURI SYS = f("/sys");
+    public static final fURI CURRENT_SYS = f("~/sys");
+    public static final fURI SYS_ISA_TID = M_ISA_TID.extend("sys");
+    public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
+    public static final fURI SYS_BASH_INST_TID = SYS_INST_TID.extend("bash");
+    public static final fURI SYS_SPACE_TID = SYS_ISA_TID.extend("space");
+    public static final fURI FS_SPACE_TID = SYS_SPACE_TID.extend("fsspace");
+    public static final fURI SERIAL_SPACE_TID = SYS_SPACE_TID.extend("serialspace");
+    public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
+    public static final fURI DIR_TID = SYS_ISA_TID.extend("dir");
+    public static final fURI LOG_ENTRY_TID = SYS_ISA_TID.extend("log_entry");
+    public static final fURI IMAGE_TID = FILE_TID.extend("image");
+    public static final Type FILE_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(FILE_TID)
+            .constructor(lhs -> makeFile(Path.of(lhs.uriValue().basePath().toString())))
+            .create();
+    public static final Type LOG_ENTRY_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(LOG_ENTRY_TID)
+            .isaPredicate(rec(
+                    uri(LEVEL), union_(uri(INFO), uri(TRACE), uri(WARN), uri(ERROR), uri(DEBUG)).tryToInst(),
+                    uri(TIME), DATETIME_TYPE,
+                    uri(SOURCE), ALL_TYPE,
+                    uri(MESSAGE), STR_TYPE)).create();
+    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
+            .tid(FILE_TID)
+            .vid(IMAGE_TID).create();
+    public static final Type DIR_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(DIR_TID)
+            //.predicate((uri, x) -> fsSpace.resolveFile(uri.as()).isDirectory() ? uri : noobj())
+            .constructor(obj -> obj.uriValue().isBranch() ? makeFile(Path.of(obj.uriValue().basePath().toString())) : noobj())
+            .create();
+    public static final Type FS_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(FS_SPACE_TID)
+            .isaPredicate(rec(uri(SCRIPT).maybe().asUri(), rec(URI_TYPE, URI_TYPE)))
+            .constructor(obj -> fsSpace.of(FileSystems.getDefault(), obj.asRec(), obj.vid()))
+            .create();
+    public static final Type SERIAL_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(SERIAL_SPACE_TID)
+            .constructor(obj -> serialSpace.of(obj.asRec(), obj.vid()))
+            .create();
+
+    private static final Real DEFAULT_TIMEOUT = real(20.0, MATH_SECOND_TID, null);
+
+    public sysInstSet() {
+        super(mutableMap(Map.of(uri(PATTERN), uri(SYS_ISA_TID.extend("#")))), INSTSET_TID, SYS_ISA_TID);
+    }
+
+    /*
+        lst(() ->{ Space sys = new sysInstSet();
+               Machine.authority().addSpace(sys);
+               Machine.write(sys); 
+               }(),() -> {
+               System.getenv().entrySet().stream()
+                    .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
+                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
+                    .collect(new CommonUtil.recCollector());
+                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()),REC_TID,f("/sys/env"))
+               }(),() -> { ThreadExecutor.instance() }())
+     */
+    private static final int MAX_DIRECTORY_DEPTH = 50;
+    private static final int MAX_FILE_RESULTS = 50;
+
+    public void setup() {
+        this.jvm().putAll(Map.of(
+                uri(CONST), lst(ThreadExecutor.instance()),
+                uri(TYPE), lst(
+                        docWrap(FS_SPACE_TYPE, "the fsspace — a java file system (default: the local disk) exposed as a metatron space"),
+                        docWrap(SERIAL_SPACE_TYPE, "the serial space — serial port / terminal i/o exposed as a metatron space"),
+                        docWrap(LOG_ENTRY_TYPE, "a structured log entry — level, datetime, source, and message"),
+                        docWrap(DIR_TYPE, "a reference to a directory within fsspace"),
+                        docWrap(FILE_TYPE, "a reference to a file within fsspace, resolved through the router's redirects"),
+                        docWrap(IMAGE_FILE_TYPE, "a file reference that decodes to an image renderable as ascii art")),
+                uri(INST), lst(
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                            try {
+                                final File file = fsSpace.staticObjToFile(lhs);
+                                LOG.debug("translating file to bytes: %s", file);
+                                final byte[] data;
+                                try (final FileInputStream fis = new FileInputStream(file)) {
+                                    data = fis.readAllBytes();
+                                } catch (final IOException e) {
+                                    throw MTronException.of(e);
+                                }
+                                return bytes(ByteBuffer.wrap(data));
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        }), "read a file uri to its raw bytes — the file must resolve to an fsspace", "<mfs:.>/README.md.as(bytes::T)   [-- the file's raw bytes --]"),
+                        docWrap(instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
+                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)), "render an image's bytes as ascii art — the second arg scales the rendering (default 1.0)", "<mfs:.>/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]"),
+                        docWrap(instC(SYS_INST_TID.extend("close").dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                            if (lhs instanceof Machine)
+                                return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
+                            CommonUtil.close(lhs);
+                            if (lhs.isNoObj())
+                                BootLoader.close();
+                            return noobj();
+                        }), "close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown"),
+                        // the rng's poly names the rec's TRAITS (short, long); the per-key VALUE type (uri) lives in
+                        // the returned rec's structure — a poly types parameter positions, never a keyed map
+                        docWrap(instC(SYS_INST_TID.extend("redirect").dom(ALL.maybe()).rng(f("rec")), lst(URI_TYPE), (lhs, inst) -> rec(
+                                uri(SHORT), uri(Machine.current().memory().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Machine.current().memory().redirect(inst.arg(0).uriValue(), true)))), "map a uri to its registered redirect forms — returning [short, long] of the rewritten uri"),
+                        docWrap(instC(SYS_INST_TID.extend("sys_stat").dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> {
+                            Runtime rt = Runtime.getRuntime();
+                            long totalMemory = rt.totalMemory();
+                            long freeMemory = rt.freeMemory();
+                            long usedMemory = totalMemory - freeMemory;
+                            long maxMemory = rt.maxMemory();
+                            return rec(
+                                    uri("total_mem_jvm"), mathInstSet.normalizeData(real((double) totalMemory, MATH_BYTE_TID, null)),
+                                    uri("free_mem_jvm"), mathInstSet.normalizeData(real((double) freeMemory, MATH_BYTE_TID, null)),
+                                    uri("max_mem_mach"), mathInstSet.normalizeData(real((double) maxMemory, MATH_BYTE_TID, null)),
+                                    uri("used_mem_jvm"), mathInstSet.normalizeData(real((double) usedMemory, MATH_BYTE_TID, null)),
+                                    uri("free_jvm"), start_(real(1.0d - ((double) usedMemory / (double) totalMemory))).as_(T(MATH_PERCENT_TID)).apply(),
+                                    uri("free_mach"), start_(real(1.0d - ((double) usedMemory / (double) maxMemory))).as_(T(MATH_PERCENT_TID)).apply(),
+                                    uri("thread"), ThreadExecutor.instance().summary());
+                        }), "a summary of thread counts"),
+                        docWrap(instC(SYS_INST_TID.extend("find_file").dom(ALL.maybe()).rng(LST_TID), rec(
+                                        uri(NAME), STR_TYPE,
+                                        uri(ROOT).maybe(), URI_TYPE,
+                                        uri(PATTERN), BOOL_TYPE,
+                                        uri(MAX).maybe(), INT_TYPE,
+                                        uri(DEPTH).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final boolean regex = inst.arg(PATTERN, 2).orElse(BOOL_FALSE).boolValue();
+                                    final Pattern pattern = regex ? CommonUtil.guardPattern(inst.arg(NAME, 0).strValue()) : null;
+                                    try (final Stream<Obj> uris = start_(inst.arg(ROOT, 1).orElse(uri("<mfs:.>"))).repeat_(rshift_(), loop_().is_(gt_(inst.arg(DEPTH, 4).orElse(jnt(MAX_DIRECTORY_DEPTH)))), BOOL_TRUE).apply().stream()
+                                            .filter(p -> regex ? CommonUtil.findSafely(pattern, p.uriValue().toString()) : p.uriValue().toString().contains(inst.arg(NAME, 0).strValue()))
+                                            .limit(inst.arg(MAX, 3).orElse(jnt(MAX_FILE_RESULTS)).intValue().intValue())) {
+                                        return lst(uris);
+                                    } catch (final Exception e) {
+                                        LOG.status(DEBUG, "error finding files at %s", inst.arg(1).orElse(uri(".")));
+                                        return lst();
+                                    }
+                                }), "maybe an obj (optional)", "a lst of all files whose path matches str regex",
+                                Map.of(uri(NAME), "a regex or plain string to match file paths against",
+                                        uri(ROOT).maybe(), "the root directory for searching (default: current working directory -- <mfs:.>)",
+                                        uri(PATTERN).maybe(), "if the search string should be treated as a regex pattern (default: false)",
+                                        uri(MAX).maybe(), "the max number of results to return (default: 50)",
+                                        uri(DEPTH).maybe(), "the max depth to search directories (default: 50)"),
+                                "recursively search directory for named file by regex or partial string match"),
+                        docWrap(instC(SYS_INST_TID.extend("read_file").dom(ALL.maybe()).rng(LST_TID), rec(
+                                        uri(FILE), URI_TYPE,
+                                        uri(MIN).maybe(), INT_TYPE,
+                                        uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final fURI file = inst.arg(FILE, 0).uriValue();
+                                    int min = inst.arg(MIN, 1).orElse(jnt(-1)).intValue().intValue();
+                                    if (min < 0) min = 0;
+                                    int max = inst.arg(MAX, 2).orElse(jnt(-1)).intValue().intValue();
+                                    if (max < 0) max = -1;
+                                    if (max != -1 && min > max)
+                                        throw MTronException.of("read_file min=%d exceeds max=%d", min, max);
+                                    final Obj fileObj = Machine.read(file);
+                                    final int finalMin = min;
+                                    if (fileObj.isStr()) {
+                                        final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
+                                        return lst(IteratorUtil.indexedStream(startLines
+                                                        .subList(Math.min(min, startLines.size() - 1), Math.min(startLines.size(), max == -1 ? Integer.MAX_VALUE : max))
+                                                        .iterator())
+                                                .map(pair -> lst(jnt(pair.get0() + finalMin), str(pair.get1()))));
+                                    } else {
+                                        throw MTronException.of("none str-based obj referenced: %s", file);
+                                    }
+                                }), "maybe an obj (optional)", "read file indexed lines",
+                                Map.of(uri(FILE), "a reference to a fsspace file",
+                                        uri(MIN).maybe(), "the start line to read",
+                                        uri(MAX).maybe(), "the end line to read"),
+                                """
+                                read a file from an fsspace::T. the min and max values represent the range to read.
+                                if no min, nor max is provided, then the entire file is read.
+                                if only a min is provided, then the file is read from that line till the end.
+                                """),
+                        docWrap(instC(SYS_INST_TID.extend("edit_file").dom(ALL.maybe()).rng(REC_TID), rec(FILE, URI_TYPE, TEXT, STR_TYPE, MIN, INT_TYPE, uri(MAX).maybe(), INT_TYPE), (lhs, inst) -> {
+                                    final fURI file = inst.arg(FILE, 0).uriValue();
+                                    final String text = inst.arg(TEXT, 1).strValue();
+                                    final int min = inst.arg(MIN, 2).intValue().intValue();
+                                    final int max = inst.arg(MAX, 3).orElse(jnt(-1)).intValue().intValue();
+                                    final Obj fileObj = Machine.read(file);
+                                    if (fileObj.isStr()) {
+                                        final List<String> startLines = new ArrayList<>(Arrays.asList(fileObj.strValue().split("\n")));
+
+                                        if (max != -1) {
+                                            for (int i = min; i < max; i++) {
+                                                startLines.set(i, "<DELETE>");
+                                            }
+                                        }
+                                        startLines.add(min, text);
+                                        final List<String> endLines = startLines.stream().filter(l -> !l.equals("<DELETE>")).toList();
+                                        Machine.write(file, str(String.join("\n", endLines)));
+                                        return rec(STATUS, uri(SUCCESS),
+                                                OBJ, auto_from_(file).tryToInst(),
+                                                "start_line_count", jnt(startLines.size()),
+                                                "inserted_line_count", jnt(CommonUtil.countLines(text)),
+                                                "end_line_count", jnt(endLines.size()));
+                                    } else {
+                                        return rec(
+                                                STATUS, uri(ERROR),
+                                                OBJ, auto_from_(file).tryToInst(),
+                                                DESC, str("file reference did not yield a text-based obj (no changes)"));
+                                    }
+                                }), "maybe an obj (optional)", "a status report on the write",
+                                Map.of(uri(FILE), "a reference to a fsspace file",
+                                        uri(TEXT), "the text to add to the file",
+                                        uri(MIN), "the location to insert (or start to overwrite)",
+                                        uri(MAX).maybe(), "the location to stop overwriting"),
+                                """
+                                write text to a file in fsspace::T. the min and max values represent the range to write.
+                                if no max is provided, then the text is inserted at the line number (shifting existing text down).
+                                if both min and max are provided, then those lines are removed and the text is inserted at the min line.
+                                """),
+                        docWrap(instC(SYS_BASH_INST_TID.dom(ALL.maybe()).rng(LST_TID.poly(STR_TID)), rec(
+                                                uri(CMD), STR_TYPE,
+                                                uri(TIMEOUT).maybe(), union_(TIME_TYPE, INT_TYPE).tryToInst()),
+                                        (lhs, inst) -> {
+                                            //final StringBuilder errors = new StringBuilder();
+                                            //final StringBuilder outputs = new StringBuilder();
+                                            final String command = inst.arg(CMD, 0).strValue();
+                                            final Lst allow = Optional.ofNullable(inst.tid().qValue(ALLOW, Lst.class)).orElse(lst());
+                                            final Lst reject = Optional.ofNullable(inst.tid().qValue(REJECT, Lst.class)).orElse(lst());
+                                            final String workingDirectory = Optional.ofNullable(inst.tid().qValue(DIR, String.class)).orElse(System.getProperty("user.dir"));
+                                            if (!allow.isEmpty()) {
+                                                if (allow.elements().map(Obj::strValue).noneMatch(a -> CommonUtil.withMatcher(CommonUtil.guardPattern(a), command, Matcher::matches)))
+                                                    throw MTronException.of("allowed patterns do not match command: %s {{r}}not in{{/r}} %s", command, allow);
+                                            }
+                                            if (!reject.isEmpty()) {
+                                                final Optional<String> p = reject.elements().map(Obj::strValue).filter(a -> CommonUtil.findSafely(CommonUtil.guardPattern(a), command)).findFirst();
+                                                if (p.isPresent())
+                                                    throw MTronException.of("reject patterns match command: %s {{r}}in{{/r}} %s", command, p.get());
+                                            }
+                                            final Map<String, String> envVars = new HashMap<>();
+                                            final Rec env = inst.tid().qValue(ENV, Rec.class);
+                                            if (null != env)
+                                                env.elements().forEach(rel -> envVars.put(rel.first().toCleanString(), rel.second().toCleanString()));
+                                            Obj timeout = inst.arg(TIMEOUT, 1).orElse(DEFAULT_TIMEOUT);
+                                            if (timeout.isInt())
+                                                timeout = real(timeout.intValue().doubleValue(), MATH_SECOND_TID, null);
+                                            final ProcResult result = new ProcBuilder("bash")
+                                                    .withArg("-c")
+                                                    .withArg(command)
+                                                    .withWorkingDirectory(new File(workingDirectory))
+                                                    .withVars(envVars)
+                                                    .withTimeoutMillis(timeout.tid(MATH_MILLIS_TID).realValue().longValue())
+                                                    .run();
+                                            if (0 != result.getExitValue())
+                                                throw MTronException.of("bash exited %d after %s: [stderr] %s [stdout] %s",
+                                                        result.getExitValue(),
+                                                        mathInstSet.normalizeTime(real((double) result.getExecutionTime(), MATH_MILLIS_TID, null)),
+                                                        result.getErrorString(),
+                                                        result.getOutputString());
+                                            return Arrays.stream(result.getOutputString().split("\n")).map(MStr::str).collect(new CommonUtil.LstCollector());
+                                        }), "maybe an obj",
+                                "a lst[str] of results",
+                                Map.of(
+                                        uri(CMD), "the terminal command to evaluate (uses bash('-c',${cmd}) behind the scenes)",
+                                        uri(TIMEOUT).maybe(), """
+                                                              a real number denoting timeout of the process (default: %s).
+                                                              """.formatted(DEFAULT_TIMEOUT)),
+                                """
+                                evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0. 
+                                note that this field is optional, so when in doubt, just don't fill it out
+                                """,
+                                """
+                                bash('ls')                                           [-- return lst containing each file/dir as str::T --]
+                                {"ls","whoami","df -h"}.-<[_ => _]==[_ => bash(_)]   [-- batch bash results indexed by cmd             --]
+                                ["ls","whoami","df -h"].mapp(-<[_ => bash(_)]).sum() [-- same as above but with lst of cmds            --]
+                                """),
+                        docWrap(instC(SYS_INST_TID.extend("sleep").dom(A.maybe()).rng(A.maybe()), lst(TIME_TYPE), (lhs, inst) -> {
+                            CommonUtil.sleepThread(inst.arg(0).as(MILLIS_TYPE).realValue().intValue());
+                            return lhs;
+                        }), "an obj", "the lhs obj", Map.of(jnt(0), "the amount of time to pause the current thread"), "pauses the current thread for arg amount of time"),
+                        docWrap(instC(SYS_INST_TID.extend("stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+                            final Object arg = inst.arg(0).jvm();
+                            if (arg != null)
+                                System.out.println(arg);
+                            return lhs;
+                        }), "maybe an obj", "maybe an obj", Map.of(), "prints arg jvm object to the terminal and emits lhs obj as rhs obj"),
+                        docWrap(instC(SYS_INST_TID.extend("stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
+                            // metatron's stdio, not System.in: whoever owns input (the console, a
+                            // pipe, an embedding host) installed the stream, so this reads what the
+                            // person is actually typing wherever metatron is running
+                            final String input = mSystem.readLine();
+                            return str(null == input ? "" : input);
+                        }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal"))))
+        ;
+        docWrap(this, "the machine bridge of metatron — terminal i/o, process execution, and raw file operations");
+        super.setup();
+    }
+}

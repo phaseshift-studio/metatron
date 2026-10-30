@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.util;
 
 import ch.usi.si.seart.treesitter.Language;
 import ch.usi.si.seart.treesitter.Parser;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
 
 import java.io.InputStream;
 import java.nio.file.Files;

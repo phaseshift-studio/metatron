@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 
@@ -111,7 +111,7 @@ public class asSlowProbeTest extends AbstractInstSetTest {
         System.out.println("### SCALE candidates=" + asCandidates() + " eval=" + bestEval() + "ms (math only)");
         InstSet.importInstSet(studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID);
         System.out.println("### SCALE candidates=" + asCandidates() + " eval=" + bestEval() + "ms (+cat)");
-        InstSet.importInstSet(studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID);
+        InstSet.importInstSet(studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID);
         System.out.println("### SCALE candidates=" + asCandidates() + " eval=" + bestEval() + "ms (+web)");
     }
 

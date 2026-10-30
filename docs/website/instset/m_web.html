@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="../js/metatron.js" type="text/javascript"></script>
         <link rel="stylesheet" href="../css/instset_doc.css">
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
                             src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_llm.html"><img
-                            src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach.html"><img
-                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_mach_ui.html"><img
-                            src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math.html"><img
-                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_math_cat.html"><img
-                            src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_sys.html"><img
-                            src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_tble.html"><img
-                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_vec.html"><img
-                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/m_web.html"><img
-                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -476,7 +498,7 @@ the world of the web widens metatron</p>
             pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
           const=&gt;[
-           [remote_console=&gt;inst(){&lt;j&gt;}]@/m/tble/helper,
+           [remote_console=&gt;inst(){&lt;j&gt;}]@/m/web/helper,
            obj_xml::[=&gt;]@/m/web/serializer/obj_xml,
            obj_html::[=&gt;]@/m/web/serializer/obj_html,
            obj_json::[
@@ -486,8 +508,8 @@ the world of the web widens metatron</p>
             bias_towards_objs=&gt;false]@/m/web/serializer/obj_json,
            obj_markdown::[=&gt;]@/m/web/serializer/obj_markdown,
            obj_text::[=&gt;]@/m/web/serializer/obj_text,
-           /m/mach/io/serializer/mtron::[=&gt;]@/m/mach/io/serializer/string/clean,
-           bytebuffer::[=&gt;]@/m/mach/io/serializer/bytebuffer,
+           /m/web/serializer/mtron::[=&gt;]@/m/web/serializer/string/clean,
+           bytebuffer::[=&gt;]@/m/web/serializer/bytebuffer,
            obj_json::[
             density=&gt;&lt;TRANSPARENT&gt;,
             wrap_uri=&gt;true,
@@ -496,7 +518,10 @@ the world of the web widens metatron</p>
            obj_bson::[=&gt;]@/m/web/serializer/obj_bson,
            obj_xsv::[
             delimiter=&gt;&#39;,&#39;,
-            header=&gt;false]@/m/web/serializer/obj_xsv],
+            header=&gt;false]@/m/web/serializer/obj_xsv,
+           obj_yaml::[
+            indent=&gt;2,
+            pretty=&gt;true]@/m/web/serializer/obj_yaml],
           type=&gt;[
            uri::T[?union(application/bson,
                          application/json,
@@ -741,7 +766,7 @@ the world of the web widens metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">10</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">48</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">48</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -751,14 +776,14 @@ the world of the web widens metatron</p>
     <div class="d-flex flex-wrap"><a href="#__m__web__helper" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">helper</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#__m__web__serializer__bytebuffer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">bytebuffer</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_bson" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_bson</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_html</span>
-    <span class="pill-label badge bg-secondary ms-2">C</span>
-</a><a href="#__m__web__serializer__obj_java" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">obj_java</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_json</span>
@@ -777,6 +802,12 @@ the world of the web widens metatron</p>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_xsv" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_xsv</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#__m__web__serializer__obj_yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_yaml</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#__m__web__serializer__string__clean" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">clean</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a></div>
 </div><div class="mb-3">
@@ -938,13 +969,31 @@ the world of the web widens metatron</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">10</span></h3>
-    <div class="card mb-3" id="__m__web__helper">
+    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">12</span></h3>
+    <div class="card mb-3" id="__m__web__serializer__bytebuffer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">bytebuffer</span>
+        <small class="text-muted code">/m/web/serializer/bytebuffer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">bytebuffer::[=&gt;]@/m/web/serializer/bytebuffer</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the byte buffer serializer — parses raw bytes into objs and writes objs back as raw bytes: \(\mathrm{bytes} \leadsto \mathrm{obj} \leadsto \mathrm{bytes}\)</p>
+</div>
+</div><div class="card mb-3" id="__m__web__serializer__string__clean">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">clean</span>
+        <small class="text-muted code">/m/web/serializer/string/clean</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/web/serializer/mtron::[=&gt;]@/m/web/serializer/string/clean</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the mtron string serializer — parses metatron source text into objs and writes objs back as metatron source: \(\mathrm{mtron} \leadsto \mathrm{obj} \leadsto \mathrm{mtron}\)</p>
+</div>
+</div><div class="card mb-3" id="__m__web__helper">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">helper</span>
         <small class="text-muted code">/m/web/helper</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[remote_console=&gt;inst(){&lt;j&gt;}]@/m/tble/helper</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">[remote_console=&gt;inst(){&lt;j&gt;}]@/m/web/helper</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a collection of web related utilities</p>
 </div>
@@ -966,13 +1015,6 @@ the world of the web widens metatron</p>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the html serializer — parses an html document into a rec and writes a rec back as html: \(\mathrm{html} \leadsto \mathrm{rec} \leadsto \mathrm{html}\)</p>
 </div>
-</div><div class="card mb-3" id="__m__web__serializer__obj_java">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span class="code text-secondary fw-bold">obj_java</span>
-        <small class="text-muted code">/m/web/serializer/obj_java</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::[=&gt;]@/m/web/serializer/obj_java</code></pre></div>
-    
 </div><div class="card mb-3" id="__m__web__serializer__obj_json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">obj_json</span>
@@ -1035,6 +1077,16 @@ the world of the web widens metatron</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}delimiter" class="text-light">{?}delimiter</a> <span class="text-light">=&gt;</span> <a href="#"the column delimiter token (e.g. ',' or '\t')"" class="text-info">&quot;the column delimiter token (e.g. &#39;,&#39; or &#39;\t&#39;)&quot;</a>
   <a href="#{?}header" class="text-light">{?}header</a> <span class="text-light">=&gt;</span> <a href="#'whether the first row is a header row parsed into rec::T keys'" class="text-info">&#39;whether the first row is a header row parsed into rec::T keys&#39;</a>
 </pre>
+</div>
+</div><div class="card mb-3" id="__m__web__serializer__obj_yaml">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">obj_yaml</span>
+        <small class="text-muted code">/m/web/serializer/obj_yaml</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_yaml::[indent=&gt;2,
+           pretty=&gt;true]@/m/web/serializer/obj_yaml</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a serializer for converting objs to/from yaml format</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
@@ -1302,12 +1354,12 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
-  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
-  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
+  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1427,8 +1479,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
-  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
+  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
   <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
 </pre>
 </div>

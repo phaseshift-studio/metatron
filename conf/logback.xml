@@ -24,7 +24,7 @@
             <level>${ROOT_LEVEL}</level>
         </filter>
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger"/>
+            <layout class="studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger"/>
         </encoder>
     </appender>
     <root level="${ROOT_LEVEL}">

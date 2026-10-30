@@ -8,7 +8,7 @@
 [mtron]
 ----
 [NO_OUTPUT] import(/m/web)
-[NO_OUTPUT] import(/m/llm)
+[NO_OUTPUT] import(/m/ai/llm)
 [NO_OUTPUT] import(/m/math)
 http_server::[origin     => http://localhost:8777,                      /
               q        => [mimeq::[=>]],                                /
@@ -54,7 +54,7 @@ A `model::T` references a LLM endpoint.
 
 [mtron]
 ----
-|/m/llm/model::T
+|/m/ai/llm/model::T
 ----
 
 Models can be either cloud-based AI LLMs or local LLMs.
@@ -100,7 +100,7 @@ The resultant Ollama `rec::T` is then morphed into a `model::T`.
 
 NOTE: There are two expressions in the example below that are bound by an intermediate
 `ollama_model` stack reference.
-The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a `model::T` ready for use in the `/m/llm` instruction set.
+The purpose of breaking up the example into two expression is to highlight the Ollama representation of a model before morphing it into a `model::T` ready for use in the `/m/ai/llm` instruction set.
 
 [mtron]
 ----
@@ -185,7 +185,7 @@ tB::1.0.as(mB::T)      [-- <3> --]
 [discrete]
 === Agents
 
-The most important type in `/m/llm` is `agent::T`.
+The most important type in `/m/ai/llm` is `agent::T`.
 While a `model::T` represents the gateway to a particular data structure and inferencing engine, an `agent::T` subsumes one or more `model::T` in its functioning.
 Along with models, and agent can be equipped with other data structures and processes that provide a richer, more intelligent entity within metatron.
 These supplemental structures and processes are collectively known as **features**.
@@ -200,7 +200,7 @@ include::../../.metatron/skills/drstynx/assets/drstynx.boot.mtron[tags=asciidoc_
 [discrete]
 ==== Features
 
-The following subsections focus on a particular `/m/llm` **feature**.
+The following subsections focus on a particular `/m/ai/llm` **feature**.
 
 ++++
 <!--

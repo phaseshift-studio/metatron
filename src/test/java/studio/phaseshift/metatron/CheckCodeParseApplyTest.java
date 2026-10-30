@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * The harness checks itself: an {@code <ERROR>} row of {@link #checkCodeParseApply(
- * studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger, String, String)} passes only when the code
+ * studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger, String, String)} passes only when the code
  * fails — by a throw, or by a {@code fail::T} in its result stream. A value, a stream of values, or noobj must fail
  * the row. That branch once only logged, so every {@code <ERROR>} row through it passed whatever the code did.
  */

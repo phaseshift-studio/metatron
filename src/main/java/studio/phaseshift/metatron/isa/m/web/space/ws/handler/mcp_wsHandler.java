@@ -1,0 +1,141 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.space.ws.handler;
+
+import org.java_websocket.WebSocket;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
+import studio.phaseshift.metatron.isa.m.web.webInstSet;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.MCP_SERVER_TID;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/**
+ * MCP (Model Context Protocol) server over a websocket (a ws_server route).
+ * Handles JSON-RPC based communication for AI/LLM tool integration.
+ * <p>
+ * The MCP server type exposes three categories of capabilities:
+ * <ul>
+ *   <li><b>tool</b> — functions that LLMs can invoke (e.g. search, calculate)</li>
+ *   <li><b>resource</b> — data/context that can be read (e.g. files, APIs)</li>
+ *   <li><b>prompt</b> — templated messages/workflows for users</li>
+ * </ul>
+ * <p>
+ * Users extend this server by defining a type in mtron:
+ * <pre>
+ * mymcp::T[?[
+ *   tool=>[
+ *     myTool=>myTool(a1,a2){ ... },
+ *     ...],
+ *   resource=>[
+ *     myRes=>!*&lt;http://...&gt;,
+ *     ...],
+ *   prompt=>[
+ *     myPrompt=>"template string",
+ *     ...]
+ * ]]@mymcp
+ * </pre>
+ * Then route it in a ws_server's table and connect via WebSocket.
+ */
+public class mcp_wsHandler extends WebSocketRec {
+
+    public static final fURI WS_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_ws");
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+
+    public static final Type WS_MCP_HANDLER_TYPE = Type.Builder.build()
+            .tid(webInstSet.MCP_TID)
+            .vid(WS_MCP_HANDLER_TID)
+            .isaPredicate(rec(
+                    uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
+                    uri(RESOURCE).maybe().asUri(), ALL_TYPE,
+                    uri(PROMPT).maybe().asUri(), ALL_TYPE))
+            .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(REC_TYPE), (lhs, inst) ->
+                    new mcp_wsHandler(new LinkedHashMap<>(inst.arg(0).asRec()
+                            .at(uri(IN), uri(MIME.MIMEType.APPLICATION_JSON.value))
+                            .at(uri(OUT), uri(MIME.MIMEType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
+
+    // Transport-agnostic protocol handler (composition)
+    private final mcpServer mcp;
+
+    public mcp_wsHandler(final Rec recClone) {
+        this(mutableMap(recClone.jvm()), recClone.tid(), recClone.vid());
+    }
+
+    public mcp_wsHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        this.mcp = new mcpServer(jvm, MCP_SERVER_TID, vid);
+        this.jvm().put(uri(ON_MESSAGE), instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
+            try {
+                LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), lhs);
+                final Obj result = this.mcp.handleMessage(lhs);
+                if (null != result && !result.isNoObj()) send(result);
+                return result;
+            } catch (final Exception e) {
+                LOG.error("error sending mcp response: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
+                send(fail(e));
+                return fail(e);
+            }
+        }));
+    }
+
+    @Override
+    public IO getIO() {
+        return new IO(
+                MIME.MIMEType.of(this.at(IN).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()),
+                MIME.MIMEType.of(this.at(OUT).orElse(uri(MIME.MIMEType.APPLICATION_JSON.value)).uriValue().toString()));
+    }
+
+    /**
+     * Override the text-frame entry so the raw JSON string reaches
+     * {@link mcpServer#handleMessage(String)} — the schema-aware argument parse
+     * needs the raw string, not the already-mangled Obj that
+     * {@link #onMessage(WebSocket, Obj)} would hand it.
+     */
+    @Override
+    public void onMessage(final WebSocket conn, final String message) {
+        try {
+            LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), message);
+            final Obj result = this.mcp.handleMessage(message);
+            if (null != result && !result.isNoObj()) send(result);
+        } catch (final Exception e) {
+            LOG.error("error sending mcp response: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
+            send(fail(e));
+        }
+    }
+
+}

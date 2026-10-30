@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
     
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
                             src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
-                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
-                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
-                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
-                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
-                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
-                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
-                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
-                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
-                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -486,8 +508,25 @@ Resolution has one gate — an address carrying a host is aligned against the ne
 against the ISA's, and memory's redirects are consulted by the ISA's resolver; the slots cannot collide, so the order
 is unobservable.</p>
 <h3>instset (instruction memory)</h3>
-<pre><code class="language-mtron">mtron&gt; */m/inset?docq
-==&gt;docs::[desc=&gt;'no documentation available']
+<pre><code class="language-mtron">mtron&gt; */m/instset?docq
+==&gt;docs::[obj=&gt;rec::T[?[
+     {?}pattern=&gt;uri::T,
+     {?}const=&gt;[&lt;#&gt;::T],
+     {?}type=&gt;{?}[&lt;#&gt;::T],
+     {?}inst=&gt;{?}[inst::T],
+     {?}rewrite=&gt;{?}[inst::T],
+     {?}sugar=&gt;{?}[lst::T],
+     {?}reference=&gt;{?}[uri::T],
+     ...(1 more)]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+          dom=&gt;'an extension of space with structu...',
+          rng=&gt;'creates the instset and registers ...',
+          args=&gt;[
+           {?}const=&gt;'constants used across the instset',
+           {?}type=&gt;'types used to structure objs of th...',
+           {?}inst=&gt;'instructions associated with the t...',
+           {?}rewrite=&gt;'code&lt;=code instructions that captu...',
+           {?}sugar=&gt;'custom instruction syntax sugars g...'],
+          desc=&gt;'[structural] an aggregate of const...']
 </code></pre>
 <p><code>instset</code> is the frame's <strong>visible vocabulary</strong>: the types, instructions, rewrites and sugars a program compiled here
 can see. It is a union in two directions — this frame's own structure over its <strong>imported</strong> sets, and that whole stack
@@ -717,12 +756,12 @@ axes of a machine.</p>
      {?}state=&gt;union(stop,run,pause),
      {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
           args=&gt;[
+           code=&gt;&quot;the thread's executing code&quot;,
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            {?}result=&gt;'the last result produced by the th...',
            {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}state=&gt;'current state of the thread',
-           code=&gt;&quot;the thread's executing code&quot;],
+           {?}state=&gt;'current state of the thread'],
           desc=&gt;'[structural] the thread base type',
           core=&gt;docs::[
            obj=&gt;thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
@@ -789,11 +828,11 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
+           {?}pattern=&gt;'the branch this network answers as...',
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
            {?}listener=&gt;'the sockets this machine serves th...',
            {?}status=&gt;'the health method — an auto inst c...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}pattern=&gt;'the branch this network answers as...'],
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;],
           desc=&gt;&quot;[structural] a machine's network: ...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -1130,7 +1169,7 @@ process.</p>
 <ol>
 <li><strong>The master sets up everything.</strong> It starts the backend, mounts its own space, and creates every table — the
 partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
-<code>import(/m/tble)</code>, so it never runs DDL, and its first look at the backend already sees every table it will read.</li>
+<code>import(/m/db/tble)</code>, so it never runs DDL, and its first look at the backend already sees every table it will read.</li>
 <li><strong>One workload per satellite</strong>, shipped in the <code>law_shard</code> layout: the backend's space, the satellite's partition,
 and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
 provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.</li>
@@ -1207,7 +1246,7 @@ rshift, <code>.as(type::T)</code>, coefficients, <code>.explain()</code>.</li>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.</li>
 <li><a href="cat-instset-mtron.html">the category graph</a> — the declared rewrites the <code>rewriter</code> stage consumes, and the
 <code>LawTable</code> that bridges an op address to a declared law.</li>
-<li><a href="ui-instset-mtron.html">ui instruction set</a> — <code>/m/mach/ui</code>, the widget family carried by the same ISA.</li>
+<li><a href="ui-instset-mtron.html">ui instruction set</a> — <code>/m/sys/ui</code>, the widget family carried by the same ISA.</li>
 <li>figure sources — <code>assets/tikz/mach-*.tex</code> (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
 <code>assets/</code>).</li>
 </ul>

@@ -36,18 +36,18 @@ print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
      "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
 [== instruction sets ==]
 print("{{y}}loading instruction sets\n{{X}}");
-import(/m/mach/io);
+import(/m/web);
 import(/m/web,web);
-import(/m/tble);
+import(/m/db/tble);
 import(/m/math,math);
 import(/m/math/cat,cat);
-import(/m/llm);
-import(/m/grph);
-import(/m/vec);
+import(/m/ai/llm);
+import(/m/db/grph);
+import(/m/db/vec);
 import(/m/iot);
-import(/m/dckr);
-import(/m/mach/ui,ui);
-import(/m/ide,ide);
+import(/m/dev/dckr);
+import(/m/sys/ui,ui);
+import(/m/dev/ide,ide);
 [===================================================================]
 [===================================================================]
         [=====================]
@@ -173,7 +173,7 @@ mqttspace::[host    => <mqtt://ginger.local:1883>,
 vecspace::[pattern     => embed:#,
            host        => !*<boot/args/external/embedding>,
            q           => [incrq::[=>],embedq::[=>]],
-           driver      => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+           driver      => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>,
            route       => [embed: => <>],
            config      => [embed => [
  [------------------------------------^--]
@@ -255,7 +255,7 @@ grphspace::[pattern   => g:#,
  content=>"""
 # scratch project
 scratch serves as a example project demonstrating how to use the /m/dev/ide instruction set.
-the project::T is a refinement of /m/llm/skill::T.
+the project::T is a refinement of /m/ai/llm/skill::T.
           
 ## project structure
 ```ui:tree::T

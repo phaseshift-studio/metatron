@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.Map;
 

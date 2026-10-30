@@ -97,16 +97,16 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
      "\n{{r}}------------{{X}}\n");
 [== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
-import(/m/mach/io);
+import(/m/web);
 import(/m/math,math:);
 import(/m/web,web:);
 import(/m/iot);
 import(/m/iot/haos);
 import(/m/iot/miot);
-import(/m/grph);
-import(/m/llm);
-import(/m/tble);
-import(/m/dcmnt);
+import(/m/db/grph);
+import(/m/ai/llm);
+import(/m/db/tble);
+import(/m/db/dcmnt);
 [== store global settings in boot ==]
 *<boot/script>.else(boot/script -> 
  [sh     => /bin/sh,
@@ -131,7 +131,7 @@ graphdb::[pattern  => /h/#,
 graphdb::[pattern => g:#,
           route   => [<g:V>=><V>,
                       <g:E>=><E>,
-                      <g:S>=>/m/grph/schema/modern],
+                      <g:S>=>/m/db/grph/schema/modern],
         native  => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
 mqtt::[pattern => <mqtt:#>,
@@ -139,15 +139,15 @@ mqtt::[pattern => <mqtt:#>,
        route   => [mqtt:=><>]]@/sys/space/mqtt;
 miot::[pattern    => <mtron:#>,
        host       => !*boot/args/mqtt/broker,
-       serializer => !*</m/mach/io/serializer/json/simple>,
+       serializer => !*</m/web/serializer/json/simple>,
        route      => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
 mqtt::[pattern    => <z2m:#>,
        host       => !*boot/args/mqtt/broker,
-       serializer => !*</m/mach/io/serializer/json/simple>,
+       serializer => !*</m/web/serializer/json/simple>,
        route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
 haos::[pattern       => <ha:#>,
        host          => !*boot/args/mqtt/broker,
-       serializer    => !*</m/mach/io/serializer/json/simple>,
+       serializer    => !*</m/web/serializer/json/simple>,
        command_topic => inst?uri<=rec(){ 
                           to(a).map(z2m:).mult(*a>>friendly_name).mult(set/state) 
                         },
@@ -174,14 +174,14 @@ catalog::[host    => <https://api.openai.com/v1>,
         host       => 
          <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:>=><>],
-        serializer => !*</m/mach/io/serializer/json/simple>,
+        serializer => !*</m/web/serializer/json/simple>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
  tabledb::[pattern    => acme:#,
         host       => 
           <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
         route      => [<acme:>=><>],
-        serializer => !*</m/mach/io/serializer/string/clean>,
+        serializer => !*</m/web/serializer/string/clean>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
  tabledb::[pattern    => db:#,
@@ -191,7 +191,7 @@ catalog::[host    => <https://api.openai.com/v1>,
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
  docdb::[pattern     => mongo:#,
        host        => <mongodb://localhost:27017/mflix>,
-       serializer  => !*</m/mach/io/serializer/bson>,
+       serializer  => !*</m/web/serializer/bson>,
        collection  => [,],
        route       => [mongo:=><>]]@/sys/space/mongo;
  mcp::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;

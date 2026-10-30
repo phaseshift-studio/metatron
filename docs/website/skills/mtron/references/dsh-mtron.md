@@ -102,11 +102,11 @@ The target shape was **read from the live VM**, not invented — `*/usr/dr/messa
 shows the contract; `*/usr/dr/message/+.tid()` gives the registry census:
 
 ```
-/m/llm/message/user         × 4
-/m/llm/message/system       × 3
-/m/llm/message/thinking     × 4
-/m/llm/message/ai           × 6
-/m/llm/message/tool_result  × 2
+/m/ai/llm/message/user         × 4
+/m/ai/llm/message/system       × 3
+/m/ai/llm/message/thinking     × 4
+/m/ai/llm/message/ai           × 6
+/m/ai/llm/message/tool_result  × 2
 ```
 
 Envelope (all variants): `text` (str, multi-line), `time`, `session` (uri, e.g.

@@ -3,7 +3,7 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.function.Supplier;
 

@@ -31,23 +31,23 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.machInstSet;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.BasicMachine;
-import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
-import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
-import studio.phaseshift.metatron.isa.mach.type.thread.mThread;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.EmojiTable;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.LogObj;
-import studio.phaseshift.metatron.isa.sys.space.fsSpace;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
-import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
-import studio.phaseshift.metatron.isa.web.space.stdio.handler.mcp_stdioHandler;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.EmojiTable;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.LogObj;
+import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.m.sys.sysInstSet;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -79,9 +79,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_INST_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class BootLoader implements Rec, Feature.SelfClone {
@@ -238,7 +238,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         }
         // take stdout before anything can write to it: fd 1 is the mcp wire on a stdio session
         if (mcp)
-            studio.phaseshift.metatron.isa.web.space.stdio.StdioProtocol.install();
+            studio.phaseshift.metatron.isa.m.web.space.stdio.StdioProtocol.install();
 
         // --- Immediate-exit flags -------------------------------------------
         if (showVersion) {
@@ -330,7 +330,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         // a profile can declare `mcp => stdio` itself (so `-b boot/mcp.boot.mtron` behaves like the flag):
         // the header args are parsed by now, and fd 1 has to be claimed before the profile prints anything
         if (!mcp && ARGS.has(uri(MCP)))
-            studio.phaseshift.metatron.isa.web.space.stdio.StdioProtocol.install();
+            studio.phaseshift.metatron.isa.m.web.space.stdio.StdioProtocol.install();
 
         if (null != webSocket) {
             final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(mutableMap(uri(HOST), uri(webSocket)), WS_CLIENT_TID, null));
@@ -660,7 +660,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.Helper.closeSources();
             Machine.root().close();
             // the root closed its own level; a frame that dialed and was never popped still holds a supervised one
-            studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.closeAll();
+            studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor.closeAll();
             ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

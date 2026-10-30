@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.m.space;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.MStats;
-import studio.phaseshift.metatron.isa.mach.type.Stats;
+import studio.phaseshift.metatron.isa.m.mach.type.MStats;
+import studio.phaseshift.metatron.isa.m.mach.type.Stats;
 
 import java.util.Map;
 import java.util.Set;

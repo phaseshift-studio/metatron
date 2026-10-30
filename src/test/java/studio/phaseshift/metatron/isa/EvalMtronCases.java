@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.function.Function;
 

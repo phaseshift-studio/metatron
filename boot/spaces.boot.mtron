@@ -52,12 +52,12 @@ print("{{r}}----{{y}}----{{r}}----\n{{g}}*{{y}}boot/args{{X}}: ",
       "\n{{y}}----{{r}}----{{y}}----{{X}}\n");
 [== instruction sets ==]
 print("{{y}}loading instruction sets\n{{X}}");
-import(/m/mach/io);
-import(/m/mach/ui,ui);
-import(/m/tble);
-import(/m/grph);
-import(/m/vec);
-import(/m/dckr);
+import(/m/web);
+import(/m/sys/ui,ui);
+import(/m/db/tble);
+import(/m/db/grph);
+import(/m/db/vec);
+import(/m/dev/dckr);
 [== module files — pull the boot modules out of the repo (cwd under bin/metatron) ==]
 fsspace::[pattern => fs:#,
           q       => [mimeq::[=>]],

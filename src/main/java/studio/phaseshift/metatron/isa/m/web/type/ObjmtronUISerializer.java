@@ -1,0 +1,1104 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.type;
+
+import org.jline.builtins.Commands;
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.docs.NanorcUtil;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.ByteArrayInputStream;
+import java.io.PrintStream;
+import java.nio.ByteBuffer;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/**
+ * The UI serializer: {@link ObjmtronSerializer} plus everything a human gets out of it.
+ * This is the one that renders for whoever is looking — the console, a log line, a test,
+ * another UI — where the console is only one of them:
+ * <ul>
+ *   <li><b>clipping</b> — recs, lsts, str, bytes, uri and fail are clipped to a readable
+ *       size.  Every limit is a key in the instance's own rec: {@code clip->rec},
+ *       {@code clip->lst}, {@code clip->str}, {@code clip->uri},
+ *       {@code clip->bytes}, {@code clip->fail} (each an int), so a call site tunes the
+ *       display without touching the class.  A fail's limit bounds the whole bracket chain
+ *       it prints — its message and the levels of its stack block (see
+ *       {@link #writeFail(Fail)});</li>
+ *   <li><b>indentation</b> — a poly whose mtron text reads wider than
+ *       {@link #NESTED_STRING_THRESHOLD} columns breaks across lines, in one of two shapes.
+ *       A collection that BEGINS a line — the top-level render, a value rendered into a
+ *       buffer at depth zero — carries its first entry on the opening bracket and hangs
+ *       every entry after it at the column the first one begins, so the entries line up
+ *       under the first.  A collection NESTED inside one that already broke takes the block
+ *       shape instead: every entry, the first included, gets a line of its own one level in
+ *       from the column its parent's entries occupy.  Hanging a nested collection under its
+ *       own first entry is what put a nested rec's entries far right of its siblings' — the
+ *       entries of {@code ring=>/m/theory/ring_theory::[…]} began after the 23 columns of
+ *       the type name, drifting away from the {@code add_group} rows beneath them — so the
+ *       anchor for a nested collection is its PARENT's entry column, threaded down, and
+ *       nesting reads as one column per level.  A collection that fits the threshold stays
+ *       on one line — a short rec has nothing to gain from a stack of newlines.  When the
+ *       opening line has already run wide — a type name that is a path
+ *       ({@code /m/sys/ui/console/command_palette::[…]}) or an entry column past
+ *       {@link #MAX_ENTRY_COLUMN} — the first entry is not carried on it either: the entries
+ *       take their own lines, one level in from the line's own indent;</li>
+ *   <li><b>{@code {{link}}} handling</b> — every uri the serializer writes is tagged as a
+ *       link, which is how a renderer that can draw links (graphitty turns the rule into
+ *       an OSC 8 hyperlink a click can resolve) learns the value is a uri.  Tagging uris
+ *       here rather than in one consumer is what keeps {@code Graphitty} from reaching
+ *       into console code to format an {@code int}:</li>
+ *   <li><b>the pager</b> — when a terminal exists the render opens a pager instead of
+ *       scrolling the terminal out from under the reader (see {@link #page(String)});</li>
+ *   <li><b>pointer style</b> — an auto-pointer instruction ({@code !*} / {@code !@}) is
+ *       drawn either as its <em>address</em> (the {@code !*<vid>} the console REPL shows)
+ *       or with its <em>body</em> wrapped in one link to that address (the log style),
+ *       per the instance's {@code pointer} key ({@code address} — the default — or
+ *       {@code body}).
+ * </ul>
+ * The ready-made instances are:
+ * <ul>
+ *   <li>{@link #single()} — the console default (clipped, indented, linked, paged,
+ *       pointer drawn as its address);</li>
+ *   <li>{@link #linkBodies()} — the log style (pointer drawn as a linked body, no pager);</li>
+ *   <li>{@link #diagnostic()} — nested and indented, but stripped of everything only a
+ *       renderer can resolve (no link tags, no color, no pager), for text that travels
+ *       outside a console — a fail message, a log line, a test assertion.</li>
+ *   <li>{@link #unlinked()} — colored and indented like the console, but with no link tags,
+ *       for a log line that renders an obj without a hyperlink no reader can click.</li>
+ * </ul>
+ * and {@link #of(Rec, fURI)} builds one configured from a rec — the mtron
+ * constructor's job.  Note what is <em>not</em> here: no legal-mtron guarantee — this
+ * output carries {@code {{link}}} markup and clip ellipses, neither of which mtron
+ * parses.  Reading is inherited from the plain serializer and is still parse-driven.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class ObjmtronUISerializer extends ObjmtronSerializer {
+
+    public static final int INDENT_SIZE = 1;
+    public static final int NESTED_STRING_THRESHOLD = 40;
+
+    /**
+     * The column past which a collection that begins a line no longer carries its first entry
+     * on the opening line.  A poly whose {@code [} lands further right than this — deep
+     * nesting, a run of long entry keys — starts its entries on lines of their own, one level
+     * in from the line's own indent, instead of dragging them out to a column no reader can
+     * follow.  A collection nested inside one that already broke does not carry at all — it
+     * takes the block shape — so this guard is for the depth-zero renders: a collection handed
+     * to {@link #writeClip} at whatever column its caller reached.
+     */
+    public static final int MAX_ENTRY_COLUMN = 40;
+
+    /**
+     * The width of a collection's own type prefix — the {@code name::} it writes before its
+     * bracket, so {@code /m/sys/ui/console/command_palette::[} is 37 columns — past which the
+     * first entry is not carried on the opening line either.  A prefix that wide is a path
+     * rather than a name, and it leaves no room for an entry after it; the entries take their
+     * own lines.  The console's {@code *mach} output is the shape this is for: without it the
+     * entry columns there reach a hundred-odd.
+     */
+    public static final int MAX_TYPE_PREFIX = 24;
+
+    // ── Config key URIs ───────────────────────────────────────────
+    private static final fURI KEY_CLIP = f("clip");
+    private static final fURI KEY_POINTER = f("pointer");
+    private static final fURI KEY_PAGER = f("pager");
+    private static final fURI KEY_COLOR = f("color");
+
+    // ── Identity ──────────────────────────────────────────────────
+    private static final fURI VID = OBJ_MTRON_STRING_SERIALIZER_VID.extend("ui");
+
+    // ── Instances ─────────────────────────────────────────────────
+    // This class's instances, declared rather than inherited, because a factory that is
+    // inherited hands out the wrong type: a factory on the base answers with a plain
+    // serializer whose writeUri emits the uri as text, so a subclass that only overrides
+    // writeUri is never the one asked to write it.
+    private static final ObjmtronUISerializer CONSOLE_INSTANCE = new ObjmtronUISerializer(str("address"), true, true);
+    private static final ObjmtronUISerializer BODIES_INSTANCE = new ObjmtronUISerializer(str(Tokens.BODY), false, true);
+    private static final ObjmtronUISerializer BW_INSTANCE = new ObjmtronUISerializer(str("address"), false, false);
+    private static final ObjmtronUISerializer PRETTY_PRINT_INSTANCE = new ObjmtronUISerializer(mutableMap(
+            uri(KEY_CLIP), noClip(),
+            uri(KEY_COLOR), BOOL_FALSE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
+
+    // A diagnostic is read where a renderer is NOT: a log file, a test assertion, a fail
+    // message that may travel to another process.  So it keeps the nesting (a run-on line is
+    // the thing a diagnostic cannot afford) and drops everything that only a renderer can
+    // resolve — no link tags, no color markup, no pager.
+    private static final ObjmtronUISerializer DIAGNOSTIC_INSTANCE = new ObjmtronUISerializer(mutableMap(
+            uri(KEY_COLOR), BOOL_FALSE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
+
+    // A log line renders objs with this: colored and indented like the console, but with no
+    // {{link}} tags — a link in a log line is a uri a reader cannot click, so the uri is drawn
+    // as its colored text, not as a hyperlink the renderer can never resolve.
+    private static final ObjmtronUISerializer UNLINKED_INSTANCE = new ObjmtronUISerializer(mutableMap(
+            uri(KEY_COLOR), BOOL_TRUE,
+            uri(KEY_PAGER), BOOL_FALSE),
+            OBJ_MTRON_SERIALIZER_TID, VID);
+
+    /**
+     * The console instance: clipped, indented, linked, paged where a terminal is present,
+     * pointer drawn as its address.
+     */
+    public static ObjmtronUISerializer single() {
+        return CONSOLE_INSTANCE;
+    }
+
+    /**
+     * The log instance: pointer drawn as a linked body, no pager.
+     */
+    public static ObjmtronUISerializer linkBodies() {
+        return BODIES_INSTANCE;
+    }
+
+    /**
+     * The black and white instance: graphitty less, but pretty-printed.
+     */
+    public static ObjmtronUISerializer blackWhite() {
+        return BW_INSTANCE;
+    }
+
+    public static ObjmtronUISerializer prettyPrint() {
+        return PRETTY_PRINT_INSTANCE;
+    }
+
+    /**
+     * The diagnostic instance: nested and indented, but with none of the console view —
+     * no link tags, no color markup, no pager.  This is what a fail message renders
+     * through, because such a message is read in a log, a test, or another process,
+     * where a {@code {{link}}} tag is noise and a one-line wall is unreadable.
+     */
+    public static ObjmtronUISerializer diagnostic() {
+        return DIAGNOSTIC_INSTANCE;
+    }
+
+    /**
+     * The unlinked instance: colored and indented like the console, but a uri is drawn as
+     * its colored text, never as a {@code {{link}}} target.  A log line renders objs
+     * through this — a link there is a uri no reader can click, so the link markup would be
+     * noise.  Unlike {@link #diagnostic()}, color stays on.
+     */
+    public static ObjmtronUISerializer unlinked() {
+        return UNLINKED_INSTANCE;
+    }
+
+    /**
+     * A serializer configured by the rec it is given — the mtron constructor's
+     * ({@code obj_mtron::[...])} job.  Its own keys — clip, pointer, pager — are read
+     * straight out of it, with the defaults above filling in whatever it leaves out.
+     */
+    public static ObjmtronUISerializer of(final Rec rec, final fURI vid) {
+        return new ObjmtronUISerializer(rec.jvm(), OBJ_MTRON_SERIALIZER_TID, null == vid ? VID : vid);
+    }
+
+    // ── Constructors ──────────────────────────────────────────────
+
+    public ObjmtronUISerializer() {
+        this(str("address"), true, true);
+    }
+
+    private ObjmtronUISerializer(final Obj pointer, final boolean pager, final boolean color) {
+        super(VID);
+        this.at(KEY_CLIP, defaultClip(), MUTABLE);
+        this.at(KEY_POINTER, pointer, MUTABLE);
+        this.at(KEY_PAGER, bool(pager), MUTABLE);
+        this.at(KEY_COLOR, bool(color), MUTABLE);
+    }
+
+    protected ObjmtronUISerializer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+    }
+
+    @Override
+    public fURI vid() {
+        return VID;
+    }
+
+    // ── Config helpers ───────────────────────────────────────────
+
+    /**
+     * The default clip config method.
+     */
+    private static Rec defaultClip() {
+        return rec(
+                "rec", jnt(10),
+                "lst", jnt(10),
+                "str", jnt(60),
+                "uri", jnt(Integer.MAX_VALUE),
+                "bytes", jnt(60),
+                "fail", jnt(60),
+                "lines", jnt(-1)
+        );
+    }
+
+    private static Rec noClip() {
+        return rec(
+                "rec", jnt(Integer.MAX_VALUE),
+                "lst", jnt(Integer.MAX_VALUE),
+                "str", jnt(Integer.MAX_VALUE),
+                "uri", jnt(Integer.MAX_VALUE),
+                "bytes", jnt(Integer.MAX_VALUE),
+                "fail", jnt(Integer.MAX_VALUE)
+        );
+    }
+
+    /**
+     * The clip for one leaf: read out of the instance's own {@code clip->...} rec — a key
+     * by the leaf's name ("lst") or by its full tid ("/m/lst", the mtron constructor's
+     * shape) — with the default filling in whatever the config leaves out.  A single-segment
+     * {@code clip} read, then a key-name match: multi-segment rec keys do not look the same
+     * as flat ones to the serializer's own rec view.
+     */
+    private int clipVal(final String leaf, final int defaultValue) {
+        final Obj sub = this.at(KEY_CLIP).orElse(noobj());
+        if (sub.isNoObj() || !sub.isRec())
+            return defaultValue;
+        for (final Map.Entry<Obj, Obj> entry : sub.asRec().recValue().entrySet()) {
+            final Obj key = entry.getKey();
+            if (!key.isUri())
+                continue;
+            final fURI k = key.uriValue();
+            final java.util.List<String> path = k.path();
+            final String leafName = path.isEmpty() ? k.name() : path.get(path.size() - 1);
+            if (leafName.equals(leaf) && entry.getValue().isInt())
+                return entry.getValue().intValue().intValue();
+        }
+        return defaultValue;
+    }
+
+    private int clipBytes() {
+        return this.clipVal("bytes", 60);
+    }
+
+    private int clipStr() {
+        return this.clipVal("str", 60);
+    }
+
+    private int clipLst() {
+        return this.clipVal("lst", 10);
+    }
+
+    private int clipRec() {
+        return this.clipVal("rec", 10);
+    }
+
+    private int clipUri() {
+        return this.clipVal("uri", Integer.MAX_VALUE);
+    }
+
+    private int clipFail() {
+        return this.clipVal("fail", 60);
+    }
+
+    private int clipLines() {
+        return this.clipVal("lines", -1);
+    }
+
+    /**
+     * Whether auto-pointer instructions are drawn as a linked body ({@code body}) or
+     * as their address ({@code address} — the default, the console REPL style).
+     */
+    private boolean pointerIsBody() {
+        return this.has(KEY_POINTER) && this.at(KEY_POINTER).strValue().equals(Tokens.BODY);
+    }
+
+    private boolean linking() {
+        return this.has(KEY_POINTER);
+    }
+
+    /**
+     * Whether a render longer than the terminal opens the pager (console default).
+     */
+    private boolean pagerOn() {
+        return this.at(KEY_PAGER).orElse(bool(false)).boolValue();
+    }
+
+    /**
+     * Whether a render is stripped of color or not (default black and white).
+     */
+    private boolean colorOn() {
+        return this.at(KEY_COLOR).orElse(bool(true)).boolValue();
+    }
+
+    private String postWrite(final String write) {
+        return colorOn() ? write : Graphitty.strip(write);
+    }
+
+    // ── Top-level write: the pager is this class's, and only when a terminal is here ──
+
+    @Override
+    public String write(final Obj obj) {
+        final String written = this.limitLines(super.write(obj));
+        final String output = this.pagerOn() ? this.page(written) : written;
+        return postWrite(output);
+    }
+
+    /**
+     * A render cut to at most {@code clip->lines} lines, with a lone {@code ...} on the line
+     * after the cut: the head of the obj is kept and the elided tail is marked, so a reader
+     * still sees the shape and knows more was held back.  A clip of {@code -1} (the default)
+     * or zero leaves the render whole.
+     */
+    private String limitLines(final String written) {
+        final int max = this.clipLines();
+        if (max <= 0)
+            return written;
+        final String[] lines = written.split("\n");
+        if (lines.length <= max)
+            return written;
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < max; i++) {
+            if (i > 0)
+                sb.append("\n");
+            sb.append(lines[i]);
+        }
+        return sb.append("\n...").toString();
+    }
+
+    /**
+     * Nothing to scroll: there is no terminal to scroll it in.  Reading a terminal
+     * height to decide whether a value needs a pager is console business, so it happens
+     * only where a terminal exists; without one the text is written as it is.
+     */
+    private String page(final String string) {
+        if (null == Console.getTerminal() || BootLoader.TESTING)
+            return string;
+        if (string.split("\n").length <= Console.getTerminal().getHeight())
+            return string;
+        try {
+            Commands.less(Console.getTerminal(), new ByteArrayInputStream(Highlighter.format(string).getBytes(UTF_8)), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[]{"--ignorercfiles"});
+            return string;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    // ── Real writer ──────────────────────────────────────────────
+    // compact for a reader: the display caps the fraction at four digits and keeps a
+    // trailing .0 on whole numbers, so a real (1.0) never reads back as an int (1).
+
+    @Override
+    public String writeReal(final Real real) {
+        final StringBuilder sb = new StringBuilder();
+        this.handleTID(sb, real, true);
+        // Double.toString is the shortest round-trippable form and keeps a trailing .0 on
+        // whole numbers, so a real (1.0) never reads back as an int (1)
+        final String ds = Double.toString(real.jvm());
+        // a non-finite real has no mantissa to shorten: "NaN" has no '.' at all, so the digit rule
+        // below read indexOf(".") + 5 == 4 and sliced past the end (Range [0, 5) for length 3), while
+        // "Infinity"/"-Infinity" were silently cut to "Infin". spell them whole instead.
+        final String ds2;
+        if (!Double.isFinite(real.jvm())) {
+            ds2 = ds;
+        } else {
+            final int dot = ds.indexOf(".");
+            final int exp = ds.indexOf("E");
+            final boolean hasExp = dot >= 0 && exp > dot;
+            // cap the fraction at four digits, but never swallow an exponent: "1.23456789E7"
+            // must keep its E7 or the rendered value changes magnitude. only the fraction
+            // before the E is capped.
+            final int end = dot < 0 ? ds.length() : Math.min(hasExp ? exp : ds.length(), dot + 5);
+            ds2 = ds.substring(0, end) + (hasExp ? ds.substring(exp) : "");
+        }
+        sb.append(ds2);
+        if (ds2.endsWith(".")) sb.append("0");
+        this.handleVID(sb, real);
+        return postWrite(sb.toString());
+    }
+
+    private String generateString(final Str str, boolean clip) {
+        if (clip) {
+            final String text = str.strValue();
+            final int max = this.clipStr();
+            if (null != text && text.length() > max)
+                // a clip width of 0 (or a negative one from a user's clip rec) still has room for
+                // the three columns of the ellipsis, and max - 1 would index at -1
+                return super.writeStr(str(text.substring(0, Math.max(0, max - 1)) + "..."));
+        }
+        final String language = str.tid().basePath().name();
+        if (!NanorcUtil.supportedLanguages().contains(language))
+            return super.writeStr(str);
+        return "{{syntax:" + language + "}}\n" +
+                super.writeStr(str) +
+                "\n{{/syntax:" + language + "}}\n";
+    }
+
+    @Override
+    public String writeStr(final Str str) {
+        return this.postWrite(this.generateString(str, false));
+    }
+
+    // ── Fail writer: the bounded stack block ─────────────────────
+
+    /**
+     * A fail rendered for a reader: its bracket chain — the {@code [msg][cause][cause]} stack
+     * block — bounded by {@link #clipFail()} columns.  A fail's message can carry a whole obj
+     * (the {@code inst apply failure: machine::[…]} of a type mismatch) and its cause chain can
+     * run several levels deep, so left alone it prints a wall; here the levels the plain
+     * renderer would emit share one budget, and {@code [...]} stands in for the levels that no
+     * longer fit.  The full text is still what the fail holds and what
+     * {@link ObjmtronSerializer} writes — this is the rendering, not the record.
+     * <p>
+     * A message is clipped from the middle rather than the end: its head names the context
+     * ({@code inst apply failure: …}) while its tail carries the reason and the
+     * {@code (at <uri>)} frame a failure is marked with — the parts a reader needs, with the
+     * obj the message dumped sitting between them.
+     */
+    @Override
+    public String writeFail(final Fail fail) {
+        final int max = Integer.MAX_VALUE;// this.clipFail();
+        final StringBuilder sb = new StringBuilder();
+        // handleIds' composition: a bracket for the fail, then one per distinct cause, then the
+        // fail's own tid/vid -- which a fail rendered from a message alone would lose
+        this.handleTID(sb, fail, !fail.isObjInst());
+        Fail current = fail;
+        String above = null;
+        int left = max;
+        while (current != null) {
+            // one line per level: a newline inside a message is not a layout this renderer owns
+            final String message = null == current.message() ? "" : current.message();//.replace('\n', ' ');
+            final Fail next = current.cause().orElse(null);
+            // a level whose text is already inside the level above's is the same failure framed
+            // twice, not a second cause — the plain renderer drops it and so does this
+            if (null == above || !(message.length() > 0 && above.length() > message.length() && above.contains(message))) {
+                if (message.length() + 2 <= left) {
+                    sb.append("[").append(message).append("]");
+                    left -= message.length() + 2;
+                } else if (current == fail) {
+                    // the fail's own message is what the reader came for: clipped to the budget, never dropped
+                    sb.append("[").append(elide(message, Math.max(3, left - 2))).append("]");
+                    left = 0;
+                } else {
+                    // a cause level that does not fit: the stack block is ellipsed here
+                    sb.append("[...]");
+                    break;
+                }
+            }
+            above = message;
+            current = next;
+        }
+        this.handleVID(sb, fail);
+        return this.postWrite(sb.toString());
+    }
+
+
+    public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth) {
+        if (inst.isNoObj() || null == inst.tid() || inst.tid().basePath().name().startsWith("auto") || inst.tid().basePath().equals(FROM_INST_TID)) {
+            return super.generateInst(sb, inst, depth + 1);
+        }
+        final fURI tid = inst.tid();
+        sb.append(tid.basePath().small());
+        // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
+        // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
+        // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there
+        // says nothing a reader needs AND re-reading it types the instruction explicitly.  A pair
+        // default on both sides is not written at all — xyz?<=() reads xyz(), which is what the tid
+        // of an untyped instruction carries, so plus(1,2) reads plus(1,2).  The other q params are
+        // drawn whenever they are there, and take the '?' when the pair is absent.
+        final StringBuilder params = new StringBuilder();
+        final String rng = defaultRng(tid) ? "" : tid.rng().small().toString();
+        final String dom = defaultDom(tid) ? "" : tid.dom().small().toString();
+        if (!rng.isEmpty() || !dom.isEmpty())
+            params.append(rng).append("<=").append(dom);
+        tid.qMap().forEach((key, value) -> {
+            if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
+                if (params.length() > 0)
+                    params.append("&");
+                params.append(key);
+                if (null != value && !value.isEmpty())
+                    params.append("=").append(value);
+            }
+        });
+        if (params.length() > 0)
+            sb.append("?").append(params);
+        sb.append("(");
+        if (!inst.args().isEmpty()) {
+            // an instruction whose arguments read wide breaks them onto lines of their own: the
+            // first argument rides the opening paren and the rest line up under it, the same shape
+            // a wide rec or lst takes — a tool schema's docstring arguments are the wall this tames
+            final boolean nested = this.isNestedInst(inst);
+            final int indent = nested ? this.lineWidth(sb) : 0;
+            final long count = inst.args().count();
+            final AtomicInteger counter = new AtomicInteger(0);
+            inst.args().elements().forEach(o -> {
+                final int index = counter.getAndIncrement();
+                if (nested && index > 0)
+                    sb.append("\n").append(" ".repeat(indent));
+                // the column the argument itself begins at: the arg column for every argument
+                // after the first, and the position just past the '(' for the first — which a
+                // rec argument breaks one level in from
+                this.renderInstArg(sb, depth + 1, this.lineWidth(sb), o);
+                if (index < count - 1)
+                    sb.append(",");
+            });
+        }
+        sb.append(")")
+                .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
+        return cleanEnding(sb);
+    }
+
+    /**
+     * Whether a tid's rng side is the default typing — {@code #{*}} ({@code all.maybeSome()}) — or
+     * is not there at all.  The two are the same statement: an instruction's syntax leaves a
+     * default side empty ({@code xyz?A<=()}), so an absent side and an explicit {@code #{*}} both
+     * draw as nothing.
+     */
+    private static boolean defaultRng(final fURI tid) {
+        return !tid.hasRng() || tid.rng().equals(ALL.maybeSome());
+    }
+
+    /**
+     * Whether a tid's dom side is the default typing — {@code #{?}} ({@code all.maybe()}) — or is
+     * not there at all ({@code xyz?<=A()}).  See {@link #defaultRng(fURI)}.
+     */
+    private static boolean defaultDom(final fURI tid) {
+        return !tid.hasDom() || tid.dom().equals(ALL.maybe());
+    }
+
+    /**
+     * {@code message} cut to at most {@code max} columns with its middle elided: the head and
+     * the tail are kept and {@code ...} — three columns, the width every other clip here uses —
+     * stands between them.  The tail takes the larger share, because it is the end of a failure
+     * that carries the reason and the {@code (at <uri>)} frame.
+     */
+    private static String elide(final String message, final int max) {
+        // nothing to elide when it already fits: a short message would have its head and tail
+        // overlap, and the tail index goes negative once the kept width exceeds the length
+        if (message.length() <= max)
+            return message;
+        final int kept = Math.max(0, max - 3);
+        final int head = kept / 3;
+        return message.substring(0, head) + "..." + message.substring(message.length() - (kept - head));
+    }
+
+// ── Inst writer: the pointer styles ──────────────────────────
+
+    /**
+     * An auto-pointer instruction is drawn in one of two ways, per this instance's
+     * {@code pointer} key:
+     * <ul>
+     *   <li><b>address</b> (the console REPL default) — the pointer itself is the
+     *       readable: {@code !*<vid>} (the body is what the click reveals);</li>
+     *   <li><b>body</b> (the log style) — the body is rendered by the PLAIN serializer
+     *       and the one link wraps all of it, whose target is the pointer's vid.  Rendering
+     *       the body here would tag the uri and type inside the instruction, and a link
+     *       inside a link ends the outer one (graphitty's rule): the first inner link
+     *       closed this wrapper, so the instruction was not clickable while its arguments were.
+     * </ul>
+     */
+    @Override
+    public String writeInst(final Inst inst) {
+        if (inst.isNoObj())
+            return this.postWrite(super.writeInst(inst));
+        if (Obj.Helper.isAutoPointer(inst)) {
+            // the pointer's target (arg 0) is normally a vid; some auto-pointer forms carry a
+            // non-vid expression there, and Obj.uriValue() throws on it.  Fall back to the
+            // plain instruction rendering in that case rather than aborting the whole write.
+            final Obj target = inst.arg(0);
+            if (null == target || !target.isUri())
+                return this.postWrite(super.writeInst(inst));
+            final fURI pointer = Obj.Helper.getAutoPointer(inst).get();
+            if (this.pointerIsBody())
+                return this.postWrite("{{link:" + pointer + "}}" + super.writeInst(inst) + "{{/link}}");
+            return this.postWrite((inst.isAutoFrom() ? "!*" : "!@") + this.writeUri(pointer.toUri()));
+        }
+        return this.postWrite(super.writeInst(inst));
+    }
+
+// ── URI / VID: the link tagging ──────────────────────────────
+
+    @Override
+    protected StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
+        if (!obj.hasVID())
+            return sb;
+        // through writeUri, not wrapUri: this is a uri written into the output, and a renderer tags
+        // uris where the serializer writes them.  Going around it left every vid -- and every type
+        // named inside a refinement or a collection -- unclickable while plain uri values were fine
+        final fURI vid = Machine.loaded() ? Machine.current().memory().redirect(obj.vid(), false) : obj.vid();
+        return sb.append("{{y}}@{{/y}}").append(this.writeUriExtension(vid.toUri(), "y", true));
+    }
+
+    protected String writeUriExtension(final Uri uri, final String color, final boolean big) {
+        // THE QUOTING DECISION BELONGS TO THE VALUE. Asking super.writeUri and testing "starts with < and ends with >"
+        // read the VALUE PLUS ITS VID — an addressed value ends with the vid, so the answer was FALSE and the
+        // brackets were dropped: `<user@mail>@abc` was drawn as `user@mail`, a spelling that does not parse.
+        final boolean quoted = requiresQuoting(uri.uriValue());
+        final StringBuilder sb = new StringBuilder();
+        this.handleTID(sb, uri, true);
+        sb.append(quoted ? "<" : "");
+        if (this.linking())
+            sb.append("{{").append(color).append("}}{{link}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/link}}{{/").append(color).append("}}");
+        else
+            sb.append("{{").append(color).append("}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/").append(color).append("}}");
+
+        sb.append(quoted ? ">" : "");
+        // THE VID IS PART OF THE VALUE'S SPELLING, so the renderer appends it exactly as every other type's does —
+        // it was simply never emitted here, which is why an addressed uri printed without its address while the
+        // obj still carried it (a read at that address answered it back).
+        this.handleVID(sb, uri);
+        return sb.toString();
+    }
+
+    @Override
+    public String writeUri(final Uri uri) {
+        return this.postWrite(this.writeUriExtension(uri, "b", false));
+    }
+
+// ── Nesting detection ────────────────────────────────────────
+
+    /**
+     * Whether a poly breaks across lines: it does when its mtron text reads wider than
+     * {@link #NESTED_STRING_THRESHOLD} columns, and a short collection —
+     * {@code [name=>'marko',age=>29]} — stays on one line, where the stack of newlines a
+     * break would add buys nothing.  A collection of fewer than two entries never breaks:
+     * there is no boundary between entries to break at, and its one entry rides the opening
+     * bracket either way.
+     * <p>
+     * The width is measured on the PLAIN serialization of the collection, not on its java
+     * {@code toString}: a rec of types is viewless in java — the predicates the types carry
+     * are exactly what a reader has to count — so the java form read short and the rec came
+     * out a wall.
+     */
+    private boolean isNested(final Poly<?, ?> poly) {
+        if (!poly.isLst() && !poly.isRec())
+            return false;
+        if (poly.count() < 2)
+            return false;
+        return Graphitty.viewLength(ObjmtronSerializer.single().write(poly)) > NESTED_STRING_THRESHOLD;
+    }
+
+    /**
+     * Whether an instruction's arguments break across lines.  An instruction of fewer than two
+     * arguments never breaks: there is no boundary between arguments to break at, and its one
+     * argument rides the opening paren either way.  The width is measured on the plain
+     * serialization, the same way a rec or lst is measured, so the threshold is the one a reader
+     * already counts against.
+     */
+    private boolean isNestedInst(final Inst inst) {
+        if (inst.args().count() < 2)
+            return false;
+        return Graphitty.viewLength(ObjmtronSerializer.single().write(inst)) > NESTED_STRING_THRESHOLD;
+    }
+
+    /**
+     * The display column the buffer's current line has reached — where the next thing
+     * written begins.  Measured through {@link Graphitty#viewLength}, because markup costs
+     * no columns: a {@code {{link}}} tag is many characters in the buffer and none on the
+     * screen, and an indent counted in buffer characters would push a continuation line
+     * past the entry it is meant to line up under.
+     */
+    private int lineWidth(final StringBuilder sb) {
+        return Graphitty.viewLength(sb.substring(sb.lastIndexOf("\n") + 1));
+    }
+
+    /**
+     * The column the buffer's current line begins its own content at — its own leading
+     * spaces, the anchor a break falls back to when the opening line has already run too wide
+     * to carry the first entry.
+     */
+    private int lineIndent(final StringBuilder sb) {
+        final int start = sb.lastIndexOf("\n") + 1;
+        int i = start;
+        while (i < sb.length() && sb.charAt(i) == ' ')
+            i++;
+        return i - start;
+    }
+
+    /**
+     * Whether a broken collection carries its first entry on the opening bracket — the hanging
+     * shape, where every later entry lines up under that first one.
+     * <p>
+     * Only a collection that begins the line's content takes it ({@code depth == 0}).  A
+     * collection nested inside one that already broke is anchored on its PARENT's entry column
+     * (the block shape, see {@link #entryIndent}); hanging it under its own first entry instead
+     * measured that column off whatever the value's key and type name happened to cost, so
+     * {@code ring=>/m/theory/ring_theory::[…]} began its entries 23 columns further right than
+     * the {@code add_group} rows beneath it — the same rec, laid out two different ways.
+     * <p>
+     * The two column guards survive for the shapes depth cannot see: a collection rendered into
+     * a buffer at depth zero still sits at whatever column its callers reached (an instruction
+     * argument, a type predicate), and a wide opening line there leaves no room for an entry.
+     */
+    private boolean carriesFirstEntry(final int depth, final int prefixFrom, final int entryColumn) {
+        return depth == 0
+                && entryColumn - prefixFrom <= MAX_TYPE_PREFIX
+                && entryColumn <= MAX_ENTRY_COLUMN;
+    }
+
+    /**
+     * The column a broken collection's entries begin at.  With the first entry carried on the
+     * opening line, they line up under it — at the column it begins at.  With the first entry
+     * dropped to a line of its own, they sit one level in from {@code anchor}: the column the
+     * parent's own entries occupy, threaded down from the caller, so the block shape is
+     * independent of the physical line the collection happens to land on.  A run of same-level
+     * siblings therefore lines up instead of swaying right one column per sibling.
+     * <p>
+     * Never less than one nesting level in: where a poly is rendered into a buffer whose final
+     * column the caller alone knows (a type predicate reached through the base serializer),
+     * the anchor falls back to the line's own indent, and the depth is then the only honest
+     * measure of how deep the collection sits.
+     */
+    private int entryIndent(final StringBuilder sb, final int depth, final int anchor, final boolean carried) {
+        return carried
+                ? this.lineWidth(sb)
+                : Math.max(anchor + INDENT_SIZE, (depth + 1) * INDENT_SIZE);
+    }
+
+// ── List generation (clipped, nested) ────────────────────────
+
+    @Override
+    public String writeLst(final Lst lst) {
+        return this.postWrite(this.generateLst(new StringBuilder(), lst, 0, 0).toString());
+    }
+
+    private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth, final int anchor) {
+        final int prefixFrom = this.lineWidth(sb);
+        this.handleTID(sb, lst, true);
+        if (lst.isEmpty()) {
+            sb.append("[,]");
+        } else {
+            final int lstClip = this.clipLst();
+            final boolean nested = this.isNested(lst);
+            sb.append("[");
+            // the first entry rides the opening bracket and the rest line up under it — unless
+            // that line has already run too wide to carry it (or the collection is itself nested
+            // inside a broken one), in which case the entries all take their own lines
+            final int entryColumn = this.lineWidth(sb);
+            final boolean carried = nested && this.carriesFirstEntry(depth, prefixFrom, entryColumn);
+            final int indent = nested ? this.entryIndent(sb, depth, anchor, carried) : 0;
+            // a member of a broken lst sits at that lst's own entry column; a member on an
+            // unbroken line sits on the line itself, which is the column it will break against
+            final int childDepth = nested ? depth + 1 : 0;
+            final int childAnchor = nested ? indent : this.lineIndent(sb);
+            if (lst.count() > lstClip) {
+                if (nested && !carried)
+                    sb.append("\n");
+                for (int i = 0; i < lstClip; i++) {
+                    if (nested && (i > 0 || !carried))
+                        sb.append(" ".repeat(indent));
+                    this.renderValue(sb, childDepth, childAnchor, lst.lstValue().get(i));
+                    sb.append(",");
+                    if (nested) sb.append("\n");
+                }
+                if (nested)
+                    sb.append(" ".repeat(indent));
+                sb.append("...(").append(lst.count() - lstClip).append(" more)]");
+            } else {
+                if (nested && !carried)
+                    sb.append("\n");
+                final AtomicInteger counter = new AtomicInteger(0);
+                lst.jvm().forEach(v -> {
+                    if (nested && (counter.getAndIncrement() > 0 || !carried))
+                        sb.append(" ".repeat(indent));
+                    this.renderValue(sb, childDepth, childAnchor, v);
+                    sb.append(",");
+                    if (nested) sb.append("\n");
+                });
+                this.cleanEnding(sb);
+                sb.append("]");
+            }
+        }
+        return this.handleVID(sb, lst);
+    }
+
+// ── Stream generation (objs) ─────────────────────────────────
+
+    /**
+     * A stream — a multiplicity, {@code {…}} in mtron and {@code Objs} in Java — written
+     * member by member through the same nested renderers a lst and a rec use.  A stream holds
+     * unrelated values with no keys and no order to lay out, so it draws on one line; what it
+     * must not do is hand its members to the plain serializer, which is what the nested path
+     * did before there was a stream arm ({@link #renderValue} and {@link #writeClip} had none,
+     * so a stream inside a rec fell through to {@code toShortString()}): there a uri was never
+     * tagged as a link, a wide member never measured the column it really sits at, and a
+     * string member was never clipped.
+     */
+    @Override
+    public String writeObjs(final Objs objs) {
+        return this.postWrite(this.generateObjs(new StringBuilder(), objs, 0, 0).toString());
+    }
+
+    private StringBuilder generateObjs(final StringBuilder sb, final Objs objs, final int depth, final int anchor) {
+        // ZERO MEMBERS IS NOOBJ, not an empty bracket pair: MObjs.isNoObj() is jvm.isEmpty(), and
+        // the plain writer's stream arm draws that value as noobj — so must this one
+        if (objs.isNoObj())
+            return sb.append(this.writeNoObj(noobj()));
+        sb.append("{");
+        final AtomicInteger counter = new AtomicInteger(0);
+        objs.stream().forEach(v -> {
+            if (counter.getAndIncrement() > 0)
+                sb.append(",");
+            // a stream draws on one line, so its members share the stream's own anchor: a member
+            // that breaks sees the column the stream sits at, not a level of its own
+            this.renderValue(sb, depth, anchor, v);
+        });
+        return sb.append("}");
+    }
+
+// ── Rec generation (clipped, nested) ─────────────────────────
+
+    @Override
+    public String writeRec(final Rec rec) {
+        /* if (rec.has(FORMAT)) {
+            return rec.at(FORMAT).apply(rec).toCleanString();
+        }*/
+        return this.postWrite(this.generateRec(new StringBuilder(), rec, 0, 0).toString());
+    }
+
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int anchor) {
+        final int prefixFrom = this.lineWidth(sb);
+        this.handleTID(sb, rec, true);
+        if (rec.isEmpty()) {
+            sb.append("[=>]");
+        } else {
+            final int recClip = this.clipRec();
+            final boolean nested = this.isNested(rec);
+            sb.append("[");
+            // the first entry rides the opening bracket and the rest line up under it — unless
+            // that line has already run too wide to carry it (or the rec is itself nested inside
+            // a broken one), in which case the entries all take their own lines
+            final int entryColumn = this.lineWidth(sb);
+            final boolean carried = nested && this.carriesFirstEntry(depth, prefixFrom, entryColumn);
+            final int indent = nested ? this.entryIndent(sb, depth, anchor, carried) : 0;
+            // a value of a broken rec sits at that rec's own entry column; a value on an unbroken
+            // line sits on the line itself, which is the column it will break against
+            final int childDepth = nested ? depth + 1 : 0;
+            final int childAnchor = nested ? indent : this.lineIndent(sb);
+            if (rec.count() > recClip) {
+                if (nested && !carried)
+                    sb.append("\n");
+                final AtomicInteger counter = new AtomicInteger(0);
+                rec.indexedStream().forEach(kv -> {
+                    final int index = counter.getAndIncrement();
+                    if (index < recClip) {
+                        if (nested && (index > 0 || !carried))
+                            sb.append(" ".repeat(indent));
+                        sb.append(this.write(kv.jvm().get0())).append("=>");
+                        if (kv.jvm().get1() == rec)
+                            throw MTronException.of("prevented infinite recursion on nested rec: key %s", kv.jvm().get0());
+                        this.renderValue(sb, childDepth, childAnchor, kv.jvm().get1());
+                        sb.append(",");
+                        if (nested) sb.append("\n");
+                    }
+                });
+                if (nested)
+                    sb.append(" ".repeat(indent));
+                sb.append("...(").append(rec.count() - recClip).append(" more)]");
+            } else {
+                if (nested && !carried)
+                    sb.append("\n");
+                final AtomicInteger counter = new AtomicInteger(0);
+                rec.jvm().forEach((k, v) -> {
+                    if (nested && (counter.getAndIncrement() > 0 || !carried))
+                        sb.append(" ".repeat(indent));
+                    sb.append(this.write(k)).append("=>");
+                    if (v == rec)
+                        throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
+                    this.renderValue(sb, childDepth, childAnchor, v);
+                    sb.append(",");
+                    if (nested) sb.append("\n");
+                });
+                this.cleanEnding(sb);
+                sb.append("]");
+            }
+        }
+        return this.handleVID(sb, rec);
+    }
+
+// ── Value rendering (the nested path) ────────────────────────
+
+    private void renderValue(final StringBuilder sb, final int depth, final int anchor, final Obj v) {
+        if (null == v) {
+            this.writeClip(sb, noobj());
+        } else if (v.isStr()) {
+            final String language = v.tid().basePath().name();
+            if (NanorcUtil.supportedLanguages().contains(language)) {
+                v.logger().warn("LANGUAGE FOUND: " + language);
+                sb.append("{{syntax:").append(language).append("}}\n");
+            }
+            sb.append(this.generateString(v.asStr(), true));
+            if (NanorcUtil.supportedLanguages().contains(language))
+                sb.append("\n{{/syntax:").append(language).append("}}\n");
+        } else if (v.isRec()) {
+            this.generateRec(sb, v.as(), depth, anchor);
+        } else if (v.isLst()) {
+            this.generateLst(sb, v.as(), depth, anchor);
+        } else if (v.isObjs()) {
+            this.generateObjs(sb, v.as(), depth, anchor);
+        } else if (v.isType()) {
+            this.generateType(sb, v.asType(), depth);
+        } else {
+            this.writeClip(sb, v);
+        }
+    }
+
+    /**
+     * {@inheritDoc}  The anchor is the column the enclosing collection's entries occupy, so a
+     * rec rendered as a value breaks one level in from its SIBLINGS' column rather than hanging
+     * out under its own first entry.
+     */
+    @Override
+    protected StringBuilder renderInstArg(final StringBuilder sb, final int depth, final Obj arg) {
+        return this.renderInstArg(sb, depth, this.lineIndent(sb), arg);
+    }
+
+    /**
+     * Render one instruction argument, anchored at the column the argument begins at — the same
+     * shaped break a value of a rec or lst gets.  A rec argument of a broken instruction is a
+     * nested collection like any other: without the depth it indented against column zero, and
+     * without the anchor off its own opening bracket.
+     */
+    protected StringBuilder renderInstArg(final StringBuilder sb, final int depth, final int anchor, final Obj arg) {
+        if (arg.isRec()) {
+            this.generateRec(sb, arg.asRec(), depth, anchor);
+        } else if (arg.isLst()) {
+            this.generateLst(sb, arg.asLst(), depth, anchor);
+        } else if (arg.isType()) {
+            sb.append(arg.vid().small()).append("::T");
+            //this.generateType(sb, arg.asType(), depth);
+        } else {
+            this.writeClip(sb, arg);
+        }
+        return sb;
+    }
+
+// ── Clip writer (the UI one) ─────────────────────────────────
+
+    /**
+     * Draw an auto-from pointer whose target is an instruction as the instruction it points to.
+     * A theory's law rec holds auto-from pointers to its live operations (the graph is the refs,
+     * not a copy), so a nested {@code add} drew the pointer's address while the same value reached
+     * directly dereferences to the instruction's short name.  Dereferencing here makes the nested
+     * read match the direct one.  A pointer whose target is not an instruction (or is not there)
+     * keeps the address form: there the reference, not a value, is what a reader needs.
+     */
+    private boolean renderAutoFromTarget(final StringBuilder sb, final Inst inst) {
+        if (!inst.isAutoFrom())
+            return false;
+        final Obj target = inst.arg(0);
+        if (null == target || !target.isUri())
+            return false;
+        final Obj resolved = Machine.read(target.uriValue());
+        if (resolved.isNoObj() || !resolved.isInst() || Obj.Helper.isAutoPointer(resolved))
+            return false;
+        this.generateInst(sb, resolved.asInst(), 0);
+        return true;
+    }
+
+    /**
+     * Write a scalar leaf, clipped for the reader.  An inst and a uri always go through
+     * the virtual writers — a value written any other way is one no renderer can tag —
+     * everything else is drawn at its clip limit, with the exact value where the limit
+     * holds.
+     */
+    @Override
+    protected StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
+        if (obj.isInst()) {
+            final Inst inst = obj.asInst();
+            if (inst.isNoObj())
+                sb.append(this.writeInst(inst));
+            else if (this.renderAutoFromTarget(sb, inst))
+                ; // the pointer's target is an instruction: drawn dereferenced, like the instruction itself
+            else if (Obj.Helper.isAutoPointer(inst))
+                sb.append(this.writeInst(inst));  // an !@ pointer, or an !* pointer whose target is not an instruction: draw the address
+            else
+                // render the inst into the SHARED buffer, not writeInst's fresh one, so its broken
+                // argument lines indent against the column the inst actually sits at
+                this.generateInst(sb, inst, 0);
+        } else if (obj.isCode()) {
+            sb.append(this.writeCode(obj.asCode()));
+        } else if (obj.isReal()) {
+            sb.append(this.writeReal(obj.asReal()));
+        } else if (obj.isStr()) {
+            final int max = this.clipStr();
+            if (obj.strValue().length() > max)
+                sb.append(this.write(str(obj.strValue().substring(0, Math.max(0, max - 1)) + "...")));
+            else
+                sb.append(this.writeStr(obj.asStr()));
+        } else if (obj.isBytes()) {
+            final int max = this.clipBytes();
+            if (obj.bytesValue().capacity() > max) {
+                final byte[] bb = Arrays.copyOf(obj.bytesValue().array(), max - 1);
+                sb.append(this.write(bytes(ByteBuffer.wrap(bb))));
+                sb.append("...");
+            } else {
+                sb.append(this.writeBytes(obj.asBytes()));
+            }
+        } else if (obj.isRec()) {
+            // the same nested, clipped shape any other rec gets — this is what a type's
+            // predicate rec goes through, and without it a type rendered flat while a
+            // rec value of the same shape on its knees indented its entries
+            this.generateRec(sb, obj.asRec(), 0, this.lineIndent(sb));
+        } else if (obj.isLst()) {
+            this.generateLst(sb, obj.asLst(), 0, this.lineIndent(sb));
+        } else if (obj.isObjs()) {
+            // a stream is drawn the way it is written at the top level, not handed to the plain
+            // serializer's toString(): that text carries no link tags and its members measure
+            // themselves from column zero
+            this.generateObjs(sb, obj.asObjs(), 0, this.lineIndent(sb));
+        } else if (obj.isUri()) {
+            final int max = this.clipUri();
+            final String uriStr = obj.uriValue().toString();
+            if (uriStr.length() > max)
+                sb.append(this.writeUri(uri(obj.uriValue().toString().substring(0, Math.max(0, max - 1)) + "...")));
+            else
+                sb.append(this.writeUri(obj.asUri()));
+        } else if (obj.isFail()) {
+            // the same bounded stack block the top level gets: a nested fail is a fail rendered
+            // for the same reader, and a message that dumped an obj into its bracket would break
+            // the line it sits in
+            sb.append(this.writeFail(obj.asFail()));
+        } else if (obj.isType()) {
+            // through the type renderer, not toShortString(): a type written as a pre-rendered string
+            // is a type the serializer never "wrote", so a renderer could not tag it -- which is why
+            // a type was clickable on its own but not inside a rec or an lst
+            sb.append(this.writeType(obj.asType()));
+        } else {
+            sb.append(obj.toShortString());
+        }
+        return sb;
+    }
+}

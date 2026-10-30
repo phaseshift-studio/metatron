@@ -1,0 +1,414 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.parser;
+
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.web.type.AbstractObjSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.StringReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Pattern;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_JSON_TID;
+
+public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
+
+    public static final String TID_KEY = "_tid";
+    public static final String VID_KEY = "_vid";
+    public static final String BID_KEY = "_bid";
+    public static final String VALUE_KEY = "_value";
+
+    public static final fURI OBJ_JSON_SERIALIZER_TID = studio.phaseshift.metatron.isa.m.web.webInstSet.OBJ_JSON_SERIALIZER_TID;
+    public static final fURI OBJ_JSON_SERIALIZER_VID = OBJ_JSON_SERIALIZER_TID;
+
+    private static final GraphittyLogger LOG = Graphitty.log(ObjJSONSerializer.class);
+    private static final ObjmtronSerializer SERIALIZER = ObjmtronSerializer.single();
+    private static final Pattern HEX_PATTERN = Pattern.compile("^0x[0-9a-fA-F]+$");
+
+    public enum Density {
+        TRANSPARENT,
+        OPAQUE
+    }
+
+    private static final fURI KEY_DENSITY = fURI.Singleton.f("density");
+    private static final fURI KEY_WRAP_URI = fURI.Singleton.f("wrap_uri");
+    private static final fURI KEY_BIAS_URI = fURI.Singleton.f("bias_towards_uri");
+    private static final fURI KEY_LITERAL_STR = fURI.Singleton.f("literal_str");
+    private static final fURI KEY_BIAS_OBJS = fURI.Singleton.f("bias_towards_objs");
+    private static final fURI KEY_SCHEMA = fURI.Singleton.f("schema");
+
+    private static final ObjJSONSerializer INSTANCE = new ObjJSONSerializer();
+
+    public static ObjJSONSerializer single() {
+        return INSTANCE;
+    }
+
+    /**
+     * Returns a serializer configured with "Simple" defaults (URI-biased, lossy).
+     * TRANSPARENT density means poly types (lst/objs/rec) are written as plain
+     * JSON arrays/objects — no `_bid`/`_tid`/`_value` envelope.
+     */
+    public static ObjJSONSerializer simple() {
+        ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+        return s;
+    }
+
+    /**
+     * A reader that keeps JSON strings <em>as they are written</em>.
+     * <p>
+     * {@link #simple()} and {@link #web()} hand an untyped string to the mtron parser, which retypes it by
+     * content: {@code "11.2"} becomes a real, {@code "24.04"} a real, {@code "1.plus(2)"} an inst. That is
+     * deliberate for the shapes that want it, but it is lossy for a document whose fields are all strings and
+     * whose strings are names — docker reports a tag as {@code "Tag":"11.2"}, and reading it as a real left the
+     * image addressable only as {@code <mariadb:11.2000>}, invisibly, because a number and a string render alike
+     * from the JSON face. Use this reader for such documents; the other instances keep their behaviour.
+     * <p>
+     * The uri bias is kept (JSON has no uri type), so a bare address is still a uri — only the mtron parse is
+     * dropped.
+     */
+    public static ObjJSONSerializer literal() {
+        ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_LITERAL_STR, BOOL_TRUE, Poly.MUTABLE);
+        return s;
+    }
+
+    /**
+     * Whether an untyped JSON string is kept as written rather than offered to the mtron parser. Default false:
+     * every existing reader keeps the behaviour its callers depend on.
+     */
+    private boolean literalStr() {
+        return this.at(KEY_LITERAL_STR).orElse(BOOL_FALSE).boolValue();
+    }
+
+    public static ObjJSONSerializer web() {
+        ObjJSONSerializer s = new ObjJSONSerializer();
+        s.at(KEY_DENSITY, uri("TRANSPARENT"), Poly.MUTABLE);
+        s.at(KEY_WRAP_URI, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_BIAS_URI, BOOL_FALSE, Poly.MUTABLE);
+        s.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+        return s;
+    }
+
+    /**
+     * Parameterize this serializer with the tool's argument schema — a rec mapping
+     * argument name (uri) to its declared type (e.g. {@code code=>code::T}).  When
+     * {@link #read(JsonElement)} hits a string under a schema'd key it disambiguates
+     * to the declared type instead of guessing (str/uri/code/inst), so the tools
+     * above never have to "massage" a JSON string back into its mtron type.
+     */
+    public ObjJSONSerializer schema(final Rec schema) {
+        this.at(KEY_SCHEMA, schema, Poly.MUTABLE);
+        return this;
+    }
+
+    /**
+     * Read a JSON string through this serializer's configuration (density, bias, and
+     * any {@link #schema(Rec)}), with lenient JSON — the same entry the MIME path uses.
+     */
+    public Obj readString(final String json) {
+        JsonReader reader = new JsonReader(new StringReader(json));
+        reader.setStrictness(Strictness.LENIENT);
+        return this.read(JsonParser.parseReader(reader));
+    }
+
+    private fURI schemaTid(final String key) {
+        final Obj schema = this.at(KEY_SCHEMA);
+        if (schema.isNoObj() || !schema.isRec()) return null;
+        final Obj t = schema.asRec().at(uri(key));
+        return t.isNoObj() ? null : t.tid();
+    }
+
+    public ObjJSONSerializer() {
+        super(OBJ_JSON_SERIALIZER_TID, OBJ_JSON_SERIALIZER_VID);
+        this.at(KEY_DENSITY, uri("OPAQUE"), Poly.MUTABLE);
+        this.at(KEY_WRAP_URI, BOOL_TRUE, Poly.MUTABLE);
+        this.at(KEY_BIAS_URI, BOOL_TRUE, Poly.MUTABLE);
+        this.at(KEY_BIAS_OBJS, BOOL_FALSE, Poly.MUTABLE);
+    }
+
+    private Density getDensity() {
+        String d = this.at(KEY_DENSITY).orElse(uri("OPAQUE")).uriValue().toString();
+        return "TRANSPARENT".equalsIgnoreCase(d) ? Density.TRANSPARENT : Density.OPAQUE;
+    }
+
+    private boolean isWrapURI() {
+        return this.at(KEY_WRAP_URI).orElse(BOOL_TRUE).boolValue();
+    }
+
+    private boolean biasTowardsUri() {
+        return this.at(KEY_BIAS_URI).orElse(BOOL_TRUE).boolValue();
+    }
+
+    private boolean biasTowardsObjs() {
+        return this.at(KEY_BIAS_OBJS).orElse(BOOL_FALSE).boolValue();
+    }
+
+    @Override
+    public Obj read(final JsonElement json) {
+        return this.read(json, null);
+    }
+
+    private Obj read(final JsonElement json, final fURI expectedTid) {
+        if (json.isJsonNull()) return noobj();
+
+        fURI tid = null, vid = null, bid = null;
+        fURI rawTid = null;
+        if (json.isJsonObject()) {
+            JsonObject jo = json.getAsJsonObject();
+            if (jo.has(TID_KEY)) {
+                rawTid = f(jo.get(TID_KEY).getAsString());
+                tid = Machine.current().memory().redirect(rawTid, true);
+            }
+            if (jo.has(VID_KEY)) vid = f(jo.get(VID_KEY).getAsString());
+            if (jo.has(BID_KEY)) bid = Machine.current().memory().redirect(f(jo.get(BID_KEY).getAsString()), true);
+        }
+        // schema-declared type (tool arg) supplies the tid when the wire carries no envelope
+        if (tid == null && expectedTid != null) tid = expectedTid;
+
+        JsonElement value = json;
+        if (json.isJsonObject() && json.getAsJsonObject().has(VALUE_KEY)) {
+            value = json.getAsJsonObject().get(VALUE_KEY);
+        } else if (json.isJsonObject() && (tid != null || vid != null || bid != null)) {
+            value = json;
+        }
+
+        Obj obj = null;
+        if (value.isJsonPrimitive()) {
+            final JsonPrimitive jp = (JsonPrimitive) value;
+            if (jp.isBoolean()) obj = bool(jp.getAsBoolean(), tid, null);
+            else if (jp.isNumber()) {
+                if (jp.getAsString().contains(".")) obj = real(jp.getAsDouble(), tid, null);
+                else obj = jnt(jp.getAsLong(), tid, null);
+            } else if (jp.isString()) {
+                final String jpstr = jp.getAsString();
+                if (HEX_PATTERN.matcher(jpstr).matches()) {
+                    obj = bytes(ByteBuffer.wrap(HexFormat.of().parseHex(jpstr.substring(2))), tid, null);
+                } else if (tid != null && T(tid).isRefinementOf(STR_TYPE)) {
+                    obj = str(jpstr, tid, null);
+                } else if (tid != null && T(tid).isRefinementOf(URI_TYPE)) {
+                    String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) : jpstr;
+                    obj = uri(f(clean), tid, null);
+                } else if (tid != null && T(tid).isRefinementOf(CODE_TYPE)) {
+                    obj = ObjmtronSerializer.parse(jpstr);
+                } else if ((bid != null && T(bid).isRefinementOf(INST_TYPE)) || (tid != null && T(tid).isRefinementOf(INST_TYPE))) {
+                    obj = ObjmtronSerializer.parse(jpstr);
+                } else if (tid != null && T(tid).isRootType()) {
+                    // #::T (any type) — the value could be anything, so hand the string straight
+                    // to the mtron parser (no str/uri/code shortcut); a plain str only when it
+                    // isn't parseable mtron. The parser reports that as a fail::T VALUE, not a
+                    // throw, so the test is on the result.
+                    obj = ObjmtronSerializer.parse(jpstr);
+                    if (obj.stream().anyMatch(Obj::isFail))
+                        obj = str(jpstr, tid, null);
+                } else {
+                    try {
+                        if ((jpstr.startsWith("\"") || jpstr.startsWith("'") && jpstr.endsWith("\"") || jpstr.endsWith("'"))) {
+                            return str(Str.Helper.stripQuotes(jpstr));
+                        } else if ((jpstr.startsWith("<") && jpstr.endsWith(">")) || jpstr.startsWith("http:") || jpstr.startsWith("https:") || jpstr.startsWith("uri::")) {
+                            String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) :
+                                    (jpstr.startsWith("uri::") ? jpstr.substring(5) : jpstr);
+                            obj = uri(f(clean), tid, null);
+                        } else if (literalStr()) {
+                            // literal(): an untyped string is a string. Only an address is recognised, because
+                            // JSON has no uri type — nothing else in JSON looks like <x> or declares a scheme.
+                            if (biasTowardsUri() && !jpstr.contains(" ")) {
+                                try {
+                                    obj = uri(jpstr);
+                                } catch (final Exception e) {
+                                    // not every bare token is an address ("8080:80" reads as a scheme and fails)
+                                    obj = str(jpstr);
+                                }
+                            } else
+                                obj = str(jpstr);
+                        } else {
+                            // the parser reports unparseable source as a fail::T value, not a throw
+                            obj = ObjmtronSerializer.parse(jpstr);
+                            if (obj.stream().anyMatch(Obj::isFail)) {
+                                // uri-bias only when the schema declared nothing — a declared
+                                // structural type (lst/rec/etc.) means the string is a mismatch
+                                // the tool should handle, not a uri to be mangled by uri-parse
+                                if (tid == null && biasTowardsUri() && !jpstr.contains(" "))
+                                    obj = uri(jpstr);
+                                else
+                                    obj = str(jpstr);
+                            }
+                        }
+                    } catch (Exception e) {
+                        obj = str(jpstr);
+                    }
+                }
+            }
+        } else if (value.isJsonArray()) {
+            final JsonArray ja = (JsonArray) value;
+            if (bid != null && T(bid).isRefinementOf(REC_TYPE) &&
+                    !ja.isEmpty() && ja.asList().stream().allMatch(e -> e.isJsonArray() && e.getAsJsonArray().size() == 2)) {
+                obj = ja.asList().stream().map(e -> rel(read(e.getAsJsonArray().get(0), null), read(e.getAsJsonArray().get(1), null))).collect(new CommonUtil.RecCollector(bid, vid));
+            } else if (ja.size() == 2 && bid != null && Tokens.TYPE_TID.equals(bid.basePath())) {
+                final fURI typeName = null != rawTid ? rawTid : tid;
+                final Obj parsed = ObjmtronSerializer.parse(typeName.toString() + "::T");
+                obj = parsed.isObjCall() ? ((Call) parsed).tryToInst() : parsed;
+            } else {
+                List<Obj> list = new ArrayList<>();
+                for (var j : ja) list.add(read(j, null));
+                final boolean isLst = (bid != null && Tokens.LST_TID.equals(bid.basePath()))
+                        || (bid == null && tid != null && Tokens.LST_TID.equals(tid.basePath()));
+                if (isLst) {
+                    obj = lst(list, tid, null);
+                } else if (tid != null || bid != null) {
+                    obj = objs(list);
+                } else {
+                    obj = lst(list, tid, null);
+                }
+            }
+        } else if (value.isJsonObject()) {
+            final JsonObject jo = (JsonObject) value;
+            Map<Obj, Obj> map = new LinkedHashMap<>();
+            for (var entry : jo.entrySet()) {
+                map.put(uri(f(entry.getKey())), this.read(entry.getValue(), this.schemaTid(entry.getKey())));
+            }
+            obj = rec(map, tid == null ? Tokens.REC_TID : tid, null);
+        }
+
+        if (obj == null) return noobj();
+        return null == vid ? obj : obj.self(obj.jvm(), obj.tid(), vid);
+    }
+
+    @Override
+    public JsonElement write(final Obj obj) {
+        if (null == obj || obj.isNoObj()) return JsonNull.INSTANCE;
+
+        JsonElement element;
+        // a CAUGHT fail is a fail too (isFail() answers false for it), and it is the form a transport sends: json carries
+        // only its message, lossy as json is, but it must carry something or the reply is never sent at all
+        if (obj.isFail() || obj.isCaughtFail()) {
+            final Throwable failure = obj.failValue();
+            element = new JsonPrimitive(null == failure.getMessage() ? failure.toString() : failure.getMessage());
+        } else if (obj.isBytes()) element = new JsonPrimitive(obj.<Bytes>as().toHexString());
+        else if (obj.isBool()) element = new JsonPrimitive(obj.boolValue());
+        else if (obj.isInt()) element = new JsonPrimitive(obj.intValue());
+        else if (obj.isReal()) element = new JsonPrimitive(obj.realValue());
+        else if (obj.isUri()) {
+            String val = isWrapURI() ? "<" + obj.uriValue().toString() + ">" : obj.uriValue().toString();
+            element = new JsonPrimitive(val);
+        } else if (obj.isStr()) element = new JsonPrimitive(obj.strValue());
+        else if (obj.isObjCall()) element = new JsonPrimitive(SERIALIZER.write(obj.<Call>as().tryToInst()));
+        else if (obj.isRel()) {
+            JsonArray arr = new JsonArray();
+            arr.add(write(obj.<Rel>as().first()));
+            arr.add(write(obj.<Rel>as().second()));
+            element = arr;
+        } else if (obj.isType()) {
+            JsonArray arr = new JsonArray();
+            arr.add(write(obj.<Type>as().predicate()));
+            arr.add(write(obj.<Type>as().constructor()));
+            element = arr;
+        } else if (obj.isLst() || obj.isObjs()) {
+            JsonArray arr = new JsonArray();
+            obj.<Iterable<Obj>>jvm().forEach(o -> arr.add(write(o)));
+            element = arr;
+        } else if (obj.isRec()) {
+            JsonObject jo = new JsonObject();
+            obj.recValue().forEach((k, v) -> jo.add(k.toCleanString(), write(v)));
+            element = jo;
+        } else throw MTronException.of("unsupported type: %s", obj.tid());
+
+        if (getDensity() == Density.OPAQUE && (obj.isObjs() || !obj.type().isBaseType() || obj.vid() != null)) {
+            JsonObject envelope = new JsonObject();            // Use base type path without aggressive redirection to preserve shortcuts like '#'
+            String bidStr = obj.baseTypeID().basePath().toString();
+            if (bidStr.isEmpty() || bidStr.equals("#"))
+                envelope.add(BID_KEY, new JsonPrimitive(bidStr));
+            else if (obj.isLst())
+                envelope.add(BID_KEY, new JsonPrimitive(Tokens.LST_TID.toString()));
+            else if (obj.isObjs())
+                envelope.add(BID_KEY, new JsonPrimitive(Tokens.OBJS_TID.toString()));
+            envelope.add(TID_KEY, new JsonPrimitive(obj.tid().big().toString()));
+            envelope.add(VALUE_KEY, element);
+            if (obj.vid() != null) envelope.add(VID_KEY, new JsonPrimitive(obj.vid().toString()));
+            return envelope;
+        }
+        return element;
+    }
+
+    public static Obj parse(final String json) {
+        JsonReader reader = new JsonReader(new StringReader(json));
+        reader.setStrictness(Strictness.LENIENT);
+        return single().read(JsonParser.parseReader(reader));
+    }
+
+    @Override
+    public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
+        JsonParser parser = new JsonParser();
+        final JsonElement element = parser.parse(new String(bytes.array(), StandardCharsets.UTF_8));
+        return this.read(element);
+    }
+
+    /**
+     * The wire bytes for an obj. A {@code str} typed {@code json} <em>is</em> a document — a MIME document type
+     * is a predicate on text, and {@code x.as(json::T)} yields exactly such a str — so its text goes out as
+     * written instead of as a JSON string of it. Everything else is the JSON text of the written element:
+     * {@code toString()} quotes a plain str ({@code "a/b"}) and, for a rec or lst, <em>is</em> the document.
+     * {@link JsonElement#getAsString()} answers neither question — it throws on a JsonObject/JsonArray (which is
+     * what a rec writes to) and would drop the quotes from a plain str.
+     */
+    @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+        final String json = obj.isStr() && WEB_JSON_TID.equals(Obj.Helper.specificTypeId(obj).basePath())
+                ? obj.strValue()
+                : this.write(obj).toString();
+        return ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public fURI vid() {
+        return OBJ_JSON_SERIALIZER_VID;
+    }
+}

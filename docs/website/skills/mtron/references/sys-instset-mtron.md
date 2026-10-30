@@ -56,8 +56,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -70,15 +70,15 @@ mtron> bash('ls')
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(16 more)]
+    ...(15 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
     'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  554G ...',
-    'tmpfs                   31G  1.1M ...',
+    '/dev/nvme1n1p2         916G  560G ...',
+    'tmpfs                   31G   16M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -89,10 +89,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 42ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 15ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 42ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 15ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -111,7 +111,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'CONTRIBUTING.md',
            'dist',
            'docs',
-           ...(16 more)]]
+           ...(15 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -121,7 +121,7 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'CONTRIBUTING.md',
     'dist',
     'docs',
-    ...(17 more)]
+    ...(16 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -162,13 +162,13 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: CONTRIBUTING.md',
     '  File: dist',
     '  File: docs',
-    ...(16 more)]
+    ...(15 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
     '  Size: 24586     	Blocks: 56     ...',
-    'Device: 259,5	Inode: 27038246    L...',
+    'Device: 259,5	Inode: 22926470    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-30 02:44:12.992972...',
+    'Access: 2026-10-30 03:47:03.372305...',
    ...
 ```
 ### a shape of its own
@@ -186,7 +186,7 @@ mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"'
     bB::6984.0,
     bB::4096.0,
     bB::4096.0,
-    ...(16 more)]
+    ...(15 more)]
 ```
 Unit values test against each other's units:
 
@@ -255,15 +255,15 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>93
+==>69
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::6.0859,
-    free_mem_jvm=>mB::1040.3251,
+==>[total_mem_jvm=>gB::13.9453,
+    free_mem_jvm=>gB::4.1650,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::5.0699,
+    used_mem_jvm=>gB::9.7802,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[run=>131,stop=>151680]]
+    thread=>[run=>132,stop=>182404]]
 ```
 # file system space (`fsspace::T`)
 

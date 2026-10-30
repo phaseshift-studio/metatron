@@ -70,6 +70,49 @@ public class HeaderGeneratorTest {
     }
 
     @Test
+    public void testInstSetMenuRendersATree() {
+        final List<HeaderGenerator.InstSet> instsets = List.of(
+                new HeaderGenerator.InstSet("/m", "m.html", "mtron", null),
+                new HeaderGenerator.InstSet("/m/db/tble", "m_db_tble.html", "tble", "./skills/mtron/references/tble-instset-mtron.html"),
+                new HeaderGenerator.InstSet("/m/db/vec", "m_db_vec.html", "vec", null),
+                new HeaderGenerator.InstSet("/m/ai/llm", "m_ai_llm.html", "llm", "./skills/mtron/references/llm-instset-mtron.html"),
+                new HeaderGenerator.InstSet("/m/dev/ide", "m_dev_ide.html", "ide", null),
+                new HeaderGenerator.InstSet("/m/math/cat", "m_math_cat.html", "cat", "./skills/mtron/references/cat-instset-mtron.html"),
+                new HeaderGenerator.InstSet("/m/sys/ui", "m_sys_ui.html", "ui", "./skills/mtron/references/ui-instset-mtron.html"),
+                new HeaderGenerator.InstSet("/m/web/rdf", "m_web_rdf.html", "rdf", null));
+
+        final String menu = HeaderGenerator.renderInstSetMenu(instsets);
+
+        // leaves that name an instruction set are links to their generated page
+        assertTrue(menu.contains("./instset/m_db_tble.html"), "tble leaf links: " + menu);
+        assertTrue(menu.contains("./instset/m_ai_llm.html"), "llm leaf links");
+        // the root /m is itself an instruction set, so it is a link, not a folder
+        assertTrue(menu.contains("./instset/m.html"), "/m links to its own page");
+        assertTrue(menu.contains("alt=\"mtron\"/>") && menu.contains("/m</a>"), "/m label present");
+        // intermediate namespaces (/m/db, /m/dev, /m/ai) are folders, not links
+        assertTrue(menu.contains("isa-folder"), "intermediate namespaces render as folders: " + menu);
+        assertTrue(menu.contains("/m/db</li>"), "db folder header present");
+        assertTrue(menu.contains("/m/dev</li>"), "dev folder header present");
+        assertTrue(menu.contains("/m/ai</li>"), "ai folder header present");
+        // a folder never links (no href for a pure namespace)
+        assertFalse(menu.contains("href=\"./instset/m_db.html\""), "db is a folder, not a page");
+        // depth classes indent children under their parent
+        assertTrue(menu.contains("isa-depth-1"), "depth-1 indent present");
+        assertTrue(menu.contains("isa-depth-2"), "depth-2 indent present");
+        // children follow their parent in document order (pre-order traversal)
+        final int dbFolder = menu.indexOf("/m/db</li>");
+        final int tbleLeaf = menu.indexOf("./instset/m_db_tble.html");
+        final int vecLeaf = menu.indexOf("./instset/m_db_vec.html");
+        assertTrue(dbFolder < tbleLeaf && tbleLeaf < vecLeaf,
+                "db children render under the db folder, in order: " + menu);
+        // a set with a reference doc gets a [doc] pill next to its link
+        assertTrue(menu.contains("./skills/mtron/references/tble-instset-mtron.html\">doc</a>"),
+                "tble carries a doc pill: " + menu);
+        assertTrue(menu.contains("class=\"article-row\""), "doc-bearing sets render as article rows");
+        assertTrue(menu.contains("class=\"article-format\""), "the doc pill reuses the article-format box");
+    }
+
+    @Test
     public void testUnlistedFilesAreDecidedByTheFilename(@TempDir final Path tmp) {
         // extensionless resources are listed; the extension is matched case-insensitively
         assertTrue(HeaderGenerator.isListed(tmp.resolve("wsplus")), "an extensionless resource is listed");

@@ -22,10 +22,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.ide.parser.ObjJavaIDESerializer;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjJavaSerializer;
-import studio.phaseshift.metatron.isa.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.dev.ide.parser.ObjJavaIDESerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.web.type.ObjJavaSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
 
 import static org.junit.jupiter.api.Assertions.*;
 

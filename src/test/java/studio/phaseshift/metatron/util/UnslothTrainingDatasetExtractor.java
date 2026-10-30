@@ -6,7 +6,7 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.q.QProcIntegrationTest;
 import studio.phaseshift.metatron.furi.q.TypeQTest;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.llm.llmInstSetTest;
+import studio.phaseshift.metatron.isa.m.ai.llm.llmInstSetTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSetTest;
 import studio.phaseshift.metatron.isa.m.mParserTest;
@@ -14,11 +14,11 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSetTest;
 import studio.phaseshift.metatron.isa.m.parse.CodeParseTest;
 import studio.phaseshift.metatron.isa.m.parse.InstParseTest;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.machInstSetTest;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.sysInstSetTest;
-import studio.phaseshift.metatron.isa.vec.vecInstSetTest;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializerTest;
+import studio.phaseshift.metatron.isa.m.mach.machInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.sysInstSetTest;
+import studio.phaseshift.metatron.isa.m.db.vec.vecInstSetTest;
+import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializerTest;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -217,7 +217,7 @@ public class UnslothTrainingDatasetExtractor {
         ));
         dataset.add(new Training.Entry(INSTR,
                 "What is the Metatron VM?",
-                "Metatron is a distributed data-oriented computing language and virtual machine. It uses Spaces as fundamental data containers, Instruction Sets (InstSets) for domain-specific operations, and a universal type system called Obj. The VM is booted via BootLoader and instruction sets are discovered through SPI. Key instruction domains include /m (core language), /m/mach (machine/IO), /m/web (HTTP/WebSocket), /m/grph (graph DB), /m/tble (SQL), /m/math (math), and /m/vec (vectors).",
+                "Metatron is a distributed data-oriented computing language and virtual machine. It uses Spaces as fundamental data containers, Instruction Sets (InstSets) for domain-specific operations, and a universal type system called Obj. The VM is booted via BootLoader and instruction sets are discovered through SPI. Key instruction domains include /m (core language), /m/mach (machine/IO), /m/web (HTTP/WebSocket), /m/db/grph (graph DB), /m/db/tble (SQL), /m/math (math), and /m/db/vec (vectors).",
                 null
         ));
         // ── Type system ──

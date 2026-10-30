@@ -2,11 +2,11 @@
 == Document Databases
 
 [%collapsible]
-./m/dcmnt instset import
+./m/db/dcmnt instset import
 ====
 [mtron]
 ----
-import(/m/dcmnt)
+import(/m/db/dcmnt)
 ----
 ====
 
@@ -54,7 +54,7 @@ one nicety that immediately jumps out when comparing JSON and mtron is mtron's l
 
 [mtron]
 ----
-*/m/dcmnt/space/dcmntspace
+*/m/db/dcmnt/space/dcmntspace
 ----
 
 [cols="6a,6a",separator=🧱,role="table-bordered center"]
@@ -77,7 +77,7 @@ the root is `rec::T[?[collection_name\=>collection_type{*}::T]]`.
 animal    -> rec::T[?[name=>str::T,  age=>int::T]]@animal                     [-- <1> --]
 chicken   -> animal::T@chicken                                                [-- <2> --]
 equipment -> rec::T[?[model=>uri::T, year=>int::T]]@equipment                 [-- <3> --]
-farmset::[type=>[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset  [-- <4> --]
+farmset::[type=>[animal::T,equipment::T,chicken::T]]@/m/db/dcmnt/schema/farmset  [-- <4> --]
 ----
 <1> an `animal::T < rec::T` (**refinement type**) is defined.
 <2> a `chicken::T == animal::T` (**nominal type**) is defined.

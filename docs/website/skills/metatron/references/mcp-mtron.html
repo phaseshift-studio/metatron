@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
     
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
                             src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
-                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
-                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
-                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
-                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
-                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
-                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
-                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
-                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
-                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -473,12 +495,102 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
                 host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-                tool=&gt;[execute_tool=&gt;tool::[
-                 inst=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
-                 name=&gt;execute_tool,
-                 desc=&gt;'Universal tool executor that can i...',
-                 arg=&gt;[command=&gt;'Command-line string with tool name...']]],
-                inst=&gt;[/m/llm/tool/execute_tool=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;}]]
+                tool=&gt;[
+                 execute_run_configuration=&gt;tool::[
+                  inst=&gt;inst(configurationName=&gt;'Name of the existing run configuration to execute',
+                             filePath=&gt;&quot;File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.&quot;,
+                             line=&gt;&quot;1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.&quot;,
+                             timeout=&gt;'Timeout in milliseconds',
+                             waitForExit=&gt;&quot;Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.&quot;,
+                             programArguments=&gt;'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             workingDirectory=&gt;'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             envs=&gt;'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){&lt;j&gt;},
+                  name=&gt;execute_run_configuration,
+                  desc=&gt;'Run either an existing run configu...',
+                  arg=&gt;[
+                   configurationName=&gt;'Name of the existing run configura...',
+                   filePath=&gt;'File path relative to the project ...',
+                   line=&gt;&quot;1-based line number for `filePath`...&quot;,
+                   timeout=&gt;'Timeout in milliseconds',
+                   waitForExit=&gt;'Whether to wait for process termin...',
+                   programArguments=&gt;'Optional program arguments overrid...',
+                   workingDirectory=&gt;'Optional working directory overrid...',
+                   ...(1 more)]],
+                 get_run_configurations=&gt;tool::[
+                  inst=&gt;inst(filePath=&gt;'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){&lt;j&gt;},
+                  name=&gt;get_run_configurations,
+                  desc=&gt;'Returns either project run configu...',
+                  arg=&gt;[filePath=&gt;'Optional file path relative to the...']],
+                 analyze_calls=&gt;tool::[
+                  inst=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
+                             analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                             depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                             maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
+                             maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
+                             treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
+                             childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;analyze_calls,
+                  desc=&gt;'Builds the IDE Call Hierarchy tree...',
+                  arg=&gt;[
+                   symbolFqn=&gt;'Plain fully qualified symbol name,...',
+                   analysisKind=&gt;&quot;Call analysis direction. Use `INCO...&quot;,
+                   depth=&gt;'Maximum number of call levels to r...',
+                   maxChildren=&gt;'Maximum number of direct children ...',
+                   maxNodes=&gt;'Maximum total number of rendered c...',
+                   treePath=&gt;'Optional path to a subtree root, c...',
+                   childOffset=&gt;'Offset for paging direct children ...',
+                   ...(1 more)]],
+                 build_project=&gt;tool::[
+                  inst=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                             filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;build_project,
+                  desc=&gt;'Triggers building of the project o...',
+                  arg=&gt;[
+                   rebuild=&gt;'Whether to perform full rebuild th...',
+                   filesToRebuild=&gt;'If specified, only compile files w...',
+                   timeout=&gt;'Timeout in milliseconds']],
+                 get_file_problems=&gt;tool::[
+                  inst=&gt;inst(filePath=&gt;'Path relative to the project root',
+                             errorsOnly=&gt;'Whether to include only errors or include both errors and warnings',
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;get_file_problems,
+                  desc=&gt;'Analyzes the specified file for er...',
+                  arg=&gt;[
+                   filePath=&gt;'Path relative to the project root',
+                   errorsOnly=&gt;'Whether to include only errors or ...',
+                   timeout=&gt;'Timeout in milliseconds']],
+                 get_project_dependencies=&gt;tool::[
+                  inst=&gt;inst(){&lt;j&gt;},
+                  name=&gt;get_project_dependencies,
+                  desc=&gt;'Get a list of all dependencies def...',
+                  arg=&gt;[=&gt;]],
+                 get_project_modules=&gt;tool::[
+                  inst=&gt;inst(){&lt;j&gt;},
+                  name=&gt;get_project_modules,
+                  desc=&gt;'Get a list of all modules in the p...',
+                  arg=&gt;[=&gt;]],
+                 ...(49 more)],
+                inst=&gt;[
+                 /m/ai/llm/tool/execute_run_configuration=&gt;inst(configurationName=&gt;'Name of the existing run configuration to execute',
+                                                                filePath=&gt;&quot;File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.&quot;,
+                                                                line=&gt;&quot;1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.&quot;,
+                                                                timeout=&gt;'Timeout in milliseconds',
+                                                                waitForExit=&gt;&quot;Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.&quot;,
+                                                                programArguments=&gt;'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                workingDirectory=&gt;'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                envs=&gt;'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){&lt;j&gt;},
+                 /m/ai/llm/tool/get_run_configurations=&gt;inst(filePath=&gt;'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){&lt;j&gt;},
+                 /m/ai/llm/tool/analyze_calls=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
+                                                    analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                                                    depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                                                    maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
+                                                    maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
+                                                    treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
+                                                    childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                                                    timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+   ...
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -507,120 +619,9 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;mcp_client::[host=&gt;http://localhost:8777/mcp,
-                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-                tool=&gt;[
-                 m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-                  inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_write_memory,
-                  desc=&gt;'(experimental) returns a memory re...',
-                  arg=&gt;[
-                   current_memory=&gt;'the memory to remember -- e.g. a s...',
-                   previous_memory=&gt;'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-                  inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_read_memory,
-                  desc=&gt;'(experimental) returns the result ...',
-                  arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-                  inst=&gt;inst(code=&gt;'/m/code',
-                             native=&gt;'/m/bool'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=&gt;'&lt;no description&gt;',
-                  arg=&gt;[code=&gt;'/m/code',native=&gt;'/m/bool']],
-                 m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_list_space,
-                  desc=&gt;'returns a rec identifying all acti...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_machine_info,
-                  desc=&gt;'returns what the running machine i...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-                  inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                             dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                             rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_find_inst,
-                  desc=&gt;'returns a lst of all instruction p...',
-                  arg=&gt;[
-                   pattern=&gt;'the inst tid to match',
-                   dom=&gt;'the dom of inst to match (can be a...',
-                   rng=&gt;'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-                  inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                             on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=&gt;'create a websocket client with pro...',
-                  arg=&gt;[
-                   host=&gt;'the full ws:// uri of the websocke...',
-                   on_message=&gt;'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=&gt;[
-                 /m/llm/tool/m_web_mcp_mcp_mtron_write_memory=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                    previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_read_memory=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=&gt;inst(code=&gt;'/m/code',
-                                                                  native=&gt;'/m/bool'){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_list_space=&gt;inst(){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_machine_info=&gt;inst(){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_find_inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                                                                 dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                                                                 rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                 /m/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                                                                      on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                 ...(1 more)]]@a
+==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]']['fail']['fail']
+   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]
 mtron&gt; *a&gt;&gt;tool
-==&gt;[m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-     inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_write_memory,
-     desc=&gt;'(experimental) returns a memory re...',
-     arg=&gt;[
-      current_memory=&gt;'the memory to remember -- e.g. a s...',
-      previous_memory=&gt;'a previous memory vid to chain cur...']],
-    m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-     inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_read_memory,
-     desc=&gt;'(experimental) returns the result ...',
-     arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-    m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-     inst=&gt;inst(code=&gt;'/m/code',
-                native=&gt;'/m/bool'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-     desc=&gt;'&lt;no description&gt;',
-     arg=&gt;[code=&gt;'/m/code',native=&gt;'/m/bool']],
-    m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_list_space,
-     desc=&gt;'returns a rec identifying all acti...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_machine_info,
-     desc=&gt;'returns what the running machine i...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-     inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_find_inst,
-     desc=&gt;'returns a lst of all instruction p...',
-     arg=&gt;[
-      pattern=&gt;'the inst tid to match',
-      dom=&gt;'the dom of inst to match (can be a...',
-      rng=&gt;'the rng of inst to match (can be a...']],
-    m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-     inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-     desc=&gt;'create a websocket client with pro...',
-     arg=&gt;[
-      host=&gt;'the full ws:// uri of the websocke...',
-      on_message=&gt;'the function to evaluate on every ...']],
-    ...(1 more)]
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)

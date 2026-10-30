@@ -273,7 +273,7 @@ public class NoObjTest extends AbstractMetatronTest {
     public void testNothingBindsNoGeneric() {
         // compiled from nothing (the compiler's noobj token), a generic domain stays open for the runtime lhs: binding
         // it to the zero would type the inst over a noobj present once, which nothing inhabits
-        final Code code = studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.parse("is(eq(10))").asCode();
+        final Code code = studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse("is(eq(10))").asCode();
         final Inst open = code.resolve(noobj()).insts().getFirst();
         assertTrue(open.tid().dom().isGeneric(), open.tid() + " keeps its generic domain");
         // something still binds it

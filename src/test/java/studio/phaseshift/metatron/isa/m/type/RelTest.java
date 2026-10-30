@@ -24,8 +24,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REL_TYPE;
@@ -924,10 +924,10 @@ public class RelTest extends AbstractAlgebraTest {
     @TestData(value = {
             "route -> rel[int,str]::T@route",
             "detour -> rel[int,str{?},bool]::T@detour",
-    })
+    }, oneTime = true)
     @CsvSource(value = {
             "route::(1=>'tally')                    % route::(1=>'tally')",
-            "(route::(1=>'tally')).type()           % route::T",
+            "route::(1=>'tally').type()             % route::T",
             "route::(1=>2)                          % <ERROR>",
             "route::('tally'=>'tally')              % <ERROR>",
             "route::(1=>('tally'=>true))            % <ERROR>",

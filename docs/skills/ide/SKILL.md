@@ -23,7 +23,7 @@ First, load necessary instruction sets. Second, open three spaces:
 uri will be provided to you and thus, this section can be skipped.
 
 ```mtron_pre
-[MAXOUTPUT 5] import(/m/ide,ide)
+[MAXOUTPUT 5] import(/m/dev/ide,ide)
 [MAXOUTPUT 5] import(/m/web,web) 
 [MAXOUTPUT 5] import(/m/math,math)                
 [MAXOUTPUT 5] memspace::[                                                   /

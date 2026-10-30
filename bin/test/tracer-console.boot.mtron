@@ -5,8 +5,8 @@
                     java_stack   => false]]
 [===============]
 print("{{y}}tracer demo boot{{X}} {{k}}— mtron_stack tracer on (see boot args header){{X}}\n");
-import(/m/mach/io);
-import(/m/mach/ui,ui);
+import(/m/web);
+import(/m/sys/ui,ui);
 import(/m/sys);
 import(/m/math);
 memspace::[pattern => /usr/#,

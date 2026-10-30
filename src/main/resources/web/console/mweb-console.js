@@ -1094,7 +1094,7 @@ class MetatronDashboard {
     //   "bool::T"                        → VID is /m/bool
     //   "inst::T"                        → VID is /m/inst
     //   "rec::T[?[...]]@/m/space"        → VID is /m/space  (after the @)
-    //   "rec::T[?[...]]@/m/llm/model"    → VID is /m/llm/model
+    //   "rec::T[?[...]]@/m/ai/llm/model"    → VID is /m/ai/llm/model
     //
     // Returns null if the value doesn't carry enough info (caller will queue a bg query).
     _iconFromTreeValue(value, uri) {

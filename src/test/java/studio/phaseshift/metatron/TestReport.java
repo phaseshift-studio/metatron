@@ -26,10 +26,10 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.opentest4j.TestAbortedException;
-import studio.phaseshift.metatron.isa.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.mach.type.ui.Stylable.Style;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.Stylable.Style;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.TableWidget;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

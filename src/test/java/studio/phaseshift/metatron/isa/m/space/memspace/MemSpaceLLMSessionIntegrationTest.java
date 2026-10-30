@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.m.space.memspace;
 import studio.phaseshift.metatron.SkipWhenPortUnavailable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.llm.space.AbstractLLMSessionIntegrationTest;
+import studio.phaseshift.metatron.isa.m.ai.llm.space.AbstractLLMSessionIntegrationTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.QPROC;
@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * memSpace-backed implementation of {@link AbstractLLMSessionIntegrationTest}.
  * <p>
  * Uses a raw path-based URI with no route — verifying that
- * {@link studio.phaseshift.metatron.isa.llm.space.SpaceChatSessionStore}
+ * {@link studio.phaseshift.metatron.isa.m.ai.llm.space.SpaceChatSessionStore}
  * works with any backing space, not just tbleSpace.
  * <p>
  * Registers the default AtomicLong-based {@code incrQ} QProc so typed-collection

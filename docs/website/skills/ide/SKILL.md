@@ -23,7 +23,7 @@ First, load necessary instruction sets. Second, open three spaces:
 uri will be provided to you and thus, this section can be skipped.
 
 ```mtron
-mtron> import(/m/ide,ide)
+mtron> import(/m/dev/ide,ide)
 mtron> import(/m/web,web)
 mtron> import(/m/math,math)
 mtron> memspace::[
@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
      mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>second::3.61,
+            runtime=>second::4.418,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/ac706580]
+            output=>!*/sys/tmp/6e02a48b]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.

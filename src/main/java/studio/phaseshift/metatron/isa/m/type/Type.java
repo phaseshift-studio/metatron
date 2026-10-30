@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -257,7 +257,7 @@ public interface Type extends Obj {
         while (!type.isRootType() && hops++ < 256) {
             // the parent chain is not guaranteed acyclic: parentType() resolves a parent by
             // re-entering the type space (T(tid())), and a type whose tid and vid disagree --
-            // /m/llm/session_or_agent{?}@/m/llm/session_or_agent, where only the tid carries the
+            // /m/ai/llm/session_or_agent{?}@/m/ai/llm/session_or_agent, where only the tid carries the
             // pattern piece -- resolves back to itself. Unbounded, this loop re-added the same
             // predicate until the heap died (an ArrayList.add OutOfMemoryError, not a stack one),
             // so a level already visited ends the walk. 256 mirrors the bound on the sibling

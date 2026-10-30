@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -141,7 +141,7 @@ public final class CommonRewrites {
                     // the space prefix segments are misidentified as collection/entry,
                     // and the real collection lands in "field", blocking the rewrite.
                     final fURI rawUri = ref.uriValue();
-                    final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(rawUri);
+                    final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(rawUri);
                     final fURI resolvedUri = space != null ? space.redirect(rawUri, true) : rawUri;
                     // When the redirect did not strip the space prefix (no route
                     // matched — e.g. a wildcard collection like /g/+), the URI is
@@ -357,7 +357,7 @@ public final class CommonRewrites {
                 if (!fromInst.arg(0).isUri())
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 // Check if this is the correct space type
                 if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(matchedInsts))) {
@@ -518,7 +518,7 @@ public final class CommonRewrites {
                 final Inst rshiftInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -792,7 +792,7 @@ public final class CommonRewrites {
                 final Inst isaInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1080,7 +1080,7 @@ public final class CommonRewrites {
                 final fURI furi = args.asLst().at(0).asUri().uriValue();
                 final String filterClause = args.asLst().at(1).asStr().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1227,7 +1227,7 @@ public final class CommonRewrites {
                 // Extract limit value from take() instruction
                 final long limitValue = takeInst.arg(0).asInt().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1347,7 +1347,7 @@ public final class CommonRewrites {
                 final Inst skipInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1487,7 +1487,7 @@ public final class CommonRewrites {
                 final long skipValue = args.asLst().at(1).asInt().jvm();
                 final long limitValue = takeInst.arg(0).asInt().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1626,7 +1626,7 @@ public final class CommonRewrites {
                 final String filterClause = args.asLst().at(1).asStr().jvm();
                 final long skipValue = skipInst.arg(0).asInt().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1841,7 +1841,7 @@ public final class CommonRewrites {
                         .map(o -> o.strValue()).toList();
                 final long skipValue = skipInst.arg(0).asInt().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -1942,7 +1942,7 @@ public final class CommonRewrites {
                 final long skipValue = args.asLst().at(2).asInt().jvm();
                 final long limitValue = takeInst.arg(0).asInt().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(furi);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -2046,7 +2046,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -2152,7 +2152,7 @@ public final class CommonRewrites {
                 }
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.m.mach.type.Machine.current().memory().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();

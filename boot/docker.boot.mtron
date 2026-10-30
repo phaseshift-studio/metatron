@@ -27,12 +27,12 @@ print("""
 '-----'`        '-----'       `._____.'  `--'   `'-'     `'-..-'  ''-'   `'-'   
                                                                 a metatron bomb                                                                         
 """);
-import(/m/mach/io);
-import(/m/mach/ui,ui);
-import(/m/llm);
+import(/m/web);
+import(/m/sys/ui,ui);
+import(/m/ai/llm);
 import(/m/web,web);
-import(/m/tble);
-import(/m/dckr);
+import(/m/db/tble);
+import(/m/dev/dckr);
 
 
 fsspace::[pattern => fs:#,
