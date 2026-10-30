@@ -63,7 +63,7 @@
         <flexmark.version>0.64.8</flexmark.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
-        <mariadb.version>3.5.10</mariadb.version>
+        <mariadb.version>4.0.0</mariadb.version>
         <mongodb.version>5.13.0</mongodb.version>
         <langchain4j.version>1.22.0</langchain4j.version>
         <!--<jlama.version>0.8.4</jlama.version>-->
@@ -72,18 +72,18 @@
         <junit.version>6.1.3</junit.version>
         <tinkerpop.version>3.8.2</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
-        <gson.version>2.14.0</gson.version>
+        <gson.version>2.15.0</gson.version>
         <petitparser.version>2.5.0</petitparser.version>
         <jline.version>4.4.8</jline.version>
         <jmdns.version>3.6.4</jmdns.version>
         <rdf4j.version>6.0.0</rdf4j.version>
-        <logback.version>1.6.5</logback.version>
+        <logback.version>1.6.6</logback.version>
         <slf4j.version>2.0.20</slf4j.version>
         <snakeyaml.version>2.7</snakeyaml.version>
         <hive.version>1.4.1</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.23.2</jsoup.version>
-        <vectors.version>0.1.29</vectors.version>
+        <vectors.version>0.1.32</vectors.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
         <asciidoctorj.version>3.0.1</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
@@ -91,12 +91,12 @@
         <!--<ollama4j.version>1.1.7</ollama4j.version>-->
         <!--<guice.version>7.0.0</guice.version>-->
         <moquette.version>0.18.0</moquette.version>
-        <commonmark.version>0.30.1</commonmark.version>
+        <commonmark.version>0.31.0</commonmark.version>
         <jserialcomm.version>2.11.4</jserialcomm.version>
         <!--<rhino.version>1.9.1</rhino.version>
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>-->
         <sqlite.version>3.53.4.0</sqlite.version>
-        <mcp.version>2.0.1</mcp.version>
+        <mcp.version>2.1.0</mcp.version>
         <zt.version>1.13.0</zt.version>
         <lucene.version>10.5.2</lucene.version>
         <treesitter.version>1.12.0</treesitter.version>
@@ -233,7 +233,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>26.7.0</version>
+            <version>26.10.0</version>
         </dependency>
         <!-- MONGODB -->
         <dependency>
@@ -1099,7 +1099,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.6.1</version>
                     <configuration>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <printSummary>true</printSummary>
