@@ -20,7 +20,7 @@ package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.LinkedHashSet;
 import java.util.List;

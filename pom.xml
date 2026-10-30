@@ -717,20 +717,20 @@
                                 <!-- generate instset docs -->
                                 <argument>/m</argument>
                                 <argument>/m/sys</argument>
-                                <argument>/m/dckr</argument>
+                                <argument>/m/dev/dckr</argument>
                                 <argument>/m/mach</argument>
                                 <argument>/m/math</argument>
                                 <argument>/m/math/cat</argument>
-                                <argument>/m/mach/ui</argument>
+                                <argument>/m/sys/ui</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/iot</argument>
-                                <argument>/m/dckr</argument>
-                                <argument>/m/llm</argument>
-                                <argument>/m/tble</argument>
-                                <argument>/m/dcmnt</argument>
-                                <argument>/m/grph</argument>
-                                <argument>/m/vec</argument>
-                                <argument>/m/ide</argument>
+                                <argument>/m/dev/dckr</argument>
+                                <argument>/m/ai/llm</argument>
+                                <argument>/m/db/tble</argument>
+                                <argument>/m/db/dcmnt</argument>
+                                <argument>/m/db/grph</argument>
+                                <argument>/m/db/vec</argument>
+                                <argument>/m/dev/ide</argument>
                             </arguments>
                         </configuration>
                     </execution>

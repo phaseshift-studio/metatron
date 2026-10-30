@@ -1,0 +1,123 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.space.http.handler;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.space.http.HttpRec;
+import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.webInstSet;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class mtron_httpHandler extends HttpRec {
+
+    public static final fURI MTRON_HTTP_TID = WEB_ISA_TID.extend("http").extend("mtron_http");
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+
+    public static final Type HTTP_MTRON_HANDLER_TYPE = Type.Builder.build()
+            .tid(webInstSet.MTRON_TID)
+            .vid(MTRON_HTTP_TID)
+            .isaPredicate(rec(
+                    uri(IN).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(webInstSet.MIME_OBJ_TYPE).else_(uri(MIME.MIMEType.APPLICATION_MTRON.value))))
+            .constructor(http -> {
+                final Map<Obj, Obj> config = new LinkedHashMap<>(http.asRec().jvm());
+                return new mtron_httpHandler(config, http.asRec().vid());
+            }).create();
+
+
+    public mtron_httpHandler(final Map<Obj, Obj> jvm, final fURI vid) {
+        super(jvm, MTRON_HTTP_TID, vid);
+
+        // ON_GET — evaluate mtron code and send result (mirrors mtron_wsHandler.ON_MESSAGE)
+        this.jvm().put(uri(ON_GET), instLambda(f("on_get"), lst(T(ALL)), (lhs, inst) -> {
+            try {
+                final Obj request = inst.arg(0);
+                final Obj rhs = lhs.apply(request);
+                LOG.debug("processed mtron GET: %s => %s", lhs, rhs);
+                this.send(MFail.reported(rhs));
+                return rhs;
+            } catch (final Exception e) {
+                LOG.error("error processing GET: %s => %s", lhs, fail(e));
+                final Fail failure = MFail.fail(e);
+                this.send(MFail.reported(failure));
+                return failure;
+            }
+        }));
+
+        // ON_POST — evaluate mtron code and send result
+        this.jvm().put(uri(ON_POST), instLambda(f("on_post"), lst(T(ALL)), (lhs, inst) -> {
+            try {
+                final Obj request = inst.arg(0);
+                final Obj rhs = lhs.apply(request);
+                LOG.debug("processed mtron POST: %s => %s", lhs, rhs);
+                this.send(MFail.reported(rhs));
+                return rhs;
+            } catch (final Exception e) {
+                LOG.error("error processing POST: %s => %s", lhs, fail(e));
+                final Fail failure = MFail.fail(e);
+                this.send(MFail.reported(failure));
+                return failure;
+            }
+        }));
+
+        // ON_ERROR — send the error (mirrors mtron_wsHandler.ON_ERROR)
+        this.jvm().put(uri(ON_ERROR), instLambda(f("on_error"), lst(T(ALL)), (lhs, _) -> {
+            try {
+                this.send(MFail.reported(lhs));
+                return noobj();
+            } catch (final Exception e) {
+                LOG.error("error processing error: %s", lhs, e);
+                return noobj();
+            }
+        }));
+
+        // SEND — overrides the base HttpRec default to provide mtron-specific serialization
+        this.jvm().put(uri(SEND), instLambda(f("send"), lst(T(ALL.maybe())), (_, inst) -> {
+            try {
+                this.send(inst.arg(0));
+                return inst.arg(0);
+            } catch (final Exception e) {
+                return noobj();
+            }
+        }));
+    }
+}

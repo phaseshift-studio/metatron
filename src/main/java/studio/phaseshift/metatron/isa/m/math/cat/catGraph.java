@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

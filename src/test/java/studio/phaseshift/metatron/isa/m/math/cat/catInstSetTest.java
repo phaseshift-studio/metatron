@@ -34,11 +34,11 @@ import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
-import studio.phaseshift.metatron.isa.mach.type.compiler.rewriter.FixPointRewriter;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
 
 import java.util.HashMap;
 import java.util.List;

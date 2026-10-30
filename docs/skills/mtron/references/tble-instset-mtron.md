@@ -1,14 +1,14 @@
 ---
 name: tble instruction set
 description: >
-  The `/m/tble` instruction set and the `tblespace::T` it belongs to:
+  The `/m/db/tble` instruction set and the `tblespace::T` it belongs to:
     a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`. TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's schema is.
 ---
 
-# tble instruction set (`/m/tble`)
+# tble instruction set (`/m/db/tble`)
 
 A relational database is a space, a table is a collection, and a row is a `rec::T` whose vid **is** its primary key.
-That is the whole idea, and it is why `/m/tble` is small: *one instruction* — `sql` — and a family of rewrites that
+That is the whole idea, and it is why `/m/db/tble` is small: *one instruction* — `sql` — and a family of rewrites that
 turn a mtron read into the SQL the backend is already good at. Everything else is the space protocol you already know:
 write with `->`, read with `*`, walk the graph.
 
@@ -22,7 +22,7 @@ Every block below runs against one sqlite database mounted as `tbledoc:#`. (`mtr
 docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron_pre
-import(/m/tble)
+import(/m/db/tble)
 tblespace::[pattern => tbledoc:#,/
             host    => <sqlite:/tmp/mtron-tbledoc.db>,/
             driver  => <org.sqlite.JDBC>,/
@@ -41,12 +41,12 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 | type           | vid                                  | tid        | meaning                                                             |
 |----------------|--------------------------------------|------------|---------------------------------------------------------------------|
-| `tblespace::T` | `/m/tble/space/tblespace`            | `space::T` | a JDBC database as a space; isa `rec[host=>uri::T,driver=>uri::T]`  |
+| `tblespace::T` | `/m/db/tble/space/tblespace`            | `space::T` | a JDBC database as a space; isa `rec[host=>uri::T,driver=>uri::T]`  |
 | table types    | `/sys/space/<space>/instset/<table>` | `rec::T`   | one per discovered table, published into the space's schema instset |
 
 ```mtron_pre
 *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-*</m/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
+*</m/db/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
 ```
 
 ## configuration
@@ -122,7 +122,7 @@ the anchored form is the one to keep when the rows might be written back:
 
 ## the rewrites — reads that become SQL
 
-The interesting half of `/m/tble`: a read that matches a table is rewritten to SQL before it runs, so `count()` is
+The interesting half of `/m/db/tble`: a read that matches a table is rewritten to SQL before it runs, so `count()` is
 `SELECT COUNT(*)`, `isa()` is `WHERE`, and a projection is a column list. The match is on the *code*, not the data — the
 same expression over a `memspace` stays in mtron.
 
@@ -162,7 +162,7 @@ same expression over a `memspace` stays in mtron.
 The instset prints that list itself, and each rewrite documents its own before/after code:
 
 ```mtron_pre
-*/m/tble?docq
+*/m/db/tble?docq
 ```
 
 ## native sql
@@ -286,8 +286,8 @@ pattern, and reads of an unmounted scheme fall through to the router's catch-all
 
 * **`.explain()` on a rewritten read fails.** The rewrite replaces the code with a rewrite inst that is not itself
   callable, so a `count()` read explains as
-  `fail::[args do not match inst args: [X=>/m/tble/inst/rewrite/sql_count?int<=#{0}(person/+)]]`.
-  Ask the rewrite instead — `*/m/tble?docq` prints the family, and each entry documents its own before/after code:
+  `fail::[args do not match inst args: [X=>/m/db/tble/inst/rewrite/sql_count?int<=#{0}(person/+)]]`.
+  Ask the rewrite instead — `*/m/db/tble?docq` prints the family, and each entry documents its own before/after code:
 
 ```mtron
 *tbledoc:person/+.count().explain()    [-- fail:: args do not match inst args --]
@@ -318,4 +318,4 @@ pattern, and reads of an unmounted scheme fall through to the router's catch-all
 * [Connecting Data Sources](connecting-datasources.md) — the pattern + route model every space shares, and `!*`.
 * [dckrSpace](dckrspace-mtron.md) — an end-to-end SQLite container + tbleSpace walkthrough.
 * the design records at `docs/design/tbleSpace-update-design.md` and `docs/design/sql_mqtt_schema_design.md`.
-* `*/m/tble?docq` — the instset's own inventory (1 inst, 18 rewrites, 1 const) read straight from the VM.
+* `*/m/db/tble?docq` — the instset's own inventory (1 inst, 18 rewrites, 1 const) read straight from the VM.

@@ -6,7 +6,7 @@
 ====
 [mtron]
 ----
-import(/m/tble)
+import(/m/db/tble)
 ----
 ====
 
@@ -136,7 +136,7 @@ lite:kv/nest -> [a=>[b=>[c=>2,d=>!*lite:kv/nest]]]
 [discrete]
 === Relational Database Rewrites
 
-Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. type operations. The universality of these operations across programming and query languages ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine whenever possible. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/tble` do just that. In general, all rewrites are instructions of the form:
+Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. type operations. The universality of these operations across programming and query languages ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine whenever possible. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/db/tble` do just that. In general, all rewrites are instructions of the form:
 
 \[
 \tt rewrite?code\{?\}<=code(arg_0,arg_1,\ldots,arg_n).

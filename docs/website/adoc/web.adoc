@@ -7,7 +7,7 @@
 [mtron]
 ----
 [NO_OUTPUT] import(/m/web)
-[NO_OUTPUT] import(/m/llm)
+[NO_OUTPUT] import(/m/ai/llm)
 ----
 ====
 
@@ -86,16 +86,16 @@ The http://ollama.com/[Ollama] endpoint will serve to demonstrate how to leverag
 
 Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`.
 In doing so, the resource then acquires the behaviors defined in the type's respective `instset`.
-For this example, that `instset` is `/m/llm`.
+For this example, that `instset` is `/m/ai/llm`.
 
 [mtron]
 ----
-*/m/llm/model                   
-*/m/llm/inst/+?dom=model
+*/m/ai/llm/model                   
+*/m/ai/llm/inst/+?dom=model
 ----
 
-<1> The `model::T` type in `/m/llm`.
-<2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
+<1> The `model::T` type in `/m/ai/llm`.
+<2> The `/m/ai/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
 
 When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:11434/api/tags` can be the source of `chat?#\<=model`.
 

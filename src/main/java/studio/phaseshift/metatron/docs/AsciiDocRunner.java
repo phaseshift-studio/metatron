@@ -23,9 +23,9 @@ import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -99,7 +99,7 @@ public class AsciiDocRunner {
         LOG.info("\n[Docs Runner v" + VERSION + "]\n\targs: " + String.join(" ", args));
         // ── Load .env files ──────────────────────────────────────────────
         loadDotEnv(Path.of(System.getProperty("user.home"), ".metatron", "env"));
-        loadDotEnv(Path.of(".env").toAbsolutePath());
+        loadDotEnv(Path.of(".asciidoc.env").toAbsolutePath());
         // Diagnostic: is OS env injection working?
         System.err.println("[env] OS_ENV size = " + OS_ENV.size());
         System.err.println("[env] ENV_VAR_CTOR = " + (ENV_VAR_CTOR != null ? "available" : "NULL"));

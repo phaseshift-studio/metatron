@@ -1,7 +1,7 @@
-import(/m/mach/io);
-import(/m/mach/ui,ui);
+import(/m/web);
+import(/m/sys/ui,ui);
 import(/m/web,web);
-import(/m/llm);
+import(/m/ai/llm);
 import(/m/math,math);
 [-- the checkout, so a tool can read and write source --]
 fsspace::[pattern => mfs:#, q => [mimeq::[=>],lineq::[=>]], route => [mfs: => <.>]]@/sys/space/fs/metatron;

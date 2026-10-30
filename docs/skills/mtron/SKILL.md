@@ -317,10 +317,10 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
   `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server->client
   notifications over a `?subq` envelope, tool registration, and what is not available yet.
-* [tble instruction set](references/tble-instset-mtron.md) -- `/m/tble` and `tblespace::T`: a JDBC database as a space
+* [tble instruction set](references/tble-instset-mtron.md) -- `/m/db/tble` and `tblespace::T`: a JDBC database as a space
   -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
   backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
-* [ui instruction set](references/ui-instset-mtron.md) -- `/m/mach/ui`: a widget as a rec whose state is its own
+* [ui instruction set](references/ui-instset-mtron.md) -- `/m/sys/ui`: a widget as a rec whose state is its own
   map, `as?str<=widget(str::T)` to render one inline anywhere a str fits, the `style::T` keys (border, width,
   anchor, `top`/`left`, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
   marker to reshape), and the three insts `display`/`nano`/`less`.
@@ -332,7 +332,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 **Protocol & services**
 
-* [llm instruction set](references/llm-instset-mtron.md) -- `/m/llm`: agents, models, features, skills and tools, and
+* [llm instruction set](references/llm-instset-mtron.md) -- `/m/ai/llm`: agents, models, features, skills and tools, and
   the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
   `mcp_server::T` carried by http, ws or the process's own stdio (`bin/metatron --mcp`).
 * [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter: a DSH zstd JSONL transcript

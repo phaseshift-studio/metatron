@@ -1,14 +1,14 @@
 ---
 name: llm instruction set
 description: >
-  The `/m/llm` instruction set — models, agents, features, skills and tools, and the Model Context Protocol on
+  The `/m/ai/llm` instruction set — models, agents, features, skills and tools, and the Model Context Protocol on
   both sides of the wire: `mcp_client::T` over streamable-http, websockets or stdio, and `mcp_server::T` carried
   by http, ws or the process's own stdio. TRIGGER: When connecting an agent to an MCP server, exposing mtron
   instructions to an MCP client, choosing a transport (streamable-http + sse, ws, stdio), wiring tools into a
   `tool_feature`, or asking how a tool gets its name.
 ---
 
-# llm instruction set (`/m/llm`)
+# llm instruction set (`/m/ai/llm`)
 
 Three ideas carry the package.
 
@@ -65,7 +65,7 @@ out. The examples that *talk to a carrier* — a client reaching a mounted serve
 live carrier the way a boot file does, at `http://localhost:8777` and `ws://localhost:8555`.
 
 ```mtron_pre
-import(/m/llm)
+import(/m/ai/llm)
 import(/m/web,web)
 [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
@@ -85,18 +85,18 @@ just defined:
 
 | type             | vid                      | meaning                                                               |
 |------------------|--------------------------|-----------------------------------------------------------------------|
-| `agent::T`       | `/m/llm/agent`           | a model + features; `.chat()` runs the loop                           |
-| `model::T`       | `/m/llm/model`           | a provider, a protocol, a host, an llm name                           |
-| `feature::T`     | `/m/llm/feature`         | a stage in the chat loop (`tool_feature`, `chat_feature`, …)          |
-| `tool::T`        | `/m/llm/tool`            | an instruction with a name, a description and an argument schema      |
-| `skill::T`       | `/m/llm/skill`           | a directory of markdown: front matter, instructions, tools, resources |
-| `message::T`     | `/m/llm/message`         | one ledger record — `user`, `ai`, `system`, `thinking`, `tool_result` |
+| `agent::T`       | `/m/ai/llm/agent`           | a model + features; `.chat()` runs the loop                           |
+| `model::T`       | `/m/ai/llm/model`           | a provider, a protocol, a host, an llm name                           |
+| `feature::T`     | `/m/ai/llm/feature`         | a stage in the chat loop (`tool_feature`, `chat_feature`, …)          |
+| `tool::T`        | `/m/ai/llm/tool`            | an instruction with a name, a description and an argument schema      |
+| `skill::T`       | `/m/ai/llm/skill`           | a directory of markdown: front matter, instructions, tools, resources |
+| `message::T`     | `/m/ai/llm/message`         | one ledger record — `user`, `ai`, `system`, `thinking`, `tool_result` |
 | `mcp_client::T`  | `/m/web/mcp/mcp_client`  | a connection to an MCP server                                         |
-| `mcp_message::T` | `/m/llm/mcp/mcp_message` | the message-ledger server                                             |
+| `mcp_message::T` | `/m/ai/llm/mcp/mcp_message` | the message-ledger server                                             |
 | `mcp_server::T`  | `/m/web/mcp/mcp_server`  | a transport-agnostic MCP server                                       |
 
 `mcp_client::T` is *declared* by `/m/web` — transport surfaces are its business — and *implemented* by
-`studio.phaseshift.metatron.isa.llm.type.mcp.mcpClient`, which is why this document, the llm one, is where a
+`studio.phaseshift.metatron.isa.m.ai.llm.type.mcp.mcpClient`, which is why this document, the llm one, is where a
 client is documented.
 
 ## Model Context Protocol
@@ -241,7 +241,7 @@ mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
 Three rules follow, and the third is the one that surprises people:
 
 * **a tool's name is derived, never typed.** `mTool.toolName` flattens the instruction's path, so `/m/inst/eval`
-  is `m_inst_eval` and `/m/llm/mcp/mcp_message/add_message` is `m_llm_mcp_mcp_message_add_message`. The name is
+  is `m_inst_eval` and `/m/ai/llm/mcp/mcp_message/add_message` is `m_llm_mcp_mcp_message_add_message`. The name is
   stable across carriers *and across servers* — the same instruction is the same tool wherever it is mounted.
 * **`tool` may be a list, a single instruction, or an already-keyed rec.** The type's constructor reshapes it into
   the keyed rec its `::T` declares, and it does so before `super(...)` — a typed obj is checked against its
@@ -269,7 +269,7 @@ A server can be built from a skill instead: its instructions become tools and it
 
 #### the ledger server (`mcp_message`)
 
-`/m/llm`'s own server is `mcp_message` — the chat ledger over MCP, mounted as `/message` above. Its tools are
+`/m/ai/llm`'s own server is `mcp_message` — the chat ledger over MCP, mounted as `/message` above. Its tools are
 `add_message`, `get_messages` and `search_messages`, and it is the bus a harness lifecycle is mirrored onto (see
 the `dsh-mtron` reference). Mounting it is one route away:
 
@@ -330,9 +330,9 @@ claim fd 1 *before* the boot file runs:
  mcp         => stdio,
  typer/stage => [code_resolve => false]]
 [===============]
-import(/m/mach/io);
+import(/m/web);
 import(/m/web,web);
-import(/m/llm);
+import(/m/ai/llm);
 fsspace::[pattern => mfs:#, q => [mimeq::[=>]], route => [mfs: => <.>]]@/sys/space/fs/metatron;
 memspace::[pattern => </usr/#>, q => [docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
 mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server;

@@ -41,6 +41,9 @@ public final class Tokens {
     public static final fURI LAMBDA_TID = f(LAMBDA);
     public static final fURI M_ISA_TID = f("/m");
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
+    public static final fURI DB_ISA_TID = M_ISA_TID.extend("db");
+    public static final fURI DEV_ISA_TID = M_ISA_TID.extend("dev");
+    public static final fURI AI_ISA_TID = M_ISA_TID.extend("ai");
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
     public static final fURI INST_TID = M_ISA_INST_TID;

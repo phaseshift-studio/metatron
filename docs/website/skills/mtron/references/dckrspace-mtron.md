@@ -38,7 +38,7 @@ links back to its containers.
 ```mtron
 mtron> dckrspace::T
 mtron> !*dckrspace?docq
-==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dckr/space/dckrspace,
+==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dev/dckr/space/dckrspace,
           desc=>'[structural] a docker daemon space',
           example=>[
            'docker:compose/my-stack -> [servic...',

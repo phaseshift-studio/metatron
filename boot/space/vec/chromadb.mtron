@@ -24,6 +24,6 @@
   print("chromadb: container loaded ${_}").
   -<[pattern  => embed:#,
      host     => <http://${!*saddr}:${!*sport}/api/v2>,
-     driver   => <studio.phaseshift.metatron.isa.vec.space.ChromaV2Client>,
+     driver   => <studio.phaseshift.metatron.isa.m.db.vec.space.ChromaV2Client>,
      q        => [incrq::[=>],embedq::[=>]],
      route    => -< [embed: => <>]]@</sys/space/vec/chroma>.as(vecspace::T) }

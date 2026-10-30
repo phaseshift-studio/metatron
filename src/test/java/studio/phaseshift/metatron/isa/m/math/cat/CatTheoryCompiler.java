@@ -21,10 +21,10 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_COMPILER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -3,11 +3,11 @@
 
 [discrete]
 [%collapsible]
-./m/grph instset import
+./m/db/grph instset import
 ====
 [mtron]
 ----
-import(/m/grph)
+import(/m/db/grph)
 ----
 ====
 
@@ -41,7 +41,7 @@ The property graph extends latexmath:[G = (V,E)] with properties (key/value pair
 This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database.
 As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
 
-NOTE: The `graphspace` of `/m/grph` uses http://tinkerpop.apache.org[Apache TinkerPop] as it's underlying storage framework.
+NOTE: The `graphspace` of `/m/db/grph` uses http://tinkerpop.apache.org[Apache TinkerPop] as it's underlying storage framework.
 While useful for the time being, once metatron's approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient.
 When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron.
 This fluidity, a naturalness of form, permeates throughout.
@@ -169,13 +169,13 @@ A │ * │g:V/1/OUT/knows/IN │=?=[age=>?>29]>>│ /OUT/created/IN/name │.co
             └─out(knows)─┘                  └─out(created)>>name─┘            
 ----
 
-With respects to the traversal instructions of `/m/grph`, the instructions `outE()`, `inV()`, `out()`, etc. — inherited from Gremlin — are https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] that map to standard metatron URI fragments.
+With respects to the traversal instructions of `/m/db/grph`, the instructions `outE()`, `inV()`, `out()`, etc. — inherited from Gremlin — are https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] that map to standard metatron URI fragments.
 --
 
 [discrete]
 === A Graph Instruction Set
 
-The `/m/grph` instruction set extends the core `/m` instruction set with the following graph-oriented instructions.
+The `/m/db/grph` instruction set extends the core `/m` instruction set with the following graph-oriented instructions.
 These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).
 
 [discrete]
@@ -324,7 +324,7 @@ grphspace::
  [pattern => g:#,
   route   => [g:V => V,
               g:E => E,
-              g:S => /m/grph/inst/schema/modern],
+              g:S => /m/db/grph/inst/schema/modern],
   native  => [factory => mfactory::[=>],
               gremlin =>
                 graph => <org.apache..TinkerGraph>

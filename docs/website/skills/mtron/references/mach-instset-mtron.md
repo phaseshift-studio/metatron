@@ -51,8 +51,25 @@ is unobservable.
 ## instset (instruction memory)
 
 ```mtron
-mtron> */m/inset?docq
-==>docs::[desc=>'no documentation available']
+mtron> */m/instset?docq
+==>docs::[obj=>rec::T[?[
+     {?}pattern=>uri::T,
+     {?}const=>[<#>::T],
+     {?}type=>{?}[<#>::T],
+     {?}inst=>{?}[inst::T],
+     {?}rewrite=>{?}[inst::T],
+     {?}sugar=>{?}[lst::T],
+     {?}reference=>{?}[uri::T],
+     ...(1 more)]][ctor?instset<=(#{*}::T){<j>}]@/m/instset,
+          dom=>'an extension of space with structu...',
+          rng=>'creates the instset and registers ...',
+          args=>[
+           {?}const=>'constants used across the instset',
+           {?}type=>'types used to structure objs of th...',
+           {?}inst=>'instructions associated with the t...',
+           {?}rewrite=>'code<=code instructions that captu...',
+           {?}sugar=>'custom instruction syntax sugars g...'],
+          desc=>'[structural] an aggregate of const...']
 ```
 `instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
 can see. It is a union in two directions — this frame's own structure over its **imported** sets, and that whole stack
@@ -296,12 +313,12 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      {?}result=><#>::T]]@/m/mach/thread,
           args=>[
+           code=>"the thread's executing code",
            {?}runtime=>"computes the thread's current runn...",
            {?}result=>'the last result produced by the th...',
            {?}loop=>'delay to repeat code evaluation (d...',
            {?}time=>'the datetime::T when the thread wa...',
-           {?}state=>'current state of the thread',
-           code=>"the thread's executing code"],
+           {?}state=>'current state of the thread'],
           desc=>'[structural] the thread base type',
           core=>docs::[
            obj=>thread::T[][ctor?core<=(#{*}::T){<j>}]@/m/mach/thread/core,
@@ -373,11 +390,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
+           {?}pattern=>'the branch this network answers as...',
            {?}roster=>'known machines, connectionless: <h...',
            {?}listener=>'the sockets this machine serves th...',
            {?}status=>'the health method — an auto inst c...',
-           {?}peer=>"machine's own connections, one per...",
-           {?}pattern=>'the branch this network answers as...'],
+           {?}peer=>"machine's own connections, one per..."],
           desc=>"[structural] a machine's network: ...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -754,7 +771,7 @@ process.
 
 1. **The master sets up everything.** It starts the backend, mounts its own space, and creates every table — the
    partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
-   `import(/m/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
+   `import(/m/db/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
 2. **One workload per satellite**, shipped in the `law_shard` layout: the backend's space, the satellite's partition,
    and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
    provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.
@@ -840,6 +857,6 @@ and run on mtron's own `plus`. Nothing is added but the parser.
 * [mtron type system](type-system-mtron.md) — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.
 * [the category graph](cat-instset-mtron.md) — the declared rewrites the `rewriter` stage consumes, and the
   `LawTable` that bridges an op address to a declared law.
-* [ui instruction set](ui-instset-mtron.md) — `/m/mach/ui`, the widget family carried by the same ISA.
+* [ui instruction set](ui-instset-mtron.md) — `/m/sys/ui`, the widget family carried by the same ISA.
 * figure sources — `assets/tikz/mach-*.tex` (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
   `assets/`).

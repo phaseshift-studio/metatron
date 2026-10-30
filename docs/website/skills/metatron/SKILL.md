@@ -9,7 +9,7 @@ This skill is a practical guide to handling common use cases patterns. Each seco
 pattern and each is independent of the other.
 
 **IMPORTANT**: If the user wants the agent to execute the associated mtron expressions, then the agent must be provided
-access to an mtron virtual machine. The `tool_feature::T` of the `/m/llm` instset enables agents to use tools -- mtron
+access to an mtron virtual machine. The `tool_feature::T` of the `/m/ai/llm` instset enables agents to use tools -- mtron
 instructions and MCP servers. A general purpose instruction is `eval?#{*}<=#{?}(#::T)`. The following agent definition
 snippet is sufficient for the spawned agent to execute mtron code.
 

@@ -26,12 +26,12 @@ print("{{r}}------------
 
 print("{{y}}loading instruction sets
 {{X}}");
-import(/m/mach/io);
-import(/m/mach/ui,ui);
-import(/m/tble);
+import(/m/web);
+import(/m/sys/ui,ui);
+import(/m/db/tble);
 import(/m/web,web);
 import(/m/math,math);
-import(/m/ide,ide);
+import(/m/dev/ide,ide);
 
 print("{{y}}fs: => . (cwd) | mfs: => . (cwd)
 {{X}}");

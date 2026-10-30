@@ -26,12 +26,12 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Component;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -48,7 +48,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
 /**
  * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
@@ -158,7 +157,7 @@ public abstract class AbstractMetatronTest {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec());
-        InstSet.importInstSet(IO_ISA_TID);
+        InstSet.importInstSet(f("/m/web"));
     }
 
     @AfterAll
@@ -176,9 +175,9 @@ public abstract class AbstractMetatronTest {
     }
 
     /**
-     * Close a console a test built. {@link Console#close()} gives back the console statics; the floating surface's
-     * render thread is a daemon it leaves to the process exit, and in a reused fork that thread would poll every
-     * couple of milliseconds for the rest of the run, so it is stopped here.
+     * Close a console a test built. {@link Console#close()} gives back the console statics and stops the floating
+     * surface's render thread; the shutdown here is an idempotent re-stop for a close that threw before reaching
+     * its own, so a reused fork never carries a daemon polling every couple of milliseconds.
      */
     protected static void closeConsole(final Console console) {
         console.close();

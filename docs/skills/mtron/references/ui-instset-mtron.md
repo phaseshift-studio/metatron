@@ -1,7 +1,7 @@
 ---
 name: ui instruction set
 description: >
-  The `/m/mach/ui` instruction set: a widget is a rec whose state is its own map, `as?str<=widget(str::T)`
+  The `/m/sys/ui` instruction set: a widget is a rec whose state is its own map, `as?str<=widget(str::T)`
   renders one inline anywhere a str fits, `style::T` says how it looks and where it hangs from, and the
   console floats it on a terminal where the pointer works it — click to focus, drag the chevron to move,
   drag the corner marker to reshape. TRIGGER: when rendering or floating a widget, styling or anchoring
@@ -9,7 +9,7 @@ description: >
   keys a widget type declares.
 ---
 
-# ui instruction set (`/m/mach/ui`)
+# ui instruction set (`/m/sys/ui`)
 
 A widget is a **rec**. Its title, its body, its style, whether it is folded, where it sits — every one of
 those is a key in its own map, and when the widget is anchored (`@uri`) that map is the space's. There is
@@ -24,7 +24,7 @@ the pointer, belongs to the console (see *anchoring, and the pointer*).
 The instruction set's own subgraph — at once the map of this doc and a widget:
 
 ```mtron_pre
-tree_widget::[root=>/m/mach/ui, max=>2].as?str<=widget(str::T)
+tree_widget::[root=>/m/sys/ui, max=>2].as?str<=widget(str::T)
 ```
 
 ## the space these examples use
@@ -38,25 +38,25 @@ widget recs live at `/usr/uidoc/#`; the last block in this doc leaves the graph 
 
 | type         | vid                  | tid      | meaning                                                           |
 |--------------|----------------------|----------|-------------------------------------------------------------------|
-| `widget::T`  | `/m/mach/ui/widget`  | `rec::T` | the widget base — every widget is a rec, and isa this             |
-| `style::T`   | `/m/mach/ui/style`   | `rec::T` | how a widget looks and where it hangs from (see *style*)          |
-| `anchor::T`  | `/m/mach/ui/anchor`  | `uri::T` | `top_left`, `top_middle`, `top_right`, `middle`, `bottom_*`       |
-| `console::T` | `/m/mach/ui/console` | `rec::T` | the terminal: panes, the prompt, and the surface widgets float on |
+| `widget::T`  | `/m/sys/ui/widget`  | `rec::T` | the widget base — every widget is a rec, and isa this             |
+| `style::T`   | `/m/sys/ui/style`   | `rec::T` | how a widget looks and where it hangs from (see *style*)          |
+| `anchor::T`  | `/m/sys/ui/anchor`  | `uri::T` | `top_left`, `top_middle`, `top_right`, `middle`, `bottom_*`       |
+| `console::T` | `/m/sys/ui/console` | `rec::T` | the terminal: panes, the prompt, and the surface widgets float on |
 
 A widget type declares **the keys its widget reads** and carries the ctor that builds it, which makes the
 type readable as the contract:
 
 ```mtron_pre
-*/m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
-*/m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
+*/m/sys/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
+*/m/sys/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
 ```
 
-`*/m/mach/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
+`*/m/sys/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer "what can I put in this thing", and it is generated from
 the same declarations the type checker uses:
 
 ```mtron_pre
-*/m/mach/ui/widget?docq
+*/m/sys/ui/widget?docq
 ```
 
 | widget type                | keys it reads                                                 |
@@ -131,7 +131,7 @@ accordion_widget::[title=>'notes',body=>"l01\nl02\nl03"].as?str<=widget(str::T)
 ```
 
 ```mtron_pre
-[MAXOUTPUT 10] tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
+[MAXOUTPUT 10] tree_widget::[root=>/m/sys/ui, max=>1].as?str<=widget(str::T)
 ```
 
 ```mtron_pre
@@ -268,7 +268,7 @@ panel_widget::[title=>'note',body=>'alpha'].display()
   they were written.
 * **`tree_widget` can fail on some roots.** `tree_widget::[root=>/sys, max=>1].as?str<=widget(str::T)`
   raises a `fail::` NPE from the tree walk (`Tuple$Pair.get1()` is null for one of `/sys`'s entries);
-  `/m/mach/ui`, `/usr/...` and the project subgraphs the ide skill walks are fine.
+  `/m/sys/ui`, `/usr/...` and the project subgraphs the ide skill walks are fine.
 * **A box drawn one cell wide and tall shows no corner marker** — it would sit on top of the chevron.
 
 ## see also
@@ -282,4 +282,4 @@ panel_widget::[title=>'note',body=>'alpha'].display()
   migration removed.
 * `bin/test/console-drag.steps`, `console-widget-scroll.steps`, `console-widget-mouse.steps` — the pty
   suites that drive the pointer and the viewport in a real console.
-* `*/m/mach/ui?docq` — the instruction set's own inventory (3 insts and the type family).
+* `*/m/sys/ui?docq` — the instruction set's own inventory (3 insts and the type family).

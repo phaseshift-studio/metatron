@@ -58,4 +58,7 @@ replay_pid*
 
 # per-machine build-server config (see metatron-remote.env.example)
 metatron-remote.env
+
+# docs pipeline secrets (AsciiDocRunner)
+.asciidoc.env
 /Desktop/

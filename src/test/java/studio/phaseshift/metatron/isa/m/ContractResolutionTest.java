@@ -30,7 +30,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer.parse;
+import static studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse;
 
 /**
  * Contract resolution across a refinement: a contract is declared once, at the most general pair of endpoints

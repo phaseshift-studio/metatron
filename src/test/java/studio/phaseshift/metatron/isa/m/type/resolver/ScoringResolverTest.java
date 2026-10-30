@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.SpecificitySelector;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.SpecificitySelector;
 
 /**
  * Test suite for {@link ScoringResolver} — the compiler's {@code scoring_resolver::T}, which

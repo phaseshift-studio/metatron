@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.FirstFindSelector;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.FirstFindSelector;
 
 /**
  * Test suite for {@link FirstFindSelector} — the compiler's {@code firstfind_selector::T}, the

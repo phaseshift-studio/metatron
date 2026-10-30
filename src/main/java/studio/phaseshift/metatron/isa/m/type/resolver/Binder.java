@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Component;
-import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.GenericBinder;
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.GenericBinder;
 
 import java.util.concurrent.atomic.AtomicReference;
 

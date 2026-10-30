@@ -101,11 +101,6 @@
         .click-to-copy:active {
             background-color: var(--mred);
         }
-
-        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
-        .click-to-copy .hljs-copy-button {
-            display: none;
-        }
     </style>
     <script src="../../../js/metatron.js" type="text/javascript"></script>
     
@@ -194,51 +189,78 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m.html"><img
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
                             src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_dcmnt.html"><img
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
                             src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
-                            alt="dcmnt"/>/m/dcmnt</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_grph.html"><img
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
                             src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
-                            alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_ide.html"><img
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
                             src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/ide</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_iot.html"><img
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_llm.html"><img
-                            src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
-                            alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach.html"><img
-                            src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
-                            alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_mach_ui.html"><img
-                            src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
-                            alt="ui"/>/m/mach/ui</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math.html"><img
-                            src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
-                            alt="math"/>/m/math</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_math_cat.html"><img
-                            src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
-                            alt="cat"/>/m/math/cat</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_sys.html"><img
-                            src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_tble.html"><img
-                            src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
-                            alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_vec.html"><img
-                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
-                            alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/m_web.html"><img
-                            src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
-                            alt="web"/>/m/web</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
                 </ul>
             </li>
             <!-- INSTSET-MENU:END -->
@@ -410,8 +432,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </nav>
 <script>
     // Click-to-copy for the download dropdown bash commands: the whole block is
-    // the copy target (no rollover copy button). The :active CSS turns the block
-    // red while pressed; this copies the command on click release.
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
     (function () {
         function fallbackCopy(text) {
             var tmp = document.createElement('input');
@@ -468,19 +490,19 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 ==&gt;object[int]::[obj=&gt;int::T,
                  law=&gt;[
                   ring=&gt;/m/theory/ring_theory::[
-                   add=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
-                   mul=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+                   add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
                    zero=&gt;0,
                    one=&gt;1],
                   add_group=&gt;/m/theory/group_theory::[
-                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;0,
-                   inv=&gt;!*/m/inst/neg?rng=/m/int&amp;dom=/m/int],
+                   inv=&gt;neg?int&lt;=int(){&lt;j&gt;}],
                   add_monoid=&gt;/m/theory/monoid_theory::[
-                   op=&gt;!*/m/inst/plus?rng=/m/int&amp;dom=/m/int,
+                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;0],
                   mult_monoid=&gt;/m/theory/monoid_theory::[
-                   op=&gt;!*/m/inst/mult?rng=/m/int&amp;dom=/m/int,
+                   op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;1]],
                  morphed_to=&gt;!λ(){&lt;j&gt;},
                  morphed_from=&gt;!λ(){&lt;j&gt;}]
@@ -1068,16 +1090,16 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               on_message=&gt;print('received ${_}')]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
@@ -1132,10 +1154,7 @@ form a tree. The plan — not its
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([start({1,2,3,4,5}).plus(10).sum?hop=0()]).select([virtual::[code=&gt;eval?&lt;=code(ws://localhost:8555){&lt;j&gt;},
-                     source=&gt;!*/sys/thread/main,
-                     rhs=&gt;!λawait(){&lt;j&gt;}]@~/sys/thread/cf9004ea]).select([rshift(rhs)]).merge().sum(),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost=&gt;1]],
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
            theory_unit_removal=&gt;plan::[
             name=&gt;theory_unit_removal,
             cut=&gt;[role=&gt;id],
@@ -1143,23 +1162,56 @@ that licenses it are the same value: every rule is <code>lower(plan::T)</code>, 
            derivation_contraction=&gt;plan::[
             name=&gt;derivation_contraction,
             cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
 <p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start([start({1,2,3,4,5,6}).group?hop=0([mod(3)=&gt;sum()])]).select([virtual::[code=&gt;eval?&lt;=code(ws://localhost:8555){&lt;j&gt;},
-                     source=&gt;!*/sys/thread/main,
-                     rhs=&gt;!λawait(){&lt;j&gt;}]@~/sys/thread/c0d5aaf0]).select([rshift(rhs)]).merge().sum().select([id()=&gt;sum()]),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost=&gt;1]],
+==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
            theory_unit_removal=&gt;plan::[
             name=&gt;theory_unit_removal,
             cut=&gt;[role=&gt;id],
             where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[
-            name=&gt;derivation_contraction,
-            cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1193,9 +1245,7 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[
-            http://localhost:8777,
-            ws://localhost:8555],
+           authority=&gt;[ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]

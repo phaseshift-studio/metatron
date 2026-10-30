@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 /**
  * Something a {@code vid} can be read from and written to — the one contract every data source a
- * {@link studio.phaseshift.metatron.isa.mach.type.Machine} dispatches to shares.
+ * {@link studio.phaseshift.metatron.isa.m.mach.type.Machine} dispatches to shares.
  * <p>
  * The machine is the gatekeeper of a read: {@code Machine.read} asks its {@code network} (authority dispatch),
  * then its {@code memory} (data memory), then its {@code instset} (instruction memory), and each of those is an

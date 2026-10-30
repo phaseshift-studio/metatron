@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,7 +1,7 @@
 ---
 name: ui instruction set
 description: >
-  The `/m/mach/ui` instruction set: a widget is a rec whose state is its own map, `as?str<=widget(str::T)`
+  The `/m/sys/ui` instruction set: a widget is a rec whose state is its own map, `as?str<=widget(str::T)`
   renders one inline anywhere a str fits, `style::T` says how it looks and where it hangs from, and the
   console floats it on a terminal where the pointer works it — click to focus, drag the chevron to move,
   drag the corner marker to reshape. TRIGGER: when rendering or floating a widget, styling or anchoring
@@ -9,7 +9,7 @@ description: >
   keys a widget type declares.
 ---
 
-# ui instruction set (`/m/mach/ui`)
+# ui instruction set (`/m/sys/ui`)
 
 A widget is a **rec**. Its title, its body, its style, whether it is folded, where it sits — every one of
 those is a key in its own map, and when the widget is anchored (`@uri`) that map is the space's. There is
@@ -24,7 +24,7 @@ the pointer, belongs to the console (see *anchoring, and the pointer*).
 The instruction set's own subgraph — at once the map of this doc and a widget:
 
 ```mtron
-mtron> tree_widget::[root=>/m/mach/ui, max=>2].as?str<=widget(str::T)
+mtron> tree_widget::[root=>/m/sys/ui, max=>2].as?str<=widget(str::T)
 ==>"""
    ui
    ├─ anchor
@@ -59,24 +59,24 @@ widget recs live at `/usr/uidoc/#`; the last block in this doc leaves the graph 
 
 | type         | vid                  | tid      | meaning                                                           |
 |--------------|----------------------|----------|-------------------------------------------------------------------|
-| `widget::T`  | `/m/mach/ui/widget`  | `rec::T` | the widget base — every widget is a rec, and isa this             |
-| `style::T`   | `/m/mach/ui/style`   | `rec::T` | how a widget looks and where it hangs from (see *style*)          |
-| `anchor::T`  | `/m/mach/ui/anchor`  | `uri::T` | `top_left`, `top_middle`, `top_right`, `middle`, `bottom_*`       |
-| `console::T` | `/m/mach/ui/console` | `rec::T` | the terminal: panes, the prompt, and the surface widgets float on |
+| `widget::T`  | `/m/sys/ui/widget`  | `rec::T` | the widget base — every widget is a rec, and isa this             |
+| `style::T`   | `/m/sys/ui/style`   | `rec::T` | how a widget looks and where it hangs from (see *style*)          |
+| `anchor::T`  | `/m/sys/ui/anchor`  | `uri::T` | `top_left`, `top_middle`, `top_right`, `middle`, `bottom_*`       |
+| `console::T` | `/m/sys/ui/console` | `rec::T` | the terminal: panes, the prompt, and the surface widgets float on |
 
 A widget type declares **the keys its widget reads** and carries the ctor that builds it, which makes the
 type readable as the contract:
 
 ```mtron
-mtron> */m/mach/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
-mtron> */m/mach/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
+mtron> */m/sys/ui/widget/panel_widget       [-- title and body, both optional; ctor?panel_widget<=#{?} --]
+mtron> */m/sys/ui/widget/tree_widget        [-- root and max required; code/flatten/xref/expand optional --]
 ```
-`*/m/mach/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
+`*/m/sys/ui/widget?docq` is the catalog — one entry per widget type, each with its args, its dom/rng and
 its own example. It is the fastest way to answer "what can I put in this thing", and it is generated from
 the same declarations the type checker uses:
 
 ```mtron
-mtron> */m/mach/ui/widget?docq
+mtron> */m/sys/ui/widget?docq
 ==>docs::[obj=>rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,
                                            {?}background=>str::T,
                                            {?}foreground=>str::T,
@@ -84,11 +84,11 @@ mtron> */m/mach/ui/widget?docq
                                            {?}headerDivider=>str::T,
                                            {?}pointer=>str::T,
                                            {?}leftMargin=>int::T,
-                                           ...(12 more)]][ctor?style<=(#{*}::T){<j>}]@/m/mach/ui/style]]@/m/mach/ui/widget,
+                                           ...(12 more)]][ctor?style<=(#{*}::T){<j>}]@/m/sys/ui/style]]@/m/sys/ui/widget,
           args=>[{?}style=>'the style specification for the wi...'],
           desc=>'[structural] the base widget type',
           accordion_widget=>docs::[
-           obj=>widget::T[?[{?}title=>str::T,{?}body=>str::T]][ctor?accordion_widget<=(#{*}::T){<j>}]@/m/mach/ui/widget/accordion_widget,
+           obj=>widget::T[?[{?}title=>str::T,{?}body=>str::T]][ctor?accordion_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/accordion_widget,
            dom=>'maybe an obj',
            rng=>'an accordion obj',
            args=>[
@@ -96,14 +96,14 @@ mtron> */m/mach/ui/widget?docq
             {?}title=>'the title of the accordion'],
            desc=>'[structural] an expandable/collaps...'],
           progress_table_widget=>docs::[
-           obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?progress_table_widget<=(#{*}::T){<j>}]@/m/mach/ui/widget/progress_table_widget,
+           obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?progress_table_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/progress_table_widget,
            desc=>'[structural] a table of progress b...',
            example=>["progress_table::[row=>[[text=>'lay..."]],
           table_widget=>docs::[
            obj=>widget::T[?[
             {?}header=>lst::T,
             {?}row=>lst::T,
-            {?}metadata=>lst::T]][ctor?table_widget<=(#{*}::T){<j>}]@/m/mach/ui/widget/table_widget,
+            {?}metadata=>lst::T]][ctor?table_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/table_widget,
            dom=>'maybe an obj',
            rng=>'a table widget',
            args=>[
@@ -118,16 +118,16 @@ mtron> */m/mach/ui/widget?docq
             {?}code=><#>::T,
             {?}flatten=>bool::T,
             {?}xref=>rec::T,
-            {?}expand=>uri::T]][ctor?tree_widget<=(#{*}::T){<j>}]@/m/mach/ui/widget/tree_widget,
+            {?}expand=>uri::T]][ctor?tree_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/tree_widget,
            dom=>'maybe an obj',
            rng=>'a tree widget',
            args=>[
+            {?}code=>'transform obj prior to insertion i...',
+            {?}expand=>'branch uris whose children are rea...',
             {?}xref=>'xref=>[max=>N, code=><call>] cross...',
             max=>'the max depth to traverse',
             {?}flatten=>'fold single-folder chains into one...',
-            root=>'the root uri to traverse from',
-            {?}code=>'transform obj prior to insertion i...',
-            {?}expand=>'branch uris whose children are rea...'],
+            root=>'the root uri to traverse from'],
            desc=>'[structural] the root uri space is...'],
           ...(11 more)]
 ```
@@ -267,7 +267,7 @@ mtron> table_widget::[header=>['name','qty'],row=>[['alpha','3'],['beta','12']]]
    """
 ```
 ```mtron
-mtron> tree_widget::[root=>/m/mach/ui, max=>1].as?str<=widget(str::T)
+mtron> tree_widget::[root=>/m/sys/ui, max=>1].as?str<=widget(str::T)
 ==>"""
    ui
    ├─ anchor
@@ -359,11 +359,11 @@ mtron> g10 -> [,].repeat(code=>+['.'],until=>loop()?>9)-<[_].repeat(code=>+(>>0.
      ...(3 more)],
     ...(3 more)]
 mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
-==>fail::[parse error at line 1, col 1: unable to construct matrix_widget::T: fail::["""inst apply failure: obj does not match /m/mach/ui/widget/matrix_widget::T
+==>fail::[parse error at line 1, col 1: unable to construct matrix_widget::T: fail::["""inst apply failure: obj does not match /m/sys/ui/widget/matrix_widget::T
      [[grid=>!*/usr/uidoc/g10,
       style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board
          X=>
-     widget::T[?[{?}grid=>lst::T,{?}title=>str::T]][ctor?matrix_widget<=(#{*}::T){<j>}]@/m/mach/ui/widget/matrix_widget
+     widget::T[?[{?}grid=>lst::T,{?}title=>str::T]][ctor?matrix_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/matrix_widget
      ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
      [grid=>(==>{?}grid)=>[['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.','.','.']]=>==>lst::T,
       noobj=>(==>{?}title)=>noobj=>/=>str::T,
@@ -506,7 +506,7 @@ panel_widget::[title=>'note',body=>'alpha'].display()
   they were written.
 * **`tree_widget` can fail on some roots.** `tree_widget::[root=>/sys, max=>1].as?str<=widget(str::T)`
   raises a `fail::` NPE from the tree walk (`Tuple$Pair.get1()` is null for one of `/sys`'s entries);
-  `/m/mach/ui`, `/usr/...` and the project subgraphs the ide skill walks are fine.
+  `/m/sys/ui`, `/usr/...` and the project subgraphs the ide skill walks are fine.
 * **A box drawn one cell wide and tall shows no corner marker** — it would sit on top of the chevron.
 
 ## see also
@@ -520,4 +520,4 @@ panel_widget::[title=>'note',body=>'alpha'].display()
   migration removed.
 * `bin/test/console-drag.steps`, `console-widget-scroll.steps`, `console-widget-mouse.steps` — the pty
   suites that drive the pointer and the viewport in a real console.
-* `*/m/mach/ui?docq` — the instruction set's own inventory (3 insts and the type family).
+* `*/m/sys/ui?docq` — the instruction set's own inventory (3 insts and the type family).

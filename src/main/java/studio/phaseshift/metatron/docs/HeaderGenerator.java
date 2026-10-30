@@ -18,14 +18,17 @@
 
 package studio.phaseshift.metatron.docs;
 
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -93,7 +96,8 @@ public class HeaderGenerator {
             }
         }
 
-        final List<InstSet> instsets = scanInstSets(instsetDir, iconsDir);
+        final Path referencesDir = skillsDir.resolve("mtron/references");
+        final List<InstSet> instsets = scanInstSets(instsetDir, iconsDir, referencesDir);
         final List<Skill> skills = scanSkills(skillsDir);
 
         final String header = Files.readString(headerFile);
@@ -129,10 +133,12 @@ public class HeaderGenerator {
 
     /**
      * Walk the generated instruction-set pages, deriving each set's vid, page
-     * filename, and icon name. A set is included only when its icon file exists
-     * ({@code &lt;leaf&gt;-icon.svg}), which drops sets that lack a published icon.
+     * filename, icon name, and (when present) a reference to its
+     * {@code skills/mtron/references/<leaf>-instset-mtron.html} doc. A set is
+     * included only when its icon file exists ({@code &lt;leaf&gt;-icon.svg}), which
+     * drops sets that lack a published icon.
      */
-    private static List<InstSet> scanInstSets(final Path instsetDir, final Path iconsDir) throws IOException {
+    private static List<InstSet> scanInstSets(final Path instsetDir, final Path iconsDir, final Path referencesDir) throws IOException {
         if (!Files.isDirectory(instsetDir)) {
             LOG.error("[header] not a directory: %s", instsetDir);
             return List.of();
@@ -147,12 +153,26 @@ public class HeaderGenerator {
                     .toList();
             for (final String name : names) {
                 final String vid = "/" + name.replaceFirst("\\.html$", "").replace("_", "/");
-                final String icon = iconName(DocsUtil.leafName(vid));
+                final String leaf = DocsUtil.leafName(vid);
+                final String icon = iconName(leaf);
                 if (!Files.isRegularFile(iconsDir.resolve(icon + "-icon.svg"))) continue;
-                instsets.add(new InstSet(vid, name, icon));
+                final String doc = docLink(leaf, referencesDir);
+                instsets.add(new InstSet(vid, name, icon, doc));
             }
         }
         return instsets;
+    }
+
+    /**
+     * The relative link to a leaf's instruction-set reference doc, or {@code null}
+     * when no {@code <leaf>-instset-mtron.html} file exists under the references
+     * directory.
+     */
+    private static String docLink(final String leaf, final Path referencesDir) {
+        final String docName = leaf + "-instset-mtron.html";
+        return Files.isRegularFile(referencesDir.resolve(docName))
+                ? "./skills/mtron/references/" + docName
+                : null;
     }
 
     /**
@@ -236,10 +256,14 @@ public class HeaderGenerator {
     }
 
     /**
-     * Render the instruction-sets dropdown: an "overview" entry, a divider, then
-     * one item per instruction set (icon + vid, linking to its generated page).
+     * Render the instruction-sets dropdown as an indented tree: an "overview" entry,
+     * a divider, then the {@code /m} namespace as a nested tree. A node that names an
+     * instruction set links to its generated page; a node that is only an intermediate
+     * namespace (e.g. {@code /m/db}) is a non-linking folder header, and every level is
+     * indented one step under its parent. The root {@code /m} sits at the top of the
+     * tree, and its immediate children are the top-level namespaces.
      */
-    private static String renderInstSetMenu(final List<InstSet> instsets) {
+    static String renderInstSetMenu(final List<InstSet> instsets) {
         final StringBuilder sb = new StringBuilder();
         sb.append("            <li class=\"nav-item dropdown\">\n");
         sb.append("                <a id=\"isa_dropdown\" class=\"nav-link dropdown-toggle\" href=\"#\" role=\"button\" data-bs-toggle=\"dropdown\"\n");
@@ -250,15 +274,106 @@ public class HeaderGenerator {
         sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"./instset/index.html\">\n");
         sb.append("                        <i class=\"bi bi-grid-3x3-gap-fill me-2\"></i>overview</a></li>\n");
         sb.append("                    <li><hr class=\"dropdown-divider\"></li>\n");
-        for (final InstSet is : instsets) {
-            sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center\" href=\"./instset/").append(is.filename()).append("\"><img\n");
-            sb.append("                            src=\"./images/icons/space/").append(is.icon())
-                    .append("-icon.svg\" class=\"isa-row icon-color me-2\"\n");
-            sb.append("                            alt=\"").append(is.icon()).append("\"/>").append(is.vid()).append("</a></li>\n");
+        final Node root = buildTree(instsets);
+        if (root != null) {
+            renderNode(sb, root, 0);
         }
         sb.append("                </ul>\n");
         sb.append("            </li>");
         return sb.toString();
+    }
+
+    /**
+     * Build the instruction-set tree from a flat vid list. Every vid is split on
+     * {@code /} and each segment chain becomes a node; a node owns the {@link InstSet}
+     * whose vid equals the node's full path, or none when it is only an intermediate
+     * namespace. Children are ordered by their leaf name so sibling folders and leaves
+     * read naturally. The root is always {@code /m}.
+     */
+    private static Node buildTree(final List<InstSet> instsets) {
+        final Map<String, Node> byPath = new HashMap<>();
+        final Map<String, InstSet> byVid = new HashMap<>();
+        for (final InstSet is : instsets) {
+            byVid.put(is.vid(), is);
+        }
+        for (final InstSet is : instsets) {
+            final String[] segments = is.vid().split("/");
+            final StringBuilder path = new StringBuilder();
+            for (int i = 1; i < segments.length; i++) {
+                path.append('/').append(segments[i]);
+                byPath.computeIfAbsent(path.toString(), Node::new);
+            }
+        }
+        for (final Map.Entry<String, Node> entry : byPath.entrySet()) {
+            final Node node = entry.getValue();
+            node.instSet = byVid.get(entry.getKey());
+            final String parentPath = parentPath(entry.getKey());
+            if (parentPath != null) {
+                final Node parent = byPath.get(parentPath);
+                if (parent != null) {
+                    parent.children.add(node);
+                }
+            }
+        }
+        final Node root = byPath.get("/m");
+        if (root != null) {
+            sortTree(root);
+        }
+        return root;
+    }
+
+    /**
+     * The parent namespace of {@code vid} (e.g. {@code /m/db} for {@code /m/db/tble}),
+     * or {@code null} for the root {@code /m}.
+     */
+    private static String parentPath(final String vid) {
+        final int slash = vid.lastIndexOf('/');
+        return slash <= 0 ? null : vid.substring(0, slash);
+    }
+
+    /**
+     * Order each node's children by leaf name (the final path segment), recursively.
+     */
+    private static void sortTree(final Node node) {
+        node.children.sort(Comparator.comparing(Node::leafName));
+        for (final Node child : node.children) {
+            sortTree(child);
+        }
+    }
+
+    /**
+     * Emit one tree level. A node with an instruction set is a link (icon + full vid);
+     * a folder node is a muted, non-linking header. Children follow, indented one more
+     * step via a {@code depth-N} class.
+     */
+    private static void renderNode(final StringBuilder sb, final Node node, final int depth) {
+        final String indentClass = "isa-depth-" + depth;
+        if (node.instSet != null) {
+            final InstSet is = node.instSet;
+            if (is.doc() != null) {
+                sb.append("                    <li class=\"article-row\">\n");
+                sb.append("                        <a class=\"code dropdown-item article-link d-flex align-items-center ").append(indentClass)
+                        .append("\" href=\"./instset/").append(is.filename()).append("\"><img\n");
+                sb.append("                                src=\"./images/icons/space/").append(is.icon())
+                        .append("-icon.svg\" class=\"isa-row icon-color me-2\"\n");
+                sb.append("                                alt=\"").append(is.icon()).append("\"/>").append(is.vid()).append("</a>\n");
+                sb.append("                        <span class=\"article-formats\"><a class=\"article-format\" href=\"")
+                        .append(is.doc()).append("\">doc</a></span>\n");
+                sb.append("                    </li>\n");
+            } else {
+                sb.append("                    <li><a class=\"code dropdown-item d-flex align-items-center ").append(indentClass)
+                        .append("\" href=\"./instset/").append(is.filename()).append("\"><img\n");
+                sb.append("                            src=\"./images/icons/space/").append(is.icon())
+                        .append("-icon.svg\" class=\"isa-row icon-color me-2\"\n");
+                sb.append("                            alt=\"").append(is.icon()).append("\"/>").append(is.vid()).append("</a></li>\n");
+            }
+        } else {
+            sb.append("                    <li class=\"isa-folder d-flex align-items-center ").append(indentClass).append("\">")
+                    .append("<i class=\"bi bi-folder2-open me-2\"></i>").append(node.path).append("</li>\n");
+        }
+        for (final Node child : node.children) {
+            renderNode(sb, child, depth + 1);
+        }
     }
 
     /**
@@ -330,9 +445,31 @@ public class HeaderGenerator {
     }
 
     /**
-     * An instruction set's vid (label), generated page filename, and icon name.
+     * An instruction set's vid (label), generated page filename, icon name, and the
+     * relative link to its {@code skills/mtron/references/<leaf>-instset-mtron.html}
+     * reference (or {@code null} when the set has no such reference).
      */
-    private record InstSet(String vid, String filename, String icon) {
+    record InstSet(String vid, String filename, String icon, String doc) {
+    }
+
+    /**
+     * A node in the instruction-set tree: its full namespace path, the instruction
+     * set whose vid equals that path (or {@code null} when the node is only an
+     * intermediate namespace), and its children.
+     */
+    private static final class Node {
+        private final String path;
+        private InstSet instSet;
+        private final List<Node> children = new ArrayList<>();
+
+        Node(final String path) {
+            this.path = path;
+        }
+
+        String leafName() {
+            final int slash = this.path.lastIndexOf('/');
+            return this.path.substring(slash + 1);
+        }
     }
 
     /**

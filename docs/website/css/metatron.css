@@ -668,6 +668,37 @@ em {
     }
 }
 
+/* A dropdown taller than the viewport scrolls inside the panel instead of clipping
+   past the bottom edge (the instruction-sets tree and agent-skills accordion are the
+   tall ones).  120px leaves the fixed navbar and a breathing margin above. */
+.navbar .dropdown-menu {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: thin;               /* Firefox */
+    scrollbar-color: var(--primary) transparent;  /* Firefox: thumb track */
+}
+
+/* A slim, dark scrollbar for the dropdown — a dark-red thumb on a near-invisible
+   track, so it reads as part of the dark menu rather than a chrome gutter. */
+.navbar .dropdown-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mred);
+}
+
 .dropdown-menu-dark .dropdown-item {
     color: var(--white);
     font-size: 1rem;
@@ -678,6 +709,45 @@ em {
 .dropdown-menu-dark .dropdown-item:hover {
     background: rgba(122, 37, 24, 0.2);
     color: var(--primary);
+}
+
+/* Instruction-set tree: each level indents one step under its parent. The depth
+   classes are emitted by HeaderGenerator (depth 0 = /m, depth 1 = its children,
+   depth 2 = grandchildren, …). */
+.dropdown-menu-dark .dropdown-item.isa-depth-1 {
+    padding-left: 2.8rem;
+}
+
+.dropdown-menu-dark .dropdown-item.isa-depth-2 {
+    padding-left: 4.2rem;
+}
+
+.dropdown-menu-dark .dropdown-item.isa-depth-3 {
+    padding-left: 5.6rem;
+}
+
+/* A folder is an intermediate namespace (/m/db, /m/dev, …) that names no instruction
+   set of its own: a muted, non-linking header, indented like its children would be. */
+.dropdown-menu-dark .isa-folder {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.4rem 0.15rem;
+    cursor: default;
+    user-select: none;
+}
+
+.dropdown-menu-dark .isa-folder.isa-depth-1 {
+    padding-left: 2.8rem;
+}
+
+.dropdown-menu-dark .isa-folder.isa-depth-2 {
+    padding-left: 4.2rem;
+}
+
+.dropdown-menu-dark .isa-folder .bi {
+    color: rgba(255, 255, 255, 0.45);
 }
 
 /* Right-align a dropdown before Bootstrap positions it. These menus open on :hover

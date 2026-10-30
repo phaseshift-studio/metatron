@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.parse;
 
 import studio.phaseshift.metatron.AbstractSerializerTest;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjByteBufferSerializer;
 
 import java.nio.ByteBuffer;
 
