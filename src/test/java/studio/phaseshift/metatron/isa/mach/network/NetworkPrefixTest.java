@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * A NETWORK NAME IS DENOTATION, NOT REACH: {@code //self/a} denotes {@code loop://self/a} because a name was BOUND to
@@ -66,7 +67,7 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
     void connect() {
         Machine.current().network().registerPrefix(NAME, LOOP);
         Machine.current().network().registerPrefix(GINGER, GINGER_WS);
-        Machine.current().network().connect(LOOP);
+        Network.Helper.connect(Machine.current().network(), LOOP);
     }
 
     @AfterEach
@@ -75,7 +76,7 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
         Machine.current().network().unregisterPrefix(GINGER);
         // a row a test declared is not the next test's: the class proves the door's dialect, so it must not inherit one
         Machine.write(f("/network/prefix"), noobj());
-        Machine.current().network().disconnect(LOOP);
+        Machine.current().network().drop(LOOP);
     }
 
     /**

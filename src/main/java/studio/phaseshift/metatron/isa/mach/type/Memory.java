@@ -34,15 +34,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * The <b>Memory</b> component of a Machine: the address space a machine holds, in both of its aspects.
  * <p>
- * It is a {@link Rec} — via {@link Machine.Component} — for a reason that is not structural convenience: memory
+ * It is a {@link Rec} — via {@link Component} — for a reason that is not structural convenience: memory
  * is <em>reflected into mtron</em>, so the language that composes machines can read and write it. A component
  * reachable only through Java accessors is invisible to the language that is supposed to be in control of it.
  * <p>
@@ -70,7 +70,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Memory extends Space, Machine.Component, Closeable {
+public interface Memory extends Space, Component, Component.Prefix, Closeable {
 
     /**
      * A Memory claims EVERYTHING it presents: its jurisdiction is the world of spaces it facades, so its pattern is
@@ -108,6 +108,62 @@ public interface Memory extends Space, Machine.Component, Closeable {
     void registerRedirect(final fURI small, final fURI big);
 
     void unregisterRedirect(final fURI small, final fURI big);
+
+    /**
+     * THIS LEVEL's short-name rows, {@code <name> => <path>}: the preferred home of each name, the same winner
+     * {@link #redirect(fURI, boolean)} prefers. The resolver's table stays the implementation's; this is the prefix
+     * contract's view of it, so {@link Component.Prefix.Helper} builds the parental view over a memory exactly as it
+     * does over a network's authorities or an ISA's scheme aliases.
+     */
+    @Override
+    Rec prefixes();
+
+    /**
+     * THE LEVEL ABOVE this memory (the union's enclosing level), or null at the root.
+     */
+    @Override
+    default Component.Prefix previousLevel() {
+        return this.previous();
+    }
+
+    @Override
+    default Component.Prefix on(final Machine machine) {
+        return machine.memory();
+    }
+
+    /**
+     * DECLARE a short name HERE — the prefix contract's spelling of {@link #registerRedirect(fURI, fURI)}. A name may
+     * denote several paths; the redirects table keeps them all and the prefix view names the preferred one.
+     */
+    @Override
+    default Obj registerPrefix(final fURI name, final fURI value) {
+        // A REDIRECT'S HOME IS A PATH: a relative value names nothing outside this very level, so it is not a row
+        if (value.isRelative())
+            return noobj();
+        this.registerRedirect(name, value);
+        return uri(value);
+    }
+
+    /**
+     * WITHDRAW this level's row for {@code name} — the binding the prefix view reports, never a parent's.
+     */
+    @Override
+    default Obj unregisterPrefix(final fURI name) {
+        final Obj held = this.prefixes().at(name);
+        if (held.isNoObj())
+            return noobj();
+        this.unregisterRedirect(name, held.uriValue());
+        return held;
+    }
+
+    /**
+     * RESOLVE a short name to its home path ({@code cos} to {@code /m/inst/cos}); a spelling memory does not name is
+     * answered unchanged, so a caller may align unconditionally.
+     */
+    @Override
+    default fURI alignPrefix(final fURI id) {
+        return this.redirect(id.one(), true);
+    }
 
     /**
      * THE CANDIDATE PATHS a short name may denote, in the order {@link #redirect} prefers them — the whole set the
@@ -331,13 +387,13 @@ public interface Memory extends Space, Machine.Component, Closeable {
 
     /**
      * {@link studio.phaseshift.metatron.isa.Addressable#drop} — memory's arm of the one retraction verb:
-     * {@code id -> noobj} over the space index, with {@code removeSpace} the typed workhorse underneath.
+     * {@code address -> noobj} over the space index, with {@code removeSpace} the typed workhorse underneath.
      * Answers the space that held the claim, or {@code noobj} when nothing did.
      */
     @Override
-    default Obj drop(final fURI id) {
-        final Obj held = this.getSpaceFor(id) instanceof Obj space ? (Obj) space : studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
-        this.removeSpace(id);
+    default Obj drop(final fURI address) {
+        final Obj held = this.getSpaceFor(address) instanceof Obj space ? (Obj) space : studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
+        this.removeSpace(address);
         return held;
     }
 

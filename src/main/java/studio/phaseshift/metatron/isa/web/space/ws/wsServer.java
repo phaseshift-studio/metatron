@@ -122,7 +122,7 @@ public final class wsServer extends Listener {
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (_, inst) -> {
                         try {
-                            // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron?name=me>] —
+                            // THE IDIOMATIC DIAL: ws_client::[pattern=><ws://host:port/mtron>] —
                             // the claim derives the host (pattern retracted), the constructor connects, and
                             // on success the client indexes itself into the network as a space's constructor
                             // indexes into Memory. Indexing is a BACKGROUND behavior: it never fails the
@@ -288,12 +288,12 @@ public final class wsServer extends Listener {
         final Network level = Machine.current().network();
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
-            level.listen(held, routes);
+            Network.Helper.listen(level, held, routes);
             return held;
         }
         final wsServer server = new wsServer(origin, level);
         try {
-            level.listen(server, routes);
+            Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {
             // a socket bound for routes that cannot be served is released with them
             server.close();
@@ -304,7 +304,7 @@ public final class wsServer extends Listener {
 
     /**
      * THE CO-MOUNT — the inbound half of a dial, held by the machine whose route the connection took: its peer, keyed
-     * by the remote socket and the route it dialed ({@code ?name} included, the dialer's identity), with the session as
+     * by the remote socket and the route it dialed, with the session as
      * its client. Answers the address the peer is retracted by, or null when the co-mount was declined.
      */
     static fURI admit(final Route route, final fURI dialed, final Obj session) {
@@ -351,7 +351,7 @@ public final class wsServer extends Listener {
     private fURI admit(final Route route, final WebSocket conn, final WebSocketRec session) {
         try {
             final InetSocketAddress remote = conn.getRemoteSocketAddress();
-            // the full connection uri: the route it dialed and its ?q (the dialer's ?name), at the remote socket
+            // the full connection uri: the route it dialed and its ?q, at the remote socket
             return null == remote ? null : admit(route, request(conn).scheme("ws").host(fURI.hostOf(remote)).port(remote.getPort()), session);
         } catch (final Exception e) {
             // never breaks the connection: a declined co-mount is a connection without a peer
@@ -368,7 +368,7 @@ public final class wsServer extends Listener {
             session.rec().onClose(conn, code, reason, remote);
             // the inbound peer dies with its socket: reach is a capability, retracted with the connection
             if (null != session.peer())
-                session.route().level().disconnect(session.peer());
+                session.route().level().drop(session.peer());
         });
     }
 
@@ -393,7 +393,7 @@ public final class wsServer extends Listener {
         conn.send(String.format("metatron ws_server at {{b}}%s{{X}}\n", this.origin()));
         conn.send("\t{{y}}available routes{{X}}:\n");
         for (final Network level : this.sharers()) {
-            final Obj entry = level.listenerAt(Network.Helper.keyOf(this.origin()));
+            final Obj entry = level.listener(this.origin().pathEncoding());
             final Obj routes = entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
             if (routes.isRec())
                 conn.send(Highlighter.format(routes));

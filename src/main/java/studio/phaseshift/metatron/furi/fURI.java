@@ -167,6 +167,30 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         return temp;
     }
 
+    /**
+     * WHETHER THE HOST NAMES THIS MACHINE'S LOOPBACK — one socket under several spellings ({@code 0.0.0.0},
+     * {@code 127.0.0.1}, {@code localhost}, {@code ::1}, …), so two spellings of the same service must agree.
+     */
+    default boolean isLoopbackHost() {
+        return Singleton.isLoopbackHost(this.host());
+    }
+
+    /**
+     * THE KEY A DIAL IS HELD UNDER: the address as a LEGAL local path, one per surface — {@link #toPath()}, with a
+     * loopback host spelled {@code localhost} FIRST so {@code 127.0.0.1} and {@code [::1]} encode to the connection
+     * {@code localhost} already holds. {@code ws://peer.local:8555/mtron?clientq=me} encodes to
+     * {@code ws/peer/local/8555/mtron}.
+     * <p>
+     * LEGAL MEANS NO DOTS AND NO COLONS IN A SEGMENT: {@link #toPath()} splits the host into its labels in order
+     * ({@code 10.0.0.7} is {@code 10/0/0/7}) — never kept whole, and never merged, since a dropped boundary lets two
+     * machines share a key and the redial of one would hang up the other. A q is dropped: the identity a dial spends
+     * and the serializers that ride the session name no connection (a {@code ?clientq} once leaked into the key this
+     * way — measured).
+     */
+    default fURI pathEncoding() {
+        return (this.isLoopbackHost() ? this.host("localhost") : this).toPath();
+    }
+
 
     default fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
@@ -1328,6 +1352,21 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     class Singleton {
         public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+        /**
+         * THE LOOPBACK SPELLINGS: one socket, many names. A socket reports IPv6 loopback uncompressed (and
+         * {@code fURI.hostOf} brackets it), so both spellings are here.
+         */
+        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]",
+                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]");
+
+        /**
+         * Whether a bare host string names loopback — the check {@link fURI#isLoopbackHost()} delegates to.
+         */
+        public static boolean isLoopbackHost(final String host) {
+            return null != host && LOOPBACK_HOSTS.contains(host);
+        }
+
         // One poly element: the leading run stops at `,` so the separator is never swallowed, and the trailing run is
         // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is an entry like any other. The element keeps
         // any whitespace around it, so a reader trims it.

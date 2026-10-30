@@ -405,7 +405,7 @@ public final class PeerCluster implements AutoCloseable {
         // hang up what dial() connected before the far sides go away, so no supervisor redials a peer that is gone
         if (this.dialed)
             for (int i = 1; i <= this.size(); i++)
-                Machine.current().network().disconnect(f("ws://localhost:" + this.port(i)));
+                Machine.current().network().drop(f("ws://localhost:" + this.port(i)));
         this.dialed = false;
         for (final Process process : this.processes) {
             process.destroy();

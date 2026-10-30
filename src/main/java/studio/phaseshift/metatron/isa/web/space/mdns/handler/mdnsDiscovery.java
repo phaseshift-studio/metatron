@@ -118,10 +118,10 @@ public class mdnsDiscovery extends MRec implements Closeable {
     private final Machine owner = Machine.current();
     private final List<JmDNS> responders = new ArrayList<>();
     /**
-     * THE PHYSICAL HOST, not {@code network().name()}. mDNS names machines, and {@code network().name()} is a
-     * logical label a machine chooses for itself ({@code metatron}) — announcing that as the SRV target makes a
-     * remote peer key this machine by a name no box on the network answers to, while our own row in
-     * {@code roster/machine} says something else. One machine, two keys, forever.
+     * THE PHYSICAL HOST, not a logical label a machine chooses for itself ({@code metatron}). mDNS names machines:
+     * announcing a self-chosen label as the SRV target makes a remote peer key this machine by a name no box on the
+     * network answers to, while our own row in {@code roster/machine} says something else. One machine, two keys,
+     * forever.
      * <p>
      * Captured once, on the constructing thread: it cannot change under a running responder, and reading it per
      * call would make a published field depend on who asked.

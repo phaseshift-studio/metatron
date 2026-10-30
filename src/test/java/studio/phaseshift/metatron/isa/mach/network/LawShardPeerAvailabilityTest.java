@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * {@code law_shard} availability needs no forked peer process — a {@code ws_client} self-dial against a
@@ -67,7 +68,7 @@ public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegra
         Machine.current().compiler(CatTheoryCompiler.single());
 
         // a ws_client self-dial mints a /network/peer — the exact trigger law_shard's guard reads
-        Machine.current().network().connect(f("ws://localhost:" + this.wsPort + "/mtron"), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + this.wsPort + "/mtron"), WS_CLIENT_TID);
         assertFalse(Machine.current().network().peers().jvm().isEmpty(), "a self-dial mints a /network/peer");
 
         // start({1,2,3,4}).plus(1).sum() lifted to path::T exposes law_shard as a live out-edge

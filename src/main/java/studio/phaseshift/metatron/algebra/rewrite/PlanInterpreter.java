@@ -321,7 +321,7 @@ public final class PlanInterpreter {
         // so what comes back is its value, 12@<tag>. A quote would now be peeled on the far side instead, and
         // whether the code it uncovers still runs is left to the peer's processor -- so there is none.
         //
-        // THE PEER RE-PLANS ITS PART. Applying a code compiles it (Machine.applyCode), so this rule runs again on the
+        // THE PEER RE-PLANS ITS PART. Applying a code compiles it (Machine.evaluate), so this rule runs again on the
         // slave where it lands: with budget left and dialed peers of its own, the peer is an interior node of the tree
         // -- it shards its part and recombines through the same combiner -- and at a height of zero it is a leaf. Every
         // level partitions its part exactly, so a cycle in the dial graph only bounces work, never duplicates or drops

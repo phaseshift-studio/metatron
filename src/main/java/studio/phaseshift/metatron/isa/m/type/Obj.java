@@ -748,7 +748,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     default Throwable failValue() {
         if (this.isFail() || this.isCaughtFail())
             return this.jvm();
-        throw MTronException.of(xxxValue, this.toCleanString(), T(tid()), FAIL_TYPE);
+        throw MTronException.of(xxxValue, this.toCleanString(), T(this.typeId()), FAIL_TYPE);
     }
 
     default boolean boolValue() {
@@ -1677,11 +1677,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     docWrap(instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).isStr()
-                    // A STRING'S MESSAGE IS ITS TEXT, NOT ITS SPELLING: toString() of a str is its mtron literal
-                    // ('bad'), and a fail's message is written as a str on the wire — so the quoted spelling would
-                    // be quoted again (fail::["'bad'"]) and the reader would see quotes that belong to the notation.
-                    ? inst.arg(0).strValue()
-                    : inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
+                            // A STRING'S MESSAGE IS ITS TEXT, NOT ITS SPELLING: toString() of a str is its mtron literal
+                            // ('bad'), and a fail's message is written as a str on the wire — so the quoted spelling would
+                            // be quoted again (fail::["'bad'"]) and the reader would see quotes that belong to the notation.
+                            ? inst.arg(0).strValue()
+                            : inst.arg(0).toString()))), "any obj", "a fail::T carrying the arg message", Map.of(jnt(0), "the failure message"), "a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message"),
                     docWrap(instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()), "any obj", "the parent of the lhs obj", Map.of(), "a parent function \\(f(x) \\nearrow x'\\): the parent link of the lhs obj"),
                     docWrap(instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),

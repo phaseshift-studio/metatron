@@ -99,7 +99,7 @@ public class WireTraceTapTest extends AbstractMetatronTest {
             assertNotNull(row.tag(), "the tag is the address the request was correlated by");
             assertEquals(0L, lane.timeouts(), "nothing timed out");
         } finally {
-            Machine.current().network().disconnect(f("ws://localhost:" + port));
+            Machine.current().network().drop(f("ws://localhost:" + port));
             if (null != space) {
                 space.close();
             }

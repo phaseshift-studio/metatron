@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
@@ -53,6 +54,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
@@ -63,13 +65,13 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
  * is the facade over the world of spaces, while {@link Compiler} lowers code and {@link Processor} runs it and neither
  * is an address space.
  * <p>
- * Three names, three questions: {@link #jvmRoot()} is this JVM's bootstrap; {@link #root()} is the top of the
- * containment this thread is in, and is what resolution reads; {@link #current()} is where the thread stands.
- * <p>
+ * Two names, two questions: {@link #root()} is this JVM's bootstrap — one machine per JVM, the one that owns its
+ * addresses and that resolution reads, whoever is executing; {@link #current()} is where <em>this thread</em> stands,
+ * which a dereference or {@code move} can change. A machine that executes need not be the one that resolves.
  * <p>
  * The members, by role:
  * <ol>
- *     <li><b>identity and place</b> -- {@code jvmRoot}, {@code root}, {@code mach0}, {@code defaultMachine}: where
+ *     <li><b>identity and place</b> -- {@code root}, {@code mach0}, {@code defaultMachine}: where
  *     things are and who contains whom.</li>
  *     <li><b>the perspective</b> -- {@code CURRENT}, {@code current()}, {@code relativeToCurrent}: where THIS thread
  *     stands, which is what lets the machine be the machine.</li>
@@ -77,7 +79,8 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
  *     machine's own sphere ({@link MachineSpace}: the machine, its components, its system information), then the
  *     network, then data memory, then instruction memory.</li>
  *     <li><b>the component contract</b> -- {@link Component} and its {@code machine()} walk.</li>
- *     <li><b>execution</b> -- {@code push}, {@code pop}, {@code move}. {@code apply} is inherited identity here: the
+ *     <li><b>execution</b> -- {@code push}, {@code pop}, {@code move}, and {@code evalAt} (the scoped move). {@code
+ *     apply} is inherited identity here: the
  *     re-homing of {@code CURRENT} as an apply side effect is disabled, so dereference stays pure and {@code move} is
  *     the only context switch.</li>
  *     <li><b>components</b> -- {@code compiler}, {@code processor}, {@code instset}, {@code memory}, {@code network},
@@ -100,15 +103,10 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * The machine ROOT — always, whatever perspective this thread is standing in. The bootstrap constant.
-     */
-    static Machine jvmRoot() {
-        return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
-    }
-
-    /**
-     * The top of the containment this thread is in: the machine that owns its addresses and whose spaces answer.
-     * Resolution reads THIS, never {@link #current()} -- a machine that EXECUTES code need not be able to RESOLVE it.
+     * This JVM's bootstrap — the machine that owns its addresses and whose spaces answer, one per JVM rather than one
+     * per thread (a statement about <em>place</em>, not about where anyone stands). Resolution reads THIS, never
+     * {@link #current()}: a machine that EXECUTES code need not be able to RESOLVE it, and a thread parked in a frame
+     * still resolves against the machine that owns the address space.
      */
     static Machine root() {
         return null == ROOT_MACHINE ? mach0() : ROOT_MACHINE;
@@ -263,59 +261,6 @@ public interface Machine extends Rec, AutoCloseable {
         return Machine.current().compiler().parser().apply(str(source));
     }
 
-    /**
-     * Evaluate a source FILE as a program: read it, parse it, run each statement in turn.
-     */
-    public static Obj evaluate(final File file) {
-        try {
-            return evaluate(Files.readString(file.toPath()));
-        } catch (final IOException e) {
-            return MTronException.of(e).asFail();
-        }
-    }
-
-    /**
-     * Evaluate a source FILE statement by statement, reporting the statement that failed.
-     * <p>
-     * Parsing and applying are INTERLEAVED: a statement is parsed, applied, and only then is the
-     * next one read. That ordering is required, not stylistic — a boot statement's construction can
-     * have side effects (a {@code @vid} write mounts a space, e.g. the console), and those effects
-     * must be in place before the next statement is read.
-     */
-    public static Stream<Obj> evaluate(final File file, final Consumer<FileParseError> exhandler) throws IOException {
-        final List<String> lines = Files.readAllLines(file.toPath());
-        final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
-        final AtomicInteger lineNumber = new AtomicInteger(0);
-        return CommonUtil.splitOnNonQuotedSequence(
-                        studio.phaseshift.metatron.isa.m.parser.mParser.stripComments(source), ';', false)
-                .stream()
-                .map(piece -> Arrays.stream(piece.split("\n"))
-                        .peek(x -> lineNumber.incrementAndGet())
-                        .filter(x -> !x.isBlank())
-                        .reduce("", (a, b) -> a + b + "\n"))
-                .map(piece -> {
-                    final String line = lines.isEmpty() ? piece : lines.get(Math.min(lineNumber.get(), lines.size() - 1));
-                    final Obj parsedPiece = studio.phaseshift.metatron.isa.m.parser.mParser.parse(piece);
-                    if (parsedPiece.stream().anyMatch(Obj::isFail)) {
-                        // the statement did not parse: report it and take the next split
-                        exhandler.accept(new FileParseError(lineNumber.get(), line, parsedPiece.asFail().asException()));
-                        return noobj();
-                    }
-                    try {
-                        return parsedPiece.apply();
-                    } catch (final Exception e) {
-                        exhandler.accept(new FileParseError(lineNumber.get(), line, e));
-                        return noobj();
-                    }
-                })
-                .filter(o -> !o.isNoObj());
-    }
-
-    /**
-     * A statement of a source file that failed, with its line and the source it came from.
-     */
-    record FileParseError(int lineNumber, String lineString, Exception parseException) {
-    }
 
     /**
      * Compile {@code source} (parse → rewrite → resolve → type) and run it on this machine.
@@ -326,8 +271,9 @@ public interface Machine extends Rec, AutoCloseable {
      * @return the obj the program computed, or the {@code fail::T} that stopped it
      */
     public static Obj evaluate(final String source) {
-        final Machine machine = Machine.current();
-        return Machine.run(machine, machine.compiler().apply(str(source)));
+        final Obj compiled = Machine.current().compiler().apply(str(source));
+        // a fail leaves the inst chain; it is returned as itself, never run
+        return compiled.isFail() ? compiled : evaluate(noobj(), compiled.asCode());
     }
 
     /**
@@ -342,15 +288,32 @@ public interface Machine extends Rec, AutoCloseable {
      * @return the obj the program computed, or the {@code fail::T} that stopped it
      */
     public static Obj evaluate(final Code code) {
-        final Machine machine = Machine.current();
-        return Machine.run(machine, machine.compiler().apply(code));
+        return evaluate(noobj(), code);
     }
 
-    private static Obj run(final Machine machine, final Obj compiled) {
-        // a fail leaves the inst chain; it is returned as itself, never run
-        if (compiled.isFail())
-            return compiled;
-        return machine.processor().code(compiled.asCode()).apply(noobj());
+    /**
+     * APPLY a program to a lhs <em>in this machine</em>: the single place a {@link Code} hands off to a machine, and
+     * what makes the machine the unit of execution. Code reaches ANOTHER machine by being shipped there in a plan
+     * ({@code law_shard}: {@code start([code]).select([to(<peer>)]).merge()}), never by a frame here that stands in it.
+     * <p>
+     * The lhs is the program's START value, and the MONAD is part of it: a monadic lhs rides {@code start} unchanged
+     * so its loop/state context survives into the processor, while a value lhs is prepended as {@code start(value)}.
+     * A code that is a single inst dispatches by that inst's own monad flag instead of going through the processor.
+     */
+    public static Obj evaluate(final Obj lhs, final Code code) {
+        final Machine machine = Machine.current();
+        final Call call = code.tryToInst();
+        if (call.isCode()) {
+            // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and rides
+            // START so the monad's loop/state context survives into the processor.
+            final Code compiled = machine.compiler().apply(Code.wrapStart(lhs, call.as())).asCode();
+            return machine.processor().code(compiled).apply(lhs.isMonad() ? lhs : noobj());
+        }
+        // single inst: dispatch by the inst's own monad flag. A monadic inst (loop()) receives the monad; a value
+        // inst is resolved and applied against the monad's obj.
+        final boolean monadic = call.isInst() && call.resolve(lhs).tid().hasQ(MONAD_IN);
+        final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
+        return call.resolve(arg).apply(arg);
     }
 
     static Obj write(final Obj obj) {
@@ -361,38 +324,6 @@ public interface Machine extends Rec, AutoCloseable {
         return null != ROOT_MACHINE;
     }
 
-
-    // ======================== the component contract ========================
-
-    interface Component extends Rec {
-        default Machine machine() {
-            Obj mach = this.parent();
-            while (!mach.isNoObj() && !(mach instanceof Machine))
-                mach = mach.parent();
-            return mach instanceof Machine ? mach.as() : mach0();
-        }
-    }
-
-    /**
-     * Apply code to a lhs <em>in this machine</em>: compile it against the machine's compiler, then run the compiled
-     * form on its processor. This is the single place a {@link Code} hands off to a machine, which is what makes the
-     * machine the unit of execution. Code reaches ANOTHER machine by being shipped there in a plan ({@code law_shard}:
-     * {@code start([code]).select([to(<peer>)]).merge()}), never by a frame here that stands in it.
-     */
-    default Obj applyCode(final Obj lhs, final Code code) {
-        final Call call = code.tryToInst();
-        if (call.isCode()) {
-            // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and rides
-            // START so the monad's loop/state context survives into the processor.
-            final Code compiled = this.compiler().apply(Code.wrapStart(lhs, call.as())).asCode();
-            return this.processor().code(compiled).apply(lhs.isMonad() ? lhs : noobj());
-        }
-        // single inst: dispatch by the inst's own monad flag. A monadic inst (loop()) receives the monad; a value
-        // inst is resolved and applied against the monad's obj.
-        final boolean monadic = call.isInst() && call.resolve(lhs).tid().hasQ(MONAD_IN);
-        final Obj arg = lhs.isMonad() && !monadic ? lhs.asMonad().obj() : lhs;
-        return call.resolve(arg).apply(arg);
-    }
 
     // ======================== components ========================
 
@@ -457,62 +388,9 @@ public interface Machine extends Rec, AutoCloseable {
     MachineSpace space();
 
     /**
-     * Bind this machine's sphere — {@link #bootstrap()} does, once per machine.
+     * Bind this machine's sphere — {@link Helper#bootstrap(Machine)} does, once per machine.
      */
     Machine space(final MachineSpace space);
-
-    /**
-     * Mount this machine's own data level and bind its sphere. The data level is a space with pattern {@code <vid>/#},
-     * so {@code ~/thread} and every other address of the machine's data resolve there as space values, not through
-     * any vid intercept. The sphere ({@link MachineSpace}) — which {@link #read}/{@link #write} ask before the network
-     * and memory — answers the machine itself and its components, and holds its system information
-     * ({@code ~/sys/fail}, {@code ~/sys/log}, …) in its own store. Called for the root in {@link AbstractMachine}'s
-     * constructor and for each child in {@link #push(fURI)}.
-     * <p>
-     * Everything here goes through {@code this.memory()} or the sphere itself at a resolved address, because bootstrap
-     * runs before the machine is reachable through {@code Machine.write} or {@code ~}.
-     */
-    default Machine bootstrap() {
-        if (this.hasVID()) {
-            // The infra PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is
-            // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
-            // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
-            final fURI resolved = this.vid().resolve();
-            // This machine's OWN address space, at <vid>/# (the root's is /#): what a vid-less `#` cache used to
-            // claim by accident, before it was made unregistered. It must be PER MACHINE — a single root /# also
-            // matches /xyz/iso, so a child's write would land in the root and outlive its machine. The vid-scoped
-            // pattern is more specific than /# and less specific than every mounted space, so mostSpecific gives
-            // each machine its own level: own, no leak up, no leak across — by construction rather than by accident.
-            final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
-            // The machine's own address space carries the same q-processors as the sphere's ~/sys store: an address
-            // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/sys/fail
-            // into this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
-            machineSpace.addQ(QCollection.docQ());
-            machineSpace.addQ(QCollection.subQ());
-            machineSpace.addQ(QCollection.incrQ());
-            machineSpace.addQ(QCollection.mimeQ());
-            machineSpace.addQ(QCollection.lockQ());
-            this.memory().addSpace(machineSpace);
-            // THE MACHINE'S OWN SPHERE (Marko, 2026-10-25): the machine itself, its components and its system
-            // information, answered FIRST by Machine.read/write and never indexed by memory, which keeps the machine's
-            // data (the catch-all above). One per machine, so a pushed frame's sphere is its own and leaves with it.
-            // ~/sys/# is the sphere's own store ("sys/# simply go into MachineSpace"): there is no sys space in memory.
-            this.space(new MachineSpace(this));
-            // THE NETWORK ANSWERS ITS OWN BRANCH, through the sphere: the component answers <vid>/network/# from its rec
-            // — every field at its own address, a peer or a listener at its key's path, and a noobj write on a member
-            // that member's retraction. mount stamps the branch; the network is not a space in memory.
-            if (this.network() instanceof BasicNetwork network)
-                network.mount(this);
-            // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
-            this.memory().write(this.vid(), this);
-            // this machine's log sink, in its sphere's ~/sys: a machine with none answers noobj, and
-            // GraphittyObjLogger.doLog then logs every level
-            final fURI vid = this.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
-            GraphittyObjLogger.setLogger(Helper.LOG_SINK);
-            this.space().write(vid, LogObj.sink(Helper.logLevels(this), vid));
-        }
-        return this;
-    }
 
     /**
      * This thread's machine stack, not initialized eagerly: until {@link #push()} is used there is no machine, and every
@@ -529,19 +407,23 @@ public interface Machine extends Rec, AutoCloseable {
      * Push a child machine whose vid strictly extends this machine's by {@code extension}, and return the child.
      * The extension is a uri because it is an expression: multi-segment, templated and composed steps all work.
      * <p>
-     * An extension carrying an <b>authority</b> is refused: it names another mtron instance rather than another
-     * machine, and a frame does not cross a process boundary. Code reaches another instance by being shipped there
-     * in a plan ({@code law_shard}); spawning that instance ({@link PeerSpawn}) is a mechanism still waiting for its
-     * instruction.
+     * A MACHINE IS A FRAME: it has its own vid and its own space — its own memory structure, ISA level and network
+     * level — so it may descend from this one and execute within the process. An extension carrying a <b>HOST</b> is
+     * refused, because it names a PEER: a network member with its own identity and lifetime, reached by dialing, not
+     * by descending. The test is a host, not {@code hasAuthority()}, which also demands an explicit port. Code reaches
+     * a peer by being shipped there in a plan ({@code law_shard}); spawning that instance ({@link PeerSpawn}) is a
+     * mechanism still waiting for its instruction.
      */
     default Machine push(final fURI extension) {
-        // AN AUTHORITY IS A PROCESS BOUNDARY, NOT A FRAME. A peer has its own vid, its own memory and its own
-        // lifetime, so it can neither descend from this machine nor share its memory -- and nothing here may stand in
-        // it either: the frame that did (it shipped every code application made in it) was a relic of the
-        // distribution the law_shard plans replaced. A HOST is the test rather than hasAuthority(), which also
-        // demands an explicit port.
+        // A MACHINE IS A FRAME; A PEER IS A NETWORK CONCEPT. push creates a machine: a child frame with its own vid
+        // and its own space -- its own memory structure (a union over this machine's), its own ISA level and its own
+        // network level -- so it may descend from this one and execute within the process. What must be refused is a
+        // PEER: an authority/host with its own identity and lifetime, reached by dialing (Network.index), never by
+        // pushing a frame -- the frame that used to stand in one shipped every code application made in it, and was a
+        // relic of the distribution the law_shard plans replaced. A HOST is the test rather than hasAuthority(),
+        // which also demands an explicit port.
         if (null != extension && extension.hasHost())
-            throw MTronException.of("push(%s) names an authority: a machine is pushed within this process, and code reaches another one by being shipped in a plan (law_shard)", extension);
+            throw MTronException.of("push(%s) names an authority: push creates a machine (a frame), while an authority names a peer — reach another instance by shipping code in a plan (law_shard)", extension);
         final fURI parentVID = this.vid();
         // The ADDRESS ARITHMETIC IS SHARED with move and pop (Helper.machineAddress): `.`, `..` and `~` mean the
         // same thing to all three, so a spelling cannot mean "up" to one instruction and something else to
@@ -610,7 +492,7 @@ public interface Machine extends Rec, AutoCloseable {
         // so the parent answered for the child's own address with a synthesized rec — and a sibling could not
         // read the child back at its vid, which is what `move(<child>)` resolves.
         CURRENT.set(child);
-        child.bootstrap();
+        Helper.bootstrap(child);
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
         Machine.root().memory().write(childVID, child);
@@ -741,6 +623,114 @@ public interface Machine extends Rec, AutoCloseable {
         public static final fURI SYS_DIR = f("sys");
 
         private static final fURI TILDE = f("~");
+
+        /**
+         * Mount this machine's own data level and bind its sphere. The data level is a space with pattern
+         * {@code <vid>/#}, so {@code ~/thread} and every other address of the machine's data resolve there as space
+         * values, not through any vid intercept. The sphere ({@link MachineSpace}) — which {@link #read}/{@link #write}
+         * ask before the network and memory — answers the machine itself and its components, and holds its system
+         * information ({@code ~/sys/fail}, {@code ~/sys/log}, …) in its own store. Called for the root in
+         * {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
+         * <p>
+         * Everything here goes through {@code machine.memory()} or the sphere itself at a resolved address, because
+         * bootstrap runs before the machine is reachable through {@code Machine.write} or {@code ~}.
+         */
+        public static Machine bootstrap(final Machine machine) {
+            if (machine.hasVID()) {
+                // The infra PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is
+                // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
+                // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
+                final fURI resolved = machine.vid().resolve();
+                // This machine's OWN address space, at <vid>/# (the root's is /#): what a vid-less `#` cache used to
+                // claim by accident, before it was made unregistered. It must be PER MACHINE — a single root /# also
+                // matches /xyz/iso, so a child's write would land in the root and outlive its machine. The vid-scoped
+                // pattern is more specific than /# and less specific than every mounted space, so mostSpecific gives
+                // each machine its own level: own, no leak up, no leak across — by construction rather than by accident.
+                final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
+                // The machine's own address space carries the same q-processors as the sphere's ~/sys store: an address
+                // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/sys/fail
+                // into this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
+                machineSpace.addQ(QCollection.docQ());
+                machineSpace.addQ(QCollection.subQ());
+                machineSpace.addQ(QCollection.incrQ());
+                machineSpace.addQ(QCollection.mimeQ());
+                machineSpace.addQ(QCollection.lockQ());
+                machine.memory().addSpace(machineSpace);
+                // THE MACHINE'S OWN SPHERE (Marko, 2026-10-25): the machine itself, its components and its system
+                // information, answered FIRST by Machine.read/write and never indexed by memory, which keeps the machine's
+                // data (the catch-all above). One per machine, so a pushed frame's sphere is its own and leaves with it.
+                // ~/sys/# is the sphere's own store ("sys/# simply go into MachineSpace"): there is no sys space in memory.
+                machine.space(new MachineSpace(machine));
+                // THE NETWORK ANSWERS ITS OWN BRANCH, through the sphere: the component answers <vid>/network/# from its rec
+                // — every field at its own address, a peer or a listener at its key's path, and a noobj write on a member
+                // that member's retraction. mount stamps the branch; the network is not a space in memory.
+                if (machine.network() instanceof BasicNetwork network)
+                    network.mount(machine);
+                // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
+                machine.memory().write(machine.vid(), machine);
+                // this machine's log sink, in its sphere's ~/sys: a machine with none answers noobj, and
+                // GraphittyObjLogger.doLog then logs every level
+                final fURI vid = machine.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
+                GraphittyObjLogger.setLogger(Helper.LOG_SINK);
+                machine.space().write(vid, LogObj.sink(Helper.logLevels(machine), vid));
+            }
+            return machine;
+        }
+
+
+        /**
+         * Evaluate a source FILE as a program: read it, parse it, run each statement in turn.
+         */
+        public static Obj evaluate(final File file) {
+            try {
+                return Machine.evaluate(Files.readString(file.toPath()));
+            } catch (final IOException e) {
+                return MTronException.of(e).asFail();
+            }
+        }
+
+        /**
+         * Evaluate a source FILE statement by statement, reporting the statement that failed.
+         * <p>
+         * Parsing and applying are INTERLEAVED: a statement is parsed, applied, and only then is the
+         * next one read. That ordering is required, not stylistic — a boot statement's construction can
+         * have side effects (a {@code @vid} write mounts a space, e.g. the console), and those effects
+         * must be in place before the next statement is read.
+         */
+        public static Stream<Obj> evaluate(final File file, final Consumer<FileParseError> exhandler) throws IOException {
+            final List<String> lines = Files.readAllLines(file.toPath());
+            final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+            final AtomicInteger lineNumber = new AtomicInteger(0);
+            return CommonUtil.splitOnNonQuotedSequence(
+                            studio.phaseshift.metatron.isa.m.parser.mParser.stripComments(source), ';', false)
+                    .stream()
+                    .map(piece -> Arrays.stream(piece.split("\n"))
+                            .peek(x -> lineNumber.incrementAndGet())
+                            .filter(x -> !x.isBlank())
+                            .reduce("", (a, b) -> a + b + "\n"))
+                    .map(piece -> {
+                        final String line = lines.isEmpty() ? piece : lines.get(Math.min(lineNumber.get(), lines.size() - 1));
+                        final Obj parsedPiece = studio.phaseshift.metatron.isa.m.parser.mParser.parse(piece);
+                        if (parsedPiece.stream().anyMatch(Obj::isFail)) {
+                            // the statement did not parse: report it and take the next split
+                            exhandler.accept(new FileParseError(lineNumber.get(), line, parsedPiece.asFail().asException()));
+                            return noobj();
+                        }
+                        try {
+                            return parsedPiece.apply();
+                        } catch (final Exception e) {
+                            exhandler.accept(new FileParseError(lineNumber.get(), line, e));
+                            return noobj();
+                        }
+                    })
+                    .filter(o -> !o.isNoObj());
+        }
+
+        /**
+         * A statement of a source file that failed, with its line and the source it came from.
+         */
+        public record FileParseError(int lineNumber, String lineString, Exception parseException) {
+        }
 
         /**
          * The sphere that answers {@code vid} for a thread standing in {@code machine}: the innermost machine — this
@@ -951,6 +941,50 @@ public interface Machine extends Rec, AutoCloseable {
             final fURI base = ancestor.resolve().asNode();
             final fURI child = candidate.resolve().asNode();
             return child.pathLength() > base.pathLength() && child.hasPrefix(base);
+        }
+
+        /**
+         * EVALUATE AT A MACHINE, SCOPED — the {@code finally} that {@link Machine#move(fURI)} is a statement of but
+         * does not do: the body runs with this thread standing at the target, and the thread is put back where it
+         * stood when the body returns <em>or throws</em>. Reach for it when the perspective is a TOOL rather than a
+         * fact: a test evaluating several independent programs, a planner trying a program at a candidate place —
+         * anything that must not leave its caller re-homed, which is exactly what a shipped program containing
+         * {@code move} would otherwise do.
+         * <p>
+         * The address is resolved by {@link machInstSet.Helper#machineAt}, the same {@code .}/{@code ..}/{@code ~}
+         * arithmetic {@code push} and {@code move} use, so a relative target is written against the caller's machine
+         * and a target that names no machine throws — with the caller's perspective restored either way.
+         * <p>
+         * THREAD-LOCAL BY CONSTRUCTION: {@code CURRENT} is per thread, so the body must run on this one. Handing it to
+         * an executor gives the worker the perspective it starts with, not the one set here.
+         *
+         * @param machineID the machine to stand in, in {@code move}'s address language
+         * @param body      what to evaluate there
+         * @param <T>       the body's answer type
+         * @return whatever the body returned
+         */
+        public static <T> T evalAt(final fURI machineID, final Supplier<T> body) {
+            final Machine here = Machine.current();
+            try {
+                Machine.current(machInstSet.Helper.machineAt(here, machineID, "evalAt"));
+                return body.get();
+            } finally {
+                Machine.current(here);
+            }
+        }
+
+        /**
+         * The same scope for a machine already in hand: no address arithmetic, no re-resolution — for a caller that
+         * has the machine (a test's starting perspective, a decision's target) and only needs the body bracketed.
+         */
+        public static <T> T evalAt(final Machine machine, final Supplier<T> body) {
+            final Machine here = Machine.current();
+            try {
+                Machine.current(machine);
+                return body.get();
+            } finally {
+                Machine.current(here);
+            }
         }
 
         /**

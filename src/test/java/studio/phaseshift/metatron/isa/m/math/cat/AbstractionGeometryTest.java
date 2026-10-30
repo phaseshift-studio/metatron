@@ -81,8 +81,8 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @AfterEach
     public void clearDials() {
-        Machine.current().network().disconnect(f("loop://ginger:8555"));
-        Machine.current().network().disconnect(f("loop://booger:8555"));
+        Machine.current().network().drop(f("loop://ginger:8555"));
+        Machine.current().network().drop(f("loop://booger:8555"));
     }
 
     /**
@@ -101,7 +101,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testDialedPeerIsTheWord() {
-        Machine.current().network().connect(f("loop://ginger.local:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger.local:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
         final Obj word = abstraction.asRec().at(uri(WHERE));
@@ -120,7 +120,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         final Obj unpeered = catInstSet.PATH_TYPE.constructor().apply(code);
         assertTrue(unpeered.asRec().at(uri("law_shard")).isNoObj(), "no peers → law_shard is pruned: " + unpeered);
-        Machine.current().network().connect(f("loop://ginger.local:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger.local:8555"));
         final Obj peered = catInstSet.PATH_TYPE.constructor().apply(code);
         assertTrue(peered.asRec().has(uri("law_shard")), "a dialed peer makes law_shard live: " + peered);
     }
@@ -130,7 +130,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testAbstractionWithWordIsAbstractionT() {
-        Machine.current().network().connect(f("loop://ginger.local:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger.local:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         final Obj abstraction = catInstSet.ABSTRACTION_TYPE.constructor().apply(code);
         assertTrue(abstraction.test(catInstSet.ABSTRACTION_TYPE),
@@ -155,7 +155,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
             "start({[a=>1],[b=>2]}).sum()                              % true",
     }, delimiter = '%')
     void testShardShapePruning(final String code, final boolean live) {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));
         checkEquality(LOG, bool(path.asRec().has(uri("law_shard"))), bool(live), true);
     }
@@ -165,7 +165,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testLoweredShardCarriesRealizedWhere() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode();
         final Obj lifted = catInstSet.realized(PlanInterpreter.lower(catRewrite.planOf("law_shard"), code));
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a shipped shard writes a realized where: " + lifted);
@@ -183,7 +183,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testLoweredShardWithAHomeLaneReadsTheAddresslessRoute() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         // a synthetic home authority: a test VM listens on nothing, so `local` would name no place on its own
         final studio.phaseshift.metatron.algebra.rewrite.Env env = studio.phaseshift.metatron.algebra.rewrite.Env.of(
                 Machine.current().network().peers(),
@@ -209,8 +209,8 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testRealizedWhereRecordsTheRealizedDemands() {
-        Machine.current().network().connect(f("loop://ginger:8555"));
-        Machine.current().network().connect(f("loop://booger:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://booger:8555"));
         final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final Obj lifted = catInstSet.realized(emitted);
@@ -226,7 +226,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testUnshippedLowerHasNoWhere() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).side(plus(1)).sum()").asCode();
         final Obj lifted = catInstSet.realized(PlanInterpreter.lower(catRewrite.planOf("law_shard"), code));
         assertTrue(lifted.isCode(), "an unshipped lower leaves the code as-is (no realized where): " + lifted);
@@ -255,7 +255,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testZeroHopPrunesDistribution() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start?hop=0({1,2,3,4}).plus(1).sum()").asCode();
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(code);
         assertTrue(path.asRec().at(uri("law_shard")).isNoObj(), "?hop=0 opts the fold out: " + path);
@@ -301,7 +301,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
      */
     @Test
     public void testMoveShipsWholeCodeToTarget() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start(5).plus(1)").asCode();
         final Code emitted = PlanInterpreter.bind(
                 PlanBuilder.plan("move").where(Placement.chain(f("loop://localhost:8555"), Span.at())).create(), code);

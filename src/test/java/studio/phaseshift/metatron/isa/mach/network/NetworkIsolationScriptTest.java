@@ -154,23 +154,19 @@ public class NetworkIsolationScriptTest extends NetworkScriptTest {
     /**
      * A COMPONENT PREDICATE CONSTRAINS WHAT IS PRESENT AND NOTHING MORE, so every partial shape passes.
      * This is worth rows of its own because the failure it guards is not a wrong answer but a machine that
-     * cannot be constructed at all: with `name` and `status` declared without {@code .maybe()}, the empty
-     * rec a deferred component slot holds was rejected, and MachPushTest lost 8 of its 9 rows — every one
-     * of them reporting {@code obj does not match /m/mach/component/network::T}. A row here names the
-     * shape that broke, in one place, instead of surfacing eight tests away.
+     * cannot be constructed at all: a declared field without {@code .maybe()} rejected the empty rec a
+     * deferred component slot holds, and MachPushTest lost 8 of its 9 rows — every one of them reporting
+     * {@code obj does not match /m/mach/component/network::T}. A row here names the shape that broke, in
+     * one place, instead of surfacing eight tests away.
      */
     @ParameterizedTest
     @CsvSource(value = {
             // shape                                                                        % accepted % why
             "[=>]                                                                            % true  % the empty rec a deferred slot holds",
-            "[name => 'local']                                                               % true  % a name alone",
+            "[pattern => </branch_child/network/#>]                                          % true  % the branch alone",
             "[roster => [b => <ws://192.168.1.42:8555>]]                                     % true  % known endpoints alone",
-            "[source => [mdns => </m/web/mdns>]]                                             % true  % a discovery source alone",
-            "[source => [mdns-lan => </m/web/mdns>, mdns-bridge => </m/web/mdns>]]            % true  % ONE MECHANISM, TWO SEGMENTS: the key is a free label, so a source per LAN segment (different interfaces, different trust) sits side by side",
-            "[peer => [<ws://192.168.1.42:8555> => [origin => <ws://192.168.1.42:8555>]]] % true  % a connection alone",
-            "[name => 'local', roster => [b => <ws://192.168.1.42:8555>], source => [mdns => </m/web/mdns>]] % true % name, roster and source together",
-            "[name => 5]                                                                     % false % a name that is not a str",
-            "[source => [mdns => 5]]                                                         % false % a source names a handler tid, not a value",
+            "[peer => [<ws/192/168/1/42/8555> => [origin => <ws://192.168.1.42:8555>]]] % true  % a connection alone, keyed by the dial's path encoding",
+            "[roster => 5]                                                                   % false % a roster names a rec of addresses, not a value",
     }, delimiter = '%')
     void testTheNetworkPredicateConstrainsOnlyWhatIsPresent(final String shape, final boolean accepted,
                                                             final String why) {

@@ -52,7 +52,7 @@ import static studio.phaseshift.metatron.Tokens.*;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Compiler extends Machine.Component, Rec {
+public interface Compiler extends Component, Rec {
 
     // ======================== schedule ========================
 

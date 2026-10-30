@@ -499,25 +499,25 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 </table>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
 ==&gt;morphism::[name=&gt;as,
-              form=&gt;mapper,
+              form=&gt;typer,
+              src=&gt;!λint(){&lt;j&gt;},
+              trgt=&gt;!λstr(){&lt;j&gt;},
+              analysis=&gt;!λ(){&lt;j&gt;},
+              obj=&gt;as?str&lt;=int(str::T){&lt;j&gt;},
+              law=&gt;[pure]]
+==&gt;morphism::[name=&gt;as,
+              form=&gt;typer,
               src=&gt;!λint(){&lt;j&gt;},
               trgt=&gt;!λrec(){&lt;j&gt;},
               analysis=&gt;!λ(){&lt;j&gt;},
               obj=&gt;as?rec&lt;=int(rec::T){&lt;j&gt;},
               law=&gt;[pure]]
 ==&gt;morphism::[name=&gt;as,
-              form=&gt;mapper,
+              form=&gt;typer,
               src=&gt;!λint(){&lt;j&gt;},
               trgt=&gt;!λbool(){&lt;j&gt;},
               analysis=&gt;!λ(){&lt;j&gt;},
               obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
-==&gt;morphism::[name=&gt;as,
-              form=&gt;mapper,
-              src=&gt;!λint(){&lt;j&gt;},
-              trgt=&gt;!λbytes(){&lt;j&gt;},
-              analysis=&gt;!λ(){&lt;j&gt;},
-              obj=&gt;as?bytes&lt;=int(bytes::T){&lt;j&gt;}]
-==&gt;morphism::[name=&gt;as,
    ...
 </code></pre>
 <h4>the algebraic theories</h4>
@@ -591,6 +591,7 @@ lifted rather than its result.</p>
 <tr><td><code>fork</code></td><td>splits objs across parallel streams</td></tr>
 <tr><td><code>join</code></td><td>merges parallel streams into a single stream</td></tr>
 <tr><td><code>catcher</code></td><td>intercepts a <code>fail</code> obj for recovery</td></tr>
+<tr><td><code>typer</code></td><td>retypes the obj's type/identity, not its value (<code>as</code>, <code>::</code>, <code>type()</code>, <code>vid()</code>, <code>tid()</code>)</td></tr>
 <tr><td><code>standard</code></td><td>an instruction with no well-defined classification</td></tr>
 </tbody>
 </table>
@@ -598,6 +599,12 @@ lifted rather than its result.</p>
 one-to-many (<code>flatmapper</code>) and <code>join</code> is the many-to-many merge (<code>gather</code>). On that projection, a coefficient floats
 through <code>mapper</code> / <code>filter</code> / <code>flatmapper</code> — the <code>floatable</code> run — and is anchored by <code>reducer</code> / <code>gather</code> — the
 <code>blocked</code> cut (see <em>the process laws</em>).</p>
+<p><code>typer</code> is the one form that is <strong>declared, not derived</strong>: <code>as?dom=A&amp;rng=B</code> is shaped like any mapper, but the
+operation's subject is the object's type/identity rather than its value, so it is opaque to a wrapper's
+<code>{self} ∪ components</code> fan-out and lies outside the <code>F</code> projection — a coefficient neither floats through it nor is
+anchored by it. The membership is declared where the operations are registered (<code>InstBuilder.declareForm</code> beside
+<code>as</code>, <code>type()</code>, <code>vid()</code> and <code>tid()</code>), staged with an instruction's other declaration facets, and drained to
+<code>?lawq</code> beside them.</p>
 <h4>the dual incidence</h4>
 <p><code>src</code>/<code>trgt</code> and <code>morphed_to</code>/<code>morphed_from</code> are the same relation seen from opposite sides:</p>
 <table>
@@ -1034,7 +1041,7 @@ names and where its <code>where</code> sends it:</p>
 <p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
 <code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
 and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
-<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hops?, span]</code> — <code>shape</code> is the topology token (<code>local</code> /
+<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hop?, span]</code> — <code>shape</code> is the topology token (<code>local</code> /
 <code>none</code> / <code>peer</code> / <code>peers</code> / <code>space</code> / <code>tree</code> / <code>shuffle</code>), <code>target</code> the concrete address. Each shape
 declares the laws it demands of a cut shipped to it (§3, two directions):</p>
 <table>
@@ -1061,16 +1068,16 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    on_message=&gt;print('received ${_}')]
+==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
@@ -1093,11 +1100,14 @@ now holding that <code>peer::T</code>, the <code>path::T</code> lists the distri
              law=&gt;[monoidic,commutative]],
             where=&gt;[
              [
-              shape=&gt;local,
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
               span=&gt;[[span=&gt;at],[span=&gt;post]]],
              [
-              shape=&gt;tree,
-              hops=&gt;1,
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
               span=&gt;[
                [span=&gt;seed,flags=&gt;[partition]],
                [span=&gt;pre,flags=&gt;[floatable,no_seed]],
@@ -1115,13 +1125,17 @@ same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
 <p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
 <code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: the seed bulk partitioned into
-shards whose seed carries the remaining hop budget (<code>start?hops=0</code> at a leaf), each shard shipped by a
-<code>select([to(peer)])</code> to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
-peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its
+shards whose fold carries the remaining hop budget (<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the
+seed), each shard shipped by a <code>select([to(peer)])</code> to its roster member, merged, and recombined at home through the
+reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+form a tree. The plan — not its
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+==&gt;[path::[obj=&gt;start([start({1,2,3,4,5}).plus(10).sum?hop=0()]).select([virtual::[code=&gt;eval?&lt;=code(ws://localhost:8555){&lt;j&gt;},
+                     source=&gt;!*/sys/thread/main,
+                     rhs=&gt;!λawait(){&lt;j&gt;}]@~/sys/thread/cf9004ea]).select([rshift(rhs)]).merge().sum(),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost=&gt;1]],
            theory_unit_removal=&gt;plan::[
             name=&gt;theory_unit_removal,
             cut=&gt;[role=&gt;id],
@@ -1129,46 +1143,23 @@ that licenses it are the same value: every rule is <code>lower(plan::T)</code>, 
            derivation_contraction=&gt;plan::[
             name=&gt;derivation_contraction,
             cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              shape=&gt;local,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              shape=&gt;tree,
-              hops=&gt;1,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 </code></pre>
 <p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              shape=&gt;local,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              shape=&gt;tree,
-              hops=&gt;1,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+==&gt;[path::[obj=&gt;start([start({1,2,3,4,5,6}).group?hop=0([mod(3)=&gt;sum()])]).select([virtual::[code=&gt;eval?&lt;=code(ws://localhost:8555){&lt;j&gt;},
+                     source=&gt;!*/sys/thread/main,
+                     rhs=&gt;!λawait(){&lt;j&gt;}]@~/sys/thread/c0d5aaf0]).select([rshift(rhs)]).merge().sum().select([id()=&gt;sum()]),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost=&gt;1]],
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1202,7 +1193,9 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[ws://localhost:8555],
+           authority=&gt;[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]

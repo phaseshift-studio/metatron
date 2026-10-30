@@ -103,7 +103,7 @@ public abstract class Listener extends MRec implements Closeable {
     }
 
     /**
-     * a level keeps a routing table on this socket (see {@link Network#listen})
+     * a level keeps a routing table on this socket (see {@link Network.Helper#listen(Network, Listener, Rec)})
      */
     public void share(final Network level) {
         this.sharers.add(level);
@@ -166,7 +166,7 @@ public abstract class Listener extends MRec implements Closeable {
      * a level's routing table on this socket, read live from its {@code listener::T} entry — empty when it keeps none
      */
     private Rec tableOf(final Network level) {
-        final Obj entry = level.listenerAt(Network.Helper.keyOf(this.origin));
+        final Obj entry = level.listener(this.origin.pathEncoding());
         final Obj table = entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
         return table.isRec() ? table.asRec() : rec();
     }

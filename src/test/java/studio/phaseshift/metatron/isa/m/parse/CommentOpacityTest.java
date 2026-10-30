@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * {@code [== the web tool's *<url> ==]} opened a string that ran to the next quote in the file. Every comment marker in
  * between was hidden, the comment closed at a much later terminator, and the statements in between were deleted as if
  * they were comment text: a boot file stopped mid-way with no error at all. Each row is a program run through
- * {@code Machine.evaluate(File)} — the path a boot file takes — and every one of its statements must answer.
+ * {@code Machine.Helper.evaluate(File)} — the path a boot file takes — and every one of its statements must answer.
  * ({@code \n} in a row is a line break.)
  */
 public class CommentOpacityTest extends AbstractMetatronTest {
@@ -64,7 +64,7 @@ public class CommentOpacityTest extends AbstractMetatronTest {
         final Path file = Files.createTempFile("comment-opacity", ".mtron");
         Files.writeString(file, source.replace("\\n", "\n"));
         final List<String> errors = new ArrayList<>();
-        final String results = Machine.evaluate(file.toFile(), error -> errors.add(error.lineNumber() + ": " + error.parseException()))
+        final String results = Machine.Helper.evaluate(file.toFile(), error -> errors.add(error.lineNumber() + ": " + error.parseException()))
                 .map(Obj::toString)
                 .collect(Collectors.joining(","));
         assertEquals(List.of(), errors, description + ": no statement may fail to parse");

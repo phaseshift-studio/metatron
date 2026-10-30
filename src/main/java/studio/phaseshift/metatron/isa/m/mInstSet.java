@@ -259,8 +259,6 @@ public class mInstSet extends AbstractInstSet {
     public static Type REGEX_TYPE;
     public static final fURI REGEX_TID = STR_TID.extend("rx");
 
-    public static Type AUTHORITY_TYPE;
-    public static Type ORIGIN_TYPE;
     public static final Type ALL_TYPE = Type.Builder.build().tid(ALL).vid(ALL).create();
     public static final Type ALL_MAYBE_TYPE = Type.Builder.build().tid(ALL.maybe()).vid(ALL.maybe()).create();
     public static final Type SPACE_TYPE = Type.Builder.build()
@@ -620,24 +618,8 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(LOCKQ_TYPE, "advisory locks over regions of space: a write to a uri matching a held, unexpired lock throws",
                                 "cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]   [-- acquire --]",
                                 "cs:src/.../Foo.java -> ...                                          [-- throws while locked --]",
-                                "cs:src/#?lockq -> noobj                                             [-- release --]"),
-                        ////////////////////////////////////////////////////////////////////////////
-                        docWrap(AUTHORITY_TYPE = Type.Builder.build()
-                                .tid(URI_TID)
-                                .vid(AUTHORITY_TID)
-                                .predicate((_, inst) -> {
-                                    final fURI uri = inst.arg(0).uriValue();
-                                    return (!uri.hasScheme() && uri.hasHost() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
-                                            inst.arg(0) : uri().c(cInt.ZERO());
-                                }).create(), "a uri containing host:port components with port being optional"),
-                        docWrap(ORIGIN_TYPE = Type.Builder.build()
-                                .tid(URI_TID)
-                                .vid(ORIGIN_TID)
-                                .predicate((_, inst) -> {
-                                    final fURI uri = inst.arg(0).uriValue();
-                                    return (uri.hasScheme() && uri.hasHost() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
-                                            inst.arg(0) : uri().c(cInt.ZERO());
-                                }).create(), "a uri containing scheme://host:port components with port being optional")),
+                                "cs:src/#?lockq -> noobj                                             [-- release --]")),
+
                 uri(CONST), lst(
                         /*docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")*/),
                 uri(INST), lst(Stream.of(

@@ -33,8 +33,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.ORIGIN;
-import static studio.phaseshift.metatron.Tokens.REC_TID;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -85,8 +84,8 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testAListenerIsAnAddressableEntry() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/mtron"), uri("mtron_ws")));
-        final Obj entry = root.network().listenerAt(Network.Helper.keyOf(SOCKET));
+        Network.Helper.listen(root.network(), server, rec(uri("/mtron"), uri("mtron_ws")));
+        final Obj entry = root.network().listener(SOCKET.pathEncoding());
         assertEquals(LISTENER_TID, entry.tid(), "a listener entry is a listener::T");
         checkEquality(LOG, entry.asRec().at(uri(ORIGIN)), uri(SOCKET), true);
         assertSame(server, Network.Helper.listenerFor(SOCKET), "the entry holds the server itself");
@@ -98,8 +97,22 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         root.network().unlisten(SOCKET);
         assertEquals(1, server.unbinds.get());
         assertTrue(server.closed());
-        checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+        checkEquality(LOG, root.network().listener(SOCKET.pathEncoding()), noobj(), true);
         assertFalse(Network.Helper.authorities().contains(SOCKET));
+    }
+
+    /**
+     * NOMINAL, NOT STRUCTURAL. {@code index} dispatches on the handle's TYPE: a rec that merely carries the fields a
+     * listener has (they are maybe(), so a structural test would admit it) is NOT mounted — only a listener::T, or a
+     * refinement of it, is a socket.
+     */
+    @Test
+    public void testAListenerLookAlikeIsNotMounted() {
+        final Machine root = Machine.current();
+        final Recorder server = new Recorder(SOCKET, root.network());
+        final Obj lookAlike = rec(uri(ORIGIN), uri(SOCKET), uri(SERVER), server);
+        assertTrue(root.network().index(lookAlike).isNoObj(), "the fields alone do not make a socket");
+        checkEquality(LOG, root.network().listener(SOCKET.pathEncoding()), noobj(), true);
     }
 
     /**
@@ -110,12 +123,12 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testDeletingAListenersAddressStopsServing() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/mtron"), uri("mtron_ws")));
+        Network.Helper.listen(root.network(), server, rec(uri("/mtron"), uri("mtron_ws")));
         this.script("[STATE] <~/network/listener/ws/localhost/28555/origin> -> <ws://0.0.0.0:9999>");
         this.script("*<~/network/listener/ws/localhost/28555/origin> % <ws://0.0.0.0:28555>");
         assertFalse(server.closed(), "a refused write touches nothing");
         this.script("[STATE] <~/network/listener/ws/localhost/28555> -> noobj");
-        checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+        checkEquality(LOG, root.network().listener(SOCKET.pathEncoding()), noobj(), true);
         assertEquals(1, server.unbinds.get(), "the owner's deletion releases the port");
         assertTrue(server.closed());
         assertNull(Network.Helper.listenerFor(SOCKET));
@@ -128,16 +141,16 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testAChildsDeletionWithdrawsItsRoutesNotTheSocket() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/"), uri("site:")));
+        Network.Helper.listen(root.network(), server, rec(uri("/"), uri("site:")));
         final Machine child = root.push(f("listener_child"));
         try {
-            child.network().listen(server, rec(uri("/drstynx"), uri("drstynx:")));
+            Network.Helper.listen(child.network(), server, rec(uri("/drstynx"), uri("drstynx:")));
             assertSame(child, server.route(f("/drstynx")).orElseThrow().machine());
             this.script("[STATE] <~/network/listener> -> noobj");
-            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            checkEquality(LOG, child.network().listener(SOCKET.pathEncoding()), noobj(), true);
             assertSame(root, server.route(f("/drstynx")).orElseThrow().machine(), "the child's route left with its entry");
             assertEquals(0, server.unbinds.get(), "a sharer's deletion never releases the owner's socket");
-            assertFalse(root.network().listenerAt(Network.Helper.keyOf(SOCKET)).isNoObj(), "the parent's entry is its own");
+            assertFalse(root.network().listener(SOCKET.pathEncoding()).isNoObj(), "the parent's entry is its own");
         } finally {
             child.pop();
         }
@@ -150,14 +163,14 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testClosingTheServerWithdrawsEveryEntry() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/"), uri("site:")));
+        Network.Helper.listen(root.network(), server, rec(uri("/"), uri("site:")));
         final Machine child = root.push(f("listener_child"));
         try {
-            child.network().listen(server, rec(uri("/drstynx"), uri("drstynx:")));
+            Network.Helper.listen(child.network(), server, rec(uri("/drstynx"), uri("drstynx:")));
             server.close();
             assertEquals(1, server.unbinds.get(), "the socket is released once");
-            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
-            checkEquality(LOG, root.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            checkEquality(LOG, child.network().listener(SOCKET.pathEncoding()), noobj(), true);
+            checkEquality(LOG, root.network().listener(SOCKET.pathEncoding()), noobj(), true);
             assertNull(Network.Helper.listenerFor(SOCKET));
         } finally {
             child.pop();
@@ -168,12 +181,12 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testPresenceIsInheritedTheEntryIsNot() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/"), uri("site:")));
+        Network.Helper.listen(root.network(), server, rec(uri("/"), uri("site:")));
         final Machine child = root.push(f("listener_child"));
         try {
             assertSame(server, Network.Helper.listenerFor(SOCKET), "a child serves through its parent's socket");
             assertTrue(Network.Helper.authorities().contains(SOCKET), "a child answers on its parent's socket");
-            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            checkEquality(LOG, child.network().listener(SOCKET.pathEncoding()), noobj(), true);
         } finally {
             child.pop();
         }
@@ -197,13 +210,13 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testMostSpecificRouteAnswers(final String request, final String owner, final String key) {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(
+        Network.Helper.listen(root.network(), server, rec(
                 uri("/"), uri("site:"),
                 uri("/mcp"), uri("mcp_mtron"),
                 uri("/people/#"), uri("people:")));
         final Machine child = root.push(f("listener_child"));
         try {
-            child.network().listen(Network.Helper.listenerFor(SOCKET), rec(
+            Network.Helper.listen(child.network(), Network.Helper.listenerFor(SOCKET), rec(
                     uri("/drstynx"), uri("drstynx:"),
                     uri("/people/alice"), uri("alice:")));
             final Listener.Route route = server.route(f(request)).orElseThrow();
@@ -218,11 +231,11 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testAKeyServedAboveIsRefused() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/mcp"), uri("mcp_mtron")));
+        Network.Helper.listen(root.network(), server, rec(uri("/mcp"), uri("mcp_mtron")));
         final Machine child = root.push(f("listener_child"));
         try {
-            assertThrows(MTronException.class, () -> child.network().listen(server, rec(uri("/mcp"), uri("hijack:"))));
-            checkEquality(LOG, child.network().listenerAt(Network.Helper.keyOf(SOCKET)), noobj(), true);
+            assertThrows(MTronException.class, () -> Network.Helper.listen(child.network(), server, rec(uri("/mcp"), uri("hijack:"))));
+            checkEquality(LOG, child.network().listener(SOCKET.pathEncoding()), noobj(), true);
             assertSame(root, server.route(f("/mcp")).orElseThrow().machine(), "the route stays its first claimant's");
         } finally {
             child.pop();
@@ -233,9 +246,9 @@ public class NetworkListenerTest extends AbstractMetatronTest {
     public void testPopRetractsTheChildsRoutesNotTheSocket() {
         final Machine root = Machine.current();
         final Recorder server = new Recorder(SOCKET, root.network());
-        root.network().listen(server, rec(uri("/"), uri("site:")));
+        Network.Helper.listen(root.network(), server, rec(uri("/"), uri("site:")));
         final Machine child = root.push(f("listener_child"));
-        child.network().listen(server, rec(uri("/drstynx"), uri("drstynx:")));
+        Network.Helper.listen(child.network(), server, rec(uri("/drstynx"), uri("drstynx:")));
         assertSame(child, server.route(f("/drstynx")).orElseThrow().machine());
         assertEquals(2, server.sharers().size());
         child.pop();
@@ -252,7 +265,7 @@ public class NetworkListenerTest extends AbstractMetatronTest {
         final Machine root = Machine.current();
         final Machine child = root.push(f("listener_child"));
         final Recorder server = new Recorder(CHILD_SOCKET, child.network());
-        child.network().listen(server, rec(uri("/compute"), uri("compute:")));
+        Network.Helper.listen(child.network(), server, rec(uri("/compute"), uri("compute:")));
         assertTrue(Network.Helper.authorities().contains(CHILD_SOCKET));
         child.pop();
         assertEquals(1, server.unbinds.get(), "the owner's pop releases the port");

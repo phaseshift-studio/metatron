@@ -369,12 +369,12 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     // ======================== bootstrap: the machine's own system state ========================
 
     /**
-     * {@link Machine#bootstrap()} seeds the machine's log sink into its OWN sphere's {@code ~/sys} at a resolved address, because it runs before the machine is reachable.
+     * {@link Machine.Helper#bootstrap(Machine)} seeds the machine's log sink into its OWN sphere's {@code ~/sys} at a resolved address, because it runs before the machine is reachable.
      */
     @Test
     public void testBootstrapSeedsMachineLogSink() {
         final Obj sink = Machine.read(Machine.Helper.LOG_SINK);
-        assertInstanceOf(Rec.class, sink, "~/sys/log is seeded by Machine.bootstrap() as a LogObj rec");
+        assertInstanceOf(Rec.class, sink, "~/sys/log is seeded by Machine.Helper.bootstrap(machine) as a LogObj rec");
         assertInstanceOf(Rec.class, sink.asRec().at(uri(LEVEL)),
                 "the sink carries its levels under `level`, which is where LogObj.check reads them");
         // STORED absolutely but READ ~-relatively, since a stored vid beginning with ~ is self-referential

@@ -57,8 +57,6 @@ public final class Tokens {
     public static final fURI LST_TID = M_ISA_TID.extend("lst");
     public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
     public static final fURI URI_TID = M_ISA_TID.extend("uri");
-    public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
-    public static final fURI ORIGIN_TID = URI_TID.extend("origin");
     public static final fURI STR_TID = M_ISA_TID.extend("str");
     public static final fURI REAL_TID = M_ISA_TID.extend("real");
     public static final fURI INT_TID = M_ISA_TID.extend("int");

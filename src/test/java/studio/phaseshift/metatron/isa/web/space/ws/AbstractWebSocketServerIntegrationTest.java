@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 
 import java.net.http.HttpClient;
@@ -85,7 +84,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
      * This machine's routes on the server's socket, as its listener entry keeps them.
      */
     protected Obj routes() {
-        final Obj entry = Machine.current().network().listenerAt(Network.Helper.keyOf(this.server.origin()));
+        final Obj entry = Machine.current().network().listener(this.server.origin().pathEncoding());
         return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
     }
 

@@ -461,8 +461,8 @@ Repeat the annotation to emit multiple entries per row.</li>
 instruction templates.</li>
 <li><strong>Operator context enrichment</strong>: every instruction in the expression is resolved via <code>?docq&gt;&gt;desc</code>
 from the metatron VM to weave semantic descriptions into the instruction field.</li>
-<li><strong>Declarative reference knowledge</strong>: the extractor also scans 7 evaluated reference docs
-(<code>language-reference</code>, <code>type-system</code>, the <code>tble</code>/<code>math</code>/<code>sys</code>/<code>web</code> instset docs, and <code>SKILL.md</code>),
+<li><strong>Declarative reference knowledge</strong>: the extractor also scans 7 evaluated reference docs (<code>language-reference</code>,
+<code>type-system</code>, the <code>tble</code>/<code>math</code>/<code>sys</code>/<code>web</code> instset docs, and <code>SKILL.md</code>),
 emitting one &quot;verbal knowledge&quot; entry per <code>##</code> section — so the model can <em>explain</em> mtron, not just
 evaluate it.</li>
 </ul>
@@ -658,10 +658,10 @@ ssh ginger.local &quot;docker exec unsloth env \
 <p>Set <code>TEXT_ONLY=1</code> for a VLM base (<code>Qwen3.8-*</code>); <code>save_pretrained_gguf</code> appends <code>_gguf</code> to <code>OUT</code>.</p>
 <p>Notes:</p>
 <ul>
-<li><strong><code>load_in_4bit=True</code> is required</strong> — <code>False</code> dequantizes the base to bf16 (~54 GB for 27B) and OOMs
-(&quot;We need an <code>offload_dir</code>… layers.61-63, lm_head&quot;). The base is already bnb-4bit; keep it 4-bit.</li>
-<li>The GGUF is named after the model (<code>qwen3.8-27b.Q4_K_M.gguf</code>), and Unsloth skips the auto-Modelfile
-(&quot;No Ollama template mapping found&quot;) — write the Modelfile manually (§5).</li>
+<li><strong><code>load_in_4bit=True</code> is required</strong> — <code>False</code> dequantizes the base to bf16 (~54 GB for 27B) and OOMs (&quot;We need an
+<code>offload_dir</code>… layers.61-63, lm_head&quot;). The base is already bnb-4bit; keep it 4-bit.</li>
+<li>The GGUF is named after the model (<code>qwen3.8-27b.Q4_K_M.gguf</code>), and Unsloth skips the auto-Modelfile (&quot;No Ollama
+template mapping found&quot;) — write the Modelfile manually (§5).</li>
 </ul>
 <hr />
 <h3>5. Ollama Deployment</h3>

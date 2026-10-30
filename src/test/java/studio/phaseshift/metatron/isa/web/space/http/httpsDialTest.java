@@ -91,20 +91,20 @@ public class httpsDialTest extends AbstractMetatronTest {
     @Test
     public void testAnHttpsDialReadsOverTls() {
         final fURI authority = f(HTTPS + "://127.0.0.1:" + far.getAddress().getPort());
-        final fURI key = Network.Helper.keyOf(authority);
+        final fURI key = authority.pathEncoding();
         final Network network = Machine.current().network();
-        checkEquality(LOG, network.peerAt(key), noobj(), true);
+        checkEquality(LOG, network.peer(key), noobj(), true);
         // A READ NEVER DIALS: the network answers nothing for an authority no client was constructed for, and the
         // read leaves no peer behind
         checkEquality(LOG, network.read(f(authority + "/motto")), noobj(), true);
-        checkEquality(LOG, network.peerAt(key), noobj(), true);
+        checkEquality(LOG, network.peer(key), noobj(), true);
         // the dial constructs the http client, and a read through it answers over tls
-        network.connect(authority);
+        Network.Helper.connect(network, authority);
         try {
-            checkEquality(LOG, network.peerAt(key), noobj(), false);
+            checkEquality(LOG, network.peer(key), noobj(), false);
             assertEquals(MOTTO, Machine.read(authority + "/motto").strValue(), "the https read should answer through the dialed peer");
         } finally {
-            network.disconnect(authority);
+            network.drop(authority);
         }
     }
 }

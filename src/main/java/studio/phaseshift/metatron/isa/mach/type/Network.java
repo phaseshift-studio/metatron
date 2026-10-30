@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
+import studio.phaseshift.metatron.isa.m.space.variableStack;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -29,7 +31,10 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
 import studio.phaseshift.metatron.isa.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -37,6 +42,7 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,9 +76,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * Like Memory and the ISA it is <em>meant</em> to accumulate, so that a frame wraps it with a
  * {@link ComponentUnion} rather than replacing it and a frame that dials a peer adds to its own level while
- * inheriting the rest. <b>It does not accumulate yet</b>: a declaration made while standing in a child is written
- * at the address, and the address is one address at every depth, so the child's is the parent's. The union is the
- * change that gives a child a level of its own.
+ * inheriting the rest. <b>The names already do</b>: a row is written to THIS level's table and resolution shadows the
+ * frame stack (see {@link Component.Prefix.Helper#effectivePrefix(Component.Prefix, fURI)}), so a name declared at the root is inherited and a frame that needs a
+ * different meaning shadows it. <b>Peers do not accumulate yet</b>: a dial made while standing in a child is written
+ * at the address, and the address is one address at every depth, so the child's peer table is the parent's. The union
+ * is the change that gives a child a level of its own there.
  * <p>
  * Membership is also a <em>capability</em>, unlike an address or a vocabulary. Memory's union is sound because an
  * address means the same thing at every depth, so inheriting is pure extension; read-through on a roster instead
@@ -84,20 +92,22 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <em>is</em>. Every question about whether two addresses denote the same service, or whether a host names this
  * machine, is a question about reachability.
  * <p>
- * <b>Denotation is not scoped by this component.</b> Scoping decides which peers a frame can reach; it never
- * changes what an absolute URI means. An unreachable origin fails loudly rather than resolving elsewhere.
+ * <b>Denotation accumulates with shadowing; reach does not.</b> A name is inherited down the frame stack — the frame
+ * that declares it owns it, a child may override it, and {@code pop} gives the shadowed meaning back — while a dial
+ * answers "may THIS level reach the parent's peer" and is therefore never inherited. An unreachable origin still fails
+ * loudly rather than resolving elsewhere.
  * <p>
  * <b>The index is kept true.</b> A member whose client is a {@link Link} is supervised for as long as it is
  * indexed: a connection that fails is redialed in place (on a capped backoff, and at once when a request needs it),
  * and only its OWNER's hang-up takes it out of the map — the client closed or deleted, {@link #drop} /
- * {@link #disconnect}, the frame popped. Connection on creation, destruction on deletion: whatever the far side
+ * {@link #drop}, the frame popped. Connection on creation, destruction on deletion: whatever the far side
  * does is a failure, and the peer stays listed, offline, until it answers again.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Network extends Addressable, Machine.Component, Closeable {
+public interface Network extends Addressable, Component.Prefix, Closeable {
 
-    studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger WIRE_LOG = studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.log(Network.class);
+    GraphittyLogger WIRE_LOG = Graphitty.log(Network.class);
 
     /**
      * this machine's connections, and the root's — {@code ~} follows {@code move}.
@@ -111,19 +121,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     fURI ROOT_ROSTER = f("/network/roster");
 
     /**
-     * where a machine DECLARES its discovery sources: {@code <mechanism> => <handler vid>}
-     */
-    fURI ROOT_SOURCE = f("/network/source");
-
-    /**
      * THE NAMES a caller uses for an origin: {@code <label> => <full origin>}. Read at the ROOT, like the roster,
      * because a name is DENOTATION — scoping decides which peers a frame can reach, never what {@code //ginger} means.
      */
     fURI ROOT_PREFIX = f("/network/prefix");
-
-    default Optional<String> name() {
-        return Optional.ofNullable(this.at(NAME).isNoObj() ? null : this.at(NAME).strValue());
-    }
 
     default Rec roster() {
         return Machine.read(ROOT_ROSTER).orElse(rec());
@@ -131,16 +132,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * The discovery sources this machine declares: {@code <mechanism> => <handler vid>}. A source is how knowledge
-     * arrives without anyone dialing anything — and nothing here starts them; {@link Machine#bootstrap()} does,
+     * arrives without anyone dialing anything — and nothing here starts them; {@link Machine.Helper#bootstrap(Machine)} does,
      * for the root, once.
      */
-    default Rec source() {
-        return this.at(SOURCE).orElse(rec());
-    }
-
     /**
      * This level's members: {@code <key> => peer::T}, where the KEY is the dial's own address as a valid local path,
-     * one per surface ({@link Helper#keyOf}: {@code ws://localhost:8555/mtron} is {@code ws/localhost/8555/mtron}). So a
+     * one per surface ({@link fURI#pathEncoding()}: {@code ws://localhost:8555/mtron} is {@code ws/localhost/8555/mtron}). So a
      * member is addressable at {@code ~/network/peer/<key>} — read field by field, deleted to hang it up — and the
      * service it reaches is the {@code origin} it carries, never its key.
      */
@@ -151,7 +148,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     /**
      * The member at a peer KEY, or noobj.
      */
-    default Obj peerAt(final fURI key) {
+    default Obj peer(final fURI key) {
         return this.peers().elements()
                 .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(key))
                 .map(Rel::second)
@@ -161,7 +158,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * This level's PRESENCE: {@code <key> => listener::T}, one per socket this machine serves through — one it opened,
-     * or one inherited from above that it keeps its own routes on — keyed like a peer ({@link Helper#keyOf}:
+     * or one inherited from above that it keeps its own routes on — keyed like a peer ({@link fURI#pathEncoding()}:
      * {@code ws://0.0.0.0:8555} is {@code ws/localhost/8555}, a wildcard bind being a loopback alias) and so addressable at {@code ~/network/listener/<key>}.
      * The entries are this level's alone; a machine reaches the sockets above it through {@link Helper#listenerFor}.
      */
@@ -172,7 +169,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     /**
      * The listener::T entry at a KEY, or noobj.
      */
-    default Obj listenerAt(final fURI key) {
+    default Obj listener(final fURI key) {
         return this.listeners().elements()
                 .filter(kv -> kv.first().isUri() && kv.first().uriValue().equals(key))
                 .map(Rel::second)
@@ -181,59 +178,19 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * LISTEN — serve through a socket from this level, with this level's own routes: a socket this machine opened
-     * (its level is the {@link Listener#owner()}), or one it inherited ({@link Helper#listenerFor}). The routes are this
-     * level's: a key another level already serves on the socket is refused, and the routes leave with the level
-     * ({@link #close()}). Listening again replaces this level's routes on the socket.
-     */
-    default Obj listen(final Listener server, final Rec routes) {
-        // a route is keyed by the path it serves: a key that is no path routes nothing, so it fails the listen
-        routes.keys().filter(route -> !route.isUri()).findFirst().ifPresent(route -> {
-            throw MTronException.of("a route is keyed by the path it serves, got %s on %s", route, server.origin());
-        });
-        final fURI key = Helper.keyOf(server.origin());
-        final Obj entry = rec(uri(ORIGIN), uri(server.origin()), uri(SERVER), server);
-        // absent rather than empty: the map idiom of the predicate rejects an empty rec
-        if (!routes.isEmpty())
-            entry.asRec().at(uri(ROUTE), routes, MUTABLE);
-        entry.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TID);
-        // the claim check and the share are one step per socket, or two levels mounting the same key at once would
-        // both pass the check; the level's own lock serializes its map, as index does
-        synchronized (server) {
-            server.refuseClaimed(this, routes);
-            synchronized (this) {
-                final Rec kept = Helper.without(this.listeners(), kv -> kv.first().uriValue().equals(key));
-                this.at(uri(LISTENER), kept.isEmpty() ? rec(uri(key), entry) : kept.plus(rec(uri(key), entry)), MUTABLE);
-            }
-            server.share(this);
-        }
-        return entry;
-    }
-
-    /**
-     * The inverse of {@link #listen}: this level stops serving through the socket at {@code origin}. Its routes
+     * The inverse of {@link Helper#listen(Network, Listener, Rec)}: this level stops serving through the socket at {@code origin}. Its routes
      * leave the socket, and a socket this level OPENED is released with them. Answers the entry, or noobj when this
      * level served nothing there.
      */
     default Obj unlisten(final fURI origin) {
-        final fURI key = Helper.keyOf(origin);
-        final Obj entry;
-        synchronized (this) {
-            entry = this.listenerAt(key);
-            if (entry.isNoObj())
-                return noobj();
-            final Rec kept = Helper.without(this.listeners(), kv -> kv.first().uriValue().equals(key));
-            this.at(uri(LISTENER), kept.isEmpty() ? noobj() : kept, MUTABLE);
-        }
-        // CLEAR, THEN CLOSE, as disconnect does: the entry is gone from the map before the socket is touched
-        Helper.stopListening(this, entry);
-        return entry;
+        // PRESENCE IS RETRACTED BY ITS KEY, and that is the address drop names: one retraction verb for both maps
+        return this.drop(origin.pathEncoding());
     }
 
     /**
      * THE MACHINES the roster knows: {@code <host> => uri{+}}, one row per machine and the addresses it answers at
      * (scheme://host:port, a route where the dial needs one). KNOWLEDGE, NEVER REACH: a row is not a way to talk to the
-     * machine — reaching it is dialing it ({@link #connect}), and the client that dial constructs brings the
+     * machine — reaching it is dialing it and the client that dial constructs brings the
      * instructions it is talked to with ({@code inst}).
      * <p>
      * The roster is a CONTAINER, not the listing: it carries {@code discover} beside {@code machine}, so a
@@ -246,21 +203,38 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * THE NAMES this machine answers to for its peers: {@code <label> => <full origin>} — {@code ginger =>
-     * ws://ginger.local:8555}. One listing at the ROOT, for the same reason the roster is: a name is denotation, so
-     * pushing a frame must not change what {@code //ginger} denotes.
+     * THE NAMES THIS LEVEL DECLARES: {@code <label> => <full origin>} — {@code ginger => ws://ginger.local:8555}.
+     * <p>
+     * THIS LEVEL'S OWN ROWS, not the effective view: a name is denotation, and denotation ACCUMULATES down the frame
+     * stack — a child's row shadows its ancestors', and a machine with none of its own inherits the meaning (see
+     * {@link Component.Prefix.Helper#effectivePrefix(Component.Prefix, fURI)}, the resolution rule). Registration is what this accessor exists for; ask
+     * {@link Component.Prefix.Helper#effectivePrefixes(Component.Prefix)} what a name means here -- which is what {@code *~/network/prefix} shows.
      * <p>
      * The fourth question this component answers, beside the three it already did: {@code roster} is what the system
      * KNOWS, {@code peer} is what this machine has DIALED, {@code listener} is what it ANSWERS ON, and {@code prefix}
      * is what you CALL it.
      */
     default Rec prefixes() {
-        final Machine root = Machine.root();
-        final Network network = null == root ? this : root.network();
-        if (null == network)
-            return rec();
-        final Obj field = network.at(PREFIX);
+        final Obj field = this.at(PREFIX);
         return field.isRec() ? field.asRec() : rec();
+    }
+
+    /**
+     * THE LEVEL ABOVE this network: the enclosing machine's network (or null at the root). Reach is not inherited, but
+     * a NAME is — that walk is {@link Component.Prefix.Helper}.
+     */
+    @Override
+    default Component.Prefix previousLevel() {
+        final Obj above = this.machine().parent();
+        return above instanceof Machine enclosing ? enclosing.network() : null;
+    }
+
+    /**
+     * THE SAME SEAT on another machine.
+     */
+    @Override
+    default Component.Prefix on(final Machine machine) {
+        return machine.network();
     }
 
     /**
@@ -273,13 +247,16 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * An UNBOUND name is answered as written and fails closed downstream. It must never fall back to a discovered peer
      * that happens to answer, which is the component's standing rule: membership is declared, never emergent.
      */
+    @Override
     default fURI alignPrefix(final fURI vid) {
         // EXACTLY THE HOSTED SLOT: a host with no scheme and no port -- a NAME for a service rather than a service. A
         // real scheme means the author already named the protocol (`loop://self` is the identity client, not a name for
         // it), and an explicit port means the address names a service already; neither may be rewritten by a binding.
         if (!vid.isHosted())
             return vid;
-        final Obj origin = this.prefixes().at(uri(vid.host()));
+        // THE SHADOWING LOOKUP, not this level's table: the meaning of a name is the nearest declaration above the
+        // machine the caller stands in, so a frame that declares nothing still resolves the root's vocabulary.
+        final Obj origin = Component.Prefix.Helper.effectivePrefix(this, f(vid.host()));
         if (!origin.isUri())
             return vid;
         final fURI full = origin.uriValue();
@@ -296,12 +273,14 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * spelled {@code //ginger} instead of {@code ws://ginger.local:8555}.
      * <p>
      * <b>THE DIAL IS NOT THE DECLARATION.</b> A connection is REACH — per frame, retractable, one member per surface —
-     * while a name is DENOTATION: one listing, at the root, and a {@code pop} must not change what {@code //ginger}
-     * means. So this binds the name and nothing else; dial with a client, as always:
+     * while a name is DENOTATION: a row that accumulates by shadowing, so a {@code pop} gives a shadowed meaning back.
+     * This binds the name and nothing else; dial with a client, as always:
      * <pre>
      *   network().registerPrefix(&lt;ginger&gt;, &lt;ws://ginger.local:8555&gt;);      [-- the name --]
      *   ws_client::[pattern= &gt;&lt;ws://ginger.local:8555/mtron&gt;];                [-- the reach --]
      * </pre>
+     * The row lands in THIS level's table ({@link Helper#prefixTable(Network)}), so a declaration made in a frame is that frame's
+     * to shadow, and one made at the root is inherited by every frame below it.
      */
     default Obj registerPrefix(final fURI name, final fURI origin) {
         if (!origin.hasScheme() || !origin.hasHost())
@@ -311,128 +290,73 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         // asks for. A spelling that is not a name at all is refused here rather than filed somewhere no read reaches.
         final fURI label = Helper.label(name).orElseThrow(() ->
                 MTronException.of("a network prefix is a single, dot-free label (//name or name): %s", name));
-        // THE FIELD IS REWRITTEN WHOLE, never addressed entry by entry -- the roster's own rule, and for the same
-        // reason: a nested write leaves the component rec in a shape its type has to re-admit on every write. It goes
-        // in through the DOOR, in the spelling the door validates, so the strip happens in exactly one place (and a
-        // legacy row the table still holds is repaired by the same pass).
-        final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
-        rows.put(uri(label), uri(origin.origin()));
-        return Machine.write(ROOT_PREFIX, Helper.markedTable(rec(rows)));
+        // ONE WRITER AT A TIME, exactly as index and drop: the table is READ, extended and written BACK WHOLE,
+        // so two declarations racing would each read the table before the other's write and the later write would drop
+        // the earlier row. Measured before the lock: sixteen concurrent registrations left ONE row behind.
+        synchronized (this) {
+            // THE FIELD IS REWRITTEN WHOLE, never addressed entry by entry -- the roster's own rule, and for the same
+            // reason: a nested write leaves the component rec in a shape its type has to re-admit on every write. It
+            // goes in through the DOOR, in the spelling the door validates, so the strip happens in exactly one place
+            // (and a legacy row the table still holds is repaired by the same pass).
+            final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
+            rows.put(uri(label), uri(origin.origin()));
+            // WRITTEN THROUGH THIS NETWORK's OWN DOOR, not the machine gatekeeper: the row belongs to the level the
+            // network is mounted at, and Machine.write routes by where the CALLING THREAD stands -- so a caller
+            // holding a frame's network from outside that frame would file the name somewhere else (measured: an
+            // empty child table and a parent's meaning quietly answering). The address is still this level's spelling.
+            return this.write(Helper.prefixTable(this), Helper.markedTable(rec(rows)));
+        }
     }
 
     /**
      * UNBIND a name: the universal close, at the same address a peer is hung up at and by the same act — a deleted
-     * binding denotes nothing rather than denoting somewhere else.
+     * binding denotes nothing rather than denoting somewhere else. Only THIS level's row is removed, which is what
+     * makes an unshadowing declaration give the shadowed meaning back.
      */
     default Obj unregisterPrefix(final fURI name) {
         // the spelling a caller gave may be marked or not; the row it removes is the one filed under the label
         final Optional<fURI> label = Helper.label(name);
-        final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
-        // matched by LABEL, never by Obj identity: a uri that has round-tripped through a rec does not equal a freshly
-        // minted one even when the two name the same address
-        rows.keySet().removeIf(key -> key.isUri() && label.isPresent()
-                && Helper.label(key.uriValue()).filter(label.get()::equals).isPresent());
-        return Machine.write(ROOT_PREFIX, rows.isEmpty() ? noobj() : Helper.markedTable(rec(rows)));
+        // the same read-merge-write as registerPrefix, under the same lock (see its note)
+        synchronized (this) {
+            final Map<Obj, Obj> rows = new LinkedHashMap<>(this.prefixes().jvm());
+            // matched by LABEL, never by Obj identity: a uri that has round-tripped through a rec does not equal a
+            // freshly minted one even when the two name the same address
+            rows.keySet().removeIf(key -> key.isUri() && label.isPresent()
+                    && Helper.label(key.uriValue()).filter(label.get()::equals).isPresent());
+            // ... and deletion through the same door, for the same reason (see registerPrefix)
+            return this.write(Helper.prefixTable(this), rows.isEmpty() ? noobj() : Helper.markedTable(rec(rows)));
+        }
     }
 
     /**
-     * Is this address a <b>peer</b>? A connection this machine holds, or one the roster declares.
-     */
-    default boolean isPeer(final fURI vid) {
-        return vid.hasAuthority()
-                && (Helper.peerAuthorities(this).stream().anyMatch(peer -> Helper.sameService(peer, vid))
-                || this.machines().elements()
-                .flatMap(kv -> Stream.concat(Stream.of(kv.first()), kv.second().stream()))
-                .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> Helper.sameService(known, vid)));
-    }
-
-    /**
-     * CONNECT — the network's MOUNT op, the third copy of memory's {@code addSpace} and the ISA's
-     * {@code refer}: take a connectionless description and make it a live member of this machine's reach.
-     * ENSURE PEERED, never rebuild: an origin this machine has already dialed answers its existing
-     * {@code peer::T} — connect is an optimization, never a protection, because a re-dial could not change
-     * the far side. A fresh connection is a disconnect first, exactly as a fresh instruction set is an
-     * unmount first.
-     * <p>
-     * The dial uri may carry the protocol ROUTE ({@code ws://host:port/mtron}); the peer keys on the
-     * SERVICE origin alone, so data reads address {@code ws://host:port/<path>} while the peer's
-     * {@code host} field remembers where it was dialed, route included — peer::T's own words.
-     * <p>
-     * The handler names the DIALER, resolved through instruction memory at dial time (which is what lets
-     * this component stay below {@code /m/web} while web's protocol clients do the dialing); {@code loop:}
-     * needs none. No dialer answers {@code noobj}: the origin stays known, not reachable from here.
-     */
-    default Obj connect(final fURI dialURI) {
-        return this.connect(dialURI, null);
-    }
-
-    default Obj connect(final fURI dialURI, final fURI handler) {
-        // CONNECT IS SUGAR. The idiomatic act is CONSTRUCTION: ws_client::[pattern=><ws://host/mtron?name=me>]
-        // — the client's constructor dials, and on success REGISTERS ITSELF with the network, exactly as a
-        // space's constructor indexes itself into Memory (memspace::[pattern=>xyz/#]). connect() remains for
-        // the caller that has a uri and a dialer vid rather than a type literal: it constructs through
-        // Helper.dial and lets register() do what the constructor would have done (register is ensure-peered,
-        // so a self-registered client is found, not double-minted).
-        // ENSURE-PEERED, as an optimization: a surface this level already holds is not dialed twice. A member its
-        // owner hung up is not one to answer -- it is retracted, and the dial below replaces it.
-        final Obj existing = this.peerAt(Helper.keyOf(dialURI));
-        if (!existing.isNoObj() && !Helper.hungUp(existing))
-            return existing;
-        final Obj dialed = Helper.dial(dialURI, handler);
-        WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", dialURI, handler, System.identityHashCode(this), dialed);
-        if (dialed.isNoObj() || dialed.isFail())
-            return noobj();
-        final Obj peer = this.index(dialed, dialURI);
-        if (peer.isRec() && null != handler)
-            peer.asRec().at(uri(HANDLER), uri(handler), MUTABLE);
-        return peer;
-    }
-
-    /**
-     * INDEX — {@link studio.phaseshift.metatron.isa.Addressable#index}, the network's arm: a protocol client that has
-     * CONNECTED writes itself here, at its KEY ({@link Helper#keyOf}), and the peer::T is minted FROM the client. NO
+     * INDEX — {@link studio.phaseshift.metatron.isa.Addressable#index}, the network's arm, dispatching on the
+     * HANDLE'S SHAPE: a {@code listener::T} entry is mounted as this level's presence on a socket
+     * ({@link Helper#mountListener} — its origin, server and route table are its own fields); anything else is a
+     * CONNECTED writes itself here, at its KEY ({@link fURI#pathEncoding()}), and the peer::T is minted FROM the client. NO
      * TWO EQUIVALENT CONNECTIONS: a fresh construction at a key the level already holds closes the member there and
      * takes its place, while indexing the SAME client again (a constructor's background index, then connect() over
      * that client) is idempotent. The claim is read from the client itself — {@code pattern} (retracted) first,
      * {@code host} second — so {@code index(client)} needs nothing but the client.
      */
     @Override
-    default Obj index(final Obj client) {
+    default Obj index(final Obj handle) {
+        // THE HANDLE'S TYPE SAYS WHICH INDEX IT ENTERS. A listener entry is a SOCKET this level serves through — its
+        // fields carry the origin, the server and this level's route table — so indexing it MOUNTS it. Anything else
+        // is a protocol CLIENT, whose claim mints a {@code peer::T}. One Addressable verb, two indexes.
+        // NOMINAL, not structural: the fields are maybe(), so a structural test would admit any rec that happens to
+        // carry an origin; nominal membership follows the type's descendants, so a REFINEMENT of listener::T mounts.
+        if (handle.isRec() && handle.testNominally(studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TYPE))
+            return Helper.mountListener(this, handle.asRec());
+        final Obj client = handle;
+        // THE CLAIM IS THE CLIENT'S OWN: pattern (retracted) first, host second — the same precedence mcpClient dials
+        // by — so indexing needs nothing but the client and there is no second, address-carrying form of this method.
         final fURI claim = Helper.claimOf(client);
-        return null == claim ? noobj() : this.index(client, claim);
-    }
-
-    default Obj index(final Obj client, final fURI dialURI) {
-        final fURI key = Helper.keyOf(dialURI);
-        final Obj peer;
-        final Obj displaced;
-        // ONE WRITER AT A TIME: the peer map is read, extended and written back, and a dial, a listener's accept and
-        // the supervisor's retraction can arrive on three threads at once -- unserialized, the later write drops the
-        // earlier one's member
-        synchronized (this) {
-            displaced = this.peerAt(key);
-            if (displaced.isRec() && client == displaced.asRec().<Obj>atDirect(uri(CLIENT)))
-                return displaced;
-            // A CLIENT IS REACHED BY THE INSTRUCTIONS IT DECLARES — its `inst`, {tid => override} — and by nothing
-            // else: a client that declares none has no way to be talked to, so it is no peer
-            final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
-            WIRE_LOG.debug("index %s key=%s inst=%s", dialURI, key, inst.isRec() ? "set" : "none");
-            if (!inst.isRec())
-                return noobj();
-            // the client IS the connection: its `inst` (the instructions you talk to it with) and its `status` stay on
-            // the client — the peer holds the client, and overrideOf and online read through it. No copy, no divergence.
-            peer = rec(
-                    uri(ORIGIN), uri(Helper.serviceOf(dialURI)),
-                    uri(HOST), uri(dialURI));
-            peer.asRec().at(uri(CLIENT), client, MUTABLE);
-            peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
-            final Rec kept = Helper.without(this.peers(), kv -> kv.first().uriValue().equals(key));
-            this.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
-        }
-        // THE CONNECTION THIS ONE REPLACES IS CLOSED -- outside the lock, because closing a link is a hang-up and a
-        // hang-up retracts (it finds nothing: its member is already gone). Close-before-clear, as everywhere.
-        if (displaced.isRec())
-            Helper.release(displaced);
+        if (null == claim)
+            return noobj();
+        final fURI key = claim.pathEncoding();
+        final boolean inst = client.isRec() && client.asRec().at(uri(INST)).isRec();
+        WIRE_LOG.debug("index %s key=%s inst=%s", claim, key, inst ? "set" : "none");
+        final Obj peer = Helper.mintPeer(this, key, client, Helper.serviceOf(claim), claim, true);
         // A LINK IS SUPERVISED FROM THE MOMENT IT IS INDEXED: what the index granted, the index keeps true -- a
         // failed connection is redialed, an owner's hang-up is retracted. Idempotent per level.
         if (client instanceof Link)
@@ -442,7 +366,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
 
     /**
      * The first member this level holds for a SERVICE — matched by the origin it carries, so any of its surfaces —
-     * or noobj. {@link #peerAt} is the exact lookup, by key.
+     * or noobj. {@link #peer} is the exact lookup, by key.
      */
     default Obj peerOf(final fURI service) {
         final List<Obj> members = this.peers().values().toList();
@@ -477,84 +401,69 @@ public interface Network extends Addressable, Machine.Component, Closeable {
     }
 
     /**
-     * ACCEPT — the CO-MOUNT: the listener's half of {@link #connect(fURI)}. An INBOUND connection mints a
+     * ACCEPT — the CO-MOUNT: the listener's half of {@link Helper#connect(Network, fURI)}. An INBOUND connection mints a
      * peer exactly as an outbound dial does (server : peer :: constructor : instance), keyed by the
      * remote's socket origin, with the server session as its client: the session's {@code inst} is what the
-     * peer is talked to with, over the session's reply channel. The inbound peer is
-     * ANONYMOUS until an identity exchange upgrades it — no {@code host} field, because an ephemeral
-     * client port is not a place to dial back to: reach lives exactly as long as the socket, and the
-     * listener retracts it with {@link #disconnect(fURI)} when the socket closes.
+     * peer is talked to with, over the session's reply channel. The inbound peer is ACCOUNTED FOR BY ITS SURFACE and
+     * nothing else — no {@code name}, no {@code host} field, because an ephemeral client port is not a place to dial
+     * back to: reach lives exactly as long as the socket, and the listener retracts it with {@link #drop(fURI)} when
+     * the socket closes.
      */
     default Obj accept(final fURI remote, final Obj session) {
-        // SELF-LOOP: a loopback dialer is THIS machine. The outbound half of the dial — the ws_client
-        // constructor's index — already records the peer (keyed by OUR origin, with a dial-back host
-        // and the dialer's own client). Minting a second peer keyed by the dialer's ephemeral source port
-        // would leave one socket as two peers: the twin is anonymous, undialable, and a fan-out target
-        // that no one answers. Decline the co-mount; the dialer records the peer.
-        if (Helper.isLoopbackHost(remote.host()))
+        // SELF-LOOP: a loopback dialer is THIS machine. The outbound half of the dial -- the ws_client
+        // constructor's index -- already records the peer (keyed by OUR origin, with a dial-back host and the
+        // dialer's own client). Minting a second peer keyed by the dialer's ephemeral source port would leave one
+        // socket as two peers: the twin is anonymous, undialable, and a fan-out target that no one answers. Decline
+        // the co-mount; the dialer records the peer.
+        if (remote.isLoopbackHost())
             return noobj();
-        // IDENTITY RIDES THE DIAL: ws://host:port/mtron?name=builder2 — the ?name parameter on
-        // the connection uri IS the identity exchange (no announce message, no anonymous state to
-        // upgrade), so a server that exposes the full connection uri mints a NAMED peer on accept.
-        final String name = remote.qMap().get(NAME);
-        final fURI service = remote.path(List.of()).removeQ(NAME);
-        // the co-mount is keyed like a dial: the remote's socket origin and the route it dialed, as a path
-        final fURI key = Helper.keyOf(remote);
-        // serialized with index and disconnect: the listener accepts on its own worker threads
-        synchronized (this) {
-            final Obj existing = this.peerAt(key);
-            if (!existing.isNoObj())
-                return existing;
-            // a session is reached, as a dialed client is, by the instructions it declares — none, no peer
-            if (!session.isRec() || !session.asRec().at(uri(INST)).isRec())
-                return noobj();
-            final Obj peer = rec(uri(ORIGIN), uri(service));
-            if (null != name && !name.isEmpty())
-                peer.asRec().at(uri(NAME), str(name), MUTABLE);
-            peer.asRec().at(uri(CLIENT), session, MUTABLE);
-            peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
-            this.at(uri(PEER), this.peers().plus(rec(uri(key), peer)), MUTABLE);
-            return peer;
-        }
+        // THE SAME MINT AS A DIAL, with two differences the inbound side owns: the peer keeps NO host (an ephemeral
+        // client port is not a place to dial back to), and an already-held key wins rather than being displaced --
+        // the listener's accept thread does not take over a member the level already holds.
+        return Helper.mintPeer(this, remote.pathEncoding(), session, Helper.serviceOf(remote), null, false);
     }
 
     /**
-     * The inverse of {@link #connect(fURI)}: retract THIS level's dial for the origin — hang up its
-     * client, remove the member. An origin that was never dialed is a no-op answering {@code noobj}.
-     * Nothing left dialed removes the {@code peer} field entirely: an EMPTY rec is not the same value as
-     * an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
-     */
-    /**
-     * {@link studio.phaseshift.metatron.isa.Addressable#drop} — the network's arm of the one retraction
-     * verb: {@code id -> noobj} over the peer map, with {@code disconnect} the typed workhorse underneath.
+     * {@link studio.phaseshift.metatron.isa.Addressable#drop} — retract members by what the ADDRESS names. A peer KEY
+     * ({@code ws/localhost/8555/mtron}) names that member; a wire uri with a route
+     * ({@code ws://localhost:8555/mtron}) names that surface; a bare origin ({@code ws://localhost:8555}) names every
+     * surface of the service; a socket's KEY ({@code ws/localhost/8555}) names that listener and stops serving on it.
+     * Answers what was dropped — the members, peers and listeners alike — or noobj when the address held nothing
+     * here. Nothing left removes the {@code peer}/{@code listener} field entirely: an EMPTY rec is not the same value
+     * as an absent one (the component predicate's map idiom rejects the empty rec's noobj entry — measured).
+     * <p>
+     * It is the inverse of {@link Helper#connect(Network, fURI)} as well: a fresh connection drops first, exactly as a fresh
+     * instruction set is an unbind.
      */
     @Override
-    default Obj drop(final fURI id) {
-        return this.disconnect(id);
-    }
-
-    /**
-     * Retract members, by what the address names: a peer KEY ({@code ws/localhost/8555/mtron}) names that member; a
-     * wire uri with a route ({@code ws://localhost:8555/mtron}) names that surface; a bare origin
-     * ({@code ws://localhost:8555}) names every surface of the service. Answers what was dropped — the member, or a bag
-     * of them — or noobj when the address held nothing here.
-     */
-    default Obj disconnect(final fURI address) {
+    default Obj drop(final fURI address) {
         final java.util.function.Predicate<Rel> named = Helper.naming(address);
+        // PRESENCE IS ADDRESSED BY KEY. A wire address WITH a route names REACH (one peer surface); a socket is named
+        // by its key ({@code ws/localhost/8555}), which is exactly what {@code unlisten} and a listener's own close
+        // pass. A bare origin is REACH too: it hangs up the service's dials and leaves the socket serving.
+        final java.util.function.Predicate<Rel> namedListener = kv -> null == address.host() && named.test(kv);
         final List<Obj> dropped;
+        final List<Obj> stopped;
         synchronized (this) {
             dropped = this.peers().elements().filter(kv -> kv.first().isUri() && named.test(kv)).map(Rel::second).toList();
-            if (dropped.isEmpty())
-                return noobj();
-            // the zero rec is noobj as a value, but a field written with one keeps it: write noobj so the field goes
-            final Rec kept = Helper.without(this.peers(), named);
-            this.at(uri(PEER), kept.isEmpty() ? noobj() : kept, MUTABLE);
+            if (!dropped.isEmpty()) {
+                // the zero rec is noobj as a value, but a field written with one keeps it: write noobj so the field goes
+                final Rec kept = Helper.without(this.peers(), named);
+                this.at(uri(PEER), kept.isEmpty() ? noobj() : kept, MUTABLE);
+            }
+            stopped = this.listeners().elements().filter(kv -> kv.first().isUri() && namedListener.test(kv)).map(Rel::second).toList();
+            if (!stopped.isEmpty()) {
+                final Rec kept = Helper.without(this.listeners(), namedListener);
+                this.at(uri(LISTENER), kept.isEmpty() ? noobj() : kept, MUTABLE);
+            }
         }
-        // CLEAR, THEN CLOSE. The members leave the map under the lock and what they held is closed outside it:
+        // CLEAR, THEN CLOSE. The members leave the maps under the lock and what they held is closed outside it:
         // closing a link is its owner's hang-up, and a hang-up retracts -- which would come straight back into
-        // this map.
+        // this map. A socket's routes leave it, and a socket this level OPENED is released with them.
         dropped.forEach(Helper::release);
-        return objs(dropped.toArray(Obj[]::new));
+        stopped.forEach(entry -> Helper.stopListening(this, entry));
+        final List<Obj> all = Stream.concat(dropped.stream(), stopped.stream()).toList();
+        return all.isEmpty() ? noobj() : objs(all.toArray(Obj[]::new));
     }
 
     /**
@@ -615,11 +524,12 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * declares: its {@code from}, else its {@code eval} of the destination-relative read ({@code localize()}).
      * <p>
      * A READ NEVER DIALS. Connection is construction and disconnection is destruction — {@code http_client::[…]},
-     * {@code ws_client::[…]} or {@link #connect} make a peer, and addressing an origin makes none: membership is
+     * {@code ws_client::[…]} or make a peer, and addressing an origin makes none: membership is
      * declared, never emergent. The web's gateway is such a client too: {@code http_client::[host=><http://#>]}, a
      * wildcard origin {@link #peerOf} matches after every exact one. An http(s) address no client covers falls
      * through to memory, which holds no web.
      */
+    @Override
     default Obj read(final fURI vid) {
         // THE GATE IS THE HOST, NOT THE PORT. hasAuthority() demands host AND port, but an address is
         // elsewhere-shaped the moment it names a host -- ws://host/path on the default port and
@@ -650,6 +560,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * Authority dispatch — write {@code obj} through a dialed peer's client: its {@code to}, else its {@code eval} of
      * the destination-relative write. Same local fall-through as {@link #read(fURI)}, and a write never dials either.
      */
+    @Override
     default Obj write(final fURI vid, final Obj obj) {
         // host-gated, exactly as read -- see the note there; a fail is not shippable data, so it stays local
         if (null == vid.host() || obj.isFail())
@@ -676,9 +587,10 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * retraction, not a failure to repair -- and then every member is disconnected, which is what actually hangs up
      * a client: a peer::T is a rec, and closing the rec would close nothing it holds.
      */
+    @Override
     default void close() {
-        studio.phaseshift.metatron.isa.mach.type.network.NetworkSupervisor.release(this);
-        this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::disconnect);
+        NetworkSupervisor.release(this);
+        this.peers().keys().filter(Obj::isUri).map(Obj::uriValue).toList().forEach(this::drop);
         // PRESENCE ENDS WITH THE LEVEL: its routes leave every socket it served through, and a socket it opened is
         // released -- a child's pop never closes the port its parent serves on
         this.listeners().values().filter(Obj::isRec).toList().forEach(entry -> Helper.stopListening(this, entry));
@@ -732,36 +644,33 @@ public interface Network extends Addressable, Machine.Component, Closeable {
      * Named rather than a lambda so the compiled code says what it bound — explain reports this class, and the
      * string is the origin whose body runs.
      */
-    record AtPeer(Network network, fURI origin, Inst.f body, boolean read,
-                  boolean submit) implements BiFunction<Obj, Inst, Obj> {
-        @Override
-        public Obj apply(final Obj lhs, final Inst inst) {
-            if (this.submit)
-                return this.body.apply(lhs, inst);
-            final fURI vid = inst.arg(0).uriValue();
-            return this.read
-                    ? QProc.Layer.read(this.network, vid, () -> this.body.apply(lhs, inst))
-                    : QProc.Layer.write(this.network, vid, lhs, () -> this.body.apply(lhs, inst));
-        }
-
-        @Override
-        public String toString() {
-            return this.origin.toString();
-        }
-    }
-
     class Helper {
 
         /**
          * Hosts that all denote "this machine" — a server bound to the first is reachable at the others.
          */
-        // a socket reports IPv6 loopback uncompressed (and fURI.hostOf brackets it), so both spellings are here
-        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]",
-                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]");
-
         private Helper() {
             // static only
         }
+
+        record AtPeer(Network network, fURI origin, Inst.f body, boolean read,
+                      boolean submit) implements BiFunction<Obj, Inst, Obj> {
+            @Override
+            public Obj apply(final Obj lhs, final Inst inst) {
+                if (this.submit)
+                    return this.body.apply(lhs, inst);
+                final fURI vid = inst.arg(0).uriValue();
+                return this.read
+                        ? QProc.Layer.read(this.network, vid, () -> this.body.apply(lhs, inst))
+                        : QProc.Layer.write(this.network, vid, lhs, () -> this.body.apply(lhs, inst));
+            }
+
+            @Override
+            public String toString() {
+                return this.origin.toString();
+            }
+        }
+
 
         /**
          * THE DIALECT, IN ONE PLACE: a name is SPELLED {@code //name} and STORED {@code name}. The marked spelling is
@@ -962,22 +871,6 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * THE PEER KEY — the dial's own address as a LEGAL local path, one per surface: {@link fURI#toPath()} of the
-         * dial, so {@code ws://peer.local:8555/mtron?name=me} is {@code ws/peer/local/8555/mtron}. Scheme, every label
-         * of the host, port, then the route, and never a {@code ?q}: the identity the dial spends and the serializers
-         * that ride the session name no connection (a {@code ?clientq} once leaked into the key this way — measured).
-         * <p>
-         * LEGAL MEANS NO DOTS AND NO COLONS IN A SEGMENT. A dotted first segment reads as a host, so a host is split
-         * into its labels in order ({@code 10.0.0.7} is {@code 10/0/0/7}) — never kept whole, and never merged, since a
-         * dropped boundary lets two machines share a key and the redial of one would hang up the other. The one step
-         * {@code toPath()} does not take is the alias: a loopback host is spelled {@code localhost} first, so
-         * {@code 127.0.0.1} and {@code [::1]} key the connection {@code localhost} already holds.
-         */
-        public static fURI keyOf(final fURI dial) {
-            return (isLoopbackHost(dial.host()) ? dial.host("localhost") : dial).toPath();
-        }
-
-        /**
          * The origin a member reaches — the service it carries, never its key — or null for a value that is not
          * a member (a roster row's address).
          */
@@ -989,7 +882,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * What a retraction's address names (see {@link Network#disconnect}): a key that member, a wire uri with a
+         * What a retraction's address names (see {@link Network#drop}): a key that member, a wire uri with a
          * route that surface, a bare origin every surface of the service.
          */
         static java.util.function.Predicate<Rel> naming(final fURI address) {
@@ -997,7 +890,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 return kv -> kv.first().uriValue().equals(address);
             final boolean surface = address.path().stream().anyMatch(segment -> !segment.isEmpty());
             if (surface) {
-                final fURI key = keyOf(address);
+                final fURI key = address.pathEncoding();
                 return kv -> kv.first().uriValue().equals(key);
             }
             final fURI service = serviceOf(address);
@@ -1022,9 +915,9 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * machine in the chain holds one.
          */
         public static Listener listenerFor(final fURI origin) {
-            final fURI key = keyOf(origin);
+            final fURI key = origin.pathEncoding();
             for (Obj at = Machine.current(); at instanceof Machine machine; at = machine.parent()) {
-                final Obj entry = machine.network().listenerAt(key);
+                final Obj entry = machine.network().listener(key);
                 if (entry.isRec() && entry.asRec().atDirect(uri(SERVER)) instanceof Listener listener && !listener.closed())
                     return listener;
             }
@@ -1046,11 +939,104 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
-         * The service KEY for any client-facing uri: bare origin, with exactly the processor the dial
-         * spends (?name) retracted — every other ?q rides through.
+         * LISTEN — serve through a socket from {@code level}, with this level's own routes: a socket this machine opened
+         * (its level is the {@link Listener#owner()}), or one it inherited ({@link Helper#listenerFor}). The routes are this
+         * level's: a key another level already serves on the socket is refused, and the routes leave with the level
+         * ({@link Network#close()}). Listening again replaces this level's routes on the socket.
+         */
+        public static Obj listen(final Network network, final Listener server, final Rec routes) {
+            // THE ENTRY IS THE HANDLE: a listener::T rec carrying the socket, its origin and THIS level's route table
+            // (absent rather than empty while it serves nothing). Build it, then let index mount it — one verb for
+            // both indexes.
+            final Obj entry = rec(uri(ORIGIN), uri(server.origin()), uri(SERVER), server);
+            if (!routes.isEmpty())
+                entry.asRec().at(uri(ROUTE), routes, MUTABLE);
+            entry.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.LISTENER_TID);
+            return network.index(entry);
+        }
+
+        /**
+         * MOUNT a listener entry — the listener arm of {@link studio.phaseshift.metatron.isa.Addressable#index}. The
+         * route table is THIS level's (an inherited socket is shared; each level keeps its own table on it), and the
+         * claim check and the share are one step per socket, or two levels mounting the same key at once would both
+         * pass the check — the level's own lock serializes its map, as the peer mint does.
+         */
+        static Obj mountListener(final Network network, final Rec entry) {
+            final Obj origin = entry.atDirect(uri(ORIGIN));
+            final Obj held = entry.atDirect(uri(SERVER));
+            if (!origin.isUri() || !(held instanceof Listener server))
+                return noobj();
+            final Rec routes = entry.atDirect(uri(ROUTE)).isRec() ? entry.atDirect(uri(ROUTE)).asRec() : rec();
+            // a route is keyed by the path it serves: a key that is no path routes nothing, so it fails the mount
+            routes.keys().filter(route -> !route.isUri()).findFirst().ifPresent(route -> {
+                throw MTronException.of("a route is keyed by the path it serves, got %s on %s", route, origin.uriValue());
+            });
+            final fURI key = origin.uriValue().pathEncoding();
+            synchronized (server) {
+                server.refuseClaimed(network, routes);
+                synchronized (network) {
+                    final Rec kept = Helper.without(network.listeners(), kv -> kv.first().uriValue().equals(key));
+                    network.at(uri(LISTENER), kept.isEmpty() ? rec(uri(key), entry) : kept.plus(rec(uri(key), entry)), MUTABLE);
+                }
+                server.share(network);
+            }
+            return entry;
+        }
+
+        /**
+         * Is this address a <b>peer</b>? A connection this machine holds, or one the roster declares.
+         */
+        public static boolean isPeer(final Network network, final fURI address) {
+            return address.hasAuthority()
+                    && (peerAuthorities(network).stream().anyMatch(peer -> sameService(peer, address))
+                    || network.machines().elements()
+                    .flatMap(kv -> Stream.concat(Stream.of(kv.first()), kv.second().stream()))
+                    .filter(Obj::isUri).map(Obj::uriValue).anyMatch(known -> sameService(known, address)));
+        }
+
+        /**
+         * THE ONE PEER MINT — put {@code client} into {@code level}'s peer map at {@code key}, with the entry's
+         * {@code origin} (the service) and, when the call site HAS a dialable address for it, its {@code host}. The
+         * {@code host} is null on the inbound side: an ephemeral client port is not a place to dial back to.
+         * <p>
+         * The caller owns the POLICIES — the loopback decline (accept), the same-client idempotence and supervision
+         * (index) — this owns the SHAPE and the map discipline: read-extend-write under the level's lock, and the
+         * displaced member released OUTSIDE it (closing a link is its owner's hang-up, and a hang-up retracts, which
+         * would come straight back into this map).
+         *
+         * @param replace whether a member already at the key for a DIFFERENT client is displaced; false keeps it
+         * @return the peer (minted or already held), or noobj when the client declares no inst — nothing to talk to
+         */
+        static Obj mintPeer(final Network level, final fURI key, final Obj client, final fURI origin,
+                            final fURI host, final boolean replace) {
+            if (!client.isRec() || !client.asRec().at(uri(INST)).isRec())
+                return noobj();
+            final Obj peer;
+            final Obj displaced;
+            synchronized (level) {
+                final Obj existing = level.peer(key);
+                if (existing.isRec() && (client == existing.asRec().<Obj>atDirect(uri(CLIENT)) || !replace))
+                    return existing;
+                displaced = existing;
+                peer = rec(uri(ORIGIN), uri(origin));
+                if (null != host)
+                    peer.asRec().at(uri(HOST), uri(host), MUTABLE);
+                peer.asRec().at(uri(CLIENT), client, MUTABLE);
+                peer.selfTID(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID);
+                final Rec kept = without(level.peers(), kv -> kv.first().uriValue().equals(key));
+                level.at(uri(PEER), kept.isEmpty() ? rec(uri(key), peer) : kept.plus(rec(uri(key), peer)), MUTABLE);
+            }
+            if (displaced.isRec())
+                release(displaced);
+            return peer;
+        }
+
+        /**
+         * The service a client-facing uri names: its ORIGIN — scheme://host:port, path and q removed, which is what
+         * {@link fURI#origin()} means and what {@code origin::T} accepts.
          */
         public static fURI serviceOf(final fURI uri) {
-            return uri.path(java.util.List.of()).removeQ(studio.phaseshift.metatron.Tokens.NAME);
+            return uri.origin();
         }
 
         /**
@@ -1071,7 +1057,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (null == a || null == b)
                 return false;
             return Objects.equals(a.origin(), b.origin())
-                    || (isLoopbackHost(a.host()) && isLoopbackHost(b.host()) && a.port() == b.port());
+                    || (a.isLoopbackHost() && b.isLoopbackHost() && a.port() == b.port());
         }
 
         /**
@@ -1096,7 +1082,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         /**
          * THE CLOSE-BEFORE-CLEAR CONTRACT, the network's copy of {@code Space.Helper.writeComplete}:
          * writing {@code noobj} over a live value closes what it displaces, so "write to noobj" IS the
-         * universal hang-up and no separate disconnect machinery exists. Today the Java-side retraction
+         * universal hang-up and no separate retraction machinery exists. Today the Java-side retraction
          * paths route through it; once the peer map is mounted as a writable space, the space write path
          * calls its own copy and a match-write ({@code ==[<x> => close()]}) hangs up the same way.
          */
@@ -1200,6 +1186,46 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
+         * A MOVE THAT CROSSES TO ANOTHER HOST IS A STATE BOUNDARY, NOT A THREAD BOUNDARY. A wire peer runs a shipped
+         * program on its own VM, so none of the caller's frame state is visible there and none of the far side's comes
+         * back — that is the whole semantic of moving to a different host. The loop client is the SAME machine, so it
+         * has to scope that state away by hand; without it the caller's arg frames ({@code Memory.ARG_STACK}, the
+         * {@code +/#} locals) are visible to the shipped program and the shipped program's bindings leak back into the
+         * caller — the one thing a move to another host can never do.
+         * <p>
+         * The perspective is {@link Machine.Helper#evalAt} (the receiver's root, caller restored). The frames are
+         * SWAPPED, never cleared: the caller's stack object must be untouched while the far side runs and is put back
+         * by REFERENCE, while the far side's stack is discarded whole — a wire peer's locals vanish too, so that is
+         * the semantic, not a leak. Only diagnostics cross ({@code ExecutionStack}), and the reentrancy flags
+         * ({@code LawTable.DERIVING}, {@code MType.RESOLVING}) are deliberately left alone: a nested move is still
+         * INSIDE the call that set them.
+         * <p>
+         * NO THREAD IS SPAWNED. The caller has nothing to do while the shipped program runs, so a worker would only add
+         * a context switch and a copy of the same restored state; concurrency belongs to the plan (scatter/star) and
+         * to {@link FutureObj}, not to the transport. If one is ever wanted for overlap, it still carries this swap —
+         * a fresh thread starts with empty thread-locals, which is exactly the state below.
+         *
+         * @param receiver the machine the far side stands at
+         * @param program  the shipped program to run there
+         * @return the program's answer, with the caller's frames and perspective restored
+         */
+        public static Obj boundary(final Machine receiver, final Supplier<Obj> program) {
+            final variableStack callerFrames = Memory.ARG_STACK.get();
+            final AbstractThread callerThread = BootLoader.CURRENT_THREAD.get();
+            return Machine.Helper.evalAt(receiver, () -> {
+                Memory.ARG_STACK.set(new variableStack(f("+/#")));
+                BootLoader.CURRENT_THREAD.remove();
+                try {
+                    return program.get();
+                } finally {
+                    Memory.ARG_STACK.set(callerFrames);
+                    if (null != callerThread)
+                        BootLoader.CURRENT_THREAD.set(callerThread);
+                }
+            });
+        }
+
+        /**
          * COMPILE-TIME BINDING (Marko, 2026-10-24) — {@code resolved}, a call the resolver has just bound to its native
          * definition, with the PEER'S body when its address names a dialed peer that overrides it: the address
          * instructions, {@code from(<uri>)} and {@code to(<uri>)}, whose literal uri argument carries an origin. The
@@ -1228,7 +1254,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             if (null == address.host())
                 return resolved;
             final fURI origin = address.path(List.of());
-            final Obj override = machine.network().overrideOf(origin, base);
+            final Obj override = reach(machine, origin, base);
             if (!override.isObjInst()) {
                 // AN ADDRESSED MACHINE WITH NO PEER HERE IS NOT A LOCAL OPERATION. The hosted form (`//abc` — no
                 // scheme, a host) and a wire scheme (`ws://host/...`) name a machine; with no dialed peer the native
@@ -1238,8 +1264,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
                 // instruction is an ordinary local read into that space.
                 final String scheme = address.scheme();
                 if (null == scheme || null != Signatures.dialerOf(scheme))
-                    throw MTronException.of("%s is not reachable from %s: no peer is dialed at %s",
-                            resolved.tid().basePath(), machine.vidOrTid(), origin);
+                    throw unreachable(machine, resolved.tid().basePath(), origin);
                 return resolved;
             }
             WIRE_LOG.debug("bound %s to the override %s declares", resolved, origin);
@@ -1260,6 +1285,47 @@ public interface Network extends Addressable, Machine.Component, Closeable {
          * to the dial uri instead. No handler, or one that declines: {@code noobj}, and the origin
          * stays known rather than reachable.
          */
+        /**
+         * CONNECT — the network's MOUNT op, the third copy of memory's {@code addSpace} and the ISA's
+         * {@code refer}: take a connectionless description and make it a live member of this machine's reach.
+         * ENSURE PEERED, never rebuild: an origin this machine has already dialed answers its existing
+         * {@code peer::T} — connect is an optimization, never a protection, because a re-dial could not change
+         * the far side. A fresh connection is a drop first, exactly as a fresh instruction set is an
+         * unmount first.
+         * <p>
+         * The dial uri may carry the protocol ROUTE ({@code ws://host:port/mtron}); the peer keys on the
+         * SERVICE origin alone, so data reads address {@code ws://host:port/<path>} while the peer's
+         * {@code host} field remembers where it was dialed, route included — peer::T's own words.
+         * <p>
+         * The handler names the DIALER, resolved through instruction memory at dial time (which is what lets
+         * this component stay below {@code /m/web} while web's protocol clients do the dialing); {@code loop:}
+         * needs none. No dialer answers {@code noobj}: the origin stays known, not reachable from here.
+         * <p>
+         * SUGAR OVER CONSTRUCTION, and therefore a helper rather than an interface method: the idiomatic act is
+         * {@code ws_client::[pattern=><ws://host/mtron?clientq=me>]} — the client's constructor dials and registers
+         * itself, exactly as a space's constructor indexes itself into Memory. This form remains for a caller
+         * holding a uri and a dialer vid rather than a type literal.
+         */
+        public static Obj connect(final Network network, final fURI dialURI) {
+            return connect(network, dialURI, null);
+        }
+
+        /**
+         * {@link #connect(Network, fURI)} with the dialer named explicitly.
+         */
+        public static Obj connect(final Network network, final fURI dialURI, final fURI handler) {
+            // ENSURE-PEERED, as an optimization: a surface this level already holds is not dialed twice. A member
+            // its owner hung up is not one to answer -- it is retracted, and the dial below replaces it.
+            final Obj existing = network.peer(dialURI.pathEncoding());
+            if (!existing.isNoObj() && !Helper.hungUp(existing))
+                return existing;
+            final Obj dialed = Helper.dial(dialURI, handler);
+            WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", dialURI, handler, System.identityHashCode(network), dialed);
+            if (dialed.isNoObj() || dialed.isFail())
+                return noobj();
+            return network.index(dialed);
+        }
+
         public static Obj dial(final fURI dialURI, final fURI handler) {
             // ONE dial path for every protocol: resolve the DIALER through instruction memory, and a
             // protocol client type's constructor IS the dial ([host=>...] in, live client out). The only
@@ -1282,15 +1348,71 @@ public interface Network extends Addressable, Machine.Component, Closeable {
         }
 
         /**
+         * THE TABLE'S ADDRESS AT THIS LEVEL: {@code <machine>/network/prefix}, derived from the LEVEL's machine — never
+         * from the calling thread, because {@code Machine.write} routes by where the caller stands (which is what once
+         * filed a frame's name in its parent). A network with no machine vid falls back to the root address.
+         */
+        public static fURI prefixTable(final Network network) {
+            final Machine machine = network.machine();
+            final fURI vid = null == machine ? null : machine.vid();
+            return null == vid || vid.isEmpty() || !vid.isAbsolute()
+                    ? ROOT_PREFIX
+                    : vid.resolve().extend(NETWORK).extend(PREFIX);
+        }
+
+        /**
+         * THE ONE REACHABILITY DOOR, asked by every boundary that SHIPS: is a peer dialed at {@code origin} from
+         * {@code machine}, able to serve {@code instTID}? Answered with that peer's body ({@link Network#overrideOf}),
+         * so a caller that needs the body does not ask twice and a caller that only needs the verdict asks
+         * {@link #reachable}.
+         * <p>
+         * THE POLICY IS THE CALLER'S, the question is not: a move's cut MUST ship, so any unreachable origin is a
+         * failure; {@code from}/{@code to} may name a SPACE ({@code maria:}, {@code docker:}) that is legitimately
+         * local, so they fall through on a scheme with no dialer. Both refusals come from
+         * {@link #unreachable(Machine, fURI, fURI)} so they cannot drift apart — they had, and the two messages
+         * were the same anyway.
+         */
+        public static Obj reach(final Machine machine, final fURI origin, final fURI instTID) {
+            return null == machine || null == machine.network() ? noobj() : machine.network().overrideOf(origin, instTID);
+        }
+
+        /**
+         * The verdict alone: a peer at {@code origin} this machine can eval through right now.
+         */
+        public static boolean reachable(final Machine machine, final fURI origin) {
+            return reach(machine, origin, EVAL_INST_TID).isObjInst();
+        }
+
+        /**
+         * THE ONE REFUSAL. It names the target, the level that is asking, and — when an ANCESTOR holds the dial —
+         * where the peer actually lives, because {@code "... is not reachable from /a"} is otherwise
+         * indistinguishable from "nobody dialed it anywhere", and that ambiguity cost a full day on the loop client:
+         * the root had dialed the peer, the frame had not, and reach belongs to the machine that dialed it.
+         */
+        public static MTronException unreachable(final Machine asking, final fURI target, final fURI origin) {
+            final Machine elsewhere = dialledAbove(asking, origin);
+            final String where = null == elsewhere ? ""
+                    : " (dialed at " + elsewhere.vidOrTid() + ", but reach belongs to the machine that dialed it)";
+            return MTronException.of("%s is not reachable from %s: no peer is dialed at %s%s",
+                    target, null == asking ? "?" : asking.vidOrTid(), origin, where);
+        }
+
+        /**
+         * The nearest ANCIENT holding a dial at {@code origin}, or null — the hint, never a promise of reach.
+         */
+        private static Machine dialledAbove(final Machine asking, final fURI origin) {
+            for (Obj at = null == asking ? null : asking.parent(); at instanceof Machine above; at = above.parent())
+                if (reachable(above, origin))
+                    return above;
+            return null;
+        }
+
+        /**
          * True when {@code host} names this machine. A server declared as {@code 0.0.0.0:8555} (all local
          * interfaces) is the same service as {@code localhost:8555} — and getting this wrong is not cosmetic:
          * the boot binds the wildcard while a peer addresses the loopback name, so an alias-blind comparison
          * makes the Router forward a request to <em>itself</em>.
          */
-        public static boolean isLoopbackHost(final String host) {
-            return null != host && LOOPBACK_HOSTS.contains(host);
-        }
-
         /**
          * one reach the network reports, asked once: {@code [origin, status=>[kind=>up|down|known, time=>ms]]}.
          * The time is how long the answer took — a ws client's is its socket state, an http client's is a round trip.
@@ -1302,7 +1424,7 @@ public interface Network extends Addressable, Machine.Component, Closeable {
             // and so is a peer::T with no client (a reference that crossed a wire): "known", never tried. "down" stays
             // reserved for a client that was asked and is not live.
             final boolean dialed = reach.isRec()
-                    && studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID.equals(reach.tid().basePath());
+                    && reach.testNominally(studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TYPE);
             final Obj client = dialed ? reach.asRec().<Obj>atDirect(uri(CLIENT)) : noobj();
             final String kind = client.isNoObj() ? "known" : Helper.status(client) ? "up" : "down";
             final long time = System.currentTimeMillis() - start;

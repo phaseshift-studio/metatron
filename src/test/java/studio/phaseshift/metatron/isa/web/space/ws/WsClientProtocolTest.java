@@ -53,7 +53,7 @@ public class WsClientProtocolTest extends AbstractMetatronTest {
     @AfterEach
     void tearDown() {
         if (null != this.space) {
-            Machine.current().network().disconnect(f("ws://localhost:" + this.port));
+            Machine.current().network().drop(f("ws://localhost:" + this.port));
             this.space.close();
             this.space = null;
         }

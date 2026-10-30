@@ -118,7 +118,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static volatile Machine ROOT_MACHINE = null;
     public static Rec ARGS;
     /**
-     * The levels every machine's log sink starts with, published to {@link Machine#bootstrap()} before the root is minted.
+     * The levels every machine's log sink starts with, published to {@link Machine.Helper#bootstrap(Machine)} before the root is minted.
      */
     public static Rec LOG_LEVELS = rec(uri(TRACE), lst(uri(ALL)));
     /**
@@ -383,7 +383,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 } else if (evalExpr != null) {
                     result = Machine.evaluate(evalExpr);
                 } else {
-                    result = Machine.evaluate(new java.io.File(filePath));
+                    result = Machine.Helper.evaluate(new java.io.File(filePath));
                 }
                 if (!result.isNoObj()) {
                     System.out.print(ObjmtronSerializer.single().write(result) + "\n");
@@ -600,7 +600,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 try {
                     final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
-                    final long count = Machine.evaluate(bootPath.toFile(), e -> {
+                    final long count = Machine.Helper.evaluate(bootPath.toFile(), e -> {
                         LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
                         if (Tracer.java_stack.enabled())
                             e.parseException().printStackTrace(System.err);
@@ -627,7 +627,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
                 }
             }
-            // the log sink is no longer written here: Machine.bootstrap() seeds one per machine at <vid>/sys/log
+            // the log sink is no longer written here: Machine.Helper.bootstrap(machine) seeds one per machine at <vid>/sys/log
             // from LOG_LEVELS (published above), and GraphittyObjLogger reads it ~-relative per frame.
             /////////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

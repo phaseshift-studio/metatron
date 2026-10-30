@@ -129,7 +129,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         Obj running = noobj();
         for (final Code segment : segments) {
             try {
-                // compile-then-run through the one path every other caller shares (Machine.applyCode):
+                // compile-then-run through the one path every other caller shares (Machine.evaluate):
                 // a private resolve + SwarmProcessor shortcut here would skip the compiler's rewrite
                 // and type stages — and explain()/profile() ARE whole-chain rewrites, so skipping the
                 // rewriter left them reading as the identity functions their registered stubs are

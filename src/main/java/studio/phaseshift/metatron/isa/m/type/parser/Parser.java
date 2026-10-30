@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -56,12 +56,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Parser extends Machine.Component {
+public interface Parser extends Component {
 
     /**
      * Parse {@code source} — a {@code str} of source text — and return the program it denotes. Any
      * other obj is not source text: it is lifted as it stands, never re-read.
-     *
+     * <p>
      * A fail is an obj too, and it is the one obj that leaves the inst chain (it goes to the fail
      * stack; only {@code catch()} brings it back), so this stage hands a fail out unchanged. A
      * {@code code::T} return could only wrap it back into a program, which is what a fail never does.

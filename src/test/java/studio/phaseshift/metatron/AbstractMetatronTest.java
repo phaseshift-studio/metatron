@@ -18,12 +18,16 @@
 
 package studio.phaseshift.metatron;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -35,11 +39,8 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,13 +48,40 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
+/**
+ * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
+ * freeze fails with a test name instead of hanging the fork; it does not cover lifecycle methods, and it can only
+ * interrupt interruptible code, so a deadlock inside {@code synchronized} or native code still needs a thread dump.
+ */
 @ExtendWith(TestData.TestDataExtension.class)
+@Timeout(value = 5, unit = TimeUnit.MINUTES)
 public abstract class AbstractMetatronTest {
     static {
         BootLoader.TESTING = true;
+    }
+
+    /**
+     * EVERY TEST METHOD STARTS AND ENDS WHERE IT BEGAN. {@code move} re-homes the thread by design, so a method that
+     * leaves the machine elsewhere used to leak that landing into the NEXT method's fixtures (measured: a row that
+     * moved to {@code /a} made the following row's {@code @BeforeEach} dial from {@code /a}). This is the invocation
+     * boundary, deliberately coarser than the helpers': a {@code script} or a method that chains two expressions is
+     * stateful WITHIN itself (push in one line, observe in the next), so only the method boundary may restore it.
+     * Helpers restore per EVALUATION just where they run independent programs ({@code checkCodeRewrite}); everything
+     * else is isolated here.
+     */
+    private Machine entryPerspective;
+
+    @BeforeEach
+    void rememberEntryPerspective() {
+        this.entryPerspective = Machine.current();
+    }
+
+    @AfterEach
+    void restoreEntryPerspective() {
+        if (null != this.entryPerspective)
+            Machine.current(this.entryPerspective);
     }
 
     protected static final Random RANDOM = new Random();
@@ -277,7 +305,12 @@ public abstract class AbstractMetatronTest {
                 if (line.startsWith("[STATE] ")) {
                     final String mtron = line.substring("[STATE] ".length()).trim();
                     LOG.debug("[state] %s", mtron);
-                    ObjmtronSerializer.parse(mtron).apply();
+                    // A FAIL IS ADDRESSED BY WHOEVER REPORTS IT: the evaluator no longer files a fail on the stack
+                    // automatically, so a state line that produces one files it here -- exactly what the console and
+                    // the wire boundaries do (MFail.reported) -- or a script that SEEDS a failure to observe the
+                    // stack (SysIsolationScriptTest) seeds nothing at all.
+                    final Obj state = ObjmtronSerializer.parse(mtron).apply();
+                    MFail.reported(state);
                     continue;
                 }
                 final String[] parts = stripComment(line).split("%", -1);
@@ -285,7 +318,9 @@ public abstract class AbstractMetatronTest {
                     checkEquality(LOG, ObjmtronSerializer.parse(parts[0].trim()).apply(),
                             ObjmtronSerializer.parse(parts[1].trim()).apply(), Boolean.parseBoolean(parts[2].trim()));
                 else if (parts.length == 2)
-                    checkCodeParseApply(LOG, parts[0].trim(), parts[1].trim());
+                    // RAW: a script is stateful ACROSS its lines (see the method note), so the per-evaluation
+                    // restore a row-based check performs would undo a line's own move for the next line.
+                    checkCodeParseApplyRaw(LOG, parts[0].trim(), parts[1].trim());
                 else
                     fail("script line must be [STATE] <mtron>, <code> % <expected>, or <lhs> % <rhs> % <equals>: " + line);
             } catch (final AssertionError | RuntimeException e) {
@@ -304,7 +339,8 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkMatchesByID(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
-        final Obj a = ObjmtronSerializer.parse(lhs).apply(jnt(1));
+        final Machine before = Machine.current();
+        final Obj a = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(lhs).apply(jnt(1)));
         final Obj b = ObjmtronSerializer.parse(rhs);
         final boolean m = a.testByID(b);
         LOG.debug("testing %s matches by ID %s: %s [expected:%s]", a, b, m, matches);
@@ -312,9 +348,10 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkCodeEvaluate(final GraphittyLogger LOG, final String lhs, final String expected) {
+        final Machine before = Machine.current();
         final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(expected);
-        final Obj actual = b.apply(a);
+        final Obj actual = Machine.Helper.evalAt(before, () -> b.apply(a));
         LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
         if (!expected.trim().equals("<ERROR>")) {
             boolean noFails = a.stream().noneMatch(Obj::isFail);
@@ -333,9 +370,10 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkCodeEvaluate(final GraphittyLogger LOG, final String evaluate, final String fetchResult, final String expectedResult) {
-        final Obj evaluation = ObjmtronSerializer.parse(evaluate).apply();
-        final Obj actual = ObjmtronSerializer.parse(fetchResult).apply();
-        final Obj expected = ObjmtronSerializer.parse(expectedResult).apply();
+        final Machine before = Machine.current();
+        final Obj evaluation = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(evaluate).apply());
+        final Obj actual = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(fetchResult).apply());
+        final Obj expected = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(expectedResult).apply());
         LOG.debug("testing %s; %s [expected:%s]", evaluation, actual, expected);
         if (!expectedResult.trim().equals("<ERROR>")) {
             boolean noFails = evaluation.stream().noneMatch(Obj::isFail);
@@ -371,12 +409,13 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkSpaceMutation(final GraphittyLogger LOG, final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
-        final Obj stateResult = ObjmtronSerializer.parse(stateCode).apply();
-        final Obj mutationResult = ObjmtronSerializer.parse(mutationCode).apply();
+        final Machine before = Machine.current();
+        final Obj stateResult = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(stateCode).apply());
+        final Obj mutationResult = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(mutationCode).apply());
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
         expected.forEach((k, v) -> {
             final Obj actual = Machine.read(k);
-            final Obj desired = ObjmtronSerializer.parse(v).apply();
+            final Obj desired = Machine.Helper.evalAt(before, () -> ObjmtronSerializer.parse(v).apply());
             LOG.debug("\t%s [expected] == %s [actual]", desired, actual);
             assertEquals(desired, actual);
         });
@@ -390,35 +429,112 @@ public abstract class AbstractMetatronTest {
         return Tuple.Quartet.with(parseResult.get0(), parseResult.get1(), evalResult.get0(), evalResult.get1());
     }
 
-    public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, boolean checkTIDs) {
+    /**
+     * THE PARENTAL PREFIX CONTRACT, run against any component that declares itself {@link Component.Prefix}: a name
+     * declared at a level is INHERITED by the level below (through the view, not by a copy), SHADOWED by a declaration
+     * there, GIVEN BACK when the shadow is withdrawn, and the parent is never touched; a popped frame takes only its
+     * own rows. One call per component, so a new prefixed component joins the family by implementing the interface and
+     * adding one line — the network and the ISA are both checked this way.
+     *
+     * @param component the component to run the contract against, at whatever level the caller stands
+     */
+    public static void testParentalChildPrefix(final Component component) {
+        if (!(component instanceof Component.Prefix parent))
+            throw new IllegalArgumentException("not a Component.Prefix component: " + component);
+        final Machine level = component.machine();
+        final String suffix = String.valueOf(Math.abs(RANDOM.nextInt(1_000_000)));
+        final String label = "parental" + suffix;
+        final fURI name = f(label);
+        final fURI inherited = f("loop://parental");
+        final fURI shadowing = f("loop://shadowing");
+        parent.registerPrefix(name, inherited);
+        try {
+            assertEquals(inherited, Component.Prefix.Helper.effectivePrefix(parent, name).uriValue(),
+                    label + " is declared at the parent");
+            Machine.current(level);
+            final Machine child = level.push(f("p" + suffix));
+            try {
+                final Component.Prefix below = parent.on(child);
+                assertEquals(inherited, Component.Prefix.Helper.effectivePrefix(below, name).uriValue(),
+                        "the child INHERITS the parent's meaning through the view");
+                assertTrue(below.prefixes().jvm().isEmpty(),
+                        "inheritance is not a copy: " + below.prefixes());
+                below.registerPrefix(name, shadowing);
+                assertEquals(shadowing, Component.Prefix.Helper.effectivePrefix(below, name).uriValue(),
+                        "a declaration at the child SHADOWS the parent's");
+                assertEquals(inherited, Component.Prefix.Helper.effectivePrefix(parent, name).uriValue(),
+                        "and the parent is untouched");
+                below.unregisterPrefix(name);
+                assertEquals(inherited, Component.Prefix.Helper.effectivePrefix(below, name).uriValue(),
+                        "withdrawing the shadow gives the parent's meaning back");
+            } finally {
+                Machine.current(child);
+                child.pop();
+                Machine.current(level);
+            }
+            assertEquals(inherited, Component.Prefix.Helper.effectivePrefix(parent, name).uriValue(),
+                    "the popped frame took only its own rows");
+        } finally {
+            parent.unregisterPrefix(name);
+        }
+    }
+
+    public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, final boolean checkTIDs) {
         final Code firstStage = ObjmtronSerializer.parse(code);
         final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = firstStage.rewrite().tryToInst();
         final Obj result = ObjmtronSerializer.parse(expectedResult);
-        if (checkTIDs) {
-            assertFalse(secondStage.insts().isEmpty());
-            assertEquals(secondStage.insts().size(), compilation.insts().size());
-            for (int i = 0; i < compilation.insts().size(); i++) {
-                assertEquals(compilation.insts().get(i).tid().basePath(), secondStage.insts().get(i).tid().basePath());
-            }
-            assertEquals(result, firstStage.apply(noobj()));
-        } else {
+        // ONE STARTING MACHINE, THREE INDEPENDENT EVALUATIONS. A program that crosses a move boundary RE-HOMES the
+        // thread -- that is what `move` is -- so the stage evaluated second would otherwise stand in the machine the
+        // first one moved to. A frame pushed by a test's own @TestData dialed nothing, and a cut from it is rightly
+        // refused ("no peer is dialed at ..."): the check would report the frame's reach, not the program's rewrite.
+        // The perspective is restored in `finally`, so a red row cannot leave the thread somewhere else either.
+        final Machine before = Machine.current();
+        try {
+            if (checkTIDs) {
+                assertFalse(secondStage.insts().isEmpty());
+                assertEquals(secondStage.insts().size(), compilation.insts().size());
+                for (int i = 0; i < compilation.insts().size(); i++) {
+                    assertEquals(compilation.insts().get(i).tid().basePath(), secondStage.insts().get(i).tid().basePath());
+                }
+                assertEquals(result, applyFrom(before, firstStage));
+            } else {
 
-            LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
-            assertEquals(secondStage, compilation);
-            Obj actual = firstStage.apply(noobj());
-            LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
-            assertEquals(result, actual);
-            actual = secondStage.apply(noobj());
-            LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
-            assertEquals(result, actual);
-            actual = compilation.apply(noobj());
-            LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
-            assertEquals(result, actual);
+                LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
+                assertEquals(secondStage, compilation);
+                Obj actual = applyFrom(before, firstStage);
+                LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
+                assertEquals(result, actual);
+                actual = applyFrom(before, secondStage);
+                LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
+                assertEquals(result, actual);
+                actual = applyFrom(before, compilation);
+                LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
+                assertEquals(result, actual);
+            }
+        } finally {
+            Machine.current(before);
         }
     }
 
+    /**
+     * Apply a program AS THE CALLER'S MACHINE, whatever a previous evaluation left standing. {@code move} re-homes
+     * the thread by definition, so a check that evaluates several independent programs in a row has to re-stand each
+     * one; the alternative is that stage two silently measures the machine stage one moved to.
+     */
+    private static Obj applyFrom(final Machine here, final Obj program) {
+        return Machine.Helper.evalAt(here, () -> program.apply(noobj()));
+    }
+
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
+        final Machine before = Machine.current();
+        Machine.Helper.evalAt(before, () -> {
+            checkCodeParseApplyRaw(LOG, lhs, code, expected);
+            return noobj();
+        });
+    }
+
+    private static void checkCodeParseApplyRaw(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj a = ObjmtronSerializer.parse(lhs);
@@ -440,10 +556,22 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkBasicCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
-        assertEquals(ObjmtronSerializer.parse(code).apply(), ObjmtronSerializer.parse(expected).apply());
+        final Machine before = Machine.current();
+        Machine.Helper.evalAt(before, () -> {
+            assertEquals(ObjmtronSerializer.parse(code).apply(), ObjmtronSerializer.parse(expected).apply());
+            return noobj();
+        });
     }
 
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
+        final Machine before = Machine.current();
+        Machine.Helper.evalAt(before, () -> {
+            checkCodeParseApplyRaw(LOG, code, expected);
+            return noobj();
+        });
+    }
+
+    private static void checkCodeParseApplyRaw(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             final List<Obj> results;
             try {
@@ -475,46 +603,6 @@ public abstract class AbstractMetatronTest {
                 else
                     assertEquals(ex, actual);
             }
-            
-          /*  final Obj acd = serializer.read(serializer.write(cd));
-            final Obj aex = serializer.read(serializer.write(ex));
-            final Obj aactual = serializer.read(serializer.write(actual));
-            LOG.debug("testing (de)serialization %s => %s [expected:%s]", acd, aactual, aex);
-            assertEquals(aex, aactual); */
         }
     }
-
-    /**
-     * Utility method for distributed testing - check if URI requires cross-host routing
-     */
-    public static boolean isCrossHostUri(final GraphittyLogger LOG, final fURI uri) {
-        boolean isCrossHost = uri.hasAuthority();
-        LOG.debug("URI {{b}}%s{{X}} is cross-host: %s", uri, isCrossHost);
-        return isCrossHost;
-    }
-
-    /**
-     * Utility method for distributed testing - simulate network delay
-     */
-    public static void simulateNetworkDelay(final GraphittyLogger LOG, int milliseconds) {
-        try {
-            LOG.debug("Simulating network delay of {{b}}%d{{X}} ms", milliseconds);
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            LOG.warn("network delay simulation interrupted");
-        }
-    }
-
-    /**
-     * Utility method to get router statistics
-     */
-    public static Obj getRouterStatistics(final GraphittyLogger LOG) {
-        if (Machine.loaded()) {
-            return Machine.current().at(uri("stats"));
-        }
-        LOG.warn("router not loaded, cannot get stats");
-        return noobj();
-    }
-
 }

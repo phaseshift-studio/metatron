@@ -13,12 +13,16 @@ import studio.phaseshift.metatron.util.CommonUtil;
  *
  * @param <T> the component kind being unioned
  */
-public interface ComponentUnion<T extends Machine.Component> {
+public interface ComponentUnion<T extends Component> {
 
-    /** The enclosing level's component, or null at the root. */
+    /**
+     * The enclosing level's component, or null at the root.
+     */
     T previous();
 
-    /** This level's own component — null until the frame first introduces something locally. */
+    /**
+     * This level's own component — null until the frame first introduces something locally.
+     */
     T current();
 
     /**

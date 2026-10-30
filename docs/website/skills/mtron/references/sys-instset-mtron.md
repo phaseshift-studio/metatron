@@ -68,17 +68,17 @@ mtron> bash('ls')
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'diagrams',
     'dist',
-    ...(17 more)]
+    'docs',
+    ...(16 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.5M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  552G ...',
-    'tmpfs                   31G   35M ...',
+    '/dev/nvme1n1p2         916G  554G ...',
+    'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -87,15 +87,15 @@ A timeout and a failed exit are both fails, and both are inspectable:
 
 ```mtron
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
-==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]@/sys/fail/1253342
+==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 8ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 42ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 8ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 42ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    [ProcBuilder<228>]]@/sys/fail/1256921
+    [ProcBuilder<228>]]
 ```
 ### batch
 
@@ -109,9 +109,9 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'boot',
            'conf',
            'CONTRIBUTING.md',
-           'diagrams',
            'dist',
-           ...(17 more)]]
+           'docs',
+           ...(16 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
@@ -119,9 +119,9 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one fla
     'boot',
     'conf',
     'CONTRIBUTING.md',
-    'diagrams',
     'dist',
-    ...(18 more)]
+    'docs',
+    ...(17 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
@@ -160,15 +160,15 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
-    '  File: diagrams',
     '  File: dist',
-    ...(17 more)]
+    '  File: docs',
+    ...(16 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 17636     	Blocks: 40     ...',
-    'Device: 259,5	Inode: 22906902    L...',
+    '  Size: 24586     	Blocks: 56     ...',
+    'Device: 259,5	Inode: 27038246    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-27 12:26:44.431362...',
+    'Access: 2026-10-30 02:44:12.992972...',
    ...
 ```
 ### a shape of its own
@@ -179,14 +179,14 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::17636.0,
+==>[bB::24586.0,
     bB::4096.0,
     bB::4096.0,
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
     bB::4096.0,
-    ...(17 more)]
+    ...(16 more)]
 ```
 Unit values test against each other's units:
 
@@ -220,9 +220,9 @@ fired:
 
 ```mtron
 mtron> bash?reject=['\brm\b']("rm -rf /tmp/never-created-here")  [-- the policy, not the file system, stops it --]
-==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]@/sys/fail/1450031
+==>fail::[inst apply failure: reject patterns match command: rm -rf /tmp/never-created-here in \brm\b (at /m/sys/inst/bash@0)]
 mtron> bash?allow=['ls']("whoami")                                [-- allow is whole-command: `whoami` is not `ls` --]
-==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]@/sys/fail/1454990
+==>fail::[inst apply failure: allowed patterns do not match command: whoami not in ['ls'] (at /m/sys/inst/bash@0)]
 ```
 The allowed form passes — the pattern must match the whole command, and may be a regex — and the env lands in the
 process:
@@ -255,15 +255,15 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>57
+==>93
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::12.5546,
-    free_mem_jvm=>gB::4.5381,
+==>[total_mem_jvm=>gB::6.0859,
+    free_mem_jvm=>mB::1040.3251,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::8.0165,
+    used_mem_jvm=>gB::5.0699,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[run=>133,stop=>277878]]
+    thread=>[run=>131,stop=>151680]]
 ```
 # file system space (`fsspace::T`)
 
@@ -328,7 +328,7 @@ is doing — the sugar is short precisely because it is legible once:
 
 ```mtron
 mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-==>fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]@/sys/fail/1519448
+==>fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]
 *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 ## walking the tree

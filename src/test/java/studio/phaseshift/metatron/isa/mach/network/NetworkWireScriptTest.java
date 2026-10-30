@@ -130,11 +130,11 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                 // the directive is the java sugar for scripts, one line per dial
                 "CONNECT", args -> {
                     if (args.length > 1)
-                        this.network().connect(f(args[0]), f(args[1]));
+                        Network.Helper.connect(this.network(), f(args[0]), f(args[1]));
                     else
-                        this.network().connect(f(args[0]));
+                        Network.Helper.connect(this.network(), f(args[0]));
                 },
-                "DISCONNECT", args -> this.network().disconnect(f(args[0])),
+                "DISCONNECT", args -> this.network().drop(f(args[0])),
                 "NETWORK_CLEAR", args -> this.clearNetwork());
     }
 
@@ -152,16 +152,16 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
                 return "key carries a ?q processor: " + key;
             if (!peer.isRec())
                 return "peer is not a rec: " + key + " => " + peer;
-            if (!machInstSet.PEER_TID.equals(peer.tid().basePath()))
+            if (!peer.testNominally(machInstSet.PEER_TYPE))
                 return "peer is not tid\u0027d peer::T: " + key + " => " + peer.tid();
             final studio.phaseshift.metatron.isa.m.type.Obj authority = peer.asRec().at(uri(ORIGIN));
             if (!authority.isUri())
                 return "peer has no authority uri: " + key;
-            // the key is the dial\u0027s own address as a path, one per surface -- what keyOf makes of where it was dialed
+            // the key is the dial\u0027s own address as a path, one per surface -- what pathEncoding() makes of where it was dialed
             final studio.phaseshift.metatron.isa.m.type.Obj host = peer.asRec().at(uri(HOST));
             final fURI dialed = host.isUri() ? host.uriValue() : authority.uriValue();
-            if (!Network.Helper.keyOf(dialed).equals(key.uriValue()))
-                return "key is not the dial\u0027s path: " + key + " vs " + Network.Helper.keyOf(dialed);
+            if (!dialed.pathEncoding().equals(key.uriValue()))
+                return "key is not the dial\u0027s path: " + key + " vs " + dialed.pathEncoding();
             final studio.phaseshift.metatron.isa.m.type.Obj client = peer.asRec().at(uri(CLIENT));
             if (!client.isRec() || !client.asRec().at(uri(INST)).isRec())
                 return "peer's client declares no inst: " + key;
@@ -216,11 +216,11 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
         final studio.phaseshift.metatron.isa.m.type.Obj dialed = Network.Helper.dial(f("loop://self"), null);
         org.junit.jupiter.api.Assertions.assertTrue(!dialed.isNoObj() && !dialed.isFail(),
                 "stage 2 — the loop dial must construct a client, got: " + dialed);
-        final studio.phaseshift.metatron.isa.m.type.Obj peer = this.network().connect(f("loop://self"));
+        final studio.phaseshift.metatron.isa.m.type.Obj peer = Network.Helper.connect(this.network(), f("loop://self"));
         org.junit.jupiter.api.Assertions.assertTrue(peer.isRec(), "stage 3 — java connect must mint, got: " + peer);
         org.junit.jupiter.api.Assertions.assertEquals(1L, this.network().peers().elements().count(),
                 "stage 3b — the live network holds the java-minted peer");
-        this.network().disconnect(f("loop://self"));
+        this.network().drop(f("loop://self"));
         // stage 4: construction IS connection — the ctor runs and, as a background behavior of a valid
         // construction, the client indexes itself into the network (the space model: no add-space inst)
         final studio.phaseshift.metatron.isa.m.type.Obj viaCtor = idc.asType().constructor().apply(
@@ -240,7 +240,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     public void testWsStagesJava() {
         final String a = this.startServer("stages");
         final studio.phaseshift.metatron.isa.m.type.Obj peer =
-                this.network().connect(f(a + "/mtron"), WS_CLIENT_TID);
+                Network.Helper.connect(this.network(), f(a + "/mtron"), WS_CLIENT_TID);
         org.junit.jupiter.api.Assertions.assertTrue(peer.isRec(), "java ws connect must mint, got: " + peer);
         Machine.write(f("/t/wire/stage"), jnt(42));
         final studio.phaseshift.metatron.isa.m.type.Obj answer = Machine.read(f(a + "/t/wire/stage"));
@@ -255,7 +255,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
 
     private void clearNetwork() {
         this.network().peers().keys().map(Obj::uriValue).toList()
-                .forEach(key -> this.network().disconnect(key));
+                .forEach(key -> this.network().drop(key));
         this.servers.forEach(CommonUtil::close);
         this.servers.clear();
     }
@@ -303,14 +303,14 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     /**
      * THE WIRE: the loop equalities carried over a real websocket — read-through equals the far side\u0027s local
      * read, write-through lands at the far side — plus the two facts the connection itself establishes: the
-     * ?name processor is spent (never leaked into a key), and connect is ensure-peered (a second dial
+     * connection q is spent (never leaked into a key), and connect is ensure-peered (a second dial
      * of the same service answers the existing peer, never a second socket).
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[CONNECT {{a}}/mtron?name=scripted {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?clientq=scripted {{ws_client}}]",
             "[STATE] </t/wire/x> -> 42",
             "*<{{a}}/t/wire/x> % 42                          [-- read through the wire == the far side local read --]",
             "[STATE] <{{a}}/t/wire/y> -> 7",
@@ -336,8 +336,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
             "[WS_SERVER b]",
-            "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
-            "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?clientq=alpha {{ws_client}}]",
+            "[CONNECT {{b}}/mtron?clientq=beta {{ws_client}}]",
             "[AWAIT_PEERS 2]                                     [-- two dialed --]",
             "[STATE] </t/wire/two> -> 11",
             "*<{{a}}/t/wire/two> % 11",
@@ -430,8 +430,8 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
             "[WS_SERVER a]",
             "[WS_SERVER b]",
             "[CONNECT loop://self]",
-            "[CONNECT {{a}}/mtron?name=alpha {{ws_client}}]",
-            "[CONNECT {{b}}/mtron?name=beta {{ws_client}}]",
+            "[CONNECT {{a}}/mtron?clientq=alpha {{ws_client}}]",
+            "[CONNECT {{b}}/mtron?clientq=beta {{ws_client}}]",
             "[AWAIT_PEERS 3]                                     [-- loop + two dialed --]",
             "[PROBE_SHAPE]",
             "*/m/networkProbe/shape % \u0027ok\u0027              [-- every entry honors the peer::T contract --]",
@@ -452,7 +452,7 @@ public class NetworkWireScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=ctor>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron?clientq=ctor>]",
             "[AWAIT_PEERS 1]                                     [-- the ctor indexed itself: the one outbound peer --]",
             "[STATE] </t/wire/c> -> 42",
             "*<{{a}}/t/wire/c> % 42                          [-- and the self-indexed reach carries reads --]"

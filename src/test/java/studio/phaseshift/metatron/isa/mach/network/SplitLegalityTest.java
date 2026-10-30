@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * {@code ?split} AT THE EMITTER (C7 of {@code distributed-qparams-implementation.md}): the partition axis is READ —
@@ -96,8 +97,8 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
-        Machine.current().network().connect(PEER);
-        Machine.current().network().connect(GINGER);
+        Network.Helper.connect(Machine.current().network(), PEER);
+        Network.Helper.connect(Machine.current().network(), GINGER);
         disjoin = InstBuilder.build()
                 .tid(f("/m/inst/disjoin"), "the idempotent disjunction fold")
                 .dom(BOOL_TID.maybeSome(), "zero or more bools").rng(BOOL_TID, "one disjoined bool")
@@ -110,8 +111,8 @@ public class SplitLegalityTest extends AbstractMetatronTest {
 
     @AfterEach
     void teardown() {
-        Machine.current().network().disconnect(PEER);
-        Machine.current().network().disconnect(GINGER);
+        Machine.current().network().drop(PEER);
+        Machine.current().network().drop(GINGER);
     }
 
     /**

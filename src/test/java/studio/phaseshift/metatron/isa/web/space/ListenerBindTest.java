@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Network;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -63,7 +62,7 @@ public class ListenerBindTest extends AbstractMetatronTest {
     }
 
     private static Obj entry(final String scheme, final int port) {
-        return Machine.current().network().listenerAt(Network.Helper.keyOf(socket(scheme, port)));
+        return Machine.current().network().listener(socket(scheme, port).pathEncoding());
     }
 
     /**

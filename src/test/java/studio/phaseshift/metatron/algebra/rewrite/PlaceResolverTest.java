@@ -145,7 +145,7 @@ public class PlaceResolverTest extends AbstractMetatronTest {
      *       {@code //ginger:9999} both answer ginger's own transport, because a place is a host and its authority
      *       ({@code Places.place} reads the same way);</li>
      *   <li><b>a spelled authority is normalised to its origin</b> — {@code ws://ginger:8555/mtron} and
-     *       {@code ws://ginger:8555/mtron?name=builder} answer {@code ws://ginger:8555}, and the counted
+     *       {@code ws://ginger:8555/mtron?clientq=builder} answer {@code ws://ginger:8555}, and the counted
      *       {@code {2}ws://ginger:8555/p} answers two of it: the path and the query are the shipped code's business,
      *       never a target's;</li>
      *   <li><b>liveness</b> — an unknown host is no place, and a spelled authority whose scheme has no dialer
@@ -178,7 +178,7 @@ public class PlaceResolverTest extends AbstractMetatronTest {
             "//twin                     % ",
             "ws://ginger:8555           % ws://ginger:8555{1}",
             "ws://ginger:8555/mtron     % ws://ginger:8555{1}",
-            "ws://ginger:8555/mtron?name=builder % ws://ginger:8555{1}",
+            "ws://ginger:8555/mtron?clientq=builder % ws://ginger:8555{1}",
             "'{2}ws://ginger:8555/p'    % ws://ginger:8555{2}",
             "nope://ginger:8555         % ",
             "'[{2}//ginger:8555,#]'    % loop://ginger:8555{2}, local{1}",
