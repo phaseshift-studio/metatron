@@ -509,13 +509,14 @@ public class Console extends MRec implements Closeable, Runnable {
                 // the release above already wrote the terminal's bytes
             }
             // Hand the terminal back with the cursor on a fresh line.  In screen mode the
-            // drain's own paint ends by parking the cursor back on the prompt row, so
-            // without this the shell's prompt lands on the console's last row, interleaved
-            // with its closing text.  In non-screen mode jline already leaves the cursor on
-            // a fresh line (and the quit path writes its own newline), so nothing is added.
+            // rows are painted at absolute positions and the render thread's save/restore
+            // can leave the cursor mid-transcript, so a bare newline lands there and the
+            // shell's prompt interleaves with the closing text.  Drop the cursor to the
+            // bottom of the terminal first, then down a line.  In non-screen mode jline
+            // already leaves the cursor on a fresh line, so nothing is added.
             if (screenMode()) {
                 try {
-                    terminal.writer().print("\r\n");
+                    terminal.writer().print("\033[999B\r\n");
                     terminal.writer().flush();
                 } catch (final Exception ignored) {
                     // the process is going away: nothing here is worth an error
