@@ -184,7 +184,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     }
 
     private void clear() {
-        this.network().peers().keys().map(Obj::uriValue).toList().forEach(key -> this.network().disconnect(key));
+        this.network().peers().keys().map(Obj::uriValue).toList().forEach(key -> this.network().drop(key));
         this.servers.values().forEach(CommonUtil::close);
         this.servers.clear();
         this.held.clear();
@@ -225,7 +225,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=survivor>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[STATE] </t/peer/x> -> 42",
             "*<{{a}}/t/peer/x> % 42                        [-- the wire answers --]",
@@ -251,7 +251,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=eager>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[STATE] </t/peer/y> -> 7",
             "[WS_SERVER_STOP a]",
@@ -271,7 +271,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[RESERVE a]                                   [-- a port with nothing behind it yet --]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=early>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]                               [-- declared, though nothing answered --]",
             "[PROBE_ONLINE {{a}}]",
             "*/m/networkProbe/online % false",
@@ -291,7 +291,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] </t/peer/handle> -> ws_client::[pattern=><{{a}}/mtron?name=owned>]",
+            "[STATE] </t/peer/handle> -> ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[STATE] </t/peer/handle> -> noobj              [-- deleting the handle closes the client --]",
             "[PROBE_PEERS]",
@@ -308,12 +308,12 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=first>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[HANG_UP {{a}}]                               [-- the owner closes the client --]",
             "[PROBE_PEERS]",
             "*/m/networkProbe/peers % 0                    [-- an explicit shutdown removes the peer --]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=second>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]                               [-- a fresh construction is a fresh connection --]",
             "[PROBE_ONLINE {{a}}]",
             "*/m/networkProbe/online % true",
@@ -332,7 +332,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
             "[STATE] *~.push(dialer)",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=framed>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]                               [-- the dial is the child frame's own reach --]",
             "[HOLD {{a}} framed]",
             "[PROBE_HELD framed]",
@@ -356,7 +356,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=reported>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[PROBE_STATUS]",
             "*/m/networkProbe/status % 'up'                [-- the dialed peer answered the probe --]",
@@ -376,10 +376,10 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=addressed>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "*</network/peer/ws/localhost/{{a_port}}/mtron/origin> % <{{a}}>   [-- the dial's own path names the member --]",
-            "*</network/peer/ws/localhost/{{a_port}}/mtron/host> % <{{a}}/mtron?name=addressed> [-- the dial, identity included, is its host --]"
+            "*</network/peer/ws/localhost/{{a_port}}/mtron/host> % <{{a}}/mtron> [-- the dial, identity included, is its host --]"
     })
     public void testAPeerIsAddressableAtItsDialsPath() {
     }
@@ -392,7 +392,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=deleted>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[HOLD {{a}} deleted]",
             "[STATE] </network/peer/ws/localhost/{{a_port}}/mtron> -> noobj",
@@ -413,10 +413,10 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=first>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "[HOLD {{a}} first]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=second>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[PROBE_PEERS]",
             "*/m/networkProbe/peers % 1                    [-- one member for the surface, never two --]",
             "[PROBE_HELD first]",
@@ -435,8 +435,8 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=one>]",
-            "[STATE] ws_client::[pattern=><{{a}}/eval?name=two>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
+            "[STATE] ws_client::[pattern=><{{a}}/eval>]",
             "[AWAIT_PEERS 2]                               [-- the two surfaces of one service coexist --]",
             "[STATE] </network/peer/ws/localhost/{{a_port}}/eval> -> noobj",
             "[AWAIT_PEERS 1]                               [-- deleting one leaves the other --]",
@@ -455,7 +455,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
             "[STATE] *~.push(dialer)",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=framed>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "*<~/network/peer/ws/localhost/{{a_port}}/mtron/origin> % <{{a}}>   [-- the frame's own member --]",
             "*</network/peer/ws/localhost/{{a_port}}/mtron/origin> % noobj      [-- the root never held it --]",
@@ -486,7 +486,7 @@ public class NetworkSupervisorScriptTest extends AbstractMetatronTest {
     @StatefulCSVSource({
             "[NETWORK_CLEAR]",
             "[WS_SERVER a]",
-            "[STATE] ws_client::[pattern=><{{a}}/mtron?name=supervised>]",
+            "[STATE] ws_client::[pattern=><{{a}}/mtron>]",
             "[AWAIT_PEERS 1]",
             "*<~/network/supervisor/status> % <supervising>   [-- the dial's supervision filed it --]"
     })

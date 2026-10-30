@@ -94,8 +94,8 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
 
     @AfterEach
     void retractPeers() {
-        Machine.current().network().disconnect(TWIN);
-        Machine.current().network().disconnect(DIALED);
+        Machine.current().network().drop(TWIN);
+        Machine.current().network().drop(DIALED);
     }
 
     /**

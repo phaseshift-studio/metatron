@@ -25,16 +25,14 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetAddress;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -71,7 +69,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * </pre>
  * <b>A MEMBER IS CONSTRUCTED, NOT WRITTEN.</b> A client indexes itself at its key and a server listens at its socket,
  * so the only write the {@code peer} and {@code listener} branches take is the deletion — the network's own retraction
- * ({@link Network#disconnect}, {@link Network#unlisten}). A value written there (a field edit included) is refused,
+ * ({@link Network#drop}, {@link Network#unlisten}). A value written there (a field edit included) is refused,
  * loudly, rather than stored beside the member it would contradict. Every other field is written onto this rec IN
  * PLACE, which is what makes the root's {@code /network/roster} the root network's own field: the generic write path
  * rebuilds the poly above a missing address as a copy, and the machine holds this one.
@@ -102,7 +100,7 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     }
 
     private static final List<Branch> BRANCHES = List.of(
-            new Branch(PEER, Network::peers, Network::disconnect,
+            new Branch(PEER, Network::peers, Network::drop,
                     "a peer is constructed, not written: %s -> %s refused (dial a client: ws_client::[pattern=>...])"),
             new Branch(LISTENER, Network::listeners, BasicNetwork::unlisten,
                     "a listener is constructed, not written: %s -> %s refused (a server listens at its socket)"));
@@ -175,10 +173,15 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
 
     @Override
     public Obj read(final fURI vid) {
+        // THE TABLE ANSWERS WHAT THIS FRAME SEES, shadowing included -- the question a reader standing in a frame
+        // actually asks, and the one the console could not get: the frame's OWN table may be empty while the root's
+        // names resolve there. Marked, because a name is spoken `//ginger`; the storage spelling is one strip away
+        // (Network#prefixes), and the write below makes read-then-write a no-op by dropping inherited rows.
+        if (this.isPrefixTable(vid))
+            return Network.Helper.markedTable(Component.Prefix.Helper.effectivePrefixes(this));
+        // A NAME IS SPELLED //ginger AND STORED ginger: an entry read answers the spelling the table is WRITTEN with,
+        // so what the door shows is what may be written back.
         final Obj read = this.answers(vid) ? super.read(vid) : Network.super.read(vid);
-        // A NAME IS SPELLED //ginger AND STORED ginger: the door answers with the spelling the table is WRITTEN with,
-        // so what `*</network/prefix>` shows is what may be written back. Network#prefixes reads the stored form --
-        // that is the key resolution asks for -- so the two accessors are one strip apart and neither drifts.
         return this.isPrefixTable(vid) && read.isRec() ? Network.Helper.markedTable(read.asRec()) : read;
     }
 
@@ -199,7 +202,31 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
         // WHAT IS STORED IS THE STRIPPED TABLE THE CALLER WROTE -- never the table already here: writing this rec
         // onto itself would accept every write and store none of them, which is the other half of the reported
         // silence (the write echoed its obj while the table stayed empty).
-        final Obj value = table ? stored.get() : obj;
+        // READ-THEN-WRITE IS A NO-OP: the door READS the effective view, so a table written back carries every
+        // ancestor's row too. A row that merely RESTATES an inherited meaning is dropped here -- storing it would copy
+        // an ancestor's declaration into this level and shadow it from then on. A genuine shadow (a different origin)
+        // and a new name are stored as written.
+        final Obj value;
+        if (table) {
+            final Map<Obj, Obj> own = new LinkedHashMap<>(stored.get().jvm());
+            final Iterator<Map.Entry<Obj, Obj>> rows = own.entrySet().iterator();
+            while (rows.hasNext()) {
+                final Map.Entry<Obj, Obj> row = rows.next();
+                if (!row.getKey().isUri() || !row.getValue().isUri())
+                    continue;
+                final Optional<fURI> label = Network.Helper.label(row.getKey().uriValue());
+                if (label.isPresent() && row.getValue().equals(Component.Prefix.Helper.inheritedPrefix(this, label.get()))) {
+                    LOG.debug("prefix row %s => %s is inherited here; not copied into this level",
+                            label.get(), row.getValue());
+                    rows.remove();
+                }
+            }
+            // AN EMPTY TABLE IS AN ABSENT FIELD, not an empty rec (`rec()` writes a noobj rel, which the
+            // component's type refuses -- measured); the universal close is how a table goes away.
+            value = own.isEmpty() ? noobj() : rec(own);
+        } else {
+            value = obj;
+        }
         // the space's q-procs and its layer, as every space write — but onto THIS rec: Space.Helper.resolveWrite
         // rebuilds the poly above a missing address as a copy, and the machine holds this one
         QProc.Helper.checkQProcs(this, vid);
@@ -220,6 +247,7 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
     private boolean isPrefixTable(final fURI vid) {
         return this.branch().extend(PREFIX).equals(vid.qLess().resolve().asNode());
     }
+
 
     /**
      * the branch an address must fall under to be this space's ({@code <vid>/network})
@@ -314,7 +342,7 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
      * serving on
      */
     private static void unlisten(final Network network, final fURI key) {
-        final fURI authority = Network.Helper.originOf(network.listenerAt(key));
+        final fURI authority = Network.Helper.originOf(network.listener(key));
         if (null != authority)
             network.unlisten(authority);
     }

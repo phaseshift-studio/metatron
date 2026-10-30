@@ -78,25 +78,25 @@ mtron> int::T.as(object::T)
 ```mtron
 mtron> int::T.as(object::T).morphed_to()
 ==>morphism::[name=>as,
-              form=>mapper,
+              form=>typer,
+              src=>!λint(){<j>},
+              trgt=>!λstr(){<j>},
+              analysis=>!λ(){<j>},
+              obj=>as?str<=int(str::T){<j>},
+              law=>[pure]]
+==>morphism::[name=>as,
+              form=>typer,
               src=>!λint(){<j>},
               trgt=>!λrec(){<j>},
               analysis=>!λ(){<j>},
               obj=>as?rec<=int(rec::T){<j>},
               law=>[pure]]
 ==>morphism::[name=>as,
-              form=>mapper,
+              form=>typer,
               src=>!λint(){<j>},
               trgt=>!λbool(){<j>},
               analysis=>!λ(){<j>},
               obj=>as?bool<=int(bool::T){<j>}]
-==>morphism::[name=>as,
-              form=>mapper,
-              src=>!λint(){<j>},
-              trgt=>!λbytes(){<j>},
-              analysis=>!λ(){<j>},
-              obj=>as?bytes<=int(bytes::T){<j>}]
-==>morphism::[name=>as,
    ...
 ```
 ### the algebraic theories
@@ -154,25 +154,33 @@ lifted rather than its result.
 
 `form` is the morphism's n-tid coefficient shape — the `(dom_c, rng_c)` pair in regex notation:
 
-| form         | what it is                                                        |
-|--------------|-------------------------------------------------------------------|
-| `initial`    | maps nothing to objs (`dom_c = 0`)                                |
-| `terminal`   | maps objs to nothing (`rng_c = 0`)                                |
-| `mapper`     | one-to-one obj transformation (`dom_c = rng_c = 1`)               |
-| `filter`     | conditionally passes or drops an obj (`dom_c = 1, rng_c = {0,1}`) |
-| `flatmapper` | one-to-many obj transformation (`dom_c = 1, rng_c > 1`)           |
-| `scatter`    | maps an obj to objs (`rng_c = {0,}`)                              |
-| `gather`     | maps objs to objs (`dom_c = {0,}`)                                |
-| `reducer`    | gathers objs into a single output (`rng_c = 1`)                   |
-| `fork`       | splits objs across parallel streams                               |
-| `join`       | merges parallel streams into a single stream                      |
-| `catcher`    | intercepts a `fail` obj for recovery                              |
-| `standard`   | an instruction with no well-defined classification                |
+| form         | what it is                                                                              |
+|--------------|-----------------------------------------------------------------------------------------|
+| `initial`    | maps nothing to objs (`dom_c = 0`)                                                      |
+| `terminal`   | maps objs to nothing (`rng_c = 0`)                                                      |
+| `mapper`     | one-to-one obj transformation (`dom_c = rng_c = 1`)                                     |
+| `filter`     | conditionally passes or drops an obj (`dom_c = 1, rng_c = {0,1}`)                       |
+| `flatmapper` | one-to-many obj transformation (`dom_c = 1, rng_c > 1`)                                 |
+| `scatter`    | maps an obj to objs (`rng_c = {0,}`)                                                    |
+| `gather`     | maps objs to objs (`dom_c = {0,}`)                                                      |
+| `reducer`    | gathers objs into a single output (`rng_c = 1`)                                         |
+| `fork`       | splits objs across parallel streams                                                     |
+| `join`       | merges parallel streams into a single stream                                            |
+| `catcher`    | intercepts a `fail` obj for recovery                                                    |
+| `typer`      | retypes the obj's type/identity, not its value (`as`, `::`, `type()`, `vid()`, `tid()`) |
+| `standard`   | an instruction with no well-defined classification                                      |
 
 Two forms collapse onto the stream-ring's function subrings for the rewrite algebra: `scatter` is the linearized
 one-to-many (`flatmapper`) and `join` is the many-to-many merge (`gather`). On that projection, a coefficient floats
 through `mapper` / `filter` / `flatmapper` — the `floatable` run — and is anchored by `reducer` / `gather` — the
 `blocked` cut (see *the process laws*).
+
+`typer` is the one form that is **declared, not derived**: `as?dom=A&rng=B` is shaped like any mapper, but the
+operation's subject is the object's type/identity rather than its value, so it is opaque to a wrapper's
+`{self} ∪ components` fan-out and lies outside the `F` projection — a coefficient neither floats through it nor is
+anchored by it. The membership is declared where the operations are registered (`InstBuilder.declareForm` beside
+`as`, `type()`, `vid()` and `tid()`), staged with an instruction's other declaration facets, and drained to
+`?lawq` beside them.
 
 ### the dual incidence
 
@@ -190,14 +198,14 @@ Composing them round-trips — from an object to its edges and back, or from an 
 
 `analysis` is one lazy `auto()` — evaluated with `>>analysis`. Inside it, each stat is itself lazy:
 
-| field       | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator                                                                                                                                                                                                                                                                                                                                                         |
-| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                                                                                                                                                                |
-| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                                                                                                                                                                         |
-| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| field       | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `family`    | the same-name siblings: $\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}$ — every registration of the same operator                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `contested` | the witness edges behind the `ambiguous` / `incomparable` labels — the competing siblings                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `orbit`     | the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `position`  | the edge's place among its siblings (a subset of the six kinds below)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `inverse`   | the opposing edge $f^{-1}$ with $f \cdot f^{-1} = 1$ — computed, never declared wherever the carrier's algebra states it: an `involution` is its own inverse, and a **group** `(op, id, inv)` makes `op`'s inverse the instruction *defined* as `op` applied to its inverted argument (`div ≡ mult ∘ inv`, so real's `mult`/`div` pair follows from its `mult_group`). A carrier whose algebra states none falls back to the declaration — int's `mult`→`div`, a truncating one-way retraction (int models a `mult_monoid`, no group), and int's `div` then has no inverse at all |
-| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here |
+| `combiner`  | the edge a reducer's partials recombine through, $(a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)$ — computed, never declared: a fold declaring `monoidic` + `commutative` is its own, a fold defined by its `derivation` names the fold that defines it (`count` ↦ `sum`, `order` ↦ `kmerge`); a keyed fold (`group`) recombines pointwise through a chain — `sum`, then a per-key fold — that no single edge names, so it has none here                                                                                                          |
 
 ### the six edge kinds
 
@@ -224,15 +232,15 @@ to be idempotent → `retract`) and finer than raw incidence.
 `class` classifies a morphism set-theoretically — as self-mapping, invertible, or split. Only the sound implications
 are computed; proper (non-split) mono/epi classification requires composition, which is not yet registered:
 
-| class        | what it asserts                                                                           |
-|--------------|-------------------------------------------------------------------------------------------|
-| `endo`       | self-mapping — $\mathrm{dom}(f) = \mathrm{rng}(f)$                                        |
-| `auto`       | an invertible endomorphism — `endo` and `iso`                                             |
+| class        | what it asserts                                                                                                                                           |
+|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `endo`       | self-mapping — $\mathrm{dom}(f) = \mathrm{rng}(f)$                                                                                                        |
+| `auto`       | an invertible endomorphism — `endo` and `iso`                                                                                                             |
 | `iso`        | invertible — the **computed** inverse is the edge itself (an `involution`), so `class` reads `analysis.inverse` rather than testing the law a second time |
-| `mono`       | left-cancellable — $f \cdot g = f \cdot h \Rightarrow g = h$ (here: a split monomorphism) |
-| `epi`        | right-cancellable — $g \cdot f = h \cdot f \Rightarrow g = h$ (here: a split epimorphism) |
-| `section`    | split mono — $f$ has a left inverse                                                       |
-| `retraction` | split epi — $f$ has a right inverse                                                       |
+| `mono`       | left-cancellable — $f \cdot g = f \cdot h \Rightarrow g = h$ (here: a split monomorphism)                                                                 |
+| `epi`        | right-cancellable — $g \cdot f = h \cdot f \Rightarrow g = h$ (here: a split epimorphism)                                                                 |
+| `section`    | split mono — $f$ has a left inverse                                                                                                                       |
+| `retraction` | split epi — $f$ has a right inverse                                                                                                                       |
 
 ### the process laws
 
@@ -246,29 +254,29 @@ mtron> |plus?int<=int(int::T).as(morphism::T)>>law
     action,
     pure]
 ```
-| law                  | what it asserts                                                              |
-|----------------------|------------------------------------------------------------------------------|
-| `commutative`        | $a \cdot b = b \cdot a$                                                      |
-| `left_distributive`  | $a \cdot (b + c) = a \cdot b + a \cdot c$                                    |
-| `right_distributive` | $(a + b) \cdot c = a \cdot c + b \cdot c$                                    |
+| law                       | what it asserts                                                                                                                                                                                                                                                                                                                                                                          |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `commutative`             | $a \cdot b = b \cdot a$                                                                                                                                                                                                                                                                                                                                                                  |
+| `left_distributive`       | $a \cdot (b + c) = a \cdot b + a \cdot c$                                                                                                                                                                                                                                                                                                                                                |
+| `right_distributive`      | $(a + b) \cdot c = a \cdot c + b \cdot c$                                                                                                                                                                                                                                                                                                                                                |
 | `semi_right_distributive` | $(a + b) \cdot c = (a \cdot c + b \cdot c) \cdot c$ — the reducer's distributivity: the two branches reduce to one object, so the law carries the re-application (Thm 19), which is what makes a shard sound rather than merely partitioned; a reducer does **not** obey `right_distributive` (Lemma 1 — $\langle\mathcal{F}_r, +, \cdot\rangle$ is a near-ring, left distributive only) |
-| `monoidic`           | an associative binary op with an identity                                    |
-| `magmadic`           | a bare binary op — a magma, as `monoidic` is a monoid — no identity demanded |
-| `unit`               | an identity element — $e \cdot x = x \cdot e = x$                            |
-| `absorbing`          | an annihilator — $a \cdot x = a$ for every $x$                               |
-| `action`             | a monoid/group acting on a carrier — $f(gh)x = f(g)f(h)x$                    |
-| `involution`         | self-inverse — $f(f(x)) = x$ (period two)                                    |
-| `idempotent`         | $f(f(x)) = f(x)$                                                             |
-| `nilpotent`          | some power is zero — $f^n = 0$                                               |
-| `floatable`          | the coefficient commutes through the stream ring's parallel/serial structure |
-| `blocked`            | cannot float past a barrier — a reduce anchors the coefficient               |
-| `pure`               | no effect: the result depends on the lhs and args alone (never inferred)     |
-| `partial`            | pass-through-or-drop $\{0,1\}$ — the optional (maybe) lift of a value        |
-| `kleene`             | the reflexive-transitive iterate $a^{*}$ — a Kleene closure                  |
-| `prime`              | atomic — no nontrivial factorization                                         |
-| `zero_divisor`       | a nonzero $a$ with $a \cdot b = 0$ for some nonzero $b$                      |
-| `cyclic`             | generated by one element — every value is a power of a single generator      |
-| `poset`              | the carrier is partially ordered — these insts are its comparisons           |
+| `monoidic`                | an associative binary op with an identity                                                                                                                                                                                                                                                                                                                                                |
+| `magmadic`                | a bare binary op — a magma, as `monoidic` is a monoid — no identity demanded                                                                                                                                                                                                                                                                                                             |
+| `unit`                    | an identity element — $e \cdot x = x \cdot e = x$                                                                                                                                                                                                                                                                                                                                        |
+| `absorbing`               | an annihilator — $a \cdot x = a$ for every $x$                                                                                                                                                                                                                                                                                                                                           |
+| `action`                  | a monoid/group acting on a carrier — $f(gh)x = f(g)f(h)x$                                                                                                                                                                                                                                                                                                                                |
+| `involution`              | self-inverse — $f(f(x)) = x$ (period two)                                                                                                                                                                                                                                                                                                                                                |
+| `idempotent`              | $f(f(x)) = f(x)$                                                                                                                                                                                                                                                                                                                                                                         |
+| `nilpotent`               | some power is zero — $f^n = 0$                                                                                                                                                                                                                                                                                                                                                           |
+| `floatable`               | the coefficient commutes through the stream ring's parallel/serial structure                                                                                                                                                                                                                                                                                                             |
+| `blocked`                 | cannot float past a barrier — a reduce anchors the coefficient                                                                                                                                                                                                                                                                                                                           |
+| `pure`                    | no effect: the result depends on the lhs and args alone (never inferred)                                                                                                                                                                                                                                                                                                                 |
+| `partial`                 | pass-through-or-drop $\{0,1\}$ — the optional (maybe) lift of a value                                                                                                                                                                                                                                                                                                                    |
+| `kleene`                  | the reflexive-transitive iterate $a^{*}$ — a Kleene closure                                                                                                                                                                                                                                                                                                                              |
+| `prime`                   | atomic — no nontrivial factorization                                                                                                                                                                                                                                                                                                                                                     |
+| `zero_divisor`            | a nonzero $a$ with $a \cdot b = 0$ for some nonzero $b$                                                                                                                                                                                                                                                                                                                                  |
+| `cyclic`                  | generated by one element — every value is a power of a single generator                                                                                                                                                                                                                                                                                                                  |
+| `poset`                   | the carrier is partially ordered — these insts are its comparisons                                                                                                                                                                                                                                                                                                                       |
 
 ## the declared rewrites — laws as rules
 
@@ -628,7 +636,7 @@ The application is a **type method**, not a field: `lower(plan::T)` is one instr
 `catInstSet.insts()`, shared by every plan. It matches the plan's `cut` against the path's code, applies the rewrite,
 and re-lifts the result to `path::T`. The plan carries no `result` λ; `lower` *is* the operator.
 
-A relocation decision in `plan.where` is `[shape, target?, hops?, span]` — `shape` is the topology token (`local` /
+A relocation decision in `plan.where` is `[shape, target?, hop?, span]` — `shape` is the topology token (`local` /
 `none` / `peer` / `peers` / `space` / `tree` / `shuffle`), `target` the concrete address. Each shape
 declares the laws it demands of a cut shipped to it (§3, two directions):
 
@@ -656,16 +664,16 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    on_message=>print('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -690,11 +698,14 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
              law=>[monoidic,commutative]],
             where=>[
              [
-              shape=>local,
+              place=>[local],
+              hop=>0,
+              split=>stream,
               span=>[[span=>at],[span=>post]]],
              [
-              shape=>tree,
-              hops=>1,
+              place=>[peer],
+              hop=>1,
+              split=>stream,
               span=>[
                [span=>seed,flags=>[partition]],
                [span=>pre,flags=>[floatable,no_seed]],
@@ -713,15 +724,19 @@ same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \l
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-shards whose seed carries the remaining hop budget (`start?hops=0` at a leaf), each shard shipped by a
-`select([to(peer)])` to its roster member, merged, and recombined at home through the reducer's combiner (Thm 19). A
-peer handed a shard with budget left plans it again over its own peers, so the shards form a tree. The plan — not its
+shards whose fold carries the remaining hop budget (`sum?hop=0` at a leaf — the depth rides the fold, never the
+seed), each shard shipped by a `select([to(peer)])` to its roster member, merged, and recombined at home through the
+reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+==>[path::[obj=>start([start({1,2,3,4,5}).plus(10).sum?hop=0()]).select([virtual::[code=>eval?<=code(ws://localhost:8555){<j>},
+                     source=>!*/sys/thread/main,
+                     rhs=>!λawait(){<j>}]@~/sys/thread/cf9004ea]).select([rshift(rhs)]).merge().sum(),
+           where=>[[span=>at]=>[//localhost=>1]],
            theory_unit_removal=>plan::[
             name=>theory_unit_removal,
             cut=>[role=>id],
@@ -729,48 +744,25 @@ mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shar
            derivation_contraction=>plan::[
             name=>derivation_contraction,
             cut=>[role=>derivation],
-            where=>[[shape=>local,span=>[[span=>at]]]]],
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              shape=>local,
-              span=>[[span=>at],[span=>post]]],
-             [
-              shape=>tree,
-              hops=>1,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              shape=>local,
-              span=>[[span=>at],[span=>post]]],
-             [
-              shape=>tree,
-              hops=>1,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+==>[path::[obj=>start([start({1,2,3,4,5,6}).group?hop=0([mod(3)=>sum()])]).select([virtual::[code=>eval?<=code(ws://localhost:8555){<j>},
+                     source=>!*/sys/thread/main,
+                     rhs=>!λawait(){<j>}]@~/sys/thread/c0d5aaf0]).select([rshift(rhs)]).merge().sum().select([id()=>sum()]),
+           where=>[[span=>at]=>[//localhost=>1]],
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 ```
 ### may / must — the fiber modality
 
@@ -807,7 +799,9 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 ```mtron
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
+           authority=>[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=>!λ(){<j>},
            linked_from=>!λ(){<j>},
            status=>!λ(){<j>}]

@@ -566,7 +566,7 @@ mtron&gt; hundreds::150                [-- 150  (passes both levels) --]
 ==&gt;hundreds::150
 mtron&gt; hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
 ==&gt;fail::[parse error at line 1, col 1: 50 is not a posint::T[is(gt(100))]@hundreds
-   	while parsing: hundreds::50]@/sys/fail/109
+   	while parsing: hundreds::50]
 </code></pre>
 <h4>non-isa predicates (nominal)</h4>
 <p>Freeform functional constraints using instructions:</p>
@@ -615,7 +615,7 @@ mtron&gt; -2.isa(intabs::T)                [-- noobj  (the filter drops it: the 
 mtron&gt; 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
 ==&gt;intabs::2
 mtron&gt; -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/110
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]
 </code></pre>
 <p>A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:</p>
 <pre><code class="language-mtron">a converting constructor (int2x, created above)
@@ -624,7 +624,7 @@ mtron&gt; int2x::2                         [-- int2x::20  (the constructor mult(
 mtron&gt; 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
 ==&gt;int2x::20
 mtron&gt; -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]@/sys/fail/111
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]
 </code></pre>
 <p>A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.</p>
@@ -659,7 +659,7 @@ types prevent this:</p>
 mtron&gt; being::T@chicken
 mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/114
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 </code></pre>
 <p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
 knowledge</strong> (nominal — what has been declared).</p>
@@ -714,28 +714,81 @@ types</strong>; <code>lst</code>, <code>rec</code> and <code>rel</code> are its 
 <tr><th>construct</th><th>name</th><th>poly denotes</th><th>verb</th></tr>
 </thead>
 <tbody>
-<tr><td><code>lst[A,B]</code></td><td>TENSOR TYPE</td><td>the slot types — the coordinates of an A × B (rank = bracket length, extent = the coefficient)</td><td>CONTAINS</td></tr>
+<tr><td><code>lst[A,B]</code></td><td>TENSOR TYPE</td><td>the position types — the coordinates of an A × B (rank = bracket length, extent = the coefficient)</td><td>CONTAINS</td></tr>
 <tr><td><code>rec[F1,F2]</code></td><td>FIBERED TYPE</td><td>the FIBERS (named, distinct objects)</td><td>EXPOSES</td></tr>
 <tr><td><code>rel[A,B,C]</code></td><td>PATH TYPE</td><td>the vertices of the right-nested chain <code>A =&gt; (B =&gt; C)</code></td><td>CHAINS</td></tr>
-<tr><td><code>object[int]</code></td><td>degenerate rank-1 tensor</td><td>the instantiation parameter</td><td>—</td></tr>
 </tbody>
 </table>
 <p><strong>graded</strong> says something about rank × extent — how many coordinates, and how far each one runs. It is a property of a
 tensor, never a synonym for <em>poly</em>.</p>
 <h4>content vs object: why the readings do not collapse</h4>
 <p>The reading decides what the bracket's entries <em>are</em>, and that decides what a call does to the value.</p>
-<p><strong>A tensor's slots are the object's content.</strong> <code>lst[int]</code> is a list whose slots hold ints — it is not an <code>int</code>.
-Position is the coordinate, so the type speaks about the value's own contents, one slot per position, and its entries
-are not separate objects a call can reach: <code>[29,'94103']</code> satisfies <code>lst[age,zipcode]::T</code> (slot 0 is an age, slot 1 a
-zipcode) and fails <code>lst[zipcode,age]::T</code>, where the coordinates are swapped.
-Two consequences, and they are the same consequence twice: there is no lifting <em>into</em> a tensor's slots (<code>lst[int]</code>
-hands a call no second candidate), and a tensor confers no supertype (<code>lst[int]</code> is never an <code>int</code> — a list of ints is
-not an int). The coefficient is where extent lives, not another coordinate: <code>lst[int{4}]</code> is ONE slot holding four
-ints, while <code>lst[int,int,int,int]</code> is four slots.</p>
+<p><strong>A tensor's positions are the object's content.</strong> <code>lst[int]</code> is a list whose positions hold ints — it is not an
+<code>int</code>. Position is the coordinate, so the type speaks about the value's own contents, one entry per position, and its
+entries are not separate objects a call can reach: <code>[29,'94103']</code> satisfies <code>lst[age,zipcode]::T</code> (position 0 is an
+age, position 1 a zipcode) and fails <code>lst[zipcode,age]::T</code>, where the coordinates are swapped.
+Two consequences, and they are the same consequence twice: there is no lifting <em>into</em> a tensor's positions (<code>lst[int]</code>
+hands a call no second candidate), and a tensor's entries name no other type (<code>lst[int]</code> is never an <code>int</code> — a list of
+ints is not an int). The coefficient is where extent lives, not another coordinate: <code>lst[int{4}]</code> is ONE position
+holding four ints, while <code>lst[int,int,int,int]</code> is four positions.</p>
 <p><strong>A fibered type's entries are distinct objects.</strong> <code>person[ninja]</code> is a person <em>and</em> a ninja; the ninja is not the
 wrapper's content but an object the wrapper exposes. So a value of that type is acceptable where <code>ninja::T</code> is
-expected (its base or any fiber — see <em>conformance and covariance</em>), and an instruction declared on <code>ninja</code> applies to
+expected (its base or any fiber — see <em>acceptance and covariance</em>), and an instruction declared on <code>ninja</code> applies to
 the fiber's value as if it had been declared top-level.</p>
+<h4>a bracket entry's coefficient: the multiplicity of the value AT that position or vertex</h4>
+<p>A bracket entry is a <em>position</em> (a tensor position, a path vertex), so a <strong>suffix coefficient is the multiplicity of the
+value at that position</strong> — not another position, and not another hop. <code>lst[int{2},str]</code> is a two-position list whose
+FIRST position holds two ints; <code>rel[int,person{2}]</code> is a two-vertex chain whose SECOND vertex holds two people
+(<code>1=&gt;{bob,marko}</code>, two people at that vertex — not two hops):</p>
+<pre><code class="language-mtron">a suffix coefficient is the multiplicity of the value AT that position / vertex
+mtron&gt; wayfarer -&gt; rec::T@wayfarer
+mtron&gt; lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]
+==&gt;lst[int{2},str]::[{1,2},'a']
+mtron&gt; rel[int,wayfarer{2}]::(1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']})   [-- the second vertex holds two wayfarers --]
+==&gt;rel[int,wayfarer{2}]::1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']}
+mtron&gt; lst[int{2},str]::[1,'a']          [-- one int is an int{1}: too few for an int{2} position --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match /m/lst[/m/int{2},/m/str]::T
+     [[1,'a']
+         X=&gt;
+     lst[int{2},str]::T
+     ──────────────────
+     [X=&gt;1,==&gt;'a']]
+     predicate apply failed on poly
+   	while parsing: lst[int{2},str]::[1,'a']]
+mtron&gt; rel[int,wayfarer{2}]::(1=&gt;wayfarer::[name=&gt;'bob'])   [-- one wayfarer is too few for a wayfarer{2} vertex --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match /m/rel[/m/int,wayfarer{2}]::T
+     [1=&gt;wayfarer::[name=&gt;'bob']
+         X=&gt;
+     rel[int,wayfarer{2}]::T
+     ─────────────────────────────────
+     [==&gt;1,X=&gt;wayfarer::[name=&gt;'bob']]]
+     predicate apply failed on poly
+   	while parsing: rel[int,wayfarer{2}]::(1=&gt;wayfarer::[name=&gt;'bob'])]
+</code></pre>
+<p>The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:</p>
+<table>
+<thead>
+<tr><th>entry</th><th>value at that position</th></tr>
+</thead>
+<tbody>
+<tr><td><code>T</code> / <code>T{1}</code></td><td>exactly one</td></tr>
+<tr><td><code>T{n}</code></td><td>exactly n (<code>lst[int{2},str]</code> ⇒ <code>[{1,2},'a']</code>)</td></tr>
+<tr><td><code>T{n,m}</code></td><td>an inclusive range — n, …, m</td></tr>
+<tr><td><code>T{+}</code></td><td>at least one, so the position is REQUIRED</td></tr>
+<tr><td><code>T{?}</code></td><td>zero or one — ABSENT, or one that is still its type</td></tr>
+<tr><td><code>T{*}</code></td><td>zero or more — absent is legal, and so is a multiplicity</td></tr>
+</tbody>
+</table>
+<p><strong>Absence</strong> is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — <code>lst[str,int{?}]</code> accepts <code>['a']</code>. In
+a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — <code>rel[int,wayfarer{?},str]</code> accepts
+<code>1=&gt;'tally'</code> (the middle vertex skipped) while <code>rel[int,wayfarer{+},str]</code> does not. A present value must still be the
+entry's type at both: <code>{?}</code> is zero-or-one, not &quot;anything when present&quot;.</p>
+<p><strong>Not yet supported: a PREFIX coefficient, and repetition.</strong> <code>lst[{4}int]</code> — &quot;the list is composed of four ints&quot;,
+spelled before the entry rather than after it — is not matchable today. Neither is a position <em>repetition</em>: a suffix
+coefficient judges the multiplicity of the value already at that position, and nothing reads it as &quot;this entry
+repeats, so the chain is longer&quot; (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
+coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.</p>
 <h4>declaring a fibered type vs instantiating one</h4>
 <p>A fibered type is spelled twice, and the two brackets say different things:</p>
 <pre><code>rec[role,position]::T[?[name=&gt;str::T, role=&gt;rec::T, position=&gt;rec::T]]@person
@@ -778,46 +831,47 @@ explicitly — one key per fiber, each narrowing its own call (<code>[role =&gt;
 <li>a wrapper on which <strong>no candidate</strong> applies yields <code>noobj</code> — a miss is not a failure. The same miss on a non-wrapper
 value is still a loud <code>unable to locate inst-f</code>, because there is nothing else to try.</li>
 </ul>
-<h4>conformance and covariance</h4>
+<h4>acceptance and covariance</h4>
 <p>Two questions, and they must not be confused: <em>may I pass this value here</em> (acceptance) and <em>which object does this
 instruction run on</em> (dispatch).</p>
 <ul>
-<li><strong>A declared fiber must be present.</strong> A slot declared at coefficient one that the value does not carry fails
-conformance. Absence is legal only where the fiber's coefficient admits zero — <code>rec[role,position{?}]</code> — and reading
-a missing key still yields <code>noobj</code>. <code>noobj</code> is a value, not a hole.</li>
-<li><strong>A predicated fiber type is satisfied by conformance.</strong> When the trait declares a shape
-(<code>ninja::T[?[name=&gt;str::T]]</code>), the instance's declaration is tested against that shape rather than asked to
-reproduce it: <code>person</code>'s declared <code>[name=&gt;str::T, role=&gt;rec::T]</code> conforms to <code>[name=&gt;str::T]</code> although the two
-predicate recs are not equal. A declaration the trait's shape CONTRADICTS (<code>name=&gt;int::T</code> where the trait wants a
-str) is not a supertype, however the poly names it.</li>
+<li><strong>A fiber named at coefficient one must be there.</strong> The value is tested against the declaration, and a field it
+does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
+<code>rec[role,position{?}]</code> — and reading a missing key still yields <code>noobj</code>. <code>noobj</code> is a value, not a hole.</li>
+<li><strong>A predicated fiber type is satisfied by the FIBER'S VALUE.</strong> A poly entry types one of the wrapper's fibers
+(<code>person[ninja]</code> puts a ninja at the field the declaration calls <code>role</code>), so the object a trait's shape is about
+(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>wrapper&gt;&gt;role</code> — not the wrapper's declaration. A
+<em>shaped nominal</em> trait therefore accepts a wrapper that only exposes the trait-carrying fiber: the trait's shape is
+asked of <code>wrapper&gt;&gt;role</code>, which is why <code>kestrel[falconer]</code> is a <code>falconer</code> although the wrapper itself declares no
+<code>name</code>. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
+value, and a field the wrapper's declaration itself types incompatibly (<code>name=&gt;str</code> where the trait wants
+<code>name=&gt;int</code>) is a veto. A field the declaration stays silent about is not a contradiction — that is exactly the case
+the fiber's value exists to answer.</li>
 <li><strong>Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.</strong> <code>person[ninja]</code> is a
 <code>person</code> and a <code>ninja</code>. The scope guard matters as much as the rule: this is <code>rec</code> only — <code>lst[int]</code> is not an
 <code>int</code>, and <code>object[int]</code> is not an <code>int</code>.</li>
 <li><strong>Covariance is type acceptance only, never dispatch.</strong> A wrapper that merely <em>borrows</em> a fiber by covariance does
 not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.</li>
 <li><strong>Dispatch is an identity question</strong>: a named domain selects the candidate that IS that type — the fiber whose own
-type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities.</li>
+type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities. |</li>
 </ul>
-<h4>where it lives in the code</h4>
-<table>
-<thead>
-<tr><th>symbol</th><th>what it answers</th></tr>
-</thead>
-<tbody>
-<tr><td><code>Processor.Helper.apply</code></td><td>the single runtime entry: resolve → delegate → invoke; a <code>Inst.Form.typer</code> short-circuits the fan-out</td></tr>
-<tr><td><code>Processor.Helper.applicable</code></td><td>is the resolved instruction about THIS candidate (generic/pattern dom → every candidate; base dom → the wrapper; a named dom → the candidate whose own identity is that name)</td></tr>
-<tr><td><code>Processor.Helper.delegationParts</code></td><td>the candidate set: the wrapper plus the values of the fields the declaration's tid poly names, present and holding a rec, one level deep</td></tr>
-<tr><td><code>Type.Helper.recPolySupertype</code></td><td>covariance: the instance's poly entries are supertypes of the instance (rec only, one level)</td></tr>
-<tr><td><code>Type.Helper.recPolyConformance</code></td><td>a predicated trait asks the instance's declaration to satisfy the trait's declared shape</td></tr>
-<tr><td><code>Type.Helper.recSlotsCarried</code></td><td>presence: every declared slot is carried unless its coefficient (or its declared slot type) admits zero</td></tr>
-<tr><td><code>Type.Helper.instantiate</code></td><td>the requested bracket survives resolution: declared parameters + requested arguments, substituted positionally</td></tr>
-<tr><td><code>fURI.polyLess</code> / <code>AbstractfURI.basePath()</code></td><td>the erasure the identity sites use: <code>basePath()</code> is exactly <code>cLess().qLess().polyLess()</code></td></tr>
-<tr><td><code>Inst.Form.typer</code>, <code>InstBuilder.declareForm</code></td><td>the typer facet is DECLARED, keyed per OPERATION by base path, so a retyped tid still answers <code>declaredForm</code></td></tr>
-<tr><td><code>AbstractfURI.test</code></td><td>the bracket claim rule: a bare lhs accepts a bracketed rhs, a bracketed lhs fails a bare acceptor, a generic rhs entry accepts within its coefficient</td></tr>
-<tr><td><code>fURI.Helper.validatePoly</code></td><td>a keyed map or a nested list inside a poly is a category error, rejected at construction</td></tr>
-</tbody>
-</table>
-<p>The claim rule is what keeps the declaration/instance asymmetry honest at the uri layer:</p>
+<p>A shaped nominal trait asks the value at the fiber, not the wrapper:</p>
+<pre><code class="language-mtron">acceptance is asked of the fiber's value, not the wrapper's declaration
+mtron&gt; [-- the wrapper declares ONLY the fiber it exposes --]
+mtron&gt; kestrel -&gt; rec[role]::T[?[role=&gt;rec::T]]@kestrel
+mtron&gt; [-- the shaped nominal trait declares the shape of the fiber's value --]
+mtron&gt; falconer -&gt; rec::T[?[name=&gt;str::T]]@falconer
+mtron&gt; jarl -&gt; kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
+==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
+mtron&gt; [-- the wrapper declares no name; the falconer at `role` carries one, so jarl is a falconer --]
+mtron&gt; *jarl.isa(falconer::T)
+==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]
+mtron&gt; [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
+mtron&gt; skald -&gt; kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
+==&gt;kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
+mtron&gt; *skald.isa(falconer::T)
+</code></pre>
+<p>The claim rule is what keeps the declaration/instance asymmetry valid at the uri layer:</p>
 <table>
 <thead>
 <tr><th>lhs</th><th>rhs</th><th>test</th></tr>
@@ -831,7 +885,7 @@ type is that name, or the wrapper when the name is the wrapper's. Borrowed names
 </table>
 <h4>worked example: two fibers</h4>
 <p>The declaration names both fibers; the instance types them. <code>position</code> is declared <strong>bare</strong> (<code>rec::T@position</code>) on
-purpose — a trait declared <em>with</em> a shape asks the wrapper's declaration to conform, and this wrapper declares
+purpose — a trait declared <em>with</em> a shape asks the wrapper's declaration to pass its test, and this wrapper declares
 <code>name</code>, <code>age</code>, <code>role</code> and <code>position</code>, not a position's <code>title</code>/<code>rank</code>:</p>
 <pre><code class="language-mtron">a fibered type: the declaration names the fibers, the instance types them
 mtron&gt; person -&gt; rec[role,position]::T[?[name=&gt;str::T,age=&gt;nat::T,role=&gt;rec::T,position=&gt;rec::T]]@person
@@ -905,17 +959,17 @@ with the type's vid (and, if the type carries one, run through its constructor �
 mtron&gt; 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==&gt;intabs::2
 mtron&gt; -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]@/sys/fail/117
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]
 mtron&gt; [-- Without a constructor the cast is a pure test --]
 mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
-==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]@/sys/fail/118
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]
 </code></pre>
 <p><code>.as()</code> is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:</p>
 <pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- chicken::[name=&gt;'fuzzy feet',age=&gt;2]  (nominally a being: the stamp goes on) --]
 ==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
-==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]@/sys/fail/121
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 </code></pre>
 <p>Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 <code>chicken</code> demands <code>age=&gt;int::T</code>, and the rec supplies it. A stamped <code>human</code>, though, carries a lineage — <code>human</code>

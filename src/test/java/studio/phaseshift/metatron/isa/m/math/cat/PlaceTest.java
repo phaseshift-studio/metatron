@@ -91,7 +91,7 @@ public class PlaceTest extends AbstractInstSetTest {
     public void testDialedPeerLinksAndReadsUp() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
                 uri("ginger.local"), uri("ws://localhost:8555"))))));
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
         assertEquals("up", place.status());
@@ -106,7 +106,7 @@ public class PlaceTest extends AbstractInstSetTest {
     public void testLoopbackAliasesAreOnePlace() {
         Machine.write(Network.ROOT_ROSTER, rec(mutableMap(uri(MACHINE), rec(mutableMap(
                 uri("ginger.local"), uri("ws://localhost:8555"))))));
-        Machine.current().network().connect(f("loop://127.0.0.1:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://127.0.0.1:8555"));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
         assertEquals("up", place.status());
@@ -120,7 +120,7 @@ public class PlaceTest extends AbstractInstSetTest {
      */
     @Test
     public void testDialedOnlyMachineIsAPlace() {
-        Machine.current().network().connect(f("loop://ginger.local:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger.local:8555"));
 
         final Place place = (Place) Places.place(uri("//ginger.local"));
         assertEquals(f("//ginger.local"), place.obj());

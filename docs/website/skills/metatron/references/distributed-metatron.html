@@ -483,11 +483,11 @@ isa/mach/io/type/*Serializer.java             ← what actually goes on the wire
 <tr><td><code>Network.overrideOf</code></td><td>the peer's override for an instruction (<code>from</code> / <code>to</code> / <code>eval</code>)</td><td><code>Network.java:373</code></td></tr>
 <tr><td><code>Network.index</code></td><td>construct = connect: index a client as a peer</td><td><code>Network.java:303</code></td></tr>
 <tr><td><code>Memory.findSpace</code></td><td>picks the space by pattern — most specific wins</td><td><code>Memory.java</code></td></tr>
-<tr><td><code>Network.Helper.isLoopbackHost</code></td><td><code>0.0.0.0</code>/<code>127.0.0.1</code>/<code>localhost</code>/<code>::1</code> are one service</td><td><code>Network.java:1112</code></td></tr>
+<tr><td><code>fURI.isLoopbackHost</code></td><td><code>0.0.0.0</code>/<code>127.0.0.1</code>/<code>localhost</code>/<code>::1</code> are one service</td><td><code>fURI.java</code></td></tr>
 <tr><td><code>Network.Helper.sameService</code></td><td>origin equality, loopback-aliased</td><td><code>Network.java:909</code></td></tr>
-<tr><td><code>~/network/peer</code></td><td>dialed peers: origin → peer::T (the connection)</td><td><code>Network.java:333</code></td></tr>
+<tr><td><code>~/network/peer</code></td><td>dialed peers: <code>&lt;dial as a path&gt;</code> =&gt; peer::T (one per surface)</td><td><code>Network.java:333</code></td></tr>
 <tr><td><code>~/network/listener</code></td><td>bound sockets: origin → listener::T (a machine's presence)</td><td><code>Network.java:199</code></td></tr>
-<tr><td><code>~/network/prefix</code></td><td>the NAMES a peer goes by: label → full origin (scheme-less, port-less slot)</td><td><code>Network.java</code> (<code>alignPrefix</code>)</td></tr>
+<tr><td><code>~/network/prefix</code></td><td>the NAMES a peer goes by: <code>//ginger =&gt; origin</code>, stored <code>ginger =&gt; origin</code></td><td><code>Network.java</code> (<code>alignPrefix</code>)</td></tr>
 <tr><td><code>~/instset/prefix</code></td><td>the NAMES a vocabulary goes by: scheme → vid (<code>import(/m/math, math)</code>)</td><td><code>AbstractInstSet.java</code></td></tr>
 <tr><td><code>Machine.Helper.align</code></td><td>the ONE canonicalization door: read, write and the move-extractor all ask it</td><td><code>Machine.java</code></td></tr>
 <tr><td><code>Network.Helper.authorities()</code></td><td>the origins this VM answers on (its listeners)</td><td><code>Network.java:695</code></td></tr>

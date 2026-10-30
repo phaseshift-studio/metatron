@@ -523,41 +523,35 @@ the machine instruction set for nesting machines and their components instset, c
             {?}inst=&gt;rec::T,
             {?}status=&gt;bool::T,
             {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client,
+           uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/authority,
+           uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding,
            rec::T[?[
-            origin=&gt;uri::T,
+            origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
             {?}host=&gt;uri::T,
-            {?}handler=&gt;uri::T,
-            {?}name=&gt;str::T,
-            {?}status=&gt;rec::T,
             {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer,
            rec::T[?[
             origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
             {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-            {?}server=&gt;&lt;#&gt;::T,
-            {?}status=&gt;bool::T]]@/m/mach/listener,
+            {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener,
            rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
            rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
            component::T[?[
             {?}pattern=&gt;uri::T,
-            {?}name=&gt;str::T,
             {?}host=&gt;uri::T,
             {?}roster=&gt;[
              {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
              {?}machine=&gt;[uri::T=&gt;uri::T]],
-            {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
-                                       {?}host=&gt;uri::T,
-                                       {?}handler=&gt;uri::T,
-                                       {?}name=&gt;str::T,
-                                       {?}status=&gt;rec::T,
-                                       {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-            {?}listener=&gt;[uri::T=&gt;rec::T[?[
+            {?}peer=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+             origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+             {?}host=&gt;uri::T,
+             {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+            {?}listener=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
              origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
              {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-             {?}server=&gt;&lt;#&gt;::T,
-             {?}status=&gt;bool::T]]@/m/mach/listener],
+             {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
             {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-            {?}source=&gt;[uri::T=&gt;uri::T],
-            {?}prefix=&gt;[uri::T=&gt;uri::T],
+            {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
             {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
            rec::T[?[
             {?}instset=&gt;rec::T[?[
@@ -577,25 +571,20 @@ the machine instruction set for nesting machines and their components instset, c
             {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
             {?}network=&gt;component::T[?[
              {?}pattern=&gt;uri::T,
-             {?}name=&gt;str::T,
              {?}host=&gt;uri::T,
              {?}roster=&gt;[
               {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
               {?}machine=&gt;[uri::T=&gt;uri::T]],
-             {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
-                                        {?}host=&gt;uri::T,
-                                        {?}handler=&gt;uri::T,
-                                        {?}name=&gt;str::T,
-                                        {?}status=&gt;rec::T,
-                                        {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-             {?}listener=&gt;[uri::T=&gt;rec::T[?[
+             {?}peer=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+              origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+              {?}host=&gt;uri::T,
+              {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+             {?}listener=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
               origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
               {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-              {?}server=&gt;&lt;#&gt;::T,
-              {?}status=&gt;bool::T]]@/m/mach/listener],
+              {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
              {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-             {?}source=&gt;[uri::T=&gt;uri::T],
-             {?}prefix=&gt;[uri::T=&gt;uri::T],
+             {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
              {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
             {?}processor=&gt;component::T[?[
              {?}state=&gt;union(stop,run,pause),
@@ -619,7 +608,10 @@ the machine instruction set for nesting machines and their components instset, c
            stop?thread&lt;=thread(){&lt;j&gt;},
            pause?thread&lt;=thread(){&lt;j&gt;},
            resume?thread&lt;=thread(){&lt;j&gt;},
-           cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;}],
+           cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;},
+           spawn?uri&lt;=#{*}(uri::T,uri::T){&lt;j&gt;},
+           reply?block(#{*}::T,
+                       uri::T){&lt;j&gt;}],
           rewrite=&gt;[/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}]]@/m/mach</code></pre>
                     </div>
                 </div>
@@ -628,7 +620,7 @@ the machine instruction set for nesting machines and their components instset, c
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">34</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">8</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">34</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -755,8 +747,14 @@ the machine instruction set for nesting machines and their components instset, c
 </a><a href="#__m__mach__inst__push?rng=A{*}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">push</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__reply?rng=#{*}&dom=#{?}&block" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">reply</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">resume</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__spawn?rng=__m__uri&dom=#{*}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">spawn</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a><a href="#__m__mach__inst__stay?rng=A{*}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stay</span>
@@ -805,10 +803,10 @@ the machine instruction set for nesting machines and their components instset, c
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
+  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
   <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
   <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
-  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#'the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry'" class="text-info">&#39;the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -961,20 +959,22 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the identity client — the identity element of the protocol-client family:
-dialing loop://&lt;name&gt; constructs one, and its eval override evaluates the shipped
-code against the local machine. The executable form of the self-similarity
-contract: a read through a loop peer equals the local read.
+dialing loop://&lt;name&gt; constructs one, and its eval override runs the shipped code
+in the receiver&#39;s perspective (Machine.Helper.evalAt at the root), so the caller is
+left where it stood -- the loop counterpart of the ws client&#39;s ship(). The
+executable form of the self-similarity contract: a read through a loop peer equals
+the local read.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'the identity mini-instset: { eval, from, to } — the instructions a wire client serves, each evaluating what it ships against the local machine'" class="text-info">&#39;the identity mini-instset: { eval, from, to } — the instructions a wire client serves, each evaluating what it ships against the local machine&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
-  <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
   <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*~/network.connect(&lt;loop://self&gt;) [-- the identity peer: reads and writes answer locally --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">id_client::[host=&gt;&lt;loop://self&gt;] [-- the identity peer: reads and writes answer locally --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__resolver__identity_resolver">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1019,8 +1019,7 @@ contract: a read through a loop peer equals the local read.
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
          {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-         {?}server=&gt;&lt;#&gt;::T,
-         {?}status=&gt;bool::T]]@/m/mach/listener</code></pre></div>
+         {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a socket a machine answers on, and that machine&#39;s routes on it. The machine that opens
@@ -1031,9 +1030,8 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the socket's service uri, scheme:____host:port — the key: one socket per authority on a physical machine"" class="text-info">host:port — the key: one socket per authority on a physical machine&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the socket's service uri as spelled, scheme:____host:port — the map key is its path encoding (`ws__localhost__8555`): one socket per authority on a physical machine"" class="text-info">8555`): one socket per authority on a physical machine&quot;</a>
   <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#"this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket"" class="text-info">&quot;this machine&#39;s routing table on the socket, &lt;path&gt; =&gt; target; a connection is answered by the most specific route across every machine sharing the socket&quot;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health of the listener'" class="text-info">&#39;the health of the listener&#39;</a>
   <a href="#server" class="text-light">server</a> <span class="text-light">=&gt;</span> <a href="#"the protocol server holding the socket — held so the owner's pop can release the port"" class="text-info">&quot;the protocol server holding the socket — held so the owner&#39;s pop can release the port&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -1044,7 +1042,7 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">machine::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">objects = /m/mach/machine, morphisms = /m/uri, op = mult, id = &lt;.&gt;, inv = &lt;..&gt;</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = mult, id = &lt;.&gt;</span></span></span>
         </span>
         <small class="text-muted code">/m/mach/machine</small>
     </div>
@@ -1065,25 +1063,20 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
          {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
          {?}network=&gt;component::T[?[
           {?}pattern=&gt;uri::T,
-          {?}name=&gt;str::T,
           {?}host=&gt;uri::T,
           {?}roster=&gt;[
            {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
            {?}machine=&gt;[uri::T=&gt;uri::T]],
-          {?}peer=&gt;[uri::T=&gt;rec::T[?[origin=&gt;uri::T,
-                                     {?}host=&gt;uri::T,
-                                     {?}handler=&gt;uri::T,
-                                     {?}name=&gt;str::T,
-                                     {?}status=&gt;rec::T,
-                                     {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-          {?}listener=&gt;[uri::T=&gt;rec::T[?[
+          {?}peer=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+           origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           {?}host=&gt;uri::T,
+           {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+          {?}listener=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
            origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
            {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-           {?}server=&gt;&lt;#&gt;::T,
-           {?}status=&gt;bool::T]]@/m/mach/listener],
+           {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
           {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-          {?}source=&gt;[uri::T=&gt;uri::T],
-          {?}prefix=&gt;[uri::T=&gt;uri::T],
+          {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
           {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
          {?}processor=&gt;component::T[?[
           {?}state=&gt;union(stop,run,pause),
@@ -1100,11 +1093,11 @@ machine is popped off the parent stack. the absolute root of the metatron graph
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'the execution axis: threads and computational state'" class="text-info">&#39;the execution axis: threads and computational state&#39;</a>
-  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'the lowering axis: parser, rewriter, resolver, and typer'" class="text-info">&#39;the lowering axis: parser, rewriter, resolver, and typer&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'the lowering axis: parser, rewriter, resolver, and typer'" class="text-info">&#39;the lowering axis: parser, rewriter, resolver, and typer&#39;</a>
   <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#"the machine's address space, bounded by the parent machine"" class="text-info">&quot;the machine&#39;s address space, bounded by the parent machine&quot;</a>
   <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#"the machine's instruction set architecture"" class="text-info">&quot;the machine&#39;s instruction set architecture&quot;</a>
   <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#"the known machines and this machine's peers"" class="text-info">&quot;the known machines and this machine&#39;s peers&quot;</a>
+  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'the execution axis: threads and computational state'" class="text-info">&#39;the execution axis: threads and computational state&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__memory">
@@ -1166,26 +1159,20 @@ machine is popped off the parent stack. the absolute root of the metatron graph
         <small class="text-muted code">/m/mach/component/network</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}pattern=&gt;uri::T,
-               {?}name=&gt;str::T,
                {?}host=&gt;uri::T,
                {?}roster=&gt;[
                 {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
                 {?}machine=&gt;[uri::T=&gt;uri::T]],
-               {?}peer=&gt;[uri::T=&gt;rec::T[?[
-                origin=&gt;uri::T,
+               {?}peer=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+                origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
                 {?}host=&gt;uri::T,
-                {?}handler=&gt;uri::T,
-                {?}name=&gt;str::T,
-                {?}status=&gt;rec::T,
                 {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-               {?}listener=&gt;[uri::T=&gt;rec::T[?[
+               {?}listener=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
                 origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
                 {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
-                {?}server=&gt;&lt;#&gt;::T,
-                {?}status=&gt;bool::T]]@/m/mach/listener],
+                {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
                {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
-               {?}source=&gt;[uri::T=&gt;uri::T],
-               {?}prefix=&gt;[uri::T=&gt;uri::T],
+               {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
                {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -1199,17 +1186,15 @@ declares.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
-  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections, one per surface: <dial as a path> => peer::T (ws__localhost__8555__mtron), each addressable at ~__network__peer__<key> and hung up by writing noobj there"" class="text-info">&lt;key&gt; and hung up by writing noobj there&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#"the branch this network answers as a space: <vid>__network__#, every field at its own address and every member at its key's path"" class="text-info">#, every field at its own address and every member at its key&#39;s path&quot;</a>
   <a href="#{?}roster" class="text-light">{?}roster</a> <span class="text-light">=&gt;</span> <a href="#'known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme:____host:port); knowledge, not reach — a machine is reached by dialing one of them'" class="text-info">host:port); knowledge, not reach — a machine is reached by dialing one of them&#39;</a>
-  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#"the branch this network answers as a space: <vid>__network__#, every field at its own address and every member at its key's path"" class="text-info">#, every field at its own address and every member at its key&#39;s path&quot;</a>
-  <a href="#{?}name" class="text-light">{?}name</a> <span class="text-light">=&gt;</span> <a href="#'a human friendly name for the nested network'" class="text-info">&#39;a human friendly name for the nested network&#39;</a>
   <a href="#{?}listener" class="text-light">{?}listener</a> <span class="text-light">=&gt;</span> <a href="#"the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws__localhost__8555) carrying this machine's own routes — a socket it opened, or one inherited from above"" class="text-info">8555) carrying this machine&#39;s own routes — a socket it opened, or one inherited from above&quot;</a>
-  <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism'" class="text-info">&#39;the roster generation mechanism: &lt;mechanism&gt; =&gt; &lt;handler tid as a uri&gt;, one entry per mechanism&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections, one per surface: <dial as a path> => peer::T (ws__localhost__8555__mtron), each addressable at ~__network__peer__<key> and hung up by writing noobj there"" class="text-info">&lt;key&gt; and hung up by writing noobj there&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">network::[name=&gt;&#39;local&#39;,roster=&gt;[b=&gt;&lt;ws://192.168.1.42:8555&gt;],source=&gt;[mdns=&gt;&lt;/m/web/mdns&gt;]] [-- a network that knows a peer before dialing it --]
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">network::[roster=&gt;[b=&gt;&lt;ws://192.168.1.42:8555&gt;]] [-- a network that knows a peer before dialing it --]
 network::[peer=&gt;[&lt;ws/localhost/39111/worker&gt;=&gt;[origin=&gt;&lt;ws://localhost:39111&gt;]]] [-- a machine whose reach is the one node it holds --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__network_supervisor">
@@ -1257,11 +1242,8 @@ and closed with the level — construction is connection, destruction is disconn
         </span>
         <small class="text-muted code">/m/mach/peer</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[origin=&gt;uri::T,
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
          {?}host=&gt;uri::T,
-         {?}handler=&gt;uri::T,
-         {?}name=&gt;str::T,
-         {?}status=&gt;rec::T,
          {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer</code></pre></div>
     
     <div class="card-body border-top py-2">
@@ -1271,17 +1253,14 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#handler" class="text-light">handler</a> <span class="text-light">=&gt;</span> <a href="#'the protocol surface at that endpoint, named as a uri: <__m__web__ws__mtron_ws>, <__m__web__http__mtron_http>, <__m__web__mcp__mcp_ws>'" class="text-info">mcp_ws&gt;&#39;</a>
-  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the health report computed for this peer — computed on call, never stored'" class="text-info">&#39;the health report computed for this peer — computed on call, never stored&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the service this peer reaches, scheme:____host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without"" class="text-info">host:port — the map key is the dial&#39;s path encoding, this is the service, and the one field a peer cannot do without&quot;</a>
+  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
-  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up&#39;</a>
-  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the peer's service uri, scheme:____host:port — the connection key, and the one field a peer cannot do without"" class="text-info">host:port — the connection key, and the one field a peer cannot do without&quot;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the machine's name in the distributed expression that means it — a bare name, never an address"" class="text-info">&quot;the machine&#39;s name in the distributed expression that means it — a bare name, never an address&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;,host=&gt;&lt;ws://192.168.1.42:8555/mtron&gt;,handler=&gt;&lt;/m/web/ws/mtron_ws&gt;,name=&gt;&#39;builder-2&#39;] [-- a peer the current machine can ship to --]
-peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;,name=&gt;&#39;builder-2&#39;] [-- known, and not reachable from here --]</code></pre>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;,host=&gt;&lt;ws://192.168.1.42:8555/mtron&gt;] [-- a peer the current machine can ship to --]
+peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable from here --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__processor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1415,12 +1394,12 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
-  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
-  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
   <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
   <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__thread_executor">
@@ -1471,7 +1450,7 @@ scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">8</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">10</span></h3>
     <div class="card mb-3" id="__m__mach__inst__cut?rng=#{*}&dom=#{*}">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1556,7 +1535,7 @@ pop()               [-- at the root: refused, reset metatron instead --]</code><
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__push?rng=A{*}&dom=A{?}-doc-0-tab').click();document.getElementById('__m__mach__inst__push?rng=A{*}&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">push?<span class="code text-success">A{*}</span><=<span class="code text-info">A{?}</span>(uri{?}::T){<j>}</code></pre>
 </div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address&#39;s parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary, one a machine does not cross: code reaches another process by being shipped there in a plan, so the address is refused.</p>
+    <p class="mb-0 text-light"> mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address&#39;s parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying a host names a PEER — a network member with its own identity and lifetime, dialed rather than descended — so a machine cannot be pushed there: the address is refused.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><span class="spec-chip spec-generic">generic</span><a href="#the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched" class="text-info">the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched</a> <span class="text-light">=&gt;</span> <span class="spec-chip spec-generic">generic</span><a href="#the machine just minted and entered \(c\)" class="text-success">the machine just minted and entered \(c\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
@@ -1568,7 +1547,38 @@ pop()               [-- at the root: refused, reset metatron instead --]</code><
 push(&lt;../b&gt;)                           [-- the sibling b, minted from the shared parent: = move(&lt;..&gt;).push(b) --]
 push(&lt;a/b&gt;)                            [-- the descendant /a/b, minted from the machine at /a --]
 push()                                 [-- an anonymous child, \(c = \mathrm{mintShortUUID}(\mathrm{vid}(\mathrm{here}))\) --]
-push(&lt;ws://localhost:8555/worker&gt;)     [-- refused: a process boundary, not a place in this tree --]</code></pre>
+push(&lt;ws://localhost:8555/worker&gt;)     [-- refused: a peer, not a machine in this tree --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__reply?rng=#{*}&dom=#{?}&block">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">reply</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/reply?rng=#{*}&amp;dom=#{?}&amp;block</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__reply?rng=#{*}&dom=#{?}&block-doc-0-tab').click();document.getElementById('__m__mach__inst__reply?rng=#{*}&dom=#{?}&block-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">reply?block(<span class="code text-success">#{*}</span>::T,
+            uri::T){<j>}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> evaluate a shipped payload and address the answer by the trip it belongs to. This is wire
+vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
+the frame&#39;s root is the reply and the payload is its (blocking) argument. Addressing the
+answer is what lets the client match a reply to its request without an envelope on the
+wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
+(noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
+travels as the absent-answer mark instead, and the client reads it as noobj.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the frame the payload is evaluated against — a shipped program starts at noobj" class="text-info">the frame the payload is evaluated against — a shipped program starts at noobj</a> <span class="text-light">=&gt;</span> <a href="#the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing" class="text-success">the payload&#39;s answer, addressed by the trip&#39;s tag; the absent-answer mark when the payload answers nothing</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#"the trip's correlation tag, a uri"" class="text-info">&quot;the trip&#39;s correlation tag, a uri&quot;</a>
+  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the payload to evaluate on this side'" class="text-info">&#39;the payload to evaluate on this side&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">reply(3.plus(1), &lt;a1f30b7c&gt;)       [-- the far side answers 4@a1f30b7c --]
+reply(noobj, &lt;a1f30b7c&gt;)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1579,6 +1589,17 @@ push(&lt;ws://localhost:8555/worker&gt;)     [-- refused: a process boundary, no
         <small class="text-muted code">/m/mach/inst/resume?rng=/m/mach/thread&amp;dom=/m/mach/thread</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread-doc-0-tab').click();document.getElementById('__m__mach__inst__resume?rng=__m__mach__thread&dom=__m__mach__thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">resume?thread<=thread(){<j>}</code></pre>
+</div>
+    
+</div><div class="card mb-3" id="__m__mach__inst__spawn?rng=__m__uri&dom=#{*}">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">spawn</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__uri" data-bs-toggle="tooltip" title="range" class="code text-success">uri</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/spawn?rng=/m/uri&amp;dom=#{*}</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__spawn?rng=__m__uri&dom=#{*}-doc-0-tab').click();document.getElementById('__m__mach__inst__spawn?rng=__m__uri&dom=#{*}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">spawn?uri<=<span class="code text-info">#{*}</span>(uri::T,uri::T){<j>}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="__m__mach__inst__stay?rng=A{*}&dom=A{?}">

@@ -253,7 +253,7 @@ public final class mqttServer extends Listener {
         final Rec table = withSysRoute(server, routes);
         if (!table.isEmpty())
             server.jvm().put(uri(ROUTE), table);
-        level.listen(server, table);
+        Network.Helper.listen(level, server, table);
         return server;
     }
 

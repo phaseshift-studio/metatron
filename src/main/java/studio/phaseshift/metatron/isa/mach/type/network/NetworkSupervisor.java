@@ -218,23 +218,23 @@ public final class NetworkSupervisor extends MRec implements Closeable {
         synchronized (SUPERVISORS) {
             levels = new ArrayList<>(SUPERVISORS.keySet());
         }
-        levels.forEach(level -> drop(level, client));
+        levels.forEach(level -> retract(level, client));
     }
 
     /**
-     * Drop the level's member whose client IS this one: matched by identity and retracted under the level's lock,
+     * Retract the level's member whose client IS this one: matched by identity and retracted under the level's lock,
      * so a member that has since replaced it (a fresh dial of the same service) is never the one dropped. The close
-     * that {@code disconnect} performs happens inside the lock, which is safe only because the client is already
+     * that {@code drop} performs happens inside the lock, which is safe only because the client is already
      * hung up — closing it again is a no-op that does not come back into the map.
      */
-    private static void drop(final Network level, final Object client) {
+    private static void retract(final Network level, final Object client) {
         synchronized (level) {
             level.peers().elements()
                     .filter(kv -> kv.first().isUri() && kv.second().isRec()
                             && client == kv.second().asRec().<Obj>atDirect(uri(CLIENT)))
                     .map(kv -> kv.first().uriValue())
                     .toList()
-                    .forEach(level::disconnect);
+                    .forEach(level::drop);
         }
     }
 
@@ -274,7 +274,7 @@ public final class NetworkSupervisor extends MRec implements Closeable {
             seen.add(link);
             if (link.hungUp()) {
                 this.retries.remove(link);
-                drop(network, link);
+                retract(network, link);
             } else if (link.connected()) {
                 if (null != this.retries.remove(link))
                     LOG.info("peer %s is back online", member.first());

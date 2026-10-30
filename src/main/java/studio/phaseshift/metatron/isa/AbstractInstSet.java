@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
@@ -40,6 +41,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -75,17 +77,29 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected final ObjectMap<fURI, fURI> PREFIX_TABLE = new ObjectMap<>();
 
     /**
+     * THIS LEVEL's own rows, from the map the RESOLVER reads — never from the rec: {@code BasicInstSet} overrides
+     * {@code at}/{@code atDirect} to UNION the frame chain (so {@code *~/instset/reference} answers in a child), which
+     * means no rec read can say "own only". The map can, and it is the source the mirror is written from; that is what
+     * makes {@code inheritance is not a copy} true for the parental view.
+     */
+    @Override
+    public Rec prefixes() {
+        return this.PREFIX_TABLE.isEmpty() ? rec() : this.PREFIX_TABLE.toRec();
+    }
+
+    /**
      * BIND a short name to a vid. Bound once, on purpose — a rebind to a DIFFERENT vid is refused, because every
      * existing spelling of that name would silently come to mean something else.
      */
     @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
+    public Obj registerPrefix(final fURI prefix, final fURI vid) {
         final fURI existing = this.PREFIX_TABLE.getRaw(prefix);
         if (null != existing && !Objects.equals(vid, existing))
             throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
         this.PREFIX_TABLE.putRaw(prefix, vid);
         this.at(uri(PREFIX), this.PREFIX_TABLE.toRec(), MUTABLE);
         LOG.info("prefix {{b}}%s {{g}}=> {{b}}%s{{X}} registered", prefix, vid);
+        return uri(vid);
     }
 
     /**
@@ -93,11 +107,12 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      * after it the spelling denotes nothing rather than denoting somewhere else.
      */
     @Override
-    public void unregisterPrefix(final fURI prefix) {
+    public Obj unregisterPrefix(final fURI prefix) {
         this.PREFIX_TABLE.computeRaw(prefix, (k, v) -> null);
         // THE FIELD GOES WHEN THE LAST NAME DOES, rather than standing as an empty rec that says "names were here"
         this.at(uri(PREFIX), this.PREFIX_TABLE.isEmpty() ? noobj() : this.PREFIX_TABLE.toRec(), MUTABLE);
         LOG.info("prefix {{b}}%s{{X}} unregistered", prefix);
+        return noobj();
     }
 
     /**

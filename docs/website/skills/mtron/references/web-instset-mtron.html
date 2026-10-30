@@ -460,8 +460,11 @@ mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                      route =&gt; [/mcp    =&gt; mcp_mtron,
                                /docker =&gt; docker:,
                                /usr    =&gt; /usr]]
-==&gt;http_server::[origin=&gt;http://localhost:8777,
-                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
+   	while parsing: http_server::[origin =&gt; http://localhost:8777,
+                        route =&gt; [/mcp    =&gt; mcp_mtron,
+                                  /docker =&gt; docker:,
+                                  /usr    =&gt; /usr]]]
 mtron&gt; [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,
@@ -479,8 +482,9 @@ mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *bu
 mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron&gt; ws_server::[origin  =&gt; ws://localhost:8555,
                    route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]
-==&gt;ws_server::[origin=&gt;ws://localhost:8555,
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
+==&gt;fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::['inst apply failure: unable to bind localhost/127.0.0.1:8555: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
+   	while parsing: ws_server::[origin  =&gt; ws://localhost:8555,
+                      route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]]
 </code></pre>
 <p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
@@ -529,11 +533,35 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 <pre><code class="language-mtron">mtron&gt; [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
 mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
 mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/usr/person/1
-==&gt;person::[name=&gt;'marko',
-            age=&gt;29]@/usr/person/1
+==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=&gt;'marko',age=&gt;29]@/usr/person/1
+         X=&gt;
+     rec[role,position]::T[?[name=&gt;str::T,
+                             age=&gt;int::T[is(gt(0))]@/m/math/nat,
+                             role=&gt;rec::T,
+                             position=&gt;rec::T]]@person
+     ───────────────────────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;'marko'=&gt;==&gt;str::T,
+      age=&gt;(==&gt;age)=&gt;29=&gt;==&gt;nat::T,
+      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
+      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=&gt;'marko',age=&gt;29]@/usr/person/1]
 mtron&gt; person::[name=&gt;'grant',age=&gt;25]@/usr/person/2
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@/usr/person/2
+==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=&gt;'grant',age=&gt;25]@/usr/person/2
+         X=&gt;
+     rec[role,position]::T[?[name=&gt;str::T,
+                             age=&gt;int::T[is(gt(0))]@/m/math/nat,
+                             role=&gt;rec::T,
+                             position=&gt;rec::T]]@person
+     ───────────────────────────────────────────────────────────
+     [name=&gt;(==&gt;name)=&gt;'grant'=&gt;==&gt;str::T,
+      age=&gt;(==&gt;age)=&gt;25=&gt;==&gt;nat::T,
+      noobj=&gt;(X=&gt;role)=&gt;noobj=&gt;X=&gt;rec::T,
+      noobj=&gt;(X=&gt;position)=&gt;noobj=&gt;X=&gt;rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=&gt;'grant',age=&gt;25]@/usr/person/2]
 </code></pre>
 <h3>types</h3>
 <table>
@@ -625,16 +653,10 @@ client, resolved <em>target</em>) — never per address, since a templated mount
 request while the same protocol engine serves them all.</li>
 </ul>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
-==&gt;person::[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==&gt;&quot;person::[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==&gt;
-   json::'{&quot;name&quot;:&quot;marko&quot;,&quot;age&quot;:29}'
-   
-   
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==&gt;&quot;{name='marko', age=29}&quot;
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>

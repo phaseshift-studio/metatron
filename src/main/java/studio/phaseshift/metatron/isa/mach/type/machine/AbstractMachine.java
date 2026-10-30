@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 
 /**
  * AbstractMachine — the machine's concrete body: the address index, the short-name tables and the
@@ -178,9 +179,9 @@ public abstract class AbstractMachine extends MRec implements Machine {
         super(withMemory(jvm), tid, vid);
         // Mount this machine's own infra space (pattern <vid>/#) and embed the machine rec in it. Mounted FIRST so a
         // fail thrown during component adoption (below) already has a space to land in (~/sys/fail).
-        this.bootstrap();
+        Machine.Helper.bootstrap(this);
         // Adopt the components. `at` is what sets a value's parent to the rec holding it, and
-        // Machine.Component.machine() walks exactly that — seeding through the constructor map alone would leave
+        // Component.machine() walks exactly that — seeding through the constructor map alone would leave
         // every component's machine() quietly answering mach0().
         // Parent the RESOLVED components, not the slot values: the slots hold templates now, and parenting one
         // would leave the memory's own machine() answering mach0().

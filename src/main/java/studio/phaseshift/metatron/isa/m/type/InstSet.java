@@ -41,20 +41,22 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 
 /**
  * A machine component that happens to also be a Space.
  * <p>
- * The {@code Machine.Component} half is the model — an ISA is one of the five things a Machine is made of, beside
+ * The {@code Component} half is the model — an ISA is one of the five things a Machine is made of, beside
  * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
  * implemented: {@code importInstSetStream} does {@code Machine.current().memory().addSpace(isa)}, so an ISA had to be a
  * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
  * descriptions meet in the meantime.
  */
-public interface InstSet extends Space, Machine.Component {
+public interface InstSet extends Space, Component.Prefix {
 
     public static InstSet instset0() {
         return new AbstractInstSet(false) {
@@ -153,7 +155,8 @@ public interface InstSet extends Space, Machine.Component {
      * @param prefix the short name, without the colon ({@code math} for {@code math:cos})
      * @param vid    the address the name denotes
      */
-    void registerPrefix(final fURI prefix, final fURI vid);
+    @Override
+    Obj registerPrefix(final fURI prefix, final fURI vid);
 
     /**
      * UNBIND a short name — the deletion side of {@link #registerPrefix(fURI, fURI)}, and the universal close applied
@@ -161,7 +164,8 @@ public interface InstSet extends Space, Machine.Component {
      *
      * @param prefix the short name to remove
      */
-    void unregisterPrefix(final fURI prefix);
+    @Override
+    Obj unregisterPrefix(final fURI prefix);
 
     /**
      * RESOLVE a prefixed spelling against this level's table, then the enclosing level's: {@code math:cos} becomes
@@ -174,7 +178,24 @@ public interface InstSet extends Space, Machine.Component {
      * @param vid the address as spelled
      * @return the aligned address, or {@code vid}'s coefficient-one form when no prefix holds its scheme
      */
+    @Override
     fURI alignPrefix(final fURI vid);
+
+    /**
+     * THE ENCLOSING LEVEL'S ISA, or null at the top — the chain the parental walk follows. A frame's ISA is wrapped
+     * over its parent's at {@code push} ({@code BasicInstSet} overrides this with its {@code previous}), so the same
+     * ALGORITHM serves the ISA as serves the network's names: the slots differ (a scheme alias here, an authority
+     * there), the walk does not.
+     */
+    @Override
+    default Component.Prefix previousLevel() {
+        return null;
+    }
+
+    @Override
+    default Component.Prefix on(final Machine machine) {
+        return machine.instset();
+    }
 
     /**
      * Whether any bound prefix DENOTES AN ANCESTOR of this address — the reason a redirect collision is expected

@@ -404,6 +404,21 @@ public class BasicMemory extends MRec implements Memory {
         return temp;
     }
 
+    @Override
+    public Rec prefixes() {
+        final Map<Obj, Obj> rows = new LinkedHashMap<>();
+        this.smallToBigRoutes.rawMap().forEach((name, homes) -> {
+            synchronized (homes) {
+                if (homes.isEmpty())
+                    return;
+                final fURI home = homes.stream().filter(b -> b.hasPrefix(this.primary.toString()))
+                        .findFirst().orElse(homes.iterator().next());
+                rows.put(uri(name), uri(home));
+            }
+        });
+        return rec(rows);
+    }
+
     /**
      * THE CANDIDATE PATHS a short name may denote — the set {@link #redirect} picks a winner from. A prefix resolver
      * already knows the root its name must stay under, so it asks this rather than taking the winner.

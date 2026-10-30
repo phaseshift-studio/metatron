@@ -81,7 +81,7 @@ public class SelfLoopPeerTest extends AbstractMetatronTest {
                     "the sole peer must be the authority we dialed (our own), got: " + only);
         } finally {
             if (null != space) {
-                Machine.current().network().disconnect(f("ws://localhost:" + port));
+                Machine.current().network().drop(f("ws://localhost:" + port));
                 space.close();
             }
         }

@@ -75,8 +75,8 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
 
     @AfterEach
     void teardown() {
-        Machine.current().network().disconnect(SLOW_A);
-        Machine.current().network().disconnect(SLOW_B);
+        Machine.current().network().drop(SLOW_A);
+        Machine.current().network().drop(SLOW_B);
     }
 
     /**

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.compiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.Set;
@@ -32,7 +33,7 @@ import java.util.Set;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Rewriter extends Machine.Component {
+public interface Rewriter extends Component {
 
     /**
      * Rewrite {@code code} to a fixpoint over the applicable rewrite rules.

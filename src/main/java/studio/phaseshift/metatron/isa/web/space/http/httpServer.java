@@ -192,14 +192,14 @@ public final class httpServer extends Listener {
             LOG.warn("%s route table problems: %s", origin, problems);
         final Listener held = Network.Helper.listenerFor(origin);
         if (null != held) {
-            level.listen(held, routes);
+            Network.Helper.listen(level, held, routes);
             return held;
         }
         // the certificate is loaded before anything binds, so a keystore that cannot serve never holds the port
         final SSLContext tls = HTTPS.equals(origin.scheme()) ? tls(config) : null;
         final httpServer server = new httpServer(origin, level, tls);
         try {
-            level.listen(server, routes);
+            Network.Helper.listen(level, server, routes);
         } catch (final RuntimeException e) {
             // a socket bound for routes that cannot be served is released with them
             server.close();

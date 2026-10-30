@@ -40,7 +40,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.Tokens.ORIGIN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -84,7 +83,7 @@ public class wsServerTest extends AbstractMetatronTest {
     void release() throws Exception {
         this.resetToRoot();
         final Network network = Machine.current().network();
-        network.disconnect(this.socket);
+        network.drop(this.socket);
         network.unlisten(this.socket);
         // a hang-up reaches the far side asynchronously: let the reach settle so each test starts with none
         final long deadline = System.currentTimeMillis() + 2000;
@@ -103,7 +102,7 @@ public class wsServerTest extends AbstractMetatronTest {
         assertTrue(Network.Helper.status(server), "a server is live while it holds its socket");
         assertSame(server, Network.Helper.listenerFor(this.socket), "the socket is this machine's presence");
         Machine.write(f("/t/ws_server/x"), str("served"));
-        Machine.current().network().connect(this.socket.extend("mtron"), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), this.socket.extend("mtron"), WS_CLIENT_TID);
         checkEquality(LOG, Machine.read(this.socket.extend("t").extend("ws_server").extend("x")), str("served"), true);
     }
 
@@ -118,12 +117,12 @@ public class wsServerTest extends AbstractMetatronTest {
         // the root dials both routes: each connection evaluates as the machine whose route it took
         Machine.current(root);
         final Obj code = ObjmtronSerializer.parse("*<~/probe/where>");
-        root.network().connect(this.socket.extend("mtron"), WS_CLIENT_TID);
+        Network.Helper.connect(root.network(), this.socket.extend("mtron"), WS_CLIENT_TID);
         checkEquality(LOG, root.network().submit(this.socket, code), str("root"), true);
-        root.network().disconnect(this.socket);
-        root.network().connect(this.socket.extend("child"), WS_CLIENT_TID);
+        root.network().drop(this.socket);
+        Network.Helper.connect(root.network(), this.socket.extend("child"), WS_CLIENT_TID);
         checkEquality(LOG, root.network().submit(this.socket, code), str("child"), true);
-        root.network().disconnect(this.socket);
+        root.network().drop(this.socket);
         // pop() pops the thread's current machine, so stand in the child again to pop it
         Machine.current(child);
         child.pop();
@@ -176,15 +175,14 @@ public class wsServerTest extends AbstractMetatronTest {
         try {
             final Listener.Route route = new Listener.Route(child.network(), f("/drstynx"), uri(WS_MTRON_HANDLER_TID.toString()));
             final WebSocketRec session = new WebSocketRec(new LinkedHashMap<>(), WS_HANDLER_TID, null);
-            final fURI dialed = f("ws://10.0.0.7:41234/drstynx?name=lab");
+            final fURI dialed = f("ws://10.0.0.7:41234/drstynx?clientq=lab");
             assertEquals(dialed, wsServer.admit(route, dialed, session));
-            final fURI key = Network.Helper.keyOf(dialed);
-            final Obj peer = child.network().peerAt(key);
+            final fURI key = dialed.pathEncoding();
+            final Obj peer = child.network().peer(key);
             assertTrue(peer.isRec(), "the peer joins the machine whose route the connection took");
-            checkEquality(LOG, peer.asRec().at(uri(NAME)), str("lab"), true);
-            checkEquality(LOG, root.network().peerAt(key), noobj(), true);
-            child.network().disconnect(dialed);
-            checkEquality(LOG, child.network().peerAt(key), noobj(), true);
+            checkEquality(LOG, root.network().peer(key), noobj(), true);
+            child.network().drop(dialed);
+            checkEquality(LOG, child.network().peer(key), noobj(), true);
         } finally {
             child.pop();
         }

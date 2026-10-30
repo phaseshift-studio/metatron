@@ -166,7 +166,7 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
     public void testMembershipIsNeverEmergentAndFailsClosed() {
         final Network network = Machine.current().network();
         final fURI stranger = f("ws://never-declared:19999/x");
-        assertFalse(network.isPeer(stranger), "a uri must not make itself a peer merely by being addressed");
+        assertFalse(Network.Helper.isPeer(network, stranger), "a uri must not make itself a peer merely by being addressed");
         assertTrue(Network.Helper.authorities().stream().noneMatch(mine -> Network.Helper.sameService(mine, stranger)),
                 "and it is not mine either: " + Network.Helper.authorities());
         final Obj read = network.read(stranger);
@@ -189,14 +189,14 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
         assertTrue(Network.Helper.peerAuthorities().isEmpty(), "nothing is declared yet: " + Network.Helper.peerAuthorities());
         final PeerCluster cluster = PeerCluster.detached(2, "/n", 21001).connect();
         try {
-            assertTrue(network.isPeer(f("ws://localhost:21001/usr/x")),
+            assertTrue(Network.Helper.isPeer(network, f("ws://localhost:21001/usr/x")),
                     "a server the roster declares IS a peer this frame may dial");
             assertTrue(Network.Helper.peerAuthorities().isEmpty(),
                     "but the roster is the known servers, NOT the connections the machine holds: " + Network.Helper.peerAuthorities());
             // THE CONNECTION IS THE MACHINE'S OWN REACH, and declaring one is what peers() reports. A member sits at
             // its dial's own path and carries the service it reaches as its authority.
             network.at(uri(PEER), rec(mutableMap(
-                    uri(Network.Helper.keyOf(f("ws://localhost:21001/n"))),
+                    uri(f("ws://localhost:21001/n").pathEncoding()),
                     rec(mutableMap(uri(ORIGIN), uri("ws://localhost:21001"))))), MUTABLE);
             assertEquals(Set.of(f("ws://localhost:21001")), Network.Helper.peerAuthorities(),
                     "the members' authorities ARE the peers — declared, not emergent");
@@ -278,12 +278,12 @@ public class NetworkIdentityTest extends AbstractMetatronTest {
             "ws://peer.local:8555/mtron          % ws/peer/local/8555/mtron",
             "ws://10.0.0.7:8555/mtron            % ws/10/0/0/7/8555/mtron",
             "ws://10.0.0.8:8555/mtron            % ws/10/0/0/8/8555/mtron",
-            "ws://localhost:8555/mtron?name=me   % ws/localhost/8555/mtron",
+            "ws://localhost:8555/mtron?clientq=me   % ws/localhost/8555/mtron",
             "ws://127.0.0.1:8555/mtron           % ws/localhost/8555/mtron",
             "ws://peer:8555                      % ws/peer/8555",
             "loop://self                         % loop/self",
     }, delimiter = '%')
     public void testAPeerKeyIsALegalPath(final String dial, final String key) {
-        assertEquals(f(key), Network.Helper.keyOf(f(dial)), "the key of " + dial);
+        assertEquals(f(key), f(dial).pathEncoding(), "the key of " + dial);
     }
 }

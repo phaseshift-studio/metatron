@@ -75,8 +75,8 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
 
     @AfterEach
     void teardown() {
-        Machine.current().network().disconnect(SERVANT);
-        Machine.current().network().disconnect(EVALER);
+        Machine.current().network().drop(SERVANT);
+        Machine.current().network().drop(EVALER);
     }
 
     /**
@@ -148,7 +148,7 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
                 .map(Reduction::ship)
                 .findFirst().orElseThrow();
         assertTrue(to.hasf(), "the emitted route carries its function: " + to);
-        assertTrue(to.functionClassName().endsWith("Network$AtPeer"), "the target peer's own eval: " + to.functionClassName());
+        assertTrue(to.functionClassName().endsWith("Network$Helper$AtPeer"), "the target peer's own eval: " + to.functionClassName());
     }
 
     @Test

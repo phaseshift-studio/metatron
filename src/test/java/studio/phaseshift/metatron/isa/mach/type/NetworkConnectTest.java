@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.PEER_TID;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * CONNECT — the network\u0027s mount op, tested against the {@code loop:} transport: the in-JVM loopback
@@ -74,13 +75,13 @@ public class NetworkConnectTest extends AbstractMetatronTest {
 
     @AfterEach
     void retract() {
-        Machine.current().network().disconnect(SELF);
+        Machine.current().network().drop(SELF);
     }
 
     @Test
     void testConnectMintsPeer() {
         final Network network = Machine.current().network();
-        final Obj peer = network.connect(SELF);
+        final Obj peer = Network.Helper.connect(network, SELF);
         assertEquals(PEER_TID, peer.tid().basePath(), "connect must answer a peer::T");
         assertEquals(SELF, peer.asRec().<Obj>at(uri(ORIGIN)).uriValue(), "the peer keys on the dialed authority");
         // THE CLIENT IS THE REACH: what the peer is talked to with is its client's inst, never a field of the peer's own
@@ -99,7 +100,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
 
     @Test
     void testTheLoopClientIsLive() {
-        final Obj peer = Machine.current().network().connect(SELF);
+        final Obj peer = Network.Helper.connect(Machine.current().network(), SELF);
         // the far side of a loop client is this machine: its status is true while it exists, and the peer is online
         checkEquality(LOG, bool(true), bool(Network.Helper.status(peer.asRec().at(uri(CLIENT)))), true);
         checkEquality(LOG, bool(true), bool(Network.Helper.online(peer)), true);
@@ -108,7 +109,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     @Test
     void testOverrideOfDispatchesToThePeersOwnBodies() {
         final Network network = Machine.current().network();
-        network.connect(SELF);
+        Network.Helper.connect(network, SELF);
         // the loop peer declares what a wire client serves — eval, from and to — each the identity of the wire body
         for (final fURI instTID : List.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID))
             assertTrue(network.overrideOf(SELF, instTID).isObjInst(), "the loop peer declares " + instTID + " in its mini-instset");
@@ -119,7 +120,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     @Test
     void testSubmitEvaluatesCodeOnThePeersEvalOverride() {
         final Network network = Machine.current().network();
-        network.connect(SELF);
+        Network.Helper.connect(network, SELF);
         final Obj code = ObjmtronSerializer.parse("1.plus(2)");
         assertEquals(jnt(3), network.submit(SELF, code),
                 "submit evaluates code on the peer's eval override — the loop peer answers the local evaluation");
@@ -128,7 +129,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     @Test
     void testAnOverrideIsTheNativeInstructionWithItsOwnF() {
         final Network network = Machine.current().network();
-        network.connect(SELF);
+        Network.Helper.connect(network, SELF);
         // an override IS the instruction it replaces with another f(): the native eval's tid (its dom and rng) and its
         // argument types — the function is the one thing that differs
         final Inst eval = network.overrideOf(SELF, EVAL_INST_TID).asInst();
@@ -169,7 +170,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(lst(uri(f("loop://probe/t/probe/y"))), calls.get(1).args(), "to's one argument: the address");
             assertEquals(jnt(7), lhss.get(1), "the written obj is the lhs, exactly as the native to takes it");
         } finally {
-            Machine.current().network().disconnect(f("loop://probe"));
+            Machine.current().network().drop(f("loop://probe"));
         }
     }
 
@@ -194,7 +195,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(EVAL_INST_TID, calls.getFirst().tid().basePath(), "submit reaches the override as the eval call");
             assertEquals(code, lhss.getFirst(), "the code arrives as the lhs — the peer evaluates it, never this side");
         } finally {
-            Machine.current().network().disconnect(f("loop://evaluator"));
+            Machine.current().network().drop(f("loop://evaluator"));
         }
     }
 
@@ -211,7 +212,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(noobj(), Machine.read(f("loop://imposter/t/imposter/x")),
                     "with no accepted override (no eval, no transport either) the read falls through and misses");
         } finally {
-            Machine.current().network().disconnect(f("loop://imposter"));
+            Machine.current().network().drop(f("loop://imposter"));
         }
     }
 
@@ -219,21 +220,21 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     void testResolutionBindsAPeersToAtCompileTime() {
         // COMPILE-TIME BINDING: resolving to(<peer address>) answers the native to — its signature, its binding to the
         // lhs — with the PEER'S body as its f(), so the compiled code says whose to runs. The body is the client's
-        // override, run inside the network's q-proc layer (Network.AtPeer).
+        // override, run inside the network's q-proc layer (Network.Helper.AtPeer).
         final Obj client = rec(uri(HOST), uri(f("loop://binder")),
                 uri(INST), rec(uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> Machine.write(inst.arg(0).uriValue().localize(), lhs))));
         Network.Helper.index(client);
         try {
             final Inst bound = instB(TO_INST_TID, lst(uri(f("loop://binder/t/binder/z")))).resolve(jnt(5));
             assertEquals(TO_INST_TID, bound.tid().basePath(), "the bound call is still the to instruction");
-            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "its f() is the peer's body, named as such: " + bound.functionClassName());
+            assertTrue(bound.functionClassName().endsWith("Network$Helper$AtPeer"), "its f() is the peer's body, named as such: " + bound.functionClassName());
             bound.apply(jnt(5));
             assertEquals(jnt(5), Machine.read(f("/t/binder/z")), "applying the bound call runs the peer's to");
             // the same call through the language reaches the peer's to (end to end; the binding itself is asserted above)
             ObjmtronSerializer.parse("6.to(<loop://binder/t/binder/w>)").apply();
             assertEquals(jnt(6), Machine.read(f("/t/binder/w")), "a program's .to(<peer address>) runs the peer's to");
         } finally {
-            Machine.current().network().disconnect(f("loop://binder"));
+            Machine.current().network().drop(f("loop://binder"));
         }
     }
 
@@ -246,10 +247,10 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             Machine.write(f("/t/lookup/x"), jnt(42));
             final Inst bound = instB(FROM_INST_TID, lst(uri(f("loop://lookup/t/lookup/x")))).resolve(noobj());
             assertEquals(FROM_INST_TID, bound.tid().basePath(), "the bound call is still the from instruction");
-            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "its f() is the peer's body: " + bound.functionClassName());
+            assertTrue(bound.functionClassName().endsWith("Network$Helper$AtPeer"), "its f() is the peer's body: " + bound.functionClassName());
             assertEquals(jnt(42), bound.apply(noobj()), "applying the bound call runs the peer's from");
         } finally {
-            Machine.current().network().disconnect(f("loop://lookup"));
+            Machine.current().network().drop(f("loop://lookup"));
         }
     }
 
@@ -274,7 +275,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             final Obj code = ObjmtronSerializer.parse("[code=>>>1.to(" + fired + ")]").apply().asRec().at(uri(CODE));
             Machine.write(f("loop://layered/t/layered/#").addQ("subq"), code);
             final Inst bound = instB(TO_INST_TID, lst(uri(f("loop://layered/t/layered/a")))).resolve(str("payload"));
-            assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "the write is compile-time bound to the peer");
+            assertTrue(bound.functionClassName().endsWith("Network$Helper$AtPeer"), "the write is compile-time bound to the peer");
             bound.apply(str("payload"));
             assertEquals(str("payload"), Machine.read(f("/t/layered/a")), "the peer's to wrote");
             final long deadline = System.currentTimeMillis() + 3000;   // the broadcast runs on a virtual thread
@@ -285,7 +286,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             Machine.current().network().qs().lstValue().stream()
                     .filter(q -> q.tid().equals(SUBQ_TID))
                     .forEach(q -> q.asRec().at(uri(OBJ)).asLst().lstValue().clear());
-            Machine.current().network().disconnect(f("loop://layered"));
+            Machine.current().network().drop(f("loop://layered"));
         }
     }
 
@@ -302,7 +303,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(jnt(42), Machine.read(f("loop://reader/t/reader/x")),
                     "a read through a from-only peer dispatches to its `from` override — the local read of the localized uri");
         } finally {
-            Machine.current().network().disconnect(f("loop://reader"));
+            Machine.current().network().drop(f("loop://reader"));
         }
     }
 
@@ -319,7 +320,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(jnt(7), Machine.read(f("/t/sink/y")),
                     "a write through a to-only peer dispatches to its `to` override — the local write to the localized uri");
         } finally {
-            Machine.current().network().disconnect(f("loop://sink"));
+            Machine.current().network().drop(f("loop://sink"));
         }
     }
 
@@ -346,13 +347,13 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertTrue(network.peerOf(f(authority)).isNoObj(), "and addressing it made no peer");
             // CONSTRUCTION IS CONNECTION: the dial constructs the http_client (inst => {from => GET, to => POST}),
             // which indexes itself, and a read now GETs the resource through its `from` override
-            network.connect(f(authority));
+            Network.Helper.connect(network, f(authority));
             assertEquals(str("world"), Machine.read(f(authority + "/hello")),
                     "a read through an http peer GETs the resource via its `from` override");
             assertTrue(network.overrideOf(f(authority), FROM_INST_TID).isObjInst(), "the dial indexed the http_client as a peer");
         } finally {
             server.stop(0);
-            Machine.current().network().disconnect(f(authority));
+            Machine.current().network().drop(f(authority));
         }
     }
 
@@ -369,7 +370,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         final Network network = Machine.current().network();
         boolean stopped = false;
         try {
-            final Obj peer = network.connect(authority);
+            final Obj peer = Network.Helper.connect(network, authority);
             checkEquality(LOG, bool(true), bool(Network.Helper.online(peer)), true);
             // a connectionless client holds no socket that could say it is down: its status asks the server, so once
             // the server is gone, the same client reads not live — derived on read, never a stored, stale true
@@ -379,7 +380,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         } finally {
             if (!stopped)
                 server.stop(0);
-            network.disconnect(authority);
+            network.drop(authority);
         }
     }
 
@@ -407,7 +408,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
         final String authority = "http://localhost:" + server.getAddress().getPort();
         final Network network = Machine.current().network();
         try {
-            network.connect(f(authority));
+            Network.Helper.connect(network, f(authority));
             assertTrue(network.overrideOf(f(authority), TO_INST_TID).isObjInst(), "the http client serves to (POST)");
             assertTrue(!network.overrideOf(f(authority), EVAL_INST_TID).isObjInst(), "and no eval: a POST evaluates nothing");
             final Obj written = rec(uri("name"), str("marko"));
@@ -417,15 +418,15 @@ public class NetworkConnectTest extends AbstractMetatronTest {
             assertEquals(written, answer, "the answer is the native to's: the obj written, not the server's reply");
         } finally {
             server.stop(0);
-            network.disconnect(f(authority));
+            network.drop(f(authority));
         }
     }
 
     @Test
     void testConnectIsEnsurePeered() {
         final Network network = Machine.current().network();
-        final Obj first = network.connect(SELF);
-        final Obj second = network.connect(SELF);
+        final Obj first = Network.Helper.connect(network, SELF);
+        final Obj second = Network.Helper.connect(network, SELF);
         assertEquals(first, second, "connect is ensure-peered: a dialed authority answers its existing peer, never a rebuild");
         assertEquals(1L, network.peers().elements().count(), "a re-dial must not add a second member");
     }
@@ -433,7 +434,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     @Test
     void testLoopReadIsLocalRead() {
         Machine.write(f("/t/loopback/x"), jnt(42));
-        Machine.current().network().connect(SELF);
+        Network.Helper.connect(Machine.current().network(), SELF);
         assertEquals(jnt(42), Machine.read(f("loop://self/t/loopback/x")),
                 "a read through a loop peer IS the local read of the localized address");
         assertEquals(Machine.read(f("/t/loopback/x")), Machine.read(f("loop://self/t/loopback/x")),
@@ -442,7 +443,7 @@ public class NetworkConnectTest extends AbstractMetatronTest {
 
     @Test
     void testLoopWriteIsLocalWrite() {
-        Machine.current().network().connect(SELF);
+        Network.Helper.connect(Machine.current().network(), SELF);
         Machine.write(f("loop://self/t/loopback/y"), jnt(7));
         assertEquals(jnt(7), Machine.read(f("/t/loopback/y")),
                 "a write through a loop peer lands at the localized address");
@@ -457,11 +458,11 @@ public class NetworkConnectTest extends AbstractMetatronTest {
     @Test
     void testDisconnectRetracts() {
         final Network network = Machine.current().network();
-        network.connect(SELF);
+        Network.Helper.connect(network, SELF);
         Machine.write(f("/t/loopback/z"), jnt(3));
         assertEquals(jnt(3), Machine.read(f("loop://self/t/loopback/z")), "reachable while dialed");
-        network.disconnect(SELF);
-        assertEquals(0L, network.peers().elements().count(), "disconnect removes the member");
+        network.drop(SELF);
+        assertEquals(0L, network.peers().elements().count(), "drop removes the member");
         assertEquals(noobj(), Machine.read(f("loop://self/t/loopback/z")),
                 "an undialed authority stops answering: reach is a capability, retracted with the dial");
     }

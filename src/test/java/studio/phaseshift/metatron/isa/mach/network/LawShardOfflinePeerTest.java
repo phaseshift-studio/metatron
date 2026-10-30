@@ -78,7 +78,7 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
         ));
         CommonUtil.sleepThread(300);
         try {
-            Machine.current().network().connect(service.extend("mtron"), WS_CLIENT_TID);
+            Network.Helper.connect(Machine.current().network(), service.extend("mtron"), WS_CLIENT_TID);
             final DistributedSweep.Layout across = this.planned();
             assertFalse(across.lanes().isEmpty(),
                     "an online peer is a shard target, so the fold is planned across it: " + across.emitted());
@@ -93,7 +93,7 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
                     "an offline peer is no target, so the fold is planned at home: " + home.emitted());
             checkCodeParseApply(LOG, FOLD, "14");
         } finally {
-            Machine.current().network().disconnect(service);
+            Machine.current().network().drop(service);
             CommonUtil.close(server);
         }
     }

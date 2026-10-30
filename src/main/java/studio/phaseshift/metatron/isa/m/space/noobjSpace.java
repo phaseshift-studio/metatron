@@ -30,6 +30,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 public final class noobjSpace implements Space, InstSet {
 
@@ -113,13 +114,20 @@ public final class noobjSpace implements Space, InstSet {
      * accepted into a table with no vocabulary behind it.
      */
     @Override
-    public void registerPrefix(final fURI prefix, final fURI vid) {
+    public Rec prefixes() {
+        // the null space holds no vocabulary, so it declares no rows either
+        return rec();
+    }
+
+    @Override
+    public Obj registerPrefix(final fURI prefix, final fURI vid) {
         throw studio.phaseshift.metatron.util.MTronException.of("the null space binds no names: %s => %s", prefix, vid);
     }
 
     @Override
-    public void unregisterPrefix(final fURI prefix) {
+    public Obj unregisterPrefix(final fURI prefix) {
         // nothing was ever bound here, so nothing is unbound
+        return noobj();
     }
 
     @Override

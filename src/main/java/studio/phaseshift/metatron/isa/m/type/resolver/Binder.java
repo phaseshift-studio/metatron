@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.GenericBinder;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Binder extends Machine.Component {
+public interface Binder extends Component {
 
     /**
      * Holder for the currently active binder. Lazily defaults to the {@code generic_binder::T} —

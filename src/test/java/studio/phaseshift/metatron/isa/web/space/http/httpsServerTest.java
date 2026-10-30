@@ -119,12 +119,12 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
         this.jdkDefault = SSLContext.getDefault();
         SSLContext.setDefault(TlsTestKeys.trusting());
         // the https gateway: the client the server's own address is read back through
-        Machine.current().network().connect(f(GATEWAY));
+        Network.Helper.connect(Machine.current().network(), f(GATEWAY));
     }
 
     @AfterAll
     public void restoreTheJdkTrust() {
-        Machine.current().network().disconnect(f(GATEWAY));
+        Machine.current().network().drop(f(GATEWAY));
         SSLContext.setDefault(this.jdkDefault);
     }
 
@@ -237,7 +237,7 @@ public class httpsServerTest extends AbstractHTTPServerIntegrationTest {
     public void testUnservableKeystoreFailsConstruction(final String construction, final String expected) throws IOException {
         final int port = generatePort();
         checkCodeEvaluate(LOG, fill(construction, port), "noobj", expected);
-        checkEquality(LOG, Machine.current().network().listenerAt(Network.Helper.keyOf(f("https://127.0.0.1:" + port))), noobj(), true);
+        checkEquality(LOG, Machine.current().network().listener(f("https://127.0.0.1:" + port).pathEncoding()), noobj(), true);
         // a port the failed construction held would refuse this bind
         new ServerSocket(port, 50, InetAddress.getLoopbackAddress()).close();
     }

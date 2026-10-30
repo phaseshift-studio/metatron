@@ -55,7 +55,7 @@ public class ClientServerStatusTest extends AbstractMetatronTest {
 
     @AfterEach
     void hangUp() {
-        Machine.current().network().disconnect(LOOP);
+        Machine.current().network().drop(LOOP);
     }
 
     /**
@@ -91,7 +91,7 @@ public class ClientServerStatusTest extends AbstractMetatronTest {
     @Test
     void testTheStatusFieldReadsAsItsValue() {
         // the auto wrapper makes the field a value: reading it answers the bool, not the inst that computes it
-        final Obj client = Machine.current().network().connect(LOOP).asRec().at(uri(CLIENT));
+        final Obj client = Network.Helper.connect(Machine.current().network(), LOOP).asRec().at(uri(CLIENT));
         checkEquality(LOG, bool(true), client.asRec().at(uri(STATUS)), true);
     }
 

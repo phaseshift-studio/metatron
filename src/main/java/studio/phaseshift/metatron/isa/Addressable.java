@@ -106,8 +106,8 @@ public interface Addressable {
 
     /**
      * INDEX a constructed obj into this source — the one verb for "a thing that exists enters the
-     * jurisdiction": Memory indexes a space, Network indexes a protocol client, an instruction set indexes
-     * an inst family. Construction is decoupled from infrastructure indexing (an obj exists whether or not
+     * jurisdiction": Memory indexes a space, Network indexes a protocol client OR a listener entry (the handle's
+     * shape decides which index it enters), an instruction set indexes an inst family. Construction is decoupled from infrastructure indexing (an obj exists whether or not
      * an index observed it), so indexing is a BACKGROUND behavior upon successful construction and this
      * method must never be load-bearing for the obj's own validity. Default: this source does not index.
      */
@@ -128,12 +128,12 @@ public interface Addressable {
     }
 
     /**
-     * DROP a member from this source — the dual of {@link #index}: {@code id -> noobj}, the universal
-     * close. What indexing granted, dropping retracts: Memory drops a space's claim, Network hangs up a
-     * peer. Answers what was dropped, or {@code noobj} when the id held nothing here. Default: this
-     * source drops nothing.
+     * DROP a member from this source — the dual of {@link #index}: {@code address -> noobj}, the universal
+     * close. What indexing granted, dropping retracts: Memory drops a space's claim, Network retracts
+     * the member at the address it is named by: a peer key, a route, a bare origin, or a socket's key. Answers what was
+     * dropped, or {@code noobj} when the address held nothing here. Default: this source drops nothing.
      */
-    default Obj drop(final fURI id) {
+    default Obj drop(final fURI address) {
         return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
     }
 

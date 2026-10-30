@@ -464,7 +464,7 @@ menu, fix the five pieces a row names:</p>
 <tr><td><code>network::T</code></td><td><code>~/network</code></td><td>the reach. <code>roster</code> is what the system <strong>knows</strong> (connectionless endpoints); <code>peer</code> is what <strong>this</strong> machine has <strong>dialed</strong>. Knowledge is inherited, reach is not. A <code>peer::T</code> carries a <code>host</code> (where to dial it back) — the marker that makes it a fan-out target; an inbound accept has none and never receives a shard.</td></tr>
 <tr><td><code>rewriter::T</code></td><td><code>~/compiler/rewriter</code></td><td>the stage. The compiler's first atomic pass lowers <code>code::T → code::T</code> to a fixpoint; <code>fixpoint_rewriter::[max=&gt;N]</code> is one such stage. A distribution rule is one of its rewrite rules, applied in place, and every emitted layout is itself re-planned where it lands.</td></tr>
 <tr><td><code>instset::T</code></td><td><code>/m/math/cat</code></td><td>the declaration surface. <code>object::T</code> holds a type's structural theories; <code>morphism::T</code> holds an inst's process laws, <code>form</code>, <code>class</code>, and <code>analysis</code>; <code>path::T</code> lifts <em>code</em> to a vertex whose out-edges are the live rewrite rules, each a <code>plan::T</code>. <code>lower(plan::T)</code> and <code>bind(plan::T)</code> are the two applications.</td></tr>
-<tr><td><code>law::T</code>, <code>plan::T</code>, <code>path::T</code></td><td>—</td><td>the engine. A <code>plan::T</code> assembles <code>[name, cut, where]</code> (a value, validated against its shapes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the <code>law::T</code> declarations — never named, always computed.</td></tr>
+<tr><td><code>law::T</code>, <code>plan::T</code>, <code>path::T</code></td><td>—</td><td>the engine. A <code>plan::T</code> assembles <code>[name, cut, where]</code> (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the <code>law::T</code> declarations — never named, always computed.</td></tr>
 </tbody>
 </table>
 <p><code>LawTable.combiner(keyed, laws)</code> is the one function that decides a fold's recombination:</p>
@@ -493,22 +493,80 @@ menu, fix the five pieces a row names:</p>
 <p>These seven are the bindings that matter for distribution; the rest of the paper's theorems describe the function
 rings the shapes live in. The full paper is <a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>.</p>
 <h3>the route vocabulary — the distribution shape</h3>
-<p>The plan's <code>where</code> names the shape, and the shape is the law's consequence. <code>Placement.Shape</code> today:</p>
+<p>The plan's <code>where</code> states <strong>three axes</strong> — where (<code>?place</code>), how far and how wide (<code>?hop</code>), and what counts as one
+share (<code>?split</code>) — and the shape is their consequence, not a fourth key. <code>law_shard</code> states them:</p>
+<pre><code class="language-mtron">[place=&gt;&lt;[local]&gt;, hop=&gt;0, split=&gt;&lt;stream&gt;]                     [-- the origin's tail: the home place, no depth, strided --]
+[place=&gt;&lt;[peer]&gt;, hop=&gt;1, split=&gt;&lt;stream&gt;, span=&gt;[seed, …]]     [-- the fan-out: the dialed set, one level, strided --]
+</code></pre>
 <table>
 <thead>
-<tr><th>shape</th><th>the law's consequence</th><th>obligations on a cut shipped to it</th></tr>
+<tr><th>shape</th><th>derived from</th><th>obligations on a cut shipped to it</th></tr>
 </thead>
 <tbody>
-<tr><td><code>local</code></td><td>transform in place (the algebraic folds)</td><td>—</td></tr>
-<tr><td><code>peers</code></td><td>star / scatter-gather — the commutative-monoid fold</td><td><code>monoidic</code>, <code>commutative</code></td></tr>
-<tr><td><code>tree</code></td><td>the same fold, recursively, at every interior node</td><td><code>monoidic</code>, <code>commutative</code></td></tr>
-<tr><td><code>shuffle</code></td><td>keyed partition — the join</td><td><code>monoidic</code></td></tr>
-<tr><td><code>space</code></td><td>write to a spatial address</td><td>—</td></tr>
-<tr><td><code>none</code></td><td>delete (the unit law's transform)</td><td>—</td></tr>
+<tr><td><code>local</code></td><td>the home place alone, no depth</td><td>—</td></tr>
+<tr><td><code>peers</code></td><td>the dialed set at no depth</td><td><code>monoidic</code>, <code>commutative</code></td></tr>
+<tr><td><code>tree</code></td><td>the dialed set at a depth of one or more</td><td><code>monoidic</code>, <code>commutative</code></td></tr>
+<tr><td><code>shuffle</code></td><td>a keyed <code>?split</code></td><td><code>monoidic</code></td></tr>
+<tr><td><code>space</code></td><td>a landing (<code>to(&lt;space&gt;)</code>)</td><td>—</td></tr>
+<tr><td><code>none</code></td><td>nowhere (the unit law's transform)</td><td>—</td></tr>
 </tbody>
 </table>
-<p><code>PlanBuilder.create()</code> validates \(\texttt{obligations} (\texttt{shape}) \subseteq \texttt{cut.laws}\); a cut shipped to a
-shape and re-applied at home must declare every law that shape demands, or the plan refuses to build.</p>
+<p><code>PlanBuilder.create()</code> validates $\texttt{obligations} (\texttt{place}, \texttt{hop}, \texttt{split}) \subseteq
+\texttt{cut.laws}$; a cut shipped to a decision and re-applied at home must declare every law the axes demand, or the
+plan refuses to build. The legacy <code>shape</code>/<code>target</code> encoding is still <em>read</em> for one cycle; the plans no longer write it.</p>
+<h4><code>?hop=height{arity}</code> — how far, and how wide</h4>
+<p><code>?hop</code> is a <strong>tree shape</strong>: the height (how many times the rule may re-plan the code it produced) and, as a leading
+coefficient, the <strong>arity</strong> (how many children one node may fan out to). A bare <code>?hop=n</code> states the height and leaves the
+arity at the receiver's own out-degree — today's behaviour — and the two arities no coefficient can render ride the pair
+form: <code>[h,1]</code> is a <strong>chain</strong> (one child per node, <code>monoidic</code> alone, order preserved).</p>
+<table>
+<thead>
+<tr><th>written</th><th>height</th><th>arity</th><th>realized shape</th></tr>
+</thead>
+<tbody>
+<tr><td><code>0</code>, <code>{0}n</code>, <code>[n,0]</code></td><td>0 / n</td><td>0</td><td><strong>the identity</strong> — <code>D(c) = c</code>, unchanged</td></tr>
+<tr><td><code>1</code></td><td>1</td><td>the out-degree</td><td>star (the default's one level)</td></tr>
+<tr><td><code>n</code></td><td>n</td><td>the out-degree</td><td>free/irregular tree</td></tr>
+<tr><td><code>[n,1]</code></td><td>n</td><td>1</td><td><strong>chain / pipeline</strong> — n lanes in a line</td></tr>
+<tr><td><code>{2}3</code></td><td>3</td><td>2</td><td>binary tree, at most 2 children/node</td></tr>
+<tr><td><code>{2,4}3</code></td><td>3</td><td>2..4 (the cap 4)</td><td>elastic: fill what is live up to 4</td></tr>
+</tbody>
+</table>
+<p>The arity <strong>caps the fan-out</strong>: each node takes the first <code>w</code> lanes of the emitter's lane order (home-first, then the
+resolution order — deterministic, never rotated per node), still clamped by <code>min(shares, seed)</code>. A node with fewer live
+targets takes what there is. The <strong>form is restated, never the number</strong>: the emitted slave's budget is the same arity
+with the height decremented (<code>{2}3 ⇒ {2}2 ⇒ {2}1 ⇒ 0</code>, <code>[3,1] ⇒ [2,1] ⇒ [1,1]</code>), and it rides the slave's <strong>fold</strong> (the
+reducer), not its seed — the seed states the part alone.</p>
+<h4><code>?place</code> — where</h4>
+<p>The place set, as a value: a <strong>list</strong> is a set of designators, a <strong>rec</strong> carries weights, and a trailing/leading
+coefficient is that designator's <strong>demand</strong> (how many lanes it takes — a share is a lane, so demand is both data weight
+and concurrency). Repetition is multiplicity: <code>[//ginger,//ginger,//booger]</code> is ginger twice.</p>
+<table>
+<thead>
+<tr><th>designator</th><th>resolves through</th></tr>
+</thead>
+<tbody>
+<tr><td><code>local</code></td><td>this frame's own place (the addressless <code>eval()</code>)</td></tr>
+<tr><td><code>peer</code></td><td>the <strong>dialed</strong> set (host-bearing, online, <code>serves</code>-positive)</td></tr>
+<tr><td><code>#</code></td><td>every reachable place the other entries did not name</td></tr>
+<tr><td><code>//host[:port]</code></td><td>the roster's place (a redirect)</td></tr>
+<tr><td><code>scheme://host:port</code></td><td>one authority, as written</td></tr>
+</tbody>
+</table>
+<p><code>?place=[local,peer]</code> is S (the master takes a share); <code>[{4}local]</code> is four home lanes on a peerless machine, still a
+fan-out (it demands the off-machine merge's laws); <code>local=&gt;0</code> is the explicit exclusion. Exclusion is omission.</p>
+<h4><code>?split</code> — what counts as one share</h4>
+<table>
+<thead>
+<tr><th><code>?split</code></th><th>lowered?</th></tr>
+</thead>
+<tbody>
+<tr><td><code>stream</code> (the default)</td><td><strong>yes</strong> — today's stride division, the layout <code>law_shard</code> has always emitted</td></tr>
+<tr><td><code>copy</code></td><td><strong>only behind idempotence</strong> — one part, the whole seed on every lane; legal only when the cut's combiner declares <code>idempotent</code>, else the unchanged chain</td></tr>
+<tr><td><code>block</code>, <code>key</code>, <code>owner</code>, <code>index</code></td><td><strong>decline</strong> — their premises (order, a key, an addressed seed, a generator) are not held yet, so the decision is the identity, never a plausible-looking reorder</td></tr>
+</tbody>
+</table>
+<p>An unreadable <code>?split</code> is refused loudly (the key and the text), never defaulted to <code>stream</code>.</p>
 <hr />
 <h3>the menu</h3>
 <p>The centerpiece: every pattern, its law, and the two motifs. The <strong>pre-write motif</strong> is the mtron before the rewrite
@@ -520,13 +578,13 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><th>pattern</th><th>law (latex)</th><th>mtron pre-write motif</th><th>mtron rewrite motif</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>A</strong> homomorphism shard ✅</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td><code>{1,2,3,4}.plus(1).count()</code></td><td><code>[start?hop=0(p_i).plus(1).count(),…]==[eval(p_i), …]&gt;-.sum()</code></td></tr>
-<tr><td><strong>B</strong> data-local shard</td><td>\(\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)\)</td><td><code>*/usr/data/+/current.plus(1).sum()</code></td><td><code>[from?hop=0(&lt;/usr/data/+/current&gt;).plus(1).sum(),…]==[eval(p_i),…]&gt;-.sum()</code></td></tr>
-<tr><td><strong>C</strong> authority push-down</td><td>\(\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}\) (Thm 5 + a pure chain)</td><td><code>*&lt;ws://host:8555/n/+&gt;.plus(1).sum()</code></td><td><code>[from?hop=0(&lt;/n/+&gt;).plus(1).sum()]==[eval(&lt;ws://host:8555&gt;)]&gt;-</code></td></tr>
+<tr><td><strong>A</strong> homomorphism shard ✅</td><td>\(h(a \uplus b) = h(a) \oplus h(b)\)</td><td><code>{1,2,3,4}.plus(1).count()</code></td><td><code>[start(p_i).plus(1).count?hop=0(),…]==[eval(p_i), …]&gt;-.sum()</code></td></tr>
+<tr><td><strong>B</strong> data-local shard</td><td>\(\mathrm{from}(p) = \sum_a \mathrm{from}_a(p)\)</td><td><code>*/usr/data/+/current.plus(1).sum()</code></td><td><code>[from(&lt;/usr/data/+/current&gt;).plus(1).sum?hop=0(),…]==[eval(p_i),…]&gt;-.sum()</code></td></tr>
+<tr><td><strong>C</strong> authority push-down</td><td>\(\mathrm{from} \cdot \mathrm{count} \mapsto \mathrm{native\_count}\) (Thm 5 + a pure chain)</td><td><code>*&lt;ws://host:8555/n/+&gt;.plus(1).sum()</code></td><td><code>[from(&lt;/n/+&gt;).plus(1).sum?hop=0()]==[eval(&lt;ws://host:8555&gt;)]&gt;-</code></td></tr>
 <tr><td><strong>D</strong> parallel fan-out ✅</td><td>\(\langle x\rangle(a+b) = \langle x\rangle a + \langle x\rangle b\) (Thm 5)</td><td>any shard; the transport, not a new fold</td><td><code>[s_i, …]==[virtual::[code=&gt;eval(p_i)],…]==[&gt;&gt;rhs,…]&gt;-.combiner</code></td></tr>
-<tr><td><strong>E</strong> tree reduction ✅</td><td>\((a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C\)</td><td><code>{1,…,8}.plus(1).sum?hop=2()</code></td><td>nested <code>start?hop=n-1(p_i)…</code> at each interior node — the dial graph is the tree</td></tr>
+<tr><td><strong>E</strong> tree reduction ✅</td><td>\((a+b+c+d)\cdot r = ((a\cdot r + b\cdot r)\cdot C + (c\cdot r + d\cdot r)\cdot C)\cdot C\)</td><td><code>{1,…,8}.plus(1).sum?hop=2()</code></td><td>nested <code>start(p_i)…?hop=n-1</code> at each interior node — the dial graph is the tree</td></tr>
 <tr><td><strong>F</strong> ordered fold</td><td>\(a \cdot (b \cdot c) = (a \cdot b) \cdot c\) (associativity alone)</td><td>a <code>lst</code>-partitioned fold (streams never shard)</td><td>pipeline — carry the running total, neighbor-to-neighbor</td></tr>
-<tr><td><strong>G</strong> keyed reduce ✅</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td><code>{1,2,3,4,5,6}.group([mod(3)=&gt;sum()])</code></td><td><code>[start?hop=0(p_i).group([mod(3)=&gt;sum()]),…]==[eval(p_i),…]&gt;-.sum()==[_=&gt;sum()]</code></td></tr>
+<tr><td><strong>G</strong> keyed reduce ✅</td><td>\(\mathrm{combiner}(\mathrm{group}([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select}([\_ \Rightarrow \mathrm{combiner}(h)])\)</td><td><code>{1,2,3,4,5,6}.group([mod(3)=&gt;sum()])</code></td><td><code>[start(p_i).group([mod(3)=&gt;sum()])?hop=0(),…]==[eval(p_i),…]&gt;-.sum()==[_=&gt;sum()]</code></td></tr>
 <tr><td><strong>H</strong> redundant / hedged shards</td><td>\(x \oplus x = x\)</td><td>a partition shipped to r peers</td><td>every reply folds (at-least-once); non-idempotent → hedge, first reply wins</td></tr>
 <tr><td><strong>I</strong> span/route interpreter</td><td>\(\mathrm{plan} \mapsto \mathrm{layout}\) (infrastructure)</td><td><code>[{1,2,3}.plus(1).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]</code></td><td><code>PlanInterpreter</code> lowers <code>plan.routes()</code> + a real span <code>[(lo, hi, role)]</code></td></tr>
 <tr><td><strong>J</strong> algebraic aggregates</td><td>\(\mathrm{mean} \equiv (\mathrm{sum}, \mathrm{count}) \cdot \mathrm{div}\)</td><td><code>{...}.mean()</code></td><td>pointwise tuple partials; the finalizer runs once at the master</td></tr>
@@ -538,13 +596,14 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><td><strong>P</strong> computed seeds</td><td>\([0, n) = \uplus_i \mathrm{index}_i\)</td><td>Monte Carlo — each peer gets a count + its own RNG seed</td><td>one O(1) message per peer; nothing shipped</td></tr>
 <tr><td><strong>Q</strong> monad migration</td><td>\(\mathrm{authority}(m)\) — ship the monad, not the value</td><td>a remote read mid-chain</td><td><code>law_shard</code> per step — the continuation ships instead of the value</td></tr>
 <tr><td><strong>R</strong> durable results</td><td>\(\mathrm{id} : \mathrm{partial} \mapsto \mathrm{address}\)</td><td><code>to(&lt;/usr/job/round/shard&gt;)</code></td><td><code>space</code> + <code>shard_result::[authority, round, status, value]</code></td></tr>
-<tr><td><strong>S</strong> master-participates</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td><code>{1,…,8}.plus(1).sum()</code></td><td>the master folds its own slice (a local lane) and ships k−1</td></tr>
-<tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td><code>{1,2,3}.plus(5).-&lt;[\|move(/a),_,plus(2).sum()]==[as(code::T).eval(//host)]&gt;-</code></td></tr>
+<tr><td><strong>S</strong> master-participates ✅</td><td>\(\bigoplus_{i=0}^{k} a_i \cdot r\) over \(\{\mathrm{master}\} \cup \mathrm{peers}\)</td><td><code>{1,…,8}.plus(1).sum()</code></td><td><code>?place=[local,peer]</code>: the master folds its own slice (a lane at distance zero) and ships k−1</td></tr>
+<tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td>`{1,2,3}.plus(5).-&lt;[\</td></tr>
 </tbody>
 </table>
-<p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done; <code>O</code> free today — it needs no plumbing).
+<p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done 2026-10-28; <code>S</code> done 2026-10-28 —
+the axes' <code>local</code> designator, <code>?place=[local,peer]</code>; <code>O</code> free today — it needs no plumbing).
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
-<code>lst</code>, never a bag); <code>S</code> is ruled (2026-10-24), deferred to Phase 7; <code>M</code> is a note; <code>I</code> is infrastructure.</p>
+<code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure.</p>
 <h3>the taxonomy — the menu as a tree</h3>
 <p>The nineteen entries are not a flat list: they fall out of <strong>two axes</strong> — the <em>data-side</em> law the anchor obeys (which
 fixes the route shape), and the <em>location-side</em> question of where the work lives — plus a set of <strong>orthogonal</strong> rules
@@ -559,7 +618,7 @@ stable; this is the lay of the land.</p>
 ├─ by the location                (native · delegation — where the work lives)
 │  └─ B  C  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
-│  └─ D:✅  S
+│  └─ D:✅  S:✅
 └─ composite &amp; substrate          (built from the above)
    └─ N  R  M  I
 </code></pre>
@@ -582,7 +641,7 @@ address, <code>M</code> decomposes into O / A / G over three index splits, <code
 <p>The four done patterns, with the slave/master forms written in full. <code>law_shard</code> (A) is the one engine they all lower
 to; the rest specialize it.</p>
 <h4>A — homomorphism shard (<code>sum</code>, <code>prod</code>, <code>count</code>, <code>order(s)</code>, rec <code>sum</code>)</h4>
-<pre><code class="language-mtron">slave_i:  start?hop=0(&lt;part_i&gt;).plus(1).count()
+<pre><code class="language-mtron">slave_i:  start(&lt;part_i&gt;).plus(1).count?hop=0()
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().sum()
 </code></pre>
 <p>The combiner is computed, never declared — a fold that declares <code>monoidic</code> + <code>commutative</code> is its own, and a fold
@@ -602,7 +661,7 @@ defined by its <code>derivation</code> recombines through the fold that defines 
 <code>/m/inst/sum?rng=/m/int&amp;dom=/m/int{*}</code>. <code>mean</code> (magmadic) and <code>str</code> <code>sum</code> (not commutative) correctly do not shard.</p>
 <p><strong><code>order</code> is the distributed sort.</strong> The slave sorts its shard and the master k-way-merges the runs — the same shard,
 with <code>kmerge</code> as the combiner instead of <code>sum</code>:</p>
-<pre><code class="language-mtron">slave_i:  start?hop=0(&lt;part_i&gt;).order(&gt;&gt;)                     [-- each shard sorts by its key --]
+<pre><code class="language-mtron">slave_i:  start(&lt;part_i&gt;).order(&gt;&gt;)?hop=0                       [-- each shard sorts by its key --]
 master:   start([s_1..s_k]).select([to(p_1)..to(p_k)]).merge().kmerge(&gt;&gt;)
 </code></pre>
 <p><code>order(&gt;&gt;)</code> on a stream of single-key recs sorts by value, and <code>kmerge(&gt;&gt;)</code> merges the sorted partial runs — a k-way
@@ -615,18 +674,22 @@ round trip at once — each <code>virtual::[code=&gt;eval(p_i)]</code> returns i
 thread — and the second reads each thread's future off its <code>rhs</code> slot. The master pays <strong>max RTT, not Σ RTT</strong>. The ship
 is <code>eval</code> (the client's mini-instset override), and the result hangs off <code>rhs</code> as a lazy <code>auto</code> over the future, so the
 emitted rec stays serializable.</p>
-<h4>E — tree reduction (<code>?hop=n</code>)</h4>
-<pre><code class="language-mtron">root:      {1,…,8}.plus(1).sum?hop=2()
-        ⇒  start([start?hop=1({1,…,8}).plus(1).sum()]).select([to(p_1)]).merge().sum()
-on p_1:    start([start?hop=0({1,3,5,7}).plus(1).sum(), start?hop=0({2,4,6,8}).plus(1).sum()])
+<h4>E — tree reduction (<code>?hop=height{arity}</code>)</h4>
+<pre><code class="language-mtron">root:      {1,…,8}.plus(1).sum?hop={2}2()                               [-- height 2, at most 2 children per node --]
+        ⇒  start([start({1,…,8}).plus(1).sum?hop={2}1()]).select([to(p_1)]).merge().sum()
+on p_1:    start([start({1,3,5,7}).plus(1).sum?hop={2}0(),
+                  start({2,4,6,8}).plus(1).sum?hop={2}0()])
               .select([to(p_2), to(p_3)]).merge().sum()
 </code></pre>
-<p>The budget resolves nearest first — a <code>?hop</code> on any instruction, else the plan's tree route (default 1, the star). A
-peer re-plans its part because applying a code compiles it (<code>Machine.applyCode</code>); at <code>hop = 0</code> the part is a leaf.
-<code>?hops</code> is the deprecated pre-singular spelling of the same key: it is read for one cycle, and <code>?hop</code> wins at the same
-position. Generated slaves always state <code>?hop</code>.</p>
+<p>The axis resolves in chain order — the first statement in the chain wins: a <code>?hop</code> on any instruction, else the plan's
+tree route (default height 1, the star). A peer re-plans its part because applying a code compiles it
+(<code>Machine.applyCode</code>); at a height of zero the part is a leaf. The emitted slave restates the <strong>form</strong>, never the
+number: the same arity, one height down, stated on the slave's <strong>fold</strong> (its reducer) — <code>{2}2 ⇒ {2}1 ⇒ 0</code> — while the
+seed carries only its part. A chain (<code>[h,1]</code>) hands the whole part to exactly one child, so the tree is a line.
+<code>?hops</code> is the deprecated pre-singular spelling of the same key: it is read for one cycle, <code>?hop</code> wins at the same
+position (both keys on one instruction), and the earliest statement wins across positions.</p>
 <h4>G — keyed reduce (<code>group([k ⇒ h])</code>)</h4>
-<pre><code class="language-mtron">slave_i:  start?hop=0(&lt;part_i&gt;).group([mod(3)=&gt;sum()])              [-- [1=&gt;1,0=&gt;3,2=&gt;5] --]
+<pre><code class="language-mtron">slave_i:  start(&lt;part_i&gt;).group([mod(3)=&gt;sum()])?hop=0               [-- [1=&gt;1,0=&gt;3,2=&gt;5] --]
 master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=&gt;sum()]   [-- [1=&gt;{1,4},…] → [1=&gt;5,…] --]
 </code></pre>
 <p>The combiner is pointwise, computed from <code>h</code>'s (<code>LawTable.pointwise</code>). The rec <code>sum</code> is the deep merge: colliding
@@ -666,8 +729,11 @@ machines with different co-located resources and instruction sets.</p>
 (<code>mInstSetLawTable</code>, <code>mathInstSetLawTable</code>): <code>entry(inst, inverse, laws…)</code>, or <code>entry(inst, inverse, derivation, laws…)</code> for a derived fold.</li>
 <li><strong>Let the combiner compute.</strong> <code>LawTable.combiner</code> reads it back — self-combining, derivation-defined, or pointwise
 (<code>group</code>) — so no combiner is ever named.</li>
-<li><strong>Author the plan.</strong> <code>PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))</code> with a <code>local(at, post)</code> placement (the home <code>merge().&lt;combiner&gt;.&lt;tail&gt;</code>) and a <code>tree(1, seed.partition(), pre.withoutSeed(), at)</code>
-placement (the fan-out). <code>create()</code> validates the shape obligations.</li>
+<li><strong>Author the plan in the axes.</strong> <code>PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))</code>, then
+state each decision's three axes before the <code>where</code> they describe: the origin's tail is
+<code>.place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())</code> over <code>local(at, post)</code> (the home
+<code>merge().&lt;combiner&gt;.&lt;tail&gt;</code>, no SEED span — a tail, never a lane), and the fan-out is <code>.place(PlaceSet.peer()) .hop(1, cInt.ANY()).split(Partition.stream())</code> over <code>tree(1, seed.partition(), pre.withoutSeed(), at)</code>.
+<code>create()</code> validates the axes' obligations and writes no derived <code>shape</code>/<code>target</code>.</li>
 <li><strong>Register it.</strong> The plan joins <code>catRewrite.rules()</code>, wired into <code>catInstSet</code>'s <code>REWRITE</code> key — a <code>plan::T</code> out-edge
 on every <code>path::T</code> it can move.</li>
 <li><strong>The interpreter lowers it.</strong> <code>PlanInterpreter.shard</code> matches the one-cut shape

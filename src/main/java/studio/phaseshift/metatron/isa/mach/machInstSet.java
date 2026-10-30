@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -74,10 +75,10 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
     /**
-     * The frame inst — {@code push(<uri>)}. The uri decides the boundary: a relative one mints a child frame in
-     * this JVM, while one carrying an authority is a <em>process</em> boundary, which a frame does not cross — code
-     * reaches another process by being shipped there in a plan ({@code law_shard}), so {@link Machine#push(fURI)}
-     * refuses it.
+     * The frame inst — {@code push(<uri>)}. push mints a MACHINE, which is a frame: it has its own vid and its own
+     * space, so a relative uri descends within this JVM. A uri carrying a HOST names a PEER — a network member with
+     * its own identity and lifetime, dialed rather than descended — so {@link Machine#push(fURI)} refuses it, and code
+     * reaches another instance by being shipped there in a plan ({@code law_shard}).
      */
     public static final fURI PUSH_INST_TID = MACH_INST_TID.extend("push");
 
@@ -153,6 +154,17 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
     public static final fURI THREAD_EXECUTOR_TID = MACH_ISA_TID.extend("thread_executor");
     /// /// PEERS AND THE NETWORK /// ///
+    /**
+     * THE URI REFINEMENTS the peer and listener types are built from. They refine {@code uri::T}, so their tids extend
+     * URI_TID (a type NAME), never MACH_ISA_TID: the machine ISA owns them because only its component types use them,
+     * not because they are machine TYPES.
+     */
+    public static final fURI AUTHORITY_TID = URI_TID.extend("authority");
+    public static final fURI ORIGIN_TID = URI_TID.extend("origin");
+    public static final fURI PATH_ENCODING_TID = URI_TID.extend("path_encoding");
+    public static Type AUTHORITY_TYPE;
+    public static Type ORIGIN_TYPE;
+    public static Type PATH_ENCODING_TYPE;
     public static final fURI PEER_TID = MACH_ISA_TID.extend("peer");
 
     public static Type PEER_TYPE;
@@ -444,14 +456,20 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(arg -> {
                                             // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
                                             // side" being this machine, each the native with the identity body:
-                                            //   code.eval(<uri>) evaluates the lhs code here (local);
+                                            //   code.eval(<uri>) runs the lhs code on the far side, which is HERE;
                                             //   from(<uri>) is the local read of the localized address;
                                             //   obj.to(<uri>) evaluates start(obj).to(</path>) here, so an unquoted
                                             //   program shipped to a loop peer runs, exactly as on a wire peer.
+                                            // EVAL IS THE ONLY ONE THAT CAN MOVE THE CALLER, because it is the only one
+                                            // that runs arbitrary code (the tail may contain `move`). It answers where
+                                            // the ws client calls ship(): the program is run in the RECEIVER's
+                                            // perspective (Machine.Helper.evalAt at the root) and the caller is left where
+                                            // it stood -- the frame of reference is the far side's, and it goes back.
                                             final Obj client = rec(
                                                     uri(HOST), arg.asRec().at(uri(HOST)),
                                                     uri(INST), rec(
-                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> lhs.apply(noobj())),
+                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID,
+                                                                    (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()))),
                                                             uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
                                                             uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
                                                     // the far side is this machine, so it is live as long as it exists
@@ -464,16 +482,43 @@ public class machInstSet extends AbstractInstSet {
                                         })
                                         .create(), null, null,
                                 Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
-                                        uri(INST), "the identity mini-instset: { eval, from, to } — the instructions a wire client serves, each evaluating what it ships against the local machine",
+                                        uri(INST), "the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from/to answer as the local read/write",
                                         uri(STATUS), "true: the far side is this machine, live as long as the client exists",
                                         uri(CLOSE), "nothing to hang up"),
                                 """
                                 the identity client — the identity element of the protocol-client family:
-                                dialing loop://<name> constructs one, and its eval override evaluates the shipped
-                                code against the local machine. The executable form of the self-similarity
-                                contract: a read through a loop peer equals the local read.
+                                dialing loop://<name> constructs one, and its eval override runs the shipped code
+                                in the receiver's perspective (Machine.Helper.evalAt at the root), so the caller is
+                                left where it stood -- the loop counterpart of the ws client's ship(). The
+                                executable form of the self-similarity contract: a read through a loop peer equals
+                                the local read.
                                 """,
-                                "*~/network.connect(<loop://self>) [-- the identity peer: reads and writes answer locally --]"),
+                                "id_client::[host=><loop://self>] [-- the identity peer: reads and writes answer locally --]"),
+                        // the URI refinements the network types stand on -- a name for a service, a service, a key
+                        docWrap(AUTHORITY_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(AUTHORITY_TID)
+                                .predicate((_, inst) -> {
+                                    final fURI uri = inst.arg(0).uriValue();
+                                    return (!uri.hasScheme() && uri.hasHost() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
+                                            inst.arg(0) : uri().c(cInt.ZERO());
+                                }).create(), "a uri containing host:port components with port being optional — a NAME for a service rather than a service"),
+                        docWrap(ORIGIN_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(ORIGIN_TID)
+                                .predicate((_, inst) -> {
+                                    final fURI uri = inst.arg(0).uriValue();
+                                    return (uri.hasScheme() && uri.hasHost() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() == 0 && uri.qMap().isEmpty()) ?
+                                            inst.arg(0) : uri().c(cInt.ZERO());
+                                }).create(), "a uri containing scheme://host:port components with port being optional — a SERVICE"),
+                        docWrap(PATH_ENCODING_TYPE = Type.Builder.build()
+                                .tid(URI_TID)
+                                .vid(PATH_ENCODING_TID)
+                                .predicate((_, inst) -> {
+                                    final fURI uri = inst.arg(0).uriValue();
+                                    return (!uri.hasScheme() && !uri.hasHost() && uri.c().isOne() && !uri.hasPoly() && uri.pathLength() > 0 && uri.qMap().isEmpty()) ?
+                                            inst.arg(0) : uri().c(cInt.ZERO());
+                                }).create(), "a uri containing a dial's path encoding: scheme, host labels, port and route as path segments, with no authority of its own — the KEY of a peer or a listener"),
                         // network — a machine's OWN reachable peers: never inherited, never shared with children
                         docWrap(PEER_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
@@ -485,43 +530,32 @@ public class machInstSet extends AbstractInstSet {
                                         // peer the current machine talks to — with the instructions that client
                                         // declares (its `inst`), never through a field of the peer's own.
                                         .isaPredicate(rec(
-                                                // THE KEY, and the one field a peer cannot do without: a roster
-                                                // lookup matches on this same service uri.
-                                                uri(ORIGIN), URI_TYPE,
-                                                // the endpoint and the SURFACE, in webSpace's own vocabulary: a
-                                                // space's `host` names where to dial and the handler refines the
-                                                // scheme into a protocol (mtron_ws, mcp_ws, …). Named as a uri
-                                                // rather than a web type because this instruction set sits below
-                                                // /m/web and does not import it — the same reason `source` on the
-                                                // network is a uri. Both absent ⇒ known, not reachable from here.
+                                                // THE ORIGIN, and the one field a peer cannot do without: a
+                                                // roster lookup matches on this same service uri. The MAP KEY is
+                                                // the dial's path encoding (`ws/localhost/8555/mtron`), never this
+                                                // field -- a peer is one SURFACE, its origin is the service.
+                                                uri(ORIGIN), ORIGIN_TYPE,
+                                                // where to dial it from here, route included -- a place to reach,
+                                                // not an authority: `ws://host:port/mtron` carries a path. Absent
+                                                // for a peer reference that crossed a wire: known, not reachable.
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
-                                                uri(HANDLER).maybe().asUri(), URI_TYPE,
-                                                // a name is how a distributed expression says WHICH machine it
-                                                // means: the rewrite mints one per peer as a path segment
-                                                // (/usr/compute/a/barrier/b), so this is the field mapping such a
-                                                // name onto a discovered authority. Not decoration.
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(STATUS).maybe().asUri(), REC_TYPE,
                                                 // the protocol CLIENT the dial constructed (a ws_client::T or kin,
                                                 // typed ALL because this instruction set sits below /m/web). It IS the
                                                 // connection: its `inst` is what the peer is talked to with, its
-                                                // `status` whether it is live, and disconnect hangs it up. absent only
-                                                // for a peer reference that crossed a wire.
+                                                // `status` whether it is live, and drop hangs it up. absent only for
+                                                // a peer reference that crossed a wire.
                                                 uri(CLIENT).maybe(), T(ALL)))
                                         .create(), null, null,
-                                Map.of(uri(ORIGIN), "the peer's service uri, scheme://host:port — the connection key, and the one field a peer cannot do without",
+                                Map.of(uri(ORIGIN), "the service this peer reaches, scheme://host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without",
                                         uri(HOST), "where to dial it from here, route included: ws://host:port/mtron",
-                                        uri(HANDLER), "the protocol surface at that endpoint, named as a uri: </m/web/ws/mtron_ws>, </m/web/http/mtron_http>, </m/web/mcp/mcp_ws>",
-                                        uri(NAME), "the machine's name in the distributed expression that means it — a bare name, never an address",
-                                        uri(STATUS), "the health report computed for this peer — computed on call, never stored",
-                                        uri(CLIENT), "the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so disconnect can hang up"),
+                                        uri(CLIENT), "the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up"),
                                 """
                                 one metatron machine as the network records it — the value of a network peer
                                 connection. Absent `host` and `handler` is not a broken peer: it is a peer
                                 reference that crossed a wire, known here and not reachable from here.
                                 """,
-                                "peer::[origin=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>,handler=></m/web/ws/mtron_ws>,name=>'builder-2'] [-- a peer the current machine can ship to --]",
-                                "peer::[origin=><ws://192.168.1.42:8555>,name=>'builder-2'] [-- known, and not reachable from here --]"),
+                                "peer::[origin=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>] [-- a peer the current machine can ship to --]",
+                                "peer::[origin=><ws://192.168.1.42:8555>] [-- known, and not reachable from here --]"),
                         // network — a machine's PRESENCE: the sockets it answers on. A port binds once per physical
                         // machine, so a socket is opened by one machine and inherited by every machine below it; each
                         // machine serving through it keeps its OWN routing table on it, in its own level.
@@ -537,13 +571,11 @@ public class machInstSet extends AbstractInstSet {
                                                 // the protocol SERVER holding the socket (a ws_server::T or kin, typed
                                                 // ALL because this instruction set sits below /m/web) -- the opener's
                                                 // entry and every sharer's hold the same one
-                                                uri(SERVER).maybe(), T(ALL),
-                                                uri(STATUS).maybe(), BOOL_TYPE))
+                                                uri(SERVER).maybe(), T(ALL)))
                                         .create(), null, null,
-                                Map.of(uri(ORIGIN), "the socket's service uri, scheme://host:port — the key: one socket per authority on a physical machine",
+                                Map.of(uri(ORIGIN), "the socket's service uri as spelled, scheme://host:port — the map key is its path encoding (`ws/localhost/8555`): one socket per authority on a physical machine",
                                         uri(ROUTE), "this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket",
-                                        uri(SERVER), "the protocol server holding the socket — held so the owner's pop can release the port",
-                                        uri(STATUS), "the health of the listener"),
+                                        uri(SERVER), "the protocol server holding the socket — held so the owner's pop can release the port"),
                                 """
                                 a socket a machine answers on, and that machine's routes on it. The machine that opens
                                 a socket owns it, and its pop releases the port. Every machine below it inherits the
@@ -639,7 +671,6 @@ public class machInstSet extends AbstractInstSet {
                                                 // the component is its own address space: the branch it answers
                                                 // for, <vid>/network/# once its machine mounts it (~/network/# until)
                                                 uri(PATTERN).maybe().asUri(), URI_TYPE,
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
                                                 uri(HOST).maybe().asUri(), URI_TYPE,
                                                 uri(ROSTER).maybe().asUri(), rec(
                                                         uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
@@ -649,13 +680,12 @@ public class machInstSet extends AbstractInstSet {
                                                         // reaching it is dialing one of them -- the client the dial
                                                         // constructs brings its own instructions (its `inst`).
                                                         uri(MACHINE).maybe(), rec(URI_TYPE, T(URI_TID.some()))),
-                                                uri(PEER).maybe().asUri(), rec(URI_TYPE, T(PEER_TID)),
+                                                uri(PEER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(PEER_TID)),
                                                 // PRESENCE, the third question: the sockets THIS machine serves
                                                 // through, at ~ like peer -- its own and the inherited ones it keeps
                                                 // routes on, so a pop takes exactly this machine's routes
-                                                uri(LISTENER).maybe().asUri(), rec(URI_TYPE, T(LISTENER_TID)),
+                                                uri(LISTENER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(LISTENER_TID)),
                                                 uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
-                                                uri(SOURCE).maybe().asUri(), rec(URI_TYPE, URI_TYPE),
                                                 // THE FOURTH QUESTION, beside known/reached/served: what you CALL a
                                                 // peer. <label> => <full origin> -- a name is denotation, so this is
                                                 // the one field of the four whose key is a LABEL rather than an
@@ -669,11 +699,9 @@ public class machInstSet extends AbstractInstSet {
                                         .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
                                         .create(),
                                 Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
-                                        uri(NAME).maybe().asUri(), "a human friendly name for the nested network",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
-                                        uri(SOURCE).maybe(), "the roster generation mechanism: <mechanism> => <handler tid as a uri>, one entry per mechanism",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
                                 a machine's network: the endpoints the system knows about, the peers the
@@ -684,7 +712,7 @@ public class machInstSet extends AbstractInstSet {
                                 from its listeners — the sockets it opened and those it inherits, up to the root\from the host every listening space
                                 declares.
                                 """,
-                                "network::[name=>'local',roster=>[b=><ws://192.168.1.42:8555>],source=>[mdns=></m/web/mdns>]] [-- a network that knows a peer before dialing it --]",
+                                "network::[roster=>[b=><ws://192.168.1.42:8555>]] [-- a network that knows a peer before dialing it --]",
                                 "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]"),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -783,12 +811,12 @@ public class machInstSet extends AbstractInstSet {
                                 "the lhs is not consulted: push acts on the machine the code is running in, and carries the value flowing through untouched",
                                 "the machine just minted and entered \\(c\\)",
                                 Map.of(jnt(0), "\\(t\\), the address to mint. The machine at that address's parent holds the new machine and only \\(\\mathrm{name}(t)\\) is newly made, so \\(\\mathrm{push}(t) = \\mathrm{move}(\\mathrm{parent}(t)) \\cdot \\mathrm{push}(\\mathrm{name}(t))\\); absent, an anonymous child is minted instead"),
-                                "mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address's parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying an authority is a different boundary, one a machine does not cross: code reaches another process by being shipped there in a plan, so the address is refused.",
+                                "mint a machine at an address in the machine tree and make it current. Constructive — it adds a machine, where move only chooses one. Because the leaf is minted from the address's parent, push can cross a level as well as descend into one, and a sibling is therefore minted from the shared parent rather than from beside it. A wire address carrying a host names a PEER — a network member with its own identity and lifetime, dialed rather than descended — so a machine cannot be pushed there: the address is refused.",
                                 "push(xyz)                              [-- mint /xyz --]",
                                 "push(<../b>)                           [-- the sibling b, minted from the shared parent: = move(<..>).push(b) --]",
                                 "push(<a/b>)                            [-- the descendant /a/b, minted from the machine at /a --]",
                                 "push()                                 [-- an anonymous child, \\(c = \\mathrm{mintShortUUID}(\\mathrm{vid}(\\mathrm{here}))\\) --]",
-                                "push(<ws://localhost:8555/worker>)     [-- refused: a process boundary, not a place in this tree --]"),
+                                "push(<ws://localhost:8555/worker>)     [-- refused: a peer, not a machine in this tree --]"),
                         // POP NAMES THE FRAME YOU STAND IN. `pop()` and `pop(<~>)` are ONE instruction, and an
                         // addressed pop must still RESOLVE to where you stand: the motif is understood (`..`
                         // folds, `~` is the base) but a frame you can only reach by ADDRESS is not yours to
@@ -872,9 +900,11 @@ public class machInstSet extends AbstractInstSet {
                             // authority would vanish without a word (`1.move(//abc)` answered 1). Answering the lhs
                             // of a move is not a result: nothing was moved to and nothing was computed.
                             final fURI cutOrigin = inst.arg(0).uriValue().origin();
-                            if (!Machine.current().network().overrideOf(cutOrigin, EVAL_INST_TID).isObjInst())
-                                throw MTronException.of("%s is not reachable from %s: no peer is dialed at %s",
-                                        inst.arg(0).uriValue(), Machine.current().vidOrTid(), cutOrigin);
+                            // ONE DOOR, ONE REFUSAL: the same reachability question atPeer asks, and a failure that
+                            // names where the dial does live when an ancestor holds it (Network.Helper.unreachable).
+                            if (!Network.Helper.reachable(Machine.current(), cutOrigin))
+                                throw Network.Helper.unreachable(Machine.current(),
+                                        inst.arg(0).uriValue(), cutOrigin);
                             final List<Inst> insts = new ArrayList<>(start_(lhs).insts());
                             insts.addAll(move_(uri(inst.arg(0).uriValue().path().isEmpty() ? ROOT_MACHINE_VID : f().path(inst.arg(0).uriValue().path()))).insts());
                             insts.addAll(inst.arg(1).asCall().insts());
@@ -959,10 +989,23 @@ public class machInstSet extends AbstractInstSet {
          * to {@code code::T} rebuilds the chain, and the peer re-compiles the shipped code, so a nested remote move is
          * extracted where it lands. A local move (no authority) is left alone.
          * <p>
-         * A PREFIXED TARGET IS ALIGNED BEFORE THE DECISION, and the aligned form is what ships. {@code move(<self:/a>)}
-         * denotes a real authority, so the tail must be cut — and the cut must carry the RESOLVED address, because the
-         * far side has never heard of this machine's names. The alignment goes through {@link Machine.Helper#align}, the
-         * same door the runtime uses, so a spelling cannot resolve one way at compile time and another when it runs.
+         * A PREFIXED TARGET IS ALIGNED BEFORE THE DECISION, and the aligned form is what the cut carries.
+         * {@code move(<self:/a>)} denotes a real authority, so the tail must be cut — and the CUT'S TARGET must be the
+         * RESOLVED address, because the far side has never heard of this machine's names. The alignment goes through
+         * {@link Machine.Helper#align}, the same door the runtime uses, so a spelling cannot resolve one way at compile
+         * time and another when it runs.
+         * <p>
+         * THE TWO HALVES RESOLVE IN DIFFERENT PLACES — do not "finish" the tail here. What this machine DIALS, it
+         * resolves (the cut's target, above). What the RECEIVER RUNS stays exactly as written: the tail is a program,
+         * re-planned in the environment it lands in, so a nested {@code move(<//self/b>)} keeps its spelling and is
+         * resolved by the destination's own tables. Aligning it here would bake THIS machine's denotation into a
+         * program meant to be re-homed: a peer whose {@code self} names another place (or nothing) would then run
+         * somewhere its tables never said. That is why this rule stops at the first cut and returns the rest verbatim.
+         * <p>
+         * THE CROSSING RULE IS HOST PRESENCE, and it is also where the STATE BOUNDARY lives: a target that names a host
+         * is the only move that leaves this machine, so it is the only one whose tail runs in the receiver's frame state
+         * ({@link Network.Helper} — {@code boundary} swaps the perspective, arg frames and thread away and back). A
+         * host-less move changes the running thread's machine and persists; it changes state, it does not isolate it.
          */
         static Code extractMove(final Code code) {
             final List<Inst> insts = code.insts();
@@ -971,11 +1014,19 @@ public class machInstSet extends AbstractInstSet {
                 if (!MOVE_INST_TID.equals(inst.tid().basePath()) || inst.arg(0).isNoObj())
                     continue;
                 final fURI target = Machine.Helper.align(Machine.current(), inst.arg(0).uriValue());
-                // A MOVE CROSSES ONLY TO A WIRE AUTHORITY. A local target is not remote, and a SCHEME WITH NO HOST is
-                // not remote either -- it is a spelling no table resolved, and cutting for it would ship the tail to
-                // an origin that names no service (measured: a scheme-only target crashed the origin arithmetic
-                // instead of failing the move). Both stay local, where the read fails by address, by name.
-                if (target.isLocal() || !target.isAddressed())
+                // A MOVE CROSSES IFF ITS TARGET NAMES A HOST. A host is the smallest thing that can name a SERVICE
+                // rather than a place, so it is the one shape that can be somewhere else: a local path (`a`, `..`,
+                // bare move()) stays here, and a scheme with no host (`loop:a`) names no service at all -- it fails by
+                // address, and cutting for it would ship the tail to an origin nothing can dial (measured: scheme-only
+                // targets crashed the origin arithmetic instead of failing the move). An ALIGNED spelling ACQUIRES its
+                // host from the tables (`self:/a`, `//self/a` -> loop://self/a), so resolution -- not the page --
+                // decides whether this move crosses.
+                // THIS IS ALSO THE ONLY PLACE A STATE BOUNDARY EXISTS: a crossing move's tail runs in the RECEIVER's
+                // frame state (Network.Helper.boundary: perspective, arg frames and thread swapped away and restored),
+                // because a move that crossed to another host must neither see nor leak the caller's frames. A host-less move
+                // re-homes the running thread and PERSISTS -- it changes state, it does not isolate it -- which is why
+                // only this branch cuts.
+                if (!target.isAddressed())
                     continue;
                 final Obj authority = target.equals(inst.arg(0).uriValue()) ? inst.arg(0) : uri(target);
                 final List<Inst> newCode = new ArrayList<>(insts.subList(0, i));

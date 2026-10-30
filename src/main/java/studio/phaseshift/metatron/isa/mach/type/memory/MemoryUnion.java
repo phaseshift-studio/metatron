@@ -213,6 +213,12 @@ public class MemoryUnion extends MRec implements Memory, ComponentUnion<Memory> 
     // ======================== writes land in this level ========================
 
     @Override
+    public Rec prefixes() {
+        // THIS LEVEL's rows: the union's own memory, never the enclosing one (the parental walk is the Helper's)
+        return null != this.current ? this.current.prefixes() : rec();
+    }
+
+    @Override
     public void registerRedirect(final fURI small, final fURI big) {
         this.own().registerRedirect(small, big);
     }

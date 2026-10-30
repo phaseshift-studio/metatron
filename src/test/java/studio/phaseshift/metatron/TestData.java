@@ -22,7 +22,6 @@ import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Memory;
@@ -37,10 +36,31 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 
 /**
- * Annotation for prepopulating a machine with test data before test execution.
+ * Prepopulate the machine with test data before the test body runs.
  * <p>
- * The provided string values are parsed and evaluated using {@link mParser#eval(String)}
- * prior to test execution.
+ * <b>ORDER — WHY THIS IS NOT A {@code BeforeEachCallback}.</b> The data is evaluated AFTER {@code @BeforeEach} and
+ * BEFORE the test method. That is the point of the hook, not an accident: a test's {@code @BeforeEach} is where its
+ * spaces get mounted (a tbleSpace, a ws client, an imported ISA), and data written before those exist would land
+ * nowhere. The price is that a {@code @BeforeEach} sees the machine as it was BEFORE the seeds — a dial or a prefix
+ * it registers attaches to the pre-seed frame, and a seed that then {@code move}s leaves it behind. If a fixture
+ * needs both, declare the reach after the seeds (e.g. in the test method, with
+ * {@link Machine.Helper#evalAt(studio.phaseshift.metatron.furi.fURI, java.util.function.Supplier)}).
+ * <p>
+ * <b>WHAT IT DOES.</b> Each entry is parsed and evaluated in order as a top-level program — {@code push(a)},
+ * {@code move(</.>)}, {@code "/network/prefix -> [//self=>loop://self]"} — and the thread's PERSPECTIVE CARRIES
+ * ACROSS entries, so a {@code push} in one entry is still standing in that frame for the next, and a
+ * {@code move(</.>)} at the end is what puts the test method back at the root. A failing entry fails the method
+ * ({@link MTronTestException}); entries in a {@code source()} file are evaluated line by line and a failing line is
+ * logged and skipped rather than failing the run.
+ * <p>
+ * {@code source()} runs first, then {@code value()}, so a file can stage the machine and the inline values specialise
+ * it.
+ * <p>
+ * <b>ONE-TIME vs PER-ROW.</b> The default re-evaluates the data before every test invocation, which is what a
+ * {@code @ParameterizedTest} needs when a row must not see its predecessor's writes. {@code oneTime = true}
+ * evaluates them once for the METHOD's rows instead (a parameterized method's rows share one method context) and
+ * clears the argument stack afterwards. Because the "loaded" flag lives in the method's context, a test method
+ * inherited by another class seeds that class's VM again.
  * <p>
  * Example usage:
  * <pre>{@code
@@ -190,7 +210,7 @@ public @interface TestData {
                             final java.io.File tempFile = java.io.File.createTempFile("test-data-", ".mtron");
                             try {
                                 java.nio.file.Files.copy(stream, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                                Machine.evaluate(tempFile).asCall().forEach(o -> o.apply());
+                                Machine.Helper.evaluate(tempFile).asCall().forEach(o -> o.apply());
                             } finally {
                                 tempFile.delete();
                             }

@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.isa.mach.network;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Network;
 
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -73,15 +73,16 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     @Test
     public void testAFieldIsWrittenOntoTheLiveNetwork() {
         final Machine child = Machine.current().push(f("branch_child"));
+        final fURI host = f("ws://lab.example:8555");
         try {
-            this.script("[STATE] <~/network/name> -> 'lab'");
-            assertEquals(Optional.of("lab"), child.network().name(), "the write lands on the network the machine holds");
-            this.script("*<~/network/name> % 'lab'");
-            // the component is a space, so a step into it is read through the space, beneath its branch
-            // bare, not <~/network>: the uri's closing '>' would take the first '>' of the step and leave '>name'
-            checkEquality(LOG, ObjmtronSerializer.parse("*~/network>>name").apply().vid(null), str("lab"), true);
-            this.script("[STATE] <~/network/name> -> noobj");
-            assertEquals(Optional.empty(), child.network().name(), "a noobj write is the field's deletion");
+            // host is a DECLARED field of network::T and nothing here reads it, so it is a safe probe; the branch
+            // gate (pattern) is untouched, so reads keep answering through the network itself
+            this.script("[STATE] <~/network/host> -> <ws://lab.example:8555>");
+            assertEquals(host, child.network().atDirect(uri(HOST)).uriValue(),
+                    "the write lands on the network the machine holds");
+            this.script("*<~/network/host> % <ws://lab.example:8555>");
+            this.script("[STATE] <~/network/host> -> noobj");
+            assertTrue(child.network().atDirect(uri(HOST)).isNoObj(), "a noobj write is the field's deletion");
         } finally {
             child.pop();
         }

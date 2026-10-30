@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * THE VM'S END IS EVERY LEVEL'S END. The root's close closes the root's own network level, but a frame that dialed
@@ -60,9 +61,9 @@ public class NetworkSupervisorShutdownTest extends AbstractMetatronTest {
         CommonUtil.sleepThread(300);
         try {
             // a dial at the root, and one in a frame that is never popped
-            Machine.current().network().connect(f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
+            Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
             Machine.current().push(f("never-popped"));
-            Machine.current().network().connect(f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
+            Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + port + "/mtron"), WS_CLIENT_TID);
             assertTrue(NetworkSupervisor.supervised() >= 2,
                     "both levels that dialed a link are supervised: " + NetworkSupervisor.supervised());
             AbstractMetatronTest.end();

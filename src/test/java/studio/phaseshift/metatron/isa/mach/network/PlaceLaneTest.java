@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * {@code ?place} AT THE EMITTER (C5 of {@code distributed-qparams-implementation.md}): the place set a fold states —
@@ -95,9 +96,9 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     @AfterEach
     void teardown() {
-        Machine.current().network().disconnect(PEER);
-        Machine.current().network().disconnect(GINGER);
-        Machine.current().network().disconnect(BOOGER);
+        Machine.current().network().drop(PEER);
+        Machine.current().network().drop(GINGER);
+        Machine.current().network().drop(BOOGER);
     }
 
     /**
@@ -112,7 +113,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
             "count()       % 6",
     }, delimiter = '%')
     void testTheMasterIsAPlaceAtDistanceZero(final String tail, final int expected) {
-        Machine.current().network().connect(PEER);
+        Network.Helper.connect(Machine.current().network(), PEER);
         final Code emitted = lower(homeAndPeer(), "start?place=[local,peer]({1,2,3,4,5,6})." + tail);
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(2, layout.lanes().size(), "one lane per share: " + emitted);
@@ -157,8 +158,8 @@ public class PlaceLaneTest extends AbstractMetatronTest {
             "plus(1).sum() % 27",
     }, delimiter = '%')
     void testDuplicateDesignatorsSumTheirShare(final String tail, final int expected) {
-        Machine.current().network().connect(GINGER);
-        Machine.current().network().connect(BOOGER);
+        Network.Helper.connect(Machine.current().network(), GINGER);
+        Network.Helper.connect(Machine.current().network(), BOOGER);
         final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6})." + tail).asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
@@ -175,7 +176,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
      */
     @Test
     void testTheDefaultEmitsTheLayoutItAlwaysDid() {
-        Machine.current().network().connect(PEER);
+        Network.Helper.connect(Machine.current().network(), PEER);
         final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
                 ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
@@ -332,9 +333,9 @@ public class PlaceLaneTest extends AbstractMetatronTest {
      * none of them a forked process: the local transport, exactly as the place rows dial one.
      */
     private static void connectAll() {
-        Machine.current().network().connect(PEER);
-        Machine.current().network().connect(GINGER);
-        Machine.current().network().connect(BOOGER);
+        Network.Helper.connect(Machine.current().network(), PEER);
+        Network.Helper.connect(Machine.current().network(), GINGER);
+        Network.Helper.connect(Machine.current().network(), BOOGER);
     }
 
     /**

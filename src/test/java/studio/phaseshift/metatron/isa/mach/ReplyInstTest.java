@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * bookkeeping entry per round trip on its variableStack, and beside the answer it is a value the peer never meant to
  * store.
  */
-public class AnchorInstTest extends AbstractMetatronTest {
+public class ReplyInstTest extends AbstractMetatronTest {
 
     /**
      * THE TAG ADDRESSES THE ANSWER — whatever the answer is. The last row is the one that matters to a scatter: a

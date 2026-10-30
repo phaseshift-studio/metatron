@@ -61,15 +61,25 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 
 | Component | Interface (extends)                   | One-line job                                         | Frame behaviour                   |
 |-----------|---------------------------------------|------------------------------------------------------|-----------------------------------|
-| Memory    | `Space, Machine.Component, Closeable` | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries) | accumulates (`MemoryUnion`)       |
-| Network   | `Addressable, Machine.Component, Closeable` | this frame's peers `service → peer::T` + the root-shared roster and names (`~/network/prefix`), `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
-| InstSet   | `Space` (via `AbstractInstSet`)       | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
-| Compiler  | `Machine.Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
-| Processor | `mThread, Machine.Component`          | `code::T → obj`; the monadic execution engine        | constructive                      |
+| Memory    | `Space, Component.Prefix, Closeable` | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries) | accumulates (`MemoryUnion`)       |
+| Network   | `Addressable, Component.Prefix, Closeable` | this frame's peers `service → peer::T` + the root-shared roster and names (`~/network/prefix`), `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
+| InstSet   | `Space, Component.Prefix` (via `AbstractInstSet`) | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
+| Compiler  | `Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
+| Processor | `mThread, Component`          | `code::T → obj`; the monadic execution engine        | constructive                      |
 
-`Machine.Component` is a `Rec` that answers `machine()` by walking its `parent()` chain up to the nearest `Machine`
+`Component` is a `Rec` that answers `machine()` by walking its `parent()` chain up to the nearest `Machine`
 (falling back to `mach0()`). Components are `Rec`s *on purpose*: memory and network must be reachable from mtron
 (`>>space`, `>>previous`), not just from Java accessors.
+
+**The parental prefix contract.** `Component.Prefix` is the one algorithm by which a component manages its names:
+`prefixes()` (this level's rows), `previousLevel()` / `on(Machine)` (the level chain), `registerPrefix` /
+`unregisterPrefix` (declare and withdraw *here*), and `alignPrefix` (resolve a spelling, nearest declaration winning).
+`Component.Prefix.Helper` builds the effective view over any implementation — `effectivePrefix`, `effectivePrefixes`,
+`inheritedPrefix` — so a memory's short names (`cos` → `/m/inst/cos`), a network's authorities (`//ginger` → an
+origin), and an ISA's scheme aliases (`math:cos`) are managed by the same walk. `AbstractMetatronTest.
+testParentalChildPrefix` runs that contract against every implementation, so a new prefixed component adds one line to
+`PrefixParentalTest`. `alignPrefix` is the resolution arm each component already owned (memory: a redirect; network: a
+name → origin; ISA: a scheme → vid) — the contract only gives it one spelling.
 
 ## Reaching a component
 
@@ -98,8 +108,8 @@ the instance-seeded slots are for.
 (`descendsFrom`), makes it current (`CURRENT`, a thread-local) and gives it its own rec; `push(extension)` mints the
 child's vid from the extension. `pop()` restores the parent and releases what the frame opened; `move(extension)`
 unifies the two through the coefficient's sign (positive = descend, negative = ascend one step). A push carrying a
-**host** is a process boundary instead, not a frame: `Extension.hasHost()` spawns a peer with its own vid, memory and
-lifetime.
+**host** names a **peer** — a network member with its own identity and lifetime, reached by dialing rather than
+descending — so `Extension.hasHost()` refuses it: a machine is a frame, a peer is not.
 
 Nesting is **read-through via `previous`**, built at push time, one level per component:
 
@@ -137,25 +147,25 @@ it stops, so its clients see `1000` whether it is restarting or gone.
 | piece                                  | what it does                                                                                                                                                             |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `Network.Link`                         | the protocol-neutral contract a client holding a live connection implements: `connected()` (local, no trip), `hungUp()` (its owner closed it — final), `redial()` (in place, bounded) |
-| `PeerSupervisor`                       | one per network level, in a static identity registry. `watch` comes from `Network.index` of a link; `release` from `Network.close()`, BEFORE the members are disconnected. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight |
+| `PeerSupervisor`                       | one per network level, in a static identity registry. `watch` comes from `Network.index` of a link; `release` from `Network.close()`, BEFORE the members are retracted. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight |
 | `Network.Helper.retract`               | the dual of `Helper.index`: the owner's `close()` drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once |
 | `WebSocketRecClient`                   | the first `Link`: `reconnect()` + a bounded wait (`CONNECT_TIMEOUT_MS`, which also bounds the TCP connect). `reset()`'s own `closeBlocking()` lands in `close()` — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay `on_close`/`on_error` |
 | `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
 
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
-(`Network.Helper.keyOf`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
+(`fURI.pathEncoding`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
 label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
 dial, the loopback alias spelled first), and the service it reaches is the `origin` field — wire dispatch
-(`isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
+(`Network.Helper.isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
 `BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
 `MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
 beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member
-by the space's base-poly read, and a noobj write there is `Network.disconnect` (at `listener/<key>`,
+by the space's base-poly read, and a noobj write there is `Network.drop` (at `listener/<key>`,
 `Network.unlisten`) — destruction on deletion from mtron. A value written at a member is refused (a peer is
 constructed, not written); every other field is written onto the live rec in place, so `/network/roster` is the root
 network's own field. An address off the branch is the authority dispatch (`Network.read`/`write`). `index` keeps **no
 two equivalent connections**: a fresh client at a held key closes the member there and takes its place, while indexing
-the same client again is idempotent; `connect` still skips the dial when the surface is held. `disconnect(address)`
+the same client again is idempotent; `connect` still skips the dial when the surface is held. `drop(address)`
 reads what the address names — a key that member, a wire uri with a route that surface, a bare authority every surface
 of the service.
 
@@ -168,8 +178,8 @@ field answers `connected()`). ws: the socket is open; http: a bounded HEAD answe
 health check; mcp_server: its own dispatch answers a ping; `Listener` (every server): not closed. A `peer::T`
 carries no transport: it is talked to with its client's `inst`, and a read never dials — construction connects.
 
-Two Java-side facts the design depends on. `index`, `accept` and `disconnect` serialize the peer map's
-read-modify-write on the level, and `disconnect` clears under the lock but closes outside it — closing a link is a
+Two Java-side facts the design depends on. `index`, `accept` and `drop` serialize the peer map's
+read-modify-write on the level, and `drop` clears under the lock but closes outside it — closing a link is a
 hang-up, and a hang-up comes back through `retract`. And `AbstractMachine.close()` now closes the network level the
 machine OWNS (`network.machine() == this`): before, a pop discarded the child's listing and left its sockets open,
 because `AbstractMachine.close()` overrides the `Machine.close()` that closed it. And `BootLoader.close()` runs
@@ -246,8 +256,29 @@ parser's contract.
 ## The processor (monadic execution)
 
 `Processor` is both an `mThread` and an `Obj`. `Processor.Helper` holds the runtime core that used to live on `Inst`:
-`apply` (resolve → `invoke`), `invoke` (noobj/domain guards, coefficient compression, range check), `applyArgs`
-(computeArgs), `resolveRuntime` (the `TypeCheck.code_resolve`-gated dynamic escape).
+`apply` (resolve → `delegate` → `invoke`), `invoke` (noobj/domain guards, coefficient compression, range check),
+`applyArgs` (computeArgs), `resolveRuntime` (the `TypeCheck.code_resolve`-gated dynamic escape). The delegation
+*decisions* are not here: they are TYPE-SYSTEM decisions, so they live on `Typer.Helper` in the compiler —
+`candidates` derives what the fan-out is over and `applicable` answers whether the resolved instruction is about a
+candidate. `Processor.Helper.delegate` keeps only the loop.
+
+`delegate` is the **wrapper's fan-out** — applying an instruction to a wrapper is applying it to a stream of two
+objects, `person[ninja]::[…].xyz()` = `{ person::[…], ninja::[…] }.xyz()`. A wrapper is a `rec` whose type INSTANTIATES
+a declaration that names the fields it exposes (`rec[role]::T[?[…,role=>rec::T]]@person` names `role`; the instance's
+poly is the component TYPES, `Type#recFibers`), so `Typer.Helper.candidates` yields the wrapper *plus* each fiber
+that is present and holds a `rec` — one level deep, since a candidate's own fibers never join.
+
+EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
+There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
+the field keyed by the poly name — and `Typer.Helper.applicable` asks the type system whether the resolved instruction
+is about the candidate at all: a generic/pattern domain is about every candidate, a base-typed domain is about the
+wrapper as that form, and any other domain reaches the candidate whose own type IDENTITY is that name (the field's
+value for `fight?dom=ninja`, the wrapper for `ponder?dom=person`). The wrapper is acceptable where a fiber's type is
+expected (the fiber check at the top of `Type.test` and `Obj.Helper.testObjs`), which is type acceptance and not
+identity, so that rule is not consulted
+for dispatch. A candidate the instruction is not applicable to contributes `noobj` — the multiplicity's identity
+(`{noobj,29} = 29`), not a failure; a `fail::` from a candidate it DID apply to propagates. `Inst.Form.typer` (`as`,
+`type`, `vid`, `tid`) is opaque and applies to the wrapper alone.
 
 The default processor is **`SwarmProcessor`** (extends `VirtualThread`, implements `MonadProcessor`), a monadic step
 loop over three queues stored in its rec:

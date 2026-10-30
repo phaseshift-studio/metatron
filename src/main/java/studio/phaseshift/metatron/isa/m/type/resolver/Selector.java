@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.compiler.resolver.SpecificitySelector;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Selector extends Machine.Component {
+public interface Selector extends Component {
 
     /**
      * Holder for the currently active selector. Lazily defaults to the

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.StatefulCSVSource;
 import studio.phaseshift.metatron.StatefulParametrizedTest;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 
 /**
  * MACHINE navigation as a stateful script — the movement half of the machine-isolation family, beside
@@ -63,7 +64,7 @@ public class MachineIsolationScriptTest extends AbstractMetatronTest {
      *   - given a borrowed instset it gets further and dies resolving the TYPE ("unable to locate inst-f
      *     machine::T => vid()"), and a variant of this fixture HUNG the suite.
      *
-     * The reason is structural, not incidental: `Machine.Component.machine()` finds a component's machine by
+     * The reason is structural, not incidental: `Component.machine()` finds a component's machine by
      * WALKING the containment link, and answers mach0() when there is none. The containment link is therefore what
      * makes a frame's components resolvable at all — a machine nothing holds cannot run its own code, so "a
      * functioning frame that nothing holds" is not a state this VM has. The reachable no-parent machine is the

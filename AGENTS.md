@@ -115,6 +115,108 @@ of a live console are in [docs/agents/console-harness.md](docs/agents/console-ha
   and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when
   position matters. See the `stream()` note under Key Concepts.
 
+## API Design — the rules this codebase keeps re-learning
+
+These came out of a long refactor of `Machine`, `Network` and the ISA prefixes. Every one of them was a real
+correction, not a preference. Read this before adding a method, a nested type, or a second name for an existing act.
+
+### 1. An interface is a contract, not a place to put implementation
+
+Expose only what a USER of the component asks for. Everything else — lifecycle, I/O front doors, algorithms — is a
+`public static` in the component's `X.Helper`.
+
+| smell | the move |
+|---|---|
+| `Machine.bootstrap()` — a `default` interface method run once at construction | `Machine.Helper.bootstrap(Machine)` |
+| `Machine.evaluate(File)` and `evaluate(File, Consumer<FileParseError>)` — file I/O on the interface | `Machine.Helper.evaluate(File, …)`, and the `FileParseError` record moved with them |
+| `Network.connect(...)`, declared "sugar" in its own javadoc | `Network.Helper.connect(Network, …)` |
+| an algorithm on the interface: `effectivePrefix` / `effectivePrefixes` / `inheritedPrefix` / the level walk | `Component.Prefix.Helper` (the contract keeps only `prefixes()`, `previousLevel()`, `on()`, `registerPrefix`, `unregisterPrefix`, `alignPrefix`) |
+
+A Helper nested in an interface is implicitly `public static`, so `Machine.Helper.bootstrap(machine)` needs no extra
+keyword. A private static used from ONE place is not a method at all: inline it (the `run` fail-guard now lives inline
+in both `evaluate` overloads).
+
+### 2. No methods for methods' sake
+
+- **A second argument derivable from the first is a bug.** `Network.index(Obj client, fURI dialURI)` was deleted —
+  the claim is read from the client (`pattern` retracted, then `host`), so `index(Obj)` is the whole API and
+  `connect` calls `this.index(dialed)`.
+- **One act, one name.** `Network.drop()` was a one-line alias of `disconnect()` with zero callers; `disconnect` is
+  now `drop` (the `Addressable` verb) and the alias is gone. `Machine.applyCode(lhs, code)` and
+  `evaluate(Code)` were the same hand-off at two quality levels: the monad-aware body won and is now
+  `Machine.evaluate(lhs, code)`; `evaluate(Code)`/`evaluate(String)` delegate to it.
+- **Before keeping a method, grep its callers.** Dead surface (`drop` had none) is not a contract; it is a shim that
+  future maintainers must reverse-engineer.
+- **A one-liner belongs inline** — unless it is the minimum hook a contract needs (e.g. `previousLevel()` returning
+  `this.previous`). Contract overrides are not "methods for methods' sake".
+
+### 3. Addresses are `fURI`; `Obj` is only the value written at an address
+
+Never `String` for an argument or return that names an address (`effectivePrefix(String label)` became
+`effectivePrefix(fURI label)`). `String` overloads exist only where the language surface itself is text (e.g.
+`Machine.evaluate(String)`). `Rec` is still the right return for an address→value TABLE, because it is keyed by
+addresses; its keys and values are `fURI`.
+
+### 4. One algorithm, one place — and a contract test to prove it
+
+The parental-prefix walk lives once, in `Component.Prefix.Helper`. `Memory`, `Network` and `InstSet` implement the
+same hooks — short names for paths, authorities, scheme aliases — so none copies the walk. The contract is verified by
+`AbstractMetatronTest.testParentalChildPrefix(Machine.Component)`, so a new prefixed component joins by implementing
+`Component.Prefix` and adding one line to `PrefixParentalTest`:
+
+```java
+@Test
+void theNetworkHonoursTheParentalPrefixContract() {
+    AbstractMetatronTest.testParentalChildPrefix(Machine.current().network());
+}
+```
+
+If two components differ only in the SLOT a name occupies (network name = authority, ISA name = scheme alias), they
+share the algorithm and the test, not the code.
+
+### 5. Nested or top-level? The test is "who uses it"
+
+- A type that several components share is its OWN file: `Component` (memory, network, instset, compiler, processor
+  all extend it) lives in `Component.java`; `Machine.Component` made every declaration read through the enclosing
+  interface.
+- A refinement that only makes sense THROUGH its host is nested: `Component.Prefix` refines a `Component`,
+  `Machine.Helper` serves `Machine`.
+- Sub-packages do NOT inherit the parent package: a type added next to `Component` needs an explicit
+  `import …mach.type.Component;` in `…mach.type.network` and `…mach.type.instset`.
+
+### 6. A DOOR reads MEANING; a WRITE declares DIFFERENCES
+
+`~/network/prefix` answers the EFFECTIVE table (every row the frame sees, nearest declaration winning), while a write
+stores only the caller's own rows. The round trip must be a no-op, so a row that merely restates an inherited meaning
+is DROPPED on write (keeping it would copy an ancestor's row in and shadow it forever). Details that bit:
+
+- the Java accessor (`prefixes()`) still answers THIS LEVEL's rows — registration merges from it, never from the door;
+- an EMPTY table is written as `noobj`, not `rec()`: the empty rec's noobj entry is rejected by the component's type
+  predicate ("measured" in the code comments);
+- the view is a SNAPSHOT, not atomic across levels — don't promise cross-level consistency;
+- the hot lookup must stay allocation-free (`effectivePrefix` stops at the first row); the merged view is for humans
+  and doors, not per-read work.
+
+### 7. Vocabulary discipline
+
+A `push` creates a MACHINE — a frame with its own vid and its own space (memory structure, ISA level, network level).
+A PEER is a NETWORK concept: an authority/host with its own identity and lifetime, reached by dialing, not by
+descending. push refuses a HOST (not `hasAuthority()`, which also demands an explicit port). Do not call a machine a
+peer, do not call a peer a frame, and do not coin a new word for an axis that already has one (`hop` is the sharded
+fold's height; a move's frame transition is a `move seam`).
+
+### 8. Before a refactor: read the callers, update the docs, run the suites
+
+- `grep` the call sites first; the "called once in BootLoader" premise was wrong for `bootstrap` (its real callers are
+  `AbstractMachine`'s constructor and `push`).
+- Renames are not done until javadoc `{@link}`, mtron doc strings (the strings served by `?docq`), and the
+  hand-authored `docs/skills/` references are updated. NEVER edit `docs/website/` — it is generated on every build.
+- Tests are the proof: run the suites that exercise the changed surface, and read `Tests run:` (a green exit code with
+  0 tests is not a pass).
+- A destructive IDE refactoring can half-apply (IntelliJ's headless "Move Inner to Upper Level" refuses nested
+  INTERFACES yet deletes the member and rewrites references). Check the tree after any tool-driven move before
+  building on it.
+
 ## Tests
 
 JUnit 5. Every test class extends `AbstractMetatronTest`, which boots and shuts down the VM.

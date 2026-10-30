@@ -63,7 +63,7 @@ public class BootHelperTest extends AbstractMetatronTest {
     })
     void testABootHelperIsOneInstruction(final String helper) throws IOException {
         final List<String> errors = new ArrayList<>();
-        final List<Obj> results = Machine.evaluate(Path.of(helper).toFile(), error -> errors.add(error.lineNumber() + ": " + error.parseException())).toList();
+        final List<Obj> results = Machine.Helper.evaluate(Path.of(helper).toFile(), error -> errors.add(error.lineNumber() + ": " + error.parseException())).toList();
         assertEquals(List.of(), errors, helper + " should parse");
         assertEquals(1, results.size(), helper + " should evaluate to exactly one instruction: " + results);
         assertTrue(results.getFirst().isObjInst(), helper + " should be an instruction: " + results.getFirst());

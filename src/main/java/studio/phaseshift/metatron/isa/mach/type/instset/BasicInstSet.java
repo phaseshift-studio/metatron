@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 
 /**
  * The machine's OWN instset: instruction memory, and the one machine component that is a FACADE as well as a union.
@@ -141,6 +142,12 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     public BasicInstSet previous(final InstSet previous) {
         this.previous = previous;
         return this;
+    }
+
+    /** THE PARENTAL CHAIN's next link — the level above this ISA, for the shared prefix walk. */
+    @Override
+    public Component.Prefix previousLevel() {
+        return this.previous;
     }
 
     /**

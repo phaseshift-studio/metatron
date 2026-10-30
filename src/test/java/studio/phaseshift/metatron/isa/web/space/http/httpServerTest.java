@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.*;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * An http_server serving a directory, read back through the web gateway — {@code http_client::[host=><http://#>]}, the
@@ -78,12 +79,12 @@ public class httpServerTest extends AbstractMetatronTest {
                 uri(ORIGIN), uri(BASE_URL),
                 uri(ROUTE), rec(uri("/"), uri("local:web"))));
         // the web gateway: a read never dials, so the http addresses below answer through the client constructed here
-        Machine.current().network().connect(f(GATEWAY));
+        Network.Helper.connect(Machine.current().network(), f(GATEWAY));
     }
 
     @AfterAll
     public static void teardownServer() {
-        Machine.current().network().disconnect(f(GATEWAY));
+        Machine.current().network().drop(f(GATEWAY));
         Machine.current().network().unlisten(f(BASE_URL));
     }
 
@@ -176,7 +177,6 @@ public class httpServerTest extends AbstractMetatronTest {
         // the response changed on the SERVER, driven solely by the query param. The contract being
         // pinned is the handler's: web_httpHandler reads with qprocLess() and spends ?mimeq on the
         // RESPONSE — the processor negotiates the serialization, it never alters the far side's read.
-        // (?name rides the connection uri the same way and is spent by the network's accept.)
         final java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
         final java.net.http.HttpResponse<String> plain = client.send(
                 java.net.http.HttpRequest.newBuilder()

@@ -27,8 +27,11 @@ mtron> http_server::[origin => http://localhost:8777,
                      route => [/mcp    => mcp_mtron,
                                /docker => docker:,
                                /usr    => /usr]]
-==>http_server::[origin=>http://localhost:8777,
-                 status=>!λstatus?bool<=(){<j>}]
+==>fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]']
+   	while parsing: http_server::[origin => http://localhost:8777,
+                        route => [/mcp    => mcp_mtron,
+                                  /docker => docker:,
+                                  /usr    => /usr]]]
 mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,
@@ -46,8 +49,9 @@ mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *build
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> ws_server::[origin  => ws://localhost:8555,
                    route  => [/basic   => !*</sys/space/mcp/web_basic>]]
-==>ws_server::[origin=>ws://localhost:8555,
-               status=>!λstatus?bool<=(){<j>}]
+==>fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::['inst apply failure: unable to bind localhost/127.0.0.1:8555: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]']
+   	while parsing: ws_server::[origin  => ws://localhost:8555,
+                      route  => [/basic   => !*</sys/space/mcp/web_basic>]]]
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -101,11 +105,35 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 mtron> [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
 mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
-==>person::[name=>'marko',
-            age=>29]@/usr/person/1
+==>fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=>'marko',age=>29]@/usr/person/1
+         X=>
+     rec[role,position]::T[?[name=>str::T,
+                             age=>int::T[is(gt(0))]@/m/math/nat,
+                             role=>rec::T,
+                             position=>rec::T]]@person
+     ───────────────────────────────────────────────────────────
+     [name=>(==>name)=>'marko'=>==>str::T,
+      age=>(==>age)=>29=>==>nat::T,
+      noobj=>(X=>role)=>noobj=>X=>rec::T,
+      noobj=>(X=>position)=>noobj=>X=>rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=>'marko',age=>29]@/usr/person/1]
 mtron> person::[name=>'grant',age=>25]@/usr/person/2
-==>person::[name=>'grant',
-            age=>25]@/usr/person/2
+==>fail::[parse error at line 1, col 1: obj does not match person::T
+     [[name=>'grant',age=>25]@/usr/person/2
+         X=>
+     rec[role,position]::T[?[name=>str::T,
+                             age=>int::T[is(gt(0))]@/m/math/nat,
+                             role=>rec::T,
+                             position=>rec::T]]@person
+     ───────────────────────────────────────────────────────────
+     [name=>(==>name)=>'grant'=>==>str::T,
+      age=>(==>age)=>25=>==>nat::T,
+      noobj=>(X=>role)=>noobj=>X=>rec::T,
+      noobj=>(X=>position)=>noobj=>X=>rec::T]]
+     predicate apply failed on execution
+   	while parsing: person::[name=>'grant',age=>25]@/usr/person/2]
 ```
 ## types
 
@@ -208,16 +236,10 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>person::[name=>'marko',age=>29]
+==>[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>
-   json::'{"name":"marko","age":29}'
-   
-   
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
-==>"{name='marko', age=29}"
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

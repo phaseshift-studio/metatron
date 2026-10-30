@@ -568,7 +568,7 @@ mtron&gt; [noobj, #]&gt;-      [-- noobj + #     --]
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; #.-&lt;[#]&gt;-          [-- # * #     --]
 ==&gt;&lt;#&gt;
 mtron&gt; [#,#]&gt;-            [-- # + #     --]
-==&gt;{2}#
+==&gt;{2}&lt;#&gt;
 mtron&gt; #.-&lt;[noobj]&gt;-      [-- # * noobj --]
 mtron&gt; [#,noobj]&gt;-        [-- # + noobj --]
 ==&gt;&lt;#&gt;</code></pre>
@@ -674,7 +674,7 @@ A machine can be thought of as an executing process.</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1 + 2
 ==&gt;3
 mtron&gt; ab * xyz * mn?i=1&amp;j=2
-==&gt;ab/xyz/mn?i=1&amp;j=2
+==&gt;ab/xyz/mn?j=2&amp;i=1
 mtron&gt; 1-&lt;[_,+ 2,* 5]&gt;-.sum()
 ==&gt;9
 mtron&gt; {1,2,3}-&lt;|[?&gt;1 =&gt; +20, _ =&gt; * -1]&gt;&gt;

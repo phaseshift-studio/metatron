@@ -449,8 +449,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   `>>`/`<<`, the `|` barrier, `>>=` update, `!*`/`!@` auto-references, path ops, failure handling, and the expression
   evaluation model.
 * [mtron type system](references/type-system-mtron.md) -- vid/tid, coefficients, the universal type, defining types,
-  predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, casting, lowest common
-  denominator.
+  predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
+  readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.
 
 **Execution & the machine**
 

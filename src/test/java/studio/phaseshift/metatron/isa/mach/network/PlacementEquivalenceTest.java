@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import studio.phaseshift.metatron.isa.mach.type.Network;
 
 /**
  * The emitter's equivalence obligation (§12.5): a {@code law_shard} lowered over a loop peer — the local transport,
@@ -64,7 +65,7 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
 
     @AfterEach
     void teardown() {
-        Machine.current().network().disconnect(f("loop://localhost:8555"));
+        Machine.current().network().drop(f("loop://localhost:8555"));
     }
 
     /**
@@ -77,7 +78,7 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
             "{1,2,3,4,5,6}.count()     % 6",
     }, delimiter = '%')
     void testShardEquivalentToLocalFold(final String source, final int expected) {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
         // the emitter fired the tree layout: the master leads start·select·select·merge·sum
@@ -94,7 +95,7 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
      */
     @Test
     void testAliasedBudgetReadByRootAndStrippedFromSlave() {
-        Machine.current().network().connect(f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code source = ObjmtronSerializer.parse("{1,2,3,4}.plus?hops=2(1).sum()").asCode();
         assertTrue(source.insts().stream().skip(1).anyMatch(i -> i.tid().hasQ("hops")),
                 "the body instruction states the deprecated budget: " + source);

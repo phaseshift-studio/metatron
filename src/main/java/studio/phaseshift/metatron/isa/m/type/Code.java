@@ -147,7 +147,7 @@ public interface Code extends Call {
     default Obj apply(final Obj lhs) {
         if (this.jvm().isEmpty())
             return this.tid().isZero() ? noobj() : lhs;
-        return Machine.current().applyCode(lhs, this);
+        return Machine.evaluate(lhs, this);
     }
 
     /**

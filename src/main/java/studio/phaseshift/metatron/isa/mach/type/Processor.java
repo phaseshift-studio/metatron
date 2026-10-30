@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Processor extends mThread, Machine.Component {
+public interface Processor extends mThread, Component {
 
     /**
      * Redeclared abstract to fold the abstract {@code mThread.apply} and the default

@@ -73,7 +73,7 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
     @AfterEach
     void retractPeer() throws Exception {
         final Network network = Machine.current().network();
-        network.disconnect(this.service());
+        network.drop(this.service());
         // the dial's close reaches the listener async; wait for the connection to settle so
         // each test starts with an empty reach
         final long deadline = System.currentTimeMillis() + 2000;
@@ -83,7 +83,7 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Test
     void testWsConnectMintsPeerWithClient() {
-        final Obj peer = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        final Obj peer = Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         assertEquals(PEER_TID, peer.tid().basePath(), "connect must answer a peer::T");
         assertEquals(this.service(), peer.asRec().<Obj>at(uri(ORIGIN)).uriValue(),
                 "the peer keys on the service authority — the route stays on host");
@@ -96,32 +96,32 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Test
     void testAHungUpWsClientReadsNotLive() {
-        final Obj client = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID).asRec().at(uri(CLIENT));
+        final Obj client = Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID).asRec().at(uri(CLIENT));
         assertTrue(Network.Helper.status(client), "live while its socket is open");
         // the status is derived on read — the socket's own state — so the very client reads false once it is hung up,
         // with no field to update
-        Machine.current().network().disconnect(this.service());
+        Machine.current().network().drop(this.service());
         assertFalse(Network.Helper.status(client), "the same client reads not live once its socket is closed");
     }
 
     @Test
     void testWsReadIsTheFarSidesLocalRead() {
         Machine.write(f("/t/wire/x"), jnt(42));
-        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         assertEquals(jnt(42), Machine.read(f("ws://localhost:" + wsPort + "/t/wire/x")),
                 "the loop contract over a real wire: a read through a ws peer answers the far side\u0027s local read");
     }
 
     @Test
     void testWsWriteLandsAtTheFarSide() {
-        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         Machine.write(f("ws://localhost:" + wsPort + "/t/wire/y"), jnt(7));
         assertEquals(jnt(7), Machine.read(f("/t/wire/y")), "a write through the peer lands at the far side");
     }
 
     @Test
     void testWsClientDeclaresEvalFromAndTo() {
-        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         final Network network = Machine.current().network();
         // the ws client's mini-instset: each instruction on its native signature with the client's own wire body
         for (final fURI instTID : List.of(EVAL_INST_TID, FROM_INST_TID, TO_INST_TID)) {
@@ -133,11 +133,11 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Test
     void testCompiledToBindsTheWsClientsTo() {
-        Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         // compile-time binding over a real wire: to(<ws address>) resolves to the ws client's own to, and applying it
         // ships start(9).to(</t/wire/z>) for the far side (this JVM behind the socket) to evaluate
         final Inst bound = instB(TO_INST_TID, lst(uri(f("ws://localhost:" + wsPort + "/t/wire/z")))).resolve(jnt(9));
-        assertTrue(bound.functionClassName().endsWith("Network$AtPeer"), "the compiled to is the ws client's: " + bound.functionClassName());
+        assertTrue(bound.functionClassName().endsWith("Network$Helper$AtPeer"), "the compiled to is the ws client's: " + bound.functionClassName());
         FutureObj.resolveFuture(bound.apply(jnt(9)));
         assertEquals(jnt(9), Machine.read(f("/t/wire/z")), "the bound to landed the write at the far side");
     }
@@ -157,8 +157,8 @@ public class NetworkWsDialTest extends AbstractWebSocketServerIntegrationTest {
 
     @Test
     void testEnsurePeeredOverTheWire() {
-        final Obj first = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
-        final Obj second = Machine.current().network().connect(this.dialURI(), WS_CLIENT_TID);
+        final Obj first = Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
+        final Obj second = Network.Helper.connect(Machine.current().network(), this.dialURI(), WS_CLIENT_TID);
         assertEquals(first, second, "connect is ensure-peered: a dialed service answers its existing peer, never a second socket");
     }
 }

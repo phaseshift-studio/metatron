@@ -1,9 +1,10 @@
 ---
 name: mach-instset
 description: |
-  The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `rec::T` whose five
-  slots are its instruction set, compiler, memory, network and processor. Machines nest as frames (`push`, `move`,
-  `pop`) and distribute work by shipping code — workloads of config and code — to their peers.
+  The machine instruction set at `/m/mach`: a machine is metatron's unit of **process** — a `rec::T` of five
+  components (instruction set, compiler, memory, network, processor), three of which are also prefixed components.
+  Machines nest as frames (`push`, `move`, `pop`) and distribute work by shipping code — workloads of config and
+  code — to their peers.
 ---
 
 # mach instruction set (`/m/mach`)
@@ -25,11 +26,37 @@ rather than a copy of the world. Reach does not nest — see *network*: peers ar
 (the roster) is root-shared. *Frames* covers the three instructions that choose where code runs, and *distribution*
 covers how work reaches a machine in another process: by shipping code to it.
 
+## components
+
+Each slot is a `component::T` (`/m/mach/component`), a `rec::T` that resolves its machine (`>>space`), so all five slots
+are addressable from mtron and together are the whole of a machine's state.
+
+Three of them are **prefixed** components: each keeps a table of short names to values, and the three tables resolve by
+one rule — the nearest declaration wins.
+
+| component | a name denotes                               | example                                   |
+|-----------|----------------------------------------------|-------------------------------------------|
+| `instset` | a scheme alias for a vocabulary root         | `math:cos` → `/m/math/inst/cos`           |
+| `network` | an authority a peer is called by             | `//ginger/a` → `ws://ginger.local:8555/a` |
+| `memory`  | a short name for a path (the redirect table) | `cos` → `/m/inst/cos`                     |
+
+A component's rows are its own address space: `*<~/network/prefix>` is what a frame calls its peers by, memory's rows
+are its redirect table (`*<~/memory/redirect>`), and an ISA's rows are scheme aliases. Declaration and withdrawal are
+writes to that address, so the table answers what a read-back would store. The level chain is each component's
+`previous`: a name declared here outranks an enclosing declaration, and a `pop` gives the shadowed meaning back.
+Resolution has one gate — an address carrying a host is aligned against the network's names, a scheme-less vid
+against the ISA's, and memory's redirects are consulted by the ISA's resolver; the slots cannot collide, so the order
+is unobservable.
+
 ## instset (instruction memory)
+
+```mtron_pre
+*/m/instset?docq
+```
 
 `instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
 can see. It is a union in two directions — this frame's own structure over its **imported** sets, and that whole stack
-over the **enclosing machine's** instset. Memory and network are a two-level walk (a frame over its parent); the
+over the **enclosing machine's** instset. memory and network are a two-level walk (a frame over its parent); the
 vocabulary is that *and* an ordered list.
 
 | part          | what it is                                                                                                                                                          |
@@ -61,9 +88,9 @@ does not depend on the address index at all.
 An ISA is also a `space::T`, and that is now down to **one remaining dependency**. Belonging to a machine has two
 halves:
 
-| half         | what it is                                                                                                                                              |
-|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| membership   | the ISA is held **by object** in the frame that referred it — this is the vocabulary, and it needs no address space at all                             |
+| half         | what it is                                                                                                                                                                   |
+|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| membership   | the ISA is held **by object** in the frame that referred it — this is the vocabulary, and it needs no address space at all                                                   |
 | registration | the ISA is also entered in the machine's **address index** — the only reason it is a `space::T`, and the only reason its content is reached by asking for it *as* an address |
 
 Both halves happen in one place, so neither is had without the other by accident. The union needs only membership: a
@@ -117,7 +144,14 @@ on the stack, not in a component. Three behaviors in particular are pinned rathe
 adding alongside, including a member that is not a space; dom/rng admission down the refinement lattice; and
 isolation — own, inherit, no leak up, no leak across.
 
+`instset::T` is one of the three prefixed components (*components*): its names are scheme aliases, resolved to an
+address under the set's root by the same nearest-declaration walk, not by a per-set algorithm.
+
 ## compiler
+
+```mtron_pre
+*/m/mach/compiler?docq
+```
 
 `compiler::T` is a **composition**, not an algorithm. Four atomic stages, each an optional rec entry with a default:
 applying a compiler runs them in order — `parse → rewrite → resolve → type` — handing each the whole of what the last
@@ -128,10 +162,6 @@ one produced.
 
 Because the stages are *wiring*, the largest compiler and the smallest are the same type: a bare `compiler::[=>]` is
 the default compiler, and naming one entry overrides exactly that one stage.
-
-```mtron_pre
-compiler::[=>]
-```
 
 | stage   | rec key    | default                | what it settles                                                       |
 |---------|------------|------------------------|-----------------------------------------------------------------------|
@@ -152,7 +182,7 @@ compiler::[rewriter=>fixpoint_rewriter::[max=>3]]
 ### parse — where a language is hosted
 
 `parser::T` is the seam where a **language** is hosted: any language can be parsed as long as it generates `code::T`.
-Given the rich type system, the object-oriented and functional-oriented approach, and turing-completeness, most any
+Given the rich type system, the object-oriented and functional-oriented approach, and Turing-completeness, most any
 language can map to mtron `code::T`.
 
 Because the stage emits code, and because the three stages after it, the processor, and the distributed runtime all
@@ -160,7 +190,7 @@ take code, another surface syntax needs no new instruction set, evaluator or typ
 into a compiler:
 
 ```mtron
-compiler::[parser=>a_lang::[=>]]   [-- the shape; a_lang::T is yours to register --]
+compiler::[parser=>a_lang::[=>]]   [-- the shape; a_lang::T is a registered subtype --]
 ```
 
 The stage is **total over objs**: an obj that is not a `str` is not source text, so it is not re-read — it is lifted as
@@ -179,10 +209,6 @@ A lone inst deliberately gets **no start**: a head-first call is a fragment rela
 nothing.
 
 `mtron_parser::T` is the parser metatron ships — source text written in metatron's mtron language to `code::T`:
-
-```mtron_pre
-mtron_parser::[=>]
-```
 
 ### rewrite — the chain, before any type
 
@@ -243,6 +269,10 @@ what the `typer::T` stage is for.
 
 ## processor
 
+```mtron_pre
+*/m/mach/component/processor?docq
+```
+
 The compiler produces code; the `processor` runs it. The two are siblings rather than stages of one another, which is
 why the compiler's last stage hands off instead of invoking: what a program *means* and how it is *run* are separate
 axes of a machine.
@@ -254,6 +284,10 @@ axes of a machine.
 | `swarm_processor::T` | the default: it schedules independently executing monads across the code's inst chain; barriers synchronize them, and the objects of the halted monads are the result |
 
 ### threads
+
+```mtron_pre
+*/m/mach/thread?docq
+```
 
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
 
@@ -272,9 +306,18 @@ machine's work runs on virtual threads.
 
 ## memory (data memory)
 
+```mtron_pre
+*/m/mach/component/memory?docq
+```
+
 `memory::T` is the machine's **data memory**: the address space of *instances*. Its relative bindings *are* the rec,
 and the index of absolute spaces is the `space` entry inside it, so a memory reads from mtron like any other rec. A
 child machine reads through to its parent's memory; that walk is what makes a machine a frame of reference.
+
+`memory::T` is also a prefixed component: its name table is the redirect table, whose rows map a short name to its
+preferred home. A name is declared and withdrawn by writing that table, a relative home is not a row — a name denotes a
+path — and a short name resolves to its home. The table is per level, so a child's withdrawal never touches an
+enclosing binding; the same nearest-declaration walk inherits and shadows it (*components*).
 
 **Two memories, one read.** `memory` holds instances and `instset` holds schema, and a read is the language's single
 way in: a read asks three sources in order — the **network** (an address carrying an authority a peer declared
@@ -284,125 +327,163 @@ labor is clean and worth holding on to: **data memory routes names to addresses*
 read is a data read — answering a schema query resolves the dom/rng types of the pattern, and resolving a type is
 itself a read — so instruction memory is not re-entered from there.
 
-## network — reach and knowledge
+## network — reach, presence and denotation
 
-`network::T` indexes the machine's **reach**: a map $\mathit{key} \Rightarrow \mathit{peer}$, one member per
-**surface**, whose value is a `peer::T`. The key is the dial's own address as a legal path — scheme, every label of the
-host, port, route, and never a `?q`: `ws://localhost:8555/mtron?name=marko` sits at `ws/localhost/8555/mtron`, so the member
-*is* an address, `~/network/peer/ws/localhost/8555/mtron`. A legal path carries no dot in any segment (a dotted first
-segment reads as a host), so a host is split into its labels: `ws://peer.local:8555/mtron` is
-`ws/peer/local/8555/mtron` and `ws://10.0.0.7:8555/mtron` is `ws/10/0/0/7/8555/mtron`. Two routes of one
-service (`/mtron` and `/mcp` on one port) are two members; a loopback alias is spelled `localhost`, so `127.0.0.1` keys
-the member `localhost` already holds.
+```mtron_pre
+*/m/mach/component/network?docq
+```
 
-| field       | what it is                                                                         |
-|-------------|------------------------------------------------------------------------------------|
-| `origin` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack   |
-| `host`      | where it was dialed, route and `?q` processors included (`ws://h:p/mtron?name=me`) |
-| `name`      | the identity the dialer announced                                                  |
-| `transport` | an inst, $\mathit{message} \mapsto \mathit{answer}$ — the reach itself             |
-| `client`    | the protocol client the dial constructed, held for the hang-up                     |
+`network::T` holds three indexes, and their scopes differ by design:
+
+| index      | what it holds                                                                  | scope                                |
+|------------|--------------------------------------------------------------------------------|--------------------------------------|
+| `peer`     | the members this level reaches, keyed by the dial's path encoding              | the frame's reach — never inherited  |
+| `listener` | the sockets this level serves on: origin, server, and this level's route table | the frame's presence — socket shared |
+| `prefix`   | the names a peer is called by (`//ginger => ws://ginger.local:8555`)           | a level's denotation                 |
+
+Reach and presence are retracted by a `pop`; a name is denotation, so a frame may bind one and a pop gives a shadowed
+meaning back.
+
+### reach — one member per surface
+
+A peer is keyed by the dial's address written as a path: scheme, every label of the host, port and route as path
+segments, and never a `?q`. `ws://localhost:8555/mtron` sits at `ws/localhost/8555/mtron`, so the member is itself an
+address, `~/network/peer/ws/localhost/8555/mtron`. A legal path carries no dot in any segment (a dotted first segment
+reads as a host), so a host is split into its labels: `ws://peer.local:8555/mtron` is `ws/peer/local/8555/mtron` and
+`ws://10.0.0.7:8555/mtron` is `ws/10/0/0/7/8555/mtron`. Two routes of one service (`/mtron` and `/mcp` on one port)
+are two members; a loopback alias is spelled `localhost`, so `127.0.0.1` keys the member `localhost` already holds.
+
+Two positions are shapes rather than conventions, typed by URI refinements owned by this instruction set:
+
+| type               | predicate                                                          | holds                          |
+|--------------------|--------------------------------------------------------------------|--------------------------------|
+| `origin::T`        | scheme and host, no path, no `?q`                                  | the service a peer reaches     |
+| `path_encoding::T` | scheme, host labels, port and route as path segments; no authority | the peer and listener map keys |
+
+A peer entry therefore cannot be keyed by a wire address or carry a route as its origin; the predicate rejects the
+write.
+
+| field    | what it is                                                                       |
+|----------|----------------------------------------------------------------------------------|
+| `origin` | the service it reaches (`scheme://host:port`) — the one field a peer cannot lack |
+| `host`   | where it was dialed, route included (`ws://h:p/mtron`)                           |
+| `client` | the protocol client the dial constructed — held so `drop` can hang it up         |
 
 One type, **two honest states**: an `origin` alone is *known, not reachable from here* — the form a peer reference
-takes after crossing a wire; an origin with a `transport` is reachable.
+takes after crossing a wire; an origin with a `client` is reachable. A peer carries no name, status or handler: an
+identity parameter belongs to the client's session, status is derived on read, and the handle is the client.
 
-### prefix — what you call a peer
+### the two doors — index and drop
 
-A fourth field, and the only one that is a **name** rather than an address: `prefix` is
-`//ginger => ws://ginger.local:8555` — the spelling a peer is *called* by, mapped to the origin it denotes. It answers
-a different question from the other three — `roster` is what the system *knows*, `peer` is what this machine has
-* dialed*, `listener` is what it *answers on*, and `prefix` is what you *call* it.
+A construction is a connection, and the two addressing verbs are the whole lifecycle: `index(m)` — a thing that
+exists enters the jurisdiction — and its dual `drop(address)` — the address maps to `noobj`, the universal close. Both
+network indexes are entered and left by those two verbs; no other door writes them.
 
-```mtron
-/network/prefix -> [//ginger => <ws://ginger.local:8555>];  [-- bind: the name, spelled as it is called --]
-</network/prefix/ginger> -> <ws://ginger.local:8555>;       [-- the same row, addressed by its label --]
-//ginger/mtron?name=marko                                   [-- = ws://ginger.local:8555/mtron?name=marko --]
-/network/prefix -> noobj                                    [-- unbind every name at once --]
-```
+`index` dispatches on the handle's **nominal type**:
 
-**A name is spelled `//name` and STORED `name`.** The door reads and writes the spelling a peer is called by, so what
-`*</network/prefix>` answers is what may be written back; the table itself keeps the **label**
-(`ginger => ws://ginger.local:8555`), because that is the key resolution asks for. A row whose key carries no `//` is
-**refused** (`noobj`) rather than stored under a spelling no read would ever ask for. An entry is addressed by its
-label — `</network/prefix/ginger>` — since a `//` cannot be a path segment.
+| handle                                                                  | what index does                                                                                       |
+|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| a protocol client (`ws_client::T`, `http_client::T`, `id_client::T`, …) | reads the claim from the client, mints a `peer::T` at the claim's path encoding, supervises a link    |
+| a `listener::T` entry                                                   | mounts the socket: refuses a route another level serves, shares the server, writes this level's entry |
 
-**The spelling is the addressed slot**: `//name/a` — a host with **no port and no scheme**. An explicit port is taken
-literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*; a real scheme is
-never rewritten (`loop://self` already says which transport it means); and a dotted host is a **hostname**, never a name
-a binding may shadow. Resolution strips the marker and queries the label, so the whole tail rides to the far side:
-`//ginger/a/b/c` denotes `ws://ginger.local:8555/a/b/c`. The binding is read at the **root**, so no frame can change
-what `//ginger` denotes; an unbound name is answered as written and fails closed, so no name resolves to a discovered
-peer merely because one happens to answer.
+Nominal, not structural: a listener entry's fields are `maybe()` (a route table is absent while nothing is served), so
+a rec that merely carries those fields is not a socket. The type is the dispatch.
 
-**The dial is not the declaration.** A connection is *reach* — per frame, retractable, one member per surface — while a
-name is *denotation*: one listing, at the root, and a `pop` must not change it. So a name is bound by a write and the
-peer is dialed by a client, one act each:
+`drop` names a member by any of the addresses it answers to:
 
-```mtron
-</network/prefix/ginger> -> <ws://ginger.local:8555>;
-ws_client::[pattern=><ws://ginger.local:8555/mtron?name=marko>];
-```
+| the address                                      | what is retracted                                                              |
+|--------------------------------------------------|--------------------------------------------------------------------------------|
+| a peer's key (`ws/localhost/8555/mtron`)         | that member; the client is released                                            |
+| a wire uri with a route (`ws://host:8555/mtron`) | that surface                                                                   |
+| a bare origin (`ws://host:8555`)                 | every surface of the service — reach only, never a socket                      |
+| a socket's key (`ws/localhost/8555`)             | that listener: this level's entry, the server released when this level owns it |
 
-**Alignment happens once, at the gatekeeper**, in `Machine.Helper.align`, which asks each component for the slot it
-owns: the instruction set for **scheme** prefixes (`math:cos` → `/m/math/inst/cos`) and the network for **authority**
-prefixes (`//ginger/a` → the origin above). The two slots cannot collide, so the order is unobservable and no precedence
-rule exists. The same door is what the compiler's move-extractor uses, which is why `move(<//ginger/a>)` ships the tail
-to the *resolved* origin rather than to a name the far side has never heard of.
+`unlisten(origin)` is exactly `drop(origin.pathEncoding())`. A `pop` releases each listener in turn (the level's share
+of the socket, and the socket itself when the level owns it) and drops each of its peers. Answers follow the union-bag
+rule: one retraction collapses to the member, several to a bag, none to `noobj`.
 
-**Construction is connection.** There is no connect inst, as there is no add-space inst: constructing a protocol
-client *is* the dial, and indexing is a background behavior of a valid construction —
-
-```mtron
-ws_client::[pattern=><ws://localhost:8555/mtron?name=marko>]
-```
-
-The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
-the network exactly as `memspace::[pattern=>xyz/#]` indexes into Memory. The lifecycle is one adjoint pair on the
-addressable contract: $\mathrm{index} (m)$ — a thing that exists enters the jurisdiction — and its dual
-$\mathrm{drop} (id)$ — $id \mapsto \mathrm{noobj}$, the universal close. What index granted, drop retracts; a displaced
-value is closed (close-before-clear), so "write noobj" and "hang up" are one act — at the member's own address:
-
-```mtron
-*</network/peer/ws/localhost/8555/mtron/origin>   [-- a member, field by field --]
-</network/peer/ws/localhost/8555/mtron> -> noobj     [-- hang up: the member leaves the map --]
-</network/peer> -> noobj                             [-- hang up every member --]
+```mtron_pre
+</network/peer/ws/localhost/8555/mtron> -> noobj      [-- hang up: the member leaves the map --]
+</network/peer/#> -> noobj                            [-- hang up every member --]
 ```
 
 **No two equivalent connections.** Dialing a surface the machine already holds closes the connection there and the new
-one takes its key; the identity a dial announces is no part of the surface.
+one takes its key; the member's identity is its surface, so a dial announces nothing about itself.
 
-**Identity rides the dial.** The `?name` parameter on the connection uri *is* the identity exchange — no announce
-message, no anonymous-then-upgrade: the listener co-mounts a **named** inbound peer the moment the socket opens
-(server : peer :: constructor : instance). It is a plain session parameter, like `?in=` and `?out=`, rather than a
-q-processor; the key carries none of them, while `host` keeps the dial as it was written.
+### presence — the socket
 
-**The identity element.** `id_client::T` (`/m/mach/id_client`) is the identity of the protocol-client family, bound
-to the scheme `loop:`: its constructor is the dial, and its mini-instset (`eval`, `from`, `to`) evaluates what it is
-sent against the local machine. A read through a loop peer therefore *equals* the local read — the self-similarity
-contract in executable form, with no socket.
+A machine's own authorities — what mDNS announces for it and what a roster files under its name — are exactly its
+**listening** surfaces: a `ws_server::T` or `http_server::T` that binds a socket. A backend the machine *dials*
+(`tblespace`, `mqttspace`, `grphspace`, `vecspace`) is reach, never identity, so its host, credentials included, never
+leaves the machine in an announcement, a roster key or a TXT route; an address carrying userinfo is refused outright
+rather than stripped.
 
-**The mini-instset.** A client reaches the network through its `inst` — `{instruction tid => override}` — and
-nothing else. Each override is the native instruction with the client's own body (the same signature, so a call
-reaches it by swapping its function): `from(<uri>)` reads, `obj.to(<uri>)` writes (the obj is the lhs), and
-`eval(code)` ships a program for the far side to run. A `ws_client` declares all three; an `http_client` declares
-`from` (GET) and `to` (POST) — a write that stores what it is sent and evaluates nothing, so it serves no `eval`. A
-shard target must serve both `to` (the route) and `eval` (the routed program must be applied there). `send_recv`
-remains a `ws_client`'s raw wire instruction, not a reach: a user's `|` (block) defers evaluation so code ships as
-written, `1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side against the shipped monad. Insts are
-total, $P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$
-(noobj) is a legal answer, not an exception.
+A listener entry is a `listener::T` rec:
 
-**Status.** Every client and every server answers `status` — a bool, true while it is live, derived each time it is
-read and never stored. A `ws_client` is live while its socket is open, an `http_client` while its host answers a HEAD,
-a loop client always, an `mcp_client` by its health check, an `mcp_server` while its own dispatch answers a ping, and
-a server while its socket is bound. `*~/network/status` reports each dialed peer by its client's `status` — `up` or
-`down` — and a roster address that was never dialed as `known`. A peer carries no transport of its own: it is talked
-to with its client's `inst`. And a read never dials: construction connects (`http_client::[host=><http://h:p>]`),
-destruction disconnects, and an address no client was constructed for falls through to memory.
+| field    | what it is                                                                       |
+|----------|----------------------------------------------------------------------------------|
+| `origin` | the socket's service uri as spelled (`scheme://host:port`)                       |
+| `route`  | this level's routing table on the socket, `<path> => target`; absent while empty |
+| `server` | the protocol server holding the socket — held so the owner's drop releases it    |
 
-**Supervision keeps the index true.** Between the index that granted a peer and the drop that retracts it, the
-network watches every peer whose client holds a live connection — a *link*, `ws_client` today — and keeps the listing
-honest. Connection on creation, destruction on deletion, and only the owner deletes:
+The key is the origin's path encoding, so one socket has one entry per level even while several levels serve through
+it. A socket is opened by one level (the owner) and shared by its descendants, each keeping its own route table; a
+route a nearer level already serves on that socket is refused to a later level, because a key has one rightful owner.
+Dropping a non-owner's key withdraws that level's rows and leaves the owner's socket bound.
+
+### construction is connection
+
+There is no connect inst, as there is no add-space inst: constructing a protocol client *is* the dial, and indexing is
+a background behavior of a valid construction.
+
+```mtron_pre
+ws_client::[pattern=><ws://localhost:8555/mtron>]
+```
+
+The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
+the network exactly as `memspace::[pattern=>xyz/#]` indexes into memory. The lifecycle is one adjoint pair on the
+addressable contract, and both halves name what the address names — a peer key, a wire uri with a route, a bare
+origin, or a socket's key (*the two doors*).
+
+### the client is the connection
+
+The client's `inst` is a mini-instset — `{instruction tid => override}` — and nothing else reaches the network through
+a peer. Each override is the native instruction with the client's own body (the same signature, so a call reaches it by
+swapping its function): `from(<uri>)` reads, `obj.to(<uri>)` writes (the obj is the lhs), and `eval(code)` ships a
+program for the far side to run. A `ws_client` declares all three; an `http_client` declares `from` (GET) and `to`
+(POST) — a write that stores what it is sent and evaluates nothing, so it serves no `eval`. A shard target must serve
+both `to` (the route) and `eval` (the routed program must be applied there). `send_recv` remains a `ws_client`'s raw
+wire instruction, not a reach: a block (`|`) defers evaluation so code ships as written,
+`1.plus(2).send_recv(|plus(45))` evaluating `plus(45)` at the far side against the shipped monad. Insts are total,
+$P (\mathrm{Obj}) \to P (\mathrm{Obj})$: a reach never errors — it answers a smaller set, and $\emptyset$ (`noobj`) is
+a legal answer, not an exception.
+
+The identity element, `id_client::T` (`/m/mach/id_client`), is the identity of the protocol-client family, bound to the
+scheme `loop:`. Its constructor is the dial, and its mini-instset (`eval`, `from`, `to`) evaluates what it is sent
+against the local machine; a read through a loop peer therefore *equals* the local read — the self-similarity contract
+in executable form, with no socket.
+
+### status
+
+Every client and every server answers `status` — a bool, true while it is live, derived each time it is read and never
+stored. A `ws_client` is live while its socket is open, an `http_client` while its host answers a HEAD, a loop client
+always, an `mcp_client` by its health check, an `mcp_server` while its own dispatch answers a ping, and a server while
+its socket is bound. `*~/network/status` reports each dialed peer by its client's `status` — `up` or `down` — and both a
+peer reference
+with no client and a roster address never dialed as `known`. A peer carries no transport of its own: it is talked to
+with its
+client's `inst`. A read never dials: construction connects (`http_client::[host=><http://h:p>]`), destruction hangs
+up, and an address no client was constructed for falls through to memory.
+
+### supervision keeps the index true
+
+```mtron_pre
+*/m/mach/network_supervisor?docq
+```
+
+Between the index that granted a peer and the drop that retracts it, the network watches every peer whose client holds
+a live connection — a *link*, `ws_client` today — and keeps the listing honest. Connection on creation, destruction on
+deletion, and only the owner deletes:
 
 | what happened                                                              | what the network does                                                                                                  |
 |----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
@@ -414,8 +495,8 @@ A dial made before its far side is up is a peer too — offline until the far si
 holds a client is the hang-up, by close-before-clear:
 
 ```mtron
-/usr/peer/local -> ws_client::[pattern=><ws://localhost:8555/mtron?name=marko>]   [-- dial, index, supervise --]
-/usr/peer/local -> noobj                                                          [-- hang up: the peer leaves the map --]
+/usr/peer/local -> ws_client::[pattern=><ws://localhost:8555/mtron>]   [-- dial, index, supervise --]
+/usr/peer/local -> noobj                                               [-- hang up: the peer leaves the map --]
 ```
 
 Redialing in place is the point: the client *is* the connection's identity, so the handle stored at
@@ -424,26 +505,61 @@ a peer is offline, `*~/network/status` reports it `down` without a round trip, a
 dropped is answered at once with a fail rather than waiting out its deadline, and `law_shard` plans only over the peers
 that answer — an outage shrinks the fan-out instead of poisoning the fold.
 
-**Two laws across the frame stack** — `push` mints each child its own network level, the same parade as its memory and
-its instset:
+### two laws across the frame stack
+
+`push` mints each child its own network level, the same parade as its memory and its instset:
 
 1. **knowledge is shared** — the roster is one listing at the root address (memory's base frame, machine-global): a
    declaration made standing anywhere is every frame's fact;
-2. **reach is not** — peers are neither inherited (not even shadowed) nor shared with children: a connection belongs
-   to exactly the machine that dialed it, a pop retracts precisely its dials — its sockets hung up and its supervision
-   ended — and a sibling never sees them.
+2. **reach and presence are not** — peers are neither inherited (not even shadowed) nor shared with children: a
+   connection belongs to exactly the machine that dialed it, a pop retracts precisely its dials and its listeners —
+   sockets hung up, supervision ended — and a sibling never sees them. A name (denotation) is the exception: it
+   inherits by shadowing, and a pop gives the shadowed meaning back.
 
-**Who a machine is: what it listens on.** A machine's own authorities — what mDNS announces for it and what the roster
-files under its name — are exactly its **listening** surfaces: a server that binds a socket — a `ws_server` or an
-`http_server` — is its network `listener` entry, and nothing else counts. A backend the machine *dials* — a `tblespace`, `mqttspace`, `grphspace`
-or `vecspace` host — is reach, never identity, so its host, a `?user=…&password=…` login included, never leaves the
-machine in an announcement, a roster key or a TXT route; an address that carries userinfo is refused outright rather
-than stripped. There is no "is this mine" predicate either: the owner of a connection is always the machine it is
-attached to.
+### prefix — the name a peer is called by
 
-The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, `?name` naming,
-value shapes, retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities, the
-supervision rows (a restart redialed, a dial before the far side is up, a deleted handle, a pop's hang-up), and the
+This component answers four questions: `roster` is what the system *knows*, `peer` is what this machine has *dialed*,
+`listener` is what it *answers on*, and `prefix` is what a peer is *called* by.
+
+```mtron
+/network/prefix -> [//ginger => <ws://ginger.local:8555>];  [-- bind: the name, spelled as it is called --]
+</network/prefix/ginger> -> <ws://ginger.local:8555>;       [-- the same row, addressed by its label --]
+//ginger/mtron                                              [-- = ws://ginger.local:8555/mtron --]
+/network/prefix -> noobj                                    [-- unbind every name at this level --]
+```
+
+**A name is spelled `//name` and STORED `name`.** The door reads and writes the spelling a peer is called by, so what
+`*</network/prefix>` answers may be written back; the table itself keeps the **label**
+(`ginger => ws://ginger.local:8555`), because that is the key resolution asks for. The door accepts either spelling of
+one row and refuses a key that is not a single, dot-free label rather than storing it under a spelling no read reaches.
+An entry is addressed by its label — `</network/prefix/ginger>` — since a `//` cannot be a path segment.
+
+**The spelling is the addressed slot**: `//name/a` — a host with **no port and no scheme**. An explicit port is taken
+literally (`//ginger:8555/a` always means that host and port), because *explicit always beats named*; a real scheme is
+never rewritten (`loop://self` already says which transport it means); and a dotted host is a **hostname**, never a
+name a binding may shadow. Resolution strips the marker and queries the label, so the whole tail rides to the far
+side: `//ginger/a/b/c` denotes `ws://ginger.local:8555/a/b/c`.
+
+**The dial is not the declaration.** A connection is reach — per frame, retractable, one member per surface — while a
+name is denotation: it accumulates by shadowing, so a `pop` gives a shadowed meaning back. A name is bound by a write
+and a peer is dialed by a client, one act each:
+
+```mtron
+</network/prefix/ginger> -> <ws://ginger.local:8555>;
+ws_client::[pattern=><ws://ginger.local:8555/mtron>];
+```
+
+**Alignment happens once, at the gatekeeper**: the instruction set answers **scheme** prefixes (`math:cos` →
+`/m/math/inst/cos`), the network answers **authority** prefixes (`//ginger/a` → the origin above), and memory's
+redirect table answers a short name (consulted by the ISA resolver). The rule is one — nearest declaration wins — so a
+component's names are its own slot, not a special case in the gatekeeper. The same door is what the compiler's
+move-extractor uses, which is why
+`move(<//ginger/a>)` ships the tail to the *resolved* origin rather than to a name the far side has never heard of.
+
+The frame-stack laws and the wire are pinned by scripted runs over live sockets: wire equalities, value shapes,
+retraction, roster and frame laws, and authority aliasing — as are the loop and ws equalities, the supervision rows (a
+restart redialed, a dial before the far side is up, a deleted handle, a pop's hang-up), the two doors (a client and a
+listener entry indexed by the same verb; a key, a surface, a bare origin and a socket retracted by name), and the
 addressing rows (a member at its dial's path, deleted there, replaced by a redial, two surfaces side by side, a frame's
 members at its own `~`).
 
@@ -453,24 +569,27 @@ The Java-level counterpart — the classes, the package layout, and the load-bea
 ## frames — `push`, `move`, `pop`
 
 The machine nest is a tree of **frames**, and three instructions choose where code runs. They speak one address
-dialect, the `..` motif — `~` is the frame you stand in, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling
-`b`, and `../../..` walks as far up as asked — and they differ only in what they do with the address:
+dialect, the `..` motif — `~` is the frame in which the code stands, `a` (or `~/a`) its child, `..` its parent,
+`../b` the sibling `b`, and `../../..` walks as far up as asked — and they differ only in what they do with the
+address:
 
-| instruction | what it does with the address                                                                                                                     |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| instruction | what it does with the address                                                                                                                                                                                        |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `push(t)`   | **mints** the machine at `t` and makes it current. Only the leaf is new: $\mathrm{push}(t) = \mathrm{move}(\mathrm{parent}(t)) \cdot \mathrm{push}(\mathrm{name}(t))$, so a sibling is minted from the shared parent |
-| `move(t)`   | **walks** to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                      |
-| `pop()`     | **discards** the current machine and lands on its `..` — a machine is discarded by the one that holds it                                         |
+| `move(t)`   | **walks** to the machine at `t` and closes nothing; `move()` is `move(<..>)`                                                                                                                                         |
+| `pop()`     | **discards** the current machine and lands on its `..` — a machine is discarded by the one that holds it                                                                                                             |
 
-A frame is an address, so the tree is walked like any other part of the metatron graph. A `*`-less `>>` walks the
-**uri graph** — a frame's child frames and its component slots, side by side — while `*…>>` walks the **obj graph**:
+A frame is an address, so the tree is walked like any other part of the metatron graph. A `*`-less `>>` walks the **uri
+graph** — a frame's child frames and its component slots, side by side — while `*…>>` walks the **obj graph**:
 the two graphs are linked by `->` and crossed by `*`.
 
 ```mtron_pre
-push(xyz).vid()
+push(xyz)
+*~.vid()
 /.>>
-/xyz>>
-pop().vid()
+/xyz.>>
+pop()
+*~.vid()
 ```
 
 Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set and network — so it is a
@@ -479,14 +598,13 @@ empty: a pushed frame holds **no peers** until it dials one, which makes a frame
 
 **The authority boundary.** A frame lives in this process. `push(<ws://localhost:8555/worker>)` names another process,
 and is refused: code reaches a machine in another process by being *shipped* there (see *distribution*), never through
-a frame here that stands in it. Spawning that process — a new peer JVM — is a mechanism still waiting for its
-instruction.
+a frame here that stands in it. Spawning that process is a mechanism still waiting for its instruction.
 
 **Not yet**: `pop` retracts the frame but not its registration — the machine is gone, yet its structure stays written
 in the root's memory, so the tree still lists it:
 
 ```mtron_pre
-/.>>
+</.>.>>
 ```
 
 The same root cause makes a frame re-entered by address (`move(<x>)`, or a later evaluation) impossible to pop: the
@@ -500,11 +618,11 @@ mechanism, the layout `law_shard` emits (see [the category graph](cat-instset-mt
 and gather the replies.
 
 ```mtron
-start([w_1,w_2,w_3]).select([to(<s_1>),to(<s_2>),to(<s_3>)]).merge()   [-- zip: code i ships to peer i --]
-[w]-<[to(<s_1>),to(<s_2>),to(<s_3>)]                                   [-- broadcast: one code to every peer --]
+[w_1,w_2,w_3]==[eval(<s_1>),eval(<s_2>),eval(<s_3>)]>-   [-- zip: code i ships to peer i --]
+[w]-<[eval(<s_1>),eval(<s_2>),eval(<s_3>)]               [-- broadcast: one code to every peer --]
 ```
 
-`to(<peer>)` ships its lhs unevaluated; the peer evaluates it and replies with the value. A select (`==`) zips codes
+`eval(<peer>)` ships its lhs unevaluated; the peer evaluates it and replies with the value. A select (`==`) zips codes
 with routes, a split (`-<`) broadcasts one code — reach for the zip only when the payload differs per peer.
 
 ### workloads — config and code in one closure
@@ -529,6 +647,7 @@ its own dog's partition, computing, and pushing the result back to the store:
 [dog=>'mama',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/walk/total/${*workload/dog}>))](workload=>_){ !*workload/code.apply() }
 [dog=>'puppy',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/walk/total/${*workload/dog}>))](workload=>_){ !*workload/code.apply() }
 */usr/walk/total/+
+*/usr/walk/total/+.sum()
 ```
 
 **Construction is connection.** The config can carry a space. Constructing a space *is* connecting it, so a workload
@@ -536,21 +655,43 @@ whose `db` is a `tblespace::T` rec binds the receiving peer's own connection to 
 there — as though the master's connection had crossed the wire:
 
 ```mtron
-[db=>tblespace::[pattern=></usr/data/#>,host=><mariadb://…>,driver=><org.mariadb.jdbc.Driver>,route=>[</usr/data>=><>]]@/sys/space/data,
- xyz=>'east',
- code=>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
+[db   =>tblespace::[pattern=></usr/data/#>,
+                    host=><mariadb://…>,
+                    driver=><org.mariadb.jdbc.Driver>,
+                    route=>[</usr/data>=><>]]@/sys/space/data,
+ xyz  =>'east',
+ code =>|(*</usr/data/${*workload/xyz}/+/amount>.sum().to(</usr/data/result/${*workload/xyz}/total>))](workload=>_){ !*workload/code.apply() }
 ```
 
 A runtime template has one cost: the receiver compiles the code before the template is filled, so its compiler sees
 `${*workload/xyz}` where a table name should be, and a database push-down (`SUM` in SQL) cannot fire — the peer reads
 the rows and sums in mtron.
 
+A multiserver fixture puts the pieces together: one MariaDB in a container, and three satellites forked from the same
+process.
+
+<!-- figure source: assets/tikz/mach-workload.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/mach-workload.png" alt="one master, three satellites, one shared MariaDB, drawn top to bottom. The master ships a workload to each satellite (solid arrows w1, w2, w3) as start([w1,w2,w3]).select([to(s1),to(s2),to(s3)]).merge(), and the acknowledgements come back up (dashed) into that merge, the latch. Each satellite is labelled with its binding — xyz=>'east', 'west', 'north' — and exchanges with the MariaDB below it (pull xyz/+, push result/xyz). A dotted arc from the master to MariaDB marks the master's own steps: 1. creates every table, 3. reads result/+. The legend: solid — a workload [db, xyz, code] ships, and evaluating it constructs the satellite's own space (construction is connection); dashed — the acknowledgements, merge() is the latch (no fail, counted through coefficients); dotted — the master's own writes and reads" width="100%" style="margin:0.3em 0 0 0"/>
+
+1. **The master sets up everything.** It starts the backend, mounts its own space, and creates every table — the
+   partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
+   `import(/m/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
+2. **One workload per satellite**, shipped in the `law_shard` layout: the backend's space, the satellite's partition,
+   and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
+   provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.
+3. **The master reads the results back** from the backend. Nothing but an acknowledgement ever travelled home.
+
+Every row of the suite is a computation over one partition — counts, sums, filters, a failure caught on the
+satellites and one left uncaught — so a new pattern is one row, and a new backend one variant.
+
 ### the latch — gather, refuse fails, count through coefficients
 
-The master's `merge()` is the latch: it completes when every peer has replied. Two properties of the gather decide what
+The master's `merge()` (sugar'd `>-`) is the latch: it completes when every peer has replied. Two properties of the
+gather decide what
 "every peer finished" means.
 
 **Equal replies bulk.** A stream is a bag, so three peers that each answer `34` arrive as *one* obj with coefficient
+
 3. Count through coefficients — mtron's `count()` — never by elements:
 
 ```mtron_pre
@@ -577,52 +718,32 @@ answers the recovery instead, and the master never sees the fail:
 **Where am I.** `*~/network/host` answers the host the current machine runs on — for a result that says where it was
 computed:
 
-```mtron
+```mtron_pre
 *~/network/host       [-- localhost --]
 ```
 
 Peers forked on one host share it; telling them apart takes their service authority.
-
-### the worked example — one backend, three satellites
-
-`AbstractMultiServerSingleSpaceTest` puts the pieces together, and a backend opts in with a subclass —
-`MariaDBMultiServerSingleSpaceTest` is the first: one MariaDB in a container, and three satellites forked from the
-test JVM.
-
-<!-- figure source: assets/tikz/mach-workload.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
-<img src="../assets/mach-workload.png" alt="one master, three satellites, one shared MariaDB, drawn top to bottom. The master ships a workload to each satellite (solid arrows w1, w2, w3) as start([w1,w2,w3]).select([to(s1),to(s2),to(s3)]).merge(), and the acknowledgements come back up (dashed) into that merge, the latch. Each satellite is labelled with its binding — xyz=>'east', 'west', 'north' — and exchanges with the MariaDB below it (pull xyz/+, push result/xyz). A dotted arc from the master to MariaDB marks the master's own steps: 1. creates every table, 3. reads result/+. The legend: solid — a workload [db, xyz, code] ships, and evaluating it constructs the satellite's own space (construction is connection); dashed — the acknowledgements, merge() is the latch (no fail, counted through coefficients); dotted — the master's own writes and reads" width="100%" style="margin:0.3em 0 0 0"/>
-
-1. **The master sets up everything.** It starts the backend, mounts its own space, and creates every table — the
-   partitions and one result row per partition — before any satellite exists. A satellite boots with nothing but
-   `import(/m/tble)`, so it never runs DDL, and its first look at the backend already sees every table it will read.
-2. **One workload per satellite**, shipped in the `law_shard` layout: the backend's space, the satellite's partition,
-   and the row's code. The latch is the gather — no fail in it, three replies counted through coefficients — and
-   provenance is checked rather than assumed: a satellite holds a space only after evaluating its workload.
-3. **The master reads the results back** from the backend. Nothing but an acknowledgement ever travelled home.
-
-Every row of the suite is a computation over one partition — counts, sums, filters, a failure caught on the
-satellites and one left uncaught — so a new pattern is one CSV line, and a new backend is one subclass.
 
 ## appendix — the registered types
 
 Everything above is a subtype of `component::T` at `/m/mach/component` — except `machine::T` itself and the
 non-component families, which hang directly off `/m/mach`:
 
-| family   | types (`::T`)                                                                                                                                                                                                                                       |
-|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| family   | types (`::T`)                                                                                                                                                                                                                                                        |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer` |
-| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                   |
-| state    | `memory`, `network`, `instset`                                                                                                                                                                                                                      |
-| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                        |
-| the rest | `thread` / `virtual` / `core`, `peer`, `id_client`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above)                                                                                                              |
+| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                    |
+| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                        |
+| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                         |
+| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares                                             |
 
 ## appendix — writing another language
 
 The whole obligation is a parser that emits `code::T`:
 
-1. Register a `parser::T` subtype in your own instruction set — a `rec::T` under your ISA with a constructor that
-   mints your parser. The seam asks for nothing else.
-2. Read your surface syntax and build mtron code — a value, an inst, or a `code::T`. Any of the three lifts into a
+1. Register a `parser::T` subtype in the new instruction set — a `rec::T` under that ISA with a constructor that
+   mints the parser. The seam asks for nothing else.
+2. Read the surface syntax and build mtron code — a value, an inst, or a `code::T`; any of the three lifts into a
    program.
 3. Leave a non-`str` obj alone (the identity case) so the same compiler still accepts what is already parsed.
 4. Wire it: `compiler::[parser=>my_lang::T]`, or put it in a machine's `compiler` slot.

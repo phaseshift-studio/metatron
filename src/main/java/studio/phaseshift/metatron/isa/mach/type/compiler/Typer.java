@@ -19,11 +19,8 @@
 package studio.phaseshift.metatron.isa.mach.type.compiler;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Component;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 
 import java.util.ArrayList;
@@ -49,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Typer extends Machine.Component {
+public interface Typer extends Component {
 
     /**
      * Type-check {@code code} according to this typer's enabled assertions.
@@ -195,7 +192,7 @@ public interface Typer extends Machine.Component {
          * @param lhs  the value the instruction applies to
          * @param inst the instruction about to be applied
          * @return the wrapper first, then the exposed component values; a one-element list when there is
-         *         nothing to fan out over
+         * nothing to fan out over
          */
         public static List<Obj> candidates(final Obj lhs, final Inst inst) {
             if (Inst.Form.of(inst) == Inst.Form.typer)
@@ -248,10 +245,10 @@ public interface Typer extends Machine.Component {
          * {@code describe} also has a {@code duo_ninja} body. An untyped call has nothing but the resolved
          * instruction's own domain to go on.
          *
-         * @param wrapper  whether {@code candidate} is the wrapper itself (not one of its components)
+         * @param wrapper   whether {@code candidate} is the wrapper itself (not one of its components)
          * @param candidate the value the instruction was resolved against
-         * @param cinst    the instruction resolved against {@code candidate}
-         * @param original the instruction before resolution (its named domain, when any, is the subject)
+         * @param cinst     the instruction resolved against {@code candidate}
+         * @param original  the instruction before resolution (its named domain, when any, is the subject)
          * @return true when the resolved instruction is about this candidate, so it must be invoked
          */
         public static boolean applicable(final boolean wrapper, final Obj candidate, final Inst cinst, final Inst original) {

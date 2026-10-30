@@ -103,7 +103,7 @@ public final class PeerSpawn {
         // A PEER IS DECLARED ONCE. Hand back the address it already has.
         if (FORKED.containsKey(key) || DECLARED.contains(key))
             return address(authority);
-        final boolean here = Network.Helper.isLoopbackHost(authority.host());
+        final boolean here = authority.isLoopbackHost();
         try {
             if (here) {
                 final Path log = Files.createTempFile("metatron-node-" + authority.port() + "-", ".log");

@@ -148,7 +148,7 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
         // (declared <authority> => address, discovered <host> => address{+}), so a suite that wants "what
         // this script declared" clears the roster first and runs no discovery source.
         all.put("PROBE_MACHINES", args -> this.probe("machines", jnt(this.network().machines().jvm().size())));
-        all.put("PROBE_PEER", args -> this.probe("peer", jnt(this.network().isPeer(f(args[0])) ? 1 : 0)));
+        all.put("PROBE_PEER", args -> this.probe("peer", jnt(Network.Helper.isPeer(this.network(), f(args[0])) ? 1 : 0)));
         all.put("PROBE_STATUS", args -> {
             // the status method's own receiver: the network, whose dialed peers it reports (the roster when none)
             final Obj report = this.network().status(this.network());
@@ -161,21 +161,21 @@ public abstract class NetworkScriptTest extends AbstractMetatronTest {
                     System.identityHashCode(this.network()), this.network().peers().elements().count());
             this.probe("peercount", jnt(this.network().peers().elements().count()));
         });
-        all.put("DISCONNECT", args -> this.network().disconnect(f(args[0])));
+        all.put("DISCONNECT", args -> this.network().drop(f(args[0])));
         // the java face of connect: the mtron inst resolves in some boots and not others (suite-dependent inst
         // resolution -- an open item pinned in NetworkWireScriptTest), so the dial goes through the proven path
         all.put("CONNECT", args -> {
             if (args.length > 1)
-                this.network().connect(f(args[0]), f(args[1]));
+                Network.Helper.connect(this.network(), f(args[0]), f(args[1]));
             else
-                this.network().connect(f(args[0]));
+                Network.Helper.connect(this.network(), f(args[0]));
         });
         return all;
     }
 
     @AfterEach
     public void clearNetworkScript() {
-        this.silent.forEach(this.network()::disconnect);
+        this.silent.forEach(this.network()::drop);
         this.silent.clear();
         this.closeCluster();
         // the roster is an ADDRESS, not a Java field, so a test that wrote into it clears it by address too

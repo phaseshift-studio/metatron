@@ -481,7 +481,7 @@ mtron&gt; noobj       [-- &quot;no obj&quot; (empty, none) --]
 </thead>
 <tbody>
 <tr><td><code>math:cos</code></td><td>an <strong>isa prefix</strong> — a scheme with no host names a vocabulary</td><td><code>import(/m/math, math)</code>; the table is <code>*&lt;/instset/prefix&gt;</code></td></tr>
-<tr><td><code>//ginger/a</code></td><td>a <strong>network name</strong> — a host with no scheme and no port names a peer</td><td><code>&lt;/network/prefix/ginger&gt; -&gt; &lt;ws://ginger.local:8555&gt;</code></td></tr>
+<tr><td><code>//ginger/a</code></td><td>a <strong>network name</strong> — a host with no scheme and no port names a peer</td><td><code>/network/prefix -&gt; [//ginger =&gt; &lt;ws://ginger.local:8555&gt;]</code>, or <code>&lt;/network/prefix/ginger&gt;</code> by label</td></tr>
 <tr><td><code>cos</code></td><td>a <strong>redirect</strong> — the short name an address already has</td><td>derived from what is mounted; <code>*&lt;/memory/redirect&gt;</code></td></tr>
 <tr><td><code>/mcp</code></td><td>a <strong>route</strong> — a path prefix a space serves</td><td>the space's own <code>route</code> field, e.g. <code>http_server::[route=&gt;[/mcp =&gt; mcp_mtron]]</code></td></tr>
 </tbody>
@@ -773,7 +773,7 @@ mtron&gt; posint::2                    [-- posint::2  (admitted: the predicate l
 ==&gt;posint::2
 mtron&gt; posint::-1           [-- refused: a predicate-only type has no constructor to rescue the value --]
 ==&gt;fail::[parse error at line 1, col 1: -1 is not a int::T[is(gt(0))]@posint
-   	while parsing: posint::-1]@/sys/fail/422143
+   	while parsing: posint::-1]
 </code></pre>
 <hr />
 <h3>8. mapping &amp; filtering</h3>
