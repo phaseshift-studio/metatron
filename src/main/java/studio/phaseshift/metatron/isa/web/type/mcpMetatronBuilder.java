@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,10 +41,10 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -55,8 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsServer.WS_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -152,7 +152,7 @@ public final class mcpMetatronBuilder {
             // eval_mtron — the foundational tool: evaluate metatron expressions
             tools.at(uri(mTool.toolName(toolTid("eval_mtron"))), docWrap(instC(
                             f(mTool.toolName(toolTid("eval_mtron"))).dom(ALL.maybe()).rng(ALL.maybeSome()),
-                            rec(uri(CODE), CODE_TYPE, uri(NATIVE).maybeSome(), BOOL_TYPE), (lhs, inst) -> {
+                            rec(uri(CODE), CODE_TYPE, uri(MIMEQ_TID).maybe().asUri(), MIME_OBJ_TYPE), (lhs, inst) -> {
                                 // code arrives already parsed to code::T by the schema-aware JSON
                                 // layer — no JSON-massaging here; just evaluate it.
                                 try {
@@ -161,14 +161,16 @@ public final class mcpMetatronBuilder {
                                     // report an MCP error) rather than flattening them to text
                                     if (result.isFail())
                                         return result;
-                                    return inst.arg(NATIVE, 1).orElse(BOOL_TRUE).boolValue() ? str(result.toString()) : result;
+                                    // mimeq picks the rendering: application/x-mtron → native, anything else → JSON
+                                    final MIME.MIMEType mime = MIME.MIMEType.of(inst.arg(MIMEQ_TID, 1).orElse(uri(MIME.MIMEType.APPLICATION_MTRON.value)).uriValue().toString(), MIME.MIMEType.APPLICATION_MTRON);
+                                    return !mime.isJson() ? str(new String(mime.serializer().outputBytes(result).array(), StandardCharsets.UTF_8)) : result;
                                 } catch (final Exception e) {
                                     return fail(e);
                                 }
 
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate",
-                            uri(NATIVE).maybe(), "return result in native mtron format"),
+                            uri(MIMEQ_TID).maybe(), "result mime type (default application/x-mtron); common: application/x-mtron, application/json, application/x-mtron-ui, text/plain"),
                     "returns the result of evaluating the provided mtron expression"), MUTABLE);
             // list_space — return an index of currently accessible spaces
             tools.at(uri(mTool.toolName(toolTid("list_space"))), docWrap(instC(
