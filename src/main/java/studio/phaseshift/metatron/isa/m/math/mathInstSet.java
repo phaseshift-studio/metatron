@@ -791,6 +791,15 @@ public class mathInstSet extends AbstractInstSet {
                                         (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
                                                 jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
                                                 arg.asInt())
+                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
+                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
+                                // reading that looks like a fact. The type declares its own real->percent edge,
+                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
+                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
+                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
+                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
+                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
+                                                lhs.asInt())
                                 .create(), "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100"),
                         docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
                         docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),

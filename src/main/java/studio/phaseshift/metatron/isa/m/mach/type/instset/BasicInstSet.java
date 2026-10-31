@@ -141,6 +141,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
 
     public BasicInstSet previous(final InstSet previous) {
         this.previous = previous;
+        // the enclosing level IS part of what this level's view answers, so reparenting changes its vocabulary
+        this.vocabularyChanged();
         return this;
     }
 
@@ -180,6 +182,10 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     public BasicInstSet refer(final InstSet isa) {
         if (null == isa || isa == this || null == isa.vid())
             return this;
+        // MEMBERSHIP IS THIS LEVEL'S CONTRIBUTION: a refer or a re-refer changes what the union answers, and the
+        // version says so — otherwise a parent's memoized view of this level would miss it (the same reason the
+        // libraries below are recomputed on this path).
+        this.vocabularyChanged();
         final fURI vid = isa.vid();
         if (this.referVids().stream().anyMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
             // ALREADY A MEMBER — REFRESH THE OBJECT. A re-mount (a new instance of the same ISA, which is what a test
@@ -244,6 +250,8 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         if (this.ownReferVids().stream().anyMatch(reference -> reference.isUri() && reference.uriValue().equals(vid))) {
             this.unrouted.add(vid.toString());
             this.ownLibraries = null;
+            // the member stops being routed, which changes the level's view exactly as a refer does
+            this.vocabularyChanged();
         }
     }
 

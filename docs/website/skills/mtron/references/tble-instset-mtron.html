@@ -860,9 +860,9 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/27
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/29
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/28
+==&gt;[body=&gt;'another one']@tbledoc:note/30
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
 ==&gt;12
 ==&gt;17
@@ -878,6 +878,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;28
 ==&gt;20
 ==&gt;7
+==&gt;29
 ==&gt;15
 ==&gt;19
 ==&gt;23
@@ -892,6 +893,7 @@ mtron&gt; *tbledoc:note/+/id                                    [-- the keys the
 ==&gt;18
 ==&gt;5
 ==&gt;9
+==&gt;30
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

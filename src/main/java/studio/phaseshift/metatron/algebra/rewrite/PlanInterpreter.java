@@ -304,7 +304,15 @@ public final class PlanInterpreter {
         final List<Obj> summands = new ArrayList<>();
         final List<Obj> routes = new ArrayList<>();
         final List<Obj> gathers = new ArrayList<>();
-        final mFluent<?> master = merge_().addInsts(withoutHop(combiner)).addInsts(withoutHop(insts.subList(cutIndex + 1, insts.size())));
+        // PROFILING IS AN END CAP, NOT A TAIL. When the chain's instruction after the cut is profile(), the
+        // fold's partials are not what comes back — each slave answers a profiling::T — so there is nothing
+        // to recombine: the master's merge() is followed by COLLATION, which indexes the reports by the
+        // machine each was made on. `merge().sum()` would try to add two reports together.
+        final boolean profiling = insts.size() > cutIndex + 1
+                && PROFILE_INST_TID.equals(insts.get(cutIndex + 1).tid().basePath());
+        final mFluent<?> master = profiling
+                ? merge_().addInst(profileCollate())
+                : merge_().addInsts(withoutHop(combiner)).addInsts(withoutHop(insts.subList(cutIndex + 1, insts.size())));
         for (int s = 0; s < k; s++) {
             final List<Obj> part = new ArrayList<>();
             if (Partition.Kind.COPY == split.kind())
@@ -319,6 +327,11 @@ public final class PlanInterpreter {
             // spelling), then carries this level's — the same arity, one height down.
             final Inst fold = withoutHop(reducer);
             slave.addInst(fold.tid(fold.tid().q(HOP, budget)));
+            // THE SLAVE'S END CAP: the peer profiles its OWN part. The marker ships, not a minted analysis
+            // inst, because the analysis captures the code by closure on the machine that runs it — the peer
+            // compiles the slave, so its profile_analysis sees the peer's chain and answers a profiling::T.
+            if (profiling)
+                slave.addInst(instB(PROFILE_INST_TID, lst()));
             summands.add(slave);
             // THE ROUTE IS BOUND HERE, at plan time (Marko, 2026-10-24: the compiled code has the bindings): resolved
             // against the slave it will carry, so the emitted select holds the native eval with the target peer's own

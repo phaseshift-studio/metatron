@@ -27,11 +27,8 @@ mtron> http_server::[origin => http://localhost:8777,
                      route => [/mcp    => mcp_mtron,
                                /docker => docker:,
                                /usr    => /usr]]
-==>fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]']
-   	while parsing: http_server::[origin => http://localhost:8777,
-                        route => [/mcp    => mcp_mtron,
-                                  /docker => docker:,
-                                  /usr    => /usr]]]
+==>http_server::[origin=>http://localhost:8777,
+                 status=>!λstatus?bool<=(){<j>}]
 mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,
@@ -49,9 +46,8 @@ mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *build
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> ws_server::[origin  => ws://localhost:8555,
                    route  => [/basic   => !*</sys/space/mcp/web_basic>]]
-==>fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::['inst apply failure: unable to bind localhost/127.0.0.1:8555: Address already in use [Net<-2>] (at /m/inst/ctor) [Net<-2>]']
-   	while parsing: ws_server::[origin  => ws://localhost:8555,
-                      route  => [/basic   => !*</sys/space/mcp/web_basic>]]]
+==>ws_server::[origin=>ws://localhost:8555,
+               status=>!λstatus?bool<=(){<j>}]
 ```
 The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
 websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
@@ -238,109 +234,14 @@ binding step, and a route is debuggable by looking at the request uri.
 mtron> */usr/person/1                                              [-- straight from the space --]
 ==>[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+==>"[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==>fail::["""<!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
-     -->
+==>
+   json::'{"name":"marko","age":29}'
    
-   <!DOCTYPE html>
-   <html lang="en">
-   <head>
-       <title>metatron</title>
-       <!-- METADATA -->
-       <meta charset="utf-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <meta name="keywords" content="metatron programming data graph database llm">
-       <meta name="description" content="Next Generation Data Technologies">
-       <meta name="theme-color" content="#ffffff">
-       <!-- FAVICON -->
-       <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon.png">
-       <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-       <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-       <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
-       <!-- FONTS -->
-       <link rel="preconnect" href="https://fonts.googleapis.com">
-       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-       <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
-       <!-- CSS PACKAGES -->
-       <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
-       <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-       <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
-       <link href="css/bootstrap.min.css" rel="stylesheet">
-       <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
-       <!-- JAVASCRIPT PACKAGES -->
-       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-               type="text/javascript"></script>
-       <script src="highlight/highlight.min.js" type="text/javascript"></script>
-       <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
-       <script src="highlight/languages/mtron.min.js" type="text/javascript"></script>
-       <script src="highlight/languages/java.min.js" type="text/javascript"></script>
-       <script src="highlight/languages/bash.min.js" type="text/javascript"></script>
-       <script src="highlight/languages/sql.min.js" type="text/javascript"></script>
-       <script src="highlight/languages/json.min.js" type="text/javascript"></script>
-       <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
-       <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
-       <!-- <script src="data/console.txt"></script>-->
-       <!-- CUSTOM CSS/JAVASCRIPT -->
-       <link href="css/metatron.css" rel="stylesheet">
-       <style>
-           .hidden {
-               display: none;
-           }
    
-           .switch {
-               border-width: 1px 1px 0 1px;
-               border-style: solid;
-               border-color: #7a2518;
-               display: inline-block;
-               border-radius: 4px 4px 0 0;
-           }
-   
-           .switch--item {
-               padding: 4px 14px;
-               font-size: 0.85rem;
-               background-color: #ffffff;
-               color: #7a2518;
-               display: inline-block;
-               cursor: pointer;
-           }
-   
-           .switch--item:first-child {
-               border-radius: 3px 0 0 0;
-           }
-   
-           .switch--item:last-child {
-               border-radius: 0 3px 0 0;
-           }
-   
-           .switch--item.selected {
-               background-color: #7a2519;
-               color: #ffffff;
-           }
-   
-           /* click-to-copy download commands: the whole block is the copy target */
-           .click-to-copy {
-               cursor: pointer;
-               -webkit-user-select: none;
-               user-select: none;
-           }
-   
-   ...
 mtron> *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+==>"{name='marko', age=29}"
 ```
 `/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
 because the space is live rather than a lookup table of two.

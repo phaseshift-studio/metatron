@@ -572,7 +572,8 @@ serialized as JSON blobs, deserialized on read.</p>
 <p>Column types are stored in <code>_mtron_meta</code> as <code>$table</code> sentinel rows. When a table has no meta row, the schema generator
 infers types from JDBC metadata.</p>
 <h3>SQL rewrite pushdown</h3>
-<p>Registered in <code>tbleInstSet.setup()</code> under <code>uri(REWRITE)</code>. All rewrites follow the <code>RewriteBuilder</code> pattern (space-aware
+<p>Registered in <code>tbleInstSet.setup()</code> under <code>uri(REWRITE)</code>. All rewrites follow the <code>DBRewriteBuilder</code> pattern
+(space-aware
 native pushdown).</p>
 <table>
 <thead>
@@ -788,7 +789,7 @@ in <code>auto_from_()</code> on read so they resolve lazily to the referenced ro
 <li><strong><code>_mtron_meta</code> persistence</strong> (<code>loadMetaTable</code>): reads FK registrations persisted by <code>persistColumnType()</code>.
 Survives restarts.</li>
 <li><strong>Naming convention</strong> (<code>discoverFKByConvention</code> + <code>inferFKByConvention</code>): a column whose name matches another
-table name (case-insensitive, with or without trailing &quot;s&quot;) is treated as a FK.  Examples:
+table name (case-insensitive, with or without trailing &quot;s&quot;) is treated as a FK. Examples:
 <ul>
 <li><code>people.company</code> → table <code>companies</code></li>
 <li><code>message.session</code> → table <code>session</code></li>
@@ -835,7 +836,8 @@ the path-based pattern can't distinguish them — both look like path segments.<
 <p>Without these guards, three bugs occur:</p>
 <ol>
 <li>Absolute paths get doubled (<code>/usr/dr/session//usr/dr/session/1</code>)</li>
-<li>Plain URIs get wrapped in unnecessary <code>auto_from_</code> (<code>session=&gt;!*/usr/dr/session/1</code> instead of <code>session=&gt;/usr/dr/session/1</code>)</li>
+<li>Plain URIs get wrapped in unnecessary <code>auto_from_</code> (<code>session=&gt;!*/usr/dr/session/1</code> instead of
+<code>session=&gt;/usr/dr/session/1</code>)</li>
 <li>JSON lists get treated as single FK path segments (<code>!*/usr/dr/message/[...]</code>)</li>
 </ol>
 <h4>FK persistence in <code>_mtron_meta</code></h4>

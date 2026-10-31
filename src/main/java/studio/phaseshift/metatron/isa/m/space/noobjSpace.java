@@ -99,6 +99,17 @@ public final class noobjSpace implements Space, InstSet {
         return Set.of();
     }
 
+    /**
+     * CONSTANT, and honestly so — see {@link InstSet#runtimeVersion()}. This store has no tables to fill: its
+     * consts, insts and rewrites are the empty sets by construction and its {@link #write} stores nothing, so there
+     * is no change a version could report. Answering a fixed {@code 0} is the claim "nothing here ever changes",
+     * which is exactly what a memo needs to hear.
+     */
+    @Override
+    public int runtimeVersion() {
+        return 0;
+    }
+
     @Override
     public Obj read(final fURI vid) {
         return noobj();

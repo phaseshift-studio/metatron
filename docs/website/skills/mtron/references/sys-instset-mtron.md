@@ -89,10 +89,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 15ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 12ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 15ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 12ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -255,15 +255,15 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>69
+==>61
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::13.9453,
-    free_mem_jvm=>gB::4.1650,
+==>[total_mem_jvm=>gB::12.8515,
+    free_mem_jvm=>gB::2.9764,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::9.7802,
+    used_mem_jvm=>gB::9.8751,
     free_jvm=>percent::0,
     free_mach=>percent::0,
-    thread=>[run=>132,stop=>182404]]
+    thread=>[run=>135,stop=>180236]]
 ```
 # file system space (`fsspace::T`)
 

@@ -796,8 +796,8 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertTrue(submitted.isRec(), () -> "desc.rewrite should be an explanation::T rec: " + submitted);
         assertTrue(ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite>>desc>>rewrite").isNoObj(),
                 "the pre-analysis rec terminates the rewrite chain");
-        assertTrue(ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite>>desc>>insts").asInt().intValue() > 1,
-                "the pre-analysis stage still carries the chain the laws collapsed");
+        assertTrue(ObjmtronSerializer.eval("6.plus(0).explain()>>desc>>rewrite>>desc>>insts").asInt().intValue() == 1,
+                "the analysis carries the chain the laws collapsed");
     }
 
     /**

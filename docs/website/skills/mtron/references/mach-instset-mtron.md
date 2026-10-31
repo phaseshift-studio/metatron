@@ -504,17 +504,17 @@ a background behavior of a valid construction.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>ws_client::[pattern=>ws://localhost:8555/mtron,
-               host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               ...(1 more)]
+==>[pattern=>ws://localhost:8555/mtron,
+    host=>ws://localhost:8555/mtron,
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
+    ...(1 more)]
 ```
 The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as `memspace::[pattern=>xyz/#]` indexes into memory. The lifecycle is one adjoint pair on the

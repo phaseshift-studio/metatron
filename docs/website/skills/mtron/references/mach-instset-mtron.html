@@ -944,17 +944,17 @@ Dropping a non-owner's key withdraws that level's rows and leaves the owner's so
 <p>There is no connect inst, as there is no add-space inst: constructing a protocol client <em>is</em> the dial, and indexing is
 a background behavior of a valid construction.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
-               host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               ...(1 more)]
+==&gt;[pattern=&gt;ws://localhost:8555/mtron,
+    host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    ...(1 more)]
 </code></pre>
 <p>The claim (<code>pattern</code>, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory. The lifecycle is one adjoint pair on the
