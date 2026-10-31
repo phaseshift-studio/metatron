@@ -21,23 +21,24 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
+import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -495,20 +496,20 @@ public class mInstSet extends AbstractInstSet {
                                         uri(TypeCheck.obj_write.name()), "ensure obj matches type on space write",
                                         uri(TypeCheck.code_resolve.name()), "ensure only fully resolved code can be executed"),
                                 """
-                                stages where the type checker should be applied.
-                                the more stages that are active, the slower instructions evaluate.
-                                however, more active stages reduces potential for data corruption.
-                                typically use many stages when designing code and once stable,
-                                remove stages accordingly for increased performance.
-                                """),
+                                        stages where the type checker should be applied.
+                                        the more stages that are active, the slower instructions evaluate.
+                                        however, more active stages reduces potential for data corruption.
+                                        typically use many stages when designing code and once stable,
+                                        remove stages accordingly for increased performance.
+                                        """),
                         docWrap(TRACER_TYPE, null, null, mutableMap(
                                         uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
                                         uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"),
                                 """
-                                diagnostic stages for surfacing internal java state.
-                                useful for debugging native java issues that mtron instructions
-                                trigger but cannot introspect.
-                                """),
+                                        diagnostic stages for surfacing internal java state.
+                                        useful for debugging native java issues that mtron instructions
+                                        trigger but cannot introspect.
+                                        """),
                         docWrap(PROFILING_TYPE,
                                 Map.of(
                                         uri(FORMAT), "lazily constructed pretty print format",
@@ -563,13 +564,13 @@ public class mInstSet extends AbstractInstSet {
                                 Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
                                 "an in-memory space with objs indexed by a topic trie"),*/
                         docWrap(QPROC_TYPE, """
-                                            qprocs (query processors) are optional space components.
-                                            qproc behaviors are driven by a qprocs specified uri ?-query pattern.
-                                            not all spaces have the same set of attached qprocs.
-                                            qprocs must be attached to a space before use. a space's qprocs are accessible at
-                                            
-                                                 *space/vid/qProc — i.e. a space \\(\\mathcal{S}\\) exposes its qprocs as \\(\\mathrm{qprocs}(\\mathcal{S})\\)
-                                            """),
+                                qprocs (query processors) are optional space components.
+                                qproc behaviors are driven by a qprocs specified uri ?-query pattern.
+                                not all spaces have the same set of attached qprocs.
+                                qprocs must be attached to a space before use. a space's qprocs are accessible at
+                                
+                                     *space/vid/qProc — i.e. a space \\(\\mathcal{S}\\) exposes its qprocs as \\(\\mathrm{qprocs}(\\mathcal{S})\\)
+                                """),
                         /// ///////////////////////////////////
                         docWrap(REGEX_TYPE = Type.Builder.build().tid(STR_TID).vid(REGEX_TID).create(), "a str refined to a regex pattern"),
                         /// ///////////////////////////////////
@@ -581,10 +582,10 @@ public class mInstSet extends AbstractInstSet {
                                         .create(), "", "",
                                 Map.of(uri(SUB).maybe().asUri(), "subscriptions to register immediately upon construction"),
                                 """
-                                uri publish-subscribe qproc.
-                                when writing an inst to a subq uri, be sure to |-block prefix 
-                                so as to store the inst and not its evaluation in the assignment.
-                                """,
+                                        uri publish-subscribe qproc.
+                                        when writing an inst to a subq uri, be sure to |-block prefix 
+                                        so as to store the inst and not its evaluation in the assignment.
+                                        """,
                                 "/usr/ai/#?subq -> sub::[code=>print('ai update: ${_}')] [-- /usr/ai subtree watch  --]",
                                 "a?subq         -> sub::[code=>>>1+1.println(_).to(a)]   [-- infinite incr loop     --]",
                                 "*tree?subq                                              [-- all subs for tree      --]",
@@ -2119,7 +2120,7 @@ public class mInstSet extends AbstractInstSet {
         private static final double EPSILON = 1.0e-9d;
 
         /**
-         * EQUALITY FOR A LAW'S TWO SIDES — structural equality ({@link Obj#equals}) OR, for the two numeric carriers
+         * EQUALITY FOR A LAW'S TWO SIDES — structural equality ( ) OR, for the two numeric carriers
          * ({@code int}, {@code real}), a small RELATIVE epsilon: {@code |l-r| <= EPSILON·max(1,|l|,|r|)}.
          *
          * <p>WHY THE EPSILON EXISTS: {@code real} is IEEE-754, so a field law that is exact over the rationals need

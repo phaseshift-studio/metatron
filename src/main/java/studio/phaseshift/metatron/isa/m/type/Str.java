@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 
@@ -284,7 +284,7 @@ public interface Str extends Mono {
         }
 
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
-        
+
         public static String stripQuotes(String string) {
             while (string.startsWith("'") || string.startsWith("\"")) {
                 string = string.substring(1);

@@ -21,13 +21,13 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Stats;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -40,14 +40,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.QPROC;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
 
 public interface Space extends Addressable, Rec, Closeable {
 

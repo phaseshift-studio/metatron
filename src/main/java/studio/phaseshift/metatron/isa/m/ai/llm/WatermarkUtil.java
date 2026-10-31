@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.ai.llm;
 
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 
@@ -177,9 +177,9 @@ public final class WatermarkUtil {
      * actually about its own watermark.
      */
     private static final String SHARED_INSTRUCTIONS = """
-                                                      **IMPORTANT**: this is about formatting your response, not calling a function.
-                                                      The watermark is stripped from what the user sees — write it for the runtime, not the reader.
-                                                      """;
+            **IMPORTANT**: this is about formatting your response, not calling a function.
+            The watermark is stripped from what the user sees — write it for the runtime, not the reader.
+            """;
 
     /**
      * Compose a feature's skill content: its own prose, then the shared

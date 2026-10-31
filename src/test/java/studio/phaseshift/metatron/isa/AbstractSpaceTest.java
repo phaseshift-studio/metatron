@@ -37,7 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.lang.reflect.Method;
@@ -134,12 +134,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @ParameterizedTest
     @TestData(value = {
             """
-            routes -> [db:abc                   => c,
-                       db:ddd                   => v:embed,
-                       db:llm_message_embedding => v:llm_embeddings,
-                       db:                      => <>,
-                       /x/y                     => v:]
-            """
+                    routes -> [db:abc                   => c,
+                               db:ddd                   => v:embed,
+                               db:llm_message_embedding => v:llm_embeddings,
+                               db:                      => <>,
+                               /x/y                     => v:]
+                    """
     })
     @CsvSource(value = {
             "db:abc/c                                        % c/c",

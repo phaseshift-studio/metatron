@@ -23,14 +23,14 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.Handshakedata;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 
 import java.util.Map;
@@ -38,9 +38,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;

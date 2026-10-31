@@ -36,8 +36,8 @@ import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.Comparator;
@@ -104,17 +104,17 @@ public class CompactionFeature extends AbstractFeature {
     static final String WATERMARK_CODEC = "mtron";
 
     private static final String COMPACTION_INSTRUCTIONS = """
-                                                          When the conversation history is getting large, you can append a `<<mtron:compaction>>`
-                                                          watermark to your response — a deferred `compact()` call, where the watermark body is
-                                                          the same argument rec `compact()` takes (all optional). An empty body means "use your
-                                                          defaults":
-                                                          
-                                                              <<mtron:compaction>><</mtron:compaction>>
-                                                          
-                                                          The compaction runs in the background — acknowledge that it is queued and respond
-                                                          normally. On the next chat, the conversation history is replaced with a resume summary
-                                                          plus the most recent messages. Prefer this over continuing with an unwieldy history.
-                                                          """;
+            When the conversation history is getting large, you can append a `<<mtron:compaction>>`
+            watermark to your response — a deferred `compact()` call, where the watermark body is
+            the same argument rec `compact()` takes (all optional). An empty body means "use your
+            defaults":
+            
+                <<mtron:compaction>><</mtron:compaction>>
+            
+            The compaction runs in the background — acknowledge that it is queued and respond
+            normally. On the next chat, the conversation history is replaced with a resume summary
+            plus the most recent messages. Prefer this over continuing with an unwieldy history.
+            """;
 
     public void registerSkill(final Agent agent) {
         if (!agent.hasFeature(LLM_SKILL_FEATURE_TID))
@@ -155,10 +155,10 @@ public class CompactionFeature extends AbstractFeature {
         if (summary.isBlank())
             return;
         agent.requireService(SystemService.class).addSystemMessage("""
-                                                                   resume summary from a prior compaction:
-                                                                   
-                                                                   %s
-                                                                   """.formatted(summary));
+                resume summary from a prior compaction:
+                
+                %s
+                """.formatted(summary));
     }
 
     @Override
@@ -255,20 +255,20 @@ public class CompactionFeature extends AbstractFeature {
      * transcript again, only the resume summary.
      */
     private static final String COMPACT_PROMPT = """
-                                                 You have been working on the task described above but have not yet completed it.
-                                                 Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
-                                                 in a future context window where the conversation history will be replaced with this summary.
-                                                 
-                                                 Your summary should be structured, concise, and actionable. Include:
-                                                 1. **Task Overview**: The user's core request, success criteria, and constraints.
-                                                 2. **Current State**: What has been completed, current progress, and any pending steps.
-                                                 3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
-                                                 
-                                                 Write in a way that enables immediate resumption of the task.
-                                                 
-                                                 ## Conversation:
-                                                 %s
-                                                 """;
+            You have been working on the task described above but have not yet completed it.
+            Write a continuation summary that will allow you (or another instance of yourself) to resume work efficiently
+            in a future context window where the conversation history will be replaced with this summary.
+            
+            Your summary should be structured, concise, and actionable. Include:
+            1. **Task Overview**: The user's core request, success criteria, and constraints.
+            2. **Current State**: What has been completed, current progress, and any pending steps.
+            3. **Key Details**: User preferences, domain-specific details, or promises made to the user.
+            
+            Write in a way that enables immediate resumption of the task.
+            
+            ## Conversation:
+            %s
+            """;
 
 
     /**

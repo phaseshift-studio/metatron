@@ -23,30 +23,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
-import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.HOP;
-import static studio.phaseshift.metatron.Tokens.PLACE;
-import static studio.phaseshift.metatron.Tokens.SPLIT;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -465,7 +458,7 @@ public class DecisionModelTest extends AbstractInstSetTest {
                 "[shape=><star>,place=>[//ginger:8555],hop=>0,split=>stream]").asRec());
         assertEquals(Placement.Shape.STAR, star.shape(), "the move fan-out is not distinguishable from a peer by axes");
         assertEquals(Placement.Shape.PEER, Placement.of(ObjmtronSerializer.parse(
-                "[place=>[//ginger:8555],hop=>0,split=>stream]").asRec()).shape(),
+                        "[place=>[//ginger:8555],hop=>0,split=>stream]").asRec()).shape(),
                 "... so the projection alone answers the peer");
     }
 

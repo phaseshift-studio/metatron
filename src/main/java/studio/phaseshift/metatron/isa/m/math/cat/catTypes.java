@@ -18,13 +18,13 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
 

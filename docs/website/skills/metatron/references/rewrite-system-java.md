@@ -115,7 +115,7 @@ are the matched source instructions. Return the replacement instruction list.
 **Key limitation:** fixed-length matching only. The pattern `[A, B]` matches exactly two instructions. There is no
 variable-length prefix/suffix capture.
 
-### 2. `RewriteBuilder` — space-aware native operation pushdown
+### 2. `DBRewriteBuilder` — space-aware native operation pushdown
 
 A fluent builder for rewrites that replace generic instruction chains with native database operations. The key
 difference: the rewrite checks **which space** the data lives in, and only fires when it's the right backend.

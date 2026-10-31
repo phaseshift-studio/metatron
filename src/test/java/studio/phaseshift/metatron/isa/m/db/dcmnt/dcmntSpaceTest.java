@@ -207,7 +207,6 @@ public class dcmntSpaceTest extends AbstractDataPathSpaceTest implements CommonR
 
     @AfterAll
     public static void stopAll() {
-        AbstractMetatronTest.end();
         if (mongoServer != null) {
             mongoServer.shutdown();
             STATIC_LOG.info("shutdown in-memory mongodb");

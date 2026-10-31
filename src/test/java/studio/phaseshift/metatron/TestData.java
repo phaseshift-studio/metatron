@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

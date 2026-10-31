@@ -15,7 +15,7 @@ import studio.phaseshift.metatron.isa.m.parse.CodeParseTest;
 import studio.phaseshift.metatron.isa.m.parse.InstParseTest;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.machInstSetTest;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.sysInstSetTest;
 import studio.phaseshift.metatron.isa.m.db.vec.vecInstSetTest;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializerTest;

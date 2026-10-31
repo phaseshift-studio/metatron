@@ -364,6 +364,7 @@ public final class Tokens {
     public static final String CREATOR = "creator";
     public static final String LEVEL = "level";
     public static final String SPACE = "space";
+    public static final String STACK = "stack";
     public static final String INST = "inst";
     public static final String SQL = "sql";
     public static final String STORE = "store";

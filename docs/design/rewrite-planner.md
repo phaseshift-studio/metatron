@@ -6,7 +6,8 @@
 
 ## Overview
 
-This document captures ideas for evolving the rewrite system from a fixed-point iteration model to an explicit **plan-directed** model, where rewrite topology is expressed as first-class mtron data.
+This document captures ideas for evolving the rewrite system from a fixed-point iteration model to an explicit
+**plan-directed** model, where rewrite topology is expressed as first-class mtron data.
 
 ---
 
@@ -24,12 +25,14 @@ while (done != 0) {
 ```
 
 **Characteristics:**
+
 - All rewrites run every iteration
 - Iterates until code stops changing (hash stable for 2 rounds)
 - Rewrite composition is **implicit** - rewrites discover each other via TID matching
 - No explicit ordering control
 
 **Example of implicit linking:**
+
 ```java
 // whereRewrite outputs TID: sql_where
 // whereCountRewrite matches TID: sql_where, then count
@@ -108,14 +111,14 @@ id_removal
 
 ## Benefits of Plan-Directed Rewriting
 
-| Aspect | Fixed-Point | Plan-Directed |
-|--------|-------------|---------------|
-| **Control** | Run all, iterate until stable | Directed graph traversal |
-| **Short-circuit** | No - all rewrites checked | Yes - stop when path completes |
-| **Customization** | Same plan for all queries | Different plans per context |
-| **Cost-based** | Hard to add | Natural - pick cheapest branch |
-| **Debuggability** | "Why did this fire?" | Plan is inspectable data |
-| **Composition** | Implicit via TID | Explicit in plan structure |
+| Aspect            | Fixed-Point                   | Plan-Directed                  |
+|-------------------|-------------------------------|--------------------------------|
+| **Control**       | Run all, iterate until stable | Directed graph traversal       |
+| **Short-circuit** | No - all rewrites checked     | Yes - stop when path completes |
+| **Customization** | Same plan for all queries     | Different plans per context    |
+| **Cost-based**    | Hard to add                   | Natural - pick cheapest branch |
+| **Debuggability** | "Why did this fire?"          | Plan is inspectable data       |
+| **Composition**   | Implicit via TID              | Explicit in plan structure     |
 
 ---
 
@@ -156,11 +159,13 @@ Plans live in the **schema** of each space:
 ```
 
 **Inheritance model:**
+
 1. Check `/sys/space/{name}/schema/plan` for dataset-specific plan
 2. Fall back to `/m/tble/inst/rewrite/plan` (general-purpose tble plan)
 3. Each dataset can customize optimizations for its specific schema/access patterns
 
 **Benefits:**
+
 - OLTP vs OLAP datasets can have different plans
 - Heavily-indexed tables can prioritize index-aware rewrites
 - Experimental plans can be tested on specific datasets
@@ -170,11 +175,13 @@ Plans live in the **schema** of each space:
 ## Rewrites and Router
 
 Currently, rewrites are **not registered** in `Router.redirects()`:
+
 - They're available but require full URI to access
 - Not intended to be user-facing
 - See `AbstractInstSet` (two constructors - migrating to `setup()` model)
 
-**Future option:** Could add rewrites to Router redirects if we want them more discoverable, but current model keeps them as internal optimization machinery.
+**Future option:** Could add rewrites to Router redirects if we want them more discoverable, but current model keeps
+them as internal optimization machinery.
 
 ---
 
@@ -215,21 +222,26 @@ mtron> plan.select([a=>[b=>[_=>[_=>?=2]]]]).>>.>>b
 ==>[c=>[e=>2]]
 ```
 
-**Use case:** Before applying rewrites, prune plan to only branches that could match the current code pattern. Avoids wasted work on irrelevant branches.
+**Use case:** Before applying rewrites, prune plan to only branches that could match the current code pattern. Avoids
+wasted work on irrelevant branches.
 
 ---
 
 ## Open Questions
 
 ### 1. Cost Model
+
 How to choose between branches in `{a, b, c}`?
+
 - First match wins? (simple)
 - Estimate cost and pick cheapest? (like Volcano/Cascades)
 - Run all and pick best result? (expensive but optimal)
 - Use `select` to prune based on code structure first?
 
 ### 2. Rewrite Identity
+
 Currently rewrites are identified by TID. In plan-directed model:
+
 - Are rewrites still referenced by TID in the plan?
 - Or are they first-class objects in the plan structure?
 
@@ -242,11 +254,14 @@ plan = [_._._ -> _.] => [from.where -> sql_where] => [_.count -> sql_count]
 ```
 
 ### 3. Backwards Compatibility
+
 Can we support both models?
+
 - `code.rewrite()` - current fixed-point (default)
 - `code.rewrite(plan)` - plan-directed (explicit)
 
 The stub already exists in Code.java:
+
 ```java
 /*default Code rewrite(final Code queryPlan) {
    // TODO!!!
@@ -254,7 +269,9 @@ The stub already exists in Code.java:
 ```
 
 ### 4. Plan Versioning
+
 If plans live in schema, how to handle:
+
 - Schema migrations that invalidate plan assumptions?
 - A/B testing different plans?
 - Rolling back to previous plan if new one causes issues?
@@ -303,5 +320,5 @@ sql_plan = {
 
 - `Code.rewrite()` - `/src/main/java/studio/phaseshift/metatron/isa/m/type/Code.java`
 - `CommonRewrites` - `/src/main/java/studio/phaseshift/metatron/algebra/rewrite/CommonRewrites.java`
-- `RewriteBuilder` - `/src/main/java/studio/phaseshift/metatron/algebra/rewrite/RewriteBuilder.java`
+- `DBRewriteBuilder` - `/src/main/java/studio/phaseshift/metatron/algebra/rewrite/RewriteBuilder.java`
 - `tbleInstSet` rewrites - `/src/main/java/studio/phaseshift/metatron/isa/tble/tbleInstSet.java`

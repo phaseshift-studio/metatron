@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.util;
 
 import ch.usi.si.seart.treesitter.Language;
 import ch.usi.si.seart.treesitter.Parser;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -55,12 +55,16 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class TreeSitterUtil {
 
-    /** the switch that disables tree-sitter entirely: {@code -Dmetatron.treesitter=off}. */
+    /**
+     * the switch that disables tree-sitter entirely: {@code -Dmetatron.treesitter=off}.
+     */
     public static final String ENABLED_PROPERTY = "metatron.treesitter";
 
     private static final String LIB_NAME = "libjava-tree-sitter.so";
 
-    /** the shipped library's {@code NEEDED} entry — musl-built, unloadable on glibc until patched. */
+    /**
+     * the shipped library's {@code NEEDED} entry — musl-built, unloadable on glibc until patched.
+     */
     private static final String MUSL_NEEDED = "libc.musl-x86_64.so.1";
     private static final String GLIBC_NEEDED = "libc.so.6";
 
@@ -208,7 +212,9 @@ public final class TreeSitterUtil {
         }
     }
 
-    /** A stable short digest of the library bytes, so every JVM agrees on one extraction directory. */
+    /**
+     * A stable short digest of the library bytes, so every JVM agrees on one extraction directory.
+     */
     private static String fingerprint(final byte[] bytes) {
         try {
             final byte[] digest = MessageDigest.getInstance("SHA-256").digest(bytes);

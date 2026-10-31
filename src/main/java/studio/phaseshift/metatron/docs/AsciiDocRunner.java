@@ -23,9 +23,9 @@ import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;

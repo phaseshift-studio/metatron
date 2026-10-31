@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 

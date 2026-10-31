@@ -20,16 +20,14 @@ package studio.phaseshift.metatron.isa.m.sys.ui;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.ModalTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.AccordionWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Stylable;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Widget;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.tool.ModalTool;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.AccordionWidget;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.FloatingSurface;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

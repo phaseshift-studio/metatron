@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.ai.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.StackBarWidget;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.StackBarWidget;
 
 import java.util.*;
 

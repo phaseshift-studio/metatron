@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.web.type.*;
 import studio.phaseshift.metatron.isa.m.web.parser.*;
 import studio.phaseshift.metatron.util.MTronException;
 

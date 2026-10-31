@@ -18,9 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.Law;
-
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
@@ -29,7 +27,9 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -40,9 +40,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;

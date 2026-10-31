@@ -18,25 +18,17 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.Law;
-
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FILTER_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.GTE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.GT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.IS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LTE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.LT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -83,7 +75,9 @@ public class catLiveness {
         return typing(code).contracts();
     }
 
-    /** The carrier flowing into each instruction and the contract it resolves to, from one probe of the chain. */
+    /**
+     * The carrier flowing into each instruction and the contract it resolves to, from one probe of the chain.
+     */
     private record Typing(List<Type> carriers, List<Inst> contracts) {
     }
 
@@ -333,8 +327,7 @@ public class catLiveness {
             case "branch_inline" -> profile.oneTerm;
             case "derivation_contraction" -> LawTable.derivations().stream()
                     .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
-            case "law_shard" ->
-                    profile.shard;   // a seed + a reducer whose partials recombine (the one-cut shard)
+            case "law_shard" -> profile.shard;   // a seed + a reducer whose partials recombine (the one-cut shard)
             default -> true; // an undeclared rule proves nothing -- keep the edge
         };
     }

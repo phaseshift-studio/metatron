@@ -20,18 +20,18 @@ package studio.phaseshift.metatron.isa.m.mach.type.memory;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Memory;
+import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Memory;
-import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
-import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.*;
@@ -39,10 +39,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MEMORY_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**

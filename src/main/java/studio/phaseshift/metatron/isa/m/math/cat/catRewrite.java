@@ -18,31 +18,21 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.Law;
-
-import studio.phaseshift.metatron.algebra.rewrite.Cut;
-import studio.phaseshift.metatron.algebra.rewrite.Plan;
-import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
-import studio.phaseshift.metatron.algebra.rewrite.Partition;
-import studio.phaseshift.metatron.algebra.rewrite.PlaceSet;
-import studio.phaseshift.metatron.algebra.rewrite.Placement;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
-import studio.phaseshift.metatron.algebra.rewrite.Span;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.*;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
-import java.util.*;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLAN_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 
 /**
@@ -218,7 +208,7 @@ public class catRewrite {
         return PLANS.get(name);
     }
 
-/**
+    /**
      * The {@code /rewrite} registrations — the law-driven rules the category ships, each its
      * {@code docWrap(rewriter(rewriteTID(name)), doc)}, plus the design note for the deferred
      * graph-driven family below the unit law.
@@ -229,199 +219,199 @@ public class catRewrite {
         // that is the thin law-indexing. A null witness (the type declares no additive structure) degrades a
         // normalizer to the identity.
         return lst(
-                        /* =====================================================================================
-                         * (4) THE GRAPH/RELATION-DRIVEN FAMILY — next slice, deliberately NOT wired yet.
-                         *
-                         * Every rewrite below reads a single instruction's own declaration (its theory roles
-                         * and process laws). The family after it reads an instruction's RELATION to the other
-                         * types in the category — the metadata catInstSet already computes but the rewriter
-                         * does not consume yet:
-                         *
-                         *   analysis.inverse   the declared opposing edge f^-1  (f . f^-1 = 1)
-                         *   class              endo / iso / auto / mono / epi / section / retraction
-                         *   position           duplicate / ambiguous / incomparable / coupling / isochain / retract
-                         *   orbit              the reversible-core component of the endpoint
-                         *   the cast subgraph  the as-edges, their refinements, and `implicit()`'s synthesized casts
-                         *
-                         * Candidate rules, each sound only under the named class/position guard:
-                         *
-                         *   inverse_pair_elision  x.as(B).as(A) |-> x        when as?B<=A . as?A<=B is `coupling`
-                         *                                                    (a true two-sided inverse -- NOT when the
-                         *                                                    round trip is lossy: `retract`/`isochain`)
-                         *   cast_fusion           x.as(A).as(B) |-> x.as(B)  when B.refines(A) (the intermediate
-                         *                                                    re-tag is the identity; `reaches`/`refines`
-                         *                                                    already decide it)
-                         *   endo_cast_drop        x.as(X::T) |-> x           when x is already X::T (an endo edge)
-                         *   section_cancellation  r . s |-> e                when `clazz` says r is a `retraction`
-                         *                                                    and s a `section` (a split mono/epi pair)
-                         *   derived_cancellation  div(mult(a,b), b) |-> a    composed from `derivation` + `inverse`
-                         *
-                         * Two things gate this family, and they are why it is a separate slice:
-                         *
-                         *   1. it needs the CAST SUBGRAPH (`graph()`, `check()`, `implicit()`), not one inst. The
-                         *      guard is a whole-graph query, so the rule is not a local list filter like the ones
-                         *      below -- it has to be driven from `catAudit.check()`/`Finding`s, not from
-                         *      `code.insts()`.
-                         *   2. the dual direction -- `derivation_expansion` (minus |-> plus . neg,
-                         *      div |-> mult . inv) -- must NOT be registered beside `derivation_contraction`.
-                         *      The two alternate forever, so no length-stable rewriter stage can settle on a
-                         *      form (the shipped `fixpoint_rewriter` would never close its stable window), and
-                         *      which form wins becomes nondeterministic.
-                         *      Expansion is a LOWERING policy (for a target that lacks the primitive), so it
-                         *      belongs behind an explicit lowering flag/plan, never in the default rewrite set.
-                         * ===================================================================================== */
+                /* =====================================================================================
+                 * (4) THE GRAPH/RELATION-DRIVEN FAMILY — next slice, deliberately NOT wired yet.
+                 *
+                 * Every rewrite below reads a single instruction's own declaration (its theory roles
+                 * and process laws). The family after it reads an instruction's RELATION to the other
+                 * types in the category — the metadata catInstSet already computes but the rewriter
+                 * does not consume yet:
+                 *
+                 *   analysis.inverse   the declared opposing edge f^-1  (f . f^-1 = 1)
+                 *   class              endo / iso / auto / mono / epi / section / retraction
+                 *   position           duplicate / ambiguous / incomparable / coupling / isochain / retract
+                 *   orbit              the reversible-core component of the endpoint
+                 *   the cast subgraph  the as-edges, their refinements, and `implicit()`'s synthesized casts
+                 *
+                 * Candidate rules, each sound only under the named class/position guard:
+                 *
+                 *   inverse_pair_elision  x.as(B).as(A) |-> x        when as?B<=A . as?A<=B is `coupling`
+                 *                                                    (a true two-sided inverse -- NOT when the
+                 *                                                    round trip is lossy: `retract`/`isochain`)
+                 *   cast_fusion           x.as(A).as(B) |-> x.as(B)  when B.refines(A) (the intermediate
+                 *                                                    re-tag is the identity; `reaches`/`refines`
+                 *                                                    already decide it)
+                 *   endo_cast_drop        x.as(X::T) |-> x           when x is already X::T (an endo edge)
+                 *   section_cancellation  r . s |-> e                when `clazz` says r is a `retraction`
+                 *                                                    and s a `section` (a split mono/epi pair)
+                 *   derived_cancellation  div(mult(a,b), b) |-> a    composed from `derivation` + `inverse`
+                 *
+                 * Two things gate this family, and they are why it is a separate slice:
+                 *
+                 *   1. it needs the CAST SUBGRAPH (`graph()`, `check()`, `implicit()`), not one inst. The
+                 *      guard is a whole-graph query, so the rule is not a local list filter like the ones
+                 *      below -- it has to be driven from `catAudit.check()`/`Finding`s, not from
+                 *      `code.insts()`.
+                 *   2. the dual direction -- `derivation_expansion` (minus |-> plus . neg,
+                 *      div |-> mult . inv) -- must NOT be registered beside `derivation_contraction`.
+                 *      The two alternate forever, so no length-stable rewriter stage can settle on a
+                 *      form (the shipped `fixpoint_rewriter` would never close its stable window), and
+                 *      which form wins becomes nondeterministic.
+                 *      Expansion is a LOWERING policy (for a target that lacks the primitive), so it
+                 *      belongs behind an explicit lowering flag/plan, never in the default rewrite set.
+                 * ===================================================================================== */
 
-                        // (1) the unit law, for EVERY theory instance the operand's type declares: op(id) |-> e,
-                        // plus a bare identity operation (code's id) which is the identity morphism.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("theory_unit_removal"),
-                                code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
+                // (1) the unit law, for EVERY theory instance the operand's type declares: op(id) |-> e,
+                // plus a bare identity operation (code's id) which is the identity morphism.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("theory_unit_removal"),
+                        code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
 
-                        // ============ (1b/1c) THE BRANCH-SPECIFIC WARM-UP — SUPERSEDED, KEPT IN COMMENT FOR THE SIDE-BY-SIDE ============
-                        // The two bodies below have moved into the law-indexed normalizers repeatedTerms / oneTerm
-                        // (inst-agnostic: the additive op is the witness read off the algebra — object[code].law,
-                        // ring.add / add_group.op, resolved inside each rule by additiveWitness at rewrite time).
-                        // The registrations that follow are the same two rules at the same rule addresses;
-                        // re-enable these to compare against the specific version (with the generic pair
-                        // registered, that would double-fire the same passes).
-                        // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
-                        //         code -> {
-                        //             final List<Inst> insts = code.insts();
-                        //             boolean changed = false;
-                        //             final List<Inst> out = new ArrayList<>(insts.size());
-                        //             for (final Inst inst : insts) {
-                        //                 if (!BRANCH_INST_TID.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
-                        //                     out.add(inst);
-                        //                     continue;
-                        //                 }
-                        //                 final List<Obj> reps = new ArrayList<>();
-                        //                 final List<cInt> sums = new ArrayList<>();
-                        //                 for (final Obj arg : inst.args().elements().toList()) {
-                        //                     int slot = -1;
-                        //                     for (int j = 0; j < reps.size(); j++) {
-                        //                         if (sameMember(reps.get(j), arg)) {
-                        //                             slot = j;
-                        //                             break;
-                        //                         }
-                        //                     }
-                        //                     if (-1 == slot) {
-                        //                         reps.add(arg);
-                        //                         sums.add(multiplicity(arg));
-                        //                     } else
-                        //                         sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
-                        //                 }
-                        //                 if (reps.size() < inst.args().count()) {
-                        //                     changed = true;
-                        //                     final List<Obj> merged = new ArrayList<>(reps.size());
-                        //                     for (int i = 0; i < reps.size(); i++)
-                        //                         merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
-                        //                     out.add(inst.args(lst(merged)));
-                        //                 } else
-                        //                     out.add(inst);
-                        //             }
-                        //             return changed ? code(out) : code;
-                        //         }), "the additive like-term law ... (see repeatedTerms)"),
-                        //
-                        // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
-                        //         code -> {
-                        //             final List<Inst> insts = code.insts();
-                        //             boolean changed = false;
-                        //             final List<Inst> out = new ArrayList<>(insts.size());
-                        //             for (final Inst inst : insts) {
-                        //                 if (BRANCH_INST_TID.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
-                        //                     final Obj member = absorb(inst.arg(0), inst.c());
-                        //                     changed = true;
-                        //                     if (member.isCall())
-                        //                         out.addAll(member.asCall().insts());
-                        //                     else
-                        //                         out.add((Inst) map_(member).tryToInst());
-                        //                 } else
-                        //                     out.add(inst);
-                        //             }
-                        //             return changed ? code(out) : code;
-                        //         }), "the single-addend law ... (see oneTerm)"),
+                // ============ (1b/1c) THE BRANCH-SPECIFIC WARM-UP — SUPERSEDED, KEPT IN COMMENT FOR THE SIDE-BY-SIDE ============
+                // The two bodies below have moved into the law-indexed normalizers repeatedTerms / oneTerm
+                // (inst-agnostic: the additive op is the witness read off the algebra — object[code].law,
+                // ring.add / add_group.op, resolved inside each rule by additiveWitness at rewrite time).
+                // The registrations that follow are the same two rules at the same rule addresses;
+                // re-enable these to compare against the specific version (with the generic pair
+                // registered, that would double-fire the same passes).
+                // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
+                //         code -> {
+                //             final List<Inst> insts = code.insts();
+                //             boolean changed = false;
+                //             final List<Inst> out = new ArrayList<>(insts.size());
+                //             for (final Inst inst : insts) {
+                //                 if (!BRANCH_INST_TID.equals(inst.tid().basePath()) || 2 > inst.args().count()) {
+                //                     out.add(inst);
+                //                     continue;
+                //                 }
+                //                 final List<Obj> reps = new ArrayList<>();
+                //                 final List<cInt> sums = new ArrayList<>();
+                //                 for (final Obj arg : inst.args().elements().toList()) {
+                //                     int slot = -1;
+                //                     for (int j = 0; j < reps.size(); j++) {
+                //                         if (sameMember(reps.get(j), arg)) {
+                //                             slot = j;
+                //                             break;
+                //                         }
+                //                     }
+                //                     if (-1 == slot) {
+                //                         reps.add(arg);
+                //                         sums.add(multiplicity(arg));
+                //                     } else
+                //                         sums.set(slot, sums.get(slot).plus(multiplicity(arg)));
+                //                 }
+                //                 if (reps.size() < inst.args().count()) {
+                //                     changed = true;
+                //                     final List<Obj> merged = new ArrayList<>(reps.size());
+                //                     for (int i = 0; i < reps.size(); i++)
+                //                         merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
+                //                     out.add(inst.args(lst(merged)));
+                //                 } else
+                //                     out.add(inst);
+                //             }
+                //             return changed ? code(out) : code;
+                //         }), "the additive like-term law ... (see repeatedTerms)"),
+                //
+                // docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
+                //         code -> {
+                //             final List<Inst> insts = code.insts();
+                //             boolean changed = false;
+                //             final List<Inst> out = new ArrayList<>(insts.size());
+                //             for (final Inst inst : insts) {
+                //                 if (BRANCH_INST_TID.equals(inst.tid().basePath()) && 1 == inst.args().count()) {
+                //                     final Obj member = absorb(inst.arg(0), inst.c());
+                //                     changed = true;
+                //                     if (member.isCall())
+                //                         out.addAll(member.asCall().insts());
+                //                     else
+                //                         out.add((Inst) map_(member).tryToInst());
+                //                 } else
+                //                     out.add(inst);
+                //             }
+                //             return changed ? code(out) : code;
+                //         }), "the single-addend law ... (see oneTerm)"),
 
-                        // (1b) the additive normalizer, law-indexed — the thin generalization of the warm-up above:
-                        // the moves are statements about the LAW, not about an inst. For the additive op S of the
-                        // algebra being rewritten,
-                        //
-                        //     like terms      S(x, x, ..., x)  ->  S(x{n})    (equality coefficient-blind: the confluence)
-                        //
-                        // S is the witness read off object[code].law — ring.add / add_group.op, which here resolves
-                        // to branch — so the body (repeatedTerms / oneTerm) knows nothing of branch; the same body
-                        // pointed at object[int].law would run on plus with no body change.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
+                // (1b) the additive normalizer, law-indexed — the thin generalization of the warm-up above:
+                // the moves are statements about the LAW, not about an inst. For the additive op S of the
+                // algebra being rewritten,
+                //
+                //     like terms      S(x, x, ..., x)  ->  S(x{n})    (equality coefficient-blind: the confluence)
+                //
+                // S is the witness read off object[code].law — ring.add / add_group.op, which here resolves
+                // to branch — so the body (repeatedTerms / oneTerm) knows nothing of branch; the same body
+                // pointed at object[int].law would run on plus with no body change.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
                                 code -> PlanInterpreter.lower(BRANCH_COLLAPSE_PLAN, code)),
-                                "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[code].law\\), \\(S = branch\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+                        "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[code].law\\), \\(S = branch\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
 
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
+                docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
                                 code -> PlanInterpreter.lower(BRANCH_INLINE_PLAN, code)),
-                                "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
+                        "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
-                        // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
-                        // identity -- neg.neg, reverse.reverse, not.not, conj.conj, inv.inv.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("theory_involution"),
-                                code -> PlanInterpreter.lower(INVOLUTION_PLAN, code)), "the involution law \\(f \\cdot f \\leadsto \\varepsilon\\) (period two) for any operation whose declared process laws include \\(\\mathrm{involution}\\) -- \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{reverse} \\cdot \\mathrm{reverse} \\leadsto \\varepsilon\\), \\(\\mathrm{not} \\cdot \\mathrm{not} \\leadsto \\varepsilon\\)"),
+                // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
+                // identity -- neg.neg, reverse.reverse, not.not, conj.conj, inv.inv.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("theory_involution"),
+                        code -> PlanInterpreter.lower(INVOLUTION_PLAN, code)), "the involution law \\(f \\cdot f \\leadsto \\varepsilon\\) (period two) for any operation whose declared process laws include \\(\\mathrm{involution}\\) -- \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{reverse} \\cdot \\mathrm{reverse} \\leadsto \\varepsilon\\), \\(\\mathrm{not} \\cdot \\mathrm{not} \\leadsto \\varepsilon\\)"),
 
-                        // (2b) the idempotent law: an adjacent pair of the SAME idempotent operation is that
-                        // operation -- ucase.ucase, zero.zero, one.one, an idempotent join (bool or/and).
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("law_idempotent"),
-                                code -> PlanInterpreter.lower(IDEMPOTENT_PLAN, code)), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
+                // (2b) the idempotent law: an adjacent pair of the SAME idempotent operation is that
+                // operation -- ucase.ucase, zero.zero, one.one, an idempotent join (bool or/and).
+                docWrap(InstSet.Helper.rewriter(rewriteTID("law_idempotent"),
+                        code -> PlanInterpreter.lower(IDEMPOTENT_PLAN, code)), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
 
-                        // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
-                        // the pure run before it that hands it one obj per obj is dead code.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
-                                code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
+                // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
+                // the pure run before it that hands it one obj per obj is dead code.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
+                        code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
 
-                        // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
-                        // the identity of the reduction), so an adjacent identical reducer/join collapses.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("law_monoidic"),
-                                code -> PlanInterpreter.lower(MONOIDIC_PLAN, code)), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
+                // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
+                // the identity of the reduction), so an adjacent identical reducer/join collapses.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("law_monoidic"),
+                        code -> PlanInterpreter.lower(MONOIDIC_PLAN, code)), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
 
 
-                        // (2f) the poset law: adjacent filters on comparisons of the same order -- the stricter
-                        // bound wins, so the two filters are one filter. Bare comparisons answer bools and never compose.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
-                                code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent filters on comparisons of the same ordered type compose to the filter on the stricter bound -- \\(\\mathrm{is}(\\mathrm{gt}(a)) \\cdot \\mathrm{is}(\\mathrm{gt}(b)) \\leadsto \\mathrm{is}(\\mathrm{gt}(\\max(a, b)))\\), \\(\\mathrm{is}(\\mathrm{lt}(a)) \\cdot \\mathrm{is}(\\mathrm{lt}(b)) \\leadsto \\mathrm{is}(\\mathrm{lt}(\\min(a, b)))\\); a bare comparison answers a bool, so \\(x.\\mathrm{gt}(a).\\mathrm{gt}(b)\\) is left as it is"),
+                // (2f) the poset law: adjacent filters on comparisons of the same order -- the stricter
+                // bound wins, so the two filters are one filter. Bare comparisons answer bools and never compose.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
+                        code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent filters on comparisons of the same ordered type compose to the filter on the stricter bound -- \\(\\mathrm{is}(\\mathrm{gt}(a)) \\cdot \\mathrm{is}(\\mathrm{gt}(b)) \\leadsto \\mathrm{is}(\\mathrm{gt}(\\max(a, b)))\\), \\(\\mathrm{is}(\\mathrm{lt}(a)) \\cdot \\mathrm{is}(\\mathrm{lt}(b)) \\leadsto \\mathrm{is}(\\mathrm{lt}(\\min(a, b)))\\); a bare comparison answers a bool, so \\(x.\\mathrm{gt}(a).\\mathrm{gt}(b)\\) is left as it is"),
 
-                        // (3a) inverse cancellation: an adjacent declared inverse pair with equal operands
-                        // cancels to the identity -- the group law g . g^-1 = 1, read off Entry.inverse.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("inverse_cancellation"),
-                                code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+                // (3a) inverse cancellation: an adjacent declared inverse pair with equal operands
+                // cancels to the identity -- the group law g . g^-1 = 1, read off Entry.inverse.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("inverse_cancellation"),
+                        code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
 
-                        // (5) the stream lift: `map` is transparent on the value it wraps, so map(f) |-> f.
-                        // This stays WITH map (its shape {?} -> {?} also matches `is`, so a shape-only
-                        // generalization would unwrap a predicate); one rule covers both map(f) |-> f and the
-                        // nesting map(map(f)) |-> map(f) (the outer unwrap exposes the inner map, next pass).
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("form_map_unwrap"),
-                                code -> PlanInterpreter.lower(MAP_UNWRAP_PLAN, code)), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
+                // (5) the stream lift: `map` is transparent on the value it wraps, so map(f) |-> f.
+                // This stays WITH map (its shape {?} -> {?} also matches `is`, so a shape-only
+                // generalization would unwrap a predicate); one rule covers both map(f) |-> f and the
+                // nesting map(map(f)) |-> map(f) (the outer unwrap exposes the inner map, next pass).
+                docWrap(InstSet.Helper.rewriter(rewriteTID("form_map_unwrap"),
+                        code -> PlanInterpreter.lower(MAP_UNWRAP_PLAN, code)), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
 
-                        // (3b) derivation contraction: fold a derived instruction's primitive composition back
-                        // to the derived operation -- plus . neg |-> minus, mult . inv |-> div.
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("derivation_contraction"),
-                                code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+                // (3b) derivation contraction: fold a derived instruction's primitive composition back
+                // to the derived operation -- plus . neg |-> minus, mult . inv |-> div.
+                docWrap(InstSet.Helper.rewriter(rewriteTID("derivation_contraction"),
+                        code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
-                        // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
-                        // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
-                        // monoidic, commutative fold -- r itself (sum, prod), the fold its derivation names
-                        // (count -> sum, order(s) -> kmerge(s)), or pointwise for a keyed group. The seed bulk is
-                        // factored over the machine's dialed peers, the elementwise (floatable) run is replicated per
-                        // factor with a local partial reduce, and the combiner is applied once more at home:
-                        //
-                        //   {1,2,3}.plus(2).sum()
-                        //     |->  start([start?hop=0({1,3}).plus(2).sum(), start?hop=0({2}).plus(2).sum()])
-                        //            .select([to(<a>), to(<b>)]).merge().sum()
-                        //
-                        // select pairs each slave with its route; to(<peer>) ships the slave unquoted, the peer's
-                        // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
-                        // with hop budget left re-plans its part over its own peers (the tree).
-                        //
-                        // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hop=n
-                        // on the chain; ?hop=0 opts a fold out), so on a lone machine the rule is the identity and the
-                        // default schedule is unchanged. Whether a NETWORKED machine should auto-distribute every
-                        // eligible chain at compile time, or only via an explicit >>law_shard edge, is policy (cf.
-                        // derivation_expansion above).
-                        docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
-                                code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
+                // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
+                // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
+                // monoidic, commutative fold -- r itself (sum, prod), the fold its derivation names
+                // (count -> sum, order(s) -> kmerge(s)), or pointwise for a keyed group. The seed bulk is
+                // factored over the machine's dialed peers, the elementwise (floatable) run is replicated per
+                // factor with a local partial reduce, and the combiner is applied once more at home:
+                //
+                //   {1,2,3}.plus(2).sum()
+                //     |->  start([start?hop=0({1,3}).plus(2).sum(), start?hop=0({2}).plus(2).sum()])
+                //            .select([to(<a>), to(<b>)]).merge().sum()
+                //
+                // select pairs each slave with its route; to(<peer>) ships the slave unquoted, the peer's
+                // evaluation answers its partial, and merge() gathers the partials for the combiner. A peer
+                // with hop budget left re-plans its part over its own peers (the tree).
+                //
+                // POLICY: the guard requires dialed peers and a hop budget (the plan's tree placement, or ?hop=n
+                // on the chain; ?hop=0 opts a fold out), so on a lone machine the rule is the identity and the
+                // default schedule is unchanged. Whether a NETWORKED machine should auto-distribute every
+                // eligible chain at compile time, or only via an explicit >>law_shard edge, is policy (cf.
+                // derivation_expansion above).
+                docWrap(InstSet.Helper.rewriter(rewriteTID("law_shard"),
+                        code -> PlanInterpreter.lower(SHARD_PLAN, code)), "the distribution kernel \\((a+b) \\cdot r = (a \\cdot r + b \\cdot r) \\cdot \\mathrm{combiner}(r)\\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer's combiner -- computed, never declared: \\(\\Sigma\\) and \\(\\Pi\\) recombine through themselves, \\(\\mathrm{count}\\) through \\(\\Sigma\\), \\(\\mathrm{order}(s)\\) through \\(\\mathrm{kmerge}(s)\\), \\(\\mathrm{group}([k \\Rightarrow h])\\) pointwise through \\(\\Sigma\\) then \\(\\mathrm{combiner}(h)\\) per key -- \\(\\{1,2,3\\}.f.\\mathrm{count} \\leadsto [\\{1,3\\}.f.\\mathrm{count},\\ \\{2\\}.f.\\mathrm{count}] == [\\mathrm{to}(a),\\ \\mathrm{to}(b)].\\Sigma\\)")
         );
     }
 

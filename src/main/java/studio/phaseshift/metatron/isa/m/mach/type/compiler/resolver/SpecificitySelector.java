@@ -20,33 +20,29 @@ package studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.resolver.Binder;
-import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
-import studio.phaseshift.metatron.isa.m.type.resolver.Selector;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.MONAD_IN;
 import static studio.phaseshift.metatron.Tokens.MONAD_OUT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SPECIFICITY_SELECTOR_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SPECIFICITY_SELECTOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*

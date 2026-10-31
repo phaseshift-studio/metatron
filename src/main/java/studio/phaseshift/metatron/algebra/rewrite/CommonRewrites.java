@@ -23,10 +23,10 @@ import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -118,7 +118,7 @@ public final class CommonRewrites {
             final BiFunction<S, DataPath, Long> countFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return RewriteBuilder.forDatabase(spaceType)
+        return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
                 .rng(Tokens.INT_TID)
                 // ALL (wildcard) catches both FROM_INST_TID (*) and AT_INST_TID (@);
@@ -188,7 +188,7 @@ public final class CommonRewrites {
             final BiFunction<S, DataPath, Number> sumFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return RewriteBuilder.forDatabase(spaceType)
+        return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID)
                 .match(FROM_INST_TID, SUM_INST_TID)
@@ -204,7 +204,7 @@ public final class CommonRewrites {
             final BiFunction<S, DataPath, Number> sumFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return RewriteBuilder.forDatabase(spaceType)
+        return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID)
                 .match(FROM_INST_TID, RSHIFT_INST_TID, SUM_INST_TID)
@@ -239,7 +239,7 @@ public final class CommonRewrites {
             final BiFunction<S, DataPath, Double> meanFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return RewriteBuilder.forDatabase(spaceType)
+        return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(Tokens.REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
@@ -312,7 +312,7 @@ public final class CommonRewrites {
             final LimitOperation<S> limitFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new LimitRewriteBuilder<>(spaceType, limitFunction, matchSpacePredicate)
+        return new LimitDBRewriteBuilder<>(spaceType, limitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, TAKE_INST_TID)
@@ -324,15 +324,15 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for limit operations that extracts the limit value
      * from the take() instruction and passes it to the optimization function.
      */
-    private static class LimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class LimitDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final LimitOperation<S> limitOperation;
 
-        LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
+        LimitDBRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
             this(spaceType, limitOperation, null);
         }
 
-        LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation,
-                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        LimitDBRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation,
+                              final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.limitOperation = limitOperation;
             this.matchSpacePredicate = matchSpacePredicate;
@@ -419,7 +419,7 @@ public final class CommonRewrites {
             final fURI rewriteTID,
             final BiFunction<S, DataPath, Number> prodFunction) {
 
-        return RewriteBuilder.forDatabase(spaceType)
+        return DBRewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
@@ -482,7 +482,7 @@ public final class CommonRewrites {
             final SelectOperation<S> selectFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new SelectRewriteBuilder<>(spaceType, selectFunction, matchSpacePredicate)
+        return new SelectDBRewriteBuilder<>(spaceType, selectFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, RSHIFT_INST_TID)
@@ -494,15 +494,15 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for select/projection operations that extracts
      * the field list from the rshift (>>) instruction.
      */
-    private static class SelectRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class SelectDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final SelectOperation<S> selectOperation;
 
-        SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
+        SelectDBRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
             this(spaceType, selectOperation, null);
         }
 
-        SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation,
-                             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        SelectDBRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation,
+                               final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.selectOperation = selectOperation;
             this.matchSpacePredicate = matchSpacePredicate;
@@ -748,7 +748,7 @@ public final class CommonRewrites {
             final ConditionFormatter conditionFormatter,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereRewriteBuilder<>(spaceType, whereFunction, predicateJoiner, conditionFormatter, matchSpacePredicate)
+        return new WhereDBRewriteBuilder<>(spaceType, whereFunction, predicateJoiner, conditionFormatter, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ISA_INST_TID)
@@ -760,21 +760,21 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for where operations that extracts and translates
      * the predicate from the isa() instruction to a native filter clause.
      */
-    private static class WhereRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final WhereOperation<S> whereOperation;
         private final PredicateJoiner predicateJoiner;
         private final ConditionFormatter conditionFormatter;
 
-        WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
-                            final PredicateJoiner predicateJoiner,
-                            final ConditionFormatter conditionFormatter) {
+        WhereDBRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
+                              final PredicateJoiner predicateJoiner,
+                              final ConditionFormatter conditionFormatter) {
             this(spaceType, whereOperation, predicateJoiner, conditionFormatter, null);
         }
 
-        WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
-                            final PredicateJoiner predicateJoiner,
-                            final ConditionFormatter conditionFormatter,
-                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereDBRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation,
+                              final PredicateJoiner predicateJoiner,
+                              final ConditionFormatter conditionFormatter,
+                              final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereOperation = whereOperation;
             this.predicateJoiner = predicateJoiner;
@@ -1033,7 +1033,7 @@ public final class CommonRewrites {
             final WhereCountOperation<S> whereCountFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereCountRewriteBuilder<>(spaceType, whereRewriteTID, whereCountFunction, matchSpacePredicate)
+        return new WhereCountDBRewriteBuilder<>(spaceType, whereRewriteTID, whereCountFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.INT_TID)
                 .match(whereRewriteTID, COUNT_INST_TID)
@@ -1044,18 +1044,18 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for where+count operations that extracts
      * the fURI and WHERE clause from the preceding native where instruction.
      */
-    private static class WhereCountRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereCountDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereRewriteTID;
         private final WhereCountOperation<S> whereCountOperation;
 
-        WhereCountRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereCountOperation<S> whereCountOperation) {
+        WhereCountDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereCountOperation<S> whereCountOperation) {
             this(spaceType, whereRewriteTID, whereCountOperation, null);
         }
 
-        WhereCountRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereCountOperation<S> whereCountOperation,
-                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereCountDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereCountOperation<S> whereCountOperation,
+                                   final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereCountOperation = whereCountOperation;
@@ -1176,7 +1176,7 @@ public final class CommonRewrites {
             final WhereLimitOperation<S> whereLimitFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereLimitRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction, matchSpacePredicate)
+        return new WhereLimitDBRewriteBuilder<>(spaceType, whereRewriteTID, whereLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, TAKE_INST_TID)
@@ -1188,18 +1188,18 @@ public final class CommonRewrites {
      * the fURI and WHERE clause from the preceding native where instruction
      * and the limit value from the take() instruction.
      */
-    private static class WhereLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereLimitDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereRewriteTID;
         private final WhereLimitOperation<S> whereLimitOperation;
 
-        WhereLimitRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereLimitOperation<S> whereLimitOperation) {
+        WhereLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereLimitOperation<S> whereLimitOperation) {
             this(spaceType, whereRewriteTID, whereLimitOperation, null);
         }
 
-        WhereLimitRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereLimitOperation<S> whereLimitOperation,
-                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereLimitOperation<S> whereLimitOperation,
+                                   final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereLimitOperation = whereLimitOperation;
@@ -1311,7 +1311,7 @@ public final class CommonRewrites {
             final SkipOperation<S> skipFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new SkipRewriteBuilder<>(spaceType, skipFunction, matchSpacePredicate)
+        return new SkipDBRewriteBuilder<>(spaceType, skipFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, SKIP_INST_TID)
@@ -1323,15 +1323,15 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for skip/offset operations that extracts the skip value
      * from the skip() instruction and passes it to the optimization function.
      */
-    private static class SkipRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class SkipDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final SkipOperation<S> skipOperation;
 
-        SkipRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation) {
+        SkipDBRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation) {
             this(spaceType, skipOperation, null);
         }
 
-        SkipRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation,
-                           final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        SkipDBRewriteBuilder(final Class<S> spaceType, final SkipOperation<S> skipOperation,
+                             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.skipOperation = skipOperation;
             this.matchSpacePredicate = matchSpacePredicate;
@@ -1439,7 +1439,7 @@ public final class CommonRewrites {
             final OffsetLimitOperation<S> offsetLimitFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new OffsetLimitRewriteBuilder<>(spaceType, offsetRewriteTID, offsetLimitFunction, matchSpacePredicate)
+        return new OffsetLimitDBRewriteBuilder<>(spaceType, offsetRewriteTID, offsetLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(offsetRewriteTID, TAKE_INST_TID)
@@ -1450,18 +1450,18 @@ public final class CommonRewrites {
      * Specialized RewriteBuilder for offset+limit operations that extracts
      * skip and limit values and fuses them into a single paginated query.
      */
-    private static class OffsetLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class OffsetLimitDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI offsetRewriteTID;
         private final OffsetLimitOperation<S> offsetLimitOperation;
 
-        OffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
-                                  final OffsetLimitOperation<S> offsetLimitOperation) {
+        OffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
+                                    final OffsetLimitOperation<S> offsetLimitOperation) {
             this(spaceType, offsetRewriteTID, offsetLimitOperation, null);
         }
 
-        OffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
-                                  final OffsetLimitOperation<S> offsetLimitOperation,
-                                  final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        OffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI offsetRewriteTID,
+                                    final OffsetLimitOperation<S> offsetLimitOperation,
+                                    final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.offsetRewriteTID = offsetRewriteTID;
             this.offsetLimitOperation = offsetLimitOperation;
@@ -1583,25 +1583,25 @@ public final class CommonRewrites {
             final WhereOffsetOperation<S> whereOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOffsetRewriteBuilder<>(spaceType, whereRewriteTID, whereOffsetFunction, matchSpacePredicate)
+        return new WhereOffsetDBRewriteBuilder<>(spaceType, whereRewriteTID, whereOffsetFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, SKIP_INST_TID)
                 .build();
     }
 
-    private static class WhereOffsetRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereOffsetDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereRewriteTID;
         private final WhereOffsetOperation<S> whereOffsetOperation;
 
-        WhereOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                  final WhereOffsetOperation<S> whereOffsetOperation) {
+        WhereOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                    final WhereOffsetOperation<S> whereOffsetOperation) {
             this(spaceType, whereRewriteTID, whereOffsetOperation, null);
         }
 
-        WhereOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                  final WhereOffsetOperation<S> whereOffsetOperation,
-                                  final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                    final WhereOffsetOperation<S> whereOffsetOperation,
+                                    final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereOffsetOperation = whereOffsetOperation;
@@ -1683,25 +1683,25 @@ public final class CommonRewrites {
             final WhereOrderOperation<S> whereOrderFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOrderRewriteBuilder<>(spaceType, whereRewriteTID, whereOrderFunction, matchSpacePredicate)
+        return new WhereOrderDBRewriteBuilder<>(spaceType, whereRewriteTID, whereOrderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(whereRewriteTID, ORDER_INST_TID)
                 .build();
     }
 
-    private static class WhereOrderRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereOrderDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereRewriteTID;
         private final WhereOrderOperation<S> whereOrderOperation;
 
-        WhereOrderRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereOrderOperation<S> whereOrderOperation) {
+        WhereOrderDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereOrderOperation<S> whereOrderOperation) {
             this(spaceType, whereRewriteTID, whereOrderOperation, null);
         }
 
-        WhereOrderRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
-                                 final WhereOrderOperation<S> whereOrderOperation,
-                                 final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereOrderDBRewriteBuilder(final Class<S> spaceType, final fURI whereRewriteTID,
+                                   final WhereOrderOperation<S> whereOrderOperation,
+                                   final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereOrderOperation = whereOrderOperation;
@@ -1796,25 +1796,25 @@ public final class CommonRewrites {
             final WhereOrderOffsetOperation<S> whereOrderOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOrderOffsetRewriteBuilder<>(spaceType, whereOrderRewriteTID, whereOrderOffsetFunction, matchSpacePredicate)
+        return new WhereOrderOffsetDBRewriteBuilder<>(spaceType, whereOrderRewriteTID, whereOrderOffsetFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(whereOrderRewriteTID, SKIP_INST_TID)
                 .build();
     }
 
-    private static class WhereOrderOffsetRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereOrderOffsetDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereOrderRewriteTID;
         private final WhereOrderOffsetOperation<S> whereOrderOffsetOperation;
 
-        WhereOrderOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
-                                       final WhereOrderOffsetOperation<S> whereOrderOffsetOperation) {
+        WhereOrderOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
+                                         final WhereOrderOffsetOperation<S> whereOrderOffsetOperation) {
             this(spaceType, whereOrderRewriteTID, whereOrderOffsetOperation, null);
         }
 
-        WhereOrderOffsetRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
-                                       final WhereOrderOffsetOperation<S> whereOrderOffsetOperation,
-                                       final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereOrderOffsetDBRewriteBuilder(final Class<S> spaceType, final fURI whereOrderRewriteTID,
+                                         final WhereOrderOffsetOperation<S> whereOrderOffsetOperation,
+                                         final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereOrderRewriteTID = whereOrderRewriteTID;
             this.whereOrderOffsetOperation = whereOrderOffsetOperation;
@@ -1898,25 +1898,25 @@ public final class CommonRewrites {
             final WhereOffsetLimitOperation<S> whereOffsetLimitFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOffsetLimitRewriteBuilder<>(spaceType, whereOffsetRewriteTID, whereOffsetLimitFunction, matchSpacePredicate)
+        return new WhereOffsetLimitDBRewriteBuilder<>(spaceType, whereOffsetRewriteTID, whereOffsetLimitFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(whereOffsetRewriteTID, TAKE_INST_TID)
                 .build();
     }
 
-    private static class WhereOffsetLimitRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class WhereOffsetLimitDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final fURI whereOffsetRewriteTID;
         private final WhereOffsetLimitOperation<S> whereOffsetLimitOperation;
 
-        WhereOffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
-                                       final WhereOffsetLimitOperation<S> whereOffsetLimitOperation) {
+        WhereOffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
+                                         final WhereOffsetLimitOperation<S> whereOffsetLimitOperation) {
             this(spaceType, whereOffsetRewriteTID, whereOffsetLimitOperation, null);
         }
 
-        WhereOffsetLimitRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
-                                       final WhereOffsetLimitOperation<S> whereOffsetLimitOperation,
-                                       final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        WhereOffsetLimitDBRewriteBuilder(final Class<S> spaceType, final fURI whereOffsetRewriteTID,
+                                         final WhereOffsetLimitOperation<S> whereOffsetLimitOperation,
+                                         final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.whereOffsetRewriteTID = whereOffsetRewriteTID;
             this.whereOffsetLimitOperation = whereOffsetLimitOperation;
@@ -1997,7 +1997,7 @@ public final class CommonRewrites {
             final OrderOperation<S> orderFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new OrderRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
+        return new OrderDBRewriteBuilder<>(spaceType, orderFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, ORDER_INST_TID)
@@ -2005,15 +2005,15 @@ public final class CommonRewrites {
                 .build();
     }
 
-    private static class OrderRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class OrderDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final OrderOperation<S> orderOperation;
 
-        OrderRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation) {
+        OrderDBRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation) {
             this(spaceType, orderOperation, null);
         }
 
-        OrderRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation,
-                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        OrderDBRewriteBuilder(final Class<S> spaceType, final OrderOperation<S> orderOperation,
+                              final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.orderOperation = orderOperation;
             this.matchSpacePredicate = matchSpacePredicate;
@@ -2105,7 +2105,7 @@ public final class CommonRewrites {
             final DedupOperation<S> dedupFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new DedupRewriteBuilder<>(spaceType, dedupFunction, matchSpacePredicate)
+        return new DedupDBRewriteBuilder<>(spaceType, dedupFunction, matchSpacePredicate)
                 .tid(rewriteTID)
                 .rng(Tokens.ALL_STAR)
                 .match(FROM_INST_TID, DEDUP_INST_TID)
@@ -2113,15 +2113,15 @@ public final class CommonRewrites {
                 .build();
     }
 
-    private static class DedupRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+    private static class DedupDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
         private final DedupOperation<S> dedupOperation;
 
-        DedupRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation) {
+        DedupDBRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation) {
             this(spaceType, dedupOperation, null);
         }
 
-        DedupRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation,
-                            final BiPredicate<S, List<Inst>> matchSpacePredicate) {
+        DedupDBRewriteBuilder(final Class<S> spaceType, final DedupOperation<S> dedupOperation,
+                              final BiPredicate<S, List<Inst>> matchSpacePredicate) {
             super(spaceType);
             this.dedupOperation = dedupOperation;
             this.matchSpacePredicate = matchSpacePredicate;

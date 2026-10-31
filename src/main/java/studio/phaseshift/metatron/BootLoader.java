@@ -24,30 +24,30 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Feature;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.EmojiTable;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
 import studio.phaseshift.metatron.isa.m.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.EmojiTable;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.Feature;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -67,8 +67,10 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -79,8 +81,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -410,34 +410,34 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     private static void printHelp() {
         final String help = """
-                            Usage: metatron [OPTIONS]
-                            
-                            A distributed data-oriented computing language and virtual machine.
-                            
-                            Options:
-                              -b, --boot <file>       Boot configuration file (env: $METATRON_BOOT)
-                              -w, --ws <uri>          WebSocket of running metatron (default: ws://localhost:8555/mtron)
-                              -e, --eval <expr>       Evaluate an mtron expression
-                              -c, --chat <prompt>     Chat with an agent loaded via boot or websocket
-                              -f, --file <file>       Evaluate an mtron source file
-                              -g, --generate <file>   Generate a custom mtron boot
-                              -p, --pipe              Read stdin as pipe input
-                              --mcp                   Serve MCP on stdin/stdout (implies -b boot/mcp.boot.mtron)
-                              -q, --quiet             Suppress diagnostic output (for piping)
-                              -v, --version           Print version and exit
-                              -h, --help              Show this help message
-                            
-                              A bare positional argument is treated as an -e expression.
-                            
-                            Examples:
-                              metatron "1 + 2"
-                              metatron "1 + 2" | metatron -p "_ + 5"
-                              metatron -f myapp.mtron
-                              metatron -b boot/boot.mtron
-                              metatron -b boot/boot.mtron "*/sys/env/HOME"
-                              METATRON_BOOT=boot/boot.mtron metatron "*/sys/env/USER"
-                            
-                            """;
+                Usage: metatron [OPTIONS]
+                
+                A distributed data-oriented computing language and virtual machine.
+                
+                Options:
+                  -b, --boot <file>       Boot configuration file (env: $METATRON_BOOT)
+                  -w, --ws <uri>          WebSocket of running metatron (default: ws://localhost:8555/mtron)
+                  -e, --eval <expr>       Evaluate an mtron expression
+                  -c, --chat <prompt>     Chat with an agent loaded via boot or websocket
+                  -f, --file <file>       Evaluate an mtron source file
+                  -g, --generate <file>   Generate a custom mtron boot
+                  -p, --pipe              Read stdin as pipe input
+                  --mcp                   Serve MCP on stdin/stdout (implies -b boot/mcp.boot.mtron)
+                  -q, --quiet             Suppress diagnostic output (for piping)
+                  -v, --version           Print version and exit
+                  -h, --help              Show this help message
+                
+                  A bare positional argument is treated as an -e expression.
+                
+                Examples:
+                  metatron "1 + 2"
+                  metatron "1 + 2" | metatron -p "_ + 5"
+                  metatron -f myapp.mtron
+                  metatron -b boot/boot.mtron
+                  metatron -b boot/boot.mtron "*/sys/env/HOME"
+                  METATRON_BOOT=boot/boot.mtron metatron "*/sys/env/USER"
+                
+                """;
         System.out.print(help);
     }
 
@@ -536,11 +536,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.write(f("/sys/tracer"), tracer);
             Machine.write(f("/sys/rewriter"), rewriter);
             Machine.write(f("/sys/tmp"), str("""
-                                             
-                                             use /sys/tmp as a temporary location for objs.
-                                             note that /sys/tmp can be automatically garbage collected at any time.
-                                             
-                                             """));
+                    
+                    use /sys/tmp as a temporary location for objs.
+                    note that /sys/tmp can be automatically garbage collected at any time.
+                    
+                    """));
             Machine.write(f("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
             // LOAD STDIO INSTRUCTIONS
             Machine.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {

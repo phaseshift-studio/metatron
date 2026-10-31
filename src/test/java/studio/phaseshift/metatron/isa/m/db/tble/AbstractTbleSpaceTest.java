@@ -36,8 +36,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Method;
@@ -467,22 +467,22 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @ParameterizedTest(name = "[{index}] Read {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            String field from users             | db:users/1       | name         | str::"Alice"
-                                            String field from products          | db:products/101  | product_name | str::"Laptop"
-                                            Email field                         | db:users/2       | email        | "bob@example.com"
-                                            Category field                      | db:products/105  | category     | str::"Furniture"
-                                            Category stationery                 | db:products/107  | category     | str::"Stationery"
-                                            Integer age field                   | db:users/1       | age          | int::30
-                                            Integer quantity field              | db:products/102  | quantity     | int::50
-                                            Integer quantity zero               | db:products/101  | quantity     | int::15
-                                            Integer age field user 2            | db:users/2       | age          | int::25
-                                            Integer age field user 3            | db:users/3       | age          | int::35
-                                            Real salary field                   | db:users/1       | salary       | real::75000.50
-                                            Real price field                    | db:products/101  | price        | real::1299.99
-                                            Small price value                   | db:products/102  | price        | real::29.99
-                                            Real salary Diana                   | db:users/4       | salary       | real::70000.25
-                                            Real price furniture                | db:products/105  | price        | real::249.99
-                                            """)
+            String field from users             | db:users/1       | name         | str::"Alice"
+            String field from products          | db:products/101  | product_name | str::"Laptop"
+            Email field                         | db:users/2       | email        | "bob@example.com"
+            Category field                      | db:products/105  | category     | str::"Furniture"
+            Category stationery                 | db:products/107  | category     | str::"Stationery"
+            Integer age field                   | db:users/1       | age          | int::30
+            Integer quantity field              | db:products/102  | quantity     | int::50
+            Integer quantity zero               | db:products/101  | quantity     | int::15
+            Integer age field user 2            | db:users/2       | age          | int::25
+            Integer age field user 3            | db:users/3       | age          | int::35
+            Real salary field                   | db:users/1       | salary       | real::75000.50
+            Real price field                    | db:products/101  | price        | real::1299.99
+            Small price value                   | db:products/102  | price        | real::29.99
+            Real salary Diana                   | db:users/4       | salary       | real::70000.25
+            Real price furniture                | db:products/105  | price        | real::249.99
+            """)
     public void testReadIndividualFields(String description, String rowUri,
                                          String fieldName, String expectedEncoded) throws Exception {
         final Obj expectedValue = parseObj(expectedEncoded);
@@ -511,16 +511,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
     @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """     
-                                                                   users    | 1   | name         | "Alice Updated"        | "Alice Updated"
-                                                                   products | 101 | product_name | str::"Gaming Laptop"   | str::"Gaming Laptop"
-                                                                   users    | 1   | age          | 31                     | int::31
-                                                                   users    | 2   | age          | 26                     | int::26
-                                                                   products | 102 | quantity     | 100                    | int::100
-                                                                   products | 103 | quantity     | 0                      | int::0
-                                                                   users    | 1   | salary       | 80000.00               | real::80000.00
-                                                                   products | 101 | price        | real::999.00           | real::999.00
-                                                                   users    | 3   | salary       | real::100000.50        | real::100000.50
-                                                                   """)
+            users    | 1   | name         | "Alice Updated"        | "Alice Updated"
+            products | 101 | product_name | str::"Gaming Laptop"   | str::"Gaming Laptop"
+            users    | 1   | age          | 31                     | int::31
+            users    | 2   | age          | 26                     | int::26
+            products | 102 | quantity     | 100                    | int::100
+            products | 103 | quantity     | 0                      | int::0
+            users    | 1   | salary       | 80000.00               | real::80000.00
+            products | 101 | price        | real::999.00           | real::999.00
+            users    | 3   | salary       | real::100000.50        | real::100000.50
+            """)
     public void testWriteIndividualFields(String table, String rowId, String field,
                                           String newValueEncoded, String expectedEncoded) throws Exception {
         final Obj newValue = parseObj(newValueEncoded);
@@ -547,16 +547,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
 
     @ParameterizedTest(name = "[{index}] Read row {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            db:users/1       | name         | Alice
-                                            db:users/2       | name         | Bob
-                                            db:users/3       | name         | Charlie
-                                            db:users/4       | name         | Diana
-                                            db:users/5       | name         | Eve
-                                            db:products/101  | product_name | Laptop
-                                            db:products/102  | product_name | Mouse
-                                            db:products/103  | product_name | Keyboard
-                                            db:products/105  | product_name | Desk Chair
-                                            """)
+            db:users/1       | name         | Alice
+            db:users/2       | name         | Bob
+            db:users/3       | name         | Charlie
+            db:users/4       | name         | Diana
+            db:users/5       | name         | Eve
+            db:products/101  | product_name | Laptop
+            db:products/102  | product_name | Mouse
+            db:products/103  | product_name | Keyboard
+            db:products/105  | product_name | Desk Chair
+            """)
     public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue)
             throws Exception {
         setupTestDatabase();
@@ -586,12 +586,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
     @CsvSource(delimiter = '|', quoteCharacter = '\'', textBlock = """
-                                                                   users    | 100 | name | str::"Test User" | name | "Test User" | age | int::25 | salary | real::50000.00 | active | bool::true | email | "test@example.com"
-                                                                   products | 200 | product_name | str::"New Product" | product_name | "New Product" | price | real::199.99 | in_stock | bool::true | quantity | int::10 | category | str::"Test Category"
-                                                                   users    | 101 | age  | int::0  | name | str::"Zero Age" | age | int::0 | salary | real::0.0 | active | bool::false | email | str::"zero@example.com"
-                                                                   users    | 102 | name | str::"Max Val" | name | str::"Max Val" | age | int::999 | salary | real::999999.99 | active | true | email | str::"max@example.com"
-                                                                   products | 201 | price | real::0.0 | product_name | str::"Free Item" | price | real::0.0 | in_stock | bool::true | quantity | 0 | category | str::"Free"
-                                                                   """)
+            users    | 100 | name | str::"Test User" | name | "Test User" | age | int::25 | salary | real::50000.00 | active | bool::true | email | "test@example.com"
+            products | 200 | product_name | str::"New Product" | product_name | "New Product" | price | real::199.99 | in_stock | bool::true | quantity | int::10 | category | str::"Test Category"
+            users    | 101 | age  | int::0  | name | str::"Zero Age" | age | int::0 | salary | real::0.0 | active | bool::false | email | str::"zero@example.com"
+            users    | 102 | name | str::"Max Val" | name | str::"Max Val" | age | int::999 | salary | real::999999.99 | active | true | email | str::"max@example.com"
+            products | 201 | price | real::0.0 | product_name | str::"Free Item" | price | real::0.0 | in_stock | bool::true | quantity | 0 | category | str::"Free"
+            """)
     public void testInsertNewRows(String table, String rowId, String verifyField,
                                   String expectedEncoded,
                                   String col1, String val1,
@@ -635,21 +635,21 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
      */
     @ParameterizedTest(name = "[{index}] {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            boolean true converts and back   | users | 1 | active | bool::true     | bool::true
-                                            boolean false converts and back  | users | 1 | active | bool::false    | bool::false
-                                            real number with decimals        | users | 1 | salary | real::12345.00 | real::12345.00
-                                            real number zero                 | users | 1 | salary | real::0.0      | real::0.0
-                                            real negative                    | users | 1 | salary | real::-500.25  | real::-500.25
-                                            real large                       | users | 1 | salary | real::9999999.99 | real::9999999.99
-                                            integer zero                     | users | 1 | age    | 0                | int::0
-                                            integer large value              | users | 1 | age    | int::999         | int::999
-                                            integer negative                 | users | 1 | age    | int::-1          | -1
-                                            integer max long                 | users | 1 | age    | 2147483647       | 2147483647
-                                            empty string                     | users | 1 | name   | str::""          | ""
-                                            string with spaces               | users | 1 | name   | "   Test"        | str::"   Test"
-                                            string with special chars        | users | 1 | email  | str::"test+tag@example.com" | str::"test+tag@example.com"
-                                            string unicode                   | users | 1 | name   | str::"José María"           | "José María"
-                                            """)
+            boolean true converts and back   | users | 1 | active | bool::true     | bool::true
+            boolean false converts and back  | users | 1 | active | bool::false    | bool::false
+            real number with decimals        | users | 1 | salary | real::12345.00 | real::12345.00
+            real number zero                 | users | 1 | salary | real::0.0      | real::0.0
+            real negative                    | users | 1 | salary | real::-500.25  | real::-500.25
+            real large                       | users | 1 | salary | real::9999999.99 | real::9999999.99
+            integer zero                     | users | 1 | age    | 0                | int::0
+            integer large value              | users | 1 | age    | int::999         | int::999
+            integer negative                 | users | 1 | age    | int::-1          | -1
+            integer max long                 | users | 1 | age    | 2147483647       | 2147483647
+            empty string                     | users | 1 | name   | str::""          | ""
+            string with spaces               | users | 1 | name   | "   Test"        | str::"   Test"
+            string with special chars        | users | 1 | email  | str::"test+tag@example.com" | str::"test+tag@example.com"
+            string unicode                   | users | 1 | name   | str::"José María"           | "José María"
+            """)
     public void testTypeConversions(String description, String table, String rowId,
                                     String field, String writeEncoded,
                                     String expectedEncoded) throws Exception {
@@ -1686,18 +1686,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             // rows are returned.
             final String tableName = "multi_test";
             final Obj result = space.sql("""
-                                         -- Create a temp table for this test
-                                         CREATE TABLE %s (id INTEGER PRIMARY KEY, label TEXT);
-                                         
-                                         -- Insert some rows
-                                         INSERT INTO %s VALUES (1, 'alpha');
-                                         INSERT INTO %s VALUES (2, 'beta');
-                                         
-                                         -- Blank line above this comment should be ignored
-                                         
-                                         -- Final query: should be the result returned
-                                         SELECT * FROM %s ORDER BY id;
-                                         """.formatted(tableName, tableName, tableName, tableName));
+                    -- Create a temp table for this test
+                    CREATE TABLE %s (id INTEGER PRIMARY KEY, label TEXT);
+                    
+                    -- Insert some rows
+                    INSERT INTO %s VALUES (1, 'alpha');
+                    INSERT INTO %s VALUES (2, 'beta');
+                    
+                    -- Blank line above this comment should be ignored
+                    
+                    -- Final query: should be the result returned
+                    SELECT * FROM %s ORDER BY id;
+                    """.formatted(tableName, tableName, tableName, tableName));
             final List<Obj> rows = result.stream().toList();
             assertEquals(2, rows.size(), "should have 2 rows");
             assertEquals(str("alpha"), rows.get(0).asRec().at(uri("label")),

@@ -25,10 +25,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.Env;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
@@ -38,27 +40,20 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.BOOL_TID;
 import static studio.phaseshift.metatron.Tokens.SPLIT;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.Tokens.BOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 /**
  * {@code ?split} AT THE EMITTER (C7 of {@code distributed-qparams-implementation.md}): the partition axis is READ —
@@ -82,13 +77,19 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
  */
 public class SplitLegalityTest extends AbstractMetatronTest {
 
-    /** The two loop peers a split row fans out over. */
+    /**
+     * The two loop peers a split row fans out over.
+     */
     private static final fURI PEER = f("loop://localhost:8555");
     private static final fURI GINGER = f("loop://ginger:8555");
-    /** A stated home authority — a test VM listens on nothing. */
+    /**
+     * A stated home authority — a test VM listens on nothing.
+     */
     private static final fURI MINE = f("loop://mantis:8555");
 
-    /** The whole fold that is OR: idempotent, so replicating its seed onto every lane is sound. Not in the table. */
+    /**
+     * The whole fold that is OR: idempotent, so replicating its seed onto every lane is sound. Not in the table.
+     */
     private static Inst disjoin;
 
     @BeforeEach
@@ -221,7 +222,9 @@ public class SplitLegalityTest extends AbstractMetatronTest {
     /// THE ONE LOWERING, THE ENVIRONMENTS AND THE ONE FOLD
     /// /////////////////////////////////////////////////////////////////////////////////////
 
-    /** The disjunction over a bag of bools — {@code {{2}true,{2}false}} is the seed {@code objs} folds them into. */
+    /**
+     * The disjunction over a bag of bools — {@code {{2}true,{2}false}} is the seed {@code objs} folds them into.
+     */
     private static Code disjunction(final String split) {
         final mFluent<?> chain = start_(objs(bool(true), bool(false), bool(true), bool(false)));
         chain.q(SPLIT, uri(split));
@@ -229,12 +232,16 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         return chain;
     }
 
-    /** The lanes' part sizes, in lane order. */
+    /**
+     * The lanes' part sizes, in lane order.
+     */
     private static List<Integer> parts(final DistributedSweep.Layout layout) {
         return layout.lanes().stream().map(lane -> lane.part().size()).toList();
     }
 
-    /** The lanes' stated hop budgets, in lane order. */
+    /**
+     * The lanes' stated hop budgets, in lane order.
+     */
     private static List<String> budgets(final DistributedSweep.Layout layout) {
         return layout.lanes().stream().map(DistributedSweep.Lane::budget).toList();
     }
@@ -249,23 +256,31 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         assertTrue(DistributedSweep.layout(emitted).lanes().isEmpty(), "and nothing ships: " + source);
     }
 
-    /** The one lowering, against the two live loop peers. */
+    /**
+     * The one lowering, against the two live loop peers.
+     */
     private static Code lower(final String source) {
         return lower(ObjmtronSerializer.parse(source).asCode());
     }
 
-    /** The same lowering of an already-built chain. */
+    /**
+     * The same lowering of an already-built chain.
+     */
     private static Code lower(final Code source) {
         return PlanInterpreter.apply(catRewrite.planOf("law_shard"), source, env());
     }
 
-    /** The live peer map and the roster, with a stated home authority: the split rows ship to the peers. */
+    /**
+     * The live peer map and the roster, with a stated home authority: the split rows ship to the peers.
+     */
     private static Env env() {
         final Machine machine = Machine.current();
         return Env.of(machine.network().peers(), machine.network().machines(), java.util.Set.of(MINE));
     }
 
-    /** The value of an emitted shard, read as the harness reads it. */
+    /**
+     * The value of an emitted shard, read as the harness reads it.
+     */
     private static Obj evaluate(final Code code) {
         return TransportRewriteHarness.single(TransportRewriteHarness.evaluate(code)).clone().selfVID(null);
     }

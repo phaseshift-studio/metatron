@@ -27,11 +27,11 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.AbstractMemorySpace;
 import studio.phaseshift.metatron.isa.m.space.TopicTrie;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.ProgressTableWidget;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.charset.StandardCharsets;

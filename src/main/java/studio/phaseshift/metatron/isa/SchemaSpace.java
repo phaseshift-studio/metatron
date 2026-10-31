@@ -18,13 +18,11 @@
 
 package studio.phaseshift.metatron.isa;
 
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -34,10 +32,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.WILD_ONE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -62,7 +58,7 @@ public interface SchemaSpace extends Space {
      *
      * @param collectionName the collection name (table, vertex-label, etc.) or wildcard
      * @return iterator of {@link IdObj} with type VIDs and their {@link Type} values,
-     *         or an empty iterator when no matching type is found
+     * or an empty iterator when no matching type is found
      */
     default Iterator<IdObj> resolveCollectionSchema(final String collectionName) {
         final InstSet instSet = this.schema();

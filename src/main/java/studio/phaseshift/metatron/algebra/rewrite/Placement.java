@@ -18,23 +18,16 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -86,23 +79,41 @@ public class Placement extends MRec {
      * ({@link #obligations()} derives them; {@code ObligationsTest} is the witness).
      */
     public enum Shape {
-        /** stay home — no regrouping, no reordering, no duplication */
+        /**
+         * stay home — no regrouping, no reordering, no duplication
+         */
         LOCAL,
-        /** ship to one peer — a one-slave shard whose cut is recombined */
+        /**
+         * ship to one peer — a one-slave shard whose cut is recombined
+         */
         PEER(Law.monoidic, Law.commutative),
-        /** fan out over the roster — order-free merge across a set */
+        /**
+         * fan out over the roster — order-free merge across a set
+         */
         PEERS(Law.monoidic, Law.commutative),
-        /** a durable result — write to a space, no combiner */
+        /**
+         * a durable result — write to a space, no combiner
+         */
         SPACE,
-        /** recursive tree-sharding with a hop budget */
+        /**
+         * recursive tree-sharding with a hop budget
+         */
         TREE(Law.monoidic, Law.commutative),
-        /** key-routed fan-out — monoidic only; the keyed law is the fold's derivation */
+        /**
+         * key-routed fan-out — monoidic only; the keyed law is the fold's derivation
+         */
         SHUFFLE(Law.monoidic),
-        /** sequential forwards — ship the whole code to one place (a {@code move} hop) */
+        /**
+         * sequential forwards — ship the whole code to one place (a {@code move} hop)
+         */
         CHAIN(Law.monoidic),
-        /** fan-out over the roster's places — each hop bound by the origin */
+        /**
+         * fan-out over the roster's places — each hop bound by the origin
+         */
         STAR(Law.monoidic, Law.commutative),
-        /** nowhere — the isolated span is deleted */
+        /**
+         * nowhere — the isolated span is deleted
+         */
         NONE;
 
         private final Set<Law> obligations;

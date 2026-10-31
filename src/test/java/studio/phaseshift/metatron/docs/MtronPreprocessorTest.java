@@ -24,7 +24,7 @@ import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,17 +38,17 @@ public class MtronPreprocessorTest extends AbstractMetatronTest {
     public void testMaxOutputDirective() {
         MtronPreprocessor preprocessor = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER);
         final String output = preprocessor.process("""
-                                                   [mtron]
-                                                   ----
-                                                   [MAXOUTPUT 5] \"\"\"abc1 /
-                                                   abc2 /
-                                                   abc3 /
-                                                   abc4 /
-                                                   abc5 /
-                                                   abc6 /
-                                                   abc7\"\"\"
-                                                   ----
-                                                   """);
+                [mtron]
+                ----
+                [MAXOUTPUT 5] \"\"\"abc1 /
+                abc2 /
+                abc3 /
+                abc4 /
+                abc5 /
+                abc6 /
+                abc7\"\"\"
+                ----
+                """);
 
         for (int i = 1; i < 8; i++) {
             assertTrue(output.contains("abc" + i));

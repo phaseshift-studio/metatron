@@ -25,11 +25,10 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -76,7 +75,7 @@ class wsRouteResolutionTest extends AbstractMetatronTest {
             "</m/web/ws/${name()}> % /chat/web_socket % RETAG     % another connection: the same template selects one without, so the lane differs",
     }, delimiter = '%')
     void testResolveRouteAgainstConnection(final String value, final String requestUri, final String expectedKind,
-                                          final String desc) {
+                                           final String desc) {
         final wsServer.RouteLane lane = wsServer.RouteLane.resolve(ObjmtronSerializer.parse(value), f(requestUri));
         LOG.info("resolveRoute(%s, %s) => %s [target=%s]", value, requestUri, lane.kind(), lane.target().toShortString());
         assertEquals(expectedKind, lane.kind().name(), desc);

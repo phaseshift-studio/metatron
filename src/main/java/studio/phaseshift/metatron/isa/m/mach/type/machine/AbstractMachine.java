@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
-import studio.phaseshift.metatron.isa.m.mach.type.Component;
 
 /**
  * AbstractMachine — the machine's concrete body: the address index, the short-name tables and the

@@ -24,9 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.EmojiTable;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.EmojiTable;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;

@@ -18,54 +18,29 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.Derivation;
-import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.math.cat.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
-import static studio.phaseshift.metatron.Tokens.ADD;
-import static studio.phaseshift.metatron.Tokens.CODE_TID;
-import static studio.phaseshift.metatron.Tokens.DERIVATION;
-import static studio.phaseshift.metatron.Tokens.HOP;
-import static studio.phaseshift.metatron.Tokens.ID;
-import static studio.phaseshift.metatron.Tokens.INVERSE;
-import static studio.phaseshift.metatron.Tokens.PLACE;
-import static studio.phaseshift.metatron.Tokens.RHS;
-import static studio.phaseshift.metatron.Tokens.SPLIT;
-import static studio.phaseshift.metatron.Tokens.ZERO;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.carriers;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.comparisonOf;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.declares;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.mapArgument;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.same;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.sameOp;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;

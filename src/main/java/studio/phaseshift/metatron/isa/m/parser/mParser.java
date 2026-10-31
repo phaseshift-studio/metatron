@@ -35,22 +35,19 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -149,6 +146,7 @@ public class mParser {
             return new SugarKey(sugar.getStartToken(), sugar.getEndToken(), sugar.getPosition(), sugar.getInstChain(), sugar.getArgCount());
         }
     }
+
     private static Parser cachedSugarParser = null;
     private static Parser cachedExpressionParser = null;
 
@@ -735,7 +733,7 @@ public class mParser {
         return "unexpected '%s'".formatted(buffer.charAt(pos));
     }
     /**
-    /**
+     /**
      * The one door: mtron source in, an {@link Obj} out.
      * <p>
      * A source is one expression or a {@code ;}-separated sequence of them: one statement parses to that statement's obj, several parse to
@@ -753,11 +751,15 @@ public class mParser {
      * @param mtron source text — an expression, or a source of them
      * @return the parsed obj, or a {@code fail::T} describing where and why it stopped
      */
-    /** A brace directly on a type name, followed by {@code ::T}: a coefficient, never a branch. */
+    /**
+     * A brace directly on a type name, followed by {@code ::T}: a coefficient, never a branch.
+     */
     private static final Pattern TYPE_COEFFICIENT =
             Pattern.compile("([A-Za-z0-9_\\-\\.]+)\\{([^{}]*)\\}\\s*::\\s*T");
 
-    /** One step of the walk: the statement, where the next one starts, or the fault. */
+    /**
+     * One step of the walk: the statement, where the next one starts, or the fault.
+     */
     private record Step(Obj statement, int next, Obj fault) {
     }
 
@@ -860,7 +862,9 @@ public class mParser {
             return null == this.fault && this.position < this.prepared.text().length();
         }
 
-        /** The next statement, or {@code noobj} when the source is exhausted or has faulted. */
+        /**
+         * The next statement, or {@code noobj} when the source is exhausted or has faulted.
+         */
         public Obj next() {
             if (!hasNext())
                 return noobj();
@@ -874,7 +878,9 @@ public class mParser {
             return step.statement();
         }
 
-        /** The fault that stopped the walk, or {@code null}. */
+        /**
+         * The fault that stopped the walk, or {@code null}.
+         */
         public Obj fault() {
             return this.fault;
         }
@@ -1115,8 +1121,8 @@ public class mParser {
     public static Parser m_furi_branch() {
         return seq(of('{').trim(),
                 labeled(seq(of('}').not(),
-                        seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false)).flatten())
-                        .map(t -> pick(t, 1)),
+                                seq(opt(m_furi_coefficient(), cInt.ONE()), m_furi(REDUCED_FURI_CHARS, false, true, false)).flatten())
+                                .map(t -> pick(t, 1)),
                         "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {+}, {?}")
                         .separatedBy(of(',').trim()),
                 of('}').trim())
@@ -1176,17 +1182,17 @@ public class mParser {
 
     public static Parser m_furi_coefficient() {
         return seq(of('{'), labeled(choice(
-                        seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
-                        seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
-                        of(","),
-                        of("**"),
-                        of("-*"),
-                        of("-?"),
-                        of('*'),
-                        of('+'),
-                        of('-'),
-                        of("??"),
-                        of('?')),
+                                seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
+                                seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
+                                of(","),
+                                of("**"),
+                                of("-*"),
+                                of("-?"),
+                                of('*'),
+                                of('+'),
+                                of('-'),
+                                of("??"),
+                                of('?')),
                         "a coefficient body — {int,int}, {,int}, {int,}, {int}, or a sugar encoding such as {*}, {**}, {?}, {??}, {+}"),
                 of('}')).map(t -> pick(t, 1).toString());
     }
@@ -1213,9 +1219,9 @@ public class mParser {
                         m_furi_template(), // Template expressions like ${[q=>hello]}
                         seq((word().or(anyOf("+#_-"))).plus(),
                                 opt(seq(of("="), labeled(choice(
-                                        seq(of("["), word().or(anyOf(QMAP_POLY_VALUE_CHARS)).star(), of("]")),
-                                        m_furi_no_query(),
-                                        word().or(anyOf(QMAP_VALUE_CHARS)).plus()),
+                                                seq(of("["), word().or(anyOf(QMAP_POLY_VALUE_CHARS)).star(), of("]")),
+                                                m_furi_no_query(),
+                                                word().or(anyOf(QMAP_VALUE_CHARS)).plus()),
                                         "a value for the query parameter ('=' must be followed by one)")), ""))
                 ).separatedBy(of("&")), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
@@ -1606,7 +1612,9 @@ public class mParser {
         return new LabeledParser(inner, message);
     }
 
-    /** A closer: expected only because the rule needs its delimiter. Loses an equal-offset tie. */
+    /**
+     * A closer: expected only because the rule needs its delimiter. Loses an equal-offset tie.
+     */
     public static Parser labeledCloser(final Parser inner, final String message) {
         LABELS.add(message);
         CLOSERS.add(message);

@@ -26,12 +26,12 @@ import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.service.ConceptServi
 import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.service.SkillService;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.service.SystemService;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mSkill;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.StatusLine;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.StatusLine;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TextUtil;
@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -55,7 +56,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -87,15 +87,15 @@ public abstract class AbstractConceptFeature extends AbstractFeature implements 
 
     private static final String CONCEPT_FEATURE_SYSTEM_TEMPLATE =
             """
-            ---[concept_feature]---
-            the following concepts have recently been extracted.
-            %s
-            to review messages associated with concepts, use tool:
-              %s(c1,c2,...)
-            to see related adjacent concepts, use tool:
-              %s(c1,c2,...)
-            both tools can take 1 or more concept arguments.
-            """;
+                    ---[concept_feature]---
+                    the following concepts have recently been extracted.
+                    %s
+                    to review messages associated with concepts, use tool:
+                      %s(c1,c2,...)
+                    to see related adjacent concepts, use tool:
+                      %s(c1,c2,...)
+                    both tools can take 1 or more concept arguments.
+                    """;
 
 
     private final Set<String> conceptRecommendations = new HashSet<>();

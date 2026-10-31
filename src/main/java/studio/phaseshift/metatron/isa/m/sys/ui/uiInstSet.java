@@ -20,21 +20,19 @@ package studio.phaseshift.metatron.isa.m.sys.ui;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.CommandPalette;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Editor;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.ModalTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.NetworkPanelTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.SwipePanelWidgetTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.TreeSelectTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.*;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Stylable;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Widget;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Editor;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.menu.CommandPalette;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.tool.ModalTool;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.tool.NetworkPanelTool;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.tool.SwipePanelWidgetTool;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.tool.TreeSelectTool;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -48,10 +46,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -60,7 +59,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*

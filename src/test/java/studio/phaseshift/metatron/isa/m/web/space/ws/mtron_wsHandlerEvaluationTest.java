@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 
 import java.io.IOException;

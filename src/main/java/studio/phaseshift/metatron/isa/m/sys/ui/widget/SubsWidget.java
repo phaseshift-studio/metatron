@@ -1,0 +1,112 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.sys.ui.widget;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.ui.Border;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+
+import java.util.List;
+
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class SubsWidget extends AbstractWidget<SubsWidget> {
+    private enum Operation {
+        DOWN_ROW,
+        UP_ROW,
+        RIGHT_COL,
+        LEFT_COL,
+        EXIT
+    }
+
+    private final TableWidget spaceTable;
+    private final TableWidget subsTable;
+    private final Selector spaceSelector;
+    private final Selector subsSelector;
+    // private final Selector selectorSelector;
+    private GridWidget grid = null;
+
+    public SubsWidget(final Console console) {
+        /// ///////////////////////////////////////////////////////
+        this.spaceTable = ((TableWidget) new TableWidget(List.of("space vid", "pattern")).style()
+                .border(Border.continuous)
+                .headerDivider("{{[b]&g}}|{{w}}")
+                .applyStyle());
+        this.subsTable = ((TableWidget) new TableWidget(List.of("subscription vid", "target", "call")).style()
+                .border(Border.continuous)
+                .headerDivider("{{[b]&g}}|{{w}}")
+                .applyStyle());
+
+
+        Machine.current().memory().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
+            this.spaceTable.addRow(List.of(r.asRel().first().toString(), r.asRel().second().<Space>as().pattern()));
+        });
+
+        this.subsSelector = ((Selector) new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).applyStyle()).onSelect((s, r, c) -> {
+            // the selection is reflected in the attached table; the grid mirrors it
+        });
+        this.spaceSelector = ((Selector) new Selector().style()
+                .pointer("{{r}}>")
+                .attachment(this.spaceTable, true)
+                .rowRange(2, this.spaceTable.rowStrings().size() + 2)
+                .applyStyle())
+                .onSelect((s, r, c) -> {
+                    try {
+                        final fURI pattern = (fURI) this.spaceTable.entry(r - 2, 1);
+                        //  Machine.authority().logger().none("{{>%s}}selected %s" + " ".repeat(10) + "{{<%s}}", this.spaceTable.width() + 2, pattern.toUri(), this.spaceTable.width() + 12);
+                        //final Space space = Machine.authority().getSpace(pattern);
+                        this.subsTable.clear();
+                        // Obj subscriptions = Machine.authority().read(pattern.query("sub"));
+                        this.subsTable.addRow(List.of("blah", "bleep", "bleep"));
+                        // this.grid.currentFocus(1);
+                        // subscriptions.stream().forEach(o ->{
+                        //     this.subsTable.addRow(List.of(o.vid().toUri(), o.<PubSubQ.Subscription>as().target().toUri(), o.<PubSubQ.Subscription>as().call().toString()));
+                        // });
+                        // Machine.authority().logger().info("{{y}}%s{{X}}", this.grid.format());
+                        //System.out.println("subscriptions: " + subscriptions);
+                      /*  final List<Widget<?>> cards = (List) subscriptions.stream().map(o -> o.<PubSubQ.Subscription>as())
+                                .map(o -> new Card(o.target().toString(),
+                                        Highlighter.format(o.call().toString()))
+                                        .style()
+                                        .border(Border.simple.foreground("{{y}}"))
+                                        .apply())
+                                .toList();*/
+                        //final Panel panel = new Panel(subscriptions.toString());
+                        //panel.right(this);
+                        //panel.display();
+                        //final Grid grid = new Grid(cards, 2).style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
+                    } catch (final Exception e) {
+                        // do nothing
+                    }
+                });
+        this.grid = new GridWidget(2, 1).cell(0, 0, this.spaceSelector).cell(1, 0, this.subsSelector).style().border(Border.none).applyStyle();
+        // this.grid.currentFocus(0);
+        this.style().attachment(this.grid, true).applyStyle();
+    }
+
+    @Override
+    public String format() {
+        return this.getStyle().attachment().format();
+    }
+}

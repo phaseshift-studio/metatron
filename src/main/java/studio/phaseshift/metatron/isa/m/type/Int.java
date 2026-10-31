@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MInt;
 
@@ -103,7 +103,7 @@ public interface Int extends Mono {
     default Int mult(final Int rhs) {
         return this.jvm((this.intValue() * this.c().max()) * (rhs.intValue() * rhs.c().max())).c(cInt.ONE());
     }
-    
+
     default Int neg() {
         return this.jvm(-1 * this.intValue());
     }

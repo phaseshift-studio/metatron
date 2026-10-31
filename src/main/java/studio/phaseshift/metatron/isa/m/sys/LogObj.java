@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyObjLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;

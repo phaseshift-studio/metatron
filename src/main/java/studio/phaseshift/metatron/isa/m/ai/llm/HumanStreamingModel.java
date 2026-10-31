@@ -27,8 +27,8 @@ import dev.langchain4j.model.chat.request.ChatRequestParameters;
 import dev.langchain4j.model.chat.request.DefaultChatRequestParameters;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.mSystem;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 
@@ -133,7 +133,9 @@ public class HumanStreamingModel implements StreamingChatModel {
                 .build();
     }
 
-    /** A message field as it should be printed: text when there is any, empty when there is none. */
+    /**
+     * A message field as it should be printed: text when there is any, empty when there is none.
+     */
     private static String text(final String value) {
         return null == value ? "" : value.trim();
     }

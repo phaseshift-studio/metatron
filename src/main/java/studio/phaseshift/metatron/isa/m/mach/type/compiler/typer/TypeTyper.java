@@ -18,24 +18,24 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.typer;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.LAW_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*

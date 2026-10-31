@@ -86,7 +86,6 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
     public static void stopAll() {
         MoquetteServer.clear();
         MoquetteServer.stop();
-        AbstractMetatronTest.end();
         CommonUtil.sleepThread(1000);
     }
 
