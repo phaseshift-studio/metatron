@@ -60,6 +60,38 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected final Map<fURI, Obj> CONST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
     protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
+    /**
+     * THIS LEVEL'S VOCABULARY VERSION — see {@link InstSet#runtimeVersion()}. One counter per level, and it only
+     * advances through {@link #vocabularyChanged()}, so the doors that can change the vocabulary are exactly the
+     * call sites of that method: a write into the tables above ({@link #write}), the mount-time population in
+     * {@link #setup()} together with the algebra it drains, and — on a level that is a UNION — a change of
+     * membership, which {@code BasicInstSet} reports from {@code refer}, {@code unroute} and {@code previous}.
+     * <p>
+     * The PREFIX table is deliberately not counted: a name is how an address is spelled, not what this level
+     * contributes to the union's insts, rewrites, types and consts, so binding {@code math:} cannot change an
+     * answer a versioned view is memoizing.
+     */
+    private volatile int runtimeVersion = 0;
+
+    @Override
+    public int runtimeVersion() {
+        return this.runtimeVersion;
+    }
+
+    /**
+     * SAY THAT THIS LEVEL'S VOCABULARY CHANGED — the single bump, so the counter cannot advance without a caller
+     * saying why, and a new mutating door has one call to add rather than a field to find.
+     * <p>
+     * {@code int}, {@code volatile}, and NOT atomic, on purpose: two racing bumps can collapse into one (the loser
+     * writes the value the winner already wrote). That is harmless because a version is read for EQUALITY by a memo
+     * that stored an earlier value, and every increment reads a value no smaller than the one stored and writes it
+     * one greater — so a bump a memo has not seen still leaves it a number it did not store. A lost increment can
+     * therefore only make the counter coarser (one memo miss), never a stale hit.
+     */
+    protected void vocabularyChanged() {
+        this.runtimeVersion++;
+    }
+
     // ======================== the names ========================
 
     /**
@@ -270,6 +302,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // the space is mounted: persist any algebra its types declared in their builder (?lawq)
         this.types().forEach(Type.Builder::drain);
         this.insts().forEach(InstBuilder::drain);
+        // THE MOUNT-TIME POPULATION IS THE VERSION'S POINT. Setup fills the tables directly (so no write door above
+        // sees it), migrates a pattern-less rule into the level that owns it, and drains the builders' algebra — all
+        // of it landing in this level AFTER the level became a union member. The bump is last so one number covers
+        // every one of those doors, including the ones setup cannot know it triggered.
+        this.vocabularyChanged();
     }
 
     @Override
@@ -438,6 +475,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return QProc.Helper.processPreWrite(this.qs(), vid, obj).orElseGet(
                 () -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
                         () -> {
+                            // EVERY BRANCH BELOW LANDS IN A TABLE, so the version advances once, here, where the
+                            // mutation begins — a version bumped per branch is a version a new branch can forget.
+                            this.vocabularyChanged();
                             if (obj.isInst()) {
                                 final Inst inst = obj.as();
                                 if (inst.dom().isCode()) {

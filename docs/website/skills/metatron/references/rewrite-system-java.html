@@ -553,7 +553,7 @@ instructions; return <code>false</code> to skip the rewrite.</p>
 are the matched source instructions. Return the replacement instruction list.</p>
 <p><strong>Key limitation:</strong> fixed-length matching only. The pattern <code>[A, B]</code> matches exactly two instructions. There is no
 variable-length prefix/suffix capture.</p>
-<h4>2. <code>RewriteBuilder</code> — space-aware native operation pushdown</h4>
+<h4>2. <code>DBRewriteBuilder</code> — space-aware native operation pushdown</h4>
 <p>A fluent builder for rewrites that replace generic instruction chains with native database operations. The key
 difference: the rewrite checks <strong>which space</strong> the data lives in, and only fires when it's the right backend.</p>
 <pre><code class="language-java">RewriteBuilder.forDatabase(tbleSpace.class)

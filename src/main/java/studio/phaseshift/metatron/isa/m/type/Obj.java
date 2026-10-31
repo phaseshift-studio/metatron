@@ -24,15 +24,15 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.impl.*;
-import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
@@ -50,6 +50,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
@@ -69,7 +70,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.type.ObjSerializer.OBJ_SERIAL_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -1609,8 +1609,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0).apply(lhs) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"),
                             """
-                            \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]
-                            """),// TODO: rec args needs resolution on generics connected
+                                    \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]
+                                    """),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst()), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                     docWrap(instC(SORTA_INST_TID.dom(ALL).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.testNominally(inst.arg(0)) ? lhs : noobj()),
@@ -1709,12 +1709,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 return lhs;
                             }),
                             "any obj", "an explanation::T analysis of the expression", Map.of(), "a structured explanation of the expression (an explanation::T with desc/per_inst/format)"),
-                    docWrap(instC(PROFILE_INST_TID.dom(ALL.maybe()).rng(PROFILING_TID), lst(), (lhs, inst) -> {
-                                // profile_timing rewrite handles normal case; bare profile() is a no-op
-                                return lhs;
-                            }), "generates a profiling::T analysis of the current expression",
-                            "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
-                            "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format"),
                     docWrap(instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                                     "type", rec(
                                             "tid", rec(
@@ -1770,11 +1764,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(PARSE_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> MIME.MIMEType.of(inst.arg(0).tid().toString(), MIME.MIMEType.APPLICATION_MTRON).serializer().inputBytes(inst.arg(0).strValue())),
                             "can be any obj", "the result of parsing arg into obj", Map.of(jnt(0), "a str encoding of an obj"), "parses the arg str based on str mime type (default application/mtron)",
                             """
-                            parse(application/json::'{"a":[1,2,3]}') [-- [a=>[1,2,3]] --]
-                            """,
+                                    parse(application/json::'{"a":[1,2,3]}') [-- [a=>[1,2,3]] --]
+                                    """,
                             """
-                            parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
-                            """),
+                                    parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
+                                    """),
                     docWrap(instC(SWAP_INST_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> {
                                 final boolean swapInstArg = inst.arg(0).isCall() && !inst.arg(0).asCall().insts().getFirst().tid().equals(BLOCK_INST_TID);
                                 final Obj newLHS = swapInstArg ? inst.arg(0).asCall().insts().getFirst().arg(0) : inst.arg(0);
@@ -1783,9 +1777,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             "the result of applying the swap arg to the lhs",
                             Map.of(jnt(0), "a obj to make the lhs"),
                             """
-                            takes the swap argument and makes it the lhs obj.
-                            if the argument is an inst, then the original lhs becomes the inst arg and the inst arg becomes the lhs.
-                            if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.""",
+                                    takes the swap argument and makes it the lhs obj.
+                                    if the argument is an inst, then the original lhs becomes the inst arg and the inst arg becomes the lhs.
+                                    if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.""",
                             // if an inst arg is double blocked, then the inst arg is treated as a value and applied to the original lhs obj.
                             "abc.mult(xyz)             [-- abc/xyz --]",
                             "abc.swap(|mult(xyz))      [-- xyz/abc --]",

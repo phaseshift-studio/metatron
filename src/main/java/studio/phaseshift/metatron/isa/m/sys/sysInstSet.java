@@ -209,6 +209,15 @@ public class sysInstSet extends AbstractInstSet {
                                     uri("free_mem_jvm"), mathInstSet.normalizeData(real((double) freeMemory, MATH_BYTE_TID, null)),
                                     uri("max_mem_mach"), mathInstSet.normalizeData(real((double) maxMemory, MATH_BYTE_TID, null)),
                                     uri("used_mem_jvm"), mathInstSet.normalizeData(real((double) usedMemory, MATH_BYTE_TID, null)),
+                                    // THE PLATFORM, so a number can be READ across machines: a timing from a
+                                    // different JVM/arch is not comparable to this one, and a collated profile
+                                    // report that omitted this would invite exactly that comparison. These are
+                                    // properties of the RUNNING VM, so they are gathered here rather than
+                                    // inferred from the host the network happens to answer at.
+                                    uri("jvm"), str(System.getProperty("java.vm.name", "?") + " " + System.getProperty("java.version", "?")),
+                                    uri("os"), str(System.getProperty("os.name", "?") + " " + System.getProperty("os.version", "?")),
+                                    uri("arch"), str(System.getProperty("os.arch", "?")),
+                                    uri("processor"), jnt(Runtime.getRuntime().availableProcessors()),
                                     uri("free_jvm"), start_(real(1.0d - ((double) usedMemory / (double) totalMemory))).as_(T(MATH_PERCENT_TID)).apply(),
                                     uri("free_mach"), start_(real(1.0d - ((double) usedMemory / (double) maxMemory))).as_(T(MATH_PERCENT_TID)).apply(),
                                     uri("thread"), ThreadExecutor.instance().summary());

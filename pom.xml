@@ -607,7 +607,6 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-
                     </execution>
                 </executions>
                 <configuration>

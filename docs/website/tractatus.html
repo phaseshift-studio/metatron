@@ -2181,7 +2181,7 @@ Over the remainder of this documentation, each of the components of Dr.Stynx&#82
                                            .side(@tool_widget.display()).end() }],
   cost_feature:::::::[rate          =&gt; [in  =&gt; usd_currency::0.435,
                                         out =&gt; usd_currency::0.870]],
-  system_feature:::::[              =&gt; ]]]@&lt;dr&gt;; </code></pre>
+  system_feature:::::[              =&gt; ]]]@&lt;dr&gt;;</code></pre>
 </div>
 </div>
 <h4 id="sec-features" class="discrete">Features</h4>
@@ -3259,7 +3259,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{g}}e{{y}}T{{c}}a{{r}}T{{m}}r{{b}}o{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}M{{r}}E{{c}}T{{r}}A{{r}}T{{r}}R{{c}}O{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5760,7 +5760,7 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
           args=&gt;[0=&gt;'/m/bytes'],
           desc=&gt;'&lt;no description&gt;']
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
-==&gt;fail::[inst apply failure: unable to convert qcollection$docs to widget (at /m/inst/as) [uiInstSet&lt;387&gt;]][unable to convert qcollection$docs to widget [uiInstSet&lt;387&gt;]]</code></pre>
+==&gt;fail::[inst apply failure: unable to convert qcollection$docs to widget (at /m/inst/as) [uiInstSet&lt;385&gt;]][unable to convert qcollection$docs to widget [uiInstSet&lt;385&gt;]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5805,16 +5805,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       6560   6349292   1% /run'
+==&gt;'tmpfs                    6355852       6572   6349280   1% /run'
 ==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2         959786032  586598404 324359420  65% /'
+==&gt;'/dev/nvme1n1p2         959786032  586854212 324103612  65% /'
 ==&gt;'tmpfs                   31779244      15408  31763836   1% /dev/shm'
 ==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
 ==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        256   6355592   1% /run/user/1000'
+==&gt;'tmpfs                    6355848        276   6355572   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1288852908 632355636  68% /srv/beast/hdd1'
+==&gt;'//192.168.1.72/beast1 1921208544 1289769964 631438580  68% /srv/beast/hdd1'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;bin
@@ -6027,7 +6027,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.10:3016/21/20/430?tz=-0600&gt;
+==&gt;datetime::&lt;//2026.10:3023/58/16/597?tz=-0600&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7868,26 +7868,19 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.10:3016/21/22/245?tz=-0600&gt;,
+             time=&gt;datetime::&lt;//2026.10:3023/58/26/015?tz=-0600&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
                  yield =&gt; !*/sys/thread/b]@/sys/thread/a     ​4​
-==&gt;virtual::[code=&gt;at(ab).plus('A'),
-             loop=&gt;second::1.0,
-             yield=&gt;!*/sys/thread/b,
-             source=&gt;!*/sys/thread/main,
-             rhs=&gt;!λawait(){&lt;j&gt;},
-             lhs=&gt;noobj,
-             state=&gt;run,
-             ...(2 more)]@/sys/thread/a
+==&gt;ERROR: fail [LinkedHashMap$LinkedHashIterator&lt;1024&gt;]
 mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
 ==&gt;virtual::[code=&gt;at(ab).plus('B'),
              loop=&gt;second::1.0,
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.10:3016/21/22/245?tz=-0600&gt;,
+             time=&gt;datetime::&lt;//2026.10:3023/58/26/015?tz=-0600&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -7914,7 +7907,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABABA'</code></pre>
+==&gt;'BABABABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7979,7 +7972,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.10:3016/20/49/963?tz=-0600&gt;,
+          time=&gt;datetime::&lt;//2026.10:3023/57/17/545?tz=-0600&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[desc=&gt;'no documentation available',
@@ -7988,7 +7981,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.10:3016/20/49/963?tz=-0600&gt;,
+           time=&gt;datetime::&lt;//2026.10:3023/57/17/545?tz=-0600&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main]</code></pre>
 </div>

@@ -227,7 +227,10 @@ re-enter), which is what makes `/` the root with no space mounted inside itself.
 `Compiler.apply` is the default schedule `parse → rewrite → resolve → type` over four overridable stage components:
 
 - **parse** — `Parser` (default `mtronParser`, `mtron_parser::T`; the language seam — see below).
-- **rewrite** — `Rewriter` (default `FixPointRewriter`, fixpoint over the rewrite rules).
+- **rewrite** — `Rewriter` (default `FixPointRewriter`, fixpoint over the rewrite rules). The rules' applied order —
+  analysis rules (`*_analysis`) last, registration order otherwise — is derived once per vocabulary and cached against
+  the rules themselves (`RULE_ORDERS`, keyed by rule identity *in order*), so a pass looks the order up instead of
+  re-sorting what only a changed ISA could change.
 - **resolve** — `Resolver` (default `ScoringResolver`; threads the type one inst at a time; generic binding runs inside
   per-candidate selection, so there is no separate binder).
 - **type** — `Typer` (default `TypeTyper`, runtime type assertions).

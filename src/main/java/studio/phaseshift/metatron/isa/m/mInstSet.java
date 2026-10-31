@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -329,6 +330,15 @@ public class mInstSet extends AbstractInstSet {
                             uri(C_RNG), INT_TYPE))))
             .create();
     public static final fURI PROFILING_TID = PROFILE_INST_TID.extend("profiling");
+
+    /**
+     * THE ADDRESSABLE FORM OF A URI — {@code fURI#pathEncoding} stated as a type, so a machine's origin can be
+     * a rec KEY: {@code ws/localhost/1112/mtron} is one addressable segment, where {@code ws://localhost:1112/mtron}
+     * is not a key at all. This is what makes a collated profile an INDEX (a rec keyed by where each report was
+     * made) rather than a list, and therefore walkable and nestable: a star's flat fan-out, a tree's hops and a
+     * divide-and-conquer plan all describe themselves the same way, each level holding the reports below it.
+     */
+    public static final fURI PATH_ENCODING_TID = URI_TID.extend("path_encoding");
     public static final Type PROFILING_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(PROFILING_TID)
@@ -359,7 +369,19 @@ public class mInstSet extends AbstractInstSet {
                             uri(MONADS), INT_TYPE, uri(C_SUM), INT_TYPE,
                             uri(COMPRESSION), REAL_TYPE, uri(PROCESSORS), INT_TYPE),
                     uri(CACHE), rec(
-                            uri(HITS), INT_TYPE, uri(MISSES), INT_TYPE, uri(HIT_RATE), REAL_TYPE)))
+                            uri(HITS), INT_TYPE, uri(MISSES), INT_TYPE, uri(HIT_RATE), REAL_TYPE),
+                    // RECURSIVE -- A COLLATED REPORT IS AN INDEX OF REPORTS: <path-encoded machine uri> =>
+                    // profiling::T. T(PROFILING_TID.maybe()) is a FORWARD REFERENCE to this very type, which is
+                    // why the entry is written T(PROFILING_TID) and never PROFILING_TYPE: the Java field does
+                    // not exist yet while this predicate is being built, and the tid resolves through the type
+                    // graph at test time. The key is a PATH-ENCODED uri so a shard's origin is ONE addressable
+                    // segment (ws/localhost/1112/mtron, never ws://localhost:1112/mtron) and the rec is
+                    // walkable. This is what lets one profile describe ANY topology -- a star's flat fan-out, a
+                    // tree's nested hops, a divide-and-conquer plan -- because each level simply holds the
+                    // reports of the places below it.
+                    // NOTE: keyed with the base uri::T for now; a dedicated path-encoded refinement does not
+                    // exist yet, so the encoding is a writer convention until the type states it.
+                    T(PATH_ENCODING_TID.maybe()), T(PROFILING_TID.maybe())))
             .create();
     
    /* public static final Type MONO_TYPE = Type.Builder.build()
@@ -626,15 +648,16 @@ public class mInstSet extends AbstractInstSet {
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),
-                        mInsts.ints().stream(),
-                        mInsts.reals().stream(),
-                        mInsts.bools().stream(),
-                        mInsts.bytess().stream(),
-                        mInsts.strs().stream(),
-                        mInsts.uris().stream(),
-                        mInsts.lsts().stream(),
-                        mInsts.recs().stream(),
-                        mInsts.codes().stream(),
+                        mInsts.int_insts().stream(),
+                        mInsts.real_insts().stream(),
+                        mInsts.bool_insts().stream(),
+                        mInsts.bytes_insts().stream(),
+                        mInsts.str_insts().stream(),
+                        mInsts.uri_insts().stream(),
+                        mInsts.lsts_insts().stream(),
+                        mInsts.rec_insts().stream(),
+                        mInsts.code_insts().stream(),
+                        mInsts.objs_insts().stream(),
                         Int.IntType.insts().stream(),
                         Real.RealType.insts().stream(),
                         Str.StrType.insts().stream(),
@@ -665,7 +688,7 @@ public class mInstSet extends AbstractInstSet {
                 uri(REWRITE), lst(
                         // capture the original (pre-collapse) code for profile(): runs FIRST so the
                         // id/plus/mult collapses below don't strip the code before it is timed.
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_analysis"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("profile_analysis").addQ("analysis"),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -680,9 +703,7 @@ public class mInstSet extends AbstractInstSet {
                                     // dom is maybe (not maybeSome): one lhs in, exactly one report out. a bulk (gather)
                                     // dom made the monad loop apply this inst *and* flush it through the barrier, so
                                     // profile() returned two reports — a {2} objs, printed as two tables end to end.
-                                    bundledCode.add(instC(M_ISA_INST_TID.extend("profile_analysis").dom(ALL.maybe()).rng(PROFILING_TID),
-                                            lst(),
-                                            (lhs, inst) -> profileTable(precedingCode)));
+                                    bundledCode.add(profileAnalysis(precedingCode));
                                     if (profileInst.get0() + 1 < insts.size()) {
                                         final Inst capInst = insts.get(profileInst.get0() + 1);
                                         bundledCode.add(capInst.dom(PROFILING_TYPE));
@@ -939,7 +960,7 @@ public class mInstSet extends AbstractInstSet {
                                                             instB(TAKE_INST_TID, lst(jnt(rangeInst.arg(1).intValue() - rangeInst.arg(0).intValue())))).toList();
                                                 })).asCode()), "rewrites a range inst to skip/take: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
 
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis").addQ("analysis"),
                                 code -> {
                                     final List<Inst> insts = code.insts();
                                     if (insts.isEmpty() || insts.size() < 2) return code;
@@ -1089,6 +1110,128 @@ public class mInstSet extends AbstractInstSet {
      * warm-up run, and return a small text table of min/max stage times. Terminal-free —
      * suitable for use in rewrites and non-interactive contexts.
      */
+    /**
+     * THE INSTRUCTION {@code profile()} MINTS — {@code profile} is a MAKER: it is not itself the instruction
+     * that gets evaluated, the rewrite mints this one around the captured program instead.
+     * <p>
+     * It is a FOLD and a BARRIER: it aggregates every monad the run produced up to the marker and answers ONE
+     * compressed {@code profile::profiling} rec. That is why it declares {@code monoidic} (the partials
+     * regroup), {@code commutative} (a collation cannot depend on arrival order) and {@code pure} (it
+     * observes, it does not mutate) — the same three laws {@code sum} declares, so a shard may end in a
+     * {@code profile_analysis} and have its report recombined at the master.
+     * <p>
+     * The captured program is bound by CLOSURE, never as an argument: an inst arg — even block-wrapped — is
+     * resolved/collapsed by the outer resolve, which would strip {@code id()}, {@code plus(0)} and
+     * {@code mult(1)} before they could be timed (see the {@code profile_analysis} rewrite rule).
+     * <p>
+     * THE DOM STAYS {@code maybe}, not {@code maybeSome}: a bulk dom made the monad loop apply this inst AND
+     * flush it through the barrier, so {@code profile()} answered two reports — a {@code {2}} objs printed as
+     * two tables end to end. That is the tension to settle when the shard end-cap lands: {@code Form.reducer}
+     * (which {@code law_shard}'s cut reads) is derived from a many-to-one dom, so this inst currently reads
+     * as a mapper however its laws are declared.
+     */
+    public static final fURI PROFILE_ANALYSIS_TID = M_ISA_INST_TID.extend("profile_analysis");
+
+    /**
+     * Mint the analysis inst for a captured program: {@code profile()} in a chain is replaced by one of these,
+     * closed over everything that preceded the marker.
+     */
+    public static Inst profileAnalysis(final Code preceding) {
+        return InstBuilder.build()
+                .tid(PROFILE_ANALYSIS_TID, "the analysis stage profile() mints: aggregate the monads up to the marker into one compressed report")
+                .dom(ALL.maybe(), "the monads the run produced up to the profile marker")
+                .rng(PROFILING_TID, "the compressed profile report")
+                .args(lst(preceding))
+                .body((lhs, inst) -> profileTable(preceding))
+                .law(Law.monoidic, Law.commutative, Law.pure)
+                // THE FORM IS DECLARED, not derived: Form.of reads a many-to-one dom as a reducer, and this
+                // inst's dom is deliberately `maybe` (a bulk dom made it answer two reports). Declared so
+                // LawTable.combiner's FORM gate lets the declared laws be consulted — without it the inst
+                // classifies as a mapper and declaresAll is never reached.
+                .form(Inst.Form.reducer)
+                .docDesc("profile() is a MAKER: this is the instruction it mints around the captured program. A FOLD and a BARRIER — it aggregates every monad up to the marker and answers one compressed profile::profiling rec, so its laws are the ones a shard's report needs in order to recombine at the master: monoidic (the partials regroup), commutative (a collation is order-free) and pure (it observes, it does not mutate). The program is captured by closure, never as an argument, so the outer resolve cannot collapse the instructions being timed.")
+                .create();
+    }
+
+    /**
+     * THE MACHINE THIS REPORT WAS GENERATED ON — the host the network answers at composed with the vid of
+     * the machine the profile ran in, i.e. the mtron {@code /network/host} applied to the machine's own vid
+     * ({@code booger/abc}). Written without the dereference marker in this comment on purpose: the literal
+     * sequence would terminate the javadoc block.
+     * <p>
+     * A PROFILING REC PRODUCED ON A SHARD MUST NAME ITS ORIGIN, or a collated report cannot attribute a
+     * number: the master sees k reports of identical shape and has nothing but arrival order to key them by.
+     * The host is the network component's own field (read at the component, not through the full read path,
+     * since this runs inside a profile); a machine with no vid — a rootless construct — contributes no
+     * identity rather than a bare host, which would read as a machine called "".
+     */
+    /**
+     * THE COLLATION INSTRUCTION — {@code profile_collate()}: the ⊕ a DISTRIBUTED profile needs at the master,
+     * and the reason {@code profiling::T} is recursive.
+     * <p>
+     * It takes the multiplicity of reports (the shards' answers plus this machine's own) and answers ONE rec
+     * indexed by where each report was made: {@code <path-encoded machine> => profiling::T}, with this
+     * machine's own at {@code master}. Keyed, never positional — a reader must be able to say WHICH machine
+     * owns a number without reconstructing the fan-out order, and the topologies differ (a star's flat
+     * fan-out, a tree's hops, a divide-and-conquer plan), so the structure has to be self-describing rather
+     * than implied by the layout.
+     * <p>
+     * THE KEY IS THE PATH ENCODING ({@link #PATH_ENCODING_TID}): {@code ws/localhost/1112/mtron} is one
+     * addressable segment, {@code ws://localhost:1112/mtron} is not a key at all.
+     * <p>
+     * MONOIDIC + COMMUTATIVE + PURE for the same reason the other two profiling insts are: the reports
+     * regroup across lanes and machines, the index does not depend on arrival order, and collation observes.
+     * The master's own row is the one NO shard can supply — its {@code apply} stage is the gather wait — which
+     * is why it must be identified and kept rather than summed away.
+     */
+    public static final fURI PROFILE_COLLATE_TID = M_ISA_INST_TID.extend("profile_collate");
+
+    /**
+     * Mint the collation inst. Deliberately NOT registered as an instruction of the ISA: like
+     * {@link #profileAnalysis(Code)} it is a MAKER's product, emitted by the distribution plan where a shard
+     * ends in {@code profile()} and the master has reports instead of partials.
+     */
+    public static Inst profileCollate() {
+        return InstBuilder.build()
+                .tid(PROFILE_COLLATE_TID, "index the gathered profiling::T reports by the machine each was made on")
+                .dom(ALL.maybeSome(), "the profiling::T reports the shards answered, plus this machine's own")
+                .rng(REC_TID, "one rec: <path-encoded machine> => profiling::T, this machine's own at `master`")
+                .form(Inst.Form.reducer)
+                .law(Law.monoidic, Law.commutative, Law.pure)
+                .body((lhs, inst) -> {
+                    final Obj here = machineIdentity();
+                    final Map<Obj, Obj> rows = new LinkedHashMap<>();
+                    lhs.stream().filter(Obj::isRec).forEach(report -> {
+                        final Obj where = report.asRec().at(uri(MACHINE));
+                        // THE MASTER IS NAMED, not inferred from arrival order: `machine == here` is the one
+                        // cheap test, and a report that names no machine is the local one by construction.
+                        rows.put(!where.isUri() || where.equals(here)
+                                        ? uri("master")
+                                        : uri(where.uriValue().pathEncoding()),
+                                report);
+                    });
+                    return rec(rows);
+                })
+                .docDesc("the master's half of a distributed profile: index the gathered profiling::T reports by the machine that made them (path-encoded), keeping this machine's own at `master`. The counterpart of profile(), which folds a LOCAL run into one report; this folds the REPORTS into one index. Same laws, different arity — and the recursion in profiling::T is what lets a report hold the reports of the places below it, so a star, a tree and a divide-and-conquer plan all describe themselves the same way.")
+                .create();
+    }
+
+    private static Obj machineIdentity() {
+        final Machine machine = Machine.current();
+        final fURI vid = machine.vid();
+        if (null == vid)
+            return noobj();
+        final Obj host = machine.network().at(uri(HOST));
+        final Obj composed = host.isUri() ? uri(host.uriValue().extend(vid)) : uri(vid);
+        // THE PROCESS ID IS PART OF THE IDENTITY, because host+frame is a PLACE, not a VM. Every peer forked on
+        // one host is a root machine on the same OS host, so they all answer `<host>/.` -- a collated profile
+        // then cannot tell a shard's report from the master's, `merge` BULKS the two indistinguishable values
+        // and the index collapses to one row labelled `master`. Measured: two local peers produced
+        // [master => profiling::[insts=>3]] where insts=3 was a SLAVE's chain.
+        // The pid rides the PATH, not a `?q`: the collation key is pathEncoding(), which renders the path.
+        return uri(composed.uriValue().toString() + "/" + ProcessHandle.current().pid());
+    }
+
     private static Rec profileTable(final Code code) {
         // snapshot the pre-collapse insts: Code.rewrite() mutates its input in place (via
         // selfJVM), so the timed loop must rewrite a fresh copy each iteration — the snapshot
@@ -1251,6 +1394,10 @@ public class mInstSet extends AbstractInstSet {
         }
         return rec(mutableMap(
                 uri(FORMAT), auto_(instLambda(ALL.maybe(), STR_TID, (lhs, inst) -> str(text))),
+                // WHICH MACHINE PRODUCED THIS REPORT — `*/network/host.mult(*~/.vid())`, e.g. booger/abc.
+                // Without it a collated report cannot say where a number came from; with it, the master
+                // keys the shards' reports by origin instead of by arrival order.
+                uri(MACHINE), machineIdentity(),
                 uri(STAGE), rec(
                         uri(REWRITE), rec(uri(MIN), real(rewriteMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(rewriteMax / ms, MILLIS_TYPE.vid(), null)),
                         uri(RESOLVE), rec(uri(MIN), real(resolveMin / ms, MILLIS_TYPE.vid(), null), uri(MAX), real(resolveMax / ms, MILLIS_TYPE.vid(), null)),

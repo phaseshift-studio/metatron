@@ -482,11 +482,8 @@ mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                      route =&gt; [/mcp    =&gt; mcp_mtron,
                                /docker =&gt; docker:,
                                /usr    =&gt; /usr]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: http_server::[origin =&gt; http://localhost:8777,
-                        route =&gt; [/mcp    =&gt; mcp_mtron,
-                                  /docker =&gt; docker:,
-                                  /usr    =&gt; /usr]]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,
@@ -504,9 +501,8 @@ mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *bu
 mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron&gt; ws_server::[origin  =&gt; ws://localhost:8555,
                    route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct ws_server::T: fail::['inst apply failure: unable to bind localhost/127.0.0.1:8555: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: ws_server::[origin  =&gt; ws://localhost:8555,
-                      route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]]
+==&gt;ws_server::[origin=&gt;ws://localhost:8555,
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 </code></pre>
 <p>The organizing idea is that <strong>a protocol is a projection of an obj, not a copy of it</strong>. An <code>mcp_server</code> rides http,
 websockets and stdio alike; a <code>str</code> that is css is <code>css::T</code> whoever asks for it. A mount then only has to say which
@@ -677,109 +673,14 @@ request while the same protocol engine serves them all.</li>
 <pre><code class="language-mtron">mtron&gt; */usr/person/1                                              [-- straight from the space --]
 ==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+==&gt;&quot;[name=&gt;'marko',age=&gt;29]@/usr/person/1&quot;
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
-==&gt;fail::[&quot;&quot;&quot;&lt;!--
-     ~ Metatron: A Distributed Computing Language and Virtual Machine
-     ~  Copyright (C) 2025- PhaseShift Studio, LLC
-     ~  
-     ~ This program is free software: you can redistribute it and/or modify
-     ~ it under the terms of the GNU Affero General Public License as published by
-     ~ the Free Software Foundation, either version 3 of the License, or
-     ~ (at your option) any later version.
-     ~  
-     ~ This program is distributed in the hope that it will be useful,
-     ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-     ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-     ~ GNU Affero General Public License for more details.
-     ~
-     ~ You should have received a copy of the GNU Affero General Public License
-     ~ along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
-     --&gt;
+==&gt;
+   json::'{&quot;name&quot;:&quot;marko&quot;,&quot;age&quot;:29}'
    
-   &lt;!DOCTYPE html&gt;
-   &lt;html lang=&quot;en&quot;&gt;
-   &lt;head&gt;
-       &lt;title&gt;metatron&lt;/title&gt;
-       &lt;!-- METADATA --&gt;
-       &lt;meta charset=&quot;utf-8&quot;&gt;
-       &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
-       &lt;meta name=&quot;keywords&quot; content=&quot;metatron programming data graph database llm&quot;&gt;
-       &lt;meta name=&quot;description&quot; content=&quot;Next Generation Data Technologies&quot;&gt;
-       &lt;meta name=&quot;theme-color&quot; content=&quot;#ffffff&quot;&gt;
-       &lt;!-- FAVICON --&gt;
-       &lt;link rel=&quot;apple-touch-icon&quot; sizes=&quot;114x114&quot; href=&quot;images/apple-touch-icon.png&quot;&gt;
-       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;32x32&quot; href=&quot;images/favicon-32x32.png&quot;&gt;
-       &lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; sizes=&quot;16x16&quot; href=&quot;images/favicon-16x16.png&quot;&gt;
-       &lt;link rel=&quot;mask-icon&quot; href=&quot;images/safari-pinned-tab.svg&quot; color=&quot;#5bbad5&quot;&gt;
-       &lt;!-- FONTS --&gt;
-       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
-       &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
-       &lt;link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;family=Oswald:wght@400;500;600;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;!-- CSS PACKAGES --&gt;
-       &lt;link href=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css&quot; rel=&quot;stylesheet&quot;/&gt;
-       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;link href=&quot;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;link href=&quot;css/bootstrap.min.css&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;link href=&quot;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;!-- JAVASCRIPT PACKAGES --&gt;
-       &lt;script src=&quot;https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js&quot;
-               type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/highlight.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/languages/mtron.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/languages/java.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/languages/bash.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/languages/sql.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;highlight/languages/json.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script src=&quot;https://code.jquery.com/jquery-3.4.1.min.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;script async src=&quot;https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;
-       &lt;!-- &lt;script src=&quot;data/console.txt&quot;&gt;&lt;/script&gt;--&gt;
-       &lt;!-- CUSTOM CSS/JAVASCRIPT --&gt;
-       &lt;link href=&quot;css/metatron.css&quot; rel=&quot;stylesheet&quot;&gt;
-       &lt;style&gt;
-           .hidden {
-               display: none;
-           }
    
-           .switch {
-               border-width: 1px 1px 0 1px;
-               border-style: solid;
-               border-color: #7a2518;
-               display: inline-block;
-               border-radius: 4px 4px 0 0;
-           }
-   
-           .switch--item {
-               padding: 4px 14px;
-               font-size: 0.85rem;
-               background-color: #ffffff;
-               color: #7a2518;
-               display: inline-block;
-               cursor: pointer;
-           }
-   
-           .switch--item:first-child {
-               border-radius: 3px 0 0 0;
-           }
-   
-           .switch--item:last-child {
-               border-radius: 0 3px 0 0;
-           }
-   
-           .switch--item.selected {
-               background-color: #7a2519;
-               color: #ffffff;
-           }
-   
-           /* click-to-copy download commands: the whole block is the copy target */
-           .click-to-copy {
-               cursor: pointer;
-               -webkit-user-select: none;
-               user-select: none;
-           }
-   
-   ...
 mtron&gt; *http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+==&gt;&quot;{name='marko', age=29}&quot;
 </code></pre>
 <p><code>/person/1</code> serves that obj and <code>/person/2</code> serves the other, through the <em>same</em> handler — and <code>/person/3</code> is a 404,
 because the space is live rather than a lookup table of two.</p>

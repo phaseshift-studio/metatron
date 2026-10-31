@@ -84,7 +84,7 @@ public final class mInsts {
     /**
      * {@code int::T}'s operations: the ring's own, the comparisons, and the folds.
      */
-    public static Set<Inst> ints() {
+    public static Set<Inst> int_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the int ring")
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "zero").argLst()
@@ -204,7 +204,7 @@ public final class mInsts {
     /**
      * {@code real::T}'s operations: the field's own, the comparisons, and the folds.
      */
-    public static Set<Inst> reals() {
+    public static Set<Inst> real_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(GT_INST_TID, "check whether the lhs real is greater than the argument real")
                         .dom(REAL_TID, "a real").rng(BOOL_TID, "true if the lhs real is greater than the arg real")
@@ -325,7 +325,7 @@ public final class mInsts {
      * {@code bool::T}'s operations: the Boolean algebra's join, meet and complement, with the two bounds as the
      * monoid identities the type's algebra already states ({@code zero => false}, {@code one => true}).
      */
-    public static Set<Inst> bools() {
+    public static Set<Inst> bool_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the Boolean algebra — false, the join identity")
                         .dom(BOOL_TID, "the lhs bool").rng(BOOL_TID, "false").argLst()
@@ -371,7 +371,7 @@ public final class mInsts {
     /**
      * {@code bytes::T}'s operations: the monoid's identity and its append.
      */
-    public static Set<Inst> bytess() {
+    public static Set<Inst> bytes_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the bytes monoid — the empty byte sequence")
                         .dom(BYTES_TID, "the lhs bytes").rng(BYTES_TID, "the empty bytes").argLst()
@@ -399,7 +399,7 @@ public final class mInsts {
     /**
      * {@code str::T}'s operations: the monoid's identity and concatenation, the lexicographic comparisons, reverse, and case.
      */
-    public static Set<Inst> strs() {
+    public static Set<Inst> str_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the characters of the lhs str")
                         .dom(STR_TID, "the str to reverse").rng(STR_TID, "the reversed str").argLst()
@@ -522,7 +522,7 @@ public final class mInsts {
     /**
      * {@code uri::T}'s operations: the path ring, the component accessors, and the folds.
      */
-    public static Set<Inst> uris() {
+    public static Set<Inst> uri_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the path of the lhs uri")
                         .dom(URI_TID, "the uri to reverse").rng(URI_TID, "the uri with its path reversed")
@@ -685,7 +685,7 @@ public final class mInsts {
     /**
      * {@code lst::T}'s operations: the slot monoid, the selectors, and the folds.
      */
-    public static Set<Inst> lsts() {
+    public static Set<Inst> lsts_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(REVERSE_INST_TID, "reverse the slots of the lhs lst")
                         .dom(LST_TID, "the lst to reverse").rng(LST_TID, "the lst with its slots reversed")
@@ -826,7 +826,7 @@ public final class mInsts {
     /**
      * {@code rec::T}'s operations: the record's merge, its entries, the reads, and the folds.
      */
-    public static Set<Inst> recs() {
+    public static Set<Inst> rec_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(AS_INST_TID, "convert an inst into the rec the argument rec type constructs")
                         .dom(INST_TID, "the inst to convert").rng(REC_TID, "the lhs inst as the argument's rec type")
@@ -993,7 +993,7 @@ public final class mInsts {
     /**
      * {@code code::T}'s operations: composition, the branch, and the two conversions.
      */
-    public static Set<Inst> codes() {
+    public static Set<Inst> code_insts() {
         return new LinkedHashSet<>(List.of(
                 InstBuilder.build().tid(AS_INST_TID, "convert a code into the lst of its insts")
                         .dom(CODE_TID, "the code to convert").rng(LST_TID, "the code's insts as a lst")
@@ -1062,5 +1062,35 @@ public final class mInsts {
                         .law(Law.commutative, Law.monoidic, Law.pure)
                         .create()
         ));
+    }
+
+    /**
+     * {@code code::T}'s operations: composition, the branch, and the two conversions.
+     */
+    public static Set<Inst> objs_insts() {
+        return new LinkedHashSet<>(List.of(
+                InstBuilder.build()
+                        .tid(PROFILE_INST_TID, "generates a profiling::T analysis of the current expression")
+                        .dom(ALL.maybe(), "the expression being profiled")
+                        .rng(PROFILING_TID, "a profiling::T analysis of the expression")
+                        // SINGLE MACHINE OR DISTRIBUTED, profile() IS A REDUCER: it is the barrier the
+                        // monads stream into, and ONE compressed report comes out the other side. The form
+                        // is DECLARED, not derived — the dom is `maybe` (a bulk dom made the monad loop
+                        // apply this inst *and* flush it through the barrier, answering two reports), and
+                        // Form.of reads a maybe-to-one dom as a mapper. The inst this marker MINTS
+                        // (machInstSet.profileAnalysis) carries the same form and the same three laws, so
+                        // the profile() a writer types and the profile_analysis() that runs cannot disagree
+                        // about the act: monoidic (the partials regroup across shards), commutative (a
+                        // collation is order-free) and pure (it observes, it does not mutate).
+                        .form(Inst.Form.reducer)
+                        .law(Law.monoidic, Law.commutative, Law.pure)
+                        // the profile_analysis rewrite does the work; bare profile() is a no-op
+                        .body((lhs, inst) -> lhs)
+                        .docDesc("""
+                                a profiling::T analysis of prior instruction in the code — 
+                                every monad the run produced up to the marker is aggregated into one compressed report (stages, per-instruction times, rewrite rules, flow, cache)""")
+                        .examples("*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
+                                "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format")
+                        .create()));
     }
 }
