@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.iot.space;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
@@ -84,7 +83,6 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         MoquetteServer.clear();
         MoquetteServer.stop();
         CommonUtil.sleepThread(1000);
-        AbstractMetatronTest.end();
     }
 
 }

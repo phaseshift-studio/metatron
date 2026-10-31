@@ -18,14 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type;
 
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.parser.Parser;
-import studio.phaseshift.metatron.isa.m.type.resolver.Resolver;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.TypeTyper;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import static studio.phaseshift.metatron.Tokens.*;
 

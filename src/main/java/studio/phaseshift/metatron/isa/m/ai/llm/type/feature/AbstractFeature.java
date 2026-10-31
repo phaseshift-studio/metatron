@@ -27,9 +27,8 @@ import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +36,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ACTIVE;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.LLM_SYSTEM_FEATURE_TID;
+
 import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.service.SystemService;
 
 /*
@@ -135,10 +135,10 @@ public abstract class AbstractFeature extends MRec implements Feature {
         if (this.watermarkRejections.isEmpty() || !agent.hasFeature(LLM_SYSTEM_FEATURE_TID))
             return;
         agent.requireService(SystemService.class).addSystemMessage("""
-                                                                                   the watermark instructions you were given were not followed:
-                                                                                   
-                                                                                   %s
-                                                                                   """.formatted(String.join("\n", this.watermarkRejections)));
+                the watermark instructions you were given were not followed:
+                
+                %s
+                """.formatted(String.join("\n", this.watermarkRejections)));
         this.watermarkRejections.clear();
     }
 }

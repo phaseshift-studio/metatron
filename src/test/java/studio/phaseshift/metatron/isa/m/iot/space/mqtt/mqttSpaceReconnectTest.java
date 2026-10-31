@@ -94,7 +94,6 @@ public class mqttSpaceReconnectTest extends AbstractMetatronTest {
     @AfterAll
     public static void stopAll() {
         stopBroker();
-        AbstractMetatronTest.end();
     }
 
     @AfterEach

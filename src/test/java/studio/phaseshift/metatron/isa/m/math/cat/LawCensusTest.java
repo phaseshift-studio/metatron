@@ -23,40 +23,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.mInstSet.AlgebraTool;
 import studio.phaseshift.metatron.isa.m.mTypes;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.type.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
-import static studio.phaseshift.metatron.isa.m.mTypes.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.BYTES_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.CODE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.REC_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.REL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mTypes.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mTypes.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -378,7 +359,9 @@ public class LawCensusTest extends AbstractMetatronTest {
         return declaration.isRec() ? declaration.asRec() : rec0();
     }
 
-    /** The row key IS a registered instruction's tid: the declaration addresses a live implementation. */
+    /**
+     * The row key IS a registered instruction's tid: the declaration addresses a live implementation.
+     */
     private static boolean live(final List<Inst> insts, final fURI address) {
         return null != address && insts.stream().anyMatch(inst -> address.equals(inst.tid()));
     }
@@ -450,7 +433,9 @@ public class LawCensusTest extends AbstractMetatronTest {
         return laws;
     }
 
-    /** Add the law names a declared {@code law => [..]} lst holds, ignoring names outside the vocabulary. */
+    /**
+     * Add the law names a declared {@code law => [..]} lst holds, ignoring names outside the vocabulary.
+     */
     private static void addLaws(final List<Law> laws, final Obj declared) {
         if (null == declared || !declared.isLst())
             return;
@@ -463,7 +448,9 @@ public class LawCensusTest extends AbstractMetatronTest {
         }
     }
 
-    /** The {@link Law} a declared name denotes, or null when the claim names something outside the vocabulary. */
+    /**
+     * The {@link Law} a declared name denotes, or null when the claim names something outside the vocabulary.
+     */
     private static Law lawNamed(final String name) {
         for (final Law law : Law.values())
             if (law.name().equals(name))
@@ -471,7 +458,9 @@ public class LawCensusTest extends AbstractMetatronTest {
         return null;
     }
 
-    /** Is this address (or carrier) written down as a known exception? An entry must begin with its address. */
+    /**
+     * Is this address (or carrier) written down as a known exception? An entry must begin with its address.
+     */
     private static boolean allowed(final String address) {
         return null != address && ALLOWLIST.stream().anyMatch(entry -> entry.startsWith(address));
     }

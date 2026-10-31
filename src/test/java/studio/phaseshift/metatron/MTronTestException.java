@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -37,7 +37,7 @@ public class MTronTestException extends RuntimeException {
     }
 
     public static MTronTestException of(final Throwable cause) {
-        if(null == cause)
+        if (null == cause)
             return new MTronTestException("null cause");
         if (cause instanceof MTronTestException)
             return (MTronTestException) cause;

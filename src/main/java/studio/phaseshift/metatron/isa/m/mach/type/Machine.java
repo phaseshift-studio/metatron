@@ -23,10 +23,8 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
 import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
@@ -34,8 +32,11 @@ import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyObjLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -53,11 +54,10 @@ import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 
 /**
  * Machine: a SPACE OF SPACES -- the address space resolution happens in. Its members ({@code instset}, {@code memory},
@@ -159,7 +159,7 @@ public interface Machine extends Rec, AutoCloseable {
         if (!owned.isNoObj())
             return owned;
         // THE ROUTER OF ROUTERS ALIGNS THE NAME ONCE. a prefixed spelling (ide:command) names the same
-        // resource as its aligned form (/m/dev/ide/inst/command), and each component keys by the canonical
+        // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
         // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
         // once, and every dispatch below sees one name. ONE DOOR: Helper.align IS that alignment, which is
         // why the compiler's move-extractor can canonicalize a spelling exactly as the runtime does -- a
@@ -278,7 +278,7 @@ public interface Machine extends Rec, AutoCloseable {
 
     /**
      * Compile and run a program that has ALREADY BEEN READ — the {@code code::T} a {@link #parse} lifts to
-     * ({@link studio.phaseshift.metatron.isa.m.type.parser.Parser.Helper#toCode}) — on this machine. It is
+     * ({@link Parser.Helper#toCode}) — on this machine. It is
      * {@link #evaluate(String)} without the text: what the compiler's parse stage would have produced is handed
      * in instead, so the program is evaluated exactly once whichever compiler is installed. The default
      * compiler reads text itself, but a compiler may accept only {@code code::T} (the test-only category

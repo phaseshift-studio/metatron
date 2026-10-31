@@ -202,7 +202,7 @@ data, it becomes **overridable from a boot file**, which no Java class was.
 ### 3.4 Fold-left: the query compiles to the backend
 
 "Lazy" undersells it. The `isa`/`select`/`take` chain is *rewritten* — a left-fold of the instruction chain
-into one native query — by the `algebra/rewrite` system (`RewriterBuilder`, `RewriteBuilder`, `CommonRewrites`,
+into one native query — by the `algebra/rewrite` system (`RewriterBuilder`, `DBRewriteBuilder`, `CommonRewrites`,
 wired into `tbleInstSet` SQL and `dcmntInstSet` Mongo; see `docs/design/rewrite-planner.md`). So
 `*<ledger> .?[pattern] ==[projection] .take(n)` becomes `SELECT <projection> … WHERE <pattern> … LIMIT n`
 (or the Mongo/TinkerPop equivalent): the backend filters, projects, and windows, and the JVM never

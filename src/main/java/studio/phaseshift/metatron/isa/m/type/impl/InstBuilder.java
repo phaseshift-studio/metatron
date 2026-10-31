@@ -18,29 +18,19 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.Derivation;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 
-import static studio.phaseshift.metatron.Tokens.DERIVATION;
-import static studio.phaseshift.metatron.Tokens.FORM;
-import static studio.phaseshift.metatron.Tokens.INVERSE;
-import static studio.phaseshift.metatron.Tokens.LAW;
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.RHS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawWrap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -288,7 +278,7 @@ public final class InstBuilder {
         this.examples = null == examples ? new String[]{} : examples;
         return this;
     }
-    
+
     /**
      * The instruction. Its docs are written straight to {@code ?docq} (the space is already known when a set
      * constructs its insts) and its declaration is staged for {@link #drain}.

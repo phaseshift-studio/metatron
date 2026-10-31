@@ -1,6 +1,7 @@
 # Skill reference docs — agent reference
 
-Moved out of [AGENTS.md](../../AGENTS.md) on 2026-10-21 so that file holds only the rules every session needs; AGENTS.md links here where it applies. AGENTS.md's "Skills and docs" section is the summary.
+Moved out of [AGENTS.md](../../AGENTS.md) on 2026-10-21 so that file holds only the rules every session needs; AGENTS.md
+links here where it applies. AGENTS.md's "Skills and docs" section is the summary.
 
 ## Skill Reference Docs
 
@@ -27,7 +28,7 @@ corresponding file:
 |---------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
 | A widget or UI class (`uiInstSet`, `TreeWidget`, `PanelWidget`, any tool) | `.metatron/skills/metatron/references/ui-instset-java.md`                                                  |
 | A type system class (`Type`, `MType`, `Inst`, `Code`)                     | `.metatron/skills/metatron/references/type-system-java.md` or `…-mtron.md`                                 |
-| A rewrite class (`RewriterBuilder`, `RewriteBuilder`)                     | `.metatron/skills/metatron/references/rewrite-system-java.md`                                              |
+| A rewrite class (`RewriterBuilder`, `DBRewriteBuilder`)                   | `.metatron/skills/metatron/references/rewrite-system-java.md`                                              |
 | A space class (`tbleSpace`, `fsSpace`)                                    | `.metatron/skills/metatron/references/tble-space-java.md` or create a new space doc                        |
 | mtron language syntax or semantics                                        | `.metatron/skills/mtron/references/mtron-language-reference.md`                                            |
 | An MCP server/client class                                                | `.metatron/skills/metatron/references/mcp-mtron.md` or `.metatron/skills/mtron/references/mcp-server-*.md` |

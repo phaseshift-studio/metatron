@@ -19,17 +19,16 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.sys.ui.Border;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.Selector;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.Selector;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.TableWidget;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -130,14 +129,14 @@ public class Generator {
         LOG.none("completed %s {{X}}generation\n", this.isSingleFile ? "{{y}}boot file" : "{{y}}boot package");
         if (!this.isSingleFile) {
             LOG.none("""
-                     %s package structure
-                     %s
-                     |_ SKILL.md
-                     |_ assets
-                       \\_ %s
-                     |_ resources
-                       \\_ <none>{{X}}
-                     """, this.name, this.skillFile.getParent(), this.bootFile.getName());
+                    %s package structure
+                    %s
+                    |_ SKILL.md
+                    |_ assets
+                      \\_ %s
+                    |_ resources
+                      \\_ <none>{{X}}
+                    """, this.name, this.skillFile.getParent(), this.bootFile.getName());
         }
     }
 }

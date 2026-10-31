@@ -23,14 +23,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
-import studio.phaseshift.metatron.isa.m.Law;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.mTypes;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AlgebraTool;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INV_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MULT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NEG_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.PLUS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 
 /**
@@ -134,12 +129,16 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
         return declaration.isRec() ? declaration.asRec() : rec0();
     }
 
-    /** Does the carrier's declared algebra bind this operation? The guard a hand-written interpretation asks. */
+    /**
+     * Does the carrier's declared algebra bind this operation? The guard a hand-written interpretation asks.
+     */
     protected boolean binds(final fURI operation) {
         return AlgebraTool.binds(this.carrier(), operation);
     }
 
-    /** Skip this interpretation unless the carrier declares every operation the row is about. */
+    /**
+     * Skip this interpretation unless the carrier declares every operation the row is about.
+     */
     protected void requires(final fURI... operations) {
         for (final fURI operation : operations)
             assumeTrue(this.binds(operation),
@@ -147,7 +146,9 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
                             (null == operation ? null : operation.basePath()) + " operation");
     }
 
-    /** Write the probe into {@code *a} and READ the row as the equation it is: the tool's template, by hand. */
+    /**
+     * Write the probe into {@code *a} and READ the row as the equation it is: the tool's template, by hand.
+     */
     protected void interpret(final String lhs, final String rhs) {
         Machine.current().memory().write(f("a"), this.sample());
         final Obj left = ObjmtronSerializer.parse(lhs).apply();

@@ -26,38 +26,24 @@ import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Law;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.CLIENT;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.INST;
-import static studio.phaseshift.metatron.Tokens.ORIGIN;
-import static studio.phaseshift.metatron.Tokens.PEER;
-import static studio.phaseshift.metatron.Tokens.REC_TID;
-import static studio.phaseshift.metatron.Tokens.STATUS;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
@@ -102,20 +88,34 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @Execution(ExecutionMode.SAME_THREAD)
 public class PlaceResolverTest extends AbstractMetatronTest {
 
-    /** Online, declares {@code eval}, carries a {@code host} — a target. */
+    /**
+     * Online, declares {@code eval}, carries a {@code host} — a target.
+     */
     private static final fURI SERVANT = f("loop://ginger:8555");
-    /** Online, declares {@code to} but not {@code eval} — no target: the route is {@code eval(<target>)}. */
+    /**
+     * Online, declares {@code to} but not {@code eval} — no target: the route is {@code eval(<target>)}.
+     */
     private static final fURI WRITER = f("loop://booger:8555");
-    /** Serves {@code eval} but its link is down — no target. */
+    /**
+     * Serves {@code eval} but its link is down — no target.
+     */
     private static final fURI SLEEPER = f("loop://quiet:8555");
-    /** Serves {@code eval} but carries no {@code host} — an accepted twin, never a target. */
+    /**
+     * Serves {@code eval} but carries no {@code host} — an accepted twin, never a target.
+     */
     private static final fURI TWIN = f("loop://twin:8555");
-    /** A second good peer, used to prove order and the 0/1/2 dial counts. */
+    /**
+     * A second good peer, used to prove order and the 0/1/2 dial counts.
+     */
     private static final fURI SECOND = f("loop://nutmeg:8555");
-    /** This machine's own authority — what makes the local place a place. */
+    /**
+     * This machine's own authority — what makes the local place a place.
+     */
     private static final fURI MINE = f("loop://mantis:8555");
 
-    /** A roster row for a machine this one knows and has not dialed: nutmeg, at its one transport. */
+    /**
+     * A roster row for a machine this one knows and has not dialed: nutmeg, at its one transport.
+     */
     private static final Rec ROSTER = rec(uri("nutmeg"), objs(uri(SECOND)));
 
     @BeforeAll

@@ -29,9 +29,9 @@ import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -41,6 +41,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -133,18 +134,73 @@ public abstract class AbstractMetatronTest {
         return Machine.current().memory().spaces().jvm().getOrDefault(f(vid).toUri(), noobj());
     }
 
-    // the VM is booted once per test class, not once per test-case instance. the
-    // constructor calls begin() so a subclass that bypasses @BeforeAll still boots,
-    // but re-booting per @ParameterizedTest row is the dominant test-harness cost.
+    // The VM is a process-wide singleton: BootLoader.load()/close() and the router they install are global to the
+    // JVM. surefire reuses two forks and runs several test CLASSES at once in each (parallel=classesAndMethods), so
+    // a class that finishes must not tear the VM down while the classes still running in the same fork are using it.
+    // The inherited @BeforeAll/@AfterAll below therefore reference-count the VM: the first class to arrive boots it,
+    // and only the last to leave closes it. begin()/end() stay public idempotent helpers for the few classes that call
+    // them directly — end() forces a teardown and is only used by the one test that shuts the VM down mid-run (which
+    // is @Isolated, so nothing else is holding the VM when it runs).
+    private static final AtomicInteger VM_HOLDERS = new AtomicInteger(0);
+    private static final Object VM_LOCK = new Object();
     private static volatile boolean BOOTED = false;
 
     public AbstractMetatronTest() {
+        // boot on construction too, so a subclass that somehow bypasses @BeforeAll still gets a live VM; idempotent,
+        // and it never touches the holder count — that belongs to the @BeforeAll/@AfterAll pair.
         begin();
+    }
 
+    /** idempotent: ensure the process VM is booted. public because several test classes call it from their own @BeforeAll. */
+    public static void begin() {
+        if (BOOTED)
+            return;
+        synchronized (VM_LOCK) {
+            bootLocked();
+        }
+    }
+
+    /**
+     * force the process VM down now. only {@code NetworkSupervisorShutdownTest} calls this — mid-test, to prove that
+     * shutdown releases every supervised level — and it is @Isolated, so no other class is mid-flight when it runs.
+     * every other class's teardown goes through the reference-counted {@link #endVm()}.
+     */
+    public static void end() {
+        synchronized (VM_LOCK) {
+            if (BOOTED) {
+                BootLoader.close();
+                BOOTED = false;
+            }
+        }
     }
 
     @BeforeAll
-    public static void begin() {
+    public static void beginVm() {
+        synchronized (VM_LOCK) {
+            VM_HOLDERS.incrementAndGet();
+            bootLocked();
+        }
+    }
+
+    @AfterAll
+    public static void endVm() {
+        try {
+            // A console is process-wide (Console.LOCAL_INSTANCE and its terminal are static) and surefire reuses its
+            // forks, so a console one class leaves open is found by every class the fork runs after it: widgets float
+            // onto its surface and tools take their mode from it (that is how NetworkPanelToolTest once hung a fork).
+            if (null != Console.LOCAL_INSTANCE)
+                closeConsole(Console.LOCAL_INSTANCE);
+        } finally {
+            synchronized (VM_LOCK) {
+                if (VM_HOLDERS.decrementAndGet() == 0 && BOOTED) {
+                    BootLoader.close();
+                    BOOTED = false;
+                }
+            }
+        }
+    }
+
+    private static void bootLocked() {
         if (BOOTED)
             return;
         BOOTED = true;
@@ -158,20 +214,6 @@ public abstract class AbstractMetatronTest {
         BootLoader.TESTING = true;
         BootLoader.load(rec());
         InstSet.importInstSet(f("/m/web"));
-    }
-
-    @AfterAll
-    public static void end() {
-        try {
-            // A console is process-wide (Console.LOCAL_INSTANCE and its terminal are static) and surefire reuses its
-            // forks, so a console one class leaves open is found by every class the fork runs after it: widgets float
-            // onto its surface and tools take their mode from it (that is how NetworkPanelToolTest once hung a fork).
-            if (null != Console.LOCAL_INSTANCE)
-                closeConsole(Console.LOCAL_INSTANCE);
-        } finally {
-            BootLoader.close();
-            BOOTED = false;
-        }
     }
 
     /**

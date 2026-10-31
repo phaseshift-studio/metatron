@@ -134,7 +134,8 @@ infers types from JDBC metadata.
 
 ## SQL rewrite pushdown
 
-Registered in `tbleInstSet.setup()` under `uri(REWRITE)`. All rewrites follow the `RewriteBuilder` pattern (space-aware
+Registered in `tbleInstSet.setup()` under `uri(REWRITE)`. All rewrites follow the `DBRewriteBuilder` pattern
+(space-aware
 native pushdown).
 
 | Rewrite                  | Match pattern                  | SQL generated                                                |
@@ -146,7 +147,7 @@ native pushdown).
 | `sql_offset`             | `from(uri).skip(n)`            | `SELECT * FROM table OFFSET n`                               |
 | `sql_offset_limit`       | `sql_offset.take(m)`           | `SELECT * FROM table LIMIT m OFFSET n`                       |
 | `sql_has`                | `from(uri).has()`              | `SELECT EXISTS(SELECT 1 FROM table LIMIT 1)`                 |
-| `sql_where`              | `from(uri).isa(pred)`        | `SELECT * FROM table WHERE conditions`                       |
+| `sql_where`              | `from(uri).isa(pred)`          | `SELECT * FROM table WHERE conditions`                       |
 | `sql_where_count`        | `sql_where.count()`            | `SELECT COUNT(*) FROM table WHERE conditions`                |
 | `sql_where_limit`        | `sql_where.take(n)`            | `SELECT * FROM table WHERE conditions LIMIT n`               |
 | `sql_where_offset`       | `sql_where.skip(n)`            | `SELECT * FROM table WHERE conditions OFFSET n`              |
@@ -387,9 +388,9 @@ in `auto_from_()` on read so they resolve lazily to the referenced row.
 2. **`_mtron_meta` persistence** (`loadMetaTable`): reads FK registrations persisted by `persistColumnType()`.
    Survives restarts.
 3. **Naming convention** (`discoverFKByConvention` + `inferFKByConvention`): a column whose name matches another
-   table name (case-insensitive, with or without trailing "s") is treated as a FK.  Examples:
-   - `people.company` → table `companies`
-   - `message.session` → table `session`
+   table name (case-insensitive, with or without trailing "s") is treated as a FK. Examples:
+    - `people.company` → table `companies`
+    - `message.session` → table `session`
 
 The lazy path (`inferFKByConvention`) fires at **read time** — if a column hasn't been registered as a FK yet,
 it checks naming convention on the first read and registers the FK permanently.
@@ -413,10 +414,10 @@ this.space.pattern().retractPattern()  // → /usr/dr/
 
 **Critical distinction**: scheme-based patterns (`drdb:#`) vs path-based patterns (`/usr/dr/#`):
 
-| Pattern | Bare PK `1` → FK path | Absolute value `/usr/dr/session/1` in column | Problem |
-|---------|----------------------|---------------------------------------------|---------|
-| `drdb:#` | `drdb:session/1` | `drdb:session/1` (scheme prefix distinguishes) | None — easy to distinguish |
-| `/usr/dr/#` | `/usr/dr/session/1` | `/usr/dr/session//usr/dr/session/1` | **Path doubling** — can't tell bare PK from absolute path |
+| Pattern     | Bare PK `1` → FK path | Absolute value `/usr/dr/session/1` in column   | Problem                                                   |
+|-------------|-----------------------|------------------------------------------------|-----------------------------------------------------------|
+| `drdb:#`    | `drdb:session/1`      | `drdb:session/1` (scheme prefix distinguishes) | None — easy to distinguish                                |
+| `/usr/dr/#` | `/usr/dr/session/1`   | `/usr/dr/session//usr/dr/session/1`            | **Path doubling** — can't tell bare PK from absolute path |
 
 When callers store full URIs (e.g. `uri(/usr/dr/session/1)`) in FK columns instead of bare primary keys (e.g. `1`),
 the path-based pattern can't distinguish them — both look like path segments.
@@ -425,15 +426,17 @@ the path-based pattern can't distinguish them — both look like path segments.
 
 Three guards prevent FK miswrapping in `readColumnWithMetadata()`:
 
-| Guard | Value example | Action | Why |
-|-------|-------------|--------|-----|
-| Starts with `/` | `/usr/dr/session/1` | Return plain `uri()` — no FK wrapping | Caller stored a full URI, not a bare PK |
-| Contains `:` | `drdb:session/1` | Return plain `uri()` — no FK wrapping | Scheme-based absolute path |
-| Starts with `[` | `[!*/usr/dr/msg/4,...]` | Skip FK, fall through to type reader | JSON list of references, not a single FK |
+| Guard           | Value example           | Action                                | Why                                      |
+|-----------------|-------------------------|---------------------------------------|------------------------------------------|
+| Starts with `/` | `/usr/dr/session/1`     | Return plain `uri()` — no FK wrapping | Caller stored a full URI, not a bare PK  |
+| Contains `:`    | `drdb:session/1`        | Return plain `uri()` — no FK wrapping | Scheme-based absolute path               |
+| Starts with `[` | `[!*/usr/dr/msg/4,...]` | Skip FK, fall through to type reader  | JSON list of references, not a single FK |
 
 Without these guards, three bugs occur:
+
 1. Absolute paths get doubled (`/usr/dr/session//usr/dr/session/1`)
-2. Plain URIs get wrapped in unnecessary `auto_from_` (`session=>!*/usr/dr/session/1` instead of `session=>/usr/dr/session/1`)
+2. Plain URIs get wrapped in unnecessary `auto_from_` (`session=>!*/usr/dr/session/1` instead of
+   `session=>/usr/dr/session/1`)
 3. JSON lists get treated as single FK path segments (`!*/usr/dr/message/[...]`)
 
 ### FK persistence in `_mtron_meta`

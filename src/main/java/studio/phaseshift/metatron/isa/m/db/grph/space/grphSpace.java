@@ -43,7 +43,7 @@
  import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
  import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
  import studio.phaseshift.metatron.isa.m.mach.type.Machine;
- import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
  import studio.phaseshift.metatron.util.CommonUtil;
  import studio.phaseshift.metatron.util.IteratorUtil;
  import studio.phaseshift.metatron.util.MTronException;

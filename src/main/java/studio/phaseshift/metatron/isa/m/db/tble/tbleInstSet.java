@@ -19,16 +19,15 @@
 package studio.phaseshift.metatron.isa.m.db.tble;
 
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
-import studio.phaseshift.metatron.algebra.rewrite.RewriteBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.DBRewriteBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.SQLRewriteUtils;
-import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
@@ -39,8 +38,8 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -52,7 +51,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.db.tble.tbleSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -711,10 +709,12 @@ public class tbleInstSet extends AbstractInstSet {
                                                     final Obj objValue = switch (metaData.getColumnType(i)) {
                                                         case java.sql.Types.BOOLEAN, java.sql.Types.BIT ->
                                                                 bool(rs.getBoolean(i));
-                                                        case java.sql.Types.TINYINT, java.sql.Types.SMALLINT, java.sql.Types.INTEGER, java.sql.Types.BIGINT ->
+                                                        case java.sql.Types.TINYINT, java.sql.Types.SMALLINT,
+                                                             java.sql.Types.INTEGER, java.sql.Types.BIGINT ->
                                                                 jnt(rs.getLong(i));
-                                                        case java.sql.Types.REAL, java.sql.Types.FLOAT, java.sql.Types.DOUBLE, java.sql.Types.DECIMAL, java.sql.Types.NUMERIC ->
-                                                                real(rs.getDouble(i));
+                                                        case java.sql.Types.REAL, java.sql.Types.FLOAT,
+                                                             java.sql.Types.DOUBLE, java.sql.Types.DECIMAL,
+                                                             java.sql.Types.NUMERIC -> real(rs.getDouble(i));
                                                         default -> str(value.toString());
                                                     };
                                                     rowMap.put(uri(colName), objValue);
@@ -824,7 +824,7 @@ public class tbleInstSet extends AbstractInstSet {
                         ), "*table/+.dedup(select(name))", "sql_distinct(table, [name])", Map.of(), "leverages native SELECT DISTINCT to deduplicate rows in the database"),
 
                         // Optimize: *kvPath/+.count() → SELECT COUNT(*) FROM kv_store WHERE furi LIKE ...
-                        docWrap(RewriteBuilder.forDatabase(tbleSpace.class)
+                        docWrap(DBRewriteBuilder.forDatabase(tbleSpace.class)
                                         .tid(TBLE_ISA_REWRITE_TID.extend("sql_kv_count"))
                                         .rng(INT_TID)
                                         .match(FROM_INST_TID, COUNT_INST_TID)
@@ -850,7 +850,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 "leverages native SELECT COUNT(*) FROM kv_store with LIKE-based pattern matching"),
 
                         // Optimize: *kvPath/+.take(n) → SELECT * FROM kv_store WHERE furi LIKE ... LIMIT n
-                        docWrap(new KVLimitRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("sql_kv_limit"))
+                        docWrap(new KVLimitDBRewriteBuilder(TBLE_ISA_REWRITE_TID.extend("sql_kv_limit"))
                                         .match(FROM_INST_TID, TAKE_INST_TID)
                                         .matchSpacePredicate(kvGuard)
                                         .build(),
@@ -870,8 +870,8 @@ public class tbleInstSet extends AbstractInstSet {
     //  Inner builder: kv_limit rewrite
     // =========================================================================
 
-    private static final class KVLimitRewriteBuilder extends RewriteBuilder<tbleSpace> {
-        KVLimitRewriteBuilder(final fURI rewriteTid) {
+    private static final class KVLimitDBRewriteBuilder extends DBRewriteBuilder<tbleSpace> {
+        KVLimitDBRewriteBuilder(final fURI rewriteTid) {
             super(tbleSpace.class);
             this.rewriteTid = rewriteTid;
             this.resultTid = ALL_STAR;

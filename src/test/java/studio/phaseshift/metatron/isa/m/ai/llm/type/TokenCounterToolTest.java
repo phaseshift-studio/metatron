@@ -24,8 +24,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.AbstractWidgetTest;
 import studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Widget;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.Widget;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -185,7 +185,7 @@ public class TokenCounterToolTest extends AbstractWidgetTest {
         final String code = "token_counter_tool::[style=>[anchor=>bottom_right,width=>47],in=>13154,out=>480,max=>262144"
                 + ",est=>[system=>1464,user=>263,ai=>671,tool=>3329]]";
         final String line = parse(code).format();
-        assertTrue(studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty.viewLength(line) <= 47,
+        assertTrue(Graphitty.viewLength(line) <= 47,
                 "the whole bar must fit its style box of 47: " + line);
         assertTrue(line.contains("{{[m]}}"), "the sections keep their background codes: " + line);
     }

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -285,8 +286,8 @@ public final class mTypes {
      * DECLARED CONSERVATIVELY, and each entry is defensible on its own terms:
      * <ul>
      *   <li>MONOID — an associative operation with an identity: {@code monoidic} (associativity) + {@code unit}.</li>
- *   <li>COMMUTATIVE_MONOID — the monoid laws plus {@code commutative}: the operation commutes. {@code lst} under
- *       concatenation is NOT one (append is ordered), {@code rec} under deep merge is (merge is keyed).</li>
+     *   <li>COMMUTATIVE_MONOID — the monoid laws plus {@code commutative}: the operation commutes. {@code lst} under
+     *       concatenation is NOT one (append is ordered), {@code rec} under deep merge is (merge is keyed).</li>
      *   <li>GROUP — a monoid with inverses: those two + {@code involution} (the tool reads {@code a·a⁻¹ = id} for the
      *       operation and {@code inv(inv(a)) = a} for the inverse itself).</li>
      *   <li>RING — the additive side is an abelian group (associativity, identity, commutativity, inverse) and the
@@ -343,7 +344,9 @@ public final class mTypes {
         axiom(NEAR_RING_THEORY_TID, Law.monoidic, Law.left_distributive);
     }
 
-    /** The batteries as declared — the reader half of {@link #declareAxioms()}, for the staged (no category) case. */
+    /**
+     * The batteries as declared — the reader half of {@link #declareAxioms()}, for the staged (no category) case.
+     */
     private static final Map<fURI, List<Law>> AXIOMS = new ConcurrentHashMap<>();
 
     /**
@@ -372,7 +375,9 @@ public final class mTypes {
         return AXIOMS.getOrDefault(address, List.of());
     }
 
-    /** The {@link Law} an axiom name denotes, or null when the name is not a law of this vocabulary. */
+    /**
+     * The {@link Law} an axiom name denotes, or null when the name is not a law of this vocabulary.
+     */
     private static Law law(final String name) {
         for (final Law law : Law.values())
             if (law.name().equals(name))

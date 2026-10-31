@@ -23,17 +23,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.Law;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -423,11 +423,11 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     @Test
     public void testAnAxesOnlyDecisionIsAPlanT() {
         assertTrue(ObjmtronSerializer.parse(
-                        "[name=><axes_only>,where=>[[place=>[peer],hop=>1,split=>stream,span=>[[span=><at>]]]]]")
+                                "[name=><axes_only>,where=>[[place=>[peer],hop=>1,split=>stream,span=>[[span=><at>]]]]]")
                         .test(catInstSet.PLAN_TYPE),
                 "a decision stated in the axes alone is a plan::T");
         assertTrue(ObjmtronSerializer.parse(
-                        "[name=><legacy_only>,where=>[[shape=><tree>,span=>[[span=><at>]]]]]")
+                                "[name=><legacy_only>,where=>[[shape=><tree>,span=>[[span=><at>]]]]]")
                         .test(catInstSet.PLAN_TYPE),
                 "and the legacy encoding is still read for one cycle");
     }

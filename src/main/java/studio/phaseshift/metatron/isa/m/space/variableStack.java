@@ -24,11 +24,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
 
-    public static final fURI STACK_SPACE_TID = M_ISA_TID.extend("space").extend("stack");
+    public static final fURI STACK_SPACE_TID = M_ISA_TID.extend(SPACE).extend(STACK);
     public static final Type STACK_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(STACK_SPACE_TID)

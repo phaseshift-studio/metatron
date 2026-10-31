@@ -11,9 +11,9 @@ import studio.phaseshift.metatron.isa.m.ai.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.Border;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -143,10 +143,10 @@ public class SkillFeature extends AbstractFeature implements SkillService {
                     agent.requireService(SystemService.class)
                             .addSystemMessage(
                                     """
-                                    ---[skill_feature]---
-                                    use activate_skill() tool to load any of the following skills:
-                                    %s
-                                    """.formatted(Graphitty.strip(table.format())));
+                                            ---[skill_feature]---
+                                            use activate_skill() tool to load any of the following skills:
+                                            %s
+                                            """.formatted(Graphitty.strip(table.format())));
                 }
             }
         } catch (final Exception e) {

@@ -43,9 +43,9 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.StatusLine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.StatusLine;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -614,13 +614,13 @@ public class Agent extends MRec {
                 .compensateOnToolErrors(true)
                 .toolExecutionErrorHandler((error, context) -> new ToolErrorHandlerResult(error.getMessage())).toolArgumentsErrorHandler((error, context) ->
                         new ToolErrorHandlerResult("""
-                                                   provided arguments do not match tool schema: %s
-                                                   """.formatted(error)))
+                                provided arguments do not match tool schema: %s
+                                """.formatted(error)))
                 .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.toolExecutionResultMessage(
                         toolExecutionRequest,
                         """
-                        %s tool does not exist. use list_tools() to see available tools.
-                        """.formatted(toolExecutionRequest.name())));
+                                %s tool does not exist. use list_tools() to see available tools.
+                                """.formatted(toolExecutionRequest.name())));
         final Obj chatFeature = this.feature(LLM_CHAT_FEATURE_TID);
         if (chatFeature.isNoObj())
             throw MTronException.of("agent has no chat feature: %s", this.vidOrTid());

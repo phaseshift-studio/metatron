@@ -22,12 +22,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -372,25 +371,25 @@ public class InstSetDocGenerator {
             }
         }
         return """
-               <!DOCTYPE html>
-               <html lang="en">
-               <head>
-                   <meta charset="UTF-8">
-                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                   <title>%s - metatron instruction set reference</title>
-                   <link rel="stylesheet" href="%s/css/metatron.css">
-                   <link rel="stylesheet" href="%s/css/instset_doc.css">
-               </head>
-               <body>
-                   <div class="container">
-                       %s
-                   </div>
-                   <script src="%s/highlight/highlight.min.js"></script>
-                   <script src="%s/highlight/languages/mtron.min.js"></script>
-                   <script>hljs.highlightAll();</script>
-               </body>
-               </html>
-               """.formatted(DocsUtil.esc(meta.name()), depth, depth,
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>%s - metatron instruction set reference</title>
+                    <link rel="stylesheet" href="%s/css/metatron.css">
+                    <link rel="stylesheet" href="%s/css/instset_doc.css">
+                </head>
+                <body>
+                    <div class="container">
+                        %s
+                    </div>
+                    <script src="%s/highlight/highlight.min.js"></script>
+                    <script src="%s/highlight/languages/mtron.min.js"></script>
+                    <script>hljs.highlightAll();</script>
+                </body>
+                </html>
+                """.formatted(DocsUtil.esc(meta.name()), depth, depth,
                 bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber), depth, depth);
     }
 
@@ -419,40 +418,40 @@ public class InstSetDocGenerator {
         final String descText = meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())
                 ? meta.desc().replace("\n", " ").strip() : "";
         final String descHtml = descText.isEmpty() ? "" : """
-                                                          <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
-                                                          %s</p>
-                                                          """.formatted(DocsUtil.esc(descText));
+                <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+                %s</p>
+                """.formatted(DocsUtil.esc(descText));
 
         return """
-               <div class="container-xxl py-4">
-                   <div class="text-center mb-2">
-                       <h1 class="text-primary glow-text mb-1">
-                           <span class="text-light">%1$s/</span>%2$s
-                       </h1>
-                       %3$s
-                       <p class="subtitle text-muted"
-                          style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
-                   </div>
-                   <div class="instset-accordion-wrapper">
-                       <div class="accordion accordion-flush" id="accordionInstSet">
-                           <div class="accordion-item">
-                               <h2 class="accordion-header" id="headingOne">
-                                   <button class="accordion-button collapsed" type="button"
-                                       data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
-                                       aria-expanded="false" aria-controls="flush-collapseOne">
-                                       <i class="bi bi-code-slash me-2"></i>%1$s/%2$s instset obj
-                                   </button>
-                               </h2>
-                               <div id="flush-collapseOne" class="accordion-collapse collapse"
-                                   aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
-                                   <div class="accordion-body">
-                                       <pre><code>%4$s</code></pre>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>"""
+                <div class="container-xxl py-4">
+                    <div class="text-center mb-2">
+                        <h1 class="text-primary glow-text mb-1">
+                            <span class="text-light">%1$s/</span>%2$s
+                        </h1>
+                        %3$s
+                        <p class="subtitle text-muted"
+                           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
+                    </div>
+                    <div class="instset-accordion-wrapper">
+                        <div class="accordion accordion-flush" id="accordionInstSet">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                                        aria-expanded="false" aria-controls="flush-collapseOne">
+                                        <i class="bi bi-code-slash me-2"></i>%1$s/%2$s instset obj
+                                    </button>
+                                </h2>
+                                <div id="flush-collapseOne" class="accordion-collapse collapse"
+                                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
+                                    <div class="accordion-body">
+                                        <pre><code>%4$s</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>"""
                 .formatted(DocsUtil.esc(parentPath), DocsUtil.esc(meta.name()), descHtml.toString(), DocsUtil.esc(meta.full()));
     }
 
@@ -461,11 +460,11 @@ public class InstSetDocGenerator {
     private static String sectionNav(final int consts, final int types, final int insts,
                                      final int spaces, final int rewrites) {
         return """
-               <div class="container-xxl mb-4">
-                   <div class="d-flex justify-content-center gap-2 flex-wrap">
-                       %s
-                   </div>
-               </div>""".formatted(
+                <div class="container-xxl mb-4">
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        %s
+                    </div>
+                </div>""".formatted(
                 navBtn("consts", "consts", consts, "bg-secondary") +
                         navBtn("types", "types", types, "bg-primary") +
                         navBtn("spaces", "spaces", spaces, "bg-info") +
@@ -538,32 +537,32 @@ public class InstSetDocGenerator {
         if (cols.isEmpty()) return "";
 
         return """
-               <div class="container-xxl mb-4">
-                   <div class="card">
-                       <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
-                       <div class="card-body">%s</div>
-                   </div>
-               </div>""".formatted(cols.toString());
+                <div class="container-xxl mb-4">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
+                        <div class="card-body">%s</div>
+                    </div>
+                </div>""".formatted(cols.toString());
     }
 
     private static String tocPill(final String href, final String name, final String badgeClass, final String letter) {
         return """
-               <a href="#%s" class="d-inline-flex justify-content-between align-items-center \
-               bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" \
-               style="min-width:180px;font-size:0.8rem;">
-                   <span class="code" style="font-size:1.2rem;">%s</span>
-                   <span class="pill-label badge %s ms-2">%s</span>
-               </a>""".formatted(href, DocsUtil.esc(name), badgeClass, letter);
+                <a href="#%s" class="d-inline-flex justify-content-between align-items-center \
+                bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" \
+                style="min-width:180px;font-size:0.8rem;">
+                    <span class="code" style="font-size:1.2rem;">%s</span>
+                    <span class="pill-label badge %s ms-2">%s</span>
+                </a>""".formatted(href, DocsUtil.esc(name), badgeClass, letter);
     }
 
     private static void tocFlatGroup(final StringBuilder sb, final String title, final String badgeClass,
                                      final String letter, final String pills) {
         if (pills.isEmpty()) return;
         sb.append("""
-                  <div class="mb-3">
-                      <h6 class="text-primary mb-2">%s</h6>
-                      <div class="d-flex flex-wrap">%s</div>
-                  </div>""".formatted(title, pills));
+                <div class="mb-3">
+                    <h6 class="text-primary mb-2">%s</h6>
+                    <div class="d-flex flex-wrap">%s</div>
+                </div>""".formatted(title, pills));
     }
 
     private static String tocTypesSection(final String instsetVid, final String instsetName,
@@ -619,10 +618,10 @@ public class InstSetDocGenerator {
         }
 
         return """
-               <div class="mb-3">
-                   <h6 class="text-primary mb-2">types</h6>
-                   %s
-               </div>""".formatted(rows.toString());
+                <div class="mb-3">
+                    <h6 class="text-primary mb-2">types</h6>
+                    %s
+                </div>""".formatted(rows.toString());
     }
 
     private static String branchLabel(final String branch) {
@@ -661,20 +660,20 @@ public class InstSetDocGenerator {
                     + DocsUtil.esc(defn) + "</code></pre></div>" : "";
             final Rec doc = fetchDocByVid(c);
             cards.append("""
-                         <div class="card mb-3" id="%s">
-                             <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                 <span class="code text-secondary fw-bold">%s</span>
-                                 <small class="text-muted code">%s</small>
-                             </div>
-                             %s
-                             %s
-                         </div>""".formatted(gid, DocsUtil.esc(name), DocsUtil.esc(uri), defnBlock, renderDoc(doc, gid, instsetVid)));
+                    <div class="card mb-3" id="%s">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <span class="code text-secondary fw-bold">%s</span>
+                            <small class="text-muted code">%s</small>
+                        </div>
+                        %s
+                        %s
+                    </div>""".formatted(gid, DocsUtil.esc(name), DocsUtil.esc(uri), defnBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
-               <div class="container-xxl mb-4" id="consts">
-                   <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">%d</span></h3>
-                   %s
-               </div>""".formatted(consts.size(), cards.toString());
+                <div class="container-xxl mb-4" id="consts">
+                    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">%d</span></h3>
+                    %s
+                </div>""".formatted(consts.size(), cards.toString());
     }
 
     // ── Section: Types ─────────────────────────────────────────────────
@@ -804,25 +803,25 @@ public class InstSetDocGenerator {
             final String inheritedFields = renderInheritedFields(t, instsetVid);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
-                         <div class="card mb-3" id="%s">
-                             <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                 <span>
-                                     <span class="code text-primary fw-bold">%s::T</span>
-                                     %s
-                                 </span>
-                                 <small class="text-muted code">%s</small>
-                             </div>
-                             %s
-                             %s
-                             %s
-                         </div>""".formatted(gid, DocsUtil.esc(name), refines, DocsUtil.esc(uri),
+                    <div class="card mb-3" id="%s">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <span>
+                                <span class="code text-primary fw-bold">%s::T</span>
+                                %s
+                            </span>
+                            <small class="text-muted code">%s</small>
+                        </div>
+                        %s
+                        %s
+                        %s
+                    </div>""".formatted(gid, DocsUtil.esc(name), refines, DocsUtil.esc(uri),
                     defnBlock, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
-               <div class="container-xxl mb-4" id="types">
-                   <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">%d</span></h3>
-                   %s
-               </div>""".formatted(types.size(), cards.toString());
+                <div class="container-xxl mb-4" id="types">
+                    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">%d</span></h3>
+                    %s
+                </div>""".formatted(types.size(), cards.toString());
     }
 
     // ── Refinement chain helpers ────────────────────────────────────────
@@ -1020,36 +1019,36 @@ public class InstSetDocGenerator {
                 final int tabIdx = variantTab.getOrDefault(inst.tid() != null ? inst.tid().toString() : "", 0);
                 final String tabId = gid + "-doc-" + tabIdx;
                 sigs.append("""
-                            <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" \
-                            onclick="document.getElementById('%s-tab').click();\
-                            document.getElementById('%s').scrollIntoView({behavior:'smooth',block:'center'});">\
-                            <code class="language-mtron">%s</code></pre>
-                            """.formatted(tabId, tabId, sig));
+                        <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" \
+                        onclick="document.getElementById('%s-tab').click();\
+                        document.getElementById('%s').scrollIntoView({behavior:'smooth',block:'center'});">\
+                        <code class="language-mtron">%s</code></pre>
+                        """.formatted(tabId, tabId, sig));
             }
 
             final String typeSig = typeSignatureHtml(instsetVid, group.get(0)) + lawChips(group.get(0));
             final String vidStr = group.get(0).tid() != null ? group.get(0).tid().toString() : "";
             cards.append("""
-                         <div class="card mb-3" id="%s">
-                             <div class="card-header d-flex justify-content-between align-items-center py-2 \
-                             text-light border-bottom border-secondary">
-                                 <span>
-                                     <span class="code text-primary fw-bold">%s</span>
-                                     %s
-                                 </span>
-                                 <small class="text-muted code">%s</small>
-                             </div>
-                             <div class="card-body p-2">%s</div>
-                             %s
-                         </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(vidStr),
+                    <div class="card mb-3" id="%s">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2 \
+                        text-light border-bottom border-secondary">
+                            <span>
+                                <span class="code text-primary fw-bold">%s</span>
+                                %s
+                            </span>
+                            <small class="text-muted code">%s</small>
+                        </div>
+                        <div class="card-body p-2">%s</div>
+                        %s
+                    </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(vidStr),
                     sigs.toString(), renderMultiDoc(uniqueDocs, gid, instsetVid)));
         }
 
         return """
-               <div class="container-xxl mb-4" id="instructions">
-                   <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
-                   %s
-               </div>""".formatted(insts.size(), cards.toString());
+                <div class="container-xxl mb-4" id="instructions">
+                    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
+                    %s
+                </div>""".formatted(insts.size(), cards.toString());
     }
 
     // ── Section: Rewrites ──────────────────────────────────────────────
@@ -1081,23 +1080,23 @@ public class InstSetDocGenerator {
             final String typeSig = typeSignatureHtml(instsetVid, rw);
             final Rec doc = fetchDocByTid(rw);
             cards.append("""
-                         <div class="card mb-3" id="%s">
-                             <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                 <span>
-                                     <span class="code text-warning fw-bold">%s</span>
-                                     %s
-                                 </span>
-                                 <small class="text-muted code">%s</small>
-                             </div>
-                             %s
-                             %s
-                         </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(uri), sigBlock, renderDoc(doc, gid, instsetVid)));
+                    <div class="card mb-3" id="%s">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <span>
+                                <span class="code text-warning fw-bold">%s</span>
+                                %s
+                            </span>
+                            <small class="text-muted code">%s</small>
+                        </div>
+                        %s
+                        %s
+                    </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(uri), sigBlock, renderDoc(doc, gid, instsetVid)));
         }
         return """
-               <div class="container-xxl mb-4" id="rewrites">
-                   <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">%d</span></h3>
-                   %s
-               </div>""".formatted(rewrites.size(), cards.toString());
+                <div class="container-xxl mb-4" id="rewrites">
+                    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">%d</span></h3>
+                    %s
+                </div>""".formatted(rewrites.size(), cards.toString());
     }
 
     // ── Section: Spaces ────────────────────────────────────────────────
@@ -1121,22 +1120,22 @@ public class InstSetDocGenerator {
                     ? renderInheritedFields(spaceType, spaceInstset) : "";
             final Rec doc = fetchDocByVid(sp.obj());
             cards.append("""
-                         <div class="card mb-3" id="%s">
-                             <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                 <a href="%s" class="code text-primary fw-bold text-decoration-none">%s</a>
-                                 <small class="text-muted code">%s</small>
-                             </div>
-                             %s
-                             %s
-                             %s
-                         </div>""".formatted(gid, vidToFilename(sp.vid()), DocsUtil.esc(sp.name()), DocsUtil.esc(sp.vid()),
+                    <div class="card mb-3" id="%s">
+                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                            <a href="%s" class="code text-primary fw-bold text-decoration-none">%s</a>
+                            <small class="text-muted code">%s</small>
+                        </div>
+                        %s
+                        %s
+                        %s
+                    </div>""".formatted(gid, vidToFilename(sp.vid()), DocsUtil.esc(sp.name()), DocsUtil.esc(sp.vid()),
                     spec, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
-               <div class="container-xxl mb-4" id="spaces">
-                   <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">%d</span></h3>
-                   %s
-               </div>""".formatted(spaces.size(), cards.toString());
+                <div class="container-xxl mb-4" id="spaces">
+                    <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">%d</span></h3>
+                    %s
+                </div>""".formatted(spaces.size(), cards.toString());
     }
 
     // ── Section: Footer ────────────────────────────────────────────────
@@ -1144,13 +1143,13 @@ public class InstSetDocGenerator {
     private static String sectionFooter(final int buildNumber) {
         final String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         return """
-               <div class="container-xxl py-3 text-center">
-                   <hr class="border-secondary">
-                   <small class="text-muted">
-                       generated by metatron instset doc generator on build %d-%s<br>
-                       (c) PhaseShift Studio, LLC
-                   </small>
-               </div>""".formatted(0, "0.1-SNAPSHOT");//buildNumber, ts);
+                <div class="container-xxl py-3 text-center">
+                    <hr class="border-secondary">
+                    <small class="text-muted">
+                        generated by metatron instset doc generator on build %d-%s<br>
+                        (c) PhaseShift Studio, LLC
+                    </small>
+                </div>""".formatted(0, "0.1-SNAPSHOT");//buildNumber, ts);
     }
 
     // ── Documentation rendering ────────────────────────────────────────
@@ -1166,32 +1165,32 @@ public class InstSetDocGenerator {
             final String active = i == 0 ? "active" : "";
             final String show = i == 0 ? "show active" : "";
             pills.append("""
-                         <li class="nav-item" role="presentation">
-                             <button class="nav-link py-1 px-2 %s text-start h-100"
-                                 id="%s-tab" data-bs-toggle="pill" data-bs-target="#%s"
-                                 type="button" role="tab" aria-selected="%s"
-                                 style="font-size:0.75rem;max-width:60px;">
-                                 <i class="fas fa-info-circle me-1"></i> %d
-                             </button>
-                         </li>""".formatted(active, tabId, tabId, i == 0 ? "true" : "false", i + 1));
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-1 px-2 %s text-start h-100"
+                            id="%s-tab" data-bs-toggle="pill" data-bs-target="#%s"
+                            type="button" role="tab" aria-selected="%s"
+                            style="font-size:0.75rem;max-width:60px;">
+                            <i class="fas fa-info-circle me-1"></i> %d
+                        </button>
+                    </li>""".formatted(active, tabId, tabId, i == 0 ? "true" : "false", i + 1));
             contents.append("""
-                            <div class="tab-pane fade %s" id="%s" role="tabpanel" aria-labelledby="%s-tab">
-                                %s
-                            </div>""".formatted(show, tabId, tabId, renderSingleDoc(docs.get(i), instsetVid)));
+                    <div class="tab-pane fade %s" id="%s" role="tabpanel" aria-labelledby="%s-tab">
+                        %s
+                    </div>""".formatted(show, tabId, tabId, renderSingleDoc(docs.get(i), instsetVid)));
         }
 
         return """
-               <div class="card-body border-top p-0">
-                   <ul class="nav nav-pills p-2 bg-dark" id="%s-pills" role="tablist">
-                       <li class="nav-item disabled me-2">
-                           <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-                       </li>
-                       %s
-                   </ul>
-                   <div class="tab-content" id="%s-content">
-                       %s
-                   </div>
-               </div>""".formatted(gid, pills.toString(), gid, contents.toString());
+                <div class="card-body border-top p-0">
+                    <ul class="nav nav-pills p-2 bg-dark" id="%s-pills" role="tablist">
+                        <li class="nav-item disabled me-2">
+                            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+                        </li>
+                        %s
+                    </ul>
+                    <div class="tab-content" id="%s-content">
+                        %s
+                    </div>
+                </div>""".formatted(gid, pills.toString(), gid, contents.toString());
     }
 
     /**
@@ -1210,9 +1209,9 @@ public class InstSetDocGenerator {
         final String desc = fieldStr(doc, "desc");
         if (desc != null && !desc.isEmpty()) {
             parts.append("""
-                         <div class="card-body border-top py-2">
-                             <p class="mb-0 text-light">%1$s %2$s</p>
-                         </div>""".formatted(specChips(desc), DocsUtil.esc(specRest(desc))));
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">%1$s %2$s</p>
+                    </div>""".formatted(specChips(desc), DocsUtil.esc(specRest(desc))));
         }
 
         // Signature (dom/rng) + args
@@ -1260,10 +1259,10 @@ public class InstSetDocGenerator {
                     .map(e -> DocsUtil.esc(e instanceof Str s ? s.jvm() : SER.write(e)))
                     .collect(Collectors.joining("\n"));
             parts.append("""
-                         <div class="card-body border-top py-2">
-                             <small class="text-muted fw-bold">examples:</small>
-                             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">%s</code></pre>
-                         </div>""".formatted(examples));
+                    <div class="card-body border-top py-2">
+                        <small class="text-muted fw-bold">examples:</small>
+                        <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">%s</code></pre>
+                    </div>""".formatted(examples));
         }
 
         return parts.toString();
@@ -1431,45 +1430,45 @@ public class InstSetDocGenerator {
             final int nRewrites = allRewrites.get(i).size();
 
             cards.append("""
-                         <div class="col-xl-4 col-md-6">
-                             <a href="%s" class="text-decoration-none">
-                                 <div class="splash-card card">
-                                     <div class="card-body d-flex flex-column p-2">
-                                         <div class="d-flex align-items-center gap-2 mb-1">
-                                             <img src="%s" alt="" class="splash-icon"
-                                                  onerror="this.style.display='none'">
-                                             <span class="code text-primary fw-bold splash-title">%s</span>
-                                         </div>
-                                         <p class="text-muted splash-desc">%s</p>
-                                         <div class="splash-stats">
-                                             <div><span class="stat-label">consts</span><span class="stat-val">%d</span></div>
-                                             <div><span class="stat-label">types</span><span class="stat-val">%d</span></div>
-                                             <div><span class="stat-label">spaces</span><span class="stat-val">%d</span></div>
-                                             <div><span class="stat-label">insts</span><span class="stat-val">%d</span></div>
-                                             <div><span class="stat-label">rewrites</span><span class="stat-val">%d</span></div>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </a>
-                         </div>""".formatted(filename, iconPath, DocsUtil.esc(meta.vid()), DocsUtil.esc(desc),
+                    <div class="col-xl-4 col-md-6">
+                        <a href="%s" class="text-decoration-none">
+                            <div class="splash-card card">
+                                <div class="card-body d-flex flex-column p-2">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <img src="%s" alt="" class="splash-icon"
+                                             onerror="this.style.display='none'">
+                                        <span class="code text-primary fw-bold splash-title">%s</span>
+                                    </div>
+                                    <p class="text-muted splash-desc">%s</p>
+                                    <div class="splash-stats">
+                                        <div><span class="stat-label">consts</span><span class="stat-val">%d</span></div>
+                                        <div><span class="stat-label">types</span><span class="stat-val">%d</span></div>
+                                        <div><span class="stat-label">spaces</span><span class="stat-val">%d</span></div>
+                                        <div><span class="stat-label">insts</span><span class="stat-val">%d</span></div>
+                                        <div><span class="stat-label">rewrites</span><span class="stat-val">%d</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>""".formatted(filename, iconPath, DocsUtil.esc(meta.vid()), DocsUtil.esc(desc),
                     nConsts, nTypes, nSpaces, nInsts, nRewrites));
         }
 
         final String content = """
-                               <div class="container-xxl py-3">
-                                   <div class="text-center mb-4">
-                                       <h1 class="text-primary glow-text">metatron</h1>
-                                       <p class="subtitle text-light">instruction set architectures</p>
-                                   </div>
-                                   <div class="row g-2">%s</div>
-                                   <div class="py-3 text-center mt-4">
-                                       <hr class="border-secondary">
-                                       <small class="text-muted">
-                                           metatron instset doc generator — build %d<br>
-                                           &copy; PhaseShift Studio, LLC
-                                       </small>
-                                   </div>
-                               </div>""".formatted(cards.toString(), buildNumber);
+                <div class="container-xxl py-3">
+                    <div class="text-center mb-4">
+                        <h1 class="text-primary glow-text">metatron</h1>
+                        <p class="subtitle text-light">instruction set architectures</p>
+                    </div>
+                    <div class="row g-2">%s</div>
+                    <div class="py-3 text-center mt-4">
+                        <hr class="border-secondary">
+                        <small class="text-muted">
+                            metatron instset doc generator — build %d<br>
+                            &copy; PhaseShift Studio, LLC
+                        </small>
+                    </div>
+                </div>""".formatted(cards.toString(), buildNumber);
 
         if (websiteTemplate) {
             final String header = SiteChrome.header(depth, "metatron instruction sets",
@@ -1481,19 +1480,19 @@ public class InstSetDocGenerator {
         }
 
         return """
-               <!DOCTYPE html>
-               <html lang="en">
-               <head>
-                   <meta charset="UTF-8">
-                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                   <title>metatron instruction set reference</title>
-                   <link rel="stylesheet" href="%s/css/metatron.css">
-                   <link rel="stylesheet" href="%s/css/instset_doc.css">
-               </head>
-               <body>
-                   <div class="container">%s</div>
-               </body>
-               </html>""".formatted(depth, depth, content);
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>metatron instruction set reference</title>
+                    <link rel="stylesheet" href="%s/css/metatron.css">
+                    <link rel="stylesheet" href="%s/css/instset_doc.css">
+                </head>
+                <body>
+                    <div class="container">%s</div>
+                </body>
+                </html>""".formatted(depth, depth, content);
     }
 
     /**

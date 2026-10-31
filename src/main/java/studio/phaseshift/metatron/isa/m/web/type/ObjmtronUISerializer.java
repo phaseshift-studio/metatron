@@ -24,9 +24,9 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.docs.NanorcUtil;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Console;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.console.Highlighter;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 

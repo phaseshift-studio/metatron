@@ -18,27 +18,17 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.Law;
-import studio.phaseshift.metatron.isa.m.Derivation;
-
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.Law.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FIELD_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.Law.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MONOID_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.RIG_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.RING_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CONJUGATE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;

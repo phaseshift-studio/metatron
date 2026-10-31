@@ -19,17 +19,12 @@
 package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.*;
 import org.opentest4j.TestAbortedException;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Border;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.Stylable.Style;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.mach.type.ui.widget.TableWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.Border;
+import studio.phaseshift.metatron.isa.m.sys.ui.Stylable.Style;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
