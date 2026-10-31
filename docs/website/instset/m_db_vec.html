@@ -1,0 +1,896 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>vec - metatron Instruction Set</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="../css/instset_doc.css">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
+    <div class="text-center mb-2">
+        <h1 class="text-primary glow-text mb-1">
+            <span class="text-light">/m/db/</span>vec
+        </h1>
+        
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
+    </div>
+    <div class="instset-accordion-wrapper">
+        <div class="accordion accordion-flush" id="accordionInstSet">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                        aria-expanded="false" aria-controls="flush-collapseOne">
+                        <i class="bi bi-code-slash me-2"></i>/m/db/vec instset obj
+                    </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse"
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
+                    <div class="accordion-body">
+                        <pre><code>instset::[pattern=&gt;/m/db/vec/#,
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/lawq::[
+            pattern=&gt;lawq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          const=&gt;[imaginary::NaN@/m/db/vec/imaginary],
+          inst=&gt;[
+           sqrt?real&lt;=real(){&lt;j&gt;},
+           dot?#&lt;=vec(vec::T){&lt;j&gt;}],
+          type=&gt;[
+           rec::T[?[
+            obj=&gt;&lt;#&gt;::T,
+            embed=&gt;lst::T,
+            {?}meta=&gt;rec::T]]@/m/db/vec/embedding,
+           lst::T@/m/db/vec/vec,
+           lst::T[?[real::T,real::T]]@/m/math/cmplx,
+           lst::T@/m/db/vec/mtrx,
+           space::T[?[
+            host=&gt;uri::T,
+            driver=&gt;uri::T,
+            config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace]]@/m/db/vec</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">constants</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__db__vec__imaginary" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">imaginary</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">types</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__db__vec__cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cmplx</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__db__vec__embedding" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">embedding</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__db__vec__mtrx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mtrx</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__db__vec__vec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">vec</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">spaces</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__db__vec__space__vecspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">vecspace</span>
+    <span class="pill-label badge bg-info text-dark ms-2">S</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">insts</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">dot</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sqrt</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div></div>
+    </div>
+</div><div class="container-xxl mb-4" id="consts">
+    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">1</span></h3>
+    <div class="card mb-3" id="__m__db__vec__imaginary">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">imaginary</span>
+        <small class="text-muted code">/m/db/vec/imaginary</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">imaginary::NaN@/m/db/vec/imaginary</code></pre></div>
+    
+</div>
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">4</span></h3>
+    <div class="card mb-3" id="__m__db__vec__cmplx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">cmplx::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/cmplx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T[?[real::T,real::T]]@/m/math/cmplx</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__db__vec__embedding">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">embedding::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/embedding</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[obj=&gt;&lt;#&gt;::T,
+         embed=&gt;lst::T,
+         {?}meta=&gt;rec::T]]@/m/db/vec/embedding</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__db__vec__mtrx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mtrx::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/mtrx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/db/vec/mtrx</code></pre></div>
+    
+    
+</div><div class="card mb-3" id="__m__db__vec__vec">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">vec::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/vec</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/db/vec/vec</code></pre></div>
+    
+    
+</div>
+</div><div class="container-xxl mb-4" id="spaces">
+    <h3 class="text-primary mb-3">spaces <span class="pill-label badge bg-info">1</span></h3>
+    <div class="card mb-3" id="__m__db__vec__space__vecspace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <a href="m_db_vec_space_vecspace.html" class="code text-primary fw-bold text-decoration-none">vecspace</a>
+        <small class="text-muted code">/m/db/vec/space/vecspace</small>
+    </div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T,config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?rng=vecspace&amp;dom=#{?}(rec::T)]@vecspace</code></pre></div>
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
+ {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
+                 {?}pre_write=&gt;inst::T,
+                 {?}post_write=&gt;inst::T,
+                 {?}qless_write=&gt;inst::T,
+                 {?}pre_read=&gt;inst::T,
+                 {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}schema=&gt;instset::T,
+ {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
+    
+</div>
+</div><div class="container-xxl mb-4" id="instructions">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">2</span></h3>
+    <div class="card mb-3" id="__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">dot</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__db__vec__vec" data-bs-toggle="tooltip" title="domain" class="code text-info">vec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#</span></span></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/inst/dot?rng=#&amp;dom=/m/db/vec/vec</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec-doc-0-tab').click();document.getElementById('__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">dot?<span class="code text-success">#</span><=vec(vec::T){<j>}</code></pre>
+</div>
+    
+</div><div class="card mb-3" id="__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">sqrt</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="domain" class="code text-info">real</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
+        </span>
+        <small class="text-muted code">/m/db/vec/inst/sqrt?rng=/m/real&amp;dom=/m/real</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real-doc-0-tab').click();document.getElementById('__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?real<=real(){<j>}</code></pre>
+</div>
+    
+</div>
+</div><div class="container-xxl py-3 text-center">
+    <hr class="border-secondary">
+    <small class="text-muted">
+        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
+        (c) PhaseShift Studio, LLC
+    </small>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>
