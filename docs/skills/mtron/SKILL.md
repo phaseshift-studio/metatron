@@ -277,7 +277,7 @@ the default values are `#{?}` and `#{*}`, respectively.
 The entry doc above is deliberately brief. These are the deep dives, keyed by task. Point: every one of them begins with
 `?docq` of the things they cover -- start there before re-reading the prose.
 
-**Language & types**
+### language & types
 
 * [mtron language reference](references/language-reference-mtron.md) -- the whole surface in 23 sections: mono/poly/call
   types, coefficients, arithmetic and strings, `*` dereference, `.as(type::T)` casting, map/filter/group, merge/split,
@@ -287,7 +287,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
   readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.
 
-**Execution & the machine**
+### execution & the machine
 
 * [mach instruction set](references/mach-instset-mtron.md) -- `/m/mach`: the machine (`machine::T` and its five slots,
   and how a machine nests as a frame of reference) and, at its centre, the compiler as four atomic stages --
@@ -296,12 +296,13 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   with a default, so `compiler::[=>]` is the default compiler and naming one entry overrides that stage. Then the
   processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
   language.
-* [distributed computing](references/distributed-computing-mtron.md) -- the pattern menu (A–S): distribution is a theorem,
+* [distributed computing](references/distributed-computing-mtron.md) -- the pattern menu (A–S): distribution is a
+  theorem,
   not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write *before* the rewrite,
   and the sharded layout the rewrite emits — grounded in the machine nest, `Network`, the `rewriter::T` stage, and the
   `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable`-combiner machinery. ✅ marks what is implemented today.
 
-**Spaces & data sources**
+### spaces & data sources
 
 * [sys instruction set + fsSpace](references/sys-instset-mtron.md) -- one file, two docs: `/m/sys` (the guarded `bash`
   and its security modulators, `sleep`/`stdout`/`stdin`, mounted state) and the full `fsspace::T` tour (configuration,
@@ -313,10 +314,11 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [geo instruction set](references/geo-instset-mtron.md) -- `/m/math/geo`: GeoJSON with the JSON taken out — six
   list-shaped types where a point IS a position, a line IS an ordered list of points and a polygon IS a list of lines
   (`geo:geometry`/`geo:point`/`geo:line`/`geo:polygon`, plus `geo:bbox`/`geo:bbox2d`/`geo:bbox3d`); every `Multi*` is
-  a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar algorithms a space without
-  native spatial support needs (`geo:distance`, `geo:area`, `geo:centroid`, `geo:envelope`,
-  `geo:contains`/`geo:inside`/`geo:intersects`), the `as(json::T)` and `geo:wkt()` encodings, the family's law table,
-  and the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
+  a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar measures a space without
+  native spatial support needs (`geo:distance`, `geo:length`, `geo:area`, `geo:coordinates`), the containment FILTER
+  (`has` for the container, `geo:inside` for the contained), the shape reductions as casts (`as(point::T)` is the
+  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the family's law table, and
+  the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
 * [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a
   cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the
@@ -324,7 +326,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
   `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server->client
   notifications over a `?subq` envelope, tool registration, and what is not available yet.
-* [tble instruction set](references/tble-instset-mtron.md) -- `/m/db/tble` and `tblespace::T`: a JDBC database as a space
+* [tble instruction set](references/tble-instset-mtron.md) -- `/m/db/tble` and `tblespace::T`: a JDBC database as a
+  space
   -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
   backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
 * [ui instruction set](references/ui-instset-mtron.md) -- `/m/sys/ui`: a widget as a rec whose state is its own
@@ -337,7 +340,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
   prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
 
-**Protocol & services**
+### protocol & services
 
 * [llm instruction set](references/llm-instset-mtron.md) -- `/m/ai/llm`: agents, models, features, skills and tools, and
   the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
@@ -345,7 +348,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
   becomes typed message recs, loaded and written into a native metatron agent memory tree.
 
-**Practice**
+### practice
 
 * [Unsloth Training](references/unsloth-training-mtron.md) -- fine-tuning an LLM on mtron: dataset extraction via
   `@Training`, model selection, training, GGUF export, and Ollama/HuggingFace deployment.

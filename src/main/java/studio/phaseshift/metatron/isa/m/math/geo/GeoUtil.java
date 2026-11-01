@@ -337,6 +337,12 @@ public final class GeoUtil {
                 real(all.stream().mapToDouble(Pos::lat).max().orElseThrow())).selfTID(BBOX2D_TID);
     }
 
+    /** the 2D box of a 3D one: z is dropped (lossy, and stated as much wherever it is offered) */
+    public static Obj bbox2dOf(final Obj bbox3d) {
+        final List<Obj> edges = bbox3d.asLst().lstValue();
+        return lst(edges.get(0), edges.get(1), edges.get(3), edges.get(4)).selfTID(BBOX2D_TID);
+    }
+
     /// ////////////////////////////////////////////////////////////////////////////////////////////
     // predicates
 

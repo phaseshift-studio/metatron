@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -97,7 +98,9 @@ public class geoTypes {
                         "the nominal base of an envelope. It declares no poly: geo:bbox2d and geo:bbox3d do"),
                 // ── the shapes ────────────────────────────────────────────────────────────────────────────────
                 docWrap(POINT_TYPE = shapeType(POINT_TID, GEOMETRY_TID,
-                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE.c(cInt.MAYBE())), GeoUtil::isPoint),
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE.c(cInt.MAYBE())), GeoUtil::isPoint,
+                                arg -> GeoUtil.isLine(GeoUtil.payload(arg)) || GeoUtil.isPolygon(GeoUtil.payload(arg))
+                                        ? GeoUtil.point(GeoUtil.centroid(arg)) : null),
                         Map.of(jnt(0), "the x (longitude) coordinate",
                                 jnt(1), "the y (latitude) coordinate",
                                 jnt(2).maybe(), "the z (altitude) coordinate"),
@@ -115,7 +118,10 @@ public class geoTypes {
                         "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.4]]]"),
                 // ── the envelopes ─────────────────────────────────────────────────────────────────────────────
                 docWrap(BBOX2D_TYPE = shapeType(BBOX2D_TID, BBOX_TID,
-                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox2d),
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox2d,
+                                arg -> GeoUtil.isBbox3d(arg) ? GeoUtil.bbox2dOf(arg)
+                                        : GeoUtil.isLine(GeoUtil.payload(arg)) || GeoUtil.isPolygon(GeoUtil.payload(arg))
+                                        || GeoUtil.isPoint(GeoUtil.payload(arg)) ? GeoUtil.bbox(arg) : null),
                         Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y",
                                 jnt(2), "the maximum x", jnt(3), "the maximum y"),
                         "a 2D envelope — four reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\)",
@@ -147,13 +153,30 @@ public class geoTypes {
      * would not accept.
      */
     private static Type shapeType(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid) {
+        return shapeType(vid, base, shape, valid, null);
+    }
+
+    /**
+     * As above, plus a REDUCTION: a constructive cast the type accepts from another shape ({@code as(point::T)} on a
+     * plane is the centroid, {@code as(bbox2d::T)} on a line is the envelope). Returns {@code null} when the value is
+     * not reducible, so the constructor can refuse it.
+     */
+    private static Type shapeType(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid,
+                                  final Function<Obj, Obj> reduce) {
         return Type.Builder.build()
                 .tid(base)
                 .vid(vid)
                 .isaPredicate(shape)
-                .constructor(arg -> valid.test(arg)
-                        ? arg.selfTID(vid)
-                        : fail(MTronException.of("%s is not a %s", arg, vid.name())))
+                .constructor(arg -> {
+                    if (valid.test(arg))
+                        return arg.selfTID(vid);
+                    if (null != reduce) {
+                        final Obj reduced = reduce.apply(arg);
+                        if (null != reduced && !reduced.isNoObj())
+                            return reduced;
+                    }
+                    return fail(MTronException.of("%s is not a %s", arg, vid.name()));
+                })
                 .inst(AS_INST_TID.dom(STR_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
                 .inst(AS_INST_TID.dom(WEB_JSON_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
                 .inst(AS_INST_TID.dom(vid).rng(WEB_JSON_TID), lst(T(WEB_JSON_TID)), (lhs, inst) -> geoInstSet.json(lhs))

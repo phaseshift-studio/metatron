@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 
 import static studio.phaseshift.metatron.isa.m.math.geo.geoInstSet.*;
 import static studio.phaseshift.metatron.Tokens.BOOL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.HAS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 
 /**
@@ -97,23 +98,19 @@ public final class geoInstSetLawTable extends LawTable {
     }
 
     private void loadPredicates() {
-        // overlap is symmetric and idempotent — the properties a planner needs to reorder conjunctions freely
-        entry(INTERSECTS_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), null,
-                Law.commutative, Law.idempotent, Law.pure);
-        // THE DECLARED INVERSE: containment is the converse of within, and this row is what licenses a space that
-        // implements only one of them to answer the other by swapping its operands
-        entry(CONTAINS_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), INSIDE_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID),
+        // ONE predicate: `has` answers the container when the arg is inside it, and noobj otherwise. A filter, so a
+        // rewrite may move or duplicate it; there is no inverse row any more, because there is no second verb —
+        // `a.has(b)` and `b` being inside `a` are the same question, and a space that implements only ST_Within
+        // answers it by swapping the operands, which is a pushdown's business, not a law's.
+        entry(HAS_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()), INSIDE_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()),
                 Law.pure);
-        entry(INSIDE_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), CONTAINS_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID),
+        entry(INSIDE_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()), HAS_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()),
                 Law.pure);
     }
 
     private void loadProjections() {
-        // the structural projections: no effect, so a rule may move them across a measure (or fuse an envelope guard)
-        entry(ENVELOPE_INST_TID.dom(GEOMETRY_TID).rng(BBOX_TID), null, Law.pure);
-        entry(KIND_INST_TID.dom(GEOMETRY_TID).rng(studio.phaseshift.metatron.Tokens.URI_TID), null, Law.pure);
+        // the structural projections: no effect, so a rule may move them across a measure
         entry(COORDINATES_INST_TID.dom(GEOMETRY_TID).rng(studio.phaseshift.metatron.Tokens.LST_TID), null, Law.pure);
-        entry(GEOMETRIES_INST_TID.dom(GEOMETRY_TID).rng(studio.phaseshift.metatron.Tokens.LST_TID), null, Law.pure);
         entry(WKT_INST_TID.dom(GEOMETRY_TID).rng(studio.phaseshift.metatron.Tokens.STR_TID), null, Law.pure);
     }
 
