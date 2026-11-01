@@ -27,9 +27,9 @@ import org.jline.terminal.MouseEvent;
 import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
@@ -237,13 +237,13 @@ public final class CommandPalette extends MRec {
                 Arrays.stream(lhs.strValue().split(" ")).forEach(s -> {
                     if (!s.trim().isEmpty()) {
                         if (s.startsWith("-"))
-                            TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toLowerCase()));
+                            Typer.Helper.flag(s.substring(1)).ifPresent(flag -> Typer.Helper.set(flag, false));
                         else
-                            TypeCheck.enable(TypeCheck.valueOf(s.toLowerCase()));
+                            Typer.Helper.flag(s).ifPresent(flag -> Typer.Helper.set(flag, true));
                     }
                 });
             }
-            this.console.logger().info("typer stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
+            this.console.logger().info("typer checks {{%s}}%s{{X}}", Typer.Helper.colorLevel(), Typer.Helper.enabled());
             return noobj();
         }), MUTABLE);
 
@@ -617,11 +617,11 @@ public final class CommandPalette extends MRec {
 
         // ===== typer-cycle (Ctrl+T) =====
         this.at("typer-cycle", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            if (TypeCheck.level() == 0)
-                TypeCheck.enable(TypeCheck.values());
+            if (Typer.Helper.level() == 0)
+                Typer.Helper.enableAll();
             else
-                TypeCheck.disable(TypeCheck.getEnabled().stream().toList().getFirst());
-            StatusLine.message(str("typer: " + TypeCheck.getEnabled()));
+                Typer.Helper.enabled().stream().findFirst().ifPresent(flag -> Typer.Helper.set(flag, false));
+            StatusLine.message(str("typer: " + Typer.Helper.enabled()));
             return noobj();
         }), MUTABLE);
         bindKey("typer-cycle", alt('t'));

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -48,7 +48,7 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
 
     @BeforeAll
     public static void setup() {
-        TypeCheck.disable(TypeCheck.code_resolve);
+        Typer.Helper.set(Typer.CODE_RESOLVE, false);
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(dckrInstSet.DCKR_ISA_TID, f("d"));
     }

@@ -51,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -74,12 +75,14 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     @BeforeEach
     public void installCategoryCompiler() {
+        // the cat suite's own pipeline: it resolves/rewrites the cat insts' bodies (removing it costs testBranchInline)
         Machine.current().compiler(CatTheoryCompiler.single());
     }
 
     @BeforeAll
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
+        InstSet.importInstSet(CAT_ISA_TID, f("cat"));
         // the catch-all import re-adds the base /m instset, and re-adding an already-mounted instset
         // re-registers its types against a fresh space, orphaning the types derived from them (e.g.
         // cmplx, whose poly is built from real/lst) — cmplx ops then fail to resolve. re-importing
@@ -325,7 +328,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .law(Law.commutative, Law.pure)
                 .docDesc("a built instruction").docDom("the lhs").docRng("the result")
                 .create();
-        assertEquals(f("/m/inst/built_test").dom(INT_TID).rng(INT_TID), built.tid(),
+        assertEquals(f("/m/inst/built_test").dom(INT_TID).rng(INT_TID), Inst.Helper.operationTid(built.tid()),
                 "the builder stamps the declared contract");
         InstBuilder.drain(built);
         final Obj laws = QCollection.lawOf(built);

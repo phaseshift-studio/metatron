@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -76,12 +76,12 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     @BeforeAll
     static void startPeers() throws Exception {
         // typing is not solved across distributed executions yet — run type-check-free, as the manual demo did
-        TypeCheck.disable(TypeCheck.values());
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         // (BootLoader.load mounts only /m, /sys, /m/mach). Import its parent (/m/math) first, then it.
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         cluster = PeerCluster.of(2).start();
         for (int i = 1; i <= cluster.size(); i++)
             clients.add(dial(i));

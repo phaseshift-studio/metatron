@@ -168,7 +168,7 @@ public class DBRewriteBuilder<S extends Space> {
         final Predicate<List<Inst>> existing = this.matchPredicate;
         this.matchPredicate = matches -> {
             final Inst first = matches.getFirst().asInst();
-            if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID))
+            if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID))
                 return false;
             if (existing != null && !existing.test(matches))
                 return false;

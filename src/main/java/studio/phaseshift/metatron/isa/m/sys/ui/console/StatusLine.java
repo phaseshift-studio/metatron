@@ -22,7 +22,6 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
@@ -31,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -90,7 +90,7 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
+        this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(Typer.Helper.colorLevel()));
         // the wire, not the machine's io counters: bytes-in/out mixed LLM tokens, MQTT payloads and database reads
         // (see Stats.IOStats), and the widget froze them at construction besides. see WireStats
         this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor()));

@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.TypeTyper;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -98,9 +97,10 @@ public interface Compiler extends Component, Rec {
     }
 
     /**
-     * @return the typer stage component ({@code typer::T})
+     * @return the typer stage component ({@code typer::T}) — the rec entry, which CARRIES THE STATE
+     * ({@code /compiler/typer/check}), falling back to a defaulting typer for a compiler that names none
      */
     default Typer typer() {
-        return TypeTyper.single();
+        return this.at(TYPER).orThrow("compiler has no typer: %s", this);
     }
 }

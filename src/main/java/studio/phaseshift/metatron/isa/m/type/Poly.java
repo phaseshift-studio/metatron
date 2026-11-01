@@ -434,7 +434,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
          * throw.
          */
         public static Lst diffTypeLstPolyRecursion(final Lst lhs, final Type rhs) {
-            final List<Obj> indices = rhs.lstIndices();
+            final List<Type> indices = rhs.lstIndices();
             final List<Obj> values = lhs.lstValue();
             final Lst result = lst();
             boolean conforming = true;

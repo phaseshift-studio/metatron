@@ -310,6 +310,13 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [math instruction set](references/math-instset-mtron.md) -- `/m/math`: the unit types (`time`, `datasize`,
   `currency`), the `datetime` uri and its construction/arithmetic, `normalize` and the trig/rounding instructions, and
   the `pi`/`e` constants.
+* [geo instruction set](references/geo-instset-mtron.md) -- `/m/math/geo`: GeoJSON with the JSON taken out — six
+  list-shaped types where a point IS a position, a line IS an ordered list of points and a polygon IS a list of lines
+  (`geo:geometry`/`geo:point`/`geo:line`/`geo:polygon`, plus `geo:bbox`/`geo:bbox2d`/`geo:bbox3d`); every `Multi*` is
+  a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar algorithms a space without
+  native spatial support needs (`geo:distance`, `geo:area`, `geo:centroid`, `geo:envelope`,
+  `geo:contains`/`geo:inside`/`geo:intersects`), the `as(json::T)` and `geo:wkt()` encodings, the family's law table,
+  and the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
 * [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a
   cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the

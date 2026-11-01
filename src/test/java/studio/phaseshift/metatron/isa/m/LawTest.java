@@ -55,22 +55,25 @@ public class LawTest {
      */
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
+            // an OPERATION on the carrier: a binary op OR a fold. The arity is a claim, so both shapes are named
+            // and the arity-agnostic spelling is deliberately absent — a commutative neg or a monoidic element is
+            // a category error, not a witness.
+            "action                 % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
+            "commutative            % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
+            "magmadic               % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
+            "monoidic               % inst?rng=A&dom=A&args=[A] | inst?rng=A&dom=A{*}",
             // a binary operation on the carrier — A × A → A: the laws that read an operand equation
-            "action                 % inst?rng=A&dom=A&args=[A]",
             "complement             % inst?rng=A&dom=A&args=[A]",
             "cyclic                 % inst?rng=A&dom=A&args=[A]",
             "left_distributive      % inst?rng=A&dom=A&args=[A]",
-            "magmadic               % inst?rng=A&dom=A&args=[A]",
             "nilpotent              % inst?rng=A&dom=A&args=[A]",
             "right_distributive     % inst?rng=A&dom=A&args=[A]",
             "zero_divisor           % inst?rng=A&dom=A&args=[A]",
             // the carrier to itself, the arity stated only by `args` — an ELEMENT law, or a law whose claims
             // span arities: no `args` key at all is the arity-agnostic spelling
             "absorbing              % inst?rng=A&dom=A",
-            "commutative            % inst?rng=A&dom=A",
             "idempotent             % inst?rng=A&dom=A",
             "involution             % inst?rng=A&dom=A",
-            "monoidic               % inst?rng=A&dom=A",
             "prime                  % inst?rng=A&dom=A",
             "unit                   % inst?rng=A&dom=A",
             // a relation on the carrier — A × A → bool
@@ -86,14 +89,20 @@ public class LawTest {
             "pure                   % obj",
     })
     void lawAnswersItsSignature(final Law law, final String expected) {
-        final fURI signature = law.wrt();
-        assertNotNull(signature, law + " answers no signature");
-        assertEquals(expected, signature.toString());
-        assertEquals(expected, f(expected).toString());   // the table itself is parseable, spelled as written
-        // the args component, which is where the operand types live, survives the parser
-        final List<String> expectedArgs = expected.contains("args=[") ? List.of("A") : List.<String>of();
-        assertEquals(expectedArgs, argText(signature.args()));
-        assertEquals(argText(signature.args()), argText(f(signature.toString()).args()));
+        // the admissible SET: shapes are separated by `|`, most specific first
+        final List<fURI> signatures = law.wrt();
+        final List<String> expectedSignatures = java.util.Arrays.stream(expected.split("\\|")).map(String::trim).toList();
+        assertFalse(signatures.isEmpty(), law + " answers no signature");
+        assertEquals(expectedSignatures, signatures.stream().map(fURI::toString).toList(),
+                law + " answers a different set of shapes");
+        for (final fURI signature : signatures) {
+            final String rendered = signature.toString();
+            assertEquals(rendered, f(rendered).toString());   // the table itself is parseable, spelled as written
+            // the args component, which is where the operand types live, survives the parser
+            final List<String> expectedArgs = rendered.contains("args=[") ? List.of("A") : List.<String>of();
+            assertEquals(expectedArgs, argText(signature.args()));
+            assertEquals(argText(signature.args()), argText(f(rendered).args()));
+        }
     }
 
     /**
@@ -104,8 +113,8 @@ public class LawTest {
     @Test
     void everyLawAnswersASignature() {
         for (final Law law : Law.values()) {
-            final fURI signature = law.wrt();
-            assertNotNull(signature, law + " answers no signature");
+            assertFalse(law.wrt().isEmpty(), law + " answers no signature");
+            for (final fURI signature : law.wrt()) {
             final String rendered = signature.toString();
             assertFalse(rendered.contains("#"), law + " spells its carrier with #, which flips hasPattern()");
             assertFalse(signature.hasPattern(), law + " should declare no wildcard: " + rendered);
@@ -122,6 +131,7 @@ public class LawTest {
                     law + " is not stable across a second parse: " + rendered);
             assertEquals(argText(signature.args()), argText(parsed.args()),
                     law + " loses its argument types: " + rendered);
+            }
         }
     }
 
@@ -131,12 +141,12 @@ public class LawTest {
      */
     @Test
     void aFoldConsumesManyAndAnswersOne() {
-        assertEquals("A{*}", Law.semi_right_distributive.wrt().dom().toString());
-        assertEquals("A", Law.semi_right_distributive.wrt().rng().toString());
+        assertEquals("A{*}", Law.semi_right_distributive.wrt().getFirst().dom().toString());
+        assertEquals("A", Law.semi_right_distributive.wrt().getFirst().rng().toString());
         // the copies ARE the coefficient, so the argument list is empty
-        assertEquals(List.<String>of(), argText(Law.semi_right_distributive.wrt().args()));
-        assertEquals("A{*}", Law.kleene.wrt().dom().toString());
-        assertEquals("A", Law.kleene.wrt().rng().toString());
+        assertEquals(List.<String>of(), argText(Law.semi_right_distributive.wrt().getFirst().args()));
+        assertEquals("A{*}", Law.kleene.wrt().getFirst().dom().toString());
+        assertEquals("A", Law.kleene.wrt().getFirst().rng().toString());
     }
 
     private static List<String> argText(final List<fURI> args) {

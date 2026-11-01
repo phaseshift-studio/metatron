@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,17 +25,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Tracer;
+import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -222,7 +216,7 @@ public class MTronExceptionTest extends AbstractMetatronTest {
             throw new AssertionError("fail lost its message: " + rendered);
         MTronException.emitStackTrace(result.asFail().jvm());   // the report boundary emits the trace
         assertEquals(before + 1, MTronException.mtronTracesEmitted(), "one logical failure → one mtron stack trace");
-        assertEquals("   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int", MTronException.lastMtronTrace());
+        assertEquals("   \\_apply_inst: /m/inst/as?rng=/m/lst&dom=/m/int&args=[/m/lst]", MTronException.lastMtronTrace());
     }
 
     // ==================================================================

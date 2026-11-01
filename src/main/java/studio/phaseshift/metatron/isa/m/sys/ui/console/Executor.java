@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.console;
 
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
@@ -30,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -111,7 +111,7 @@ public final class Executor {
             try {
                 final Level startLevel = this.console.getStatus().getState();
                 final Obj resolvedResult = Call.Helper.resolveInspection(running.get(), segment, unresolved -> {
-                    if (TypeCheck.code_resolve.enabled()) {
+                    if (Typer.Helper.codeResolve()) {
                         throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                     } else {
                         this.console.getStatus().setState(Level.WARN);

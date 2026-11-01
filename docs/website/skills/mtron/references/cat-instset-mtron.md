@@ -123,7 +123,7 @@ group/monoid instances. `theory::T` is the nominal super-type grouping them:
 
 ```mtron
 mtron> |plus?int<=int(int::T).as(morphism::T)
-==>morphism[plus?rng=int&dom=int]::[
+==>morphism[plus?rng=int&dom=int&args=[/m/int]]::[
     name=>plus,
     form=>mapper,
     class=>[endo],
@@ -571,7 +571,7 @@ and computes its cut/span/where without consulting the code below; the descent (
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
 ==>[abstraction::[obj=>[
-                   morphism[start]::[
+                   morphism[start?args=[/m/int]]::[
                     name=>start,
                     form=>initial,
                     src=>!λ#(){<j>},
@@ -587,7 +587,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                     analysis=>!λ(){<j>},
                     obj=>plus(0),
                     ...(1 more)],
-                   morphism[neg?rng=int&dom=int]::[
+                   morphism[neg?rng=int&dom=int&args]::[
                     name=>neg,
                     form=>mapper,
                     class=>[
@@ -603,7 +603,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                     analysis=>!λ(){<j>},
                     obj=>neg(),
                     ...(1 more)],
-                   morphism[neg?rng=int&dom=int]::[
+                   morphism[neg?rng=int&dom=int&args]::[
                     name=>neg,
                     form=>mapper,
                     class=>[

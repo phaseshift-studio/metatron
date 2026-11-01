@@ -102,7 +102,9 @@ public class RewriterBuilder extends MRec {
 
 
     private static boolean instsMatch(final Inst match, final Inst source) {
-        if (!source.tid().test(match.tid()))
+        // THE OPERATION DECIDES, NOT THE CONTRACT'S SPELLING: a tid carrying `args` declares its argument types, and
+        // that must not stop a rule from matching the operation (a rewrite fires on what the instruction DOES).
+        if (!Inst.Helper.operationTid(source.tid()).test(Inst.Helper.operationTid(match.tid())))
             return false;
         /*if(!source.dom().test(match.dom()))
             return false;

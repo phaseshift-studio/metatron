@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,15 +28,16 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.Map;
 
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -52,6 +54,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class RecTest extends AbstractAlgebraTest {
+
+    @AfterEach
+    public void clearStack() {
+        Machine.current().memory().stackBaseFrame().at(f("+"), uri(NOOBJ).c(cInt::zero), MUTABLE);
+    }
 
     @Override
     protected Type carrier() {
@@ -1203,7 +1210,7 @@ public class RecTest extends AbstractAlgebraTest {
      * <pre>
      * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
      * </pre>
-     * A WRAPPER is a rec whose type INSTANTIATES a declaration that names the fields the wrapper exposes:
+     * A FIBERED rec type defines fields the wrapper exposes. These fields are called 'fibers'.
      * {@code rec[role]::T[?[…,role=>rec::T]]@person} names {@code role} (the declaration's tid poly is the FIELD
      * NAMES) and {@code person[ninja]} names its type (the instance's vid poly is the COMPONENT TYPES). So
      * {@code person[ninja]::[role=>ninja::[…]]} is two objects to an instruction — the person-typed wrapper and the
@@ -1222,6 +1229,10 @@ public class RecTest extends AbstractAlgebraTest {
      * body reading {@code >>weapon} sees the ninja's. A domain naming no component type ({@code ponder?dom=person})
      * answers on the wrapper.
      * <p>
+     * A BASE-typed domain is about a candidate's own FORM, not about a name: {@code ?<=rec} reaches the wrapper
+     * AND the ninja component ({@code ninja::T} is a {@code rec::T}, so the ninja is a rec in its own right),
+     * while {@code ?<=lst} reaches neither and {@code ?<=int} would reach only an int-valued fiber.
+     * <p>
      * A {@code typer} ({@code as}, {@code type}, {@code vid}, {@code tid}) is OPAQUE: it decides what the value IS,
      * so it cannot be distributed over the old basis and applies to the wrapper alone — one result, poly erased.
      * <p>
@@ -1233,6 +1244,7 @@ public class RecTest extends AbstractAlgebraTest {
     @TestData(value = {
             "person -> rec[role]::T[?[role=>rec::T,name=>?str::T]]@person",
             "ninja -> rec::T@ninja",
+            "weaponed -> rec::T[?[weapon=>str::T]]@weaponed",
             "marko -> person[ninja]::[role=>ninja::[name=>'dark_assassin',weapon=>'bulldozer'],name=>'marko']@marko",
             "fight -> |inst?<=ninja(){ \"${>>name} is your name and ${>>weapon} is your weapon\" }",
             "inst?<=ninja(){ \"${>>weapon} fun\" }@love",
@@ -1247,9 +1259,25 @@ public class RecTest extends AbstractAlgebraTest {
             // a domain that names no component type answers on the wrapper, unchanged
             "*marko.ponder()           % 'a person ponders'",
             // untyped: both levels answer, summed as a multiplicity
-            "*marko>>name              % {'marko','dark_assassin'}",
+            "*marko>>name                         % {'marko','dark_assassin'}",
+            "*marko>>?<=#(name)                   % {'marko','dark_assassin'}",
+            "*marko>>?<=rec(name)                 % {'marko','dark_assassin'}", // a ninja is a rec
+            "*marko>>role.type()                  % ninja::T",
+            "*marko.?weaponed::T                   % *marko", // the bundle speaks first: the wrapper answers, not its ninja
+            "*marko>>role.?weaponed::T.type()     % ninja::T", // a ninja is weaponed
+            "*marko>>?<=weaponed(name)            % {'dark_assassin'}", // a ninja is weaponed TODO: should work
+            "*marko>>?<=ninja(name)               % 'dark_assassin'",
+            "*marko>>?<=ninja{0}(name)            % <ERROR>",
+            "*marko>>?<=person(name)              % 'marko' ",
+            "*marko>>?<=lst(name)                 % noobj ",  // TODO: should this <ERROR>
             // ... and noobj is the identity, so the one level that has a weapon answers alone
-            "*marko>>weapon            % 'bulldozer'",
+            "*marko>>weapon                       % 'bulldozer'",
+            "*marko>>?<=ninja(weapon)             % 'bulldozer'",
+            "*marko>>?<=person(weapon)            % noobj",
+            "*marko>>?<=person[ninja](weapon)     % noobj",
+            "*marko>>?<=#(weapon)                 % 'bulldozer'",
+            // ... and noobj is the identity, so the one level that has a weapon answers alone
+            "*marko.>>?<=#(weapon)                % 'bulldozer'",
             //
             "*marko.love()             % 'bulldozer fun'",
             // a typer is opaque: one result, the instantiation erased
@@ -1702,5 +1730,128 @@ public class RecTest extends AbstractAlgebraTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testMonoFiberAcceptance(final String value, final String type, final boolean matches) {
         checkMatches(LOG, value, type, matches);
+    }
+
+    /**
+     * A FIELD STUDY OF DEPTH AND OF WHAT A FIBER MAY HOLD. The world is a range: {@code animal} is one int fiber
+     * ({@code age}), {@code herd} nests an animal ({@code lead}) beside an int ({@code size}), and {@code ridge}
+     * nests a herd beside a str ({@code name}) and a lst ({@code tags}) — so {@code delta} is three fiber levels deep
+     * and carries a rec, a str and a lst fiber at once:
+     * <pre>
+     * ridge[herd,str,lst]::[herd=>herd[animal,int]::[lead=>animal[int]::[age=>3],size=>4],name=>'granite',tags=>['alpha','beta']]
+     *    \_ herd             \_ animal       \_ age          \_ size            \_ name             \_ tags
+     * </pre>
+     * ONE LEVEL PER CALL. A fiber's VALUE is a candidate; a fiber's own fibers are not. So the depth of a read is the
+     * number of {@code >>} it takes: {@code >>age} answers on the animal and on the herd (the {@code lead} candidate's
+     * own field), and is {@code noobj} on the ridge, where age sits two fibers down — the same boundary a typed call
+     * hits ({@code graze} answers on the herd, not on the ridge). Each {@code >>fiber} re-establishes the wrapper, so
+     * the next level becomes visible.
+     * <p>
+     * NON-REC FIBERS are exposed like any other: an int fiber answers a typed call ({@code birthday?dom=int}) and a
+     * {@code +} whose domain reached it ({@code animal + 3} is the age summed, a VALUE operation — the animal's field
+     * is untouched, and writing it is a separate act), a str fiber reads (and a str instruction reaches it when the
+     * navigation is explicit), and a lst fiber reads as the lst it holds.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "animal -> rec[age]::T[?[age=>int::T]]@animal",
+            "herd -> rec[lead,size]::T[?[lead=>rec::T,size=>int::T]]@herd",
+            "ridge -> rec[herd,name,tags]::T[?[herd=>rec::T,name=>str::T,tags=>lst::T]]@ridge",
+            "stallion -> animal[int]::[age=>7]@stallion",
+            "mustang -> herd[animal,int]::[lead=>animal[int]::[age=>9],size=>5]@mustang",
+            "delta -> ridge[herd,str,lst]::[herd=>herd[animal,int]::[lead=>animal[int]::[age=>3],size=>4],name=>'granite',tags=>['alpha','beta']]@delta",
+            "birthday -> |inst?<=int(){ plus(1) }",
+            "graze -> |inst?<=animal(){ >>age }",
+    })
+    @CsvSource(value = {
+            // ---- one fiber, an int: the instantiation is kept and the fiber answers as itself ----
+            "*stallion                        % animal[int]::[age=>7]",
+            "*stallion.type()                 % rec[age]::T[?[age=>int::T]]@animal[int]",
+            "*stallion>>age                   % 7",
+            "*stallion.birthday()             % 8",   // ?<=int reaches the int fiber
+            "*stallion + 3                    % 10",  // ... and so does a plus that found it (a VALUE, not a write)
+            // ---- two deep: a rec fiber beside an int ----
+            "*mustang>>lead                     % animal[int]::[age=>9]",
+            "*mustang>>age                       % 9", // the lead CANDIDATE's own field, one level down
+            "*mustang>>lead>>age                 % 9",
+            "*mustang.birthday()                 % 6", // size at the herd is the int the domain reaches
+            "*mustang.graze()                    % 9", // ?<=animal reaches the lead fiber
+            // ---- three deep: rec, str and lst fibers on one wrapper ----
+            "*delta>>name                     % 'granite'",
+            "*delta>>tags                     % ['alpha','beta']",
+            "*delta>>herd>>age                  % 3",
+            "*delta>>herd>>lead>>age            % 3",
+            "*delta>>herd.birthday()            % 5",
+            "*delta>>?<=herd(size)              % 4",
+            "*delta>>herd.graze()               % 3",
+            "*delta>>herd>>lead.graze()         % 3",
+            // ---- the boundary: at the ridge, age is two fibers down and no call reaches it ----
+            "*delta>>age                     % noobj",
+            "*delta.graze()                  % noobj",
+            "*delta + 3                      % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNestedFiberedRecsAcrossAThreeLevelWorld(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A FIBER MAY BE A PATH. The declaration {@code rec[geo/0]} exposes not a field but the value AT that path — the
+     * first element of the lst at {@code geo} — and the instance types it ({@code human[real]}), so the component is
+     * a real:
+     * <pre>
+     * human[real]::[name=>'marko',age=>29,geo=>point::[2.0,3.5]]
+     *          \_ the fiber is geo/0 = 2.0, typed real
+     * *marko + 3.5    =>  5.5    the wrapper's plus reaches that ONE real (not geo/1 = 3.5)
+     * </pre>
+     * The path stays in the type ({@code rec[geo/0]::T[...]@human[real]}) and reads by path still work
+     * ({@code >>geo/0}, {@code >>geo/1}), but only {@code geo/0} is exposed: the second element is a plain lst
+     * element, so an untyped {@code +} does not also sum it.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "lst::T[?[real::T,real::T]]@point",
+            "rec[geo/0]::T[?[name=>str::T,age=>int::T,geo=>point::T]]@human",
+            "human[real]::[name=>'marko',age=>29,geo=>point::[2.0,3.5]]@marko",
+    })
+    @CsvSource(value = {
+            "*marko                                    % human[real]::[name=>'marko',age=>29,geo=>point::[2.0,3.5]]",
+            "*marko.type()                             % rec[geo/0]::T[?[name=>str::T,age=>int::T,geo=>lst::T[?[real::T,real::T]]@point]]@human[real]",
+            "*marko + 3.5                              % 5.5",   // the path fiber (geo/0) is the ONE real a plus reaches
+            "*marko + 3.5 + 1.0                        % 6.5",
+            "*marko>>geo                               % point::[2.0,3.5]",
+            "*marko>>geo/0                             % 2.0",
+            "*marko>>geo/1                             % 3.5",   // a path read is not a fiber: geo/1 is not exposed
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testPathFiberAnswersThroughTheWrapper(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A FIBER OF COEFFICIENT N IS A STREAM, and a typed reduction over it must be reduced on the FIBER — not on the
+     * wrapper. {@code rec[geo/+]} exposes every element of the lst at {@code geo} (two reals here, {@code hiker[real{2}]}
+     * types them), so a sum whose domain names reals reaches those reals and sums them ({@code 5.5}), whether the
+     * caller writes the exact coefficient ({@code ?<=real{2}}) or the open one ({@code ?<=real{*}}).
+     * <p>
+     * The open spelling is the interesting one: the resolver may bind the call's contract before the delegation runs,
+     * and a reducer's input arrives from a BARRIER that gathers the upstream value into a stream. A one-member stream
+     * is its member (that is what {@code objs()} guarantees everywhere else), so the delegation must still see the
+     * wrapper and hand the reduction to the fiber the domain names.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "trail -> lst::T[?[real::T,real::T]]@trail",
+            "hiker -> rec[geo/+]::T[?[name=>str::T,age=>int::T,geo=>trail::T]]@hiker",
+            "rambler -> hiker[real{2}]::[name=>'marko',age=>29,geo=>trail::[2.0,3.5]]@rambler",
+    })
+    @CsvSource(value = {
+            "*rambler                                  % hiker[real{2}]::[name=>'marko',age=>29,geo=>trail::[2.0,3.5]]",
+            "*rambler.type()                           % rec[geo/+]::T[?[name=>str::T,age=>int::T,geo=>lst::T[?[real::T,real::T]]@trail]]@hiker[real{2}]",
+            "*rambler>>geo/+                           % {2.0,3.5}",   // the fiber is a multiplicity, not one value
+            "*rambler.sum?<=real{2}()                  % 5.5",        // the exact coefficient
+            "*rambler.sum?<=real{*}()                  % 5.5",        // ... and the open one: still the fiber's stream
+            "*rambler>>geo/+.sum?<=real{*}()           % 5.5",        // the same reduction, navigated explicitly
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testMultiplicityFiberAnswersATypedReduction(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

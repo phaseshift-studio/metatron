@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
@@ -529,32 +529,7 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         if (inst.isNoObj() || null == inst.tid() || inst.tid().basePath().name().startsWith("auto") || inst.tid().basePath().equals(FROM_INST_TID)) {
             return super.generateInst(sb, inst, depth + 1);
         }
-        final fURI tid = inst.tid();
-        sb.append(tid.basePath().small());
-        // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
-        // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
-        // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there
-        // says nothing a reader needs AND re-reading it types the instruction explicitly.  A pair
-        // default on both sides is not written at all — xyz?<=() reads xyz(), which is what the tid
-        // of an untyped instruction carries, so plus(1,2) reads plus(1,2).  The other q params are
-        // drawn whenever they are there, and take the '?' when the pair is absent.
-        final StringBuilder params = new StringBuilder();
-        final String rng = defaultRng(tid) ? "" : tid.rng().small().toString();
-        final String dom = defaultDom(tid) ? "" : tid.dom().small().toString();
-        if (!rng.isEmpty() || !dom.isEmpty())
-            params.append(rng).append("<=").append(dom);
-        tid.qMap().forEach((key, value) -> {
-            if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
-                if (params.length() > 0)
-                    params.append("&");
-                params.append(key);
-                if (null != value && !value.isEmpty())
-                    params.append("=").append(value);
-            }
-        });
-        if (params.length() > 0)
-            sb.append("?").append(params);
-        sb.append("(");
+        this.generateInstHead(sb, inst).append("(");
         if (!inst.args().isEmpty()) {
             // an instruction whose arguments read wide breaks them onto lines of their own: the
             // first argument rides the opening paren and the rest line up under it, the same shape
@@ -581,21 +556,43 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     }
 
     /**
-     * Whether a tid's rng side is the default typing — {@code #{*}} ({@code all.maybeSome()}) — or
-     * is not there at all.  The two are the same statement: an instruction's syntax leaves a
-     * default side empty ({@code xyz?A<=()}), so an absent side and an explicit {@code #{*}} both
-     * draw as nothing.
+     * The name and typing an instruction is drawn by — {@code λ} alone, or
+     * {@code plus?str<=int&a=b} — everything before the opening parenthesis.  Split out of
+     * {@link #generateInst} because {@link #isNestedInst} has to count exactly these columns:
+     * the measure it used before was the plain serializer's render, which spells the tid out in
+     * full ({@code λ?rng=#{*}&dom=#{?}}) and names every type argument by its whole path, so
+     * columns no reader ever sees were spent against {@link #NESTED_STRING_THRESHOLD} — a
+     * twenty-seven column {@code λ(#::T,lst[law{*}]::T){<j>}} broke over two lines.
      */
-    private static boolean defaultRng(final fURI tid) {
-        return !tid.hasRng() || tid.rng().equals(ALL.maybeSome());
-    }
-
-    /**
-     * Whether a tid's dom side is the default typing — {@code #{?}} ({@code all.maybe()}) — or is
-     * not there at all ({@code xyz?<=A()}).  See {@link #defaultRng(fURI)}.
-     */
-    private static boolean defaultDom(final fURI tid) {
-        return !tid.hasDom() || tid.dom().equals(ALL.maybe());
+    protected StringBuilder generateInstHead(final StringBuilder sb, final Inst inst) {
+        final fURI tid = inst.tid();
+        sb.append(tid.basePath().small());
+        // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
+        // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
+        // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there
+        // says nothing a reader needs AND re-reading it types the instruction explicitly.  A pair
+        // default on both sides is not written at all — xyz?<=() reads xyz(), which is what the tid
+        // of an untyped instruction carries, so plus(1,2) reads plus(1,2).  The other q params are
+        // drawn whenever they are there, and take the '?' when the pair is absent.
+        final StringBuilder params = new StringBuilder();
+        final String rng = defaultRng(tid) ? "" : tid.rng().isZero() ? "{0}" : tid.rng().small().toString();
+        final String dom = defaultDom(tid) ? "" : tid.dom().isZero() ? "{0}" : tid.dom().small().toString();
+        if (!rng.isEmpty() || !dom.isEmpty())
+            params.append(rng).append("<=").append(dom);
+        tid.qMap().forEach((key, value) -> {
+            if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
+                if (!key.equals(ARGS) || inst.args().isNoObj()) {
+                    if (params.length() > 0)
+                        params.append("&");
+                    params.append(key);
+                    if (null != value && !value.isEmpty())
+                        params.append("=").append(value);
+                }
+            }
+        });
+        if (params.length() > 0)
+            sb.append("?").append(params);
+        return sb;
     }
 
     /**
@@ -713,14 +710,40 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
     /**
      * Whether an instruction's arguments break across lines.  An instruction of fewer than two
      * arguments never breaks: there is no boundary between arguments to break at, and its one
-     * argument rides the opening paren either way.  The width is measured on the plain
-     * serialization, the same way a rec or lst is measured, so the threshold is the one a reader
-     * already counts against.
+     * argument rides the opening paren either way.
+     * <p>
+     * The width measured is this writer's OWN one-line shape — {@link #flatInst} — not the plain
+     * serializer's render of the instruction.  The plain text is a compiler-to-compiler form: it
+     * spells the tid out in full ({@code λ?rng=#{*}&dom=#{?}}), quotes {@code #} as {@code <#>}
+     * and names a type argument by its whole path.  None of that reaches the reader, but all of it
+     * was counted against {@link #NESTED_STRING_THRESHOLD}, which put roughly twenty invisible
+     * columns on every lambda and broke a twenty-seven column
+     * {@code λ(#::T,lst[law{*}]::T){<j>}} into two lines for no reason a reader could see.
      */
     private boolean isNestedInst(final Inst inst) {
         if (inst.args().count() < 2)
             return false;
-        return Graphitty.viewLength(ObjmtronSerializer.single().write(inst)) > NESTED_STRING_THRESHOLD;
+        return Graphitty.viewLength(this.flatInst(inst).toString()) > NESTED_STRING_THRESHOLD;
+    }
+
+    /**
+     * The instruction as this writer would draw it on ONE line: its head, its arguments in their
+     * plain spelling, and the body it carries.  Markup-free and unbroken — the columns a reader
+     * keeps if the arguments stay where they are — which is the only honest thing to measure
+     * against {@link #NESTED_STRING_THRESHOLD}.  An argument's own width is still the plain
+     * render's: a collection there is measured the way {@link #isNested} measures one, over the
+     * full text rather than a clipped or already-broken shape.
+     */
+    private StringBuilder flatInst(final Inst inst) {
+        final StringBuilder flat = this.generateInstHead(new StringBuilder(), inst).append("(");
+        final AtomicInteger counter = new AtomicInteger(0);
+        inst.args().elements().forEach(arg -> {
+            if (counter.getAndIncrement() > 0)
+                flat.append(",");
+            flat.append(ObjmtronSerializer.single().write(arg));
+        });
+        return flat.append(")")
+                .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
     }
 
     /**

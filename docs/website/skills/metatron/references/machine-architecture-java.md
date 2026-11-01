@@ -59,13 +59,13 @@ isa/mach/machInstSet.java                    ← type registration (machine::T e
 
 ## The five components
 
-| Component | Interface (extends)                   | One-line job                                         | Frame behaviour                   |
-|-----------|---------------------------------------|------------------------------------------------------|-----------------------------------|
-| Memory    | `Space, Component.Prefix, Closeable` | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries) | accumulates (`MemoryUnion`)       |
-| Network   | `Addressable, Component.Prefix, Closeable` | this frame's peers `service → peer::T` + the root-shared roster and names (`~/network/prefix`), `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
-| InstSet   | `Space, Component.Prefix` (via `AbstractInstSet`) | the vocabulary: types/insts/rewrites/sugars; `import` lands here | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference` |
-| Compiler  | `Component, Rec`              | `code::T → code::T` in three stages                  | constructive (inherited/replaced) |
-| Processor | `mThread, Component`          | `code::T → obj`; the monadic execution engine        | constructive                      |
+| Component | Interface (extends)                               | One-line job                                                                                                                         | Frame behaviour                                                                                                                                                     |
+|-----------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Memory    | `Space, Component.Prefix, Closeable`              | relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries)                       | accumulates (`MemoryUnion`)                                                                                                                                         |
+| Network   | `Addressable, Component.Prefix, Closeable`        | this frame's peers `service → peer::T` + the root-shared roster and names (`~/network/prefix`), `own`/`isPeer`, supervision of links | a level of its own (`NetworkUnion`): knowledge (the roster at `/network/roster`) is shared, reach (`peer`) is never inherited, and a pop hangs up the frame's dials |
+| InstSet   | `Space, Component.Prefix` (via `AbstractInstSet`) | the vocabulary: types/insts/rewrites/sugars; `import` lands here                                                                     | accumulates — `BasicInstSet` is own structure over its imports over the enclosing machine's ISA; membership in the rec under `reference`                            |
+| Compiler  | `Component, Rec`                                  | `code::T → code::T` in three stages                                                                                                  | constructive (inherited/replaced)                                                                                                                                   |
+| Processor | `mThread, Component`                              | `code::T → obj`; the monadic execution engine                                                                                        | constructive                                                                                                                                                        |
 
 `Component` is a `Rec` that answers `machine()` by walking its `parent()` chain up to the nearest `Machine`
 (falling back to `mach0()`). Components are `Rec`s *on purpose*: memory and network must be reachable from mtron
@@ -113,10 +113,10 @@ descending — so `Extension.hasHost()` refuses it: a machine is a frame, a peer
 
 Nesting is **read-through via `previous`**, built at push time, one level per component:
 
-| component | the child's level                                                                            |
-|-----------|-----------------------------------------------------------------------------------------------|
-| memory    | `MemoryUnion(this.memory())` — the child's own spaces over the enclosing memory's               |
-| instset   | `BasicInstSet(this.instset())` — the child's own declarations over the enclosing vocabulary     |
+| component | the child's level                                                                                                                                  |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| memory    | `MemoryUnion(this.memory())` — the child's own spaces over the enclosing memory's                                                                  |
+| instset   | `BasicInstSet(this.instset())` — the child's own declarations over the enclosing vocabulary                                                        |
 | network   | `NetworkUnion()` — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster, and the level's supervision is its own |
 
 Reads go **through** (own first, then `previous`), writes reach only the own level, and a popped frame takes its own
@@ -144,19 +144,20 @@ that read, never the door.
 The close code cannot carry that distinction anyway: a metatron server shutting down closes its session cache before
 it stops, so its clients see `1000` whether it is restarting or gone.
 
-| piece                                  | what it does                                                                                                                                                             |
-|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Network.Link`                         | the protocol-neutral contract a client holding a live connection implements: `connected()` (local, no trip), `hungUp()` (its owner closed it — final), `redial()` (in place, bounded) |
-| `PeerSupervisor`                       | one per network level, in a static identity registry. `watch` comes from `Network.index` of a link; `release` from `Network.close()`, BEFORE the members are retracted. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight |
-| `Network.Helper.retract`               | the dual of `Helper.index`: the owner's `close()` drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once |
-| `WebSocketRecClient`                   | the first `Link`: `reconnect()` + a bounded wait (`CONNECT_TIMEOUT_MS`, which also bounds the TCP connect). `reset()`'s own `closeBlocking()` lands in `close()` — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay `on_close`/`on_error` |
-| `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand |
+| piece                                   | what it does                                                                                                                                                                                                                                                                                                                                   |
+|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Network.Link`                          | the protocol-neutral contract a client holding a live connection implements: `connected()` (local, no trip), `hungUp()` (its owner closed it — final), `redial()` (in place, bounded)                                                                                                                                                          |
+| `PeerSupervisor`                        | one per network level, in a static identity registry. `watch` comes from `Network.index` of a link; `release` from `Network.close()`, BEFORE the members are retracted. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight |
+| `Network.Helper.retract`                | the dual of `Helper.index`: the owner's `close()` drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once                                                                                                                                                                         |
+| `WebSocketRecClient`                    | the first `Link`: `reconnect()` + a bounded wait (`CONNECT_TIMEOUT_MS`, which also bounds the TCP connect). `reset()`'s own `closeBlocking()` lands in `close()` — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay `on_close`/`on_error`                                                  |
+| `WebSocketRec.onClose` / `WebSocketObj` | a failed link `abandon`s its in-flight round trips (each answered with a fail at once) and keeps `ROUTED`, so the redialed connection does not wrap a second router; `awaitOpen` redials on demand                                                                                                                                             |
 
 **Members are addresses (2026-10-21).** A member's key is the dial's own address as a path, one per surface
 (`fURI.pathEncoding`: `ws://peer.local:8555/mtron?name=me` → `ws/peer/local/8555/mtron` — a legal path, every host
 label its own segment and no dot in any, no `?q`, loopback aliases spelled `localhost`; it is `fURI.toPath()` of the
 dial, the loopback alias spelled first), and the service it reaches is the `origin` field — wire dispatch
-(`Network.Helper.isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its own branch:
+(`Network.Helper.isPeer`, `peerOf`) and `law_shard`'s routes match on that, never on the key. The component answers its
+own branch:
 `BasicNetwork` extends `AbstractSpace`, `Machine.bootstrap()` stamps it as `<vid>/network/#`, and the machine's
 `MachineSpace` hands it every address there — it is not a space in memory. It stores nothing
 beside its rec and answers every read from it, so `*</network/peer/ws/localhost/8555/mtron/origin>` walks a member
@@ -227,10 +228,13 @@ re-enter), which is what makes `/` the root with no space mounted inside itself.
 `Compiler.apply` is the default schedule `parse → rewrite → resolve → type` over four overridable stage components:
 
 - **parse** — `Parser` (default `mtronParser`, `mtron_parser::T`; the language seam — see below).
-- **rewrite** — `Rewriter` (default `FixPointRewriter`, fixpoint over the rewrite rules).
+- **rewrite** — `Rewriter` (default `FixPointRewriter`, fixpoint over the rewrite rules). The rules' applied order —
+  analysis rules (`*_analysis`) last, registration order otherwise — is derived once per vocabulary and cached against
+  the rules themselves (`RULE_ORDERS`, keyed by rule identity *in order*), so a pass looks the order up instead of
+  re-sorting what only a changed ISA could change.
 - **resolve** — `Resolver` (default `ScoringResolver`; threads the type one inst at a time; generic binding runs inside
   per-candidate selection, so there is no separate binder).
-- **type** — `Typer` (default `TypeTyper`, runtime type assertions).
+- **type** — `Typer` (default `BasicTyper`, runtime type assertions).
 
 Stages are rec entries, not Java fields: `BasicCompiler.defaultStages()` supplies all four and `BasicCompiler.stages`
 merges a caller's over them, so `compiler::[=>]` mints the default compiler *with* its stages and
@@ -256,17 +260,18 @@ parser's contract.
 ## The processor (monadic execution)
 
 `Processor` is both an `mThread` and an `Obj`. `Processor.Helper` holds the runtime core that used to live on `Inst`:
-`apply` (resolve → `delegate` → `invoke`), `invoke` (noobj/domain guards, coefficient compression, range check),
-`applyArgs` (computeArgs), `resolveRuntime` (the `TypeCheck.code_resolve`-gated dynamic escape). The delegation
-*decisions* are not here: they are TYPE-SYSTEM decisions, so they live on `Typer.Helper` in the compiler —
-`candidates` derives what the fan-out is over and `applicable` answers whether the resolved instruction is about a
-candidate. `Processor.Helper.delegate` keeps only the loop.
+`apply` (ask the typer for the subjects → ask the selector for the instruction → `invoke`/`fanOut`), `invoke`
+(noobj/domain guards, coefficient compression, range check), `applyArgs` (computeArgs). The *resolution* is the
+selector's (`Selector.Helper.resolve`, which holds the `code_resolve`-gated dynamic escape), and the delegation
+*decisions* are type-system decisions, so they live on `Typer.Helper` in the compiler — `bundleAndFibers` derives what
+the fan-out is over and `applicable` answers whether the resolved instruction is about a subject.
+`Processor.Helper.fanOut` keeps only the loop.
 
-`delegate` is the **wrapper's fan-out** — applying an instruction to a wrapper is applying it to a stream of two
-objects, `person[ninja]::[…].xyz()` = `{ person::[…], ninja::[…] }.xyz()`. A wrapper is a `rec` whose type INSTANTIATES
-a declaration that names the fields it exposes (`rec[role]::T[?[…,role=>rec::T]]@person` names `role`; the instance's
-poly is the component TYPES, `Type#recFibers`), so `Typer.Helper.candidates` yields the wrapper *plus* each fiber
-that is present and holds a `rec` — one level deep, since a candidate's own fibers never join.
+`fanOut` is the **bundle's fan-out** — applying an instruction to a fibered value is applying it to the bundle and its
+fibers, `person[ninja]::[…].xyz()` = `{ person::[…], ninja::[…] }.xyz()`. A BUNDLE is a `rec` whose type INSTANTIATES
+a declaration that names the fibers it lifts (`rec[role]::T[?[…,role=>rec::T]]@person` names `role`; the instance's
+poly is the fiber TYPES, `Type#recFibers`), so `Typer.Helper.bundleAndFibers` yields the bundle *plus* each fiber
+that is present — one level deep, since a fiber's own fibers never join.
 
 EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
 There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
@@ -352,7 +357,8 @@ The Router→Machine migration is **not finished**. `Router.java` is deleted, bu
   so `Router` could be deleted; it is meant to fold into the frame chain.
 - `ExecutionStack` still wraps reads/writes and instruction apply.
 
-Any cleanup that lands these two (drop `stackSpace`, fold `argFrames` into the frame chain) removes the "two scoping mechanisms at once" ambiguity that is the main source of the current complexity.
+Any cleanup that lands these two (drop `stackSpace`, fold `argFrames` into the frame chain) removes the "two scoping
+mechanisms at once" ambiguity that is the main source of the current complexity.
 
 ---
 
@@ -368,7 +374,8 @@ But `Frame` was carrying three responsibilities that must be rehomed, not delete
    live in per-instance Java state: `resolvedMemory` / `resolvedNetwork` / `resolvedInstSet` on `AbstractMachine` —
    **not** "old artifacts". The reason is no longer a shared rec map (`push()` now clones with `null`, so the child
    owns its own map — see the 2026-10-12 note below); it is that a slot may hold a deferred seed and the read path
-   must not allocate. (Removing `resolvedMemory` re-introduced a `StackOverflowError`: `memory()` → `atDirect(uri(MEMORY))` →
+   must not allocate. (Removing `resolvedMemory` re-introduced a `StackOverflowError`: `memory()` →
+   `atDirect(uri(MEMORY))` →
    `uri(MEMORY)` → `MObj.<init>` → `fURI.big()` → `memory()`. The field memoizes the slot and breaks that cycle.)
 
 2. **The upward link — done two ways, deliberately.** `push()` wires it explicitly (`child.parent(this)`) for the
@@ -419,31 +426,31 @@ really clean up Memory and put items where they should logically be -- Network r
 InstSet, and data spaces in Memory."
 
 * **Memory's index holds data spaces only.**
-  - `InstSet.mount` refers the ISA into `Machine.current().instset()`, and adds its sugars.
-  - `BasicMemory.addSpace` sends an `InstSet` there and never indexes it, which catches the hand-mounted schema
-    instsets (tble, dcmnt, vec, grph).
-  - The import probe checks `instset().members()`.
-  - `memory().spaces()` lists no instruction set.
+    - `InstSet.mount` refers the ISA into `Machine.current().instset()`, and adds its sugars.
+    - `BasicMemory.addSpace` sends an `InstSet` there and never indexes it, which catches the hand-mounted schema
+      instsets (tble, dcmnt, vec, grph).
+    - The import probe checks `instset().members()`.
+    - `memory().spaces()` lists no instruction set.
 * **Memory's LOOKUP still routes an ISA's addresses.** `BasicMemory.findSpace`/`hasSpaceFor`/`getSpace` weigh the
   libraries this level's machine mounted (`BasicInstSet.ownLibraries()`) against the level's data spaces, by
   `Memory.mostSpecific`.
-  - "The most specific gains the write": `/m/math/cat/…` → `/m/math/cat`, `/m/math/…` → `/m/math`, the rest of
-    `/m/…` → `/m`.
-  - A data space more specific than an ISA keeps its addresses.
-  - Everything memory does around the contest applies unchanged: prefix and coefficient alignment, the stack first for
-    a short name, the `big()` retry, type-graph invalidation, the ISA's own q-procs (`?docq`).
-  - An ISA is weighed at the memory level of the frame that mounted it, as it was once indexed there, so a child does
-    not claim its parent's libraries ahead of the parent's own data spaces.
-  - A library is an ISA with a vid and a real path (`BasicInstSet.isLibrary`). A frame's own level (a
-    `ComponentUnion`) and an ISA whose pattern is everything (`#`, `/#`) are pure vocabulary, read through the union
-    fallback.
+    - "The most specific gains the write": `/m/math/cat/…` → `/m/math/cat`, `/m/math/…` → `/m/math`, the rest of
+      `/m/…` → `/m`.
+    - A data space more specific than an ISA keeps its addresses.
+    - Everything memory does around the contest applies unchanged: prefix and coefficient alignment, the stack first for
+      a short name, the `big()` retry, type-graph invalidation, the ISA's own q-procs (`?docq`).
+    - An ISA is weighed at the memory level of the frame that mounted it, as it was once indexed there, so a child does
+      not claim its parent's libraries ahead of the parent's own data spaces.
+    - A library is an ISA with a vid and a real path (`BasicInstSet.isLibrary`). A frame's own level (a
+      `ComponentUnion`) and an ISA whose pattern is everything (`#`, `/#`) are pure vocabulary, read through the union
+      fallback.
 * **Unmounting** (`memory().removeSpace(vid)`) un-routes an ISA (`BasicInstSet.unroute`) but keeps it a member, which
   is what removing it from the index used to do. A re-mount routes it again.
 * **The vocabulary's pattern is the members' "lowest common denominator"** (Marko: "thus /m/#").
-  - `BasicInstSet.refer` writes the deepest path every referred ISA's pattern lies beneath.
-  - A level that refers nothing reports its enclosing machine's.
-  - With a schema instset at `/sys/space/…` among the members, the pattern is `/#` until schema instsets leave
-    `/sys/space`.
+    - `BasicInstSet.refer` writes the deepest path every referred ISA's pattern lies beneath.
+    - A level that refers nothing reports its enclosing machine's.
+    - With a schema instset at `/sys/space/…` among the members, the pattern is `/#` until schema instsets leave
+      `/sys/space`.
 * **Inherited references resolve through the enclosing levels** (`BasicInstSet.resolve`), not memory's index.
 * **Code enumerating instruction sets asks `instset().members()`**, never `memory().spaces()` (`catInstSetTest`).
 * `~/sys` yields to a deeper claimant named by memory's lookup (`MachineSpace.yields`), an ISA included, so a schema

@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
@@ -63,10 +63,11 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     @BeforeAll
     static void startTree() throws Exception {
         // typing is not solved across distributed executions yet — run type-check-free, as the peers do
-        TypeCheck.disable(TypeCheck.values());
         InstSet.importInstSet(MATH_ISA_TID);
         InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
+        // the state belongs to the compiler stage, so it is set AFTER the compiler is installed
         // every peer mounts the category, so law_shard can fire wherever a part lands
         cluster = PeerCluster.of(3).seed(PeerCluster.DEFAULT_SEED_MATRIX, "import(/m/math)", "import(/m/math/cat)").start();
         // THE MIDDLE OF THE TREE: peer 1 dials peers 2 and 3. A dial is construction, so it has to happen THERE: the

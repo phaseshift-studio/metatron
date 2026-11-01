@@ -289,7 +289,7 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
 
     @Test
     public void testSingleEntryRecHoldingAStructuredValueNests() {
-        Obj longValue = MRec.rec("docq::[pattern=>docq,pre_read=>inst,obj=>memspace,inst=>instset]", MRec.rec("pattern", MStr.str("docq"), new Object[]{"pre_read", MStr.str("inst"), "obj", MStr.str("memspace"), "inst", MStr.str("instset")}), new Object[0]);
+        Obj longValue = MRec.rec("/m/sys/docq/pattern/that/is/long/enough/to/force/the/nesting", MRec.rec("pattern", MStr.str("docq"), new Object[]{"pre_read", MStr.str("inst"), "obj", MStr.str("memspace"), "inst", MStr.str("instset")}), new Object[0]);
         Obj outer = MRec.rec(Map.of(MUri.uri("k"), longValue));
         String written = ObjmtronUISerializer.prettyPrint().write(outer);
         this.LOG.debug("single-entry rec => %s", new Object[]{written});

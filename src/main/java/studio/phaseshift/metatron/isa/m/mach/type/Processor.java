@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type;
 
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
@@ -91,35 +91,21 @@ public interface Processor extends mThread, Component {
     // ======================== runtime (computeArgs + apply) ========================
 
     /**
-     * The processor's execution runtime — the per-instruction computation the machine performs
-     * when it drives a monad: computeArgs, function application, the noobj/domain guards, the
-     * runtime dom/rng type checks, fail propagation, and coefficient policy. Relocated out of
-     * {@code Inst} (the type system) so the type layer stays data and the machine owns evaluation.
+     * THE EXECUTOR — apply an instruction to a value and nothing else: compute the arguments, invoke the function,
+     * sum a fan-out, propagate a fail, carry the coefficient.
+     * <p>
+     * It makes no type or resolution decisions of its own. WHICH instruction a call refers to is the
+     * {@link Selector}'s ({@link Selector.Helper#resolve}); WHAT a call is about — the bundle, a fiber, or every
+     * candidate — is the {@link Typer}'s ({@link Typer.Helper#candidates}, {@link Typer.Helper#applicable},
+     * {@link Typer.Helper#supersedes}), together with every admission check ({@link Typer.Helper#domRngMatch}) and
+     * the assertion levels ({@link Typer.Helper#instDom()}, {@link Typer.Helper#instRng()}). The executor asks
+     * those two and runs what they name, so a fibered type's bundle-vs-fiber choice is a type-system answer, not a
+     * property of the execution loop.
      */
     class Helper {
 
         private Helper() {
             // do nothing
-        }
-
-        /**
-         * inst_dom/inst_rng dispatch check. Fast-out when the lhs's tid/vid label matches the
-         * target type and the coefficient/poly are consistent — trust construction-time
-         * validation. Otherwise fall back to the full structural test.
-         * <p>
-         * The label comparison is the INSTANTIATION MATCH: a value of {@code object[/m/code]} is an
-         * {@code object}, so a bracketed id is compared against its erasure (identity, not a claim — the
-         * bracket rule in {@link studio.phaseshift.metatron.furi.fURI#test} still refuses
-         * {@code object[/m/code].test(object)} at the claim position). A bracketed CONTRACT still fails
-         * this fast-out and falls through to the structural test, which is the claim.
-         */
-        public static boolean instDomRngMatch(final Obj lhs, final Type type) {
-            if (type.tid().poly().isEmpty()
-                    // identity, not a claim: erasure is explicit here
-                    && Type.Helper.testByIdentity(Obj.Helper.specificTypeId(lhs), Obj.Helper.specificTypeId(type))
-                    && lhs.c().within(type.c()))
-                return true;
-            return lhs.test(type);
         }
 
         /**
@@ -159,70 +145,67 @@ public interface Processor extends mThread, Component {
         }
 
         /**
-         * Runtime dynamic-inst resolution — the escape hatch for an inst that reached the processor
-         * unresolved. Gated by {@code TypeCheck.code_resolve}: when the typer requires fully-resolved
-         * code, an unresolved inst is a hard failure; otherwise it is resolved on demand (per monad)
-         * via the compiler's resolver.
-         */
-        public static Inst resolveRuntime(final Obj lhs, final Inst inst) {
-            if (TypeCheck.code_resolve.enabled())
-                throw MTronException.of("inst reached runtime unresolved (code_resolve enabled): %s => %s", lhs, inst);
-            return inst.resolve(lhs);
-        }
-
-        /**
-         * The machine's single entry for applying one inst against a runtime lhs: resolve (the
-         * code_resolve-gated dynamic escape), then {@link #delegate} (a wrapper fans out to its components),
-         * then the runtime (guards, computeArgs, f().apply, checks, coefficient). {@code Inst.apply} and the
-         * monad loop both hand off here, which is why the wrapper's fan-out lives here and not in resolution.
+         * The machine's single entry for applying one inst against a runtime lhs: take the subjects the typer names
+         * ({@link Typer.Helper#bundleAndFibers} — the BUNDLE and its FIBERS, or the value alone when it is no
+         * bundle), let the {@link Selector} say which instruction each one refers to
+         * ({@link Selector.Helper#resolve}), and run them (guards, computeArgs, f().apply, checks, coefficient).
          * <p>
-         * WHAT fans out over IS NOT DECIDED HERE: {@link Typer.Helper#candidates} derives the candidate set
-         * (the wrapper plus its exposed components, or the wrapper alone for a {@code Inst.Form.typer}) and
-         * {@link Typer.Helper#applicable} decides which candidates the resolved instruction is about. This
-         * class only resolves against each candidate and invokes it.
+         * WHAT is a subject is NOT DECIDED HERE: a fibered type's bundle-vs-fiber choice is a type-system answer
+         * ({@link Typer.Helper#applicable}, {@link Typer.Helper#supersedes}); this class executes what it names.
          */
         public static Obj apply(final Obj lhs, final Inst inst) {
-            final List<Obj> candidates = Typer.Helper.candidates(lhs, inst);
+            // A ONE-MEMBER STREAM IS ITS MEMBER. `objs()` collapses a single element everywhere else, but a BARRIER
+            // (a reducer/gather) accumulates its input into a stream, so a single upstream value arrives wrapped in a
+            // one-member objs. Unwrap it, or the delegation would be skipped for a wrapper that a reducer gathered
+            // (`*marko.sum?<=real{*}` sums the reals at its fiber, not the wrapper).
+            final Obj subject = lhs.isObjs() && lhs.c().isOne() && 1L == lhs.objsValue().spliterator().getExactSizeIfKnown()
+                    ? lhs.objsValue().iterator().next()
+                    : lhs;
+            final List<Obj> candidates = Typer.Helper.bundleAndFibers(subject, inst);
             return candidates.size() == 1 ?
-                    invoke(lhs, resolve(lhs, inst), inst) :
-                    delegate(lhs, candidates, inst);
+                    invoke(subject, Selector.Helper.resolve(subject, inst), inst) :
+                    fanOut(subject, candidates, inst);
         }
 
         /**
-         * RESOLVE, OR PASS. An inst that already carries its function needs no resolution; anything else is
-         * resolved against the given obj. In a fan-out this runs once per CANDIDATE, which is the whole point of
-         * the delegation rule below.
-         */
-        private static Inst resolve(final Obj lhs, final Inst inst) {
-            return inst.hasf() ? inst : resolveRuntime(lhs, inst);
-        }
-
-        /**
-         * DELEGATION — applying an instruction to a wrapper is applying it to a stream of two objects.
+         * A BUNDLE AND ITS FIBERS — applying an instruction to a fibered value is applying it to the bundle and to
+         * the values of its fibers, summed.
          * <pre>
          * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
          * </pre>
-         * WHAT the stream holds and WHETHER the resolved instruction is about each candidate are TYPE-SYSTEM
-         * decisions: {@link Typer.Helper#candidates} derives the candidate set (the wrapper plus the values of
-         * the fields its type declaration exposes, one level deep) and {@link Typer.Helper#applicable} decides
-         * which candidates the resolved instruction is about. This class keeps only the loop — resolve against
-         * THAT candidate, ask the typer, invoke.
+         * WHAT that set holds is the {@link Typer}'s answer ({@link Typer.Helper#bundleAndFibers}): the bundle plus
+         * the fibers its declaration exposes, one level deep. WHETHER the instruction is about each subject is the
+         * Typer's too ({@link Typer.Helper#applicable}). This class keeps only the loop — ask the {@link Selector}
+         * which instruction the subject refers to, invoke it.
          * <p>
-         * EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH — resolve against THAT candidate, then invoke. There
-         * is nothing special about a poly type here: the resolver and the type checker do exactly what they do
-         * for any value, only on the value of the field keyed by the poly name.
+         * The results are SUMMED as a multiplicity — the stream the fibered type promises — with {@code noobj} as the
+         * identity ({@code {noobj, 29} = 29}). A subject the instruction is not about contributes nothing: the
+         * identity, NOT a failure. A {@code fail::} from a subject the instruction DID apply to is not the identity
+         * and propagates, or an instruction that broke on one fiber would read as a success.
          * <p>
-         * The results are SUMMED as a multiplicity — the stream the rule promises — with {@code noobj} as the
-         * identity ({@code {noobj, 29} = 29}). A candidate the instruction does NOT resolve against, or one
-         * whose own type does not name the resolved domain, is not applicable and contributes nothing: that is
-         * the identity, NOT a failure. A {@code fail::} from a candidate the instruction DID apply to is not the
-         * identity and propagates, or an instruction that genuinely broke on one part of the wrapper would read
-         * as a success.
+         * THE BUNDLE SPEAKS FIRST: when the domain NAMES a type the bundle itself is, the bundle is the subject and
+         * its fibers are not asked at all ({@link Typer.Helper#supersedes}). A domain that names no single subject —
+         * a generic one or a base form, which is about every subject of that form — still sums over both levels.
+         * <p>
+         * A FILTER is the other form of the same precedence: it KEEPS OR DROPS its subject, and the subject is the
+         * fibered rec itself — so when the bundle qualifies ({@code *marko.?weaponed::T} on a bundle that is
+         * accepted as a weaponed through the ninja it exposes), the bundle IS the answer and its fibers are not
+         * asked. When it does not qualify, the fibers are offered the filter as usual.
          */
-        private static Obj delegate(final Obj lhs, final List<Obj> candidates, final Inst inst) {
+        private static Obj fanOut(final Obj lhs, final List<Obj> candidates, final Inst inst) {
+            final Inst bundleInst = Selector.Helper.resolve(lhs, inst);
+            if (Typer.Helper.supersedes(lhs, bundleInst, inst))
+                return invoke(lhs, bundleInst, inst);
+            // the filter's verdict on the bundle is the answer when it passes; a decline (noobj) falls through, and
+            // a fail is left to the loop below, which propagates it exactly as it does for any candidate
+            if (Inst.Form.of(bundleInst) == Inst.Form.filter) {
+                final Obj filtered = invoke(lhs, bundleInst, inst);
+                if (!filtered.isNoObj() && !filtered.isFail())
+                    return filtered;
+            }
             final List<Obj> results = new ArrayList<>(candidates.size());
             for (final Obj candidate : candidates) {
-                final Inst cinst = resolve(candidate, inst);
+                final Inst cinst = candidate == lhs ? bundleInst : Selector.Helper.resolve(candidate, inst);
                 // NOT APPLICABLE IS THE IDENTITY, NOT A FAIL: a resolution miss, a resolution that could not
                 // produce a callable instruction, or a domain about another subject contributes noobj.
                 if (!Typer.Helper.applicable(candidate == lhs, candidate, cinst, inst))
@@ -253,16 +236,16 @@ public interface Processor extends mThread, Component {
                 return noobj();
             Obj clhs = lhs;
             boolean modulateC = false;
-            if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
-                    && !instDomRngMatch(clhs, cinst.dom()) && clhs.unique()) {
+            if (Typer.Helper.instDom() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail()
+                    && !Typer.Helper.domRngMatch(clhs, cinst.dom()) && clhs.unique()) {
                 clhs = clhs.c(cInt::one);
                 // bindQ is applied by the compiler (ScoringResolver.resolveInst); the resolved
                 // inst already carries ?block, so no second bindQ is needed at apply time.
-                cinst = resolveRuntime(clhs, original);
+                cinst = Selector.Helper.resolve(clhs, original);
                 modulateC = true;
                 if (cinst.isNoObj())
                     return unresolved(lhs, original);
-                if (!instDomRngMatch(clhs, cinst.dom()))
+                if (!Typer.Helper.domRngMatch(clhs, cinst.dom()))
                     return transientFail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
             }
             final Obj rhs = applyFunction(clhs, cinst, original, isMonadicInst);
@@ -345,8 +328,8 @@ public interface Processor extends mThread, Component {
                 } catch (final Exception e) {
                     rhs = transientFail(MTronException.of(e));
                 }
-                if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
-                        && !instDomRngMatch(rhs, cinst.rng())) {
+                if (Typer.Helper.instRng() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail()
+                        && !Typer.Helper.domRngMatch(rhs, cinst.rng())) {
                     final Fail child = Poly.Helper.failChild(rhs);
                     final String text = "rhs does not match inst range -- " + Poly.Helper.mismatchText(cinst.rng(), rhs) + ":" + cinst;
                     rhs = null == child ? transientFail(MTronException.of(text)) : transientFail(MTronException.of(child.jvm(), text));

@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -185,13 +185,13 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             "34                                     % 34",
     }, delimiter = '%')
     void testACoefficientCrossesTheWire(final String code, final String expected) throws Exception {
-        final boolean checked = TypeCheck.inst_dom.enabled();
-        TypeCheck.enable(TypeCheck.inst_dom);
+        final boolean checked = Typer.Helper.instDom();
+        Typer.Helper.set(Typer.INST_DOM, true);
         try {
             this.checkAnswer(code, expected, ask("127.0.0.1", localPort, code));
         } finally {
             if (!checked)
-                TypeCheck.disable(TypeCheck.inst_dom);
+                Typer.Helper.set(Typer.INST_DOM, false);
         }
     }
 
@@ -208,8 +208,8 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             "34                                     % 34",
     }, delimiter = '%')
     void testACoefficientComesBack(final String code, final String expected) {
-        final boolean checked = TypeCheck.inst_dom.enabled();
-        TypeCheck.enable(TypeCheck.inst_dom);
+        final boolean checked = Typer.Helper.instDom();
+        Typer.Helper.set(Typer.INST_DOM, true);
         final WebSocketRec wsRec = new WebSocketRec(mutableMap(
                 uri(HOST), uri("ws://127.0.0.1:" + cluster.port(1) + PeerCluster.MTRON_ROUTE),
                 uri(IN), uri(MIME.MIMEType.APPLICATION_MTRON.value),
@@ -221,7 +221,7 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
         } finally {
             client.close();
             if (!checked)
-                TypeCheck.disable(TypeCheck.inst_dom);
+                Typer.Helper.set(Typer.INST_DOM, false);
         }
     }
 

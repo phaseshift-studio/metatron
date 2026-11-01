@@ -40,6 +40,8 @@
         </license>
     </licenses>
     <properties>
+        <!-- the inst `args`-in-tid switch: override on the command line with -Dmtron.inst.args-in-tid=true -->
+        <mtron.inst.args-in-tid>false</mtron.inst.args-in-tid>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
@@ -720,6 +722,7 @@
                                 <argument>/m/mach</argument>
                                 <argument>/m/math</argument>
                                 <argument>/m/math/cat</argument>
+                                <argument>/m/math/geo</argument>
                                 <argument>/m/sys/ui</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/iot</argument>
@@ -1126,6 +1129,9 @@
                             <logback.configurationFile>
                                 ${basedir}/src/test/resources/logback-testing.xml
                             </logback.configurationFile>
+                            <!-- the inst `args`-in-tid switch (MInst.ARGS_IN_TID): off by default, opted into per build
+                                 with `-Dmtron.inst.args-in-tid=true` — never by hard-coding the field -->
+                            <mtron.inst.args-in-tid>${mtron.inst.args-in-tid}</mtron.inst.args-in-tid>
                         </systemPropertyVariables>
                         <excludes>
                             <testExclude>com/example/scratch/**/*</testExclude>

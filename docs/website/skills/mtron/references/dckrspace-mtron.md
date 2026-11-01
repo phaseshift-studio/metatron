@@ -417,23 +417,15 @@ mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite us
                   insts=>2,
                   rewrite=>explanation::[
                    format=>!λ?str<=(){<j>},
-                   desc=>[rng=><#>,insts=>3],
+                   desc=>[rng=><#>,insts=>2],
                    per_inst=>[
                     [
-                     op=>from,
-                     args=>[mydb:people/+],
+                     op=>sql_where,
+                     args=>[people/+,"role = 'developer'"],
                      f=>'<j>',
                      form=>standard,
                      c_dom=>0,
                      c_rng=>0],
-                    [
-                     op=>isa,
-                     dom=><#>,
-                     rng=><#>,
-                     args=>[[role=>developer]],
-                     form=>mapper,
-                     c_dom=>1,
-                     c_rng=>1],
                     [
                      op=>select,
                      dom=><#>,
@@ -467,23 +459,14 @@ mtron> *mydb:people/+.count().explain()                         [-- sql rewrite 
                   insts=>1,
                   rewrite=>explanation::[
                    format=>!λ?str<=(){<j>},
-                   desc=>[rng=>int,insts=>2],
-                   per_inst=>[
-                    [
-                     op=>from,
-                     args=>[mydb:people/+],
-                     f=>'<j>',
-                     form=>standard,
-                     c_dom=>0,
-                     c_rng=>0],
-                    [
-                     op=>count,
-                     rng=>int,
-                     args=>[,],
-                     f=>'<j>',
-                     form=>reducer,
-                     c_dom=>0,
-                     c_rng=>1]]]],
+                   desc=>[rng=>int,insts=>1],
+                   per_inst=>[[op=>sql_count,
+                               rng=>int,
+                               args=>[people/+],
+                               f=>'<j>',
+                               form=>initial,
+                               c_dom=>0,
+                               c_rng=>1]]]],
                  per_inst=>[[op=>sql_count,
                              rng=>int,
                              args=>[people/+],

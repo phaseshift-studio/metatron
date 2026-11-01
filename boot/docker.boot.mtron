@@ -49,7 +49,7 @@ fsspace::[pattern => fs:#,
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
 <fs:boot/space/tble/sqlite.mtron>(user=>!*boot/args/user,storage=>!(*boot/args/data.else(/tmp)));
-
+mdns_discovery::[=>];
 *boot/args/console.?=true.
   else(print('{{g}}docker boot complete — ws 0.0.0.0:8555, http 0.0.0.0:8777{{X}}\n').
        print('{{g}}a simple remote console: {{y}}wsplus {{b}}ws://localhost:8555/mtron{{X}}\n')).

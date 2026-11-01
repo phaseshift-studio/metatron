@@ -163,20 +163,26 @@ are placeholders — the schemas below are motifs, not literal runs.
 | **S** master-participates ✅          | $\bigoplus_{i=0}^{k} a_i \cdot r$ over $\{\mathrm{master}\} \cup \mathrm{peers}$                                                     | `{1,…,8}.plus(1).sum()`                                              | `?place=[local,peer]`: the master folds its own slice (a lane at distance zero) and ships k−1 |
 | **T** reference frame migration ✅    | $\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots$ — machine semiring groupoid, stream ring's process dual                            | `{1,2,3}.plus(5).move(//host/a).plus(2).sum()`                       | `{1,2,3}.plus(5).-<[\                                                                         |
 
+| **U** profile collation              | $\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)$ — $\oplus$ is keyed union with per-op times added, so the report is a commutative monoid | `{1,2,3,4,5}.plus(10).sum().profile()>>format`                       | `[start(p_i).plus(10).sum.profile?hop=0(),…]==[eval(p_i),…]>-.profile_collate()>>format`       |
+
 **Legend.** ✅ = implemented (`A` done; `D` done 2026-10-26; `E`, `G` v1 done 2026-10-28; `S` done 2026-10-28 —
 the axes' `local` designator, `?place=[local,peer]`; `O` free today — it needs no plumbing).
 An empty box is *not* "unsound": the law holds, the lowering is unwritten. `F` is struck for streams (order lives in
-`lst`, never a bag); `M` is a note; `I` is infrastructure.
+`lst`, never a bag); `M` is a note; `I` is infrastructure. `U` is the instrumentation row: `profile()` already
+captures the *emitted* chain — the master's `start/select/select/merge/<fold>` with the gather's wait visible — but
+the far side is one number, because `profile_analysis` captures only the machine it runs on. Collation ships each
+shard's own report home so the peers' per-op cost is legible; the master still needs the gather's wall time, and that
+row alone cannot be reconstructed from the shards.
 
 ## the taxonomy — the menu as a tree
 
-The nineteen entries are not a flat list: they fall out of **two axes** — the *data-side* law the anchor obeys (which
+The twenty-one entries are not a flat list: they fall out of **two axes** — the *data-side* law the anchor obeys (which
 fixes the route shape), and the *location-side* question of where the work lives — plus a set of **orthogonal** rules
-that multiply any fan-out and a set of **composites** that build on the rest. The table above keeps the A–S lettering
+that multiply any fan-out and a set of **composites** that build on the rest. The table above keeps the A–U lettering
 stable; this is the lay of the land.
 
 ```
-distribution — the menu (A–T)
+distribution — the menu (A–U)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅
 │  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
@@ -185,7 +191,7 @@ distribution — the menu (A–T)
 ├─ by the location                (native · delegation — where the work lives)
 │  └─ B  C  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
-│  └─ D:✅  S:✅
+│  └─ D:✅  S:✅  U
 └─ composite & substrate          (built from the above)
    └─ N  R  M  I
 ```

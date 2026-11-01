@@ -23,7 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -51,8 +51,8 @@ public class ObjSQLSerializerTest extends AbstractMetatronTest {
     static void beforeAll() {
         InstSet.importInstSet(MATH_ISA_TID);
         memSpace.of(f("/sys/#"), null);
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.values());
+        Typer.Helper.enableAll();
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));

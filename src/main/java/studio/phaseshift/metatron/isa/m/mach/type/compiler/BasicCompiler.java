@@ -19,19 +19,19 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.TypeTyper;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -70,7 +70,7 @@ public class BasicCompiler extends MRec implements Compiler {
                 uri(PARSER), mtronParser.single(),
                 uri(REWRITER), FixPointRewriter.single(),
                 uri(RESOLVER), ScoringResolver.single(),
-                uri(TYPER), TypeTyper.single());
+                uri(TYPER), new BasicTyper());
     }
 
     /**

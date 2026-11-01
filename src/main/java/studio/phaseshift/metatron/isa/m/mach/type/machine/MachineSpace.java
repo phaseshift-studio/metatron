@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.Tokens.PROCESSOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -193,7 +194,11 @@ public final class MachineSpace extends memSpace {
             return false;
         final String part = this.part(vid);
         return NETWORK.equals(part) || (MEMORY.equals(part) && this.isNameIndex(vid))
-                || (SYS.equals(part) && !this.yields(vid));
+                || (SYS.equals(part) && !this.yields(vid))
+                // THE COMPILER IS THE MACHINE'S, so a write into it is the machine's: the typer's state lives at
+                // <machine>/compiler/typer/check, and `@/compiler/typer/check >>= +[inst_dom => false]` must land
+                // there — not in memory, where the next read would never see it (the sphere answers first).
+                || (COMPILER.equals(part) && !this.yields(vid));
     }
 
     /**
@@ -214,6 +219,14 @@ public final class MachineSpace extends memSpace {
             return super.write(vid, obj);
         if (MEMORY.equals(this.part(vid)))
             return this.owner.memory().write(vid, obj);
+        // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which
+        // is the object the machine holds (writing the machine rec itself would re-type the whole machine)
+        if (COMPILER.equals(this.part(vid))) {
+            final List<String> segments = vid.qLess().resolve().segments();
+            final String below = String.join("/", segments.subList(this.depth + 1, segments.size()));
+            this.owner.compiler().at(uri(below), obj, MUTABLE);
+            return obj;
+        }
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
         return this.owner.network().write(vid, obj);
     }

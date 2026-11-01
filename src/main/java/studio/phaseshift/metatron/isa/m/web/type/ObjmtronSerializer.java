@@ -22,11 +22,11 @@ package studio.phaseshift.metatron.isa.m.web.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -36,6 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.ARGS;
+import static studio.phaseshift.metatron.Tokens.REL_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -158,7 +161,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     private String handleIds(final Obj obj, final String objString) {
         final StringBuilder sb = new StringBuilder();
-        this.handleTID(sb, obj, !obj.isObjInst()).append(objString);
+        if (obj.isObjInst()) {
+            this.generateInstHead(sb, obj.asInst()).append(objString);
+        } else {
+            this.handleTID(sb, obj, !obj.isObjInst()).append(objString);
+        }
         this.handleVID(sb, obj);
         return sb.toString();
     }
@@ -296,12 +303,15 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeRel(final Rel rel) {
+        final boolean relWrap = !rel.tid().equals(REL_TID);
         final boolean firstRel = rel.jvm().get0().isRel();
         final boolean secondRel = rel.jvm().get1().isRel();
         final StringBuilder sb = new StringBuilder();
+        if (relWrap) sb.append("(");
         sb.append(firstRel ? "(" : "").append(this.write(rel.jvm().get0())).append(firstRel ? ")" : "");
         sb.append("=>");
         sb.append(secondRel ? "(" : "").append(this.write(rel.jvm().get1())).append(secondRel ? ")" : "");
+        if (relWrap) sb.append(")");
         return handleIds(rel, this.cleanEnding(sb).toString());
     }
 
@@ -330,6 +340,55 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeInst(final Inst inst) {
         return this.generateInst(new StringBuilder(), inst, 0).toString();
+    }
+
+    /**
+     * Whether a tid's rng side is the default typing — {@code #{*}} ({@code all.maybeSome()}) — or
+     * is not there at all.  The two are the same statement: an instruction's syntax leaves a
+     * default side empty ({@code xyz?A<=()}), so an absent side and an explicit {@code #{*}} both
+     * draw as nothing.
+     */
+    protected static boolean defaultRng(final fURI tid) {
+        return !tid.hasRng() || tid.rng().equals(ALL.maybeSome());
+    }
+
+    /**
+     * Whether a tid's dom side is the default typing — {@code #{?}} ({@code all.maybe()}) — or is
+     * not there at all ({@code xyz?<=A()}).  See {@link #defaultRng(fURI)}.
+     */
+    protected static boolean defaultDom(final fURI tid) {
+        return !tid.hasDom() || tid.dom().equals(ALL.maybe());
+    }
+
+    protected StringBuilder generateInstHead(final StringBuilder sb, final Inst inst) {
+        final fURI tid = inst.tid();
+        sb.append(tid.basePath());
+        // the typing pair — rng<=dom — is written around its defaults.  The syntax lets either side
+        // stand empty (xyz?A<=(), xyz?<=A()) and an empty side means the default typing, so a side
+        // that IS the default is left empty rather than spelled out: writing #{*} or #{?} there
+        // says nothing a reader needs AND re-reading it types the instruction explicitly.  A pair
+        // default on both sides is not written at all — xyz?<=() reads xyz(), which is what the tid
+        // of an untyped instruction carries, so plus(1,2) reads plus(1,2).  The other q params are
+        // drawn whenever they are there, and take the '?' when the pair is absent.
+        final StringBuilder params = new StringBuilder();
+        final String rng = defaultRng(tid) ? "" : tid.rng().isZero() ? "{0}" : tid.rng().toString();
+        final String dom = defaultDom(tid) ? "" : tid.dom().isZero() ? "{0}" : tid.dom().toString();
+        if (!rng.isEmpty() || !dom.isEmpty())
+            params.append(rng).append("<=").append(dom);
+        tid.qMap().forEach((key, value) -> {
+            if (!key.equals(Tokens.RNG) && !key.equals(Tokens.DOM)) {
+                if (!key.equals(ARGS) || inst.args().isNoObj()) {
+                    if (!params.isEmpty())
+                        params.append("&");
+                    params.append(key);
+                    if (null != value && !value.isEmpty())
+                        params.append("=").append(value);
+                }
+            }
+        });
+        if (!params.isEmpty())
+            sb.append("?").append(params);
+        return sb;
     }
 
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth) {

@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -484,7 +491,7 @@ isa/m/type/impl/MLst.java      ← MLst: concrete Lst + lst() factories
 isa/m/type/impl/MUri.java      ← MUri: concrete Uri + uri() factories
 isa/m/parser/mFluent.java      ← Fluent builder + StartLess entry points
 isa/m/mInstSet.java            ← ISA definitions (/m namespace)
-TypeCheck.java                 ← Global type-checking stage configuration
+isa/m/mach/type/compiler/Typer.java  ← the typer::T stage; its `check` rec IS the type-check state
 </code></pre>
 <h3>Creating types</h3>
 <h4>The <code>T()</code> factory</h4>
@@ -737,23 +744,28 @@ if (predObj.isRec()) {
     });
 }
 </code></pre>
-<h3>TypeCheck</h3>
-<p>Global type-checking configuration. Five levels, all enabled by default:</p>
-<pre><code class="language-java">TypeCheck.code_resolve   // require code fully resolved pre-evaluation
-TypeCheck.inst_dom       // require inst domain type match pre-evaluation
-TypeCheck.inst_rng       // require inst range type match post-evaluation
-TypeCheck.type_ctor      // require type constructor match for obj creation
-TypeCheck.obj_write      // require obj type match for space write
-
-// Toggle
-TypeCheck.enable(TypeCheck.inst_dom);
-TypeCheck.disable(TypeCheck.type_ctor);
-
-// Query
-TypeCheck.check(TypeCheck.obj_write);  // true if enabled
-TypeCheck.level();                     // count of enabled stages (0-5)
-TypeCheck.getEnabled();                // returns Set&lt;TypeCheck&gt;
+<h3>The typer's check state</h3>
+<p>There is no global registry: the type-check state is the <code>typer::T</code> stage's own rec, at <code>/compiler/typer/check</code>. It is
+one <code>bool::T</code> per check point, grouped under <code>check</code> so the typer can grow other features beside them (and so a point
+can later become a finer realization than true/false):</p>
+<pre><code>typer::[check=&gt;[code_resolve=&gt;false, inst_rng=&gt;true, inst_dom=&gt;true, type_pred=&gt;true, obj_write=&gt;true], verify=&gt;…]
 </code></pre>
+<p>The boot default is every point on except <code>code_resolve</code>; a boot profile names only the points it overrides
+(<code>typer/check =&gt; [code_resolve =&gt; true]</code>).</p>
+<pre><code class="language-java">Typer.Helper.asserts(Typer.INST_DOM);   // is a point on?
+Typer.Helper.instDom();                 // the same, per point: instDom/instRng/typePred/objWrite/codeResolve
+Typer.Helper.set(Typer.INST_DOM, false); // turn a point off IN THIS MACHINE
+Typer.Helper.enabled();                  // the points currently on
+Typer.Helper.level();                    // how many (the console's strictness level)
+
+// the same act, as the canonical nested write
+Machine.current().compiler().typer().at(&quot;check/inst_dom&quot;, BOOL_TRUE, Poly.MUTABLE);
+
+// and from mtron (the address is part of the machine, so the sphere owns the write)
+//   @/compiler/typer/check &gt;&gt;= [inst_dom =&gt; false]
+</code></pre>
+<p>Enforcement sites ask the gateway (<code>Typer.Helper</code>), never a static set: the processor before invoking, the space
+before a write, the obj before a type-predicate test, the selector before a dynamic resolution.</p>
 <h3>Common gotchas</h3>
 <ol>
 <li>

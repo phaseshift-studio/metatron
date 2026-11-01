@@ -53,6 +53,8 @@ import(/m/dev/ide,ide);
         [=====================]
         [======== HOME =======]
         [=====================]
+
+
 memspace::[
   pattern => </usr/marko/#>,                                 
         q => [mintq::[=>],
@@ -98,7 +100,13 @@ http_server::[origin   => !*<boot/args/external/web/http>,
 http_client::[host => <http://#>];
 http_client::[host => <https://#>];
 mqtt_server::[origin => <mqtt://0.0.0.0:1883>];
-
+[==
+  spawn a series of sibling jvms on current physical machine.
+  make spawns ws_client::T peers.
+==]
+harvest?ws_client{*}<=int{*}(){
+  spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>).
+  -<[host=>_].as(ws_client::T)}@harvest;
         [=====================]
         [======= DOCKER ======]
         [=====================]

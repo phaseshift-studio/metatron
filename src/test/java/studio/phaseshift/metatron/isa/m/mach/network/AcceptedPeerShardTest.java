@@ -28,7 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -82,11 +82,11 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
     @BeforeEach
     void setupTwin() {
         // typing is not solved across distributed executions yet — run type-check-free, as the manual demo did
-        TypeCheck.disable(TypeCheck.values());
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         // the twin exactly as the listener mints it: the inbound session's mini-instset is its reach — and it serves
         // all a shard needs (eval, to), so only its being ACCEPTED (no host to dial back) keeps it from being a target
         Machine.current().network().accept(TWIN, rec(uri(INST), silent(TWIN)));

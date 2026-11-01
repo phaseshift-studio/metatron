@@ -33,11 +33,11 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
@@ -1009,7 +1009,10 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
-    @TestData(value = {"rec::T[?[=>]]@reck", "lst::T[?[,]]@lyst"})
+    // oneTime: the two seeds are only READ by the rows; re-declaring them before every row re-typed `reck` in
+    // place mid-method (a redefinition lands by re-typing the registered type object), which is what made the
+    // `[a,b].as(reck::T)` row resolve against a half-replaced type.
+    @TestData(value = {"rec::T[?[=>]]@reck", "lst::T[?[,]]@lyst"}, oneTime = true)
     @CsvSource(value = {
             "true.as(bool::T)                                                                                            % true",
             "false.as(bool::T)                                                                                           % false",
@@ -1150,11 +1153,11 @@ public class mInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[plus(2).plus(2)]==[tid()]                                       % [/m/code]",
-            "[|(plus(2).plus(2))]==[tid()]                                    % [/m/inst/block]",
-            "[plus(2)]==[tid()]                                               % [/m/inst/plus]",
+            "[|(plus(2).plus(2))]==[tid()]                                    % [/m/inst/block?args=[/m/code]]",
+            "[plus(2)]==[tid()]                                               % [/m/inst/plus?args=[/m/int]]",
             "[plus(2).plus(2)]==[as(lst::T)]                                  % [[plus(2),plus(2)]]",
             "[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]                   % [plus(2).plus(2)]",
-            "[plus(2).plus(2)]==[as(inst::T)]                                 % [inst?rng=#&dom=#(){plus(2).plus(2)}]",
+            "[plus(2).plus(2)]==[as(inst::T)]                                 % [/m/inst?rng=#&dom=#(){/m/inst/plus(2)./m/inst/plus(2)}]",
             "[plus(2).plus(2)]==[as(inst::T)]==[swap(4)]                      % [8]",
             "[*</usr/data/${*workload/xyz}/+>.count()]==[as(lst::T)]          % [[*</usr/data/${*workload/xyz}/+>,count()]]",
             "[db=>4,code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code.apply() }         % 6",

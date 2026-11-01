@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -622,16 +629,21 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td>`{1,2,3}.plus(5).-&lt;[\</td></tr>
 </tbody>
 </table>
+<p>| <strong>U</strong> profile collation              | \(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\) — \(\oplus\) is keyed union with per-op times added, so the report is a commutative monoid | <code>{1,2,3,4,5}.plus(10).sum().profile()&gt;&gt;format</code>                       | <code>[start(p_i).plus(10).sum.profile?hop=0(),…]==[eval(p_i),…]&gt;-.profile_collate()&gt;&gt;format</code>       |</p>
 <p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done 2026-10-28; <code>S</code> done 2026-10-28 —
 the axes' <code>local</code> designator, <code>?place=[local,peer]</code>; <code>O</code> free today — it needs no plumbing).
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
-<code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure.</p>
+<code>lst</code>, never a bag); <code>M</code> is a note; <code>I</code> is infrastructure. <code>U</code> is the instrumentation row: <code>profile()</code> already
+captures the <em>emitted</em> chain — the master's <code>start/select/select/merge/&lt;fold&gt;</code> with the gather's wait visible — but
+the far side is one number, because <code>profile_analysis</code> captures only the machine it runs on. Collation ships each
+shard's own report home so the peers' per-op cost is legible; the master still needs the gather's wall time, and that
+row alone cannot be reconstructed from the shards.</p>
 <h3>the taxonomy — the menu as a tree</h3>
-<p>The nineteen entries are not a flat list: they fall out of <strong>two axes</strong> — the <em>data-side</em> law the anchor obeys (which
+<p>The twenty-one entries are not a flat list: they fall out of <strong>two axes</strong> — the <em>data-side</em> law the anchor obeys (which
 fixes the route shape), and the <em>location-side</em> question of where the work lives — plus a set of <strong>orthogonal</strong> rules
-that multiply any fan-out and a set of <strong>composites</strong> that build on the rest. The table above keeps the A–S lettering
+that multiply any fan-out and a set of <strong>composites</strong> that build on the rest. The table above keeps the A–U lettering
 stable; this is the lay of the land.</p>
-<pre><code>distribution — the menu (A–T)
+<pre><code>distribution — the menu (A–U)
 ├─ by the anchor's law            (the data-side theorem → the route shape)
 │  ├─ free · floatable (Thm 6)        → O:✅
 │  ├─ star · comm. monoid (Thm 19)    → A:✅  E:✅  G:✅  J  K  L  H
@@ -640,7 +652,7 @@ stable; this is the lay of the land.</p>
 ├─ by the location                (native · delegation — where the work lives)
 │  └─ B  C  Q  P  T:✅
 ├─ orthogonal                     (multiply any fan-out)
-│  └─ D:✅  S:✅
+│  └─ D:✅  S:✅  U
 └─ composite &amp; substrate          (built from the above)
    └─ N  R  M  I
 </code></pre>

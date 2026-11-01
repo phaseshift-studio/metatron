@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -722,9 +729,27 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 <h4>type — the fourth stage</h4>
 <p>The last stage is the machine's own type assertion. <code>typer::T</code> is where a frame holds <em>how much</em> checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.</p>
-<p><strong>Not yet wired</strong>: the typer is the identity today, and enforcement still reads the global registry — flags mirrored
-at <code>/sys/typer/stage</code>, which a boot profile sets through its <code>typer/stage</code> rec. Moving those flags into the machine is
-what the <code>typer::T</code> stage is for.</p>
+<p>The typer's state lives in the stage itself — <code>/compiler/typer/check</code>, one <code>bool::T</code> per check point
+(<code>code_resolve</code>, <code>inst_rng</code>, <code>inst_dom</code>, <code>type_pred</code>, <code>obj_write</code>), the boot default being every point on except
+<code>code_resolve</code>. A boot profile overrides individual points with <code>typer/check =&gt; [code_resolve =&gt; true]</code>.</p>
+<p>There are exactly two ways to change it, and both are the same nested write:</p>
+<pre><code class="language-mtron">mtron&gt; @/compiler/typer/check &gt;&gt;= [inst_dom =&gt; false]
+==&gt;[inst_dom=&gt;false,
+    code_resolve=&gt;false,
+    inst_rng=&gt;false,
+    type_pred=&gt;true,
+    obj_write=&gt;true]
+mtron&gt; */compiler/typer/check
+==&gt;[inst_dom=&gt;false,
+    code_resolve=&gt;false,
+    inst_rng=&gt;false,
+    type_pred=&gt;true,
+    obj_write=&gt;true]
+</code></pre>
+<p><code>Typer.Helper</code> is the Java side of that door, and the one the stages call: the processor asks <code>instDom()</code>/<code>instRng()</code>
+before invoking, the space asks <code>objWrite()</code> before a write, a type-predicate test asks <code>typePred()</code>, and the selector
+asks <code>codeResolve()</code> before falling back to a dynamic resolution. Because the state is the component's rec, a pushed
+frame inherits the enclosing machine's compiler (it clones the machine rec), so a dialed-down state follows a frame.</p>
 <h3>processor</h3>
 <pre><code class="language-mtron">mtron&gt; */m/mach/component/processor?docq
 ==&gt;docs::[desc=&gt;'no documentation available',
@@ -756,12 +781,12 @@ axes of a machine.</p>
      {?}state=&gt;union(stop,run,pause),
      {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
           args=&gt;[
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            {?}result=&gt;'the last result produced by the th...',
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}state=&gt;'current state of the thread',
            {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}state=&gt;'current state of the thread'],
+           {?}loop=&gt;'delay to repeat code evaluation (d...'],
           desc=&gt;'[structural] the thread base type',
           core=&gt;docs::[
            obj=&gt;thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
@@ -816,23 +841,23 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}roster=&gt;[
       {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
       {?}machine=&gt;[uri::T=&gt;uri::T]],
-     {?}peer=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
-      origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+     {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+      origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
       {?}host=&gt;uri::T,
       {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
-     {?}listener=&gt;[uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
-      origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+     {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+      origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
       {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
       {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
      {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}pattern=&gt;'the branch this network answers as...',
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}pattern=&gt;'the branch this network answers as...',
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}status=&gt;'the health method — an auto inst c...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;],
+           {?}listener=&gt;'the sockets this machine serves th...'],
           desc=&gt;&quot;[structural] a machine's network: ...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',

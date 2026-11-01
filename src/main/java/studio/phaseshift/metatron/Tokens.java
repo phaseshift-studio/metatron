@@ -498,6 +498,16 @@ public final class Tokens {
     public static final String SOURCE = "source";
     public static final String SCOPE = "scope";
     public static final String LOCATION = "location";
+    // -- GeoJSON tokens (RFC 7946) ---------------------------------------------
+    // the wire format dictates these spellings, so the rec keys are the RFC's own names rather than synonyms: a geo
+    // rec reads as the GeoJSON object it stands for. TYPE, ID, FEATURE, POSITION, PLACE, SHAPE and LOCATION are the
+    // existing terms the metatron side reuses (see geoInstSet).
+    public static final String COORDINATES = "coordinates";
+    public static final String GEOMETRY = "geometry";
+    public static final String GEOMETRIES = "geometries";
+    public static final String PROPERTIES = "properties";
+    public static final String FEATURES = "features";
+    public static final String BBOX = "bbox";
     public static final String STATE = "state";
     public static final String ROOT = "root";
     public static final String WEB_ROOT = "web_root";

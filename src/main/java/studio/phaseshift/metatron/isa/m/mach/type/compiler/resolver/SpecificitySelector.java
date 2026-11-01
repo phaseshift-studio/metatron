@@ -141,8 +141,19 @@ public class SpecificitySelector extends MRec implements Selector {
         }
 
         // score by specificity, then take the first candidate the binder can make concrete.
+        // A CALL THAT NAMES A STREAM DOMAIN NAMES THE STREAM'S SUBJECT ({@code ?dom=real{*}}), so a contract of
+        // another type is never a candidate for it — the scored path refuses what the single-candidate shortcut
+        // already refuses ({@link #hintReplace}): {@code sum?dom=real{*}} must not land on the rec sum merely
+        // because the lhs (a wrapper) is a rec. A unit (coefficient-one) hint is the ordinary typed call and keeps
+        // its looser scoring, where the lhs form still steers the pick.
+        final boolean streamDomain = userInst.hasDom() && !userInst.dom().c().isOne();
         return viable.stream()
                 .filter(apiInst -> apiInst.dom().isGeneric() || !apiInst.dom().isNominal() || Obj.Helper.specificType(lhs).testByID(apiInst.dom()))
+                .filter(apiInst -> !streamDomain || Inst.Helper.admitsIgnoringCoefficient(apiInst, userInst.dom()))
+                // the candidate's DECLARED argument contract is part of its signature: two instructions that differ
+                // only in argument type are told apart here, and one that declares none admits anything (a no-op
+                // for an instset minted with MInst.ARGS_IN_TID off)
+                .filter(apiInst -> Inst.Helper.admitsArgs(apiInst, userInst))
                 .map(apiInst -> Tuple.Pair.with(this.scoreSpecificity(lhs, userInst, apiInst), apiInst))
                 .sorted(Comparator.comparingInt((Tuple.Pair<Integer, Inst> scored) -> scored.get0()).reversed())
                 .map(scored -> binder.apply(lhs, userInst, this.hintCompose(Inst.Helper.unaddressed(scored.get1()), userInst)))

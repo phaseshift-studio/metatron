@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 
 /**
  * Base for every VM-booting test. The class-level {@link Timeout} caps each inherited test method at five minutes, so a
@@ -208,8 +210,8 @@ public abstract class AbstractMetatronTest {
         // every type assertion ON except code_resolve — the same stance DocsUtil boots with. The suite
         // must exercise ENFORCEMENT, not just the type system's functions; code_resolve stays off because
         // it demands fully-resolved code and most tests evaluate dynamically-built code.
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
+        Typer.Helper.enableAll();
+        Typer.Helper.set(Typer.CODE_RESOLVE, false);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec());
@@ -639,7 +641,25 @@ public abstract class AbstractMetatronTest {
             } else {
                 if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
                     LOG.error("expectation led to failure: %s", actual);
-                if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality
+                if (ex.isUri() && actual.isUri()) {
+                    // A TID EXPECTATION NAMES AN ADDRESS. The `args` component is the contract's ARGUMENT TYPES, not a
+                    // part of the operation's identity, so an instset/machinery minted with MInst.ARGS_IN_TID on must
+                    // not fail an address assertion (nor make an address assertion pass that names the wrong op).
+                    assertEquals(Inst.Helper.operationTid(ex.uriValue()), Inst.Helper.operationTid(actual.uriValue()),
+                            String.format("%s => %s", code, actual));
+                } else if (ex.isLst() && actual.isLst() && ex.lstValue().size() == actual.lstValue().size()) {
+                    // A LIST OF ADDRESSES is a list of OPERATIONS: the same rule as the uri case, element by element
+                    // (plans, analysis rows and {@code asData} answers are lists of tids).
+                    for (int i = 0; i < ex.lstValue().size(); i++) {
+                        final Obj e = ex.lstValue().get(i);
+                        final Obj a = actual.lstValue().get(i);
+                        if (e.isUri() && a.isUri())
+                            assertEquals(Inst.Helper.operationTid(e.uriValue()), Inst.Helper.operationTid(a.uriValue()),
+                                    String.format("%s => %s [%d]", code, actual, i));
+                        else
+                            assertEquals(e, a, String.format("%s => %s [%d]", code, actual, i));
+                    }
+                } else if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality
                     assertTrue(actual.test(ex));
                 else
                     assertEquals(ex, actual);

@@ -606,13 +606,28 @@ public final class QCollection {
      * lets a caller fall back to its in-code declaration.
      */
     public static Obj lawOf(final Obj obj) {
-        return lawOf(obj.isInst() ? obj.tid() : obj.vid());
+        return lawOf(lawId(obj));
+    }
+
+    /**
+     * THE ADDRESS THE ALGEBRA IS DECLARED AT — a type's vid, or an instruction's OPERATION address (its tid with the
+     * {@code args} component removed). A declaration is a fact about the operation, not about the argument types the
+     * instruction happened to be minted with, so a reader and a writer cannot disagree merely because one was minted
+     * with {@code MInst.ARGS_IN_TID} on.
+     */
+    private static fURI lawId(final Obj obj) {
+        return obj.isInst() ? lawId(obj.tid()) : obj.vid();
+    }
+
+    private static fURI lawId(final fURI id) {
+        return null == id || !id.hasQ(ARGS) ? id : id.removeQ(ARGS);
     }
 
     /**
      * {@link #lawOf(Obj)} by address — what a law lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
      */
-    public static Obj lawOf(final fURI objID) {
+    public static Obj lawOf(final fURI objIDUnstripped) {
+        final fURI objID = lawId(objIDUnstripped);
         if (null == objID)
             return noobj();
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
@@ -628,7 +643,7 @@ public final class QCollection {
     }
 
     public static <OBJ extends Obj> OBJ lawWrap(final OBJ obj, final Rec law) {
-        final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
+        final fURI objID = lawId(obj);
         if (null == objID || null == law)
             return obj;
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?

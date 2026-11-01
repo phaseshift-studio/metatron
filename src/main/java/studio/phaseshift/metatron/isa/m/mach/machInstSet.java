@@ -18,11 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.mach;
 
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -31,7 +30,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.TypeTyper;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
@@ -41,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -312,7 +312,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(PARSER).maybe(), "the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default",
                                         uri(REWRITER).maybe(), "the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites",
                                         uri(RESOLVER).maybe(), "the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default",
-                                        uri(TYPER).maybe(), "the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine instead of a global TypeCheck registry"),
+                                        uri(TYPER).maybe(), "the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code /compiler/typer/check}, not a global registry"),
                                 "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.",
                                 "compiler::[rewriter=>fixpoint_rewriter::[max=>3],resolver=>scoring_resolver::[=>]]   [-- wire the stages that matter; parser and typer default --]",
                                 "compiler::[parser=>mtron_parser::[=>]]   [-- name the read stage explicitly --]",
@@ -428,7 +428,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_TYPER_TYPE = Type.Builder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_TYPER_TID)
-                                .constructor(arg -> new TypeTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
+                                .constructor(arg -> new BasicTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
                                 .create(),
                         // memory — a machine's address space: its relative bindings are the rec itself, and its
                         // absolute index is the `space` entry inside it, so both are reachable from mtron
@@ -486,13 +486,13 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATUS), "true: the far side is this machine, live as long as the client exists",
                                         uri(CLOSE), "nothing to hang up"),
                                 """
-                                the identity client — the identity element of the protocol-client family:
-                                dialing loop://<name> constructs one, and its eval override runs the shipped code
-                                in the receiver's perspective (Machine.Helper.evalAt at the root), so the caller is
-                                left where it stood -- the loop counterpart of the ws client's ship(). The
-                                executable form of the self-similarity contract: a read through a loop peer equals
-                                the local read.
-                                """,
+                                        the identity client — the identity element of the protocol-client family:
+                                        dialing loop://<name> constructs one, and its eval override runs the shipped code
+                                        in the receiver's perspective (Machine.Helper.evalAt at the root), so the caller is
+                                        left where it stood -- the loop counterpart of the ws client's ship(). The
+                                        executable form of the self-similarity contract: a read through a loop peer equals
+                                        the local read.
+                                        """,
                                 "id_client::[host=><loop://self>] [-- the identity peer: reads and writes answer locally --]"),
                         // the URI refinements the network types stand on -- a name for a service, a service, a key
                         docWrap(AUTHORITY_TYPE = Type.Builder.build()
@@ -550,10 +550,10 @@ public class machInstSet extends AbstractInstSet {
                                         uri(HOST), "where to dial it from here, route included: ws://host:port/mtron",
                                         uri(CLIENT), "the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up"),
                                 """
-                                one metatron machine as the network records it — the value of a network peer
-                                connection. Absent `host` and `handler` is not a broken peer: it is a peer
-                                reference that crossed a wire, known here and not reachable from here.
-                                """,
+                                        one metatron machine as the network records it — the value of a network peer
+                                        connection. Absent `host` and `handler` is not a broken peer: it is a peer
+                                        reference that crossed a wire, known here and not reachable from here.
+                                        """,
                                 "peer::[origin=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>] [-- a peer the current machine can ship to --]",
                                 "peer::[origin=><ws://192.168.1.42:8555>] [-- known, and not reachable from here --]"),
                         // network — a machine's PRESENCE: the sockets it answers on. A port binds once per physical
@@ -577,12 +577,12 @@ public class machInstSet extends AbstractInstSet {
                                         uri(ROUTE), "this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket",
                                         uri(SERVER), "the protocol server holding the socket — held so the owner's pop can release the port"),
                                 """
-                                a socket a machine answers on, and that machine's routes on it. The machine that opens
-                                a socket owns it, and its pop releases the port. Every machine below it inherits the
-                                socket and serves through it by keeping its own routing table here, which its own pop
-                                takes away. A connection is answered by the most specific route across every machine
-                                sharing the socket, and the peer it makes joins that machine's network.
-                                """,
+                                        a socket a machine answers on, and that machine's routes on it. The machine that opens
+                                        a socket owns it, and its pop releases the port. Every machine below it inherits the
+                                        socket and serves through it by keeping its own routing table here, which its own pop
+                                        takes away. A connection is answered by the most specific route across every machine
+                                        sharing the socket, and the peer it makes joins that machine's network.
+                                        """,
                                 "listener::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- a machine's routes on its socket --]"),
                         NETWORK_SUPERVISOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -602,11 +602,11 @@ public class machInstSet extends AbstractInstSet {
                                         .create(), null, null,
                                 Map.of(uri(STATUS), "supervising / closed — the liveness marker, updated on close"),
                                 """
-                                the per-level reconciler that keeps a network's index true: it supervises the
-                                machine's dialed peers (redials a down link on capped backoff, drops a hung-up one,
-                                reports a recovered one online). One per level, minted on the first link it indexes
-                                and closed with the level — construction is connection, destruction is disconnect.
-                                """,
+                                        the per-level reconciler that keeps a network's index true: it supervises the
+                                        machine's dialed peers (redials a down link on capped backoff, drops a hung-up one,
+                                        reports a recovered one online). One per level, minted on the first link it indexes
+                                        and closed with the level — construction is connection, destruction is disconnect.
+                                        """,
                                 "network_supervisor::[=>] [-- start supervising the current machine's network --]"),
                         MACH_DISCOVERY_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -624,7 +624,7 @@ public class machInstSet extends AbstractInstSet {
                                         .create(),
                                 Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself"),
                                 """
-                                a discovery protocol — a source of machine endpoints for the one roster/machine table. Existence is its interface: construction starts it, deletion stops it, and it publishes no verbs. It requires exactly one field, status, because liveness is the only thing a consumer cannot work out for itself. Where an endpoint was learned is irrelevant: every protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one consolidated index. Distinct from /m/web/discovery, which is the protocol surface it discovers over"""),
+                                        a discovery protocol — a source of machine endpoints for the one roster/machine table. Existence is its interface: construction starts it, deletion stops it, and it publishes no verbs. It requires exactly one field, status, because liveness is the only thing a consumer cannot work out for itself. Where an endpoint was learned is irrelevant: every protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one consolidated index. Distinct from /m/web/discovery, which is the protocol surface it discovers over"""),
                         MACH_NETWORK_TYPE = docWrap(Type.Builder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
                                         .vid(MACH_NETWORK_TID)
@@ -704,14 +704,14 @@ public class machInstSet extends AbstractInstSet {
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"),
                                 """
-                                a machine's network: the endpoints the system knows about, the peers the
-                                current machine has dialed, and the handlers that discover them. membership is
-                                declared, never emergent — a uri must not be able to make itself a peer merely
-                                by being addressed — and it is accumulating, so a child machine unions its own
-                                level over its parent's. the authorities this machine answers to are derived
-                                from its listeners — the sockets it opened and those it inherits, up to the root\from the host every listening space
-                                declares.
-                                """,
+                                        a machine's network: the endpoints the system knows about, the peers the
+                                        current machine has dialed, and the handlers that discover them. membership is
+                                        declared, never emergent — a uri must not be able to make itself a peer merely
+                                        by being addressed — and it is accumulating, so a child machine unions its own
+                                        level over its parent's. the authorities this machine answers to are derived
+                                        from its listeners — the sockets it opened and those it inherits, up to the root\from the host every listening space
+                                        declares.
+                                        """,
                                 "network::[roster=>[b=><ws://192.168.1.42:8555>]] [-- a network that knows a peer before dialing it --]",
                                 "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]"),
                         MACH_MACHINE_TYPE = docWrap(Type.Builder.build()
@@ -730,14 +730,14 @@ public class machInstSet extends AbstractInstSet {
                                         uri(NETWORK), "the known machines and this machine's peers",
                                         uri(PROCESSOR), "the execution axis: threads and computational state"),
                                 """
-                                a machine integrates language, structure, and process into one context for action
-                                within metatron. machines form a nested stack: a parent machine's state is reachable
-                                from its children, and a parent defines the scope of a child machine's access to
-                                resources. machines communicate laterally through the network component, where a
-                                peer group forms a shared computing workspace that is garbage collected when the
-                                machine is popped off the parent stack. the absolute root of the metatron graph
-                                (/.) is the root machine.
-                                """),
+                                        a machine integrates language, structure, and process into one context for action
+                                        within metatron. machines form a nested stack: a parent machine's state is reachable
+                                        from its children, and a parent defines the scope of a child machine's access to
+                                        resources. machines communicate laterally through the network component, where a
+                                        peer group forms a shared computing workspace that is garbage collected when the
+                                        machine is popped off the parent stack. the absolute root of the metatron graph
+                                        (/.) is the root machine.
+                                        """),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = docWrap(Type.Builder.build()
                                         .tid(REC_TID)
@@ -951,14 +951,14 @@ public class machInstSet extends AbstractInstSet {
                                 Map.of(jnt(0), "the payload to evaluate on this side",
                                         jnt(1), "the trip's correlation tag, a uri"),
                                 """
-                                evaluate a shipped payload and address the answer by the trip it belongs to. This is wire
-                                vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
-                                the frame's root is the reply and the payload is its (blocking) argument. Addressing the
-                                answer is what lets the client match a reply to its request without an envelope on the
-                                wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
-                                (noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
-                                travels as the absent-answer mark instead, and the client reads it as noobj.
-                                """,
+                                        evaluate a shipped payload and address the answer by the trip it belongs to. This is wire
+                                        vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
+                                        the frame's root is the reply and the payload is its (blocking) argument. Addressing the
+                                        answer is what lets the client match a reply to its request without an envelope on the
+                                        wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
+                                        (noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
+                                        travels as the absent-answer mark instead, and the client reads it as noobj.
+                                        """,
                                 "reply(3.plus(1), <a1f30b7c>)       [-- the far side answers 4@a1f30b7c --]",
                                 "reply(noobj, <a1f30b7c>)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]")
                 ))),

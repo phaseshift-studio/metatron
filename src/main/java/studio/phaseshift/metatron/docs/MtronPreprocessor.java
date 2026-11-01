@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.docs;
 
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.util.ArrayList;
@@ -265,7 +265,8 @@ public final class MtronPreprocessor {
             //    [MAXOUTPUT] ──
             final var outputs = new ArrayList<String>();
             try {
-                TypeCheck.disable(TypeCheck.code_resolve, TypeCheck.inst_rng);
+                Typer.Helper.set(Typer.CODE_RESOLVE, false);
+                Typer.Helper.set(Typer.INST_RNG, false);
                 final Obj input = SER.read(expr);
                 final Obj result = input.apply();
                 if (result.isFail() && !error) {

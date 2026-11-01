@@ -3,7 +3,7 @@
  web    => [
    http/origin  => <http://localhost:8777>,
    ws/origin    => <ws://localhost:8555>],
- typer/stage  => [inst_dom     => true, 
+ typer/check  => [inst_dom     => true, 
                   inst_rng     => true,
                   type_pred    => true,
                   obj_write    => true,

@@ -24,8 +24,10 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.LST_TID;
@@ -41,20 +43,38 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * TypeTyper — the concrete {@code typer::T}: the runtime type-assertion stage. Identity for now —
  * the {@code inst_dom}/{@code inst_rng}/{@code type_pred} rec flags select which assertions run, and
- * those assertions are wired up separately (per-machine) rather than read from the global TypeCheck.
+ * the assertions are enforced at the point that reads them (the processor, the space write) via
+ * {@code Typer.Helper}, and the degree of checking is THIS typer's {@code check} state.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class TypeTyper extends MRec implements Typer {
+public class BasicTyper extends MRec implements Typer {
 
-    private static final TypeTyper INSTANCE = new TypeTyper(mutableMap(), MACH_TYPER_TID, null);
-
-    public static TypeTyper single() {
-        return INSTANCE;
+    /**
+     * A typer whose {@code check} state is {@code check} — what the boot installs into the machine's compiler, and
+     * what a test can mint directly.
+     */
+    public static BasicTyper of(final Rec check) {
+        final BasicTyper typer = new BasicTyper(mutableMap(), MACH_TYPER_TID, null);
+        typer.jvm().put(uri(Typer.CHECK), check);
+        return typer;
     }
 
-    public TypeTyper(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    /**
+     * A typer carrying the boot default state — one instance per compiler, so the degree of checking belongs to the
+     * machine that owns the compiler rather than to a JVM-wide singleton.
+     */
+    /**
+     * A defaulting typer whose state is the boot default — one per compiler, so each machine owns its own degree
+     * of checking.
+     */
+    public BasicTyper() {
+        this(mutableMap(), MACH_TYPER_TID, null);
+    }
+
+    public BasicTyper(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        this.jvm().put(uri(Typer.CHECK), rec(new LinkedHashMap<>(Typer.defaults().jvm())));
         this.jvm().put(uri("verify"), instLambda(lst(ALL_TYPE, T(LST_TID.poly(LAW_TID.maybeSome()))), (_, inst) -> {
             if (inst.arg(0).isObjInst())
                 return mInstSet.AlgebraTool.analyzeTypeInst(inst.arg(0).dom(), inst.arg(0).asInst(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();

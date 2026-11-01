@@ -749,10 +749,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
      * The argument TYPES an instruction signature declares, in order — the {@code args} query component read as
      * types, the peer of {@link #dom()} / {@link #rng()} ({@code inst?rng=int&dom=int&args=[int,rec]}).
      * <p>
-     * An ABSENT component reads as an empty list, and so does one whose body is empty ({@code args=[]}): argument
-     * order is semantic, but a signature with no arguments is one signature however it is spelled, so callers
-     * cannot tell the two apart here. The canonical spelling omits the key entirely (see {@link #args(List)}), which
-     * is what keeps every uri that carries no arguments rendering byte-identically.
+     * An ABSENT component reads as an empty list, and so does the BARE key ({@code args}) and an empty body
+     * ({@code args=[]}): the list reader cannot tell them apart — ask {@link #hasArgs()} for the claim. The
+     * distinction matters: a bare key declares ZERO arguments (a claim the contract makes), while an absent key is
+     * no argument claim at all. The canonical spelling omits the key entirely when there is nothing to declare (see
+     * {@link #args(List)}), which is what keeps every uri that carries no arguments rendering byte-identically.
      * <p>
      * The component is a SINGLE lst-valued query key: one uri text per element, comma separated inside {@code [ ]}
      * ({@code [int,rec]}, {@code [/m/int,A]}). It is parsed here, in this lower layer, straight from the query
@@ -766,13 +767,18 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
     /**
-     * Whether this uri carries at least one argument type. An absent component and an empty list answer alike
-     * ({@code false}), following {@link #args()}'s contract rather than {@link #hasQ(String)}'s key presence.
+     * Whether this uri DECLARES its argument types — the key is present, however many types it lists.
+     * <p>
+     * THE KEY, NOT THE LIST, because {@code zero} and {@code unknown} are different claims: a BARE {@code args} key
+     * ({@code inst?rng=A&dom=A&args}) declares that the operation takes NO arguments, while an ABSENT key is no
+     * argument claim at all. Both read as an empty {@link #args()} list, so this is the only way to tell them apart;
+     * {@link #args(List)} cannot write the bare key (an empty list removes it) — a caller that means ZERO uses
+     * {@link #addQ(String) addQ("args")}.
      *
-     * @return whether {@link #args()} is non-empty
+     * @return whether the {@code args} key is present
      */
     default boolean hasArgs() {
-        return !this.args().isEmpty();
+        return this.hasQ(ARGS);
     }
 
     /**
@@ -782,7 +788,8 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
      * <p>
      * An empty (or null) list REMOVES the component: the canonical form carries no {@code args} key at all, which
      * is a hard requirement — every pre-existing tid must render byte-identically, so an empty argument list can
-     * never add a {@code ?args=[]} to the query.
+     * never add a {@code ?args=[]} to the query. A caller that means to DECLARE ZERO arguments (a claim, distinct
+     * from no claim) therefore writes the bare key with {@link #addQ(String) addQ("args")}, not this method.
      *
      * @param args the argument types in order; empty (or null) omits the component
      * @return a new fURI carrying the component, or this uri when there is nothing to remove

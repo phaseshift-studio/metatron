@@ -263,9 +263,21 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.
 
-**Not yet wired**: the typer is the identity today, and enforcement still reads the global registry — flags mirrored
-at `/sys/typer/stage`, which a boot profile sets through its `typer/stage` rec. Moving those flags into the machine is
-what the `typer::T` stage is for.
+The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point
+(`code_resolve`, `inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
+`code_resolve`. A boot profile overrides individual points with `typer/check => [code_resolve => true]`.
+
+There are exactly two ways to change it, and both are the same nested write:
+
+```mtron_pre
+@/compiler/typer/check >>= [inst_dom => false]
+*/compiler/typer/check
+```
+
+`Typer.Helper` is the Java side of that door, and the one the stages call: the processor asks `instDom()`/`instRng()`
+before invoking, the space asks `objWrite()` before a write, a type-predicate test asks `typePred()`, and the selector
+asks `codeResolve()` before falling back to a dynamic resolution. Because the state is the component's rec, a pushed
+frame inherits the enclosing machine's compiler (it clones the machine rec), so a dialed-down state follows a frame.
 
 ## processor
 

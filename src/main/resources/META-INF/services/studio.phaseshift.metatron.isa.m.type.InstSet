@@ -35,3 +35,4 @@ studio.phaseshift.metatron.isa.m.db.vec.vecInstSet
 studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet
 studio.phaseshift.metatron.isa.m.dev.ide.ideInstSet
 studio.phaseshift.metatron.isa.m.math.cat.catInstSet
+studio.phaseshift.metatron.isa.m.math.geo.geoInstSet

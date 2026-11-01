@@ -181,7 +181,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_NANOS_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000.0d);
@@ -197,7 +197,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_MICROS_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
                     case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
@@ -213,7 +213,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_MILLIS_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000.0d);
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
@@ -229,7 +229,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_SECOND_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000_000.0d);
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
@@ -245,7 +245,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_MINUTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1_000_000_000.0d);
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d / 1000.0d);
@@ -261,7 +261,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_HOUR_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1_000_000_000.0d);
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d / 1000.0d);
@@ -277,7 +277,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_TIME_TID)
             .vid(MATH_DAY_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1_000_000_000.0d);
                     case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d / 1000.0d);
@@ -620,7 +620,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_BYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
                     case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
@@ -636,7 +636,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_KBYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
                     case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
@@ -651,7 +651,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_MBYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
@@ -666,7 +666,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_GBYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
@@ -681,7 +681,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_TBYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
@@ -696,7 +696,7 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_PBYTE_TID)
             .constructor(arg -> {
-                final String tid = arg.tid().toString();
+                final String tid = arg.tid().basePath().toString();
                 return switch (tid) {
                     case MATH_BYTE_STRING ->
                             arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
@@ -860,7 +860,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_MM_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
                                         case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
@@ -877,7 +877,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_CM_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
                                         case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
@@ -897,7 +897,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_DM_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
                                         case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
@@ -917,7 +917,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_METER_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
                                         case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
@@ -937,7 +937,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_METRIC_TID)
                                 .vid(MATH_KM_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
                                         case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 100.0d);
@@ -962,7 +962,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_IMPERIAL_TID)
                                 .vid(MATH_INCH_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d);
                                         case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d);
@@ -979,7 +979,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_IMPERIAL_TID)
                                 .vid(MATH_FOOT_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 12.0d);
                                         case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 3.0d);
@@ -999,7 +999,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_IMPERIAL_TID)
                                 .vid(MATH_YARD_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 36.0d);
                                         case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 3.0d);
@@ -1019,7 +1019,7 @@ public class mathInstSet extends AbstractInstSet {
                                 .tid(MATH_IMPERIAL_TID)
                                 .vid(MATH_MILE_TID)
                                 .constructor(arg -> {
-                                    final String tid = arg.tid().toString();
+                                    final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
                                         case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 63360.0d);
                                         case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 5280.0d);

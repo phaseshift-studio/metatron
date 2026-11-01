@@ -24,7 +24,7 @@ isa/m/type/impl/MLst.java      ← MLst: concrete Lst + lst() factories
 isa/m/type/impl/MUri.java      ← MUri: concrete Uri + uri() factories
 isa/m/parser/mFluent.java      ← Fluent builder + StartLess entry points
 isa/m/mInstSet.java            ← ISA definitions (/m namespace)
-TypeCheck.java                 ← Global type-checking stage configuration
+isa/m/mach/type/compiler/Typer.java  ← the typer::T stage; its `check` rec IS the type-check state
 ```
 
 ## Creating types
@@ -343,26 +343,35 @@ if (predObj.isRec()) {
 }
 ```
 
-## TypeCheck
+## The typer's check state
 
-Global type-checking configuration. Five levels, all enabled by default:
+There is no global registry: the type-check state is the `typer::T` stage's own rec, at `/compiler/typer/check`. It is
+one `bool::T` per check point, grouped under `check` so the typer can grow other features beside them (and so a point
+can later become a finer realization than true/false):
+
+```
+typer::[check=>[code_resolve=>false, inst_rng=>true, inst_dom=>true, type_pred=>true, obj_write=>true], verify=>…]
+```
+
+The boot default is every point on except `code_resolve`; a boot profile names only the points it overrides
+(`typer/check => [code_resolve => true]`).
 
 ```java
-TypeCheck.code_resolve   // require code fully resolved pre-evaluation
-TypeCheck.inst_dom       // require inst domain type match pre-evaluation
-TypeCheck.inst_rng       // require inst range type match post-evaluation
-TypeCheck.type_ctor      // require type constructor match for obj creation
-TypeCheck.obj_write      // require obj type match for space write
+Typer.Helper.asserts(Typer.INST_DOM);   // is a point on?
+Typer.Helper.instDom();                 // the same, per point: instDom/instRng/typePred/objWrite/codeResolve
+Typer.Helper.set(Typer.INST_DOM, false); // turn a point off IN THIS MACHINE
+Typer.Helper.enabled();                  // the points currently on
+Typer.Helper.level();                    // how many (the console's strictness level)
 
-// Toggle
-TypeCheck.enable(TypeCheck.inst_dom);
-TypeCheck.disable(TypeCheck.type_ctor);
+// the same act, as the canonical nested write
+Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
 
-// Query
-TypeCheck.check(TypeCheck.obj_write);  // true if enabled
-TypeCheck.level();                     // count of enabled stages (0-5)
-TypeCheck.getEnabled();                // returns Set<TypeCheck>
+// and from mtron (the address is part of the machine, so the sphere owns the write)
+//   @/compiler/typer/check >>= [inst_dom => false]
 ```
+
+Enforcement sites ask the gateway (`Typer.Helper`), never a static set: the processor before invoking, the space
+before a write, the obj before a type-predicate test, the selector before a dynamic resolution.
 
 ## Common gotchas
 

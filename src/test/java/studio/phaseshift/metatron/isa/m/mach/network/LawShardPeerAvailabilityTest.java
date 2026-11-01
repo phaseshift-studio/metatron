@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -61,11 +61,11 @@ public class LawShardPeerAvailabilityTest extends AbstractWebSocketServerIntegra
     @Test
     void testLawShardAvailableWhenPeered() {
         // typing is not solved across distributed executions yet — run type-check-free, as the manual demo did
-        TypeCheck.disable(TypeCheck.values());
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
 
         // a ws_client self-dial mints a /network/peer — the exact trigger law_shard's guard reads
         Network.Helper.connect(Machine.current().network(), f("ws://localhost:" + this.wsPort + "/mtron"), WS_CLIENT_TID);
