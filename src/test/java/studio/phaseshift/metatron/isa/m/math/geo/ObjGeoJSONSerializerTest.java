@@ -88,6 +88,35 @@ public class ObjGeoJSONSerializerTest extends AbstractInstSetTest {
     }
 
     @Test
+    public void aBagOfPointsIsAMultiPoint() {
+        final Obj bag = studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(
+                java.util.List.of(GeoUtil.point(PORTLAND), GeoUtil.point(THE_DALLES)));
+        assertEquals("{\"type\":\"MultiPoint\",\"coordinates\":[[-123.13,44.47],[-121.18,45.61]]}",
+                ObjGeoJSONSerializer.single().text(bag));
+        // and back: the document is a bag again, not a list (a bag has no order, a line does)
+        final Obj read = ObjGeoJSONSerializer.single().parse(
+                "{\"type\":\"MultiPoint\",\"coordinates\":[[-123.13,44.47],[-121.18,45.61]]}");
+        assertEquals(2, read.stream().count());
+        assertEquals(GeoUtil.point(PORTLAND), read.stream().toList().get(0));
+    }
+
+    @Test
+    public void aRecWithAGeoFiberIsAFeature() {
+        final Obj feature = studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(
+                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("geo:location"), GeoUtil.point(PORTLAND),
+                studio.phaseshift.metatron.isa.m.type.impl.MUri.uri("name"),
+                studio.phaseshift.metatron.isa.m.type.impl.MStr.str("Dinagat Islands"));
+        final String text = ObjGeoJSONSerializer.single().text(feature);
+        assertTrue(text.contains("\"type\":\"Feature\""));
+        assertTrue(text.contains("\"geometry\""));
+        assertTrue(text.contains("\"properties\""));
+        assertTrue(text.contains("\"name\":\"Dinagat Islands\""));
+        // the wire has no name for the geometry slot, so a read normalizes the fiber to `geo:geometry`; the DOCUMENT
+        // round-trips, which is the contract that matters at a boundary
+        assertEquals(text, ObjGeoJSONSerializer.single().text(ObjGeoJSONSerializer.single().parse(text)));
+    }
+
+    @Test
     public void wktIsTheOtherEncoding() {
         final Obj point = GeoUtil.point(PORTLAND);
         assertEquals("POINT (-123.13 44.47)", ObjGeoJSONSerializer.single().wkt(point));

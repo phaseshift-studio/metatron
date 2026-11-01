@@ -4,8 +4,9 @@ description: |
   The GeoJSON (RFC 7946) model at `/m/math/geo`, in six types: a point IS a position, a line IS an ordered list of
   points, a polygon IS a list of lines — the kind is the type's name, and there is no `type` or `coordinates` key
   anywhere in the model. Every `Multi*` form is a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the
-  JSON vocabulary lives only in `ObjGeoJSONSerializer`. Plus the geodesic and planar algorithms (distance, length,
-  area, centroid, envelope, contains, inside, intersects) and the two encodings (GeoJSON and WKT).
+  JSON vocabulary lives only in `ObjGeoJSONSerializer`. Plus the geodesic and planar measures (distance, length,
+  area), the containment filter (`has`/`inside`), the shape reductions as casts (`as(point::T)` is the centroid,
+  `as(bbox2d::T)` the envelope), and the two encodings (GeoJSON and WKT).
   TRIGGER: when reading or writing a GeoJSON document, building a geometry from a list or from text, measuring a
   geometry, asking whether one geometry contains, lies inside or intersects another, handing a geometry to a spatial
   database as WKT, or declaring a native spatial pushdown.
@@ -153,10 +154,9 @@ mtron> person -> rec[geo:location]::T[?[name=>str::T]]@person
 mtron> person::[name=>'marko',geo:location=>geo:point::[-123.0,44.5]]@marko
 ==>person::[name=>'marko',
             geo:location=>geo:point::[-123.0,44.5]]@marko
-mtron> *marko.kind()                                         [-- Point: the geometry at the fiber answers --]
-==>Point
-mtron> *marko.inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])  [-- true --]
-==>true
+mtron> *marko.type()                                         [-- the point type: the geometry at the fiber answers --]
+mtron> *marko.inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])  [-- the point itself, since the filter answers the contained --]
+==>geo:point::[-123.0,44.5]
 mtron> *marko>>geo:location                                   [-- the point itself --]
 ==>geo:point::[-123.0,44.5]
 ```
@@ -165,31 +165,43 @@ and on the way back in the properties are flattened into the rec again. No featu
 
 ## the questions
 
-| instruction                                                          | answer                                                                     |
-|----------------------------------------------------------------------|----------------------------------------------------------------------------|
-| `geo:kind()`                                                         | the kind, as a uri: `Point`, `LineString`, `Polygon` — read off the type   |
-| `geo:coordinates()`                                                  | every stored position, in document order, as stamped points                |
-| `geo:envelope()`                                                     | the enclosing `geo:bbox2d`                                                 |
-| `geo:distance(g)`                                                    | geodesic metres to `g`; `0` when they intersect (a point in a polygon)     |
-| `geo:length()`                                                       | geodesic metres of every polyline and polygon boundary                     |
-| `geo:area()`                                                         | square metres of the polygonal part, shell positive and holes negative     |
-| `geo:centroid()`                                                     | the representative point                                                   |
-| `geo:contains(g)` / `geo:inside(g)` / `geo:intersects(g)`            | the three predicates; `inside` also takes a `geo:bbox2d`/`geo:bbox3d`      |
-| `geo:wkt()` / `as(json::T)` / `as(<kind>::T)`                        | the two string encodings, out and in                                       |
+| instruction                                          | answer                                                                        |
+|------------------------------------------------------|-------------------------------------------------------------------------------|
+| `g.type()`                                           | the kind — the type's name, `point::T`, `line::T`, `polygon::T`                |
+| `geo:coordinates()`                                  | every stored position, in document order, as stamped points                   |
+| `geo:distance(g)`                                    | geodesic metres to `g`; `0` when they intersect (a point in a polygon)        |
+| `geo:length()`                                       | geodesic metres of every polyline and polygon boundary                        |
+| `geo:area()`                                          | square metres of the polygonal part, shell positive and holes negative        |
+| `has(g)` / `geo:inside(g)`                       | the containment FILTER: `has` answers the container, `inside` the contained; both take a geometry or an envelope |
+| `geo:wkt()` / `as(json::T)` / `as(<kind>::T)`        | the two string encodings, out and in                                          |
+
+The two shape reductions are **casts**, not instructions, because construction and conversion are the same door:
+
+| cast | what it is |
+|------|------------|
+| `plane::[…].as(point::T)` | the centroid — a point from any geometry |
+| `line::[…].as(bbox2d::T)` | the envelope — the box around every stored position |
+| `bbox3d::[…].as(bbox2d::T)` | the 2D box: z dropped, lossy and stated |
 
 ```mtron
-mtron> geo:point::[-123.13,44.47].geo:kind()               [-- Point --]
-==>Point
-mtron> geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:envelope()   [-- geo:bbox2d::[-123.13,44.47,-121.18,45.61] --]
+mtron> geo:point::[-123.13,44.47].type()                            [-- the point type --]
+mtron> geo:line::[[-123.13,44.47],[-121.18,45.61]].as(bbox2d::T)    [-- geo:bbox2d::[-123.13,44.47,-121.18,45.61] --]
 ==>bbox2d::[-123.13,44.47,-121.18,45.61]
-mtron> geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()     [-- meter::121998.59… the Columbia gorge --]
+mtron> geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()     [-- meter::198845.05… — Portland to The Dalles --]
 ==>meter::198845.0518
-mtron> geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 2.65e8 m² --]
+mtron> geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 5.3e8 m² --]
 ==>5.2931E8
-mtron> geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:contains(geo:point::[-123.05,44.5])   [-- true --]
-==>true
-mtron> geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- true --]
-==>true
+mtron> geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].has(geo:point::[-123.05,44.5])   [-- the polygon itself --]
+==>geo:polygon::[[[-123.2,44.4],
+                  [-122.9,44.4],
+                  [-122.9,44.6],
+                  [-123.2,44.6],
+                  [-123.2,44.4]]]
+mtron> geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point itself --]
+==>geo:point::[-123.05,44.5]
+mtron> geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].as(point::T)   [-- the centroid --]
+==>point::[-123.0499,
+           44.4999]
 ```
 ## what the numbers mean
 
@@ -199,7 +211,7 @@ mtron> geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6
 - **length** sums the same distance along each polyline, and along a polygon's boundary (closing the ring);
 - **area** is the planar shoelace formula scaled by $R^2\cos\bar\varphi$ at the mean latitude of the stored positions:
   exact for a rectangle whose sides run along parallels and meridians, an approximation otherwise;
-- **contains/intersects** are exact for a point, a vertex-on-vertex test plus a ray cast otherwise;
+- **`has`/`geo:inside`** are exact for a point, a vertex-on-vertex test plus a ray cast otherwise — one predicate, two subjects (the container, or the contained one, which is what a fibered rec preserves);
 - the **envelope** is always the axis-aligned box around every stored position.
 
 What is *not* modeled is stated rather than half-done: there is no antimeridian cutting (RFC 7946 §3.1.9), no ring
@@ -211,13 +223,12 @@ measurement, and no 3D envelope on a geometry (a `bbox3d` is a value of its own,
 `geoInstSetLawTable` declares what a rewrite may do to a geo instruction: a native spatial operator may be substituted
 only where the laws license it, so **an undeclared instruction is one the optimizer must leave alone.**
 
-| instruction                                                   | laws                                | what it licenses                                                      |
-|---------------------------------------------------------------|-------------------------------------|-----------------------------------------------------------------------|
-| `geo:distance`                                                | `commutative`, `pure`               | operand order is free, so two callers reach one native operator       |
-| `geo:intersects`                                              | `commutative`, `idempotent`, `pure` | a conjunct may be deduplicated and its operands swapped               |
-| `geo:contains` / `geo:inside`                                 | `pure`, each other's INVERSE        | a space with `ST_Within` alone answers `ST_Contains`                  |
-| `geo:envelope`, `geo:kind`, `geo:coordinates`, `geo:wkt`      | `pure`                              | structural projections have no effect, so a rewrite can move or drop them |
-| `geo:area`, `geo:length`                                      | `pure`, `blocked`                   | measured here, not floatable to a native operator                     |
+| instruction                                     | laws                            | what it licenses                                                                 |
+|-------------------------------------------------|---------------------------------|----------------------------------------------------------------------------------|
+| `geo:distance`                                  | `commutative`, `pure`           | operand order is free, so two callers reach one native operator                  |
+| `has` / `geo:inside`                        | `pure`, each other's INVERSE    | a space with `ST_Within` alone answers `ST_Contains` by swapping the operands    |
+| `geo:coordinates`, `geo:wkt`                    | `pure`                          | structural projections have no effect, so a rewrite can move or drop them        |
+| `geo:area`, `geo:length`                        | `pure`, `blocked`               | measured here, not floatable to a native operator                                |
 
 A geometry is not a ring, a monoid or a lattice: there is no `plus` of two geometries, so the family declares no
 carrier algebra and `typeLawsUncached` answers the empty rec. The measures are homomorphisms **to** the reals, not

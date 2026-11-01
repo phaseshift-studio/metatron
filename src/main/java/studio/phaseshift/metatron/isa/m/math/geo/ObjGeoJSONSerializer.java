@@ -271,14 +271,86 @@ public class ObjGeoJSONSerializer extends AbstractObjSerializer<JsonElement> {
             obj.asLst().lstValue().forEach(element -> array.add(this.write(element)));
             return array;
         }
-        if (obj.isObjs()) {
-            final JsonArray array = new JsonArray();
-            obj.stream().forEach(element -> array.add(this.write(element)));
-            return array;
-        }
-        if (obj.isRec())
+        if (obj.isObjs())
+            return this.writeBag(obj);
+        if (obj.isRec()) {
+            // a rec with a geometry fiber IS a Feature: the fiber is its geometry, everything else is properties
+            if (!GeoUtil.geometryFibers(obj).isEmpty())
+                return this.writeFeature(obj);
             return this.writeRec(obj);
+        }
         throw MTronException.of("cannot write %s as GeoJSON", obj.tid());
+    }
+
+    /**
+     * A BAG: a multiplicity of one kind is the GeoJSON "Multi" of that kind, and a mixed bag is a GeometryCollection.
+     * This is the one place where the bag/list distinction is read — a bag has no order, so the wire says "multiple"
+     * where a single ordered list would say LineString or Polygon.
+     */
+    private JsonElement writeBag(final Obj bag) {
+        final List<Obj> members = bag.stream().toList();
+        if (members.isEmpty())
+            return new JsonArray();
+        final String tag = GeoUtil.tagOf(members.get(0));
+        if (null != tag && members.stream().allMatch(member -> tag.equals(GeoUtil.tagOf(member))))
+            switch (tag) {
+                case "Point": return this.writeMulti("MultiPoint", members);
+                case "LineString": return this.writeMulti("MultiLineString", members);
+                case "Polygon": return this.writeMulti("MultiPolygon", members);
+                default: break;
+            }
+        if (members.stream().allMatch(member -> member.isRec() && !GeoUtil.geometryFibers(member).isEmpty())) {
+            final JsonObject out = new JsonObject();
+            out.add(TYPE, new JsonPrimitive("FeatureCollection"));
+            final JsonArray features = new JsonArray();
+            members.forEach(member -> features.add(this.writeFeature(member)));
+            out.add(FEATURES, features);
+            return out;
+        }
+        // a heterogeneous bag is a GeometryCollection: every member written as its own document
+        final JsonObject out = new JsonObject();
+        out.add(TYPE, new JsonPrimitive("GeometryCollection"));
+        final JsonArray geometries = new JsonArray();
+        members.forEach(member -> geometries.add(this.write(member)));
+        out.add(GEOMETRIES, geometries);
+        return out;
+    }
+
+    private JsonElement writeMulti(final String type, final List<Obj> members) {
+        final JsonObject out = new JsonObject();
+        out.add(TYPE, new JsonPrimitive(type));
+        final JsonArray coordinates = new JsonArray();
+        members.forEach(member -> coordinates.add(this.writeCoordinates(GeoUtil.payload(member))));
+        out.add(COORDINATES, coordinates);
+        return out;
+    }
+
+    /**
+     * A FEATURE: a rec with a `geo:`-prefixed fiber. One fiber is the document's geometry; several become a
+     * GeometryCollection (the wire has exactly one slot, and dropping all but the first would lose data); every
+     * non-geo field is the properties bag.
+     */
+    private JsonElement writeFeature(final Obj rec) {
+        final JsonObject out = new JsonObject();
+        out.add(TYPE, new JsonPrimitive(GeoUtil.FEATURE_TAG));
+        final List<Obj> fibers = GeoUtil.geometryFibers(rec);
+        if (1 == fibers.size()) {
+            out.add(GEOMETRY, this.write(fibers.get(0)));
+        } else {
+            final JsonObject collection = new JsonObject();
+            collection.add(TYPE, new JsonPrimitive("GeometryCollection"));
+            final JsonArray geometries = new JsonArray();
+            fibers.forEach(fiber -> geometries.add(this.write(fiber)));
+            collection.add(GEOMETRIES, geometries);
+            out.add(GEOMETRY, collection);
+        }
+        final JsonObject properties = new JsonObject();
+        rec.asRec().jvm().forEach((key, value) -> {
+            if (!(key.isUri() && key.uriValue().toString().startsWith(GeoUtil.GEO_FIBER_PREFIX)))
+                properties.add(key.isUri() ? key.uriValue().toString() : key.toString(), this.write(value));
+        });
+        out.add(PROPERTIES, properties);
+        return out;
     }
 
     /**
@@ -395,9 +467,14 @@ public class ObjGeoJSONSerializer extends AbstractObjSerializer<JsonElement> {
      * {@code as(json::T)} fail.
      */
     public String text(final Obj obj) {
-        return null == GeoUtil.tagOf(obj)
-                ? new String(ObjJSONSerializer.web().outputBytes(obj).array(), StandardCharsets.UTF_8)
-                : this.write(obj).toString();
+        // a geo value, a Feature (a rec with a geo fiber), and a bag of either all go through the GeoJSON writer;
+        // anything else falls back to the generic web JSON serializer
+        final boolean geo = null != GeoUtil.tagOf(obj)
+                || (obj.isRec() && !GeoUtil.geometryFibers(obj).isEmpty())
+                || (obj.isObjs() && obj.stream().anyMatch(member -> null != GeoUtil.tagOf(member)
+                        || (member.isRec() && !GeoUtil.geometryFibers(member).isEmpty())));
+        return geo ? this.write(obj).toString()
+                : new String(ObjJSONSerializer.web().outputBytes(obj).array(), StandardCharsets.UTF_8);
     }
 
     /** the Well-Known Text of a geometry — what {@code x.geo_wkt()} answers */

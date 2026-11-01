@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.mach.type.Machine.Helper.evalAt;
 import static studio.phaseshift.metatron.isa.m.mach.type.Machine.current;
@@ -83,14 +84,16 @@ public class geoInstSetTest extends AbstractInstSetTest {
     /** The kind, the coordinates, the envelope and the measures — the questions the wire answers with a `type` key. */
     @ParameterizedTest
     @CsvSource(value = {
-            POINT + ".kind()                                        % Point",
-            LINE + ".kind()                                          % LineString",
-            POLYGON + ".kind()                                       % Polygon",
+            POINT + ".type()                                        % point::T",
+            LINE + ".type()                                          % line::T",
+            POLYGON + ".type()                                       % polygon::T",
             POINT + ".coordinates()                                  % [" + POINT + "]",
             LINE + ".coordinates()                                   % [" + POINT + ",point::[-121.18,45.61]]",
-            POINT + ".envelope()                                    % bbox2d::[-123.13,44.47,-123.13,44.47]",
-            LINE + ".envelope()                                     % bbox2d::[-123.13,44.47,-121.18,45.61]",
-            POLYGON + ".envelope()                                  % bbox2d::[-123.2,44.4,-122.9,44.6]",
+            POINT + ".as(bbox2d::T)                                 % bbox2d::[-123.13,44.47,-123.13,44.47]",
+            LINE + ".as(bbox2d::T)                                  % bbox2d::[-123.13,44.47,-121.18,45.61]",
+            POLYGON + ".as(bbox2d::T)                               % bbox2d::[-123.2,44.4,-122.9,44.6]",
+            // the lossy projection a 3D envelope offers: z dropped, stated as lossy
+            "bbox3d::[-123.2,44.4,0.0,-122.9,44.6,1300.0].as(bbox2d::T)   % bbox2d::[-123.2,44.4,-122.9,44.6]",
             POINT + ".area()                                       % 0.0",
             LINE + ".area()                                        % 0.0",
     }, delimiter = '%', quoteCharacter = '~')
@@ -101,13 +104,13 @@ public class geoInstSetTest extends AbstractInstSetTest {
     /** The predicates: containment, inside an envelope, and overlap. */
     @ParameterizedTest
     @CsvSource(value = {
-            POLYGON + ".inside(bbox2d::[-123.2,44.4,-122.9,44.6])         % true",
-            POLYGON + ".inside(bbox2d::[-124.2,44.4,-123.9,44.6])         % false",
-            POLYGON + ".contains(point::[-123.05,44.5])                    % true",
-            POLYGON + ".contains(point::[-120.0,44.5])                     % false",
-            POLYGON + ".intersects(point::[-123.05,44.5])                  % true",
-            POLYGON + ".intersects(point::[-120.0,44.5])                   % false",
-            POINT + ".inside(bbox2d::[-123.2,44.4,-122.9,44.6])           % true",
+            POLYGON + ".inside(bbox2d::[-123.2,44.4,-122.9,44.6])         % " + POLYGON,
+            POLYGON + ".inside(bbox2d::[-124.2,44.4,-123.9,44.6])         % noobj",
+            // `has` preserves the CONTAINER, `inside` the CONTAINED
+            POLYGON + ".has(point::[-123.05,44.5])                       % " + POLYGON,
+            POLYGON + ".has(point::[-120.0,44.5])                        % noobj",
+            "bbox2d::[-123.2,44.4,-122.9,44.6].has(" + POLYGON + ")      % bbox2d::[-123.2,44.4,-122.9,44.6]",
+            POINT + ".inside(bbox2d::[-123.2,44.4,-122.9,44.6])           % " + POINT,
     }, delimiter = '%', quoteCharacter = '~')
     public void testPredicates(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -135,10 +138,10 @@ public class geoInstSetTest extends AbstractInstSetTest {
         eval("person -> rec[geo:location]::T[?[name=>str::T]]@person");
         eval("person::[name=>'marko',geo:location=>point::[-123.0,44.5]]@marko");
         // the untyped geo question is answered by the geometry at the fiber
-        assertTrue(eval("*marko.kind()").isUri());
+        assertTrue(eval("*marko.type()").isType());
         assertTrue(eval("*marko.?point::T").isNoObj() || eval("*marko.?point::T").isRec());
         assertTrue(eval("*marko>>geo:location").isLst());
-        // an envelope question reaches the point inside the person
-        assertTrue(eval("*marko.inside(bbox2d::[-123.2,44.4,-122.9,44.6])").isBool());
+        // an envelope question reaches the point inside the person, and the filter answers WITH that point
+        assertEquals(eval("point::[-123.0,44.5]"), eval("*marko.inside(bbox2d::[-123.2,44.4,-122.9,44.6])"));
     }
 }

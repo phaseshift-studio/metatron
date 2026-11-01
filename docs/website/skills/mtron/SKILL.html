@@ -909,10 +909,11 @@ the <code>pi</code>/<code>e</code> constants.</li>
 <li><a href="references/geo-instset-mtron.html">geo instruction set</a> -- <code>/m/math/geo</code>: GeoJSON with the JSON taken out — six
 list-shaped types where a point IS a position, a line IS an ordered list of points and a polygon IS a list of lines
 (<code>geo:geometry</code>/<code>geo:point</code>/<code>geo:line</code>/<code>geo:polygon</code>, plus <code>geo:bbox</code>/<code>geo:bbox2d</code>/<code>geo:bbox3d</code>); every <code>Multi*</code> is
-a coefficient, a Feature is a rec with a <code>geo:</code>-prefixed fiber, and the geodesic/planar algorithms a space without
-native spatial support needs (<code>geo:distance</code>, <code>geo:area</code>, <code>geo:centroid</code>, <code>geo:envelope</code>,
-<code>geo:contains</code>/<code>geo:inside</code>/<code>geo:intersects</code>), the <code>as(json::T)</code> and <code>geo:wkt()</code> encodings, the family's law table,
-and the <code>geoRewrite.pushdown</code> contract that lets a spatial space replace the algorithms with its own operator.</li>
+a coefficient, a Feature is a rec with a <code>geo:</code>-prefixed fiber, and the geodesic/planar measures a space without
+native spatial support needs (<code>geo:distance</code>, <code>geo:length</code>, <code>geo:area</code>, <code>geo:coordinates</code>), the containment FILTER
+(<code>has</code> for the container, <code>geo:inside</code> for the contained), the shape reductions as casts (<code>as(point::T)</code> is the
+centroid, <code>as(bbox2d::T)</code> the envelope), the <code>as(json::T)</code> and <code>geo:wkt()</code> encodings, the family's law table, and
+the <code>geoRewrite.pushdown</code> contract that lets a spatial space replace the algorithms with its own operator.</li>
 <li><a href="references/cat-instset-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
 outV the dom, inV the rng) and <code>?asq</code> as its property map: the six edge kinds and what each means when you add a
 cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the

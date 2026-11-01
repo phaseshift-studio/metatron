@@ -135,11 +135,13 @@ public final class geoRewrite {
      */
     public static Map<fURI, fURI> standardPushdowns(final fURI instprefix) {
         final Map<fURI, fURI> pushes = new LinkedHashMap<>();
+        // one containment verb: `inside` (contained-first). A backend with only ST_Contains answers it by swapping
+        // the operands — that is the shape of the query, not a second instruction to map.
         pushes.put(INSIDE_INST_TID, instprefix.extend("within"));
-        pushes.put(CONTAINS_INST_TID, instprefix.extend("contains"));
-        pushes.put(INTERSECTS_INST_TID, instprefix.extend("intersects"));
         pushes.put(DISTANCE_INST_TID, instprefix.extend("distance"));
-        pushes.put(ENVELOPE_INST_TID, instprefix.extend("envelope"));
+        // the envelope is a CAST now, so a backend that materializes a box maps the measurement it protects instead
+        pushes.put(LENGTH_INST_TID, instprefix.extend("length"));
+        pushes.put(AREA_INST_TID, instprefix.extend("area"));
         return pushes;
     }
 

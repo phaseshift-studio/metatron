@@ -33,21 +33,17 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_METER_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_JSON_TID;
-import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_JSON_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -139,14 +135,8 @@ public class geoInstSet extends AbstractInstSet {
     public static final fURI DISTANCE_INST_TID = GEO_INST_TID.extend("distance");
     public static final fURI LENGTH_INST_TID = GEO_INST_TID.extend("length");
     public static final fURI AREA_INST_TID = GEO_INST_TID.extend("area");
-    public static final fURI CENTROID_INST_TID = GEO_INST_TID.extend("centroid");
-    public static final fURI ENVELOPE_INST_TID = GEO_INST_TID.extend("envelope");
-    public static final fURI CONTAINS_INST_TID = GEO_INST_TID.extend("contains");
     public static final fURI INSIDE_INST_TID = GEO_INST_TID.extend("inside");
-    public static final fURI INTERSECTS_INST_TID = GEO_INST_TID.extend("intersects");
     public static final fURI COORDINATES_INST_TID = GEO_INST_TID.extend("coordinates");
-    public static final fURI GEOMETRIES_INST_TID = GEO_INST_TID.extend("geometries");
-    public static final fURI KIND_INST_TID = GEO_INST_TID.extend("kind");
     public static final fURI WKT_INST_TID = GEO_INST_TID.extend("wkt");
 
     /// //////////////////////////////////////////////////////////////
@@ -183,7 +173,6 @@ public class geoInstSet extends AbstractInstSet {
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////
     // the algorithms
-
     private List<Obj> instructions() {
         final List<Obj> insts = new ArrayList<>();
         insts.add(docWrap(instC(DISTANCE_INST_TID.dom(GEOMETRY_TID).rng(MATH_METER_TID), lst(GEOMETRY_TYPE),
@@ -191,98 +180,70 @@ public class geoInstSet extends AbstractInstSet {
                 "the lhs geometry",
                 "the distance to the arg geometry as a \\(\\mathrm{meter}::T\\)",
                 Map.of(GEOMETRY_TYPE, "the geometry to measure to"),
-                "the geodesic distance \\(d(a,b) = 2R\\arcsin\\sqrt{\\sin^2\\frac{\\Delta\\varphi}{2} + \\cos\\varphi_a\\cos\\varphi_b\\sin^2\\frac{\\Delta\\lambda}{2}}\\), and \\(0\\) when the geometries intersect, so a point inside a polygon is at distance zero rather than at the distance to its nearest vertex",
-                "geo:point::[coordinates=>[-123.13,44.47]].geo:distance(geo:point::[coordinates=>[-122.68,45.52]])   [-- meter::121998.59… (the Columbia gorge, about 122 km) --]",
-                "geo:polygon::[...].geo:distance(geo:point::[...])   [-- meter::0.0 when the point is inside --]"));
+                "the geodesic distance \\(d(a,b)\\), and \\(0\\) when the geometries intersect — a point inside a polygon is at distance zero, not at the distance to its nearest vertex",
+                "geo:point::[-123.13,44.47].geo:distance(geo:point::[-122.68,45.52])   [-- meter::121998.59… (the Columbia gorge, about 122 km) --]"));
 
         insts.add(docWrap(instC(LENGTH_INST_TID.dom(GEOMETRY_TID).rng(MATH_METER_TID), lst(),
                         (lhs, inst) -> real(GeoUtil.length(lhs), MATH_METER_TID, null)),
                 "the lhs geometry",
                 "its measured length as a \\(\\mathrm{meter}::T\\) — every polyline and every polygon boundary, summed geodesically",
                 Map.of(),
-                "the \\(1\\)-dimensional measure of a geometry: \\(\\sum_i d(p_i, p_{i+1})\\) over each part's consecutive positions; a multipoint has length zero",
-                "geo:linestring::[coordinates=>[[-123.13,44.47],[-122.68,45.52]]].geo:length()   [-- meter::121998.59… --]"));
+                "the \\(1\\)-dimensional measure: the geodesic distance along each part's consecutive points; a point has length zero",
+                "geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()   [-- meter::198845.05… (Portland to The Dalles) --]"));
 
         insts.add(docWrap(instC(AREA_INST_TID.dom(GEOMETRY_TID).rng(REAL_TID), lst(),
                         (lhs, inst) -> real(GeoUtil.area(lhs))),
                 "the lhs geometry",
-                "its area in square meters, as a plain \\(\\mathrm{real}::T\\) (there is no squared-length unit type in \\(\\mathrm{math}\\))",
+                "its area in square meters, as a plain \\(\\mathrm{real}::T\\) (\\(\\mathrm{math}\\) has no squared-length unit type)",
                 Map.of(),
-                "the \\(2\\)-dimensional measure of the polygonal part: shells positive, holes negative, projected equirectangularly at the polygon's mean latitude — an approximation that is tight for parcels and districts, wrong for continents",
-                "geo:polygon::[coordinates=>[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.4]]]].geo:area()   [-- about 2.65e8 --]"));
-
-        insts.add(docWrap(instC(CENTROID_INST_TID.dom(GEOMETRY_TID).rng(POINT_TID), lst(),
-                        (lhs, inst) -> point(GeoUtil.centroid(lhs))),
-                "the lhs geometry",
-                "its representative point as a \\(\\mathrm{geo{:}point}::T\\)",
-                Map.of(),
-                "the area centroid when the geometry is polygonal, else the length-weighted midpoint of its polylines, else the mean of its positions — \\(\\bar{p} = \\frac{1}{A}\\int_A p\\,\\mathrm{d}A\\) for the polygonal case",
-                "geo:linestring::[coordinates=>[[-123.13,44.47],[-122.98,44.52]]].geo:centroid()   [-- geo:point::[coordinates=>[-123.055,44.4950]] --]"));
-
-        insts.add(docWrap(instC(ENVELOPE_INST_TID.dom(GEOMETRY_TID).rng(BBOX2D_TID), lst(),
-                        (lhs, inst) -> GeoUtil.bbox(lhs)),
-                "the lhs geometry",
-                "its envelope as a \\(\\mathrm{geo{:}bbox}::T\\)",
-                Map.of(),
-                "the axis-aligned envelope \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\) over every stored position — the cheap rejection test every spatial index performs before an exact predicate",
-                "geo:linestring::[coordinates=>[[-123.13,44.47],[-122.98,44.52]]].geo:envelope()   [-- geo:bbox::[-123.13,44.47,-122.98,44.52] --]"));
-
-        insts.add(docWrap(instC(CONTAINS_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), lst(GEOMETRY_TYPE),
-                        (lhs, inst) -> bool(GeoUtil.contains(lhs, inst.arg(0)))),
-                "the lhs geometry",
-                "a \\(\\mathrm{bool}::T\\): whether the lhs contains the arg",
-                Map.of(GEOMETRY_TYPE, "the geometry that may be contained"),
-                "the containment predicate \\(a \\sqsupset b\\): every position of \\(b\\) inside \\(a\\) and no part of \\(b\\) properly crossing \\(a\\)'s boundary — exact for a point in a polygon, conservative for a polygon in a polygon",
-                "geo:polygon::[...].geo:contains(geo:point::[...])   [-- true --]"));
-
-        insts.add(docWrap(instC(INSIDE_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), lst(ALL_TYPE),
-                        (lhs, inst) -> bool(GeoUtil.within(lhs, inst.arg(0)))),
-                "the lhs geometry",
-                "a \\(\\mathrm{bool}::T\\): whether the lhs lies within the arg — a geometry, or an envelope",
-                Map.of(GEOMETRY_TYPE, "the containing geometry, or a \\(\\mathrm{geo{:}bbox}::T\\) envelope"),
-                "the converse of containment, \\(a \\sqsubset b \\iff b \\sqsupset a\\) — the predicate a spatial index answers natively, and the inverse of {@code geo:contains} in the family's law table. The envelope form (\\texttt{inside} a bbox) is the query an index answers from the box alone: every stored position must fall inside \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\).",
-                "geo:point::[...].geo:inside(geo:polygon::[...])   [-- true --]",
-                "geo:point::[...].geo:inside(geo:bbox::[-123.2,44.4,-122.9,44.6])   [-- true --]"));
-
-        insts.add(docWrap(instC(INTERSECTS_INST_TID.dom(GEOMETRY_TID).rng(BOOL_TID), lst(GEOMETRY_TYPE),
-                        (lhs, inst) -> bool(GeoUtil.intersects(lhs, inst.arg(0)))),
-                "the lhs geometry",
-                "a \\(\\mathrm{bool}::T\\): whether the lhs touches or overlaps the arg",
-                Map.of(GEOMETRY_TYPE, "the other geometry"),
-                "the overlap predicate \\(a \\cap b \\neq \\emptyset\\): a bbox rejection first, then a shared position, then a position inside the other's polygon, then a segment crossing — touching counts as intersecting",
-                "geo:polygon::[...].geo:intersects(geo:polygon::[...])   [-- true --]"));
+                "the \\(2\\)-dimensional measure of the polygonal part: shells positive, holes negative, by the planar shoelace formula scaled at the polygon's mean latitude — tight for parcels and districts, wrong for continents",
+                "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 5.3e8 --]"));
 
         insts.add(docWrap(instC(COORDINATES_INST_TID.dom(GEOMETRY_TID).rng(LST_TID), lst(),
                         (lhs, inst) -> lst(GeoUtil.positions(lhs).stream().map(GeoUtil::point).toList())),
                 "the lhs geometry",
-                "every position it stores, in document order, as a list of \\(\\mathrm{geo{:}position}::T\\) — a geometry collection is walked depth-first",
+                "every position it stores, in document order, as stamped \\(\\mathrm{geo{:}point}::T\\) values",
                 Map.of(),
-                "the flattening: \\(\\mathrm{positions}(g)\\), the coordinates any geometry is ultimately made of",
-                "geo:linestring::[coordinates=>[[-123.13,44.47],[-122.98,44.52]]].geo:coordinates()   [-- [geo:position::[-123.13,44.47],geo:position::[-122.98,44.52]] --]"));
-
-        insts.add(docWrap(instC(GEOMETRIES_INST_TID.dom(GEOMETRY_TID).rng(LST_TID), lst(),
-                        (lhs, inst) -> GeoUtil.payload(lhs)),
-                "the lhs geometry",
-                "its immediate parts as a list of \\(\\mathrm{geo{:}geometry}::T\\) — a collection's members, or the geometry itself",
-                Map.of(),
-                "the \\(1\\)-step decomposition: the list the GeometryCollection kind nests, and a singleton for every other kind, so a fold over a geometry's parts needs no shape test",
-                "geo:geometrycollection::[geometries=>[...]].geo:geometries()   [-- [geo:point::[...],geo:linestring::[...]] --]"));
-
-        insts.add(docWrap(instC(KIND_INST_TID.dom(GEOMETRY_TID).rng(URI_TID), lst(),
-                        (lhs, inst) -> uri(GeoUtil.tagOf(lhs))),
-                "the lhs geometry",
-                "its GeoJSON kind as a \\(\\mathrm{uri}::T\\) — \\(\\mathrm{Point}\\), \\(\\mathrm{Polygon}\\), …",
-                Map.of(),
-                "the tag the wire format discriminates on, as a uri so it can be matched and dispatched: the same fact the tid carries, addressed",
-                "geo:point::[coordinates=>[-123.13,44.47]].geo:kind()   [-- Point --]"));
+                "the flattening: whatever the nesting depth, the points a geometry is ultimately made of",
+                "geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:coordinates()   [-- [geo:point::[-123.13,44.47],geo:point::[-121.18,45.61]] --]"));
 
         insts.add(docWrap(instC(WKT_INST_TID.dom(GEOMETRY_TID).rng(STR_TID), lst(),
                         (lhs, inst) -> str(GeoUtil.wkt(lhs))),
                 "the lhs geometry",
                 "its Well-Known Text",
                 Map.of(),
-                "the other string encoding — the one every spatial database's \\(\\mathrm{ST\\_GeomFromText}\\) takes, so a geometry can be handed to a native operator. There is no \\(\\mathrm{wkt}::T\\) document type to cast onto, so this is an instruction rather than an \\(\\mathrm{as}\\)",
-                "geo:point::[coordinates=>[-123.13,44.47]].geo:wkt()   [-- 'POINT (-123.13 44.47)' --]"));
+                "the other string encoding — the one every spatial database's \\(\\mathrm{ST\\_GeomFromText}\\) takes. There is no \\(\\mathrm{wkt}::T\\) document type to cast onto, so this is an instruction rather than an \\(\\mathrm{as}\\)",
+                "geo:point::[-123.13,44.47].geo:wkt()   [-- 'POINT (-123.13 44.47)' --]"));
+
+        // ── the one predicate: `has` answers the object itself when it holds ─────────────────────────────────────
+        insts.add(docWrap(instC(HAS_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()), lst(ALL_TYPE),
+                        (lhs, inst) -> GeoUtil.within(inst.arg(0), lhs) ? lhs : noobj()),
+                "the lhs geometry (the container)",
+                "the lhs itself when it holds the arg, otherwise \\(\\mathrm{noobj}\\) — a filter, not a bool",
+                Map.of(ALL_TYPE, "what to look for: a geometry (inside the lhs), or a \\(\\mathrm{geo{:}bbox2d}::T\\) envelope"),
+                "the containment predicate as a filter: \\(a \\sqsupset b\\) when every position of \\(b\\) lies inside \\(a\\). Because it answers the object rather than a bool, a fibered rec lifts it — \\(*marko.has(region)\\) is marko, or a miss",
+                "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:has(geo:point::[-123.05,44.5])   [-- the polygon --]",
+                "geo:point::[-123.05,44.5].geo:has(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- noobj: a point holds nothing --]"));
+        // a box is a container too: BOTH envelopes answer `has` against a geometry
+        for (final fURI box : java.util.List.of(BBOX2D_TID, BBOX3D_TID))
+            insts.add(docWrap(instC(HAS_INST_TID.dom(box).rng(box.maybe()), lst(ALL_TYPE),
+                            (lhs, inst) -> GeoUtil.within(inst.arg(0), lhs) ? lhs : noobj()),
+                    "the lhs envelope",
+                    "the envelope itself when the arg lies inside it, otherwise \\(\\mathrm{noobj}\\)",
+                    Map.of(ALL_TYPE, "the geometry to look for"),
+                    "the box form of {@code has}: the query a spatial index answers from the envelope alone",
+                    "geo:bbox2d::[-123.2,44.4,-122.9,44.6].geo:has(geo:point::[-123.05,44.5])   [-- the box --]"));
+
+        // the mirror: `inside` answers the CONTAINED object when it lies in the arg. The two rows are not
+        // redundant — `has` preserves the container (`region.has(point)` is the region), `inside` preserves the
+        // contained (`*marko.inside(region)` is marko), and that is what a fibered record needs.
+        insts.add(docWrap(instC(INSIDE_INST_TID.dom(GEOMETRY_TID).rng(GEOMETRY_TID.maybe()), lst(ALL_TYPE),
+                        (lhs, inst) -> GeoUtil.within(lhs, inst.arg(0)) ? lhs : noobj()),
+                "the lhs geometry (the contained thing)",
+                "the lhs itself when it lies in the arg, otherwise \\(\\mathrm{noobj}\\)",
+                Map.of(ALL_TYPE, "the container: a geometry, or a \\(\\mathrm{geo{:}bbox2d}::T\\) envelope"),
+                "the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \\(a.inside(b) \\iff b.has(a)\\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec",
+                "geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]"));
         return insts;
     }
 
