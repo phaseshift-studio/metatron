@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
                                 src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -550,15 +557,15 @@ the world of the web widens metatron</p>
                          image/svg+xml,
                          image/x-icon,
                          application/xhtml+xml)]@/m/web/mime,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/xml,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/html,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/json,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/yaml,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/xsv,
-           xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/csv,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/xml,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/html,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/json,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/yaml,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/xsv,
+           xsv::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/csv,
            str::T@/m/web/mime/css,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/markdown,
-           str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/java,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/markdown,
+           str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/java,
            serializer::T,
            serializer::T[?[
             clip=&gt;[
@@ -1112,7 +1119,7 @@ the world of the web widens metatron</p>
         </span>
         <small class="text-muted code">/m/web/mime/csv</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xsv::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/csv</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xsv::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/csv</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__web__mime__xsv" class="code inherited-link">xsv::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">/m/inst/pred?#{?}&lt;=(#{*}::T){&lt;j&gt;}</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a csv verified str encoding of a comma-separated values document</p>
@@ -1147,7 +1154,7 @@ the world of the web widens metatron</p>
         </span>
         <small class="text-muted code">/m/web/mime/html</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/html</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/html</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an html verified str encoding of an html document</p>
@@ -1234,7 +1241,7 @@ http_client::[host=&gt;&lt;https://#&gt;]                        [-- the whole w
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">listener::T[?[{?}keystore=&gt;&lt;#&gt;::T,
               {?}pass=&gt;&lt;#&gt;::T,
               {?}status=&gt;bool::T]][ctor?http_server&lt;=(rec::T){&lt;j&gt;}]@/m/web/http/http_server</code></pre></div>
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_mach.html#__m__mach__listener" class="code inherited-link">listener::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[origin=&gt;uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/uri/origin,
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_mach.html#__m__mach__listener" class="code inherited-link">listener::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
  {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
  {?}server=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -1281,7 +1288,7 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
         </span>
         <small class="text-muted code">/m/web/mime/java</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/java</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/java</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a str encoding of a java source file</p>
@@ -1294,7 +1301,7 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
         </span>
         <small class="text-muted code">/m/web/mime/json</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/json</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/json</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a json document</p>
@@ -1307,7 +1314,7 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
         </span>
         <small class="text-muted code">/m/web/mime/markdown</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/markdown</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/markdown</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a str encoding of a markdown document</p>
@@ -1355,11 +1362,11 @@ http_server::[host=&gt;&lt;https://0.0.0.0:8443&gt;,keystore=&gt;&lt;conf/server
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp client type specification" class="text-info">an mcp client type specification</a> <span class="text-light">=&gt;</span> <a href="#a connection to an existing mcp server" class="text-success">a connection to an existing mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'the tools__functions available for use on the mcp server'" class="text-info">functions available for use on the mcp server&#39;</a>
-  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
-  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
-  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
-  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the current status of the mcp client__server connection'" class="text-info">server connection&#39;</a>
+  <a href="#{?}command" class="text-light">{?}command</a> <span class="text-light">=&gt;</span> <a href="#'only necessary for stdio mcp servers, where the client is the server'" class="text-info">&#39;only necessary for stdio mcp servers, where the client is the server&#39;</a>
+  <a href="#{?}host" class="text-light">{?}host</a> <span class="text-light">=&gt;</span> <a href="#'the mcp server endpoint (optional for stdio)'" class="text-info">&#39;the mcp server endpoint (optional for stdio)&#39;</a>
+  <a href="#{?}transport" class="text-light">{?}transport</a> <span class="text-light">=&gt;</span> <a href="#"specify the transport if host schema resolution isn't sufficient"" class="text-info">&quot;specify the transport if host schema resolution isn&#39;t sufficient&quot;</a>
+  <a href="#{?}env" class="text-light">{?}env</a> <span class="text-light">=&gt;</span> <a href="#'environment variables for the stdio server process'" class="text-info">&#39;environment variables for the stdio server process&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1480,8 +1487,8 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
-  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
   <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
+  <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_stdio">
@@ -2119,7 +2126,7 @@ a connection takes the most specific route of every machine sharing the socket: 
         </span>
         <small class="text-muted code">/m/web/mime/xml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/xml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/xml</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a xml verified str encoding of an xml document</p>
@@ -2132,7 +2139,7 @@ a connection takes the most specific route of every machine sharing the socket: 
         </span>
         <small class="text-muted code">/m/web/mime/xsv</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/xsv</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/xsv</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an xsv verified str encoding of a {comma,tab,etc.}-separated values document</p>
@@ -2145,7 +2152,7 @@ a connection takes the most specific route of every machine sharing the socket: 
         </span>
         <small class="text-muted code">/m/web/mime/yaml</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/web/mime/yaml</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">str::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/web/mime/yaml</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a yaml document</p>

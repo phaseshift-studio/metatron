@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -607,7 +614,8 @@ it stops, so its clients see <code>1000</code> whether it is restarting or gone.
 (<code>fURI.pathEncoding</code>: <code>ws://peer.local:8555/mtron?name=me</code> → <code>ws/peer/local/8555/mtron</code> — a legal path, every host
 label its own segment and no dot in any, no <code>?q</code>, loopback aliases spelled <code>localhost</code>; it is <code>fURI.toPath()</code> of the
 dial, the loopback alias spelled first), and the service it reaches is the <code>origin</code> field — wire dispatch
-(<code>Network.Helper.isPeer</code>, <code>peerOf</code>) and <code>law_shard</code>'s routes match on that, never on the key. The component answers its own branch:
+(<code>Network.Helper.isPeer</code>, <code>peerOf</code>) and <code>law_shard</code>'s routes match on that, never on the key. The component answers its
+own branch:
 <code>BasicNetwork</code> extends <code>AbstractSpace</code>, <code>Machine.bootstrap()</code> stamps it as <code>&lt;vid&gt;/network/#</code>, and the machine's
 <code>MachineSpace</code> hands it every address there — it is not a space in memory. It stores nothing
 beside its rec and answers every read from it, so <code>*&lt;/network/peer/ws/localhost/8555/mtron/origin&gt;</code> walks a member
@@ -665,10 +673,13 @@ re-enter), which is what makes <code>/</code> the root with no space mounted ins
 <p><code>Compiler.apply</code> is the default schedule <code>parse → rewrite → resolve → type</code> over four overridable stage components:</p>
 <ul>
 <li><strong>parse</strong> — <code>Parser</code> (default <code>mtronParser</code>, <code>mtron_parser::T</code>; the language seam — see below).</li>
-<li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules).</li>
+<li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules). The rules' applied order —
+analysis rules (<code>*_analysis</code>) last, registration order otherwise — is derived once per vocabulary and cached against
+the rules themselves (<code>RULE_ORDERS</code>, keyed by rule identity <em>in order</em>), so a pass looks the order up instead of
+re-sorting what only a changed ISA could change.</li>
 <li><strong>resolve</strong> — <code>Resolver</code> (default <code>ScoringResolver</code>; threads the type one inst at a time; generic binding runs inside
 per-candidate selection, so there is no separate binder).</li>
-<li><strong>type</strong> — <code>Typer</code> (default <code>TypeTyper</code>, runtime type assertions).</li>
+<li><strong>type</strong> — <code>Typer</code> (default <code>BasicTyper</code>, runtime type assertions).</li>
 </ul>
 <p>Stages are rec entries, not Java fields: <code>BasicCompiler.defaultStages()</code> supplies all four and <code>BasicCompiler.stages</code>
 merges a caller's over them, so <code>compiler::[=&gt;]</code> mints the default compiler <em>with</em> its stages and
@@ -690,16 +701,17 @@ parser's contract.</p>
 (<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
 <h3>The processor (monadic execution)</h3>
 <p><code>Processor</code> is both an <code>mThread</code> and an <code>Obj</code>. <code>Processor.Helper</code> holds the runtime core that used to live on <code>Inst</code>:
-<code>apply</code> (resolve → <code>delegate</code> → <code>invoke</code>), <code>invoke</code> (noobj/domain guards, coefficient compression, range check),
-<code>applyArgs</code> (computeArgs), <code>resolveRuntime</code> (the <code>TypeCheck.code_resolve</code>-gated dynamic escape). The delegation
-<em>decisions</em> are not here: they are TYPE-SYSTEM decisions, so they live on <code>Typer.Helper</code> in the compiler —
-<code>candidates</code> derives what the fan-out is over and <code>applicable</code> answers whether the resolved instruction is about a
-candidate. <code>Processor.Helper.delegate</code> keeps only the loop.</p>
-<p><code>delegate</code> is the <strong>wrapper's fan-out</strong> — applying an instruction to a wrapper is applying it to a stream of two
-objects, <code>person[ninja]::[…].xyz()</code> = <code>{ person::[…], ninja::[…] }.xyz()</code>. A wrapper is a <code>rec</code> whose type INSTANTIATES
-a declaration that names the fields it exposes (<code>rec[role]::T[?[…,role=&gt;rec::T]]@person</code> names <code>role</code>; the instance's
-poly is the component TYPES, <code>Type#recFibers</code>), so <code>Typer.Helper.candidates</code> yields the wrapper <em>plus</em> each fiber
-that is present and holds a <code>rec</code> — one level deep, since a candidate's own fibers never join.</p>
+<code>apply</code> (ask the typer for the subjects → ask the selector for the instruction → <code>invoke</code>/<code>fanOut</code>), <code>invoke</code>
+(noobj/domain guards, coefficient compression, range check), <code>applyArgs</code> (computeArgs). The <em>resolution</em> is the
+selector's (<code>Selector.Helper.resolve</code>, which holds the <code>code_resolve</code>-gated dynamic escape), and the delegation
+<em>decisions</em> are type-system decisions, so they live on <code>Typer.Helper</code> in the compiler — <code>bundleAndFibers</code> derives what
+the fan-out is over and <code>applicable</code> answers whether the resolved instruction is about a subject.
+<code>Processor.Helper.fanOut</code> keeps only the loop.</p>
+<p><code>fanOut</code> is the <strong>bundle's fan-out</strong> — applying an instruction to a fibered value is applying it to the bundle and its
+fibers, <code>person[ninja]::[…].xyz()</code> = <code>{ person::[…], ninja::[…] }.xyz()</code>. A BUNDLE is a <code>rec</code> whose type INSTANTIATES
+a declaration that names the fibers it lifts (<code>rec[role]::T[?[…,role=&gt;rec::T]]@person</code> names <code>role</code>; the instance's
+poly is the fiber TYPES, <code>Type#recFibers</code>), so <code>Typer.Helper.bundleAndFibers</code> yields the bundle <em>plus</em> each fiber
+that is present — one level deep, since a fiber's own fibers never join.</p>
 <p>EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
 There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
 the field keyed by the poly name — and <code>Typer.Helper.applicable</code> asks the type system whether the resolved instruction
@@ -777,7 +789,8 @@ is declined to memory's q-procs. <code>~/sys</code> is a holding area: its parts
 so <code>Router</code> could be deleted; it is meant to fold into the frame chain.</li>
 <li><code>ExecutionStack</code> still wraps reads/writes and instruction apply.</li>
 </ul>
-<p>Any cleanup that lands these two (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain) removes the &quot;two scoping mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
+<p>Any cleanup that lands these two (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain) removes the &quot;two scoping
+mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
 <hr />
 <h3>Post-refactor note — <code>Frame</code> class gutted (2026-10-08)</h3>
 <p>The <code>Frame</code> class (and the <code>FRAMES</code> address index) was removed in favor of <code>ThreadLocal&lt;Machine&gt;</code> (<code>CURRENT</code>) as the
@@ -790,7 +803,8 @@ cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
 live in per-instance Java state: <code>resolvedMemory</code> / <code>resolvedNetwork</code> / <code>resolvedInstSet</code> on <code>AbstractMachine</code> —
 <strong>not</strong> &quot;old artifacts&quot;. The reason is no longer a shared rec map (<code>push()</code> now clones with <code>null</code>, so the child
 owns its own map — see the 2026-10-12 note below); it is that a slot may hold a deferred seed and the read path
-must not allocate. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> → <code>atDirect(uri(MEMORY))</code> →
+must not allocate. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> →
+<code>atDirect(uri(MEMORY))</code> →
 <code>uri(MEMORY)</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code>. The field memoizes the slot and breaks that cycle.)</p>
 </li>
 <li>

@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -988,8 +988,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
             // ── ObjCall handling ──
             if (rhs.isObjCall() && !rhs.asCall().isPredicate(lhs)) {
-                return ((!TypeCheck.inst_dom.enabled() || Obj.Helper.specificType(lhs).test(rhs.dom())) &&
-                        (!TypeCheck.inst_rng.enabled() || Obj.Helper.specificType(lhs).test(rhs.rng())));
+                return ((!Typer.Helper.instDom() || Obj.Helper.specificType(lhs).test(rhs.dom())) &&
+                        (!Typer.Helper.instRng() || Obj.Helper.specificType(lhs).test(rhs.rng())));
             }
 
             // ── non-base type with TID→VID match: predicate-aware early exit ──
@@ -1130,7 +1130,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                 throw new TypeMismatchException(obj, obj.type(), "%s [%s] is not a %s", obj, obj.jvm().getClass().getSimpleName().toLowerCase(), obj.type());
             if (!obj.isType() && obj.tid().isGeneric())
                 throw new TypeMismatchException(obj, obj.type(), "%s value can not be typed generic %s::T", obj.jvm(), obj.tid());
-            if (TypeCheck.type_pred.enabled()) {
+            if (Typer.Helper.typePred()) {
                 // A GENERIC POLY BINDS AT CONSTRUCTION. A poly written WITH a value is a declaration, not a free
                 // signature: `lst[A,A]::[1,2]` gives both indices one type, so the value's own elements decide that A
                 // is int and the value is then typed `lst[int,int]` (its tid, and so what .type() reports). This is
@@ -1642,24 +1642,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Machine.write(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
-                    docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(URI_TYPE), (lhs, inst) -> {
-                                final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
-                                // A COMPONENT IS ITS LOCUS, so a dereference hands it back AS ITSELF. Types, machines
-                                // and SPACES are exempt from the detaching copy: everything else may be copied and
-                                // have its address stripped (a dereferenced value is a value, not a place), but a
-                                // component read through an address is the ONE object stored there. Copying one made
-                                // every dereference of `*~/instset` a different object from `*</instset>` — two
-                                // reads of one slot that could not be compared — and no identity-stable read of a
-                                // memory, an ISA or a mounted space was possible at all.
-                                return readObj.isType() || readObj.isMachine() || readObj.isSpace()
-                                        ? readObj
-                                        : readObj.clone().selfVID(null);
-                            }), // TODO: only resolves when explicit mono args (not code args)
-                            "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
-                            "*abc        [-- obj at abc                            --]",
-                            "abc.*_      [-- obj at abc via dynamic arg generation --]",
-                            "c.*ab${_}   [-- obj at abc via uri template parameter --]",
-                            "from(abc)   [-- obj at abc non-sugar form             --]"),
                     docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Machine.write(lhs.uriValue(), inst.arg(0))),
                             "a uri reference", "writes the arg obj to the lhs uri", Map.of(jnt(0), "an obj to be the referent of the uri"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
                     docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
@@ -1770,7 +1752,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                     parse('[a=>[b=>c]]')                     [-- [a=>[b=>c]]  --]
                                     """),
                     docWrap(instC(SWAP_INST_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> {
-                                final boolean swapInstArg = inst.arg(0).isCall() && !inst.arg(0).asCall().insts().getFirst().tid().equals(BLOCK_INST_TID);
+                                final boolean swapInstArg = inst.arg(0).isCall() && !inst.arg(0).asCall().insts().getFirst().tid().basePath().equals(BLOCK_INST_TID);
                                 final Obj newLHS = swapInstArg ? inst.arg(0).asCall().insts().getFirst().arg(0) : inst.arg(0);
                                 return swapInstArg ? inst.arg(0).asCall().insts().getFirst().args(lst(lhs)).apply(newLHS) : lhs.apply(newLHS);
                             }), "the lhs to swap for the swap arg",

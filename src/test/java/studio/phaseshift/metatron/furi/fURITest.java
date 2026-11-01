@@ -1755,24 +1755,26 @@ public class fURITest extends AbstractMetatronTest {
 
     /**
      * The {@code args} component: the argument TYPES an instruction signature carries — one uri text per element
-     * inside a SINGLE lst-valued query key. An absent component answers an empty list, as does an empty body, and
-     * neither renders as a component ({@code ?args=[]} is not the canonical spelling).
+     * inside a SINGLE lst-valued query key. The LIST reader answers empty for an absent component, for a bare
+     * {@code args} key and for {@code args=[]}; the CLAIM is read by {@link fURI#hasArgs()}, which follows the KEY —
+     * a bare key declares ZERO arguments, which is not the same as stating no argument claim at all.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "/m/inst?dom=int&rng=str                    | -",          // absent: unchanged, byte for byte
-            "/m/inst?dom=int&rng=str&args=[]            | -",          // empty body: indistinguishable from absent
-            "/m/inst?dom=int&rng=int&args=[int]         | int",        // one argument
-            "/m/inst?dom=int&rng=rec&args=[int,rec]     | int,rec",    // two arguments, in order
-            "/m/inst?dom=A{*}&rng=B{*}&args=[B]         | B",          // a generic (poly) argument type
-            "/m/inst?args=[/m/int,A]                    | /m/int,A",   // a path type beside a generic
-            "/m/inst?args=[A{2,3}]                      | A{2,3}",     // a coefficient's comma is not a separator
+            "/m/inst?dom=int&rng=str                    | -       | false",  // absent: no argument claim
+            "/m/inst?dom=int&rng=str&args=[]            | -       | true",   // an empty body IS a claim of zero
+            "/m/inst?dom=int&rng=int&args               | -       | true",   // the canonical zero: the bare key
+            "/m/inst?dom=int&rng=int&args=[int]         | int     | true",   // one argument
+            "/m/inst?dom=int&rng=rec&args=[int,rec]     | int,rec | true",   // two arguments, in order
+            "/m/inst?dom=A{*}&rng=B{*}&args=[B]         | B       | true",   // a generic (poly) argument type
+            "/m/inst?args=[/m/int,A]                    | /m/int,A| true",   // a path type beside a generic
+            "/m/inst?args=[A{2,3}]                      | A{2,3}  | true",   // a coefficient's comma is not a separator
     }, delimiter = '|')
-    void testArgs(final String furi, final String expected) {
+    void testArgs(final String furi, final String expected, final boolean claims) {
         final fURI signature = f(furi);
         final List<fURI> args = signature.args();
-        assertEquals("-".equals(expected) ? "" : expected, String.join(",", args.stream().map(fURI::toString).toList()));
-        assertEquals(!expected.equals("-"), signature.hasArgs());
+        assertEquals("-".equals(expected.trim()) ? "" : expected.trim(), String.join(",", args.stream().map(fURI::toString).toList()));
+        assertEquals(claims, signature.hasArgs());
         assertTrue(signature.qMap().keySet().stream().filter(ARGS::equals).count() <= 1, "one args key, never repeated");
         // rendering is stable: parse(toString()).toString() equals toString()
         final fURI reparsed = f(signature.toString());

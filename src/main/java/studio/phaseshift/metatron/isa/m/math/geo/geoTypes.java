@@ -1,0 +1,172 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.math.geo;
+
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Map;
+import java.util.function.Predicate;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.geo.geoInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_JSON_TID;
+
+/**
+ * The {@code /type} registrations of the geo instruction set — and the whole of its data model.
+ *
+ * <p>The names carry no {@code geo_} prefix: the instruction set's namespace is the prefix. Imported as
+ * {@code import(/m/math/geo,geo)}, the types read {@code geo:point::T}, {@code geo:line::T}, … .
+ *
+ * <h2>GeoJSON's vocabulary is a JSON vocabulary</h2>
+ *
+ * <p>{@code type}, {@code coordinates}, {@code geometry}, {@code properties} and {@code features} exist because JSON
+ * cannot say what a value is. A point is not "a value whose {@code type} is {@code Point} and whose {@code coordinates}
+ * are a position" — a point IS its position. So the model is the list, and the KIND is which list:
+ *
+ * <pre>
+ * lst::T@geometry                                            any list: a shape on the earth
+ * geometry::T[?[real::T,real::T,real{?}::T]]@point           a coordinate pair or triple
+ * geometry::T[?[point{+}::T]]@line                           an ORDERED list of points
+ * geometry::T[?[line{+}::T]]@polygon                         a shell line plus hole lines
+ * </pre>
+ *
+ * <p>There is no {@code position}, no {@code multipoint}, no {@code multilinestring}, no {@code multipolygon} and no
+ * {@code geometrycollection}. A multi-point is a BAG of points ({@code point{2,}::T}), a multi-line is a bag of lines,
+ * and a collection is a bag of geometries — coefficients, not types. The bag/list distinction is real and the wire has
+ * no way to say it, which is exactly the mapping {@link ObjGeoJSONSerializer} owns.
+ *
+ * <p>The same is true of the document container: a <b>feature</b> is a rec with a {@code geo:}-prefixed fiber
+ * ({@code rec[geo:+]::T}) — see the serializer's documentation — so no feature type is declared here, and none is
+ * needed.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class geoTypes {
+
+    private geoTypes() {
+    }
+
+    /**
+     * The registered type blocks — the {@code lst} the instset's setup puts at {@code /type}.
+     *
+     * @param self the registering instset
+     * @return the docwrapped type registrations
+     */
+    public static studio.phaseshift.metatron.isa.m.type.Lst registered(final InstSet self) {
+        final studio.phaseshift.metatron.isa.m.type.Lst types = lst(
+                // ── the bases: NOMINAL, no poly. A refinement declares its own shape ──────────────────────────────
+                docWrap(GEOMETRY_TYPE = Type.Builder.build()
+                                .tid(LST_TID)
+                                .vid(GEOMETRY_TID)
+                                .create(),
+                        Map.of(),
+                        "the nominal base of every geometry: a list of reals at whatever depth its kind nests. It declares no poly — a point, a line and a polygon each declare their own"),
+                docWrap(BBOX_TYPE = Type.Builder.build()
+                                .tid(LST_TID)
+                                .vid(BBOX_TID)
+                                .create(),
+                        Map.of(),
+                        "the nominal base of an envelope. It declares no poly: geo:bbox2d and geo:bbox3d do"),
+                // ── the shapes ────────────────────────────────────────────────────────────────────────────────
+                docWrap(POINT_TYPE = shapeType(POINT_TID, GEOMETRY_TID,
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE.c(cInt.MAYBE())), GeoUtil::isPoint),
+                        Map.of(jnt(0), "the x (longitude) coordinate",
+                                jnt(1), "the y (latitude) coordinate",
+                                jnt(2).maybe(), "the z (altitude) coordinate"),
+                        "a point — a coordinate pair, or a triple with an altitude. \\([\\lambda, \\varphi[, h]]\\)",
+                        "geo:point::[-123.13,44.47]", "geo:point::[-123.13,44.47,1240.0]"),
+                docWrap(LINE_TYPE = shapeType(LINE_TID, GEOMETRY_TID,
+                                lst(T(POINT_TID).c(cInt.SOME())), GeoUtil::isLine),
+                        Map.of(),
+                        "a line — an ORDERED list of points. A multi-point is a bag, a line is a sequence, and the wire has no way to say the difference",
+                        "geo:line::[[-123.13,44.47],[-122.98,44.52]]"),
+                docWrap(POLYGON_TYPE = shapeType(POLYGON_TID, GEOMETRY_TID,
+                                lst(T(LINE_TID).c(cInt.SOME())), GeoUtil::isPolygon),
+                        Map.of(),
+                        "a polygon — a shell line followed by zero or more hole lines (a ring is a line whose first and last points coincide, which the RFC requires and this type does not enforce)",
+                        "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.4]]]"),
+                // ── the envelopes ─────────────────────────────────────────────────────────────────────────────
+                docWrap(BBOX2D_TYPE = shapeType(BBOX2D_TID, BBOX_TID,
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox2d),
+                        Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y",
+                                jnt(2), "the maximum x", jnt(3), "the maximum y"),
+                        "a 2D envelope — four reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\)",
+                        "geo:bbox2d::[-123.2,44.4,-122.9,44.6]"),
+                docWrap(BBOX3D_TYPE = shapeType(BBOX3D_TID, BBOX_TID,
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox3d),
+                        Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y", jnt(2), "the minimum z",
+                                jnt(3), "the maximum x", jnt(4), "the maximum y", jnt(5), "the maximum z"),
+                        "a 3D envelope — six reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, h_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}, h_{\\max}]\\)",
+                        "geo:bbox3d::[-123.2,44.4,0.0,-122.9,44.6,1300.0]"));
+        publish();
+        return types;
+    }
+
+    /** publish the assigned types to the instset that names them (a static import cannot be assigned) */
+    private static void publish() {
+        geoInstSet.GEOMETRY_TYPE = GEOMETRY_TYPE;
+        geoInstSet.POINT_TYPE = POINT_TYPE;
+        geoInstSet.LINE_TYPE = LINE_TYPE;
+        geoInstSet.POLYGON_TYPE = POLYGON_TYPE;
+        geoInstSet.BBOX_TYPE = BBOX_TYPE;
+        geoInstSet.BBOX2D_TYPE = BBOX2D_TYPE;
+        geoInstSet.BBOX3D_TYPE = BBOX3D_TYPE;
+    }
+
+    /**
+     * A KIND: a nominal refinement of a base ({@code geometry} or {@code bbox}) that DECLARES its list shape. The poly
+     * is the whole type — no rec, no {@code coordinates} key — and the constructor only refuses a value the declaration
+     * would not accept.
+     */
+    private static Type shapeType(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid) {
+        return Type.Builder.build()
+                .tid(base)
+                .vid(vid)
+                .isaPredicate(shape)
+                .constructor(arg -> valid.test(arg)
+                        ? arg.selfTID(vid)
+                        : fail(MTronException.of("%s is not a %s", arg, vid.name())))
+                .inst(AS_INST_TID.dom(STR_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
+                .inst(AS_INST_TID.dom(WEB_JSON_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
+                .inst(AS_INST_TID.dom(vid).rng(WEB_JSON_TID), lst(T(WEB_JSON_TID)), (lhs, inst) -> geoInstSet.json(lhs))
+                .create();
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////
+
+    static Type GEOMETRY_TYPE;
+    static Type POINT_TYPE;
+    static Type LINE_TYPE;
+    static Type POLYGON_TYPE;
+    static Type BBOX_TYPE;
+    static Type BBOX2D_TYPE;
+    static Type BBOX3D_TYPE;
+}

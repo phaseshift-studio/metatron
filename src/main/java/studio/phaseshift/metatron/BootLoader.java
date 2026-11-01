@@ -26,6 +26,9 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
@@ -66,13 +69,12 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TYPER_TYPE_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -473,22 +475,18 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .map(t -> rel(uri(t.name()), BOOL_FALSE))
                             .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
-            /// /// SET TYPE CHECKER STAGES /// ///
-            // the default is every assertion on except code_resolve. A boot profile's typer/stage names
-            // only the flags it wants to OVERRIDE (e.g. the console's `[code_resolve=>false]`), so it is
-            // merged over that default rather than replacing it — naming one flag must not silently
-            // disable the other four.
-            final Rec typerDefaults = Stream.of(TypeCheck.values())
-                    .map(tc -> rel(uri(tc.name()), tc == TypeCheck.code_resolve ? BOOL_FALSE : BOOL_TRUE))
-                    .collect(new CommonUtil.RecCollector());
-            // OVERRIDE per key, not union: rec plus() would turn a flag named in both recs into a
-            // multiplicity ({false,false}), which then fails the Bool cast in TypeCheck.init.
-            Rec typer = typerDefaults;
-            for (final Map.Entry<Obj, Obj> stage : args.at("typer/stage").orElse(rec()).asRec().recValue().entrySet())
-                typer = typer.at(stage.getKey(), stage.getValue());
-            final Rec typerRec = typer.vid(f("/sys/typer"));
-            TypeCheck.init(typerRec.tid(TYPER_TYPE_TID).as());
-            LOG.info("{{c}}typer{{X}} registered: %s", typerRec);
+            /// /// SET THE TYPER'S CHECK STATE /// ///
+            // the typer IS the state: its `check` field names the type-check points, and the boot default is every
+            // point ON except code_resolve. A boot profile names only the points it wants to OVERRIDE
+            // (`typer/check => [code_resolve => true]`; the legacy `typer/stage` spelling is honored too), merged
+            // over that default — naming one point must not silently disable the other four.
+            Rec typerCheck = rec(new java.util.LinkedHashMap<>(Typer.defaults().jvm()));
+            final java.util.Map<Obj, Obj> checkOverrides =
+                    args.at("typer/check").orElse(args.at("typer/stage").orElse(rec())).asRec().recValue();
+            for (final java.util.Map.Entry<Obj, Obj> stage : checkOverrides.entrySet())
+                typerCheck = typerCheck.at(stage.getKey(), stage.getValue());
+            final Typer typer = BasicTyper.of(typerCheck);
+            LOG.info("{{c}}typer{{X}} registered: %s", typer);
             /// /// SET REWRITER FILTER /// ///
             final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst())).vid(f("/sys/rewriter"));
             LOG.info("{{c}}rewriter{{X}}: %s", rewriter);
@@ -532,7 +530,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
             //Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
             LOG.debug("router location: %s", ROOT_MACHINE.vid());
-            Machine.write(f("/sys/typer/stage"), typerRec);
+            // the typer is the compiler's fourth stage, so its state lives at /compiler/typer — install the instance
+            // the boot configured rather than a global registry
+            final java.util.Map<Obj, Obj> stages = new java.util.LinkedHashMap<>(BasicCompiler.defaultStages());
+            stages.put(uri(TYPER), typer);
+            ROOT_MACHINE.compiler(new BasicCompiler(stages, MACH_COMPILER_TID, null));
             Machine.write(f("/sys/tracer"), tracer);
             Machine.write(f("/sys/rewriter"), rewriter);
             Machine.write(f("/sys/tmp"), str("""

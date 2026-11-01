@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -220,6 +219,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
     public static final fURI UNION_INST_TID = M_ISA_INST_TID.extend("union");
     public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
+    public static final fURI ZIP_INST_TID = M_ISA_INST_TID.extend("zip");
     public static final fURI CASCADE_INST_TID = M_ISA_INST_TID.extend("cascade");
     public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
@@ -278,21 +278,26 @@ public class mInstSet extends AbstractInstSet {
             .vid(REWRITER_TYPE_TID)
             .isaPredicate(rec(URI_TYPE, T(LST_TID.poly(M_ISA_INST_TID))))
             .create();
+    /**
+     * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
+     * under {@code check} leaves the typer free to grow more orthogonal features beside it, and keeping each flag a
+     * {@code bool::T} leaves room for a finer realization (a level, a predicate) at the same key.
+     */
     public static final Type TYPER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(TYPER_TYPE_TID)
-            .isaPredicate(rec(
-                    uri(TypeCheck.inst_dom.name()), BOOL_TYPE,
-                    uri(TypeCheck.inst_rng.name()), BOOL_TYPE,
-                    uri(TypeCheck.type_pred.name()), BOOL_TYPE,
-                    uri(TypeCheck.code_resolve.name()), BOOL_TYPE,
-                    uri(TypeCheck.obj_write.name()), BOOL_TYPE))
-            .constructor(stages -> rec(
-                    uri(TypeCheck.inst_dom.name()), stages.asRec().at(uri(TypeCheck.inst_dom.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.inst_rng.name()), stages.asRec().at(uri(TypeCheck.inst_rng.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.type_pred.name()), stages.asRec().at(uri(TypeCheck.type_pred.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.code_resolve.name()), stages.asRec().at(uri(TypeCheck.code_resolve.name())).orElse(BOOL_FALSE),
-                    uri(TypeCheck.obj_write.name()), stages.asRec().at(uri(TypeCheck.obj_write.name())).orElse(BOOL_FALSE))).create();
+            .isaPredicate(rec(uri(Typer.CHECK), rec(
+                    uri(Typer.INST_DOM.name()), BOOL_TYPE,
+                    uri(Typer.INST_RNG.name()), BOOL_TYPE,
+                    uri(Typer.TYPE_PRED.name()), BOOL_TYPE,
+                    uri(Typer.CODE_RESOLVE.name()), BOOL_TYPE,
+                    uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)))
+            .constructor(state -> rec(uri(Typer.CHECK), rec(
+                    uri(Typer.INST_DOM.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_DOM)).orElse(BOOL_FALSE),
+                    uri(Typer.INST_RNG.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_RNG)).orElse(BOOL_FALSE),
+                    uri(Typer.TYPE_PRED.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.TYPE_PRED)).orElse(BOOL_FALSE),
+                    uri(Typer.CODE_RESOLVE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.CODE_RESOLVE)).orElse(BOOL_FALSE),
+                    uri(Typer.OBJ_WRITE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.OBJ_WRITE)).orElse(BOOL_FALSE)))).create();
     public static final Type TRACER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(TRACER_TYPE_TID)
@@ -512,13 +517,9 @@ public class mInstSet extends AbstractInstSet {
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]"),
                         /// ///////////////////////////////////
                         docWrap(TYPER_TYPE, null, null, mutableMap(
-                                        uri(TypeCheck.inst_dom.name()), "ensure lhs obj matches instruction domain",
-                                        uri(TypeCheck.inst_rng.name()), "ensure rhs obj matches instruction range",
-                                        uri(TypeCheck.type_pred.name()), "ensure type constructor argument matches type predicate",
-                                        uri(TypeCheck.obj_write.name()), "ensure obj matches type on space write",
-                                        uri(TypeCheck.code_resolve.name()), "ensure only fully resolved code can be executed"),
+                                        uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"),
                                 """
-                                        stages where the type checker should be applied.
+                                        the check points where the type checker should be applied.
                                         the more stages that are active, the slower instructions evaluate.
                                         however, more active stages reduces potential for data corruption.
                                         typically use many stages when designing code and once stable,
@@ -1697,6 +1698,10 @@ public class mInstSet extends AbstractInstSet {
          *       ARITY-AGNOSTIC and matches any arity — an element law, a unary {@code neg}, or a fold. That is what
          *       lets an idempotent {@code zero} and an idempotent {@code or} be the same law.</li>
          * </ol>
+         * Each {@code args} element is compared against the instruction's DECLARED argument type when its tid carries
+         * one ({@code inst?…&args=[int]}, minted under {@code MInst.ARGS_IN_TID}) and against the type of the argument
+         * VALUE otherwise — so a declared contract is judged as a contract, and an undeclared one as the only
+         * evidence there is.
          * A mismatch is a CATEGORY ERROR, never a counterexample: the instruction is not the kind of thing the law
          * is about, so the verdict is {@code uncheckable} with the law's shape named, and neither confirms nor
          * refutes it.
@@ -1713,21 +1718,39 @@ public class mInstSet extends AbstractInstSet {
         private static String signatureMismatch(final Law law, final Inst inst) {
             if (null == law || null == inst || null == inst.tid())
                 return null;
-            final fURI signature = law.wrt();
+            // A LAW ANSWERS A SET OF SHAPES: it names this instruction's contract when ANY of them matches.
+            for (final fURI signature : law.wrt())
+                if (null == signatureMismatch(signature, inst))
+                    return null;
+            return about(law);
+        }
+
+        /**
+         * The signature match for ONE admissible shape of the law — null when this shape names the instruction's
+         * contract, else the one-line refusal.
+         */
+        private static String signatureMismatch(final fURI signature, final Inst inst) {
             if (!signature.hasDom() && !signature.hasRng())
                 return null;                        // `inst` (form) and `obj` (effect): about the instruction itself
             final fURI dom = inst.tid().dom();
             final fURI rng = inst.tid().rng();
             final List<fURI> args = signature.args();
+            // THE DECLARED CONTRACT WINS OVER THE VALUES: a tid carrying `args` states its argument types itself
+            // (MInst.ARGS_IN_TID), so the signature is compared against that declaration; an inst that declares none
+            // is read through the argument VALUES it was minted with, which is the only contract it has. The test is
+            // the KEY, not list emptiness: a bare `args` key declares ZERO arguments, which is a claim (and a
+            // different one from "no claim"), while a missing key is no claim at all.
+            final boolean declares = inst.tid().hasQ(ARGS);
+            final List<fURI> declared = declares ? inst.tid().args() : List.of();
             // arity is a claim ONLY when the signature carries args: no args means "any arity"
-            if (!args.isEmpty() && args.size() != inst.args().count())
-                return about(law);
+            if (!args.isEmpty() && args.size() != (declares ? declared.size() : inst.args().count()))
+                return "arity";
             final String[] carrier = {null};
             if (!agrees(dom, signature.dom(), carrier) || !agrees(rng, signature.rng(), carrier))
-                return about(law);
+                return "dom/rng";
             for (int i = 0; i < args.size(); i++)
-                if (!agrees(argType(inst, i), args.get(i), carrier))
-                    return about(law);
+                if (!agrees(declares ? declared.get(i) : argType(inst, i), args.get(i), carrier))
+                    return "args";
             return null;
         }
 
@@ -1792,7 +1815,8 @@ public class mInstSet extends AbstractInstSet {
          * expected instead of inferring it from a law name.
          */
         private static String about(final Law law) {
-            return "the law is about " + law.wrt();
+            return "the law is about " + law.wrt().stream().map(fURI::toString)
+                    .collect(java.util.stream.Collectors.joining(" or "));
         }
 
         /**

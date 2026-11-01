@@ -3,7 +3,7 @@
 [== contacted, so this profile is safe to boot beside a live server. ==]
 [space  => /sys/space,
  log    => info,
- typer/stage  => [code_resolve => false]];
+ typer/check  => [code_resolve => false]];
 [===============]
 header2 ->"""      {{r}}PhaseShift Studio Presents
 {{g}}  ___ ___  _  _ ___  ___  _    ___ 

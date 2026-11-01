@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -63,12 +63,12 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
     @Test
     void testAnOfflinePeerIsNoShardTarget() throws InterruptedException {
         // typing is not solved across distributed executions yet — run type-check-free, as the manual demo did
-        TypeCheck.disable(TypeCheck.values());
         // catRewrite.law_shard is registered by catInstSet, which the standard test boot does not mount
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         InstSet.importInstSet(WEB_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         final int port = generatePort();
         final fURI service = f("ws://localhost:" + port);
         final Listener server = wsServer.of(rec(

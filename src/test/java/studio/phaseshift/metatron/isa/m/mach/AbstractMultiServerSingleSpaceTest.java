@@ -26,7 +26,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -162,7 +162,7 @@ public abstract class AbstractMultiServerSingleSpaceTest extends AbstractMetatro
     @BeforeAll
     void startTopology() throws Exception {
         // typing is not solved across distributed executions yet -- run type-check-free, as the satellites do
-        TypeCheck.disable(TypeCheck.values());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         this.startBackend();
         spaceImports().forEach(AbstractMultiServerSingleSpaceTest::evaluate);
         // the master's own space, then every table -- all before any satellite exists

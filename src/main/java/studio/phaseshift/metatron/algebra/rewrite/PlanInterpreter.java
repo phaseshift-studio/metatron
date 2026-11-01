@@ -929,7 +929,7 @@ public final class PlanInterpreter {
      */
     private static Code absorbingRemoval(final Code code) {
         final List<Inst> insts = code.insts();
-        final int seed = (!insts.isEmpty() && START_INST_TID.equals(insts.get(0).tid().basePath())) ? 1 : 0;
+        final int seed = (!insts.isEmpty() && START_INST_TID.equals(insts.getFirst().tid().basePath())) ? 1 : 0;
         final List<Type> carriers = carriers(code);
         final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
         for (int i = 0; i < insts.size(); i++) {

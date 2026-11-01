@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 
 /**
  * CLI integration tests for {@link BootLoader#main(String[])}.
@@ -66,8 +67,8 @@ public class BootLoaderCLITest extends AbstractMetatronTest {
 
     @BeforeAll
     static void beforeAll() {
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.values());
+        Typer.Helper.enableAll();
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
     }

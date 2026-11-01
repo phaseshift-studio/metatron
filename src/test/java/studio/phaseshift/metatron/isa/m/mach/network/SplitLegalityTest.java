@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.Env;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
@@ -94,10 +94,10 @@ public class SplitLegalityTest extends AbstractMetatronTest {
 
     @BeforeEach
     void setup() {
-        TypeCheck.disable(TypeCheck.values());
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         Network.Helper.connect(Machine.current().network(), PEER);
         Network.Helper.connect(Machine.current().network(), GINGER);
         disjoin = InstBuilder.build()

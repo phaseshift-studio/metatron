@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.REPLY_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Lst.lst_noobj;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -191,8 +192,18 @@ public interface Inst extends Call {
         //return MType.of(range);
     }
 
+    /**
+     * The instruction's argument POLY — a positionally ordered {@code lst} or a named {@code rec}.
+     * <p>
+     * ONE REPRESENTATION FOR "NO ARGUMENTS": an inst minted with a null argument slot reads an EMPTY lst. It reads
+     * {@code lst_noobj()} today — a one-element lst holding {@code noobj} — which is not "no arguments" at any call
+     * site that asks: {@code isEmpty()} answers false for an instruction that takes none, {@code fullSignature} reads
+     * the noobj slot as an unreadable argument and claims nothing, and two instructions that agree on everything
+     * compare unequal (a parsed call carries an empty lst, a sugar-minted one carries the noobj wrapper).
+     */
     default Poly<?, ?> args() {
-        return null == this.jvm().get0() ? lst() : this.jvm().get0();
+        final Poly<?, ?> args = this.jvm().get0();
+        return null == args ? lst() : args;
     }
 
     default Inst args(final Poly<?, ?> args) {
@@ -407,7 +418,17 @@ public interface Inst extends Call {
             // binder refuses a zero operand, and attaching it here would hand the definition the zero's payload
             if (!Helper.argsFillSlots(resolved2.asInst(), domainInst))
                 return noobj();
-            final Inst resolve2 = resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
+            // A NAMED ARG WRAPPER STILL TAKES AN ORDERED CALL: when the definition declares its parameters by name
+            // ({@code (amt=>?real::T)}) and the caller provides no keys ({@code f(5.6)}), the parameters are bound in
+            // declaration order — {@code [amt=>5.6]} — the same binding the selector's binder performs. Attaching
+            // the caller's list verbatim would leave the definition's own parameter names unbound, so a body that
+            // reads one by name ({@code *amt}) would find nothing.
+            final Poly callArgs = resolved2.asInst().args().isRec()
+                    ? Helper.resolveArgs(domainInst, resolved2.asInst(), lhs)
+                    : domainInst.args();
+            if (null == callArgs)
+                return noobj();
+            final Inst resolve2 = resolved2.<Inst>as().args(callArgs).c(domainInst.c()); //.resolve(lhs);
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
     }
@@ -520,6 +541,38 @@ public interface Inst extends Call {
         }
 
         /**
+         * THE FULL SIGNATURE — the inst with its declared argument types written into its tid ({@code args=[...]}, or
+         * the bare {@code args} key when it declares none), so its contract is complete: {@code A x B -> C}.
+         * <p>
+         * EXPLICIT AND FLAG-FREE: it applies {@code MInst.signature}'s rule regardless of
+         * {@code MInst.ARGS_IN_TID}, which is the mint-time convenience switch — so a caller can complete a signature
+         * where it matters without encoding every tid in the VM. Idempotent: an inst whose tid already carries
+         * {@code args} is returned as it stands, and an inst with no argument Poly states no claim and is unchanged.
+         *
+         * @param inst the instruction to complete
+         * @return the inst carrying its declared argument types, or {@code inst} when it claims no arguments
+         */
+        /**
+         * THE OPERATION'S ADDRESS — the tid with its {@code args} component removed. The component states the DECLARED
+         * argument types (a rendering of the args poly), and an instruction's IDENTITY is its operation: matching,
+         * equality and hashing compare through this, while the contract itself is read from {@code args()}. A tid
+         * that declares no arguments answers itself, so the call is free with {@code MInst.ARGS_IN_TID} off.
+         *
+         * @param tid the instruction's tid
+         * @return the tid without its {@code args} component
+         */
+        public static fURI operationTid(final fURI tid) {
+            return null == tid || !tid.hasQ(ARGS) ? tid : tid.removeQ(ARGS);
+        }
+
+        public static Inst fullSignature(final Inst inst) {
+            if (null == inst || null == inst.tid() || inst.args().isNoObj())
+                return inst;
+            final fURI keyed = MInst.signature(inst.tid(), inst.args());
+            return keyed.equals(inst.tid()) ? inst : ((Inst) inst.clone()).selfTID(keyed).asInst();
+        }
+
+        /**
          * The inst's address for origin context in fail messages: the vid if
          * it is a clean full address (no query), otherwise the tid base with
          * the vid's index appended ("plus@1" — the inst plus its slot in the
@@ -537,7 +590,7 @@ public interface Inst extends Call {
         }
 
         public static Optional<fURI> isFromOrAtInstToUri(final Inst inst) {
-            return Optional.ofNullable((inst.tid().equals(FROM_INST_TID) || inst.tid().equals(AT_INST_TID)) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
+            return Optional.ofNullable((inst.tid().basePath().equals(FROM_INST_TID) || inst.tid().basePath().equals(AT_INST_TID)) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
@@ -702,6 +755,74 @@ public interface Inst extends Call {
             return true;
         }
 
+        /**
+         * Does this candidate's DECLARED argument contract admit the user's arguments? A candidate that declares no
+         * argument types claims nothing and admits anything. One that declares them claims an arity and a base type
+         * per position: the user's argument at that position must have that base form; a generic or undeclared
+         * declared type admits anything there, and an argument whose type cannot be read (a nested call) admits.
+         * <p>
+         * The declaration is the {@code args} query component of the candidate's tid ({@code inst?…&args=[int,rec]},
+         * written when it was minted under {@code MInst.ARGS_IN_TID}); an inst whose tid carries none declares
+         * nothing, which is why resolving against an instset minted with the flag off is unchanged. Types are
+         * compared by BASE NAME — {@link fURI#basePath()}'s {@link fURI#name()} — the same notion the law matcher
+         * uses, so a declared {@code /m/int} and an argument whose specific type id is {@code int} agree, and
+         * nothing has to be minted to ask.
+         *
+         * @param candidate the candidate definition as declared
+         * @param user      the call whose arguments would fill its slots
+         * @return false only when the declaration claims an arity or a base type the call's arguments contradict
+         */
+        public static boolean admitsArgs(final Inst candidate, final Inst user) {
+            // hasQ first: args() PARSES the query body, and an instset minted with the flag off (the common case) has
+            // no key at all, so the gate must cost one lookup, not a parse, per candidate
+            if (null == candidate || null == user || null == candidate.tid() || !candidate.tid().hasQ(ARGS))
+                return true;
+            // a BARE `args` key DECLARES ZERO arguments — a claim, which is why the gate is hasQ and not isEmpty: no
+            // key at all is "no argument claim" and admits anything (the early return above)
+            final List<fURI> declared = candidate.tid().args();
+            final Poly<?, ?> given = user.args();
+            if (null == given || !given.isLst())
+                return true;                        // a named (rec-shaped) call states no order to read
+            final List<Obj> values = given.lstValue();
+            // A CALL MAY SUPPLY FEWER ARGUMENTS THAN THE CONTRACT DECLARES: the contract's remaining positions are
+            // the binder's to fill (that is what makes a zero-argument call of a one-argument operation legal), so
+            // only the positions the caller actually supplies are held to the declaration. Supplying MORE than the
+            // contract declares is still a refusal.
+            if (values.size() > declared.size())
+                return false;
+            for (int i = 0; i < values.size(); i++) {
+                final fURI wanted = declared.get(i);
+                if (null == wanted || wanted.isGeneric())
+                    continue;                       // a generic slot accepts anything
+                final String wantedName = baseName(wanted);
+                if (wantedName.isEmpty() || "#".equals(wantedName) || "+".equals(wantedName))
+                    continue;                       // an undeclared endpoint accepts anything
+                final Obj arg = values.get(i);
+                if (null == arg || arg.isNoObj() || arg.isObjCall())
+                    continue;                       // a nested call's type cannot be read here
+                final fURI actual = Obj.Helper.specificTypeId(arg);
+                if (null == actual || actual.isGeneric())
+                    continue;
+                if (!wantedName.equals(baseName(actual)))
+                    return false;
+            }
+            return true;
+        }
+
+        /**
+         * The type name a declared contract and an argument are compared by: a declaration is written as a type's
+         * own address ({@code /m/int}) while a value's specific type id may name the same carrier elsewhere, so the
+         * base PATH's name is what both spellings share. Empty for a uri with no base (an endpoint that states
+         * nothing, and therefore refuses nothing).
+         */
+        private static String baseName(final fURI uri) {
+            final fURI base = uri.basePath();
+            if (null == base)
+                return "";
+            final String name = base.name();
+            return null == name ? "" : name;
+        }
+
         public static boolean admitsIgnoringCoefficient(final Inst definition, final Obj lhs) {
             if (!definition.hasDom() || lhs.isNoObj() || lhs.isFail() || lhs.isCall())
                 return true;
@@ -748,7 +869,7 @@ public interface Inst extends Call {
          * @return the same inst with no vid ({@code candidate} itself when it has none)
          */
         public static Inst unaddressed(final Inst candidate) {
-            return null == candidate.vid() ? candidate : candidate.clone().selfVID(null).as();
+            return null == candidate.vid() ? candidate : ((Inst) candidate.clone()).selfVID(null).as();
         }
 
         public static Inst bindQ(final Obj lhs, final Inst userInst, final Inst apiInst) {
@@ -809,7 +930,20 @@ public interface Inst extends Call {
                         } else {
                             if (apiArg.typeId().one().isGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.typeId().one(), userArg.typeId())).c(apiArg.c());
-                            if (null != apiArg && !apiArg.isObjCall() && !userArg.typeId().one().isGeneric() && !userArg.test(apiArg)) {
+                            // A TYPE-NAMED ARGUMENT IS COMPARED AS A TYPE: when both the declared argument and the
+                            // caller's argument are TYPES (`as(rec::T)`), the same type NAME is the same request —
+                            // object identity is too strict, since an instset constructed a second time re-registers
+                            // its types (AbstractInstSetTest builds one per test) and the registered contracts then
+                            // hold the earlier Type objects. Otherwise the ordinary test decides.
+                            // A TYPE-NAMED ARGUMENT IS COMPARED AS A TYPE: when both the declared argument and the
+                            // caller's argument are TYPES (`as(rec::T)`), the same type NAME is the same request --
+                            // object identity is too strict, since an instset constructed a second time re-registers
+                            // its types (AbstractInstSetTest builds one per test) and the registered contracts then
+                            // hold the earlier Type objects. Otherwise the ordinary test decides.
+                            final boolean sameTypeName = apiArg.isType() && userArg.isType()
+                                    && Obj.Helper.specificTypeId(userArg).basePath().equals(Obj.Helper.specificTypeId(apiArg).basePath());
+                            if (null != apiArg && !apiArg.isObjCall() && !userArg.typeId().one().isGeneric()
+                                    && !sameTypeName && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
                                 return null;
                             }

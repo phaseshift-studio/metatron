@@ -22,7 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.algebra.rewrite.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.Span;
@@ -67,10 +67,10 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
     @BeforeEach
     void setup() {
         // typing is not solved across distributed executions yet — run type-check-free, as the forked-peer suite does
-        TypeCheck.disable(TypeCheck.values());
         InstSet.importInstSet(f("/m/math"));
         InstSet.importInstSet(f("/m/math/cat"));
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
     }
 
     @AfterEach

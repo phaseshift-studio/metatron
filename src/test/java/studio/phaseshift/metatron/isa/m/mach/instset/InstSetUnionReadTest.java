@@ -137,9 +137,11 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
 
             assertEquals(2, childUnion.read(NAME).stream().count(),
                     "two contracts for one name — an overload is extended, never erased: " + childUnion.read(NAME));
-            assertTrue(childUnion.read(NAME).stream().anyMatch(o -> o.asInst().tid().equals(REAL_CONTRACT)),
+            // the contract's identity is the OPERATION (dom/rng): a tid minted with MInst.ARGS_IN_TID also declares
+            // its argument types, which must not make a written contract unrecognizable
+            assertTrue(childUnion.read(NAME).stream().anyMatch(o -> Inst.Helper.operationTid(o.asInst().tid()).equals(REAL_CONTRACT)),
                     "the child's contract is among the candidates");
-            assertTrue(childUnion.read(NAME).stream().anyMatch(o -> o.asInst().tid().equals(INT_CONTRACT)),
+            assertTrue(childUnion.read(NAME).stream().anyMatch(o -> Inst.Helper.operationTid(o.asInst().tid()).equals(INT_CONTRACT)),
                     "and the enclosing machine's is too");
             assertEquals(1, parentUnion.read(NAME).stream().count(),
                     "the enclosing machine sees only its own — nothing leaks up");

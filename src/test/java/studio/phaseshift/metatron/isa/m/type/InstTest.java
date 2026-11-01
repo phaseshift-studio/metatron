@@ -607,4 +607,30 @@ public class InstTest extends AbstractObjTest {
                 .create();
         assertEquals(Inst.Form.mapper, plain.form(), "an undeclared form is still derived from the n-tid shape");
     }
+
+    /**
+     * A NAMED ARG WRAPPER STILL TAKES AN ORDERED CALL. A declaration names its parameters
+     * ({@code (delta=>?real::T)}), so a caller may pass them by key. When it passes none — {@code nudge(5.6)} — the
+     * parameters are bound in DECLARATION ORDER ({@code [delta=>5.6]}), exactly as the selector's binder does, so a
+     * body that reads its parameter by name ({@code *delta}, through the arg stack) finds it.
+     * <p>
+     * The typed call resolves through the binder; the UNTYPED one ({@code [2.0,3.5].nudge(5.6)}) falls through to the
+     * global-read fallback in {@code Inst.resolve}, which used to attach the caller's list verbatim — leaving
+     * {@code delta} unbound and making the body's {@code *delta} read nothing. Both spellings, and the keyed one,
+     * must answer the same.
+     */
+    @ParameterizedTest
+    @TestData(value = {
+            "coord -> lst::T[?[real::T,real::T]]@coord",
+            "nudge?coord<=coord(delta=>?real::T){ ==[+*delta,+*delta] }@nudge",
+    })
+    @CsvSource(value = {
+            "coord::[2.0,3.5].nudge(5.6)            % [7.6,9.1]",
+            "[2.0,3.5].nudge(5.6)                   % [7.6,9.1]",
+            "coord::[2.0,3.5].nudge(delta=>5.6)     % [7.6,9.1]",
+            "[2.0,3.5].nudge(delta=>5.6)            % [7.6,9.1]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNamedArgsAcceptAnOrderedCall(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }

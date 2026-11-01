@@ -107,8 +107,9 @@ The best example of the desired test-style can be found at:
 
 Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 
-1. `TypeCheck.disable(TypeCheck.code_resolve)` — disables full code resolution requirement in tests (i.e. dynamic
-   resolution is 'ok')
+1. `Typer.Helper.enableAll()` then `Typer.Helper.set(Typer.CODE_RESOLVE, false)` — every check point on except
+   full code resolution (dynamic resolution is 'ok'). The state belongs to the machine's compiler, so a test that
+   installs its own compiler sets it AFTER `Machine.current().compiler(...)`.
 2. `BootLoader.BOOTING = true` — sets booting state
 3. `BootLoader.TESTING = true` — skips shutdown hook headless wait
 4. `BootLoader.load(...)` — initializes the VM

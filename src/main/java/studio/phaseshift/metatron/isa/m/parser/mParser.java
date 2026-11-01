@@ -58,6 +58,7 @@ import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -409,13 +410,18 @@ public class mParser {
                 seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args"), of('{').not()).pick(1), // 1 inst_args
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
-                .map(t -> (Inst) new MInst(Triplet.with(
-                        pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
-                                lst(mParser.<List<Obj>>pick(t, 1)) :
-                                rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
-                        null,
-                        noobj()), // todo: encode seed in parser
-                        pick(t, 0), pick(t, 2)));
+                .map(t -> {
+                    final Inst temp = (Inst) new MInst(Triplet.with(
+                            pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
+                                    lst(mParser.<List<Obj>>pick(t, 1)) :
+                                    rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
+                            null,
+                            noobj()), // todo: encode seed in parser
+                            pick(t, 0), pick(t, 2));
+                    // THE FULL SIGNATURE IS ONE RULE (Inst.Helper.fullSignature): the parser completes the contract it
+                    // just parsed, and the nested-element guard there keeps an unrepresentable tid from being built
+                    return Inst.Helper.fullSignature(temp);
+                });
     }
 
     public static Parser m_inst_c() {

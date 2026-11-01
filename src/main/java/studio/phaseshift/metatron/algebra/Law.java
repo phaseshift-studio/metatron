@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
 
+import java.util.List;
+
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /**
@@ -168,6 +170,14 @@ public enum Law {
     private static final fURI FOLD = f("inst?dom=A{*}&rng=A");
 
     /**
+     * An operation ON THE CARRIER, at the two arities the instsets witness: a binary operation ({@code A × A → A})
+     * or a fold ({@code A{*} → A}). The ARITY-AGNOSTIC {@link #ENDO} is deliberately NOT in this set — an operation
+     * law is about an operation, so a unary {@code neg} or a nullary element is not the kind of thing it can be
+     * about.
+     */
+    private static final List<fURI> OPERATION = List.of(BINARY_ENDO, FOLD);
+
+    /**
      * A signature for a form law — {@code inst}: the law is about an instruction's form, not an operation on a
      * carrier.
      */
@@ -198,26 +208,32 @@ public enum Law {
      * {@code zero} and an idempotent {@code or} must be spelled {@code inst?rng=A&dom=A}: the binary spelling would
      * make the nullary claim a category error.
      *
-     * @return the fURI signature of the law's subject
+     * A law answers the SET of shapes it is admissible on: most answer one, and the operation laws answer the two
+     * arities the instsets witness (a binary op and a fold). A claim is a category error when the instruction's
+     * contract matches NONE of them; matching one is necessary and never sufficient (the equations decide truth).
+     *
+     * @return the fURI signatures the law is about, most specific first
      */
-    public fURI wrt() {
+    public List<fURI> wrt() {
         return switch (this) {
+            // an OPERATION on the carrier, either arity the instsets witness: a binary op or a fold. The arity is a
+            // real claim here -- a commutative unary neg is a category error, and so is a monoidic element.
+            case action, commutative, magmadic, monoidic -> OPERATION;
             // a binary operation on the carrier (A × A → A): the laws that read an OPERAND equation
-            case complement, cyclic, left_distributive, magmadic, nilpotent, right_distributive, zero_divisor,
-                 action -> BINARY_ENDO;
+            case complement, cyclic, left_distributive, nilpotent, right_distributive, zero_divisor -> List.of(BINARY_ENDO);
             // the carrier to itself, the arity stated only by `args`: the ELEMENT laws (an identity, an
             // annihilator, an atomic element) and the process laws whose claims today span arities -- an
-            // idempotent nullary zero/one AND an idempotent binary join, a commutative stream reduction AND a
-            // commutative binary op, a self-inverse unary op AND the group form of the same law
-            case absorbing, commutative, idempotent, involution, monoidic, prime, unit -> ENDO;
+            // idempotent nullary zero/one AND an idempotent binary join, a self-inverse unary op AND the group
+            // form of the same law
+            case absorbing, idempotent, involution, prime, unit -> List.of(ENDO);
             // the comparisons of a partially ordered carrier (A × A → bool)
-            case poset -> RELATION;
+            case poset -> List.of(RELATION);
             // the reducer's distributivity, and the closure it iterates: both are laws of an unbounded iterate
-            case semi_right_distributive, kleene -> FOLD;
+            case semi_right_distributive, kleene -> List.of(FOLD);
             // coefficient/form laws: read off the instruction's form, no operation on a carrier to state
-            case floatable, blocked, partial -> FORM;
+            case floatable, blocked, partial -> List.of(FORM);
             // the effect axis: there is no carrier
-            case pure -> EFFECT;
+            case pure -> List.of(EFFECT);
         };
     }
 }

@@ -74,6 +74,15 @@ public final class InstBuilder {
     private static final Map<fURI, Declaration> DECLARATIONS = new ConcurrentHashMap<>();
 
     /**
+     * A DECLARATION'S IDENTITY IS THE OPERATION'S, not the argument types the instruction happened to be minted with:
+     * a law/inverse/derivation is a fact about the algebra, so the {@code args} component is stripped before the index
+     * is read or written ({@code MInst.ARGS_IN_TID} can put one there, and a caller holding a rebuilt tid may not).
+     */
+    private static fURI declarationKey(final fURI tid) {
+        return null == tid || !tid.hasQ(ARGS) ? tid : tid.args(List.of());
+    }
+
+    /**
      * The order declarations were made in. A reader that unions them ({@code LawTable.derivations}) must replay them
      * deterministically, and a hash map's iteration order is not an order — the instructions' own build order is.
      */
@@ -286,7 +295,10 @@ public final class InstBuilder {
     public Inst create() {
         if (null == this.tid)
             throw studio.phaseshift.metatron.util.MTronException.of("tid must be set before creating an inst");
-        final fURI keyed = null == this.dom || null == this.rng ? this.tid : this.tid.dom(this.dom).rng(this.rng);
+        final fURI composed = null == this.dom || null == this.rng ? this.tid : this.tid.dom(this.dom).rng(this.rng);
+        // the declared ARGUMENT types complete the contract (A x B -> C) in the tid's `args` component — a no-op
+        // unless MInst.ARGS_IN_TID says a tid is where the contract is carried
+        final fURI keyed = MInst.keyed(composed, this.args);
         final Inst inst = null == this.seed ?
                 MInst.instC(keyed, this.args, this.body) :
                 MInst.instC(keyed, this.args, this.body, this.seed);
@@ -297,7 +309,7 @@ public final class InstBuilder {
                     this.argDocs, this.description, this.examples);
         // any facet is a declaration: an instruction may state only its inverse or only its defining equation
         if (!this.laws.isEmpty() || null != this.inverse || null != this.derivation) {
-            DECLARATIONS.put(inst.tid(), new Declaration(List.copyOf(this.laws), this.inverse, this.derivation));
+            DECLARATIONS.put(declarationKey(inst.tid()), new Declaration(List.copyOf(this.laws), this.inverse, this.derivation));
             DECLARATION_ORDER.add(inst.tid());
         }
         // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
@@ -312,7 +324,7 @@ public final class InstBuilder {
      * how a law lookup became a per-evaluation cost.
      */
     public static Declaration declaration(final fURI instTid) {
-        return null == instTid ? null : DECLARATIONS.get(instTid);
+        return null == instTid ? null : DECLARATIONS.get(declarationKey(instTid));
     }
 
     /**
@@ -325,7 +337,7 @@ public final class InstBuilder {
         if (DECLARATION_VIEW_SIZE != DECLARATION_ORDER.size()) {
             final Map<fURI, Declaration> view = new LinkedHashMap<>();
             for (final fURI tid : DECLARATION_ORDER) {
-                final Declaration declared = DECLARATIONS.get(tid);
+                final Declaration declared = DECLARATIONS.get(declarationKey(tid));
                 if (null != declared)
                     view.put(tid, declared);
             }
@@ -344,7 +356,7 @@ public final class InstBuilder {
     public static void drain(final Inst inst) {
         if (null == inst || null == inst.tid())
             return;
-        final Declaration declared = DECLARATIONS.get(inst.tid());   // a DECLARATION, not a one-shot: each VM boot repersists it
+        final Declaration declared = DECLARATIONS.get(declarationKey(inst.tid()));   // a DECLARATION, not a one-shot: each VM boot repersists it
         final Inst.Form form = DECLARED_FORMS.get(inst.tid().basePath());
         if (null == declared && null == form)
             return;

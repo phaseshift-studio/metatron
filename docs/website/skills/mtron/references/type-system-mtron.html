@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -754,7 +761,7 @@ hands a call no second candidate), and a tensor's entries name no other type (<c
 ints is not an int). The coefficient is where extent lives, not another coordinate: <code>lst[int{4}]</code> is ONE position
 holding four ints, while <code>lst[int,int,int,int]</code> is four positions.</p>
 <p><strong>A fibered type's entries are distinct objects.</strong> <code>person[ninja]</code> is a person <em>and</em> a ninja; the ninja is not the
-wrapper's content but an object the wrapper exposes. So a value of that type is acceptable where <code>ninja::T</code> is
+bundle's content but an object the bundle exposes. So a value of that type is acceptable where <code>ninja::T</code> is
 expected (its base or any fiber — see <em>acceptance and covariance</em>), and an instruction declared on <code>ninja</code> applies to
 the fiber's value as if it had been declared top-level.</p>
 <h4>a bracket entry's coefficient: the multiplicity of the value AT that position or vertex</h4>
@@ -767,7 +774,7 @@ mtron&gt; wayfarer -&gt; rec::T@wayfarer
 mtron&gt; lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]
 ==&gt;lst[int{2},str]::[{1,2},'a']
 mtron&gt; rel[int,wayfarer{2}]::(1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']})   [-- the second vertex holds two wayfarers --]
-==&gt;rel[int,wayfarer{2}]::1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']}
+==&gt;rel[int,wayfarer{2}]::(1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']})
 mtron&gt; lst[int{2},str]::[1,'a']          [-- one int is an int{1}: too few for an int{2} position --]
 ==&gt;fail::[parse error at line 1, col 1: obj does not match /m/lst[/m/int{2},/m/str]::T
      [[1,'a']
@@ -812,6 +819,13 @@ coefficient judges the multiplicity of the value already at that position, and n
 repeats, so the chain is longer&quot; (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
 coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.</p>
 <h4>declaring a fibered type vs instantiating one</h4>
+<p>Three words, used consistently from here on:</p>
+<ul>
+<li><strong>bundle</strong> — a value of a <em>fibered type</em>: the outer <code>rec::T</code> (<code>person[ninja]::[…]</code>). Formerly called the bundle.</li>
+<li><strong>fiber</strong> — a particular field of that <code>rec::T</code> that its bracket LIFTS: the key/value becomes a virtual sibling of
+the rec's other fields, so an instruction can reach it as if it stood alone (<code>role</code> holding the ninja).</li>
+<li><strong>field</strong> — any <code>key=&gt;value</code> pair of a <code>rec::T</code>. Every fiber is a field; most fields are not fibers.</li>
+</ul>
 <p>A fibered type is spelled twice, and the two brackets say different things:</p>
 <pre><code>rec[role,position]::T[?[name=&gt;str::T, role=&gt;rec::T, position=&gt;rec::T]]@person
     ^^^^^^^^^^^^^^ the DECLARATION's poly NAMES the fibers (field names)
@@ -820,8 +834,9 @@ person[ninja,position]::[...]
        ^^^^^^^^^^^^^^^ the INSTANCE's poly gives their TYPES (their contents)
 </code></pre>
 <ul>
-<li>the DECLARATION's poly is a list of <strong>field names</strong> — the fibers this wrapper exposes;</li>
-<li>the INSTANCE's poly is a list of <strong>type arguments</strong> — what each fiber's value is.</li>
+<li>the DECLARATION's poly is a list of <strong>field names</strong> — the fibers this bundle exposes (its key range);</li>
+<li>the INSTANCE's poly is a list of <strong>type arguments</strong> — what each fiber's value is (its value range). A KEY belongs
+in the declaration's bracket, never the instance's: <code>human[geo]</code> would type a fiber with the key's own name.</li>
 </ul>
 <p>The declaration's entries are parameters and the instance's are arguments, so resolution substitutes one for the
 other positionally: <code>person[role]</code> + <code>[ninja]</code> → <code>person[ninja]</code>, an unclaimed parameter keeps its declared entry, and
@@ -831,18 +846,37 @@ as false: the lhs is a specialization and <code>role</code> is not the name <cod
 layer, by that bound substitution rather than by the bracket claim.</p>
 <h4>lifting (dispatch into a fiber)</h4>
 <p>An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: <code>fight?&lt;=ninja()</code> on a
-<code>person[ninja]</code> wrapper reaches the <code>ninja</code> object inside it, not the wrapper.</p>
-<p>Mechanically there is nothing trait-aware anywhere in the processor. The candidate set is the wrapper <strong>plus the
-values of the fields the declaration's poly names</strong>, and each candidate is resolved and invoked on its own — so the
-&quot;selection&quot; is ordinary resolution, not a lookup table keyed by the declaration:</p>
+<code>person[ninja]</code> bundle reaches the <code>ninja</code> object inside it, not the bundle.</p>
+<p>Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE <strong>plus the values
+of its FIBERS</strong>, and each subject is selected and invoked on its own — so the &quot;selection&quot; is ordinary resolution, not
+a lookup table keyed by the declaration:</p>
 <ul>
-<li>an <strong>untyped call lifts over all fibers</strong>; <code>?&lt;=T</code> selects one candidate, because a named domain is the subject the
+<li>an <strong>untyped call lifts over all fibers</strong>; <code>?&lt;=T</code> selects one subject, because a named domain is the subject the
 call is about.</li>
-<li><code>noobj</code> is the multiplicity identity, so <code>{noobj, 29}</code> = <code>29</code>: a candidate the instruction is not about contributes
-nothing. A <code>fail::</code> is not the identity — it PROPAGATES — or an instruction that broke on one part of the wrapper
+<li>a <strong>base-typed domain is about a subject's own form, never its name</strong>: <code>?&lt;=rec(...)</code> reaches the bundle AND a
+fiber whose own type refines <code>rec</code> — <code>ninja::T</code> is a <code>rec::T</code>, so the ninja answers a rec-typed instruction as
+itself — while <code>?&lt;=lst(...)</code> reaches neither, and <code>?&lt;=int(...)</code> reaches only an int-valued fiber
+(<code>ex::[o=&gt;12].plus?&lt;=int</code> adds at <code>o</code>, since the bundle is a rec, not an int).</li>
+<li>a <strong>named domain</strong> splits the two levels. The <strong>bundle</strong> answers as the very type it instantiates — a bracket does
+not change the name (<code>dojo[master]</code> is a <code>dojo</code>; a predicated domain additionally requires the same predicates) —
+and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A <strong>fiber</strong> answers as the
+value it holds, so a <em>structural</em> type (<code>weaponed -&gt; rec::T[?[weapon=&gt;str::T]]</code>) is also satisfied by a fiber's own
+shape: the ninja at <code>role</code> carrying a weapon answers <code>?&lt;=weaponed(...)</code> as itself. That is why <code>?&lt;=weaponed</code> reaches
+the ninja and never the bundle.</li>
+<li><strong>the fiber bundle speaks first</strong>: when the domain NAMES a type the bundle itself is, the bundle is the subject
+and its fibers are not asked — <code>weaponed[weaponed]::[weapon=&gt;'axe',role=&gt;weaponed::[weapon=&gt;'knife']]</code> answers
+<code>?&lt;=weaponed(weapon)</code> with <code>'axe'</code> alone, not <code>{'axe','knife'}</code>. A domain that names no single subject — a generic
+one, or a base FORM (about every subject of that form) — does not supersede: <code>?&lt;=rec</code> and an untyped read still
+sum over both levels.</li>
+<li><strong>a FILTER asks the bundle first too</strong>: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
+so <code>*marko.?weaponed::T</code> answers <code>*marko</code> (the bundle is accepted as a weaponed through the ninja it exposes; the
+filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
+fibers, and a <code>fail::</code> from the bundle still propagates.</li>
+<li><code>noobj</code> is the multiplicity identity, so <code>{noobj, 29}</code> = <code>29</code>: a subject the instruction is not about contributes
+nothing. A <code>fail::</code> is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
 would read as a success.</li>
-<li>candidates are <strong>one level deep</strong>: a candidate that is itself a wrapper is applied to as the object it is, never
-expanded again.</li>
+<li>subjects are <strong>one level deep</strong>: a fiber that is itself a bundle is applied to as the object it is, never expanded
+again.</li>
 <li><code>Inst.Form.typer</code> — <code>as</code>, <code>::</code>, <code>type</code>, <code>vid</code>, <code>tid</code> — <strong>never lifts</strong>. A typer retypes the one object it is given,
 so it is opaque: <code>as(person::T)</code> is both the narrowing escape from a fan-out and the exception to it (it changes the
 basis, so it cannot be distributed over the old one).</li>
@@ -850,7 +884,7 @@ basis, so it cannot be distributed over the old one).</li>
 any obj; <code>as(T)</code> first, or <code>?&lt;=T</code> on the call, is what narrows it back to one basis.</li>
 <li>a fan-out result is an <strong>unordered multiplicity</strong>. When order or provenance matters the user writes the keyed rec
 explicitly — one key per fiber, each narrowing its own call (<code>[role =&gt; *marko.describe?&lt;=ninja(), position =&gt; *marko.describe?&lt;=position()]</code>). There is no keyed projection that does it for you.</li>
-<li>a wrapper on which <strong>no candidate</strong> applies yields <code>noobj</code> — a miss is not a failure. The same miss on a non-wrapper
+<li>a bundle on which <strong>no subject</strong> applies yields <code>noobj</code> — a miss is not a failure. The same miss on a non-bundle
 value is still a loud <code>unable to locate inst-f</code>, because there is nothing else to try.</li>
 </ul>
 <h4>acceptance and covariance</h4>
@@ -860,32 +894,34 @@ instruction run on</em> (dispatch).</p>
 <li><strong>A fiber named at coefficient one must be there.</strong> The value is tested against the declaration, and a field it
 does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
 <code>rec[role,position{?}]</code> — and reading a missing key still yields <code>noobj</code>. <code>noobj</code> is a value, not a hole.</li>
-<li><strong>A predicated fiber type is satisfied by the FIBER'S VALUE.</strong> A poly entry types one of the wrapper's fibers
+<li><strong>A predicated fiber type is satisfied by the FIBER'S VALUE.</strong> A poly entry types one of the bundle's fibers
 (<code>person[ninja]</code> puts a ninja at the field the declaration calls <code>role</code>), so the object a trait's shape is about
-(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>wrapper&gt;&gt;role</code> — not the wrapper's declaration. A
-<em>shaped nominal</em> trait therefore accepts a wrapper that only exposes the trait-carrying fiber: the trait's shape is
-asked of <code>wrapper&gt;&gt;role</code>, which is why <code>kestrel[falconer]</code> is a <code>falconer</code> although the wrapper itself declares no
+(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>bundle&gt;&gt;role</code> — not the bundle's declaration. A
+<em>shaped nominal</em> trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+asked of <code>bundle&gt;&gt;role</code>, which is why <code>kestrel[falconer]</code> is a <code>falconer</code> although the bundle itself declares no
 <code>name</code>. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
-value, and a field the wrapper's declaration itself types incompatibly (<code>name=&gt;str</code> where the trait wants
+value, and a field the bundle's declaration itself types incompatibly (<code>name=&gt;str</code> where the trait wants
 <code>name=&gt;int</code>) is a veto. A field the declaration stays silent about is not a contradiction — that is exactly the case
 the fiber's value exists to answer.</li>
 <li><strong>Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.</strong> <code>person[ninja]</code> is a
 <code>person</code> and a <code>ninja</code>. The scope guard matters as much as the rule: this is <code>rec</code> only — <code>lst[int]</code> is not an
 <code>int</code>, and <code>object[int]</code> is not an <code>int</code>.</li>
-<li><strong>Covariance is type acceptance only, never dispatch.</strong> A wrapper that merely <em>borrows</em> a fiber by covariance does
+<li><strong>Covariance is type acceptance only, never dispatch.</strong> A bundle that merely <em>borrows</em> a fiber by covariance does
 not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.</li>
-<li><strong>Dispatch is an identity question</strong>: a named domain selects the candidate that IS that type — the fiber whose own
-type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities. |</li>
+<li><strong>Dispatch is an identity question</strong>: a named domain selects the subject that IS that type — the fiber whose own
+type is that name (or whose own <em>shape</em> satisfies a structural one: a ninja carrying a weapon IS a <code>weaponed</code>), or
+the bundle when the name is the bundle's DECLARATION (<code>dojo[master]</code> is a <code>dojo</code>). Borrowed names are not
+identities, and neither is a bundle's own field bag: the bundle is what it instantiates. |</li>
 </ul>
-<p>A shaped nominal trait asks the value at the fiber, not the wrapper:</p>
-<pre><code class="language-mtron">acceptance is asked of the fiber's value, not the wrapper's declaration
-mtron&gt; [-- the wrapper declares ONLY the fiber it exposes --]
+<p>A shaped nominal trait asks the value at the fiber, not the bundle:</p>
+<pre><code class="language-mtron">acceptance is asked of the fiber's value, not the bundle's declaration
+mtron&gt; [-- the bundle declares ONLY the fiber it exposes --]
 mtron&gt; kestrel -&gt; rec[role]::T[?[role=&gt;rec::T]]@kestrel
 mtron&gt; [-- the shaped nominal trait declares the shape of the fiber's value --]
 mtron&gt; falconer -&gt; rec::T[?[name=&gt;str::T]]@falconer
 mtron&gt; jarl -&gt; kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
 ==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
-mtron&gt; [-- the wrapper declares no name; the falconer at `role` carries one, so jarl is a falconer --]
+mtron&gt; [-- the bundle declares no name; the falconer at `role` carries one, so jarl is a falconer --]
 mtron&gt; *jarl.isa(falconer::T)
 ==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]
 mtron&gt; [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
@@ -907,7 +943,7 @@ mtron&gt; *skald.isa(falconer::T)
 </table>
 <h4>worked example: two fibers</h4>
 <p>The declaration names both fibers; the instance types them. <code>position</code> is declared <strong>bare</strong> (<code>rec::T@position</code>) on
-purpose — a trait declared <em>with</em> a shape asks the wrapper's declaration to pass its test, and this wrapper declares
+purpose — a trait declared <em>with</em> a shape asks the bundle's declaration to pass its test, and this bundle declares
 <code>name</code>, <code>age</code>, <code>role</code> and <code>position</code>, not a position's <code>title</code>/<code>rank</code>:</p>
 <pre><code class="language-mtron">a fibered type: the declaration names the fibers, the instance types them
 mtron&gt; person -&gt; rec[role,position]::T[?[name=&gt;str::T,age=&gt;nat::T,role=&gt;rec::T,position=&gt;rec::T]]@person
@@ -919,21 +955,21 @@ mtron&gt; marko -&gt; person[ninja,position]::[name=&gt;'marko',age=&gt;29,role=
     age=&gt;29,
     role=&gt;ninja::[name=&gt;'dark_assassin'],
     position=&gt;position::[title=&gt;'sniper',rank=&gt;5]]@marko
-mtron&gt; [-- untyped: both the wrapper and the role fiber carry a name --]
+mtron&gt; [-- untyped: both the bundle and the role fiber carry a name --]
 mtron&gt; *marko&gt;&gt;name
 ==&gt;'marko'
 ==&gt;'dark_assassin'
 mtron&gt; [-- only the position fiber carries a title; noobj is the identity --]
 mtron&gt; *marko&gt;&gt;title
 ==&gt;'sniper'
-mtron&gt; [-- a wrapper's own field reads alone --]
+mtron&gt; [-- a bundle's own field reads alone --]
 mtron&gt; *marko&gt;&gt;age
 ==&gt;29
 </code></pre>
 <p>The instantiation is carried by the value's own type, so <code>*marko.type()</code> reports the DECLARATION instantiated with
 both arguments — <code>rec[role,position]::T[?[…]]@person[ninja,position]</code> — while <code>*marko</code> still prints the value under
 that type.</p>
-<p>A named domain picks the candidate that IS that type — the role fiber, or the position fiber, never the wrapper that
+<p>A named domain picks the subject that IS that type — the role fiber, or the position fiber, never the bundle that
 merely borrows them. A body that reads a key its own fiber does not carry has nothing to answer:</p>
 <pre><code class="language-mtron">dispatch is identity: a named domain reaches the fiber whose own type is that name
 mtron&gt; aim -&gt; |inst?&lt;=position(){ &gt;&gt;title }
@@ -945,8 +981,8 @@ mtron&gt; *marko.aim?&lt;=position()         [-- the same call with its type nam
 mtron&gt; *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
 ==&gt;'dark_assassin'
 </code></pre>
-<p>An untyped call is about every candidate, so an instruction both fibers declare answers twice; <code>?&lt;=T</code> narrows it, and
-a typer stays on the wrapper alone:</p>
+<p>An untyped call is about every subject, so an instruction both fibers declare answers twice; <code>?&lt;=T</code> narrows it, and
+a typer stays on the bundle alone:</p>
 <pre><code class="language-mtron">untyped fans out, ?&lt;=T selects, a typer does not lift
 mtron&gt; describe?dom=ninja -&gt; |inst?&lt;=ninja(){ 'a shadow' }
 mtron&gt; describe?dom=position -&gt; |inst?&lt;=position(){ 'sniper report' }
@@ -955,7 +991,7 @@ mtron&gt; *marko.describe()               [-- both fibers declare a body: an uno
 ==&gt;'sniper report'
 mtron&gt; *marko.describe?&lt;=position()    [-- one fiber, one answer --]
 ==&gt;'sniper report'
-mtron&gt; *marko.as(person::T)            [-- a typer is opaque: the wrapper alone, the instantiation erased --]
+mtron&gt; *marko.as(person::T)            [-- a typer is opaque: the bundle alone, the instantiation erased --]
 ==&gt;person::[name=&gt;'marko',
             age=&gt;29,
             role=&gt;ninja::[name=&gt;'dark_assassin'],

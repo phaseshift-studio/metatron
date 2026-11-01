@@ -226,8 +226,12 @@ public interface Type extends Obj {
     }
 
     default boolean isIsaPredicate() {
+        // THE OPERATION KIND IS THE BASE PATH: the predicate inst's tid carries the CONTRACT (dom/rng/args — the type
+        // argument it was minted with), none of which changes WHICH operation it is. A full-tid equality here made a
+        // predicate like `isa?args=[...]` read as "no isa predicate", and isPredicateObj() then answered null to a
+        // caller that assumes a predicate.
         return this.hasPredicate() && this.predicate().isObjCall() && this.predicate().asCall().insts().size() == 1 &&
-                this.predicate().asCall().insts().getFirst().tid().equals(ISA_INST_TID);
+                this.predicate().asCall().insts().getFirst().tid().basePath().equals(ISA_INST_TID);
     }
 
     default Obj isPredicateObj() {
@@ -326,18 +330,34 @@ public interface Type extends Obj {
                         .map(fiber -> fiber.c(fiber.c().mult(this.c()))).map(Obj::asType).toList();
     }
 
+    default List<Tuple.Pair<fURI, Type>> recFiberIndex() {
+        //System.out.println("TYPE: " + this);
+        final List<Type> types = this.vid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
+        //System.out.println("FIBER TYPES: " + types);
+        final List<fURI> index = this.tid().poly().stream().map(fURI.Singleton::f).toList();//.elements().map(e -> T(e.uriValue())).toList();
+        //System.out.println("INDEX: " + index);
+        final List<Tuple.Pair<fURI, Type>> typedIndices = new ArrayList<>();
+        //System.out.println(index + "--" + types);
+        if (index.size() != types.size())
+            return List.of();
+        for (int i = 0; i < index.size(); i++) {
+            typedIndices.add(Tuple.Pair.with(index.get(i), types.get(i)));
+        }
+        return typedIndices;
+    }
+
     /**
      * The types at a tensor's indices ({@code lst[int,str]}); empty for any other bracket.
      */
-    default List<Obj> lstIndices() {
-        return this.isTensored() ? this.tid().polyParsed().map(Obj::lstValue).orElse(List.of()) : List.of();
+    default List<Type> lstIndices() {
+        return this.tid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
     }
 
     /**
      * The types at a path's vertices ({@code rel[int,str]}); empty for any other bracket.
      */
-    default List<Obj> relPaths() {
-        return this.isPathed() ? this.tid().polyParsed().map(Obj::lstValue).orElse(List.of()) : List.of();
+    default List<Type> relPaths() {
+        return this.tid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
     }
 
     default Type parentType() {
@@ -687,7 +707,7 @@ public interface Type extends Obj {
                     member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
                             : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
                             : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
-                            : !member.isType() || !poly.isTensored() || testTensor(lst(member.asType().lstIndices()), poly)));
+                            : !member.isType() || !poly.isTensored() || testTensor(lst((List) member.asType().lstIndices()), poly)));
         }
 
         /**
@@ -730,7 +750,7 @@ public interface Type extends Obj {
          * by index, and a missing trailing index passes when its entry admits zero.
          */
         public static boolean testTensor(final Lst lst, final Type tensoredLst) {
-            return lst.test(lst(tensoredLst.lstIndices()));
+            return lst.test(lst((List) tensoredLst.lstIndices()));
         }
 
         /**
@@ -746,11 +766,11 @@ public interface Type extends Obj {
          * rest of the path, while an ordinary obj closes the path at a vertex after which every entry admits zero. A
          * vertex's coefficient is the multiplicity of the value at it, so a vertex that admits zero may be skipped.
          */
-        private static boolean pathTested(final Obj chain, final List<Obj> vertices) {
+        private static boolean pathTested(final Obj chain, final List<Type> vertices) {
             if (vertices.isEmpty())
                 return false;
             final Obj vertex = vertices.getFirst();
-            final List<Obj> rest = vertices.subList(1, vertices.size());
+            final List<Type> rest = vertices.subList(1, vertices.size());
             if (vertex.c().isZeroable() && pathTested(chain, rest))
                 return true;
             return chain.isRel()
@@ -767,7 +787,7 @@ public interface Type extends Obj {
          */
         public static void validatePoly(final Type type) {
             if (type.isPathed()) {
-                final List<Obj> path = type.relPaths();
+                final List<Type> path = type.relPaths();
                 final String first = type.tid().poly().getFirst().trim();
                 if (path.size() < 2)
                     throw MTronException.of(

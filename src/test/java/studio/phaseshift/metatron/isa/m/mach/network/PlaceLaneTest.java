@@ -24,35 +24,31 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.rewrite.Env;
 import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOP;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 /**
  * {@code ?place} AT THE EMITTER (C5 of {@code distributed-qparams-implementation.md}): the place set a fold states —
@@ -77,21 +73,27 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
  */
 public class PlaceLaneTest extends AbstractMetatronTest {
 
-    /** A stated home authority — what makes {@code local} a place in a synthetic env. */
+    /**
+     * A stated home authority — what makes {@code local} a place in a synthetic env.
+     */
     private static final fURI MINE = f("loop://mantis:8555");
-    /** The two loop peers the duplicate-designator row names by address. */
+    /**
+     * The two loop peers the duplicate-designator row names by address.
+     */
     private static final fURI GINGER = f("loop://ginger:8555");
     private static final fURI BOOGER = f("loop://booger:8555");
-    /** The one loop peer the default and S rows fan out over. */
+    /**
+     * The one loop peer the default and S rows fan out over.
+     */
     private static final fURI PEER = f("loop://localhost:8555");
 
     @BeforeEach
     void setup() {
         // typing is not solved across distributed executions yet — run type-check-free, as the forked-peer suite does
-        TypeCheck.disable(TypeCheck.values());
-        InstSet.importInstSet(f("/m/math"));
-        InstSet.importInstSet(f("/m/math/cat"));
+        InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(CAT_ISA_TID);
         Machine.current().compiler(CatTheoryCompiler.single());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
     }
 
     @AfterEach
@@ -323,7 +325,9 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         return Env.of(machine.network().peers(), machine.network().machines(), Set.of(MINE));
     }
 
-    /** A peerless machine that still answers: the lanes case, with no dialed set at all. */
+    /**
+     * A peerless machine that still answers: the lanes case, with no dialed set at all.
+     */
     private static Env alone() {
         return Env.of(rec(), rec(), Set.of(MINE));
     }
@@ -347,7 +351,9 @@ public class PlaceLaneTest extends AbstractMetatronTest {
                 ObjmtronSerializer.parse(source).asCode(), env);
     }
 
-    /** The value of a code, as the harness reads it (a distributed computation's answer). */
+    /**
+     * The value of a code, as the harness reads it (a distributed computation's answer).
+     */
     private static Obj evaluate(final Code code) {
         return TransportRewriteHarness.single(TransportRewriteHarness.evaluate(code));
     }

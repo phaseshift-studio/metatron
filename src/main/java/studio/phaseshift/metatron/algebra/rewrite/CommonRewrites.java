@@ -129,7 +129,7 @@ public final class CommonRewrites {
                     // Accept any data-source instruction: FROM (*) / AT (@), or a
                     // pushed-down sql_limit/sql_where/sql_skip that already carries the
                     // resolved data-path URI in arg(0).
-                    if (!first.tid().test(FROM_INST_TID) && !first.tid().test(AT_INST_TID)
+                    if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID)
                             && !first.arg(0).isUri())
                         return false;
                     final Obj ref = first.arg(0);

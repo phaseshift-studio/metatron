@@ -76,7 +76,7 @@ under `/m/math/+` and available via the standard type resolution system.
 ```mtron
 mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime::<//2026.10:3100/03/30/922?tz=-0600>
+==>datetime::<//2026.11:104/11/58/273?tz=-0700>
 mtron> [-- from record (goes through .as(uri::T) first) --]
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
@@ -241,16 +241,16 @@ Time units require a real-backed value — an int-backed time is a type violatio
 
 ```mtron
 mtron> day::2.as(millis::T)         [-- int-backed time (bad) --]
-==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=day&dom=#{?}(<#{*}>::T)]@day
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][/m/inst/ctor?/m/math/time/day<=(<#{*}>::T)]@day
    	while parsing: day::2.as(millis::T)]
 mtron> hour::2.as(minute::T)        [-- int-backed time (bad) --]
-==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=hour&dom=#{?}(<#{*}>::T)]@hour
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][/m/inst/ctor?/m/math/time/hour<=(<#{*}>::T)]@hour
    	while parsing: hour::2.as(minute::T)]
 mtron> nanos::2.as(millis::T)       [-- int-backed time (bad) --]
-==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=nanos&dom=#{?}(<#{*}>::T)]@nanos
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][/m/inst/ctor?/m/math/time/nanos<=(<#{*}>::T)]@nanos
    	while parsing: nanos::2.as(millis::T)]
 mtron> micros::2.as(millis::T)      [-- int-backed time (bad) --]
-==>fail::[parse error at line 1, col 1: 2 is not a time::T[][ctor?rng=micros&dom=#{?}(<#{*}>::T)]@micros
+==>fail::[parse error at line 1, col 1: 2 is not a time::T[][/m/inst/ctor?/m/math/time/micros<=(<#{*}>::T)]@micros
    	while parsing: micros::2.as(millis::T)]
 ```
 #### relational operators

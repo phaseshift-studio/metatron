@@ -56,8 +56,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -75,10 +75,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.5M ...',
+    'tmpfs                  6.1G  6.6M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  560G ...',
-    'tmpfs                   31G   16M ...',
+    '/dev/nvme1n1p2         916G  562G ...',
+    'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -89,10 +89,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 12ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 13ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 12ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 13ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -141,11 +141,11 @@ mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
-    op      dom          rng      args                f    desc     c_dom  c_rng 
-    start   noobj{0}::T  lst::T   ['ls','whoami']     <j>  initial  {0}    {1}   
-    select  lst::T       lst::T   [id()=>bash(id())]  <j>  mapper   {1}    {1}   
-    rshift  lst::T       #{*}::T  noobj               <j>  scatter  {1}    {*}   
-    sum     #{*}::T      #::T                         <?>  reducer  {*}    {1}   
+    op      dom          rng      args                                            f    desc     c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']                                 <j>  initial  {0}    {1}   
+    select  lst::T       lst::T   [/m/inst/id()=>/m/sys/inst/bash(/m/inst/id())]  <j>  mapper   {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj                                           <j>  scatter  {1}    {*}   
+    sum     #{*}::T      #::T                                                     <?>  reducer  {*}    {1}   
    """
 ```
 ### pipe over the results
@@ -168,7 +168,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 24586     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22926470    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-30 03:47:03.372305...',
+    'Access: 2026-10-31 06:11:42.782633...',
    ...
 ```
 ### a shape of its own
@@ -255,15 +255,16 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>61
+==>63
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::12.8515,
-    free_mem_jvm=>gB::2.9764,
+==>[total_mem_jvm=>gB::14.1406,
+    free_mem_jvm=>mB::1241.7100,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::9.8751,
-    free_jvm=>percent::0,
-    free_mach=>percent::0,
-    thread=>[run=>135,stop=>180236]]
+    used_mem_jvm=>gB::12.9280,
+    jvm=>'OpenJDK 64-Bit Server VM 25.0.3',
+    os=>'Linux 7.0.0-38-generic',
+    arch=>'amd64',
+    ...(4 more)]
 ```
 # file system space (`fsspace::T`)
 

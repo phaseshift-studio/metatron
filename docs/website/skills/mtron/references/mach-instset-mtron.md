@@ -277,9 +277,30 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.
 
-**Not yet wired**: the typer is the identity today, and enforcement still reads the global registry — flags mirrored
-at `/sys/typer/stage`, which a boot profile sets through its `typer/stage` rec. Moving those flags into the machine is
-what the `typer::T` stage is for.
+The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point
+(`code_resolve`, `inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
+`code_resolve`. A boot profile overrides individual points with `typer/check => [code_resolve => true]`.
+
+There are exactly two ways to change it, and both are the same nested write:
+
+```mtron
+mtron> @/compiler/typer/check >>= [inst_dom => false]
+==>[inst_dom=>false,
+    code_resolve=>false,
+    inst_rng=>false,
+    type_pred=>true,
+    obj_write=>true]
+mtron> */compiler/typer/check
+==>[inst_dom=>false,
+    code_resolve=>false,
+    inst_rng=>false,
+    type_pred=>true,
+    obj_write=>true]
+```
+`Typer.Helper` is the Java side of that door, and the one the stages call: the processor asks `instDom()`/`instRng()`
+before invoking, the space asks `objWrite()` before a write, a type-predicate test asks `typePred()`, and the selector
+asks `codeResolve()` before falling back to a dynamic resolution. Because the state is the component's rec, a pushed
+frame inherits the enclosing machine's compiler (it clones the machine rec), so a dialed-down state follows a frame.
 
 ## processor
 
@@ -313,12 +334,12 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      {?}result=><#>::T]]@/m/mach/thread,
           args=>[
-           code=>"the thread's executing code",
-           {?}runtime=>"computes the thread's current runn...",
            {?}result=>'the last result produced by the th...',
-           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}runtime=>"computes the thread's current runn...",
+           code=>"the thread's executing code",
+           {?}state=>'current state of the thread',
            {?}time=>'the datetime::T when the thread wa...',
-           {?}state=>'current state of the thread'],
+           {?}loop=>'delay to repeat code evaluation (d...'],
           desc=>'[structural] the thread base type',
           core=>docs::[
            obj=>thread::T[][ctor?core<=(#{*}::T){<j>}]@/m/mach/thread/core,
@@ -378,23 +399,23 @@ mtron> */m/mach/component/network?docq
      {?}roster=>[
       {?}discover=>rec::T[?[status=>bool::T]]@/m/web/discovery,
       {?}machine=>[uri::T=>uri::T]],
-     {?}peer=>[uri::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
-      origin=>uri::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T)]@/m/uri/origin,
+     {?}peer=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
+      origin=>uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/origin,
       {?}host=>uri::T,
       {?}client=><#>::T]]@/m/mach/peer],
-     {?}listener=>[uri::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
-      origin=>uri::T[/m/inst/pred?rng=#{?}&dom=#{?}(<#{*}>::T)]@/m/uri/origin,
+     {?}listener=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
+      origin=>uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/origin,
       {?}route=>[uri::T=><#>::T],
       {?}server=><#>::T]]@/m/mach/listener],
      {?}supervisor=>rec::T[?[status=>union(supervising,closed)]][ctor?network_supervisor<=(#{*}::T){<j>}]@/m/mach/network_supervisor,
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
            {?}roster=>'known machines, connectionless: <h...',
-           {?}listener=>'the sockets this machine serves th...',
+           {?}pattern=>'the branch this network answers as...',
+           {?}peer=>"machine's own connections, one per...",
            {?}status=>'the health method — an auto inst c...',
-           {?}peer=>"machine's own connections, one per..."],
+           {?}listener=>'the sockets this machine serves th...'],
           desc=>"[structural] a machine's network: ...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',

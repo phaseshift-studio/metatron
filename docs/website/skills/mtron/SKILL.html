@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_math_geo.html"><img
+                                src="../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../instset/m_sys.html"><img
                                 src="../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -899,6 +906,13 @@ pattern-based access, <code>lineq</code> line-level editing).</li>
 <li><a href="references/math-instset-mtron.html">math instruction set</a> -- <code>/m/math</code>: the unit types (<code>time</code>, <code>datasize</code>,
 <code>currency</code>), the <code>datetime</code> uri and its construction/arithmetic, <code>normalize</code> and the trig/rounding instructions, and
 the <code>pi</code>/<code>e</code> constants.</li>
+<li><a href="references/geo-instset-mtron.html">geo instruction set</a> -- <code>/m/math/geo</code>: GeoJSON with the JSON taken out — six
+list-shaped types where a point IS a position, a line IS an ordered list of points and a polygon IS a list of lines
+(<code>geo:geometry</code>/<code>geo:point</code>/<code>geo:line</code>/<code>geo:polygon</code>, plus <code>geo:bbox</code>/<code>geo:bbox2d</code>/<code>geo:bbox3d</code>); every <code>Multi*</code> is
+a coefficient, a Feature is a rec with a <code>geo:</code>-prefixed fiber, and the geodesic/planar algorithms a space without
+native spatial support needs (<code>geo:distance</code>, <code>geo:area</code>, <code>geo:centroid</code>, <code>geo:envelope</code>,
+<code>geo:contains</code>/<code>geo:inside</code>/<code>geo:intersects</code>), the <code>as(json::T)</code> and <code>geo:wkt()</code> encodings, the family's law table,
+and the <code>geoRewrite.pushdown</code> contract that lets a spatial space replace the algorithms with its own operator.</li>
 <li><a href="references/cat-instset-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
 outV the dom, inV the rng) and <code>?asq</code> as its property map: the six edge kinds and what each means when you add a
 cast, how to read an edge that no row declares, the fully generic arg-type cast behind a plain tag, and the

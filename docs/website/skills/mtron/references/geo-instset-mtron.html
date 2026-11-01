@@ -1,0 +1,901 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>geo instruction set · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">geo instruction set</h1>
+        <small>The GeoJSON (RFC 7946) model at /m/math/geo, in six types: a point IS a position, a line IS an ordered list of points, a polygon IS a list of lines — the kind is the type's name, and there is no type or coordinates key anywhere in the model. Every Multi* form is a coefficient, a Feature is a rec with a geo:-prefixed fiber, and the JSON vocabulary lives only in ObjGeoJSONSerializer. Plus the geodesic and planar algorithms (distance, length, area, centroid, envelope, contains, inside, intersects) and the two encodings (GeoJSON and WKT). TRIGGER: when reading or writing a GeoJSON document, building a geometry from a list or from text, measuring a geometry, asking whether one geometry contains, lies inside or intersects another, handing a geometry to a spatial database as WKT, or declaring a native spatial pushdown.</small><br/>
+        <a href="geo-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>geo-instset-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>the geographic instruction set (<code>/m/math/geo</code>)</h2>
+<p><code>/m/math/geo</code> is GeoJSON with the JSON taken out of it. The wire format's <code>type</code>, <code>coordinates</code>, <code>geometry</code>,
+<code>properties</code> and <code>features</code> keys exist because JSON has no type system: a point cannot say &quot;I am a position&quot;, so the
+document says it for the point. mtron does not need the help. <strong>A point IS a position. A line IS an ordered list of
+points. A polygon IS a list of lines.</strong> The model is the value, the kind is the value's type name, and everything
+GeoJSON adds on top — the <code>Multi*</code> synonyms, the feature wrapper, the properties bag — is a mapping that happens at the
+boundary and nowhere else.</p>
+<p><strong>The names carry no <code>geo_</code> prefix: the instruction set's namespace IS the prefix.</strong></p>
+<pre><code class="language-mtron">mtron&gt; import(/m/math/geo,geo)
+...
+</code></pre>
+<h3>the model</h3>
+<pre><code>lst::T@geometry                                         any list: a shape on the earth
+geometry::T[?[real::T,real::T,real{?}::T]]@point        a coordinate pair, or a triple with an altitude
+geometry::T[?[point{+}::T]]@line                        an ORDERED list of points
+geometry::T[?[line{+}::T]]@polygon                      a shell line, then zero or more hole lines
+
+lst::T@bbox                                             the nominal base of an envelope
+bbox::T[?[real::T,real::T,real::T,real::T]]@bbox2d      [λmin, φmin, λmax, φmax]
+bbox::T[?[real::T,real::T,real::T,real::T,real::T,real::T]]@bbox3d   [λmin, φmin, hmin, λmax, φmax, hmax]
+</code></pre>
+<p>Six types. The two bases declare <strong>no poly</strong> — a refinement declares its own shape, so <code>geometry</code> is the family label
+and <code>point</code>, <code>line</code>, <code>polygon</code> are the shapes:</p>
+<pre><code>lst
+├── geo:geometry          &quot;a shape on the earth&quot; — the instruction domain
+│   ├── geo:point         [λ, φ[, h]]
+│   ├── geo:line          [point{+}]
+│   └── geo:polygon       [line{+}]
+└── geo:bbox
+    ├── geo:bbox2d        [λmin, φmin, λmax, φmax]
+    └── geo:bbox3d        [λmin, φmin, hmin, λmax, φmax, hmax]
+</code></pre>
+<p>There is <strong>no <code>position</code>, no <code>multipoint</code>, no <code>multilinestring</code>, no <code>multipolygon</code>, no <code>geometrycollection</code> and no
+<code>feature</code> type.</strong> A multi-point is a <em>bag</em> of points (<code>point{2,}::T</code>), a multi-line is a bag of lines, a collection is a
+bag of geometries, and a feature is a rec — coefficients and fields, not types. The bag/list distinction is real (a bag
+has no order, a line does) and JSON has no way to say it; that difference is the serializer's business.</p>
+<p>A <code>point</code> is two or more reals: the RFC's two or three, plus the further elements §3.1.1 allows after the altitude. A
+<code>line</code> needs at least one point and a <code>polygon</code> at least one line, and construction is checked against exactly those
+declarations:</p>
+<pre><code class="language-mtron">mtron&gt; geo:point::[-123.13,44.47]                          [-- a point: a coordinate pair --]
+==&gt;geo:point::[-123.13,44.47]
+mtron&gt; geo:point::[-123.13,44.47,1240.0]                   [-- and with an altitude (Powell Butte, ~1240 m) --]
+==&gt;geo:point::[-123.13,44.47,1240.0]
+mtron&gt; geo:line::[[-123.13,44.47],[-121.18,45.61]]         [-- a line: Portland to The Dalles --]
+==&gt;geo:line::[[-123.13,44.47],
+              [-121.18,45.61]]
+mtron&gt; geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]]
+==&gt;geo:polygon::[[[-123.2,44.4],
+                  [-122.9,44.4],
+                  [-122.9,44.6],
+                  [-123.2,44.6],
+                  [-123.2,44.4]]]
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; geo:point::[-123.13]                        [-- fail: not enough coordinates --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match geo:point::T
+     [[-123.13]
+         X=&gt;
+     geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
+     ─────────────────────────────────────────────────────────────────────────────────────
+     [==&gt;-123.13,X=&gt;noobj,==&gt;noobj]]
+     predicate apply failed on execution
+   	while parsing: geo:point::[-123.13]]
+mtron&gt; geo:point::[1,2]                            [-- fail: mtron's int is not a real --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match geo:point::T
+     [[1,2]
+         X=&gt;
+     geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
+     ─────────────────────────────────────────────────────────────────────────────────────
+     [X=&gt;1,X=&gt;2,==&gt;noobj]]
+     predicate apply failed on execution
+   	while parsing: geo:point::[1,2]]
+mtron&gt; geo:line::[-123.13,44.47]                   [-- fail: a line is a list of POINTS --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match geo:line::T
+     [[-123.13,44.47]
+         X=&gt;
+     geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [X=&gt;-123.13,X=&gt;44.47]]
+     predicate apply failed on execution
+   	while parsing: geo:line::[-123.13,44.47]]
+</code></pre>
+<h3>what the wire adds, and where</h3>
+<p>The mapping table is the whole of GeoJSON's extra vocabulary, and every row is a serializer rule rather than a type:</p>
+<table>
+<thead>
+<tr><th>the model</th><th>the document</th></tr>
+</thead>
+<tbody>
+<tr><td><code>point::[λ,φ]</code></td><td><code>{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[λ,φ]}</code></td></tr>
+<tr><td><code>line::[[λ,φ],…]</code></td><td><code>{&quot;type&quot;:&quot;LineString&quot;,&quot;coordinates&quot;:[[λ,φ],…]}</code></td></tr>
+<tr><td><code>polygon::[[[λ,φ],…],…]</code></td><td><code>{&quot;type&quot;:&quot;Polygon&quot;,&quot;coordinates&quot;:[[[λ,φ],…],…]}</code></td></tr>
+<tr><td>a <strong>bag</strong> of points (<code>point{2,}::T</code>)</td><td><code>{&quot;type&quot;:&quot;MultiPoint&quot;,&quot;coordinates&quot;:[…]}</code></td></tr>
+<tr><td>a bag of lines</td><td><code>{&quot;type&quot;:&quot;MultiLineString&quot;,…}</code></td></tr>
+<tr><td>a bag of polygons</td><td><code>{&quot;type&quot;:&quot;MultiPolygon&quot;,…}</code></td></tr>
+<tr><td>a bag of mixed geometries</td><td><code>{&quot;type&quot;:&quot;GeometryCollection&quot;,&quot;geometries&quot;:[…]}</code></td></tr>
+<tr><td>a <strong>rec with a <code>geo:</code>-prefixed fiber</strong> (<code>rec[geo:+]::T</code>)</td><td><code>{&quot;type&quot;:&quot;Feature&quot;,&quot;geometry&quot;:{…},&quot;properties&quot;:{…}}</code></td></tr>
+<tr><td>a bag of such recs</td><td><code>{&quot;type&quot;:&quot;FeatureCollection&quot;,&quot;features&quot;:[…]}</code></td></tr>
+<tr><td><code>bbox2d</code> / <code>bbox3d</code></td><td>the <code>&quot;bbox&quot;</code> field on an object</td></tr>
+</tbody>
+</table>
+<p>The document's <code>type</code> is consumed on the way in (the tid says the kind) and derived on the way out; its <code>coordinates</code>
+is the value itself; a <code>Feature</code>'s <code>properties</code> come back <strong>into</strong> the rec, flattened, because properties are just the
+rec's other fields. <code>ObjGeoJSONSerializer</code> is the only place any of these words appear.</p>
+<pre><code class="language-mtron">mtron&gt; geo:point::[-123.13,44.47].as(json::T)      [-- json::'{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-123.13,44.47]}' --]
+==&gt;
+   json::'{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-123.13,44.47]}'
+   
+   
+mtron&gt; geo:line::[[-123.13,44.47],[-121.18,45.61]].as(json::T)
+==&gt;
+   json::'{&quot;type&quot;:&quot;LineString&quot;,&quot;coordinates&quot;:[[-123.13,44.47],[-121.18,45.61]]}'
+   
+   
+mtron&gt; '{&quot;type&quot;:&quot;Point&quot;,&quot;coordinates&quot;:[-123.13,44.47]}'.as(geo:point::T)   [-- back to the bare point --]
+==&gt;point::[-123.13,44.47]
+</code></pre>
+<h4>a feature is a rec, and the wild-fiber is how you say so</h4>
+<p>Declare the fiber with the <code>geo:</code> namespace and the rec becomes a feature: everything else on the rec is its
+<code>properties</code>, and the geometry answers the geo instructions <strong>untyped</strong> — the engine offers the call to the values the
+fiber exposes, so the point inside the person receives it.</p>
+<pre><code class="language-mtron">mtron&gt; person -&gt; rec[geo:location]::T[?[name=&gt;str::T]]@person
+...
+mtron&gt; person::[name=&gt;'marko',geo:location=&gt;geo:point::[-123.0,44.5]]@marko
+==&gt;person::[name=&gt;'marko',
+            geo:location=&gt;geo:point::[-123.0,44.5]]@marko
+mtron&gt; *marko.kind()                                         [-- Point: the geometry at the fiber answers --]
+==&gt;Point
+mtron&gt; *marko.inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])  [-- true --]
+==&gt;true
+mtron&gt; *marko&gt;&gt;geo:location                                   [-- the point itself --]
+==&gt;geo:point::[-123.0,44.5]
+</code></pre>
+<p>On the way out that rec is a GeoJSON <code>Feature</code> — <code>geometry</code> is the fiber's value, <code>properties</code> is <code>{name: &quot;marko&quot;}</code> —
+and on the way back in the properties are flattened into the rec again. No feature type exists at either end.</p>
+<h3>the questions</h3>
+<table>
+<thead>
+<tr><th>instruction</th><th>answer</th></tr>
+</thead>
+<tbody>
+<tr><td><code>geo:kind()</code></td><td>the kind, as a uri: <code>Point</code>, <code>LineString</code>, <code>Polygon</code> — read off the type</td></tr>
+<tr><td><code>geo:coordinates()</code></td><td>every stored position, in document order, as stamped points</td></tr>
+<tr><td><code>geo:envelope()</code></td><td>the enclosing <code>geo:bbox2d</code></td></tr>
+<tr><td><code>geo:distance(g)</code></td><td>geodesic metres to <code>g</code>; <code>0</code> when they intersect (a point in a polygon)</td></tr>
+<tr><td><code>geo:length()</code></td><td>geodesic metres of every polyline and polygon boundary</td></tr>
+<tr><td><code>geo:area()</code></td><td>square metres of the polygonal part, shell positive and holes negative</td></tr>
+<tr><td><code>geo:centroid()</code></td><td>the representative point</td></tr>
+<tr><td><code>geo:contains(g)</code> / <code>geo:inside(g)</code> / <code>geo:intersects(g)</code></td><td>the three predicates; <code>inside</code> also takes a <code>geo:bbox2d</code>/<code>geo:bbox3d</code></td></tr>
+<tr><td><code>geo:wkt()</code> / <code>as(json::T)</code> / <code>as(&lt;kind&gt;::T)</code></td><td>the two string encodings, out and in</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mtron&gt; geo:point::[-123.13,44.47].geo:kind()               [-- Point --]
+==&gt;Point
+mtron&gt; geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:envelope()   [-- geo:bbox2d::[-123.13,44.47,-121.18,45.61] --]
+==&gt;bbox2d::[-123.13,44.47,-121.18,45.61]
+mtron&gt; geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()     [-- meter::121998.59… the Columbia gorge --]
+==&gt;meter::198845.0518
+mtron&gt; geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 2.65e8 m² --]
+==&gt;5.2931E8
+mtron&gt; geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:contains(geo:point::[-123.05,44.5])   [-- true --]
+==&gt;true
+mtron&gt; geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- true --]
+==&gt;true
+</code></pre>
+<h3>what the numbers mean</h3>
+<ul>
+<li><strong>distance</strong> is the great-circle distance (haversine, IUGG mean radius 6371008.8 m) — exact on the sphere to
+centimetres, and <code>0</code> when the geometries intersect, so a point inside a polygon is at distance zero rather than at the
+distance to the nearest vertex;</li>
+<li><strong>length</strong> sums the same distance along each polyline, and along a polygon's boundary (closing the ring);</li>
+<li><strong>area</strong> is the planar shoelace formula scaled by \(R^2\cos\bar\varphi\) at the mean latitude of the stored positions:
+exact for a rectangle whose sides run along parallels and meridians, an approximation otherwise;</li>
+<li><strong>contains/intersects</strong> are exact for a point, a vertex-on-vertex test plus a ray cast otherwise;</li>
+<li>the <strong>envelope</strong> is always the axis-aligned box around every stored position.</li>
+</ul>
+<p>What is <em>not</em> modeled is stated rather than half-done: there is no antimeridian cutting (RFC 7946 §3.1.9), no ring
+closure check (a &quot;ring&quot; is a line, and the RFC's first-point-equals-last is the caller's to honour), no altitude in any
+measurement, and no 3D envelope on a geometry (a <code>bbox3d</code> is a value of its own, not a field the model carries).</p>
+<h3>the algebra the rewriter may use</h3>
+<p><code>geoInstSetLawTable</code> declares what a rewrite may do to a geo instruction: a native spatial operator may be substituted
+only where the laws license it, so <strong>an undeclared instruction is one the optimizer must leave alone.</strong></p>
+<table>
+<thead>
+<tr><th>instruction</th><th>laws</th><th>what it licenses</th></tr>
+</thead>
+<tbody>
+<tr><td><code>geo:distance</code></td><td><code>commutative</code>, <code>pure</code></td><td>operand order is free, so two callers reach one native operator</td></tr>
+<tr><td><code>geo:intersects</code></td><td><code>commutative</code>, <code>idempotent</code>, <code>pure</code></td><td>a conjunct may be deduplicated and its operands swapped</td></tr>
+<tr><td><code>geo:contains</code> / <code>geo:inside</code></td><td><code>pure</code>, each other's INVERSE</td><td>a space with <code>ST_Within</code> alone answers <code>ST_Contains</code></td></tr>
+<tr><td><code>geo:envelope</code>, <code>geo:kind</code>, <code>geo:coordinates</code>, <code>geo:wkt</code></td><td><code>pure</code></td><td>structural projections have no effect, so a rewrite can move or drop them</td></tr>
+<tr><td><code>geo:area</code>, <code>geo:length</code></td><td><code>pure</code>, <code>blocked</code></td><td>measured here, not floatable to a native operator</td></tr>
+</tbody>
+</table>
+<p>A geometry is not a ring, a monoid or a lattice: there is no <code>plus</code> of two geometries, so the family declares no
+carrier algebra and <code>typeLawsUncached</code> answers the empty rec. The measures are homomorphisms <strong>to</strong> the reals, not
+operations on geometries.</p>
+<h3>pushdown</h3>
+<p>The instructions are for spaces that have <strong>no</strong> spatial support. One that does — PostGIS behind <code>/m/db/tble</code>, a
+document store's geo operator, a graph database's predicate — should answer <code>from(&lt;path&gt;).geo:inside(&lt;polygon&gt;)</code> with an
+indexed operator and never materialize the geometry in the VM. <code>geoRewrite</code> provides the pushdown factories; nothing is
+registered by default, because a pushdown is a claim about a backend, not about this family.</p>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

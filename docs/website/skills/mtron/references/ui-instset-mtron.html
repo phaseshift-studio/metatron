@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -541,8 +548,8 @@ the same declarations the type checker uses:</p>
            dom=&gt;'maybe an obj',
            rng=&gt;'an accordion obj',
            args=&gt;[
-            {?}body=&gt;'the body content of the accordion',
-            {?}title=&gt;'the title of the accordion'],
+            {?}title=&gt;'the title of the accordion',
+            {?}body=&gt;'the body content of the accordion'],
            desc=&gt;'[structural] an expandable/collaps...'],
           progress_table_widget=&gt;docs::[
            obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/progress_table_widget,
@@ -556,9 +563,9 @@ the same declarations the type checker uses:</p>
            dom=&gt;'maybe an obj',
            rng=&gt;'a table widget',
            args=&gt;[
-            {?}header=&gt;'a lst of obj table headers',
+            {?}metadata=&gt;'a lst of rows of data behind the d...',
             {?}row=&gt;'a lst of poly table rows',
-            {?}metadata=&gt;'a lst of rows of data behind the d...'],
+            {?}header=&gt;'a lst of obj table headers'],
            desc=&gt;'[structural] a tabular data widget'],
           tree_widget=&gt;docs::[
            obj=&gt;widget::T[?[
@@ -571,12 +578,12 @@ the same declarations the type checker uses:</p>
            dom=&gt;'maybe an obj',
            rng=&gt;'a tree widget',
            args=&gt;[
-            {?}code=&gt;'transform obj prior to insertion i...',
-            {?}expand=&gt;'branch uris whose children are rea...',
-            {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-            max=&gt;'the max depth to traverse',
+            root=&gt;'the root uri to traverse from',
             {?}flatten=&gt;'fold single-folder chains into one...',
-            root=&gt;'the root uri to traverse from'],
+            max=&gt;'the max depth to traverse',
+            {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
+            {?}expand=&gt;'branch uris whose children are rea...',
+            {?}code=&gt;'transform obj prior to insertion i...'],
            desc=&gt;'[structural] the root uri space is...'],
           ...(11 more)]
 </code></pre>

@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.network;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -80,7 +80,7 @@ public final class PeerNode {
         // it logs at default DEBUG and three concurrent chatty boots will not be ready before the test does
         BootLoader.load(rec(uri("log"), uri("warn")));
         // typing is not solved across distributed executions yet — a peer evaluates shipped code type-check-free
-        TypeCheck.disable(TypeCheck.values());
+        Typer.CHECKS.forEach(flag -> Typer.Helper.set(flag, false));
         memSpace.unregistered(rec(uri(PATTERN), uri("/sys/#")), null).addQ(QCollection.incrQ());
         InstSet.importInstSet(f("/m/web"));
         trace("peer %d: booted (root=%s, port=%d)", index, root, port);

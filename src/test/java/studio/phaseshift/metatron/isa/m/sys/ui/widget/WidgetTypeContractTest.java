@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -65,12 +65,12 @@ public class WidgetTypeContractTest extends AbstractInstSetTest {
 
     @BeforeEach
     void typeChecksOn() {
-        TypeCheck.enable(TypeCheck.type_pred);
+        Typer.Helper.set(Typer.TYPE_PRED, true);
     }
 
     @AfterEach
     void typeChecksOff() {
-        TypeCheck.disable(TypeCheck.type_pred);
+        Typer.Helper.set(Typer.TYPE_PRED, false);
     }
 
     @ParameterizedTest

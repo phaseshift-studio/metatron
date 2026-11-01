@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
@@ -37,6 +38,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -124,7 +126,7 @@ public final class mInsts {
                         .rng(REAL_TID, "the mean of the lhs int stream").argLst()
                         .body((lhs, inst) -> real(lhs.stream().mapToLong(Obj::intValue).average().orElse(0L)))
                         .examples("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
-                        .law(Law.magmadic, Law.commutative, Law.pure)
+                        .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(GT_INST_TID, "check whether the lhs int is greater than the argument int")
                         .dom(INT_TID, "the lhs int").rng(BOOL_TID, "whether the lhs is greater than the rhs")
@@ -283,7 +285,7 @@ public final class mInsts {
                         .argLst()
                         .body((lhs, inst) -> real(lhs.stream().mapToDouble(Obj::realValue).average().orElse(0.0)))
                         .examples("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
-                        .law(Law.magmadic, Law.commutative, Law.pure)
+                        .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "a power function \\(f(x, n) \\nearrow x^n\\): the lhs real raised to the arg real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the lhs real raised to the arg real")
@@ -766,6 +768,23 @@ public final class mInsts {
                         .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()))
                         .law(Law.monoidic, Law.pure)
                         .create(),
+                InstBuilder.build().tid(ZIP_INST_TID, "interleave lst argument with lhs lst")
+                        .dom(LST_TID, "elements are lhs of zip").rng(LST_TID, "lst of zip pairs")
+                        .argLst(T(A.some()), "elements are the rhs of zip")
+                        .body((lhs, inst) -> {
+                            final List<Obj> zipList = new ArrayList<>();
+                            final List<Obj> lhsList = lhs.lstValue();
+                            final List<Obj> argList = inst.arg(0).lstValue();
+                            final int lhsMaxIndex = lhsList.size();
+                            final int argMaxIndex = argList.size();
+                            final int index = Math.min(lhsMaxIndex, argMaxIndex);
+                            for (int i = 0; i < index; i++) {
+                                zipList.add(lst(lhsList.get(i).c(c -> c.mult(lhs.c())), argList.get(i).c(c -> c.mult(inst.args().c()))));
+                            }
+                            return lst(zipList);
+                        })
+                        .law(Law.monoidic, Law.pure)
+                        .create(),
                 InstBuilder.build().tid(SELECT_INST_TID, "select the slots of the lhs lst at the argument keys")
                         .dom(LST_TID, "the lst to select from").rng(B.maybeSome(), "the selected slots")
                         .argLst(T(A.some()), "the keys to select")
@@ -1069,6 +1088,30 @@ public final class mInsts {
      */
     public static Set<Inst> objs_insts() {
         return new LinkedHashSet<>(List.of(
+                docWrap(InstBuilder.build()
+                                .tid(FROM_INST_TID)
+                                .dom(ALL.maybe())
+                                .rng(B.maybeSome())
+                                .args(lst(URI_TYPE)).body((lhs, inst) -> {
+                                    final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
+                                    // A COMPONENT IS ITS LOCUS, so a dereference hands it back AS ITSELF. Types, machines
+                                    // and SPACES are exempt from the detaching copy: everything else may be copied and
+                                    // have its address stripped (a dereferenced value is a value, not a place), but a
+                                    // component read through an address is the ONE object stored there. Copying one made
+                                    // every dereference of `*~/instset` a different object from `*</instset>` — two
+                                    // reads of one slot that could not be compared — and no identity-stable read of a
+                                    // memory, an ISA or a mounted space was possible at all.
+                                    return readObj.isType() || readObj.isMachine() || readObj.isSpace()
+                                            ? readObj
+                                            : readObj.clone().selfVID(null);
+                                })
+                                .law(Law.monoidic)
+                                .create(), // TODO: only resolves when explicit mono args (not code args)
+                        "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
+                        "*abc        [-- obj at abc                            --]",
+                        "abc.*_      [-- obj at abc via dynamic arg generation --]",
+                        "c.*ab${_}   [-- obj at abc via uri template parameter --]",
+                        "from(abc)   [-- obj at abc non-sugar form             --]"),
                 InstBuilder.build()
                         .tid(PROFILE_INST_TID, "generates a profiling::T analysis of the current expression")
                         .dom(ALL.maybe(), "the expression being profiled")

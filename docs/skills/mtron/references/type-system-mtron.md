@@ -340,7 +340,7 @@ ints is not an int). The coefficient is where extent lives, not another coordina
 holding four ints, while `lst[int,int,int,int]` is four positions.
 
 **A fibered type's entries are distinct objects.** `person[ninja]` is a person *and* a ninja; the ninja is not the
-wrapper's content but an object the wrapper exposes. So a value of that type is acceptable where `ninja::T` is
+bundle's content but an object the bundle exposes. So a value of that type is acceptable where `ninja::T` is
 expected (its base or any fiber — see *acceptance and covariance*), and an instruction declared on `ninja` applies to
 the fiber's value as if it had been declared top-level.
 
@@ -385,6 +385,13 @@ coefficient is not a multiplicity at all, so a path reports it as not yet matche
 
 ### declaring a fibered type vs instantiating one
 
+Three words, used consistently from here on:
+
+- **bundle** — a value of a *fibered type*: the outer `rec::T` (`person[ninja]::[…]`). Formerly called the bundle.
+- **fiber** — a particular field of that `rec::T` that its bracket LIFTS: the key/value becomes a virtual sibling of
+  the rec's other fields, so an instruction can reach it as if it stood alone (`role` holding the ninja).
+- **field** — any `key=>value` pair of a `rec::T`. Every fiber is a field; most fields are not fibers.
+
 A fibered type is spelled twice, and the two brackets say different things:
 
 ```
@@ -395,8 +402,9 @@ person[ninja,position]::[...]
        ^^^^^^^^^^^^^^^ the INSTANCE's poly gives their TYPES (their contents)
 ```
 
-- the DECLARATION's poly is a list of **field names** — the fibers this wrapper exposes;
-- the INSTANCE's poly is a list of **type arguments** — what each fiber's value is.
+- the DECLARATION's poly is a list of **field names** — the fibers this bundle exposes (its key range);
+- the INSTANCE's poly is a list of **type arguments** — what each fiber's value is (its value range). A KEY belongs
+  in the declaration's bracket, never the instance's: `human[geo]` would type a fiber with the key's own name.
 
 The declaration's entries are parameters and the instance's are arguments, so resolution substitutes one for the
 other positionally: `person[role]` + `[ninja]` → `person[ninja]`, an unclaimed parameter keeps its declared entry, and
@@ -409,19 +417,38 @@ layer, by that bound substitution rather than by the bracket claim.
 ### lifting (dispatch into a fiber)
 
 An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: `fight?<=ninja()` on a
-`person[ninja]` wrapper reaches the `ninja` object inside it, not the wrapper.
+`person[ninja]` bundle reaches the `ninja` object inside it, not the bundle.
 
-Mechanically there is nothing trait-aware anywhere in the processor. The candidate set is the wrapper **plus the
-values of the fields the declaration's poly names**, and each candidate is resolved and invoked on its own — so the
-"selection" is ordinary resolution, not a lookup table keyed by the declaration:
+Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE **plus the values
+of its FIBERS**, and each subject is selected and invoked on its own — so the "selection" is ordinary resolution, not
+a lookup table keyed by the declaration:
 
-- an **untyped call lifts over all fibers**; `?<=T` selects one candidate, because a named domain is the subject the
+- an **untyped call lifts over all fibers**; `?<=T` selects one subject, because a named domain is the subject the
   call is about.
-- `noobj` is the multiplicity identity, so `{noobj, 29}` = `29`: a candidate the instruction is not about contributes
-  nothing. A `fail::` is not the identity — it PROPAGATES — or an instruction that broke on one part of the wrapper
+- a **base-typed domain is about a subject's own form, never its name**: `?<=rec(...)` reaches the bundle AND a
+  fiber whose own type refines `rec` — `ninja::T` is a `rec::T`, so the ninja answers a rec-typed instruction as
+  itself — while `?<=lst(...)` reaches neither, and `?<=int(...)` reaches only an int-valued fiber
+  (`ex::[o=>12].plus?<=int` adds at `o`, since the bundle is a rec, not an int).
+- a **named domain** splits the two levels. The **bundle** answers as the very type it instantiates — a bracket does
+  not change the name (`dojo[master]` is a `dojo`; a predicated domain additionally requires the same predicates) —
+  and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A **fiber** answers as the
+  value it holds, so a *structural* type (`weaponed -> rec::T[?[weapon=>str::T]]`) is also satisfied by a fiber's own
+  shape: the ninja at `role` carrying a weapon answers `?<=weaponed(...)` as itself. That is why `?<=weaponed` reaches
+  the ninja and never the bundle.
+- **the fiber bundle speaks first**: when the domain NAMES a type the bundle itself is, the bundle is the subject
+  and its fibers are not asked — `weaponed[weaponed]::[weapon=>'axe',role=>weaponed::[weapon=>'knife']]` answers
+  `?<=weaponed(weapon)` with `'axe'` alone, not `{'axe','knife'}`. A domain that names no single subject — a generic
+  one, or a base FORM (about every subject of that form) — does not supersede: `?<=rec` and an untyped read still
+  sum over both levels.
+- **a FILTER asks the bundle first too**: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
+  so `*marko.?weaponed::T` answers `*marko` (the bundle is accepted as a weaponed through the ninja it exposes; the
+  filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
+  fibers, and a `fail::` from the bundle still propagates.
+- `noobj` is the multiplicity identity, so `{noobj, 29}` = `29`: a subject the instruction is not about contributes
+  nothing. A `fail::` is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
   would read as a success.
-- candidates are **one level deep**: a candidate that is itself a wrapper is applied to as the object it is, never
-  expanded again.
+- subjects are **one level deep**: a fiber that is itself a bundle is applied to as the object it is, never expanded
+  again.
 - `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**. A typer retypes the one object it is given,
   so it is opaque: `as(person::T)` is both the narrowing escape from a fan-out and the exception to it (it changes the
   basis, so it cannot be distributed over the old one).
@@ -430,7 +457,7 @@ values of the fields the declaration's poly names**, and each candidate is resol
 - a fan-out result is an **unordered multiplicity**. When order or provenance matters the user writes the keyed rec
   explicitly — one key per fiber, each narrowing its own call (`[role => *marko.describe?<=ninja(), position =>
   *marko.describe?<=position()]`). There is no keyed projection that does it for you.
-- a wrapper on which **no candidate** applies yields `noobj` — a miss is not a failure. The same miss on a non-wrapper
+- a bundle on which **no subject** applies yields `noobj` — a miss is not a failure. The same miss on a non-bundle
   value is still a loud `unable to locate inst-f`, because there is nothing else to try.
 
 ### acceptance and covariance
@@ -441,33 +468,35 @@ instruction run on* (dispatch).
 - **A fiber named at coefficient one must be there.** The value is tested against the declaration, and a field it
   does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
   `rec[role,position{?}]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
-- **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the wrapper's fibers
+- **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the bundle's fibers
   (`person[ninja]` puts a ninja at the field the declaration calls `role`), so the object a trait's shape is about
-  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `wrapper>>role` — not the wrapper's declaration. A
-  *shaped nominal* trait therefore accepts a wrapper that only exposes the trait-carrying fiber: the trait's shape is
-  asked of `wrapper>>role`, which is why `kestrel[falconer]` is a `falconer` although the wrapper itself declares no
+  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A
+  *shaped nominal* trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+  asked of `bundle>>role`, which is why `kestrel[falconer]` is a `falconer` although the bundle itself declares no
   `name`. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
-  value, and a field the wrapper's declaration itself types incompatibly (`name=>str` where the trait wants
+  value, and a field the bundle's declaration itself types incompatibly (`name=>str` where the trait wants
   `name=>int`) is a veto. A field the declaration stays silent about is not a contradiction — that is exactly the case
   the fiber's value exists to answer.
 - **Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.** `person[ninja]` is a
   `person` and a `ninja`. The scope guard matters as much as the rule: this is `rec` only — `lst[int]` is not an
   `int`, and `object[int]` is not an `int`.
-- **Covariance is type acceptance only, never dispatch.** A wrapper that merely *borrows* a fiber by covariance does
+- **Covariance is type acceptance only, never dispatch.** A bundle that merely *borrows* a fiber by covariance does
   not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.
-- **Dispatch is an identity question**: a named domain selects the candidate that IS that type — the fiber whose own
-  type is that name, or the wrapper when the name is the wrapper's. Borrowed names are not identities. |
+- **Dispatch is an identity question**: a named domain selects the subject that IS that type — the fiber whose own
+  type is that name (or whose own *shape* satisfies a structural one: a ninja carrying a weapon IS a `weaponed`), or
+  the bundle when the name is the bundle's DECLARATION (`dojo[master]` is a `dojo`). Borrowed names are not
+  identities, and neither is a bundle's own field bag: the bundle is what it instantiates. |
 
-A shaped nominal trait asks the value at the fiber, not the wrapper:
+A shaped nominal trait asks the value at the fiber, not the bundle:
 
 ```mtron_pre
-[HEADER] acceptance is asked of the fiber's value, not the wrapper's declaration
-[-- the wrapper declares ONLY the fiber it exposes --]
+[HEADER] acceptance is asked of the fiber's value, not the bundle's declaration
+[-- the bundle declares ONLY the fiber it exposes --]
 kestrel -> rec[role]::T[?[role=>rec::T]]@kestrel
 [-- the shaped nominal trait declares the shape of the fiber's value --]
 falconer -> rec::T[?[name=>str::T]]@falconer
 jarl -> kestrel[falconer]::[role=>falconer::[name=>'sigrid']]@jarl
-[-- the wrapper declares no name; the falconer at `role` carries one, so jarl is a falconer --]
+[-- the bundle declares no name; the falconer at `role` carries one, so jarl is a falconer --]
 *jarl.isa(falconer::T)
 [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
 skald -> kestrel[falconer]::[role=>[name=>7]]@skald
@@ -486,7 +515,7 @@ The claim rule is what keeps the declaration/instance asymmetry valid at the uri
 ### worked example: two fibers
 
 The declaration names both fibers; the instance types them. `position` is declared **bare** (`rec::T@position`) on
-purpose — a trait declared *with* a shape asks the wrapper's declaration to pass its test, and this wrapper declares
+purpose — a trait declared *with* a shape asks the bundle's declaration to pass its test, and this bundle declares
 `name`, `age`, `role` and `position`, not a position's `title`/`rank`:
 
 ```mtron_pre
@@ -495,11 +524,11 @@ person -> rec[role,position]::T[?[name=>str::T,age=>nat::T,role=>rec::T,position
 ninja -> rec::T@ninja
 position -> rec::T@position
 marko -> person[ninja,position]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin'],position=>position::[title=>'sniper',rank=>5]]@marko
-[-- untyped: both the wrapper and the role fiber carry a name --]
+[-- untyped: both the bundle and the role fiber carry a name --]
 *marko>>name
 [-- only the position fiber carries a title; noobj is the identity --]
 *marko>>title
-[-- a wrapper's own field reads alone --]
+[-- a bundle's own field reads alone --]
 *marko>>age
 ```
 
@@ -507,7 +536,7 @@ The instantiation is carried by the value's own type, so `*marko.type()` reports
 both arguments — `rec[role,position]::T[?[…]]@person[ninja,position]` — while `*marko` still prints the value under
 that type.
 
-A named domain picks the candidate that IS that type — the role fiber, or the position fiber, never the wrapper that
+A named domain picks the subject that IS that type — the role fiber, or the position fiber, never the bundle that
 merely borrows them. A body that reads a key its own fiber does not carry has nothing to answer:
 
 ```mtron_pre
@@ -519,8 +548,8 @@ shadow -> |inst?<=ninja(){ >>name }
 *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
 ```
 
-An untyped call is about every candidate, so an instruction both fibers declare answers twice; `?<=T` narrows it, and
-a typer stays on the wrapper alone:
+An untyped call is about every subject, so an instruction both fibers declare answers twice; `?<=T` narrows it, and
+a typer stays on the bundle alone:
 
 ```mtron_pre
 [HEADER] untyped fans out, ?<=T selects, a typer does not lift
@@ -528,7 +557,7 @@ describe?dom=ninja -> |inst?<=ninja(){ 'a shadow' }
 describe?dom=position -> |inst?<=position(){ 'sniper report' }
 *marko.describe()               [-- both fibers declare a body: an unordered multiplicity --]
 *marko.describe?<=position()    [-- one fiber, one answer --]
-*marko.as(person::T)            [-- a typer is opaque: the wrapper alone, the instantiation erased --]
+*marko.as(person::T)            [-- a typer is opaque: the bundle alone, the instantiation erased --]
 ```
 
 ## type checking and casting

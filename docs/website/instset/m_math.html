@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
                                 src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -499,10 +506,10 @@ the collection of mathematical instructions, algebraic and numeric data types, a
             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
           type=&gt;[
            int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
-           int::T[is(gt(0))]@/m/math/nat,
+           int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat,
            lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
            real::T@/m/math/datasize,
-           uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/math/datetime,
+           uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
            datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
            datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
            datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
@@ -850,7 +857,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/datetime</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?rng=#{?}&amp;dom=#{?}(&lt;#{*}&gt;::T)]@/m/math/datetime</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
@@ -1110,7 +1117,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[is(gt(0))]@/m/math/nat</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat</code></pre></div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a positive integer greater than 0 \(\mathbb{N}\)</p>

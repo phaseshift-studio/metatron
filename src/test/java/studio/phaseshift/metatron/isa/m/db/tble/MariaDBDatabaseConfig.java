@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.db.tble;
 
 import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import java.sql.Connection;
@@ -40,7 +39,14 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
         this.container = new MariaDBContainer<>(DockerImageName.parse("mariadb:11.2"))
                 .withDatabaseName("testdb")
                 .withUsername("testuser")
-                .withPassword("testpass");
+                .withPassword("testpass")
+                // MariaDB Connector/J 4.0 enables TLS by default; 3.x did not. The
+                // mariadb:11.2 image ships no certificates, so `have_ssl` is DISABLED
+                // and the server has nothing to negotiate. Without this every
+                // connection fails with "Trying to connect with ssl, but ssl not
+                // enabled in the server" -- including the container's own readiness
+                // probe, which is a JDBC connection (see setup()).
+                .withUrlParam("sslMode", "disable");
     }
 
     @Override
@@ -48,11 +54,14 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
         if (container == null || !container.isRunning()) {
             throw new IllegalStateException("MariaDB container not started. Call setup() first.");
         }
-        // Return in the format expected by tbleSpace (without jdbc: prefix)
+        // Return in the format expected by tbleSpace (without jdbc: prefix).
+        // sslMode=disable must ride along: tbleSpace hands this straight to
+        // DriverManager, and Connector/J 4.0 would otherwise demand TLS.
         return "mariadb://" + container.getHost() + ":" + container.getFirstMappedPort() +
                 "/" + container.getDatabaseName() +
                 "?user=" + container.getUsername() +
-                "&password=" + container.getPassword();
+                "&password=" + container.getPassword() +
+                "&sslMode=disable";
     }
 
     @Override
@@ -77,8 +86,16 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
         if (container == null) {
             throw new IllegalStateException("MariaDB container not initialized");
         }
-        container.waitingFor(Wait.forLogMessage(".*ready for connections.*", 1));
-        container.withStartupTimeout(java.time.Duration.ofMinutes(3));
+        // A JdbcDatabaseContainer is ready when it can be CONNECTED to, not when a log
+        // line or a listening port appears: its readiness gate is a JDBC poll bounded by
+        // withStartupTimeoutSeconds (120s by default), and a WaitStrategy installed here
+        // is never consulted. A log wait would also be wrong on its own terms -- the
+        // mariadb entrypoint prints "ready for connections" from the temporary
+        // initialisation server long before the real one is up (the same trap documented
+        // in MySQLDatabaseConfig). MariaDBContainer retries a failed start three times,
+        // so a probe that can never succeed costs 3 x 120s = ~6 minutes before the
+        // reported "Could not create/start container" / "Retry limit hit".
+        container.withStartupTimeoutSeconds(180);
         container.start();
     }
 

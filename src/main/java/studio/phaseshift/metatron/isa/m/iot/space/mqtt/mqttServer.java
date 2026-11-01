@@ -414,7 +414,7 @@ public final class mqttServer extends Listener {
             if (!topic.equals(ALL) && (!memory.hasSpaceFor(topic) || !memory.getSpaceFor(topic).hasQ(SUBQ_PATTERN)))
                 return 0x80;
             // the subscription's code is a TYPED instruction (pub in, noobj out) and nothing else — untyped code
-            // under full TypeCheck can be tested as a predicate, and only a signature, not an execution, may pass.
+            // under full type checking can be tested as a predicate, and only a signature, not an execution, may pass.
             // it carries the subscriber's vid as its argument, pairs a fired pub with it, and hands the [pub, uri]
             // obs to the queue; the dispatch thread drains the queue and writes each pub back to its session
             final Obj code = instC(MQTT_SERVER_TID.extend("deliver").dom(LST_TID).rng(NOOBJ_TID),

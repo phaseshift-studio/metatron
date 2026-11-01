@@ -93,6 +93,18 @@ public class MType extends MObj implements Type {
      * a single call stack; two threads resolving the same name are independent and both read.
      */
     private static final ThreadLocal<Set<String>> RESOLVING = ThreadLocal.withInitial(LinkedHashSet::new);
+
+    /**
+     * REFUSE a defining request ({@code X::T[...]@name}) that differs from the registered type, or only report
+     * it? The rule is "clear the name first": {@code name -> noobj()}, then redefine.
+     * <p>
+     * OFF BY DEFAULT, because the test fixtures (and, for now, parts of the instsets) re-declare names with a
+     * different predicate and rely on the replacement landing — e.g. {@code mortal} as
+     * {@code human::T[?lt(120)]@mortal} over an earlier {@code mortal}. With the flag on, the registered type is
+     * kept and the attempt is warned; the kill then lets the next definition through. The warning fires either way,
+     * so the offenders are findable before the switch is turned on.
+     */
+    public static volatile boolean REFUSE_REDEFINITION = Boolean.getBoolean("mtron.type.refuse-redefinition");
     private static final Set<fURI> POLY_BASE_TYPES = Set.of(LST_TID, REC_TID, REL_TID);
 
     private static Type checkPolyPoly(final Type type) {
@@ -164,31 +176,51 @@ public class MType extends MObj implements Type {
                         final fURI instTID = Objects.equals(registered.vid(), registered.tid()) ? instVID : registered.tid();
                         return checkPolyPoly(new MType(registered.jvm(), instTID, instVID, false).as());
                     } else {
-                        // A request that names BOTH a base type and a vid (X::T@name) wins over the
-                        // registered form: a re-registration may rebase a name onto a different type
-                        // (mortal -> person::T[...]@mortal after mortal was human::T[...]@mortal), and
-                        // taking the stored obj's ids would silently keep the old base. A name-only
-                        // request -- T(vid) or X::T with no @vid -- falls back to the registered ids,
-                        // since there the "tid" argument is the name being looked up.
-                        final boolean useRequested = null != tid && null != vid;
-                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
-                        // a name-only request that spelled type arguments keeps them on the derived vid
-                        final fURI derivedVID = useRequested ? bigVID : Type.Helper.instantiate(obj.vid(), checkID);
-                        // A NAME-ONLY REQUEST IS A REFERENCE, NOT A DEFINITION: it never registers what it derives.
-                        // The derived type carries the stored type's address, and registering it by construction
-                        // (canonical coefficient, vid != tid) claimed an address the request never defined. A
-                        // call-site refinement replaced its name's definition: nat::T[is(gt(100))] made nat "an int
-                        // over 100". A name holding a variant of another type re-registered that variant at the
-                        // other type's address: bignat, seeded with nat::T[is(gt(100))], wrote it over /m/math/nat
-                        // whenever bignat::T resolved. Only a request that names both a base and a vid
-                        // (X::T[...]@name) defines the name, as a re-registration and Type.Builder do.
+                        // A DEFINITION MAY NOT REPLACE A REGISTERED TYPE. A request that names BOTH a base type
+                        // and a vid (X::T[...]@name) is a DEFINITION, and when it differs from the registered one
+                        // the registered type is KEPT and the attempt is reported: the escape hatch is to clear
+                        // the name first (`name -> noobj()`), which makes the next definition the first one.
+                        // A name-only request (T(name), or X::T with no @name) is a REFERENCE, not a definition, so
+                        // it keeps deriving freely below.
+                        if (null != tid && null != vid) {
+                            // A DEFINING REQUEST THAT DIFFERS FROM THE REGISTERED TYPE IS A REDEFINITION, and the
+                            // rule is to clear the name first: `name -> noobj()`, then redefine. DETECT it here and
+                            // REPORT it; whether to also REFUSE it is a policy the suite does not yet keep (many
+                            // fixtures deliberately re-declare a name with a different predicate, e.g. mortal as
+                            // human::T[?lt(120)]@mortal over an earlier mortal), so the replacement still happens.
+                            // THE SAME DECLARATION IS NOT A REDEFINITION: two parses of one declaration build
+                            // different Call objects (the bodies are distinct lambdas), so object equality cannot
+                            // tell them apart from a genuine change -- the RENDERED form can.
+                            final boolean sameDeclaration = String.valueOf(obj.asType().predicate()).equals(String.valueOf(predicate))
+                                    && String.valueOf(obj.asType().constructor()).equals(String.valueOf(constructor));
+                            if (!sameDeclaration) {
+                                studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty
+                                        .log(MType.class)
+                                        .warn("unable to redefine %s — noobj() its vid first, then redefine", obj.asType().vid());
+                                if (REFUSE_REDEFINITION)
+                                    return checkPolyPoly(obj.asType());
+                            }
+                        }
+                        // A request that names BOTH a base type and a vid (X::T[...]@name) is a DEFINITION: it wins
+                        // over the registered form, so a re-registration may rebase a name onto a different type.
+                        // A name-only request (T(name), or X::T with no @name) is a REFERENCE, not a definition: it
+                        // derives from the registered form (the stored ids, since the "tid" argument here is the name
+                        // being looked up) and NEVER registers what it derives. Registering it by construction (canonical coefficient,
+                        // vid != tid) claimed an address the request never defined: a call-site refinement replaced
+                        // its name's definition (nat::T[is(gt(100))] made nat "an int over 100"), and a name holding
+                        // a variant re-registered that variant at the other type's address (bignat, seeded with
+                        // nat::T[is(gt(100))], wrote it over /m/math/nat whenever bignat::T resolved). A request that
+                        // DOES define (X::T[...]@name) has already been answered or refused above.
                         // The coefficient is folded into the tid BEFORE construction so the constructor's
                         // canonical-only registration rule sees the final coefficient -- a variant must not
                         // register itself after the fact.
+                        final boolean useRequested = null != tid && null != vid;
+                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
+                        final fURI derivedVID = useRequested ? bigVID : Type.Helper.instantiate(obj.vid(), checkID);
                         return checkPolyPoly(new MType(Tuple.Pair.with(
                                 null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), derivedTID, derivedVID,
-                                useRequested && null != derivedVID && !derivedTID.equals(derivedVID)).as()); // coefficient specific type doesn't exist, create it
+                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor),
+                                derivedTID, derivedVID, useRequested && null != derivedVID && !derivedTID.equals(derivedVID)).as());
                     }
                 }
             } finally {

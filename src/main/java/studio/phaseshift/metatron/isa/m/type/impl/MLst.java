@@ -49,6 +49,10 @@ public class MLst extends MObj implements Lst {
         return EMPTY_LST;
     }
 
+    public static Lst lst_noobj() {
+        return NOOBJ_LST;
+    }
+
     public static Lst lst(final Stream<Obj> objs) {
         return lst((List<Obj>) objs.collect(Collectors.toCollection(ArrayList::new)));
     }
@@ -72,6 +76,7 @@ public class MLst extends MObj implements Lst {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
-    private static final Lst EMPTY_LST = new MLst(mutableList(), LST_TID, null);
+    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, null);
+    private static final Lst NOOBJ_LST = new MLst(List.of(), LST_TID.zero(), null);
 
 }

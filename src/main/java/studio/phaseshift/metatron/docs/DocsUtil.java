@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.dcmntInstSet;
 import studio.phaseshift.metatron.isa.m.db.grph.grphInstSet;
@@ -33,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet;
 import studio.phaseshift.metatron.isa.m.web.rdf.rdfInstSet;
 import studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet;
 import studio.phaseshift.metatron.isa.m.db.vec.vecInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 
 import java.nio.file.Path;
@@ -82,8 +82,8 @@ public final class DocsUtil {
             is.setup();
         }
         // hardcode type checker in support of runtime inst resolution
-        TypeCheck.enable(TypeCheck.values());
-        TypeCheck.disable(TypeCheck.code_resolve);
+        Typer.Helper.enableAll();
+        Typer.Helper.set(Typer.CODE_RESOLVE, false);
     }
 
     /**

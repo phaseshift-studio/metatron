@@ -244,6 +244,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                         <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
                     </li>
                     <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
                                 src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
                                 alt="sys"/>/m/sys</a>
@@ -323,6 +329,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -506,8 +513,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           {?}timeout=&gt;'a real number denoting timeout of ...',
-           cmd=&gt;'the terminal command to evaluate (...'],
+           cmd=&gt;'the terminal command to evaluate (...',
+           {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -524,10 +531,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.5M ...',
+    'tmpfs                  6.1G  6.6M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  560G ...',
-    'tmpfs                   31G   16M ...',
+    '/dev/nvme1n1p2         916G  562G ...',
+    'tmpfs                   31G  1.1M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -536,10 +543,10 @@ mtron&gt; bash('df -h')
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 12ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 13ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 12ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 13ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]
@@ -583,11 +590,11 @@ applied to each. The glyphs are the actions, and the sugar says so in plain sigh
    ...
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum().explain()&gt;&gt;format
 ==&gt;&quot;&quot;&quot;
-    op      dom          rng      args                f    desc     c_dom  c_rng 
-    start   noobj{0}::T  lst::T   ['ls','whoami']     &lt;j&gt;  initial  {0}    {1}   
-    select  lst::T       lst::T   [id()=&gt;bash(id())]  &lt;j&gt;  mapper   {1}    {1}   
-    rshift  lst::T       #{*}::T  noobj               &lt;j&gt;  scatter  {1}    {*}   
-    sum     #{*}::T      #::T                         &lt;?&gt;  reducer  {*}    {1}   
+    op      dom          rng      args                                            f    desc     c_dom  c_rng 
+    start   noobj{0}::T  lst::T   ['ls','whoami']                                 &lt;j&gt;  initial  {0}    {1}   
+    select  lst::T       lst::T   [/m/inst/id()=&gt;/m/sys/inst/bash(/m/inst/id())]  &lt;j&gt;  mapper   {1}    {1}   
+    rshift  lst::T       #{*}::T  noobj                                           &lt;j&gt;  scatter  {1}    {*}   
+    sum     #{*}::T      #::T                                                     &lt;?&gt;  reducer  {*}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <h4>pipe over the results</h4>
@@ -607,7 +614,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
     '  Size: 24586     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22926470    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-30 03:47:03.372305...',
+    'Access: 2026-10-31 06:11:42.782633...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -677,15 +684,16 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;61
+==&gt;63
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;gB::12.8515,
-    free_mem_jvm=&gt;gB::2.9764,
+==&gt;[total_mem_jvm=&gt;gB::14.1406,
+    free_mem_jvm=&gt;mB::1241.7100,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;gB::9.8751,
-    free_jvm=&gt;percent::0,
-    free_mach=&gt;percent::0,
-    thread=&gt;[run=&gt;135,stop=&gt;180236]]
+    used_mem_jvm=&gt;gB::12.9280,
+    jvm=&gt;'OpenJDK 64-Bit Server VM 25.0.3',
+    os=&gt;'Linux 7.0.0-38-generic',
+    arch=&gt;'amd64',
+    ...(4 more)]
 </code></pre>
 <h2>file system space (<code>fsspace::T</code>)</h2>
 <p>An <code>fsspace::T</code> mounts a directory into the metatron graph. A file's uri is
