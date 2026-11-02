@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.web.type;
 
 import org.jline.builtins.Commands;
+import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.docs.NanorcUtil;
@@ -34,7 +35,9 @@ import java.io.ByteArrayInputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -82,6 +85,19 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *       ({@code /m/sys/ui/console/command_palette::[…]}) or an entry column past
  *       {@link #MAX_ENTRY_COLUMN} — the first entry is not carried on it either: the entries
  *       take their own lines, one level in from the line's own indent;</li>
+ *   <li><b>code bodies</b> — an instruction implemented in Java carries a {@code {<j>}}
+ *       body; one implemented in mtron carries the code it is made of, drawn as a block
+ *       (see {@link #writeInstBody}).  That body breaks between instructions only — never
+ *       inside one — so every broken line still ends at the {@code .} that composes the
+ *       chain and the block pastes back into a REPL as the one expression it is.  A line
+ *       holds at most {@link #CODE_LINE_INSTS} instructions and ends early when the next
+ *       one would run past {@link #CODE_LINE_WIDTH}: packing by width alone turns a body of
+ *       short instructions into two or three dense lines, and one instruction per line
+ *       turns a desugared body into a column.  An instruction breaks its own arguments only
+ *       when it does not fit the line it is on (see {@link #isNestedInst}).  A
+ *       {@code {<j>}} is drawn for the instruction the reader asked about, not for the
+ *       Java-backed leaves inside another instruction's body: a desugared body is mostly
+ *       such leaves, and one marker each says nothing a reader can use;</li>
  *   <li><b>{@code {{link}}} handling</b> — every uri the serializer writes is tagged as a
  *       link, which is how a renderer that can draw links (graphitty turns the rule into
  *       an OSC 8 hyperlink a click can resolve) learns the value is a uri.  Tagging uris
@@ -138,6 +154,39 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      * entry columns there reach a hundred-odd.
      */
     public static final int MAX_TYPE_PREFIX = 24;
+
+    /**
+     * The columns a code body indents its instructions by — two, the measure
+     * {@link ObjmtronSerializer#prettyPrintCode} already uses for code, rather than the one
+     * column a nested collection takes.  A body is a block of statements, and one column
+     * reads as a continuation of the line above instead of a level beneath it.
+     */
+    public static final int CODE_INDENT = 2;
+
+    /**
+     * The width a line of code body packs to before it breaks — at an instruction boundary,
+     * never inside one.  One instruction per line turns a desugared body, which is a chain of
+     * a dozen or more instructions, into a column of one-liners; letting them run together
+     * gives a single wrapped wall.  So instructions ride one line until the next would push it
+     * past this column, and the line then ends at the {@code .} that composes them.
+     * <p>
+     * This is the DEFAULT, and the one every render without a terminal uses — a log line, the
+     * docs pipeline, a test.  Where a terminal exists its own width is used instead, so the
+     * console never wraps a line this writer could have broken itself (see
+     * {@link #codeLineWidth()}), and a test keeps this number so its assertions about columns
+     * do not move with the width of the window the suite happens to run in.
+     */
+    public static final int CODE_LINE_WIDTH = 100;
+
+    /**
+     * The most instructions a code body puts on one line.  Packing by width alone is not enough:
+     * a body whose instructions are short then arrives as two or three dense lines, and the
+     * compose boundaries — the {@code .} a reader scans for — disappear into the middle of a
+     * line.  One instruction per line is the other bad end (a desugared body is a dozen or more
+     * instructions).  Two is what a hand-written mtron body reads like: each line holds a step
+     * and its neighbour, and every break is a boundary the eye can follow.
+     */
+    public static final int CODE_LINE_INSTS = 2;
 
     // ── Config key URIs ───────────────────────────────────────────
     private static final fURI KEY_CLIP = f("clip");
@@ -367,6 +416,21 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return colorOn() ? write : Graphitty.strip(write);
     }
 
+    /**
+     * The column a code body packs its lines against — a live terminal's own width when there is
+     * a terminal to ask, so the console is never made to wrap a line this writer could have
+     * broken itself, and {@link #CODE_LINE_WIDTH} otherwise (a log line, the docs pipeline, a
+     * test).  A test keeps the constant deliberately: its assertions are about columns, and the
+     * width of the window a suite happens to run in must not be able to move them.
+     */
+    private int codeLineWidth() {
+        if (BootLoader.TESTING)
+            return CODE_LINE_WIDTH;
+        final Terminal terminal = Console.getTerminal();
+        final int width = null == terminal ? 0 : terminal.getWidth();
+        return width > 0 ? width : CODE_LINE_WIDTH;
+    }
+
     // ── Top-level write: the pager is this class's, and only when a terminal is here ──
 
     @Override
@@ -526,15 +590,28 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
 
 
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth) {
+        return this.generateInst(sb, inst, depth, true);
+    }
+
+    /**
+     * {@code drawJavaBody} says whether a Java-backed instruction's body is drawn as
+     * {@code {<j>}}.  It is true for the instruction the reader asked about, and false for one
+     * drawn INSIDE another instruction's body: a desugared body is mostly Java-backed leaves,
+     * and a {@code {<j>}} on every one of them is a wall of markers that says nothing a reader
+     * can use — the body that matters there is the chain itself.  An mtron body is drawn
+     * either way.
+     */
+    private StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final boolean drawJavaBody) {
         if (inst.isNoObj() || null == inst.tid() || inst.tid().basePath().name().startsWith("auto") || inst.tid().basePath().equals(FROM_INST_TID)) {
             return super.generateInst(sb, inst, depth + 1);
         }
         this.generateInstHead(sb, inst).append("(");
         if (!inst.args().isEmpty()) {
-            // an instruction whose arguments read wide breaks them onto lines of their own: the
-            // first argument rides the opening paren and the rest line up under it, the same shape
-            // a wide rec or lst takes — a tool schema's docstring arguments are the wall this tames
-            final boolean nested = this.isNestedInst(inst);
+            // an instruction that no longer fits the line it is on breaks its arguments onto lines
+            // of their own: the first argument rides the opening paren and the rest line up under
+            // it, the same shape a wide rec or lst takes — a tool schema's docstring arguments are
+            // the wall this tames
+            final boolean nested = this.isNestedInst(sb, inst);
             final int indent = nested ? this.lineWidth(sb) : 0;
             final long count = inst.args().count();
             final AtomicInteger counter = new AtomicInteger(0);
@@ -550,9 +627,131 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
                     sb.append(",");
             });
         }
-        sb.append(")")
-                .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
+        sb.append(")");
+        this.writeInstBody(sb, inst, depth, drawJavaBody);
         return cleanEnding(sb);
+    }
+
+    /**
+     * The body an instruction carries: {@code {<j>}} for one implemented in Java, and the code
+     * it is made of for one implemented in mtron.
+     * <p>
+     * A desugared mtron body is a long chain of instructions, so it is laid out as a block: one
+     * level in (see {@link #CODE_INDENT}), breaking BETWEEN instructions only — every broken
+     * line therefore ends at the {@code .} that composes the chain, which is what lets the block
+     * be pasted back into a REPL as the one expression it is — and at most
+     * {@link #CODE_LINE_INSTS} per line, a line also ending early when the next instruction
+     * would run past {@link #CODE_LINE_WIDTH}.  The instructions are drawn through
+     * {@link #generateInst}, so each is named by the short form of its tid (the same
+     * {@code basePath().small()} the instruction's own name gets) rather than by the path the
+     * plain data serializer writes, and a body of one or two instructions that fits on the line
+     * it is on stays there as {@code {…}}.
+     * <p>
+     * Every instruction is rendered at the column it will really begin at — the line-start
+     * column for the first on a line, the running column for the ones after it — because an
+     * instruction's arguments break against that column (see {@link #isNestedInst}), and a
+     * render measured at column zero put those continuations under the wrong place.  The same
+     * render is then measured and written, so the layout and the text cannot disagree.
+     */
+    private StringBuilder writeInstBody(final StringBuilder sb, final Inst inst, final int depth, final boolean drawJavaBody) {
+        if (null == inst.f())
+            return sb;
+        if (inst.isJavaFunction())
+            return drawJavaBody ? sb.append("{<j>}") : sb;
+        final Obj body = inst.getMtronFunctionObj();
+        final List<Inst> insts = body.isCode() ? body.asCode().codeValue() :
+                body.isObjInst() ? List.of(body.asInst()) : null;
+        if (null == insts)
+            return sb.append("{").append(inst.f()).append("}");
+        if (insts.isEmpty())
+            return sb.append("{}");
+        final int indent = this.lineIndent(sb) + CODE_INDENT;
+        final int width = this.codeLineWidth();
+        // first try the whole body where it is: every instruction single-line and the '}' still
+        // inside the width.  Whether that many instructions may share a line is the cap's call,
+        // and it is made once the count is known.
+        final List<String> inline = new ArrayList<>(insts.size());
+        int column = this.lineWidth(sb) + 1;
+        boolean fits = true;
+        for (final Inst part : insts) {
+            final String text = this.generateInstText(part, depth + 1, column);
+            if (text.isEmpty())
+                continue;
+            if (text.indexOf('\n') >= 0) {
+                fits = false;
+                break;
+            }
+            inline.add(text);
+            column += Graphitty.viewLength(text) + 1;   // the '.' after it
+            if (column + 1 > width) {                   // and the closing '}'
+                fits = false;
+                break;
+            }
+        }
+        // a body that fits where it is stays on the line — every instruction single-line, the '}'
+        // still inside the width, and no more instructions than a line is allowed: the cap is a
+        // rule about LINES, so it governs the line the body starts on too, and a body of one or
+        // two instructions is the only shape that reads better beside its head than beneath it
+        if (fits && inline.size() <= CODE_LINE_INSTS)
+            return sb.append("{").append(String.join(".", inline)).append("}");
+        sb.append("{\n").append(" ".repeat(indent));
+        column = indent;
+        int onLine = 0;
+        for (int i = 0; i < insts.size(); i++) {
+            final Inst part = insts.get(i);
+            int start = onLine == 0 ? indent : column;
+            String text = this.generateInstText(part, depth + 1, start);
+            // an instruction that draws nothing is not a compose boundary either: writing its
+            // dot would leave a `..` no reader (and no parser) can use
+            if (text.isEmpty())
+                continue;
+            if (onLine > 0 && (text.indexOf('\n') >= 0 || onLine >= CODE_LINE_INSTS ||
+                    column + this.firstLineWidth(text) + 1 > width)) {
+                sb.append("\n").append(" ".repeat(indent));
+                column = indent;
+                onLine = 0;
+                // the instruction starts the line now, so its arguments measure breaks against
+                // the line-start column, not the column it almost landed at
+                start = indent;
+                text = this.generateInstText(part, depth + 1, start);
+            }
+            sb.append(text);
+            column = this.endColumn(text, start);
+            onLine++;
+            if (i < insts.size() - 1) {
+                sb.append(".");
+                column++;
+            }
+        }
+        // the closing brace keeps the last instruction company: a line of its own would read as
+        // another statement of the body
+        return sb.append(" }");
+    }
+
+    /**
+     * One instruction as text, drawn as though it begins at column {@code start} — the column
+     * its arguments measure their breaks against.  The scratch buffer holds that many columns
+     * so the renderer sees the same line the real buffer will, and they are stripped off the
+     * front of the answer.
+     */
+    private String generateInstText(final Inst inst, final int depth, final int start) {
+        final StringBuilder scratch = new StringBuilder(" ".repeat(start));
+        this.generateInst(scratch, inst, depth, false);
+        cleanEnding(scratch);
+        return scratch.length() < start ? "" : scratch.substring(start);
+    }
+
+    /** The columns the first line of {@code text} occupies — what a fit test may count. */
+    private int firstLineWidth(final String text) {
+        final int newline = text.indexOf('\n');
+        return Graphitty.viewLength(newline < 0 ? text : text.substring(0, newline));
+    }
+
+    /** The column {@code text} leaves the line at, when it begins at {@code start}. */
+    private int endColumn(final String text, final int start) {
+        final int newline = text.lastIndexOf('\n');
+        // a broken render carries its own absolute indentation on every line after the first
+        return newline < 0 ? start + Graphitty.viewLength(text) : Graphitty.viewLength(text.substring(newline + 1));
     }
 
     /**
@@ -712,38 +911,35 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
      * arguments never breaks: there is no boundary between arguments to break at, and its one
      * argument rides the opening paren either way.
      * <p>
-     * The width measured is this writer's OWN one-line shape — {@link #flatInst} — not the plain
-     * serializer's render of the instruction.  The plain text is a compiler-to-compiler form: it
-     * spells the tid out in full ({@code λ?rng=#{*}&dom=#{?}}), quotes {@code #} as {@code <#>}
-     * and names a type argument by its whole path.  None of that reaches the reader, but all of it
-     * was counted against {@link #NESTED_STRING_THRESHOLD}, which put roughly twenty invisible
-     * columns on every lambda and broke a twenty-seven column
-     * {@code λ(#::T,lst[law{*}]::T){<j>}} into two lines for no reason a reader could see.
+     * The test is ROOM, not an instruction's own circumference: the arguments stay beside the
+     * instruction until the line they are on can no longer hold them
+     * ({@link #CODE_LINE_WIDTH}).  A fixed width — this measure used to be the plain serializer's
+     * render of the whole instruction against {@link #NESTED_STRING_THRESHOLD} — broke calls that
+     * fit perfectly well: {@code spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>)}, 45
+     * columns of arguments, was split over two lines while the line it sat on was nowhere near
+     * full, and a break inside a call is the break a reader can least afford.
+     * <p>
+     * The width is this writer's own: the head's short name is already written, so only the
+     * argument column is measured, and each argument is measured through the plain serializer —
+     * one honest, conservative line for a value whose drawn shape is only known after the fact.
      */
-    private boolean isNestedInst(final Inst inst) {
+    private boolean isNestedInst(final StringBuilder sb, final Inst inst) {
         if (inst.args().count() < 2)
             return false;
-        return Graphitty.viewLength(this.flatInst(inst).toString()) > NESTED_STRING_THRESHOLD;
+        return this.lineWidth(sb) + this.argsWidth(inst) > this.codeLineWidth();
     }
 
     /**
-     * The instruction as this writer would draw it on ONE line: its head, its arguments in their
-     * plain spelling, and the body it carries.  Markup-free and unbroken — the columns a reader
-     * keeps if the arguments stay where they are — which is the only honest thing to measure
-     * against {@link #NESTED_STRING_THRESHOLD}.  An argument's own width is still the plain
-     * render's: a collection there is measured the way {@link #isNested} measures one, over the
-     * full text rather than a clipped or already-broken shape.
+     * The columns an instruction's parenthesized arguments occupy on one line — the two parens,
+     * every argument in its plain spelling, and the commas between them.
      */
-    private StringBuilder flatInst(final Inst inst) {
-        final StringBuilder flat = this.generateInstHead(new StringBuilder(), inst).append("(");
-        final AtomicInteger counter = new AtomicInteger(0);
-        inst.args().elements().forEach(arg -> {
-            if (counter.getAndIncrement() > 0)
-                flat.append(",");
-            flat.append(ObjmtronSerializer.single().write(arg));
-        });
-        return flat.append(")")
-                .append((inst.f() == null ? "" : "{" + inst.f() + "}"));
+    private int argsWidth(final Inst inst) {
+        int width = 2;   // '(' and ')'
+        final List<Obj> args = inst.args().elements().toList();
+        for (final Obj arg : args)
+            width += Graphitty.viewLength(ObjmtronSerializer.single().write(arg)) + 1;   // the ','
+        // every argument but the last ended with a comma that is not written
+        return width - 1;
     }
 
     /**

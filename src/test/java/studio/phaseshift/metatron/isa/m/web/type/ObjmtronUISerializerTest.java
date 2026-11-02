@@ -409,4 +409,60 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
         Assertions.assertTrue(written.contains("{{link}}"), String.format("a uri inside a stream is tagged like any other: %s", written));
         Assertions.assertTrue(written.contains("...(2 more)"), String.format("a member is clipped like the lst it is: %s", written));
     }
+
+    // ── mtron code bodies ────────────────────────────────────────
+
+    /**
+     * A harvest-shaped body: six instructions, with one whose arguments are long enough to have
+     * tempted the writer into breaking them.
+     */
+    private static Inst harvestShapedInst() {
+        return MInst.instC(Singleton.f("/harvest"), MLst.lst(),
+                "to(i).spawn(<//localhost:${_ + 1111}/${_}>,<//${_}>).split([host=>id()]).as(web_socket::T).split([*i=>rshift(host)]).sum()");
+    }
+
+    @Test
+    public void testMtronBodyBreaksOnlyAtTheDotsThatComposeIt() {
+        final String written = ObjmtronUISerializer.blackWhite().write(harvestShapedInst());
+        final String[] lines = written.split("\n");
+        this.LOG.debug("mtron body => %s", new Object[]{written});
+        Assertions.assertEquals(4, lines.length, String.format("the head, then at most %s instructions per line: %s", ObjmtronUISerializer.CODE_LINE_INSTS, written));
+        for (int i = 1; i < lines.length - 1; i++)
+            Assertions.assertTrue(lines[i].endsWith("."), String.format("a broken line ends at the compose dot, so the block still reads as one expression: %s", written));
+        Assertions.assertTrue(lines[lines.length - 1].endsWith(" }"), String.format("the closing brace keeps the last instruction company: %s", written));
+        Assertions.assertTrue(written.contains("spawn(<//localhost:${_ + 1111}/${_}>,<//${_}>)"), String.format("arguments that fit the line keep it: %s", written));
+    }
+
+    @Test
+    public void testBrokenInstructionArgumentsLineUpUnderTheFirst() {
+        final String written = ObjmtronUISerializer.blackWhite().write(MInst.instC(Singleton.f("/harvest"), MLst.lst(),
+                "to(i).expand(<//a-machine-with-a-long-name.local:1111/some/deep/path/segment/alpha>,<//another-machine-with-a-long-name.local:2222/another/deep/path/beta>).sum()"));
+        final int first = written.indexOf("<//a-machine-with-a-long-name");
+        final int second = written.indexOf("<//another-machine-with-a-long-name");
+        this.LOG.debug("long args inside a body => %s", new Object[]{written});
+        Assertions.assertTrue(first > 0 && second > first, String.format("both arguments are drawn: %s", written));
+        Assertions.assertEquals(first - (written.lastIndexOf('\n', first) + 1), second - (written.lastIndexOf('\n', second) + 1),
+                String.format("an argument pushed to its own line lines up under the first one: %s", written));
+    }
+
+    @Test
+    public void testMtronBodyPastesBackAsOneExpression() {
+        final Inst inst = harvestShapedInst();
+        final String written = ObjmtronUISerializer.blackWhite().write(inst);
+        Assertions.assertTrue(written.contains("){\n"), String.format("the body is laid out as a block: %s", written));
+        final Obj reparsed = ObjmtronSerializer.parse(written.substring(written.indexOf('{') + 1, written.lastIndexOf('}')));
+        this.LOG.debug("body pasted back => %s", new Object[]{reparsed});
+        Assertions.assertEquals(inst.getMtronFunctionObj().asCode().codeValue().size(), reparsed.asCode().codeValue().size(),
+                String.format("the block is the same expression when pasted back: %s", written));
+    }
+
+    @Test
+    public void testShortMtronBodiesStayInlineUntilTheLineCap() {
+        final String two = ObjmtronUISerializer.blackWhite().write(MInst.instC(Singleton.f("/harvest"), MLst.lst(), "to(i).sum()"));
+        this.LOG.debug("two-instruction body => %s", new Object[]{two});
+        Assertions.assertTrue(two.endsWith("(){to(i).sum()}"), String.format("a body of one or two instructions rides its head: %s", two));
+        final String three = ObjmtronUISerializer.blackWhite().write(MInst.instC(Singleton.f("/harvest"), MLst.lst(), "to(i).expand('a').sum()"));
+        this.LOG.debug("three-instruction body => %s", new Object[]{three});
+        Assertions.assertTrue(three.endsWith("(){\n  to(i).expand('a').\n  sum() }"), String.format("a third instruction is a line the cap forbids: %s", three));
+    }
 }
