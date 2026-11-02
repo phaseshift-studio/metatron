@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"
+     class="bi bi-geo" role="img" aria-label="geo">
+    <!-- a position on a coordinate frame: the reticle that marks where a geometry sits -->
+    <path fill-rule="evenodd" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1m0 1.6a5.4 5.4 0 1 1 0 10.8 5.4 5.4 0 0 1 0-10.8"/>
+    <path d="M7.35 0h1.3v3.2h-1.3zM7.35 12.8h1.3V16h-1.3zM0 7.35h3.2v1.3H0zM12.8 7.35H16v1.3h-3.2z"/>
+    <circle cx="8" cy="8" r="1.7"/>
+</svg>

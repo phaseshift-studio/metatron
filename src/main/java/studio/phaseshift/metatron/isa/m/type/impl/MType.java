@@ -1,0 +1,273 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type.impl;
+
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.TypeGraph;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+
+
+public class MType extends MObj implements Type {
+
+    protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
+        this(jvm, tid, vid, vid != null && !tid.equals(vid));
+    }
+
+    private MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid, final boolean register) {
+        super(jvm, tid.big(), null == vid ? null : vid.big());
+        // Only a CANONICAL form (coefficient one) auto-registers. Resolving a coefficient variant
+        // ({2}, {+}, {?*} ...) of an already-named type -- e.g. the resolver asking for
+        // T(vid=nat{?*}) while scoping a `*nat` read -- must not overwrite the name's registration
+        // with the variant, or every later read of the name answers with that variant's coefficient.
+        // Types whose own coefficient is not one are still registered, but by the explicit write
+        // (X -> Y) that defines them, not by construction.
+        if (register && this.c().isOne() && Machine.loaded() && null != this.vid() && !this.vid().equals(this.tid()) /*(this.hasPredicate() || this.hasConstructor())*/ && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+            Machine.current().memory().write(this.vid(), this);
+        }
+    }
+
+    public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
+        return T(tid, vid, jvm.get0(), jvm.get1());
+    }
+
+    public static Type T(final fURI vid) {
+        return T(null, vid, null, null);
+    }
+
+    public static Type T(final fURI vid, final Call predicate) {
+        return T(null, vid, predicate, null);
+    }
+
+    /**
+     * a memoized entry point to type resolution. equal raw arguments resolve
+     * to the same cached type without a space read, until the type path is
+     * written or the router rebinds -- see {@link TypeGraph}.
+     */
+    public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+        if (null == BootLoader.ROOT_MACHINE)
+            // class-init phase, before a machine exists to hold a graph: resolve directly (no memo)
+            return T0(tid, vid, predicate, constructor);
+        // NOTHING REFINES TO NOTHING. a {0} tid or vid is the noobj type whatever it is named: there is nothing in
+        // nothing to refine, so the set cannot get any smaller. a constant, answered before the memo -- it needs no
+        // cache entry, no watch and no invalidation. NOOBJ_TYPE is null only while it is itself being built
+        // (TypeBuilder.create() resolves through here), and that one construction takes the ordinary path.
+        if (null != NOOBJ_TYPE && ((null != tid && tid.isZero()) || (null != vid && vid.isZero())))
+            return NOOBJ_TYPE;
+        final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
+        return Machine.current().memory().typeGraph().memo(key, () -> T0(tid, vid, predicate, constructor));
+    }
+
+    /**
+     * the names THIS thread is resolving through the registry right now -- the in-flight brake's state,
+     * see the comment at the registry read in {@code T0}. per thread because the recursion it breaks is
+     * a single call stack; two threads resolving the same name are independent and both read.
+     */
+    private static final ThreadLocal<Set<String>> RESOLVING = ThreadLocal.withInitial(LinkedHashSet::new);
+
+    /**
+     * REFUSE a defining request ({@code X::T[...]@name}) that differs from the registered type, or only report
+     * it? The rule is "clear the name first": {@code name -> noobj()}, then redefine.
+     * <p>
+     * OFF BY DEFAULT, because the test fixtures (and, for now, parts of the instsets) re-declare names with a
+     * different predicate and rely on the replacement landing — e.g. {@code mortal} as
+     * {@code human::T[?lt(120)]@mortal} over an earlier {@code mortal}. With the flag on, the registered type is
+     * kept and the attempt is warned; the kill then lets the next definition through. The warning fires either way,
+     * so the offenders are findable before the switch is turned on.
+     */
+    public static volatile boolean REFUSE_REDEFINITION = Boolean.getBoolean("mtron.type.refuse-redefinition");
+    private static final Set<fURI> POLY_BASE_TYPES = Set.of(LST_TID, REC_TID, REL_TID);
+
+    private static Type checkPolyPoly(final Type type) {
+        if (!type.vid().hasPoly() && !type.tid().hasPoly())
+            return type;
+        // A LABEL CANNOT BE ASKED FOR ITS BASE. an ephemeral type (tid == vid: the label this method's caller builds
+        // for a name the registry did not answer) is a REFERENCE, not a definition. Walking its base type resolves
+        // the name it IS, which is the very resolution asking the question: T(person[ninja]) finds no declaration,
+        // builds this label, and baseTypeID() -> type() -> T(person[ninja]) starts over -- an unbounded regress that
+        // ends in a StackOverflowError (the parser reports it as recursive grammar, which it never was). The bracket
+        // is a type-argument request; the only place that can judge it is the declaration, so the registry branch
+        // of T0 validates it there, on the resolved (non-ephemeral) form.
+        if (type.asType().isEphemeral())
+            return type;
+        if (type.vid().hasPoly() && !POLY_BASE_TYPES.contains(type.baseTypeID().basePath()))
+            throw MTronException.of("only poly types can have polynomials: %s X=> %s", type.vid().basePath(), type.vid().poly());
+        // every construction path reaches this point, so a bracket is validated here whether the type is written,
+        // resolved or built, and whether the bracket is on the vid (rel[A]::T) or only on the tid (rel[A]::T@route)
+        Type.Helper.validatePoly(type);
+        return type;
+    }
+
+    private static Type T0(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
+        final fURI bigTID = null == tid ? vid.big() : tid.big();
+        final fURI bigVID = null == vid ? null : vid.big();
+        final fURI checkID = null == bigVID ? bigTID : bigVID;
+        assert checkID != null;
+        if (checkID.isGeneric())
+            return checkPolyPoly(new MType(Tuple.Pair.with(null, null), checkID, checkID));
+        // THE IN-FLIGHT BRAKE. the registry read below can re-enter this very resolution: a space read
+        // walks its q-proc list, which constructs objs whose type checks resolve this same name, which
+        // reads the registry, which walks the q-proc list... the memoized first lap broke that cycle BY
+        // ACCIDENT (the second lap hit the cache); this is the same brake made deliberate and scoped: a
+        // re-entered name answers the label immediately and nothing is stored, so the brake holds even
+        // when a racing write keeps the first lap out of the cache.
+        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()
+                && RESOLVING.get().add(checkID.toString())) { // TODO: remove the pattern constraint - why not a type be the set of other types?
+            try {
+                Obj obj = Machine.read(checkID);
+                // THE BRACKET IS AN ARGUMENT LIST, NOT AN ADDRESS. a declaration is registered under its NAME
+                // (person), while an instantiation spells its type arguments (person[ninja]). The address carries no
+                // bracket, so the read of the spelled form answers nothing for a name the registry does hold, and
+                // the branches below would never run: their whole job is to substitute the request's bracket into the
+                // declaration's ({@code Type.Helper.instantiate(registered.vid(), checkID)}). Ask again with the
+                // bracket erased -- exactly the erasure the bracket rule already defines for a type name.
+                if (!obj.isType() && checkID.hasPoly())
+                    obj = Machine.read(checkID.polyLess());
+                // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
+                // registered type (often also referenced from another type's predicate). Re-typing it with
+                // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
+                // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
+                // predicate with it.
+                obj = obj.clone().selfTID(obj.tid().c(checkID.c()));
+                if (obj.isType()) {
+                    if (checkID.c().equals(obj.c()) &&
+                            Objects.equals(obj.asType().predicate(), predicate) &&
+                            Objects.equals(obj.asType().constructor(), constructor)) {
+                        // THE REQUESTED BRACKET SURVIVES THE REGISTERED FORM. The read answers with the
+                        // declaration; a request that named type arguments (person[ninja] against a
+                        // registered person[role]) must keep them on what it gets back, or the instantiation
+                        // it asked for silently becomes the bare declaration. A bare request (no bracket)
+                        // takes the registered form untouched and allocates nothing.
+                        final Type registered = obj.asType();
+                        if (checkID.poly().isEmpty())
+                            return checkPolyPoly(registered);
+                        final fURI instVID = Type.Helper.instantiate(registered.vid(), checkID);
+                        // a base type's name IS its type, so its tid carries the same arguments; a named
+                        // type keeps the base its declaration refined
+                        final fURI instTID = Objects.equals(registered.vid(), registered.tid()) ? instVID : registered.tid();
+                        return checkPolyPoly(new MType(registered.jvm(), instTID, instVID, false).as());
+                    } else {
+                        // A DEFINITION MAY NOT REPLACE A REGISTERED TYPE. A request that names BOTH a base type
+                        // and a vid (X::T[...]@name) is a DEFINITION, and when it differs from the registered one
+                        // the registered type is KEPT and the attempt is reported: the escape hatch is to clear
+                        // the name first (`name -> noobj()`), which makes the next definition the first one.
+                        // A name-only request (T(name), or X::T with no @name) is a REFERENCE, not a definition, so
+                        // it keeps deriving freely below.
+                        if (null != tid && null != vid) {
+                            // A DEFINING REQUEST THAT DIFFERS FROM THE REGISTERED TYPE IS A REDEFINITION, and the
+                            // rule is to clear the name first: `name -> noobj()`, then redefine. DETECT it here and
+                            // REPORT it; whether to also REFUSE it is a policy the suite does not yet keep (many
+                            // fixtures deliberately re-declare a name with a different predicate, e.g. mortal as
+                            // human::T[?lt(120)]@mortal over an earlier mortal), so the replacement still happens.
+                            // THE SAME DECLARATION IS NOT A REDEFINITION: two parses of one declaration build
+                            // different Call objects (the bodies are distinct lambdas), so object equality cannot
+                            // tell them apart from a genuine change -- the RENDERED form can.
+                            final boolean sameDeclaration = String.valueOf(obj.asType().predicate()).equals(String.valueOf(predicate))
+                                    && String.valueOf(obj.asType().constructor()).equals(String.valueOf(constructor));
+                            if (!sameDeclaration) {
+                                studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty
+                                        .log(MType.class)
+                                        .warn("unable to redefine %s — noobj() its vid first, then redefine", obj.asType().vid());
+                                if (REFUSE_REDEFINITION)
+                                    return checkPolyPoly(obj.asType());
+                            }
+                        }
+                        // A request that names BOTH a base type and a vid (X::T[...]@name) is a DEFINITION: it wins
+                        // over the registered form, so a re-registration may rebase a name onto a different type.
+                        // A name-only request (T(name), or X::T with no @name) is a REFERENCE, not a definition: it
+                        // derives from the registered form (the stored ids, since the "tid" argument here is the name
+                        // being looked up) and NEVER registers what it derives. Registering it by construction (canonical coefficient,
+                        // vid != tid) claimed an address the request never defined: a call-site refinement replaced
+                        // its name's definition (nat::T[is(gt(100))] made nat "an int over 100"), and a name holding
+                        // a variant re-registered that variant at the other type's address (bignat, seeded with
+                        // nat::T[is(gt(100))], wrote it over /m/math/nat whenever bignat::T resolved). A request that
+                        // DOES define (X::T[...]@name) has already been answered or refused above.
+                        // The coefficient is folded into the tid BEFORE construction so the constructor's
+                        // canonical-only registration rule sees the final coefficient -- a variant must not
+                        // register itself after the fact.
+                        final boolean useRequested = null != tid && null != vid;
+                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
+                        final fURI derivedVID = useRequested ? bigVID : Type.Helper.instantiate(obj.vid(), checkID);
+                        return checkPolyPoly(new MType(Tuple.Pair.with(
+                                null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
+                                null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor),
+                                derivedTID, derivedVID, useRequested && null != derivedVID && !derivedTID.equals(derivedVID)).as());
+                    }
+                }
+            } finally {
+                RESOLVING.get().remove(checkID.toString());
+            }
+        }
+        // final boolean isBaseType = ;
+        if (BASE_TYPES.contains(checkID.basePath()) || bigTID.basePath().equals(ALL)) {
+            return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID));
+        }
+        //if (Objects.equals(bigVID, bigTID))
+        //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        //if ((null != vid && null != tid) || checkID.hasPattern())
+        //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
+        return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, null == bigVID ? checkID : bigVID))/*.c(checkID.c()).as()*/;
+    }
+
+    @Override
+    public Type clone(final Object jvm, final fURI tid, final fURI vid) {
+        // a type derived to coefficient {0} (c(0), tid(x{0})) is the noobj type, as T() answers it. NOOBJ_TYPE is null only
+        // while it is itself being built
+        if (null != NOOBJ_TYPE && null != tid && tid.isZero())
+            return NOOBJ_TYPE;
+        return new MType((Tuple.Pair<Call, Call>) jvm, tid, vid, false);
+    }
+
+    @Override
+    public Tuple.Pair<Call, Call> jvm() {
+        return (Tuple.Pair<Call, Call>) this.jvm;
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        //return other instanceof Type && (Objects.equals(this.vid(), ((Type) other).vid()) || (Objects.equals(this.tid, ((Type) other).tid()) && Objects.equals(this.jvm(), ((Type) other).jvm())));
+        if (!(other instanceof Obj))
+            return false;
+        if (this.isNoObj() && ((Obj) other).isNoObj())
+            return true;
+        return other instanceof Type && Objects.equals(this.vid, ((Type) other).vid()) && Objects.equals(this.tid, ((Type) other).tid());
+    }
+
+    @Override
+    public int hashCode() {
+        // a zero-coefficient type equals every zero (above), so it hashes as one
+        return this.isNoObj() ? Obj.Helper.objHashCode(this) : Objects.hash(this.vid(), this.jvm());
+        //  return Objects.hash(this.vid(), this.tid());
+    }
+
+}

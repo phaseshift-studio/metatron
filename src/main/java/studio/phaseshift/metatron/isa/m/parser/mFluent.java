@@ -1,0 +1,997 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.parser;
+
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Fluent;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
+
+    private static Obj simplify(final Obj obj) {
+        if (obj.isCall())
+            return obj.asCall().tryToInst();
+        return obj;
+    }
+
+   /* @Override
+    public Obj apply(final Obj obj) {
+        return MCode.code(this.insts()).apply(obj);
+    }
+
+    @Override
+    public Code resolve(final Obj obj) {
+        return MCode.code(this.insts()).resolve(obj);
+    }*/
+
+    // ========================================
+    // Constructors and Core Methods
+    // ========================================
+
+    protected mFluent() {
+        this(new ArrayList<>(), CODE_TID, null);
+    }
+
+    protected mFluent(final List<Inst> value, final fURI tid, final fURI vid) {
+        super(value, tid, vid);
+    }
+
+    @Override
+    public F addInst(final Inst inst) {
+        final Poly<?, ?> polyArgs = inst.args().isLst() ?
+                lst(inst.args().lstValue().stream().map(mFluent::simplify).toList()) :
+                rec(inst.args().recValue().entrySet().stream().map(kv -> Tuple.Pair.with(mFluent.simplify(kv.getKey()), mFluent.simplify(kv.getValue()))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
+        this.codeValue().add(inst.args(polyArgs));
+        return (F) this;
+    }
+
+    public F addInsts(final List<Inst> insts) {
+        this.codeValue().addAll(insts);
+        return (F) this;
+    }
+
+    public F dom(final fURI dom) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().dom(dom));
+        return (F) this;
+    }
+
+    public F rng(final fURI rng) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().rng(rng));
+        return (F) this;
+    }
+
+
+    public F domRng(final fURI dom, final fURI rng) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().dom(dom).rng(rng));
+        return (F) this;
+    }
+
+    public F lastC(final cInt c) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().c(c));
+        return (F) this;
+    }
+
+    public F q(final String key, final Object value) {
+        this.codeValue().getLast().selfTID(this.codeValue().getLast().tid().q(key, value));
+        return (F) this;
+    }
+
+    public F q(final String key) {
+        return this.q(key, null);
+    }
+
+    // ========================================
+    // Control Flow Operations
+    // ========================================
+
+    public F start_(final Obj obj) {
+        return this.addInst(instB(mInstSet.START_INST_TID, lst(obj)));
+    }
+
+    public F move_(final Obj obj) {
+        return this.addInst(instB(machInstSet.MOVE_INST_TID, lst(obj)));
+    }
+
+    public F update_(final Obj obj) {
+        return this.addInst(instB(mInstSet.UPDATE_INST_TID, lst(obj)));
+    }
+
+    public F block_(final Obj obj) {
+        return this.addInst(instB(mInstSet.BLOCK_INST_TID, lst(obj)));
+    }
+
+    public F range_(final Obj start, final Obj end) {
+        return this.addInst(instB(mInstSet.RANGE_INST_TID, lst(start, end)));
+    }
+
+    public F else_(final Obj obj) {
+        return this.addInst(instB(mInstSet.ELSE_INST_TID, lst(obj)));
+    }
+
+    public F apply_(final Obj obj) {
+        return this.addInst(instB(mInstSet.APPLY_INST_TID, lst(obj)));
+    }
+
+    public F catch_(final Obj obj) {
+        return this.addInst(instB(mInstSet.CATCH_INST_TID, lst(obj)));
+    }
+
+    public F repeat_(final Obj obj) {
+        return this.addInst(instB(mInstSet.REPEAT_INST_TID, obj.<Poly<?, ?>>as()));
+    }
+
+    public F repeat_(final Obj code, final Obj until, final Obj emit) {
+        return this.addInst(instB(mInstSet.REPEAT_INST_TID, rec(uri(CODE), code, uri(UNTIL), until, uri(EMIT), emit)));
+    }
+
+    public F end_() {
+        return this.addInst(instB(mInstSet.END_INST_TID, lst()));
+    }
+
+    public F barrier_() {
+        return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst()));
+    }
+
+    public F barrier_(final Obj obj) {
+        return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst(obj)));
+    }
+
+    public F zero_() {
+        return this.addInst(instB(mInstSet.ZERO_INST_TID, lst()));
+    }
+
+    public F one_() {
+        return this.addInst(instB(mInstSet.ONE_INST_TID, lst()));
+    }
+
+    // ========================================
+    // Logical Operators
+    // ========================================
+
+    public F and_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.AND_INST_TID, lst(obj)));
+    }
+
+    public F or_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.OR_INST_TID, lst(obj)));
+    }
+
+    public F not_(final Obj obj) {
+        return this.addInst(instB(mInstSet.NOT_INST_TID, lst(obj)));
+    }
+
+    public F is_(final Obj obj) {
+        return this.addInst(instB(mInstSet.IS_INST_TID, lst(obj)));
+    }
+
+    public F isa_(final Obj obj) {
+        return this.addInst(instB(mInstSet.ISA_INST_TID, lst(obj)));
+    }
+
+    public F has_(final Obj obj) {
+        return this.addInst(instB(mInstSet.HAS_INST_TID, lst(obj)));
+    }
+
+    // ========================================
+    // Comparison Operators
+    // ========================================
+
+    public F eq_(final Obj obj) {
+        return this.addInst(instB(mInstSet.EQ_INST_TID, lst(obj)));
+    }
+
+    public F neq_(final Obj obj) {
+        return this.addInst(instB(mInstSet.NEQ_INST_TID, lst(obj)));
+    }
+
+    public F lt_(final Obj obj) {
+        return this.addInst(instB(mInstSet.LT_INST_TID, lst(obj)));
+    }
+
+    public F lte_(final Obj obj) {
+        return this.addInst(instB(mInstSet.LTE_INST_TID, lst(obj)));
+    }
+
+    public F gt_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GT_INST_TID, lst(obj)));
+    }
+
+    public F gte_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GTE_INST_TID, lst(obj)));
+    }
+
+    // ========================================
+    // Arithmetic Operators
+    // ========================================
+
+    public F plus_(final Obj obj) {
+        return this.addInst(instB(mInstSet.PLUS_INST_TID, lst(obj)));
+    }
+
+    public F mplus_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MPLUS_INST_TID, lst(obj)));
+    }
+
+    public F minus_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MINUS_INST_TID, lst(obj)));
+    }
+
+    public F mult_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MULT_INST_TID, lst(obj)));
+    }
+
+    public F div_(final Obj obj) {
+        return this.addInst(instB(mInstSet.DIV_INST_TID, lst(obj)));
+    }
+
+    public F inv_() {
+        return this.addInst(instB(mInstSet.INV_INST_TID, lst()));
+    }
+
+    public F neg_() {
+        return this.addInst(instB(mInstSet.NEG_INST_TID, lst()));
+    }
+
+    public F pow_(final Obj obj) {
+        return this.addInst(instB(mInstSet.POW_INST_TID, lst(obj)));
+    }
+
+    public F math_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MATH_INST_TID, lst(obj)));
+    }
+
+    // ========================================
+    // Collection Operations
+    // ========================================
+
+    public F map_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MAP_INST_TID, lst(obj)));
+    }
+
+    public F filter_(final Obj obj) {
+        return this.addInst(instB(mInstSet.FILTER_INST_TID, lst(obj)));
+    }
+
+    public F select_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SELECT_INST_TID, lst(obj)));
+    }
+
+    public F order_(final Obj obj) {
+        return this.addInst(instB(mInstSet.ORDER_INST_TID, lst(obj)));
+    }
+
+    public F kmerge_(final Obj obj) {
+        return this.addInst(instB(mInstSet.KMERGE_INST_TID, lst(obj)));
+    }
+
+    public F group_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GROUP_INST_TID, lst(obj)));
+    }
+
+    public F get_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GET_INST_TID, lst(obj)));
+    }
+
+    public F union_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.UNION_INST_TID, lst(obj)));
+    }
+
+    public F split_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SPLIT_INST_TID, lst(obj)));
+    }
+
+    public F branch_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.BRANCH_INST_TID, lst(obj)));
+    }
+
+
+    public F choose_(final Obj obj) {
+        return this.addInst(instB(mInstSet.CHOOSE_INST_TID, lst(obj)));
+    }
+
+    public F merge_() {
+        return this.addInst(instB(mInstSet.MERGE_INST_TID, lst()));
+    }
+
+    public F merge_(final Obj obj) {
+        return this.addInst(instB(mInstSet.MERGE_INST_TID, lst(obj)));
+    }
+
+    public F take_(final Obj obj) {
+        return this.addInst(instB(mInstSet.TAKE_INST_TID, lst(obj)));
+    }
+
+    public F skip_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SKIP_INST_TID, lst(obj)));
+    }
+
+    public F find_(final Obj obj) {
+        return this.addInst(instB(mInstSet.FIND_TID, lst(obj)));
+    }
+
+    public F fill_(final Obj obj) {
+        return this.addInst(instB(mInstSet.FILL_TID, lst(obj)));
+    }
+
+    // ========================================
+    // Aggregation Functions
+    // ========================================
+
+    public F count_() {
+        return this.addInst(instB(mInstSet.COUNT_INST_TID, lst()));
+    }
+
+    public F sum_() {
+        return this.addInst(instB(mInstSet.SUM_INST_TID, lst()));
+    }
+
+    public F prod_() {
+        return this.addInst(instB(mInstSet.PROD_INST_TID, lst()));
+    }
+
+    public F reduce_(final Obj obj) {
+        return this.addInst(instB(mInstSet.REDUCE_INST_TID, lst(obj)));
+    }
+
+    public F cc_(final Obj obj) {
+        return this.addInst(instB(mInstSet.CC_INST_TID, lst(obj)));
+    }
+
+    // ========================================
+    // Shift Operations
+    // ========================================
+
+    public F lshift_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.LSHIFT_INST_TID, lst(obj)));
+    }
+
+    public F rshift_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.RSHIFT_INST_TID, lst(obj)));
+    }
+
+
+    // ========================================
+    // Type/Conversion Operations
+    // ========================================
+
+    public F as_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AS_INST_TID, lst(obj)));
+    }
+
+    public F to_(final Obj obj) {
+        return this.addInst(instB(mInstSet.TO_INST_TID, lst(obj)));
+    }
+
+    public F to_(final fURI uri) {
+        return this.addInst(instB(mInstSet.TO_INST_TID, lst(uri(uri))));
+    }
+
+    public F eval_(final Obj obj) {
+        return this.addInst(instB(mInstSet.EVAL_INST_TID, lst(obj)));
+    }
+
+    public F eval_(final fURI uri) {
+        return this.addInst(instB(mInstSet.EVAL_INST_TID, lst(uri(uri))));
+    }
+
+    public F from_(final Obj obj) {
+        return this.addInst(instB(mInstSet.FROM_INST_TID, lst(obj)));
+    }
+
+    public F loop_() {
+        return this.addInst(instB(mInstSet.LOOP_INST_TID, lst()));
+    }
+
+    public F auto_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(obj)));
+    }
+
+    public F auto_from_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_FROM_INST_TID, lst(obj)));
+    }
+
+    public F auto_at_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_AT_INST_TID, lst(obj)));
+    }
+
+
+    public F type_(final Obj obj) {
+        return this.addInst(instB(mInstSet.TYPE_INST_TID, lst(obj)));
+    }
+
+    public F reify_() {
+        return this.addInst(instB(mInstSet.REIFY_INST_TID, lst()));
+    }
+
+    // ========================================
+    // Utility Methods
+    // ========================================
+
+    public F id_() {
+        return this.addInst(instB(ID_INST_TID, lst()));
+    }
+
+    public F explain_(final Obj obj) {
+        return this.addInst(instB(mInstSet.EXPLAIN_INST_TID, lst(obj)));
+    }
+
+    public F at_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AT_INST_TID, lst(obj)));
+    }
+
+    public F ref_(final Obj obj) {
+        return this.addInst(instB(mInstSet.REF_INST_TID, lst(obj)));
+    }
+
+    public F parent_(final Obj obj) {
+        return this.addInst(instB(mInstSet.PARENT_INST_TID, lst(obj)));
+    }
+
+    public F within_(final Obj obj) {
+        return this.addInst(instB(mInstSet.WITHIN_INST_TID, lst(obj)));
+    }
+
+    /*public F lift_(final Obj obj) {
+        return this.addInst(instB(mInstSet.LIFT_INST_TID, lst(obj)));
+    }*/
+
+    public F side_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SIDE_INST_TID, lst(obj)));
+    }
+
+    // public F close_(final Obj obj) {
+    //     return this.addInst(instB(mInstSet.CLOSE_INST_TID, lst(obj)));
+    // }
+
+
+    public F compose_(final Call code) {
+        final List<Inst> composition = new ArrayList<>();
+        composition.addAll(this.insts());
+        composition.addAll(code.insts());
+        return this.jvm(composition).as();
+    }
+
+    public F dedup_(final Obj obj) {
+        return this.addInst(instB(mInstSet.DEDUP_INST_TID, lst(obj)));
+    }
+
+    public F dedup_() {
+        return this.addInst(instB(mInstSet.DEDUP_INST_TID, lst()));
+    }
+
+    public F source_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SOURCE_INST_TID, lst(obj)));
+    }
+
+    public F swap_(final Obj obj) {
+        return this.addInst(instB(mInstSet.SWAP_INST_TID, lst(obj)));
+    }
+
+    public F print_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.PRINT_INST_TID, lst(obj)));
+    }
+
+    public F throw_(final Obj obj) {
+        return this.addInst(instB(mInstSet.THROW_INST_TID, lst(obj)));
+    }
+
+    public F q_(final Obj obj) {
+        return this.addInst(instB(mInstSet.Q_INST_TID, lst(obj)));
+    }
+
+    public F rng_() {
+        return this.addInst(instB(mInstSet.RNG_INST_TID, lst()));
+    }
+
+    public F dom_() {
+        return this.addInst(instB(mInstSet.DOM_INST_TID, lst()));
+    }
+
+    public F tid_() {
+        return this.addInst(instB(mInstSet.TID_INST_TID, lst()));
+    }
+
+    public F vid_() {
+        return this.addInst(instB(mInstSet.VID_INST_TID, lst()));
+    }
+
+    /*public List<Obj> toList() {
+        return IteratorUtil.list(this.iterator());
+    }*/
+
+    public F domrng(final fURI dom, final fURI rng) {
+        final Inst last = this.insts().remove(this.insts().size() - 1);
+        this.insts().add(last.tid(last.tid().dom(dom).rng(rng)));
+        //this.logger().info(this.insts());
+        return (F) this;
+    }
+
+    @Override
+    public mFluent<F> clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (mFluent<F>) super.clone(jvm, tid, vid);
+    }
+
+    /// /////////////////////////////////////////////////////////////
+
+    public static class StartLess {
+
+        // ========================================
+        // Core Methods
+        // ========================================
+
+        public static <F extends mFluent<F>> F inst_(final Inst inst) {
+            return new mFluent<F>().addInst(inst);
+        }
+
+        // ========================================
+        // Control Flow Operations
+        // ========================================
+
+        public static <F extends mFluent<F>> F start_(final Obj obj) {
+            return new mFluent<F>().start_(obj);
+        }
+
+        public static <F extends mFluent<F>> F move_(final Obj obj) {
+            return new mFluent<F>().move_(obj);
+        }
+
+        public static <F extends mFluent<F>> F update_(final Obj obj) {
+            return new mFluent<F>().update_(obj);
+        }
+
+        public static <F extends mFluent<F>> F block_(final Obj obj) {
+            return new mFluent<F>().block_(obj);
+        }
+
+        // public static <F extends mFluent<F>> F where_(final Obj obj) {
+        //    return new mFluent<F>().where_(obj);
+        // }
+
+        public static <F extends mFluent<F>> F else_(final Obj obj) {
+            return new mFluent<F>().else_(obj);
+        }
+
+        public static <F extends mFluent<F>> F apply_(final Obj obj) {
+            return new mFluent<F>().apply_(obj);
+        }
+
+        public static <F extends mFluent<F>> F catch_(final Obj obj) {
+            return new mFluent<F>().catch_(obj);
+        }
+
+        public static <F extends mFluent<F>> F repeat_(final Obj obj) {
+            return new mFluent<F>().repeat_(obj);
+        }
+
+        public static <F extends mFluent<F>> F repeat_(final Obj code, final Obj until, final Obj emit) {
+            return new mFluent<F>().repeat_(code, until, emit);
+        }
+
+        public static <F extends mFluent<F>> F end_() {
+            return new mFluent<F>().end_();
+        }
+
+        public static <F extends mFluent<F>> F barrier_() {
+            return new mFluent<F>().barrier_();
+        }
+
+        public static <F extends mFluent<F>> F zero_() {
+            return new mFluent<F>().zero_();
+        }
+
+        public static <F extends mFluent<F>> F one_() {
+            return new mFluent<F>().one_();
+        }
+
+        // ========================================
+        // Logical Operators
+        // ========================================
+
+        public static <F extends mFluent<F>> F and_(final Obj... obj) {
+            return new mFluent<F>().and_(obj);
+        }
+
+        public static <F extends mFluent<F>> F or_(final Obj... obj) {
+            return new mFluent<F>().or_(obj);
+        }
+
+        public static <F extends mFluent<F>> F not_(final Obj obj) {
+            return new mFluent<F>().not_(obj);
+        }
+
+        public static <F extends mFluent<F>> F is_(final Obj obj) {
+            return new mFluent<F>().is_(obj);
+        }
+
+        public static <F extends mFluent<F>> F isa_(final Obj obj) {
+            return new mFluent<F>().isa_(obj);
+        }
+
+        public static <F extends mFluent<F>> F has_(final Obj obj) {
+            return new mFluent<F>().has_(obj);
+        }
+
+        public static <F extends mFluent<F>> F obj_() {
+            return new mFluent<F>().addInst(instC(M_ISA_INST_TID.q(MONAD_IN, "obj"), lst(), (lhs, inst) -> lhs));
+        }
+
+
+        // ========================================
+        // Comparison Operators
+        // ========================================
+
+        public static <F extends mFluent<F>> F eq_(final Obj obj) {
+            return new mFluent<F>().eq_(obj);
+        }
+
+        public static <F extends mFluent<F>> F neq_(final Obj obj) {
+            return new mFluent<F>().neq_(obj);
+        }
+
+        public static <F extends mFluent<F>> F lt_(final Obj obj) {
+            return new mFluent<F>().lt_(obj);
+        }
+
+        public static <F extends mFluent<F>> F lte_(final Obj obj) {
+            return new mFluent<F>().lte_(obj);
+        }
+
+        public static <F extends mFluent<F>> F gt_(final Obj obj) {
+            return new mFluent<F>().gt_(obj);
+        }
+
+        public static <F extends mFluent<F>> F gte_(final Obj obj) {
+            return new mFluent<F>().gte_(obj);
+        }
+
+        // ========================================
+        // Arithmetic Operators
+        // ========================================
+
+        public static <F extends mFluent<F>> F plus_(final Obj obj) {
+            return new mFluent<F>().plus_(obj);
+        }
+
+        public static <F extends mFluent<F>> F mplus_(final Obj obj) {
+            return new mFluent<F>().mplus_(obj);
+        }
+
+        public static <F extends mFluent<F>> F minus_(final Obj obj) {
+            return new mFluent<F>().minus_(obj);
+        }
+
+        public static <F extends mFluent<F>> F mult_(final Obj obj) {
+            return new mFluent<F>().mult_(obj);
+        }
+
+        public static <F extends mFluent<F>> F div_(final Obj obj) {
+            return new mFluent<F>().div_(obj);
+        }
+
+        public static <F extends mFluent<F>> F inv_() {
+            return new mFluent<F>().inv_();
+        }
+
+        public static <F extends mFluent<F>> F neg_() {
+            return new mFluent<F>().neg_();
+        }
+
+        public static <F extends mFluent<F>> F pow_(final Obj obj) {
+            return new mFluent<F>().pow_(obj);
+        }
+
+        public static <F extends mFluent<F>> F math_(final Obj obj) {
+            return new mFluent<F>().math_(obj);
+        }
+
+        // ========================================
+        // Collection Operations
+        // ========================================
+
+        public static <F extends mFluent<F>> F map_(final Obj obj) {
+            return new mFluent<F>().map_(obj);
+        }
+
+        public static <F extends mFluent<F>> F filter_(final Obj obj) {
+            return new mFluent<F>().filter_(obj);
+        }
+
+        public static <F extends mFluent<F>> F select_(final Obj obj) {
+            return new mFluent<F>().select_(obj);
+        }
+
+        public static <F extends mFluent<F>> F order_(final Obj obj) {
+            return new mFluent<F>().order_(obj);
+        }
+
+        public static <F extends mFluent<F>> F group_(final Obj obj) {
+            return new mFluent<F>().group_(obj);
+        }
+
+        public static <F extends mFluent<F>> F get_(final Obj obj) {
+            return new mFluent<F>().get_(obj);
+        }
+
+        public static <F extends mFluent<F>> F union_(final Obj... obj) {
+            return new mFluent<F>().union_(obj);
+        }
+
+        public static <F extends mFluent<F>> F union_(final List<Obj> unionList) {
+            return new mFluent<F>().addInst(instB(mInstSet.UNION_INST_TID, lst(unionList)));
+        }
+
+        public static <F extends mFluent<F>> F split_(final Obj obj) {
+            return new mFluent<F>().split_(obj);
+        }
+
+        public static <F extends mFluent<F>> F branch_(final Obj... obj) {
+            return new mFluent<F>().branch_(obj);
+        }
+
+        public static <F extends mFluent<F>> F choose_(final Obj obj) {
+            return new mFluent<F>().choose_(obj);
+        }
+
+        public static <F extends mFluent<F>> F merge_() {
+            return new mFluent<F>().merge_();
+        }
+
+        public static <F extends mFluent<F>> F merge_(final Obj obj) {
+            return new mFluent<F>().merge_(obj);
+        }
+
+
+        public static <F extends mFluent<F>> F kmerge_(final Obj obj) {
+            return new mFluent<F>().kmerge_(obj);
+        }
+
+        public static <F extends mFluent<F>> F take_(final Obj obj) {
+            return new mFluent<F>().take_(obj);
+        }
+
+        public static <F extends mFluent<F>> F skip_(final Obj obj) {
+            return new mFluent<F>().skip_(obj);
+        }
+
+        public static <F extends mFluent<F>> F find_(final Obj obj) {
+            return new mFluent<F>().find_(obj);
+        }
+
+        public static <F extends mFluent<F>> F fill_(final Obj obj) {
+            return new mFluent<F>().fill_(obj);
+        }
+
+        // ========================================
+        // Aggregation Functions
+        // ========================================
+
+        public static <F extends mFluent<F>> F count_() {
+            return new mFluent<F>().count_();
+        }
+
+        public static <F extends mFluent<F>> F sum_() {
+            return new mFluent<F>().sum_();
+        }
+
+        public static <F extends mFluent<F>> F prod_() {
+            return new mFluent<F>().prod_();
+        }
+
+        public static <F extends mFluent<F>> F reduce_(final Obj obj) {
+            return new mFluent<F>().reduce_(obj);
+        }
+
+        public static <F extends mFluent<F>> F cc_(final Obj obj) {
+            return new mFluent<F>().cc_(obj);
+        }
+
+        // ========================================
+        // Shift Operations
+        // ========================================
+
+        public static <F extends mFluent<F>> F lshift_(final Obj... obj) {
+            return new mFluent<F>().lshift_(obj);
+        }
+
+        public static <F extends mFluent<F>> F rshift_(final Obj... obj) {
+            return new mFluent<F>().rshift_(obj);
+        }
+
+        // ========================================
+        // Type/Conversion Operations
+        // ========================================
+
+        public static <F extends mFluent<F>> F as_(final Obj obj) {
+            return new mFluent<F>().as_(obj);
+        }
+
+        public static <F extends mFluent<F>> F to_(final Obj obj) {
+            return new mFluent<F>().to_(obj);
+        }
+
+        public static <F extends mFluent<F>> F to_(final fURI id) {
+            return to_(uri(id));
+        }
+
+        public static <F extends mFluent<F>> F eval_(final Obj obj) {
+            return new mFluent<F>().eval_(obj);
+        }
+
+        public static <F extends mFluent<F>> F eval_(final fURI id) {
+            return eval_(uri(id));
+        }
+
+
+        public static <F extends mFluent<F>> F from_(final Obj obj) {
+            return new mFluent<F>().from_(obj);
+        }
+
+        public static <F extends mFluent<F>> F from_(final fURI id) {
+            return from_(uri(id));
+        }
+
+        public static <F extends mFluent<F>> F loop_() {
+            return new mFluent<F>().loop_();
+        }
+
+        public static <F extends mFluent<F>> F auto_(final Obj obj) {
+            return new mFluent<F>().auto_(obj);
+        }
+
+        public static <F extends mFluent<F>> F auto_(final Supplier<Obj> function) {
+            return new mFluent<F>().auto_(instC(M_ISA_INST_TID, lst(), (x, y) -> function.get()));
+        }
+
+        public static <F extends mFluent<F>> F auto_at_(final fURI furi) {
+            return new mFluent<F>().auto_at_(uri(furi));
+        }
+
+        public static <F extends mFluent<F>> F auto_from_(final Uri uri) {
+            if (null == uri)
+                throw MTronException.of("uri can not be null");
+            return new mFluent<F>().auto_from_(uri);
+        }
+
+        public static <F extends mFluent<F>> F auto_from_(final fURI uri) {
+            if (null == uri)
+                throw MTronException.of("uri can not be null");
+            return auto_from_(uri.toUri());
+        }
+
+        public static <F extends mFluent<F>> F type_(final Obj obj) {
+            return new mFluent<F>().type_(obj);
+        }
+
+        public static <F extends mFluent<F>> F reify_() {
+            return new mFluent<F>().reify_();
+        }
+
+        // ========================================
+        // Utility Methods
+        // ========================================
+
+        public static <F extends mFluent<F>> F id_() {
+            return new mFluent<F>().id_();
+        }
+
+        public static <F extends mFluent<F>> F dedup_(final Obj obj) {
+            return new mFluent<F>().dedup_(obj);
+        }
+
+        public static <F extends mFluent<F>> F dedup_() {
+            return new mFluent<F>().dedup_();
+        }
+
+        public static <F extends mFluent<F>> F range_(final Obj start, Obj end) {
+            return new mFluent<F>().range_(start, end);
+        }
+
+        public static <F extends mFluent<F>> F explain_(final Obj obj) {
+            return new mFluent<F>().explain_(obj);
+        }
+
+        public static <F extends mFluent<F>> F at_(final Obj obj) {
+            return new mFluent<F>().at_(obj);
+        }
+
+        public static <F extends mFluent<F>> F at_(final fURI id) {
+            return new mFluent<F>().at_(uri(id));
+        }
+
+        public static <F extends mFluent<F>> F ref_(final Obj obj) {
+            return new mFluent<F>().ref_(obj);
+        }
+
+        public static <F extends mFluent<F>> F parent_(final Obj obj) {
+            return new mFluent<F>().parent_(obj);
+        }
+
+        public static <F extends mFluent<F>> F within_(final Obj obj) {
+            return new mFluent<F>().within_(obj);
+        }
+        
+/*       public static <F extends mFluent<F>> F lift_(final Obj obj) {
+            return new mFluent<F>().lift_(obj);
+        }*/
+
+        public static <F extends mFluent<F>> F side_(final Obj obj) {
+            return new mFluent<F>().side_(obj);
+        }
+
+        //public static <F extends mFluent<F>> F close_(final Obj obj) {
+        //    return new mFluent<F>().close_(obj);
+        //}
+
+        public static <F extends mFluent<F>> F source_(final Obj obj) {
+            return new mFluent<F>().source_(obj);
+        }
+
+        public static <F extends mFluent<F>> F swap_(final Obj obj) {
+            return new mFluent<F>().swap_(obj);
+        }
+
+        public static <F extends mFluent<F>> F print_(final Obj... obj) {
+            return new mFluent<F>().print_(obj);
+        }
+
+        public static <F extends mFluent<F>> F failure_(final Obj obj) {
+            return new mFluent<F>().throw_(obj);
+        }
+
+        public static <F extends mFluent<F>> F q_(final Obj obj) {
+            return new mFluent<F>().q_(obj);
+        }
+
+        public static <F extends mFluent<F>> F rng_() {
+            return new mFluent<F>().rng_();
+        }
+
+        public static <F extends mFluent<F>> F dom_() {
+            return new mFluent<F>().dom_();
+        }
+
+        public static <F extends mFluent<F>> F tid_() {
+            return new mFluent<F>().tid_();
+        }
+
+        public static <F extends mFluent<F>> F vid_() {
+            return new mFluent<F>().vid_();
+        }
+    }
+}

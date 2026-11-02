@@ -1,0 +1,19 @@
+# Exit hand-back of the terminal: on quit the console gives mouse tracking
+# and the extended key reporting back to the terminal — the shell it returns
+# to must not inherit either (regression: after quit, the terminal was left
+# in mouse-reporting mode, so the shell's wheel and clicks typed raw mouse
+# bytes into the prompt and selection did not work).
+#
+#   bin/metatron-console --steps bin/test/console-exit-release.steps --raw raw.txt
+#
+# The release bytes themselves are verified against the raw transcript:
+# the full mouse-off sweep (..1006l..1016l) and the extend-mode reset (>4;0m)
+# must arrive, and nothing on the way out may re-arm an enable.
+
+WAIT_CONSOLE
+
+# a widget on screen keeps the pointer armed through the prompts — the quit
+# is what has to take it to the terminal's own side
+MARK quit
+SEND :quit
+WAIT shutdown 30

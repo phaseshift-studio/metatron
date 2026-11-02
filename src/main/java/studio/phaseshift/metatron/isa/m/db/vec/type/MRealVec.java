@@ -1,0 +1,100 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.db.vec.type;
+
+//import jdk.incubator.vector.DoubleVector;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+
+import java.util.Vector;
+import java.util.stream.Stream;
+
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class MRealVec extends MVec {
+
+    public MRealVec(final Vector<Double> value, final fURI tid, final fURI vid) {
+        super(null, tid, vid);
+    }
+
+    @Override
+    public MRealVec zero() {
+        final Vector<Double> vec = new Vector<>(this.jvm().size());
+        for (int i = 0; i < vec.size(); i++) {
+            vec.set(i, 0.0);
+        }
+        return new MRealVec(vec, this.tid(), this.vid());
+    }
+
+    @Override
+    public long count() {
+        return this.jvm().size();
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> elements() {
+        return Stream.empty();
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> valueElements() {
+        return this.elements();
+    }
+
+    @Override
+    public <O extends Obj> O at(Obj key) {
+        return null;
+    }
+    /*
+   public MRealVec vec(final Lst lst) {
+        final double[] array = new double[lst.lstValue().size()];
+        for (int i = 0; i < lst.lstValue().size(); i++) {
+            array[i] = lst.lstValue().get(i).realValue();
+        }
+        return new MRealVec(DoubleVector.fromArray(DoubleVector.SPECIES_64, array, 0), RVEC_TID, fURI.NULL);
+    }
+
+    @Override
+    public DoubleVector jvm() {
+        return (DoubleVector) this.jvm;
+    }
+
+    @Override
+    public long count() {
+        return this.jvm().length();
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> elements() {
+        return Stream.empty();
+    }
+
+    @Override
+    public <O extends Obj> O at(Obj key) {
+        return null;
+    }
+
+    @Override
+    public boolean has(Obj key) {
+        return false;
+    }*/
+}

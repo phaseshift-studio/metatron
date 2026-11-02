@@ -1,0 +1,342 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type;
+
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+
+/**
+ * A machine component that happens to also be a Space.
+ * <p>
+ * The {@code Component} half is the model — an ISA is one of the five things a Machine is made of, beside
+ * its compiler, processor, network and memory. The {@code Space} half is an accident of how importing was
+ * implemented: {@code importInstSetStream} does {@code Machine.current().memory().addSpace(isa)}, so an ISA had to be a
+ * Space to be reachable. Frame-scoping imports removes that need, and this declaration is where the two
+ * descriptions meet in the meantime.
+ */
+public interface InstSet extends Space, Component.Prefix {
+
+    public static InstSet instset0() {
+        return new AbstractInstSet(false) {
+        }.c(cInt.ZERO()).as();
+    }
+
+    Type INSTSET_TYPE = TypeBuilder.build().tid(REC_TID).vid(INSTSET_TID)
+            .isaPredicate(rec(
+                    uri(PATTERN).maybe().asUri(), URI_TYPE,
+                    uri(CONST).maybe().asUri(), lst(T(ALL.maybe())),
+                    uri(TYPE).maybe(), lst(T(ALL_STAR)).maybe(),
+                    uri(INST).maybe(), lst(INST_TYPE).maybe(),
+                    uri(REWRITE).maybe(), lst(INST_TYPE).maybe(),
+                    uri(SUGAR).maybe(), lst(LST_TYPE).maybe(),
+                    // the union's MEMBERSHIP: the imported ISAs, by vid, IN IMPORT ORDER (earlier = higher
+                    // precedence). Declared here because it is what makes the union reflective — this is the field
+                    // that answers "what are my insts, rewrites, sugars and types" without walking the mounts.
+                    uri(REFERENCE).maybe().asUri(), lst(URI_TYPE).maybe(),
+                    // THE NAMES: <short scheme> => <the vid it denotes> — what `import(/m/math, math)` binds, and the
+                    // reason `math:cos` names /m/math/inst/cos. It lives HERE because a MOUNT is what gave the name: an
+                    // ISA owns its own shorthand the way it owns its consts and insts, and memory holds no part of it.
+                    uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE)))
+            .constructor(arg -> {
+                final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
+                };
+                InstSet.mount(isa);
+                isa.setup();
+                return isa;
+            }).create();
+
+    fURI A = f("A");
+    fURI B = f("B");
+    fURI C = f("C");
+    fURI D = f("D");
+    fURI E = f("E");
+    fURI F = f("F");
+    fURI G = f("G");
+
+    /**
+     * The DECLARED read: what this instruction set's tables say about a pattern, with no lazy
+     * materialization. A plain store answers exactly as {@code read} does; a union walks its members with
+     * this form, so a read that the machine makes as a FALLBACK (see {@code Machine.read}'s instset hop)
+     * cannot cause work on the reader's behalf.
+     */
+    default Obj readDeclared(final fURI pattern) {
+        return this.read(pattern);
+    }
+
+    void setup();
+
+    /**
+     * Refer to another instset — an import, held BY REFERENCE and never copied.
+     * <p>
+     * A plain store ignores this (the default): it is a {@link Space} holding its own structure and nothing else.
+     * It is meaningful on an instset that is a UNION over the ones it imports, where this both records the
+     * membership and fixes its precedence — earlier references are consulted first, after the own structure.
+     */
+    default InstSet refer(final InstSet isa) {
+        return this;
+    }
+
+    /**
+     * The instruction sets this vocabulary is composed of — for a plain store, itself and nothing else. The
+     * machine's own instset (a union) walks its levels: this level, its imports in import order, then the
+     * enclosing machine's, each ISA once.
+     * <p>
+     * THIS IS THE ENUMERATION, and {@code Machine.current().instset()} is its door: a consumer that wants "every
+     * instruction set this machine uses" (a rewriter collecting rules, the category graph collecting morphisms, a
+     * reflector listing the vocabulary) asks it HERE rather than scanning {@code memory().spaces()} for
+     * {@code instanceof InstSet} — the vocabulary is the machine's, not the data index's, and the index entry is
+     * the half of the old Router model that is slated to go.
+     */
+    default List<InstSet> members() {
+        return List.of(this);
+    }
+
+    @Override
+    fURI pattern();
+
+    Set<Obj> consts();
+
+    Set<Type> types();
+
+    Set<Inst> insts();
+
+    Set<Inst> rewrites();
+
+    /**
+     * THE VERSION OF THIS LEVEL'S VOCABULARY — a value that advances whenever what this level contributes to a
+     * union changes (its {@link #insts()}, {@link #rewrites()}, {@link #types()}, {@link #consts()}), and that never
+     * decreases.
+     * <p>
+     * It is the freshness signal a DERIVED VIEW carries: a consumer that memoizes an answer built from this level's
+     * tables stores the version it read, and re-reads the tables only when the number it sees is not the one it
+     * stored. The version lives HERE, on the level, because that is the only place the truth is available — a parent
+     * cannot observe that a member's tables were written. {@code setup()} populates a member AFTER it was mounted
+     * ({@code importInstSetStream} is {@code mount} then {@code setup}), and a later {@code write} migrates a rule
+     * across levels by pattern. Without this signal a union has only two options and both are wrong: re-derive the
+     * whole fold on every call, or cache on membership alone and keep serving a vocabulary that has since changed.
+     * <p>
+     * A store whose contribution is CONSTANT answers {@code 0} forever. That is not "unknown" — it is "nothing here
+     * ever changes", which is a claim a memo can rely on (see {@code noobjSpace}). Consumers compare versions for
+     * EQUALITY, never for order, so any value that stops moving is a store they may memoize once.
+     */
+    int runtimeVersion();
+
+    /**
+     * BIND A SHORT NAME to a vid — the one act behind {@code import(/m/math, math)}, and the reason a prefixed
+     * spelling ({@code math:cos}) denotes the same resource as its aligned form ({@code /m/math/cos}).
+     * <p>
+     * Bound once, on purpose: an import name that silently retargeted would make every existing {@code math:…}
+     * spelling mean something else, so a rebind to a DIFFERENT vid is refused rather than obeyed. Unbinding is
+     * {@link #unregisterPrefix(fURI)}, the deletion side of the same relation.
+     *
+     * @param prefix the short name, without the colon ({@code math} for {@code math:cos})
+     * @param vid    the address the name denotes
+     */
+    @Override
+    Obj registerPrefix(final fURI prefix, final fURI vid);
+
+    /**
+     * UNBIND a short name — the deletion side of {@link #registerPrefix(fURI, fURI)}, and the universal close applied
+     * to a name: after it the spelling denotes nothing rather than denoting somewhere else.
+     *
+     * @param prefix the short name to remove
+     */
+    @Override
+    Obj unregisterPrefix(final fURI prefix);
+
+    /**
+     * RESOLVE a prefixed spelling against this level's table, then the enclosing level's: {@code math:cos} becomes
+     * {@code /m/math/cos}. A vid with no scheme, or one whose scheme names no bound prefix, is answered as its
+     * coefficient-one form — the caller decides whether that is "unchanged" (see {@code Machine.Helper.align}).
+     * <p>
+     * The prefix supplies the ROOT only: the short name inside it ({@code cos} in {@code math:cos}) is memory's
+     * redirect to place, which is why the two tables compose rather than compete.
+     *
+     * @param vid the address as spelled
+     * @return the aligned address, or {@code vid}'s coefficient-one form when no prefix holds its scheme
+     */
+    @Override
+    fURI alignPrefix(final fURI vid);
+
+    /**
+     * THE ENCLOSING LEVEL'S ISA, or null at the top — the chain the parental walk follows. A frame's ISA is wrapped
+     * over its parent's at {@code push} ({@code BasicInstSet} overrides this with its {@code previous}), so the same
+     * ALGORITHM serves the ISA as serves the network's names: the slots differ (a scheme alias here, an authority
+     * there), the walk does not.
+     */
+    @Override
+    default Component.Prefix previousLevel() {
+        return null;
+    }
+
+    @Override
+    default Component.Prefix on(final Machine machine) {
+        return machine.instset();
+    }
+
+    /**
+     * Whether any bound prefix DENOTES AN ANCESTOR of this address — the reason a redirect collision is expected
+     * rather than reported: {@code math:cos} and {@code /m/math/cos} are one resource under two spellings, so the
+     * routes that serve both are not a mistake. Only the diagnostic path reads this.
+     *
+     * @param target an address a redirect registered
+     * @return whether some prefix's vid is a prefix of {@code target}
+     */
+    default boolean hasPrefixFor(final fURI target) {
+        return false;
+    }
+
+    default Set<Sugar> sugars() {
+        return Set.of();
+    }
+
+    /**
+     * The address→tid edge of this instset: given a vid, return the tid of the
+     * obj stored at that vid — for a type, its refinement (parent); for a
+     * constant, inst, or rewrite, the obj's own type.  Returns {@code null}
+     * when the vid is unknown or a base type (vid == tid).  Address-only; does
+     * not construct a {@link Type}.
+     */
+    default fURI vidToTid(final fURI vid) {
+        return null;
+    }
+
+    class Helper {
+
+        public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
+            return instC(tid.dom(CODE_TID).rng(CODE_TID.maybe()), lst(), (lhs, inst) -> rewrite.apply(lhs.asCode()));
+        }
+    }
+
+    /*
+     * @author Marko A. Rodriguez (http://markorodriguez.com)
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface JREService {
+        String vid();
+
+
+        class Helper {
+            public static fURI vid(final Class<?> spec) {
+                return f(spec.getAnnotation(JREService.class).vid());
+            }
+
+            public static void verifyClass(final Class<?> spec, final fURI vid) throws MTronException {
+                if (!(!spec.isAnnotationPresent(JREService.class) || Helper.vid(spec).equals(vid))) {
+                    throw MTronException.of("invalid service annotation for %s: %s (expected %s)", spec, vid, Helper.vid(spec));
+                }
+            }
+        }
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////
+
+    static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI pattern) {
+        return ServiceLoader.load(InstSet.class)
+                .stream()
+                .peek(p -> {
+                    if (!p.type().isAnnotationPresent(JREService.class))
+                        throw MTronException.of("an inst set without a service metadata located: %s", p.type().getCanonicalName());
+                })
+                .filter(p -> p.type().isAnnotationPresent(JREService.class))
+                .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(pattern));
+    }
+
+    /**
+     * MOUNT AN INSTRUCTION SET — the ONE door a machine gets an ISA through: it is REFERRED into the machine's own
+     * instset, which is where it lives (Marko, 2026-10-25: "Instsets shouldn't be in Memory as spaces (though they are
+     * spaces). They should be in InstSet only."). It is NOT a space in memory's index, which holds data spaces alone —
+     * but the addresses it holds stay routable: memory's lookup weighs the libraries the machine mounted against its
+     * data spaces, and the most specific claimant answers and takes the write ("the most specific gains the write").
+     * A space handed to {@code BasicMemory.addSpace} that is an instruction set is referred into the instset too (its
+     * sugars are this door's alone), so no caller can mount one as data; {@code removeSpace} unmounts it (no longer
+     * routed, still a member).
+     */
+    static void mount(final InstSet isa) {
+        Machine.current().instset().refer(isa);
+        isa.sugars().forEach(mParser::addSugar);
+    }
+
+    static Stream<InstSet> importInstSetStream(final fURI vid) {
+        return importInstSetStream(vid, null);
+    }
+
+    static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
+        if (null != prefix)
+            // THE NAME LANDS WITH THE VOCABULARY IT NAMES. an import is the act that gives the shorthand, so the
+            // instset keeps the table -- not memory, which mounts nothing and names nothing.
+            Machine.current().instset().registerPrefix(prefix, vid);
+        // IMPORT IS "ENSURE MOUNTED" -- AN OPTIMIZATION, NEVER A PROTECTION. a provider whose
+        // instruction set is already mounted in scope is skipped BEFORE it is instantiated (the
+        // service annotation carries the vid), so re-running an import is observationally identical
+        // to skipping it. that identity is what makes the skip sound: a mounted ISA's vocabulary is
+        // not something a re-import may change -- a user redefinition belongs at the redefiner's own
+        // level, shadowing the import, never written into it (seal-and-shadow) -- so there is nothing
+        // a reload could restore. a caller that wants a FRESH instance unmounts the old one first,
+        // which removes it from scope and makes the import real. the probe walks the machine's vocabulary
+        // (its instset's members, the enclosing machines' included), so a frame sees its enclosing machine's mounts.
+        final Set<fURI> mounted = Machine.current().instset().members().stream()
+                .map(PlatonicObj::vid)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        return loadInstSetProvider(vid)
+                .filter(p -> !mounted.contains(JREService.Helper.vid(p.type())))
+                .map(ServiceLoader.Provider::get)
+                .peek(InstSet::mount)
+                .peek(InstSet::setup); // setup
+    }
+
+    static void importInstSet(final fURI vid, final fURI prefix) {
+        importInstSetStream(vid, prefix).forEach(isa -> {
+            Graphitty.log(isa).info("loading instruction set: %s", isa.vidOrTid());
+        });
+    }
+
+    public static void importInstSet(final fURI vid) {
+        importInstSet(vid, null);
+    }
+}

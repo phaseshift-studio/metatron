@@ -1,0 +1,2 @@
+[discrete]
+= The Inst Ringoid and Ring Monad

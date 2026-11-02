@@ -1,0 +1,728 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron;
+/// ///////////////////////////////////////////////
+
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.sys.LogObj;
+import studio.phaseshift.metatron.isa.m.sys.space.fsSpace;
+import studio.phaseshift.metatron.isa.m.sys.sysInstSet;
+import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.EmojiTable;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.Feature;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
+import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.space.ws.wsServer.WS_CLIENT_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+public class BootLoader implements Rec, Feature.SelfClone {
+    private static final String SUREFIRE_REAL_CLASS_PATH = "surefire.real.class.path";
+    /// ////////////////////////////////////////////////////////////////////////
+    /// the global variables that must be gc()'d on close
+    /// ////////////////////////////////////////////////////////////////////////
+    public static boolean BOOTING = true;
+    /**
+     * A single machine (a non-root frame) is being closed via pop/shutdown, rather than the whole boot. Set around
+     * {@code AbstractMachine.close()}'s teardown so {@code GraphittyObjLogger} does not print its "no space embedded
+     * logger" fallback while the frame's own log sink is being torn down with the rest of its spaces.
+     */
+    public static boolean CLOSING = false;
+    public static boolean TESTING = false;
+    public static boolean ONE_SHOT = false;
+    /**
+     * Read-only type-test mode. When {@code true}, type-checking and obj
+     * construction run without the incidental space-write (clone+save) side
+     * effects: {@code Obj.Helper.objCheckAndSave} becomes check-only and
+     * {@code Rec.test} resolves values without autoResolve. Defaults {@code false}
+     * so production behavior is byte-for-byte unchanged; the test harness flips
+     * this on to keep classification cheap and side-effect free.
+     */
+    public static boolean RO_TEST = false;
+    public static volatile boolean RESET = false;
+    /**
+     * Exit code returned to the shell when a restart is requested.
+     * {@code bin/metatron} loops when it sees this code.
+     */
+    public static final int EXIT_RESET = 100;
+    public static java.util.function.IntConsumer EXIT_HANDLER = System::exit;
+    private static final GraphittyLogger LOG;
+    public static volatile Machine ROOT_MACHINE = null;
+    public static Rec ARGS;
+    /**
+     * The levels every machine's log sink starts with, published to {@link Machine.Helper#bootstrap(Machine)} before the root is minted.
+     */
+    public static Rec LOG_LEVELS = rec(uri(TRACE), lst(uri(ALL)));
+    /**
+     * Tracks the currently executing metatron thread on this Java thread.
+     */
+    public static final ThreadLocal<AbstractThread> CURRENT_THREAD = new ThreadLocal<>();
+    /**
+     * Keeps the main thread alive in headless mode (no console REPL to block it).
+     */
+    private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
+
+
+    static {
+        LOG = Graphitty.log(new BootLoader());
+    }
+
+    public static void main(final String[] args) throws IOException {
+        // Route java.util.logging through SLF4J/logback so all logging is unified
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+        // --- CLI flag parsing ------------------------------------------------
+        String bootFile = null;
+        String evalExpr = null;
+        String filePath = null;
+        String extraArgs = null;
+        fURI webSocket = null;
+        boolean generateMode = false;
+        boolean pipeMode = false;
+        boolean quiet = false;
+        boolean mcp = false;
+        boolean showVersion = false;
+        boolean showHelp = args.length == 0;
+        String legacyArgs = null;
+
+        int i = 0;
+        while (i < args.length) {
+            final String arg = args[i];
+            switch (arg) {
+                case "-b", "--boot" -> {
+                    if (++i < args.length) bootFile = args[i];
+                    else {
+                        System.err.println("metatron: -b requires a file argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-w", "--ws" -> {
+                    try {
+                        if (++i < args.length) webSocket = f(args[i]);
+                        else {
+                            webSocket = f("ws://localhost:8555/mtron");
+                        }
+                    } catch (final Exception e) {
+                        System.err.println("metatron: -w requires a legal websocket uri");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-e", "--eval" -> {
+                    if (++i < args.length) evalExpr = args[i];
+                    else {
+                        System.err.println("metatron: -e requires an expression argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-f", "--file" -> {
+                    if (++i < args.length) filePath = args[i];
+                    else {
+                        System.err.println("metatron: -f requires a file argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-c", "--chat" -> {
+                    if (++i < args.length) evalExpr = "@dr.chat(\"\"\"" + args[i] + "\"\"\").>>chat";
+                    else {
+                        System.err.println("metatron: -c requires a prompt argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+                case "-g", "--generate" -> {
+                    if (++i < args.length) filePath = args[i];
+                    else {
+                        System.err.println("metatron: -g requires a file or directory argument");
+                        EXIT_HANDLER.accept(1);
+                    }
+                    generateMode = true;
+                }
+                case "--mcp" -> mcp = true;
+                case "-p", "--pipe" -> pipeMode = true;
+                case "-q", "--quiet" -> quiet = true;
+                case "-v", "--version" -> showVersion = true;
+                case "-h", "--help" -> showHelp = true;
+                default -> {
+                    // positional: [rec expr], legacy, or bare expression
+                    if (arg.startsWith("[")) {
+                        if (args.length == 1)
+                            legacyArgs = arg;
+                        else
+                            extraArgs = arg;
+                    } else if (evalExpr == null && filePath == null) {
+                        evalExpr = arg;          // bare expression (no -e needed)
+                        showHelp = false;
+                    } else {
+                        System.err.println("metatron: unknown option: " + arg);
+                        System.err.println("Try 'metatron --help' for more information.");
+                        EXIT_HANDLER.accept(1);
+                    }
+                }
+            }
+            i++;
+        }
+
+        // --- stdio MCP mode ---------------------------------------------------
+        // --mcp claims stdin and stdout for the protocol, so it can not share them with a mode that reads
+        // stdin (-p) or prints one result and exits (-e/-f/-c), nor with a websocket client run (-w).
+        if (mcp && (evalExpr != null || filePath != null || pipeMode || generateMode || null != webSocket)) {
+            System.err.println("metatron: --mcp can not be combined with -e/-f/-c/-p/-g/-w (it owns stdin and stdout)");
+            EXIT_HANDLER.accept(1);
+        }
+        // take stdout before anything can write to it: fd 1 is the mcp wire on a stdio session
+        if (mcp)
+            studio.phaseshift.metatron.isa.m.web.space.stdio.StdioProtocol.install();
+
+        // --- Immediate-exit flags -------------------------------------------
+        if (showVersion) {
+            System.out.println("metatron " + METATRON_VERSION);
+            EXIT_HANDLER.accept(0);
+        }
+        if (showHelp) {
+            printHelp();
+            EXIT_HANDLER.accept(0);
+        }
+
+        if (generateMode) {
+            final Generator generator = new Generator(filePath);
+            generator.start();
+            EXIT_HANDLER.accept(0);
+        }
+
+        // --- Boot file resolution: -b flag -> $METATRON_BOOT env -> null ----
+        if (bootFile == null)
+            bootFile = System.getenv("METATRON_BOOT");
+        // an stdio session with no profile of its own gets the portless one
+        if (bootFile == null && mcp)
+            bootFile = "boot/mcp.boot.mtron";
+
+        // --- Suppress diagnostic output for eval/piping mode -----------------
+        if (quiet || evalExpr != null || filePath != null)
+            LogObj.setSLF4J("error");
+
+        // --- Build ARGS rec for load() --------------------------------------
+        if (legacyArgs != null) {
+            // legacy: single mtron-expression string
+            try {
+                ARGS = ObjmtronSerializer.parse(legacyArgs).as();
+                if (!quiet) LogObj.setSLF4J(ARGS.has(uri("log")) ? ARGS.at(uri("log")).uriValue().toString() : "info");
+            } catch (final Exception e) {
+                LOG.error(e);
+                EXIT_HANDLER.accept(1);
+            }
+            if (!quiet) LOG.info("unparsed boot args:\n%s", legacyArgs);
+        } else {
+            ARGS = rec();
+            // merge extra mtron-rec args (e.g. '[log=>info,a=>b]')
+            if (extraArgs != null) {
+                try {
+                    ARGS.jvm().putAll(ObjmtronSerializer.parse(extraArgs).as().jvmAs());
+                } catch (final Exception e) {
+                    LOG.error(e);
+                    EXIT_HANDLER.accept(1);
+                }
+            }
+            // -b flag takes priority over any boot in extraArgs
+            if (bootFile != null)
+                ARGS.jvm().put(uri(BOOT), uri(bootFile));
+            if (evalExpr != null || filePath != null || quiet || mcp)
+                ARGS.jvm().putIfAbsent(uri("log"), uri("error"));
+            if (mcp)
+                ARGS.jvm().put(uri(MCP), uri(STDIO));
+        }
+
+        // --- Parse boot-file header for embedded args -----------------------
+        if (ARGS.has(BOOT)) {
+            final Path bootPath = Path.of(ARGS.at(BOOT).uriValue().toString());
+            //fsSpace.makeFile(bootPath).vid(f("boot/file"));
+            try (final FileInputStream bootReader = new FileInputStream(bootPath.toFile())) {
+                final List<String> bootLines = Arrays.asList(new String(bootReader.readAllBytes()).split("\n"));
+                final int argsStart = IteratorUtil.indexedStream(bootLines.iterator()).filter(x -> x.get1().startsWith("[== boot args ==]")).map(x -> x.get0()).findFirst().orElse(-1);
+                if (argsStart != -1) {
+                    final int argsEnd = IteratorUtil.indexedStream(bootLines.iterator()).filter(x -> x.get1().startsWith("[===============]")).map(x -> x.get0()).findFirst().orElse(-1);
+                    if (argsEnd != -1) {
+                        final List<String> bootArgs = bootLines.subList(argsStart + 1, argsEnd);
+                        if (!quiet) LOG.info("header boot args:\n%s", String.join("\n", bootArgs));
+                        // a header block is a rec of args; anything else (say, a stray semicolon making it a
+                        // lst of statements) is reported and skipped rather than cast-failing the boot
+                        final Obj bootArgsObj = ObjmtronSerializer.parse(String.join("\n", bootArgs));
+                        if (bootArgsObj.isRec())
+                            ARGS.jvm().putAll(bootArgsObj.asRec().jvm());
+                        else
+                            LOG.warn("boot args block did not parse as a rec — ignoring: %s", bootArgsObj);
+                    } else {
+                        LOG.warn("boot args section not properly closed in %s", bootPath);
+                    }
+                }
+            } catch (IOException e) {
+                LOG.error(e);
+                EXIT_HANDLER.accept(1);
+            }
+        }
+
+        // a profile can declare `mcp => stdio` itself (so `-b boot/mcp.boot.mtron` behaves like the flag):
+        // the header args are parsed by now, and fd 1 has to be claimed before the profile prints anything
+        if (!mcp && ARGS.has(uri(MCP)))
+            studio.phaseshift.metatron.isa.m.web.space.stdio.StdioProtocol.install();
+
+        if (null != webSocket) {
+            final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(mutableMap(uri(HOST), uri(webSocket)), WS_CLIENT_TID, null));
+            final CommonUtil.Spinner spinner = CommonUtil.spinner("waiting for response...", false);
+            final Thread shutdownHook = new Thread(() -> {
+                spinner.stop();
+                client.close();
+            }, "ws-shutdown");
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            try {
+                final Obj result = MFail.reported(client.sendRecv(ObjmtronSerializer.parse(evalExpr)));
+                if (!result.isNoObj()) {
+                    System.out.print(Graphitty.string("{{-X-}}{{<100}}"));
+                    System.out.print(CommonUtil.removeQuotes(ObjmtronSerializer.single().write(result)) + "\n");
+                    if (result.isFail() || result.isCaughtFail())
+                        MTronException.emitStackTrace(result.asFail().jvm());
+                }
+            } finally {
+                spinner.stop();
+                client.close();
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                } catch (final IllegalStateException ignored) { /* shutting down */ }
+            }
+            EXIT_HANDLER.accept(0);
+        }
+
+        // --- Boot the system ------------------------------------------------
+        if (evalExpr != null || filePath != null)
+            ONE_SHOT = true;
+        BootLoader.load(ARGS);
+
+        // --- Evaluate expression or file, print result to stdout, exit ------
+        if (evalExpr != null || filePath != null) {
+            int exitCode = 0;
+            try {
+                // Read piped stdin (-p flag, _ placeholder binds to this)
+                Obj stdinObj = noobj();
+                if (pipeMode) {
+                    final String stdinStr = new String(System.in.readAllBytes()).trim();
+                    if (!stdinStr.isEmpty())
+                        stdinObj = mParser.parse(stdinStr).apply();
+                }
+                // Evaluate expression
+                final Obj result;
+                if (!stdinObj.isNoObj()) {
+                    // Piped: parsed expression applied with stdin as lhs
+                    // e.g. "_ + 5" with stdin "3" → plus(_, 5).apply(3) → 8
+                    result = mParser.parse(evalExpr).apply(stdinObj);
+                } else if (evalExpr != null) {
+                    result = Machine.evaluate(evalExpr);
+                } else {
+                    result = Machine.Helper.evaluate(new java.io.File(filePath));
+                }
+                if (!result.isNoObj()) {
+                    System.out.print(ObjmtronSerializer.single().write(result) + "\n");
+                    if (result.isFail() || result.isCaughtFail())
+                        MTronException.emitStackTrace(result.asFail().jvm());
+                }
+            } catch (final Exception e) {
+                System.err.println("metatron: " + e.getMessage());
+                exitCode = 1;
+            } finally {
+                close();
+                EXIT_HANDLER.accept(RESET ? EXIT_RESET : exitCode);
+            }
+        }
+
+        // --- Headless mode: signal restart via exit code -----------------
+        // not while serving a stdio session: exiting 100 makes bin/metatron swap the JVM under a live pipe,
+        // which strands in-flight requests and answers a strict client's next initialize with silence
+        if (RESET && !mcp)
+            System.exit(EXIT_RESET);
+        else if (RESET)
+            LOG.warn("reset ignored while serving mcp stdio — restart the harness to reboot the vm");
+    }
+
+    private static void printHelp() {
+        final String help = """
+                Usage: metatron [OPTIONS]
+                
+                A distributed data-oriented computing language and virtual machine.
+                
+                Options:
+                  -b, --boot <file>       Boot configuration file (env: $METATRON_BOOT)
+                  -w, --ws <uri>          WebSocket of running metatron (default: ws://localhost:8555/mtron)
+                  -e, --eval <expr>       Evaluate an mtron expression
+                  -c, --chat <prompt>     Chat with an agent loaded via boot or websocket
+                  -f, --file <file>       Evaluate an mtron source file
+                  -g, --generate <file>   Generate a custom mtron boot
+                  -p, --pipe              Read stdin as pipe input
+                  --mcp                   Serve MCP on stdin/stdout (implies -b boot/mcp.boot.mtron)
+                  -q, --quiet             Suppress diagnostic output (for piping)
+                  -v, --version           Print version and exit
+                  -h, --help              Show this help message
+                
+                  A bare positional argument is treated as an -e expression.
+                
+                Examples:
+                  metatron "1 + 2"
+                  metatron "1 + 2" | metatron -p "_ + 5"
+                  metatron -f myapp.mtron
+                  metatron -b boot/boot.mtron
+                  metatron -b boot/boot.mtron "*/sys/env/HOME"
+                  METATRON_BOOT=boot/boot.mtron metatron "*/sys/env/USER"
+                
+                """;
+        System.out.print(help);
+    }
+
+    public static void load(final Rec args) {
+        if (BOOTING) {
+            // Re-create executor if a previous test run shut it down
+            /// /// PARSING OF BOOT ARGUMENT REC /// ///
+            LOG.info("final boot args:\n%s", args);
+            if (args.has(BOOT)) {
+                final fURI bootUri = args.at(BOOT).uriValue();
+                final String bootPath = bootUri.toString();
+                if (bootPath.startsWith("/")) {
+                    // absolute path: normalize but don't prepend CWD
+                    args.at(uri(BOOT), f(Path.of(bootPath).normalize().toString()).toUri(), MUTABLE);
+                } else {
+                    // relative path: resolve against CWD
+                    args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(bootUri).toUri(), MUTABLE);
+                }
+            }
+            LogObj.setSLF4J(args.at(uri("log")).orElse(uri("warn")).uriValue().toString());
+            LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
+            /// /// INITIAL PHASE OF BOOT PROCESS /// ///
+            Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
+            LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
+                    InstSet.class.getCanonicalName(),
+                    InstSet.loadInstSetProvider(ALL)
+                            .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
+                            .reduce("", (a, b) -> a + "\n\t\t" + b));
+            /// // SET TRACER STAGES /// ///
+            LOG.info("registering the {{c}}x_ers{{X}}...");
+            final Rec tracer = Tracer.init(rec(uri("stack"),
+                    args.at("tracer/stack").orElse(Stream.of(Tracer.values())
+                            .map(t -> rel(uri(t.name()), BOOL_FALSE))
+                            .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
+            LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
+            /// /// INSTRUCTION SIGNATURE ENCODING /// ///
+            // the `args` component of an instruction tid is OPT-IN and read from a JVM system property ONCE, at
+            // MInst's class-init -- so the instsets' boot-time registrations are minted long before anything can
+            // ask. Print the state: otherwise a tid expectation that lacks `args=[...]` looks like a resolver bug
+            // when it is only that `-Dmtron.inst.args-in-tid=true` never reached this JVM (the pom property feeds
+            // surefire, not a console/launcher JVM).
+            // ON is the norm, so it is INFO; OFF is a deliberate opt-out and says so at WARN — an accidental
+            // `-Dmtron.inst.args-in-tid=false` is the failure that would otherwise look like a resolver bug (tids
+            // that "lost" their args).
+            if (MInst.ARGS_IN_TID)
+                LOG.info("{{c}}inst args in tid{{X}}: true — instruction tids carry their declared argument types");
+            else
+                LOG.warn("{{c}}inst args in tid{{X}}: false — instruction tids omit their declared argument types");
+            /// /// SET THE TYPER'S CHECK STATE /// ///
+            // the typer IS the state: its `check` field names the type-check points, and the boot default is every
+            // point ON except code_resolve. A boot profile names only the points it wants to OVERRIDE
+            // (`typer/check => [code_resolve => true]`; the legacy `typer/stage` spelling is honored too), merged
+            // over that default — naming one point must not silently disable the other four.
+            Rec typerCheck = rec(new java.util.LinkedHashMap<>(Typer.defaults().jvm()));
+            final java.util.Map<Obj, Obj> checkOverrides =
+                    args.at("typer/check").orElse(args.at("typer/stage").orElse(rec())).asRec().recValue();
+            for (final java.util.Map.Entry<Obj, Obj> stage : checkOverrides.entrySet())
+                typerCheck = typerCheck.at(stage.getKey(), stage.getValue());
+            final Typer typer = BasicTyper.of(typerCheck);
+            LOG.info("{{c}}typer{{X}} registered: %s", typer);
+            /// /// SET REWRITER FILTER /// ///
+            final Rec rewriter = args.at("rewriter").orElse(rec(uri("allow"), lst(uri(ALL)), uri("disallow"), lst())).vid(f("/sys/rewriter"));
+            LOG.info("{{c}}rewriter{{X}}: %s", rewriter);
+            /// /// START OF BOOTING PROCESS /// ///
+            String hostname = null;
+            try {
+                hostname = InetAddress.getLocalHost().getHostName();
+            } catch (final Exception e) {
+                hostname = System.getenv(HOSTNAME);
+            }
+            if (null == hostname)
+                LOG.warn("booting metatron on a non-networked jvm");
+            else {
+                args.at(LOCAL, uri(hostname), MUTABLE);
+            }
+            final fURI SYS_VID = f("/sys");
+
+            final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
+            sysSpace.addQ(QCollection.docQ());
+            sysSpace.addQ(QCollection.subQ());
+            sysSpace.addQ(QCollection.incrQ());
+            sysSpace.addQ(QCollection.mimeQ());
+            sysSpace.addQ(QCollection.lockQ());
+            Machine.write(f("/sys?docq"), QCollection.Docs.doc("local system resources"));
+            Machine.write(f("/sys/mach?docq"), QCollection.Docs.doc("machine templates"));
+            Machine.write(f("/sys/mach/default?docq"), QCollection.Docs.doc("default machine template"));
+            Machine.write("/sys/info", auto_(instB(SYS_INST_TID.extend("sys_stat"), lst())).tryToInst());
+            Machine.write(f("/sys/info?docq"), QCollection.Docs.doc("local physical machine information"));
+            Machine.write(f("/sys/thread?docq"), QCollection.Docs.doc("metatron threads globally"));
+            // published before the root is minted: bootstrap seeds the sink during construction, so [log=>…] must be readable by then
+            LOG_LEVELS = rec(args.at(LOGG).orElse(uri(TRACE)), lst(uri(ALL)));
+            /// CREATE A ROUTER AND ATTACH IT TO SYS
+            // minted from the template at /sys/mach, so the root has all five slots. Built by the
+            // pattern/vid constructor it had only pattern, primary, memory and network — an address space
+            // that could not execute, and whose /compiler and /processor were simply absent.
+            // The root's vid is `/` — the one address that is not inside any space, which is the honest
+            // description of a frame of reference. It is deliberately NOT written into /sys any more: a root
+            // stored inside the address space it defines is what forced the old /sys/router self-reference.
+            // `*` reaches it instead, through Memory's fallback to the machine's own rec.
+            ROOT_MACHINE = BasicMachine.of(MACH_MACHINE_TID, f("/."));
+            Machine.current(Machine.root());   // the boot runs as root: every library registers where it is written
+            //Machine.current().memory().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID.extend("space/sys")).as());
+            LOG.debug("router location: %s", ROOT_MACHINE.vid());
+            // the typer is the compiler's fourth stage, so its state lives at /compiler/typer — install the instance
+            // the boot configured rather than a global registry
+            final java.util.Map<Obj, Obj> stages = new java.util.LinkedHashMap<>(BasicCompiler.defaultStages());
+            stages.put(uri(TYPER), typer);
+            ROOT_MACHINE.compiler(new BasicCompiler(stages, MACH_COMPILER_TID, null));
+            Machine.write(f("/sys/tracer"), tracer);
+            Machine.write(f("/sys/rewriter"), rewriter);
+            Machine.write(f("/sys/tmp"), str("""
+                    
+                    use /sys/tmp as a temporary location for objs.
+                    note that /sys/tmp can be automatically garbage collected at any time.
+                    
+                    """));
+            Machine.write(f("/sys/emoji"), EmojiTable.EMOJIS.entrySet().stream().map(kv -> rel(uri(kv.getKey()), str(kv.getValue()))).collect(new CommonUtil.RecCollector()));
+            // LOAD STDIO INSTRUCTIONS
+            Machine.write("/sys/io/stdout", docWrap(instC(f("/sys/io/stdout").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+                final Object arg = inst.arg(0).jvm();
+                if (arg != null)
+                    System.out.println(arg);
+                return lhs;
+            }), "maybe an obj", "maybe an obj", Map.of(), "prints arg jvm object to the terminal and emits lhs obj as rhs obj"));
+            Machine.write("/sys/io/stdin", block_(docWrap(instC(f("/sys/io/stdin").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> {
+                final Scanner scanner = new Scanner(System.in);
+                final String input = scanner.nextLine();
+                return str(input);
+            }), "maybe an obj", "a single line of input", Map.of(), "read a line of input from the running terminal")).tryToInst());
+            // Machine.authority().registerRedirect(f("stdout"), f("/sys/io/stdout"));
+            // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
+            /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
+            // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own
+            // instset. Hand-registering these three with addSpace alone is why `instset()` could not answer for
+            // /m — the base language — while it answered for every ISA imported later through `import`.
+            final InstSet m = new mInstSet();
+            InstSet.mount(m);
+            m.setup();
+            //
+            final InstSet sys = new sysInstSet();
+            InstSet.mount(sys);
+            sys.setup();
+            ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
+            System.getenv().entrySet().stream()
+                    .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
+                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
+                    .forEach(kv -> Machine.write(kv.getKey(), kv.getValue()));
+
+            //
+            final InstSet mach = new machInstSet();
+            InstSet.mount(mach);
+            mach.setup();
+            /// PUBLISH THE STAGED DECLARATIONS NO SET CLAIMED
+            // a set publishes its own jurisdiction at mount (PendingWrites.drainUnder in AbstractInstSet.setup), so the
+            // residue is what sits outside every mounted prefix: a leaf-vid set's `…?decq` write is BESIDE its vid, not
+            // under it, and the jurisdiction rule (the address equals the prefix or starts with prefix + "/") therefore
+            // never reaches it. Only the DECLARATIONS are swept: `?decq`/`?docq` are value replaces and therefore
+            // idempotent, while re-publishing an instruction or a type into an already populated space re-registers it
+            // (see PendingWrites' class javadoc). An empty log answers 0, which is the ordinary case.
+            PendingWrites.drainRest();
+            /// WRITE THE BOOT ARGS TO THE ROUTER STACK
+            Machine.write(f("boot/args"), args);
+            Thread.currentThread().setName("metatron-main");
+            LOG.info("starting system thread");
+            final CoreThread systemThread = docWrap(CoreThread.core(
+                    instLambda(_ -> {
+                        try {
+                            SHUTDOWN_LATCH.await();
+                        } catch (final InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                        return noobj();
+                    }),
+                    mThread.CURRENT_SYS_THREAD.extend("main")), "this root thread waits till all child threads are complete and then releases a latch to initiate metatron shutdown procedure");
+            systemThread.applyAsync();
+            Machine.write(mThread.CURRENT_SYS_THREAD.extend("main"), systemThread);
+            BootLoader.CURRENT_THREAD.set(systemThread);
+            ///////////////////////////////////////////////////////////////
+            if (args.has(uri(Tokens.BOOT))) {
+                LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
+                try {
+                    final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
+                    fsSpace.makeFile(bootPath).vid(f("boot/file"));
+                    final long count = Machine.Helper.evaluate(bootPath.toFile(), e -> {
+                        LOG.error("{{r}}%s{{X}} starting at line {{y}}%d{{X}}\n%s", e.parseException(), e.lineNumber() + 1, e.lineString());
+                        if (Tracer.java_stack.enabled())
+                            e.parseException().printStackTrace(System.err);
+                    }).count();
+                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);
+                } catch (final IOException e) {
+                    LOG.error(e);
+                    EXIT_HANDLER.accept(0);
+                }
+                LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
+            }
+            // a stdio session was asked for and the profile did not mount a carrier — attach the default
+            // one. Idempotent by construction (mcp_stdioHandler.serving()), so a profile that DID mount one
+            // wins and --mcp stays sugar over the profile rather than a competing code path.
+            if (args.has(uri(MCP)) && !mcp_stdioHandler.serving()) {
+                LOG.info("attaching the default mcp stdio carrier");
+                // a fallback must never take the boot down with it: a profile that failed to mount its own
+                // carrier still deserves to report why, rather than dying with no output at all (2026-09-26)
+                try {
+                    final Obj attached = mcp_stdioHandler.of(rec(mutableMap(uri(HOST), uri("mcp_mtron"))));
+                    if (attached.isFail())
+                        LOG.error("unable to attach the default mcp stdio carrier: %s", attached);
+                } catch (final Throwable e) {
+                    LOG.error("unable to attach the default mcp stdio carrier: %s", null == e.getMessage() ? e.getClass().getName() : e.getMessage());
+                }
+            }
+            // the log sink is no longer written here: Machine.Helper.bootstrap(machine) seeds one per machine at <vid>/sys/log
+            // from LOG_LEVELS (published above), and GraphittyObjLogger reads it ~-relative per frame.
+            /////////////////////////////////////////////////////////////////
+            LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
+            BOOTING = false;
+            System.gc();
+            /// /// END OF BOOTING PROCESS /// ///
+            // If a console (or other blocking component) was loaded from the boot script, it
+            // will have blocked mParser.eval() above and we never reach here.  In headless mode
+            // (no console, not testing) we reach here immediately -- park the main thread so the
+            // JVM stays alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
+            final String surefireClassPath = System.getProperty(SUREFIRE_REAL_CLASS_PATH);
+            if (!TESTING && !ONE_SHOT && (surefireClassPath == null || surefireClassPath.isEmpty())) {
+                try {
+                    SHUTDOWN_LATCH.await();
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else {
+            LOG.warn("boot processes previously completed -- ignoring request to boot");
+        }
+    }
+
+    public static void close() {
+        try {
+            BOOTING = true;
+            SHUTDOWN_LATCH.countDown();  // release headless main-thread park (no-op if already 0)
+            if (!ONE_SHOT)
+                LOG.none("\n");
+            Machine.Helper.closeSources();
+            Machine.root().close();
+            // the root closed its own level; a frame that dialed and was never popped still holds a supervised one
+            studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor.closeAll();
+            ROOT_MACHINE = null;
+            ARGS = null;
+            ThreadExecutor.instance().shutdown();
+            LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
+        } catch (final Exception e) {
+            LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown: %s\n\t", Graphitty.sillyPrint("metatron", true, true), e);
+        }
+    }
+
+    @Override
+    public Map<Obj, Obj> jvm() {
+        return ARGS.jvm();
+    }
+
+    @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
+    public fURI tid() {
+        return f(Tokens.BOOT);
+    }
+
+    @Override
+    public fURI vid() {
+        return f(Tokens.BOOT);
+    }
+
+    @Override
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+        return Feature.SelfClone.super.clone(jvm, tid, vid);
+    }
+
+    @Override
+    public Obj clone() {
+        return Feature.SelfClone.super.clone();
+    }
+
+}

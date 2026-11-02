@@ -1,0 +1,208 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.space;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.mach.type.MStats;
+import studio.phaseshift.metatron.isa.m.mach.type.Stats;
+
+import java.util.Map;
+import java.util.Set;
+
+import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+
+public final class noobjSpace implements Space, InstSet {
+
+    private static final noobjSpace INSTANCE = new noobjSpace();
+
+    private noobjSpace() {
+
+    }
+
+    public static <S extends Space> S single() {
+        return (S) INSTANCE;
+    }
+
+    @Override
+    public void setup() {
+
+    }
+
+    @Override
+    public Space sjvm() {
+        return this;
+    }
+
+    @Override
+    public Map<Uri, Obj> routes() {
+        return Map.of();
+    }
+
+    @Override
+    public Stats stats() {
+        return new MStats();
+    }
+
+    @Override
+    public Map<Obj, Obj> jvm() {
+        return Map.of();
+    }
+
+    @Override
+    public Rec at(Obj key, Obj value) {
+        return this;
+    }
+
+    @Override
+    public fURI pattern() {
+        return NOOBJ_TID;
+    }
+
+    @Override
+    public Set<Obj> consts() {
+        return Set.of();
+    }
+
+    @Override
+    public Set<Type> types() {
+        return Set.of(NOOBJ_TYPE);
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return Set.of();
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return Set.of();
+    }
+
+    /**
+     * CONSTANT, and honestly so — see {@link InstSet#runtimeVersion()}. This store has no tables to fill: its
+     * consts, insts and rewrites are the empty sets by construction and its {@link #write} stores nothing, so there
+     * is no change a version could report. Answering a fixed {@code 0} is the claim "nothing here ever changes",
+     * which is exactly what a memo needs to hear.
+     */
+    @Override
+    public int runtimeVersion() {
+        return 0;
+    }
+
+    @Override
+    public Obj read(final fURI vid) {
+        return noobj();
+    }
+
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        return obj;
+    }
+
+    /**
+     * THE NULL SPACE BINDS NO NAMES: a name bound here could never be reached by a read, so it is refused rather than
+     * accepted into a table with no vocabulary behind it.
+     */
+    @Override
+    public Rec prefixes() {
+        // the null space holds no vocabulary, so it declares no rows either
+        return rec();
+    }
+
+    @Override
+    public Obj registerPrefix(final fURI prefix, final fURI vid) {
+        throw studio.phaseshift.metatron.util.MTronException.of("the null space binds no names: %s => %s", prefix, vid);
+    }
+
+    @Override
+    public Obj unregisterPrefix(final fURI prefix) {
+        // nothing was ever bound here, so nothing is unbound
+        return noobj();
+    }
+
+    @Override
+    public fURI alignPrefix(final fURI vid) {
+        return vid.one();
+    }
+
+    @Override
+    public fURI redirect(fURI furi, boolean big) {
+        return NOOBJ_TID;
+    }
+
+    @Override
+    public fURI tid() {
+        return NOOBJ_TID;
+    }
+
+    @Override
+    public fURI vid() {
+        return null;
+    }
+
+    @Override
+    public noobjSpace clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return Space.Helper.spaceToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Space.Helper.spaceHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof noobjSpace;
+    }
+
+    @Override
+    public void close() {
+
+    }
+
+    @Override
+    public boolean isNoObj() {
+        return true;
+    }
+
+    @Override
+    public noobjSpace clone() {
+        return this;
+    }
+
+    @Override
+    public Rec plus(final Rec objs) {
+        return this;
+    }
+
+    @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+}

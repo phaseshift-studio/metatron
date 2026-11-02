@@ -1,0 +1,100 @@
+[discrete]
+== Q Processors
+
+A query process (_qproc_) is a space attachment that intercepts reads and writes according to the query parameters of the uri.
+These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.
+
+Currently, metarton provides the following qprocs in the core distribution.
+
+[cols="1a,2a,5a",options=header,role="table-bordered small center",header]
+|===
+^| q     ^| key=value | description
+| subq   | subq      | subscribe to obj mutations within a furi pattern.
+| docq   | docq      | read and write obj documentation.
+| incrq  | incrq     | increment a space global counter.
+| typeq  | T         | constrain furis to only allow objs of a certain type.
+| constq | constq    | prevent objs from being mutated (updated or deleted).
+|===
+
+The q-processor type is defined as
+
+[mtron]
+----
+*qproc
+----
+
+where a qproc may implement any of the associated read/write interception stages.
+
+[cols="7a,4a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+.read processors
+. *pre-read*: prior to reading the space, any `?pattern` furi will be first processed by pre-read.
+. *post-read*: prior to returning an `obj` from the space, any `?pattern` furi will be first processed by post-read.
+
+.write processors
+. *pre-write*: prior to writing to the space, any `?pattern` furi will be first processed by pre-write.
+. *post-write*: prior to returning an `obj` written to the space, any `?pattern` furi will be first processed by post-write.
+. *qless-write*: regardless of a `?pattern` furi, all writes to the space will be processed by qless-write.
+
+🧱
+[source,mtron]
+----
+       ┌──────────┐        ┌─────────────┐           
+───────► pre-read ┼────────┼──┐          │           
+       └──────────┘        │  │          │           
+       ┌───────────┐       │  │          │           
+◄──────┼ post-read │◄──────┼──┘          │           
+       └───────────┘       │             │           
+       ┌───────────┐       │             │           
+────┬──► pre-write ┼───────┼──┐          │           
+    │  └───────────┘       │  │          │           
+    │  ┌────────────┐      │  │          │           
+◄───┼──┼ post-write ◄──────┼──▲          │           
+    │  └────────────┘      │  │          │           
+    │  ┌─────────────┐     │  │          │           
+    └──► qless-write ┼─────┼──┘   space  │           
+       └─────────────┘     └─────────────┘                                         
+----
+|===
+
+[discrete]
+=== qproc examples
+
+[discrete]
+==== subq: publish and subscribe to patterns in space
+
+[mtron]
+----
+*/sys/space/usr
+/usr/notes/#?subq -> sub::[code=>print('${>>1} written to ${>>0}')]
+*/usr/notes/#?subq
+/usr/notes/#?subq -> none
+*/usr/notes/#?subq
+----
+
+For target removal of subscriptions, place the subscription in space by vid.
+Then use `subq` value to match on the vid.
+
+[mtron]
+----
+/usr/notes/#?subq -> sub::[code=>print('${>>1} written to ${>>0}')]@abc
+*/usr/notes/#?subq
+/usr/notes/#?subq=abc -> none
+*/usr/notes/#?subq
+----
+
+[discrete]
+==== docq: read and write obj documentation for humans and agents
+
+[discrete]
+==== typeq: read and write type constraints in space
+
+[discrete]
+==== incrq: reada and write furis with counters
+
+[discrete]
+==== lineq: read and write str::T with line precision
+
+[discrete]
+==== mimeq: read and write objs using mime-types

@@ -1,0 +1,291 @@
+---
+name: metatron-mcp
+description: Reference for agents requiring tools
+---
+
+# MCP Clients and Servers
+
+## Adding an MCP Server
+
+To connect to an MCP server, a `mcp_client::T` must be created. `mcp_client::T` requires the MCP server support either websocket, http, or stdio transport. For most situations, the following pattern suffices -- simply convert the MCP server's published `mcpServer` JSON snippet into an `mcp_client::T` via the transformation path `str::T => json::T => mcp_client::T`.
+
+```mtron
+mtron> """
+       {
+        "type": "streamable-http",
+        "url": "http://127.0.0.1:64342/stream",
+        "headers": {
+         "IJ_MCP_SERVER_PROJECT_PATH": "~/software/metatron"
+        }
+       }
+       """.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
+```
+If the snippet provided has an `mcpServer` outer wrapping, then do:
+
+```mtron
+mtron> """
+       {"mcpServers": {
+        "intellij" : {
+          "type": "streamable-http",
+          "url": "http://127.0.0.1:64342/stream",
+          "headers": {
+           "IJ_MCP_SERVER_PROJECT_PATH": "~/software/metatron"
+          }
+        }}}
+       """.as(json::T).as(rec::T)>>mcpServers/intellij.as(json::T).as(mcp_client::T)
+==>mcp_client::[type=>streamable-http,
+                url=><http://127.0.0.1:64342/stream>,
+                headers=>[IJ_MCP_SERVER_PROJECT_PATH=>~/software/metatron],
+                host=><http://127.0.0.1:64342/stream>,
+                status=>!λstatus?bool<=(){<j>},
+                tool=>[
+                 execute_run_configuration=>tool::[
+                  inst=>inst(configurationName=>'Name of the existing run configuration to execute',
+                             filePath=>"File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.",
+                             line=>"1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.",
+                             timeout=>'Timeout in milliseconds',
+                             waitForExit=>"Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.",
+                             programArguments=>'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             workingDirectory=>'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                             envs=>'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){<j>},
+                  name=>execute_run_configuration,
+                  desc=>'Run either an existing run configu...',
+                  arg=>[
+                   configurationName=>'Name of the existing run configura...',
+                   filePath=>'File path relative to the project ...',
+                   line=>"1-based line number for `filePath`...",
+                   timeout=>'Timeout in milliseconds',
+                   waitForExit=>'Whether to wait for process termin...',
+                   programArguments=>'Optional program arguments overrid...',
+                   workingDirectory=>'Optional working directory overrid...',
+                   ...(1 more)]],
+                 get_run_configurations=>tool::[
+                  inst=>inst(filePath=>'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){<j>},
+                  name=>get_run_configurations,
+                  desc=>'Returns either project run configu...',
+                  arg=>[filePath=>'Optional file path relative to the...']],
+                 analyze_calls=>tool::[
+                  inst=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
+                             analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                             depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                             maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
+                             maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
+                             treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
+                             childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>analyze_calls,
+                  desc=>'Builds the IDE Call Hierarchy tree...',
+                  arg=>[
+                   symbolFqn=>'Plain fully qualified symbol name,...',
+                   analysisKind=>"Call analysis direction. Use `INCO...",
+                   depth=>'Maximum number of call levels to r...',
+                   maxChildren=>'Maximum number of direct children ...',
+                   maxNodes=>'Maximum total number of rendered c...',
+                   treePath=>'Optional path to a subtree root, c...',
+                   childOffset=>'Offset for paging direct children ...',
+                   ...(1 more)]],
+                 build_project=>tool::[
+                  inst=>inst(rebuild=>"Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.",
+                             filesToRebuild=>'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>build_project,
+                  desc=>'Triggers building of the project o...',
+                  arg=>[
+                   rebuild=>'Whether to perform full rebuild th...',
+                   filesToRebuild=>'If specified, only compile files w...',
+                   timeout=>'Timeout in milliseconds']],
+                 get_file_problems=>tool::[
+                  inst=>inst(filePath=>'Path relative to the project root',
+                             errorsOnly=>'Whether to include only errors or include both errors and warnings',
+                             timeout=>'Timeout in milliseconds'){<j>},
+                  name=>get_file_problems,
+                  desc=>'Analyzes the specified file for er...',
+                  arg=>[
+                   filePath=>'Path relative to the project root',
+                   errorsOnly=>'Whether to include only errors or ...',
+                   timeout=>'Timeout in milliseconds']],
+                 get_project_dependencies=>tool::[
+                  inst=>inst(){<j>},
+                  name=>get_project_dependencies,
+                  desc=>'Get a list of all dependencies def...',
+                  arg=>[=>]],
+                 get_project_modules=>tool::[
+                  inst=>inst(){<j>},
+                  name=>get_project_modules,
+                  desc=>'Get a list of all modules in the p...',
+                  arg=>[=>]],
+                 ...(49 more)],
+                inst=>[
+                 /m/ai/llm/tool/execute_run_configuration=>inst(configurationName=>'Name of the existing run configuration to execute',
+                                                                filePath=>"File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.",
+                                                                line=>"1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.",
+                                                                timeout=>'Timeout in milliseconds',
+                                                                waitForExit=>"Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.",
+                                                                programArguments=>'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                workingDirectory=>'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
+                                                                envs=>'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){<j>},
+                 /m/ai/llm/tool/get_run_configurations=>inst(filePath=>'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){<j>},
+                 /m/ai/llm/tool/analyze_calls=>inst(symbolFqn=>"Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.",
+                                                    analysisKind=>"Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.",
+                                                    depth=>'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                                                    maxChildren=>'Maximum number of direct children rendered for each node. Default: 50.',
+                                                    maxNodes=>'Maximum total number of rendered call nodes. Default: 1000.',
+                                                    treePath=>"Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.",
+                                                    childOffset=>"Offset for paging direct children of the node addressed by `treePath`. Default: 0.",
+                                                    timeout=>'Timeout in milliseconds'){<j>},
+   ...
+```
+Moreover, if the `mcpServer` snippet has multiple inner servers endpoints defined, to load all of them, do:
+
+```mtron
+mtron> {"mcpServers": {
+         "intellij": {
+         }
+==>fail::[parse error at line 1, col 14:
+     {"mcpServers": {
+            "intellij": {
+            }
+                  ^
+     unexpected ':']
+mtron> }}
+==>fail::[parse error at line 1, col 1:
+     }}
+     ^
+     unclosed triple-quote — missing closing '"""']
+```
+For `STDIO` transport MCP servers, the same process works:
+
+```
+mcp_client::[command=>[</home/killswitch/.local/bin/codegraph>,'serve', '--mcp']]@codegraph;
+``` 
+
+do
+
+```mtron
+mtron> *mcp_server
+```### Using tools from the client
+
+After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entries keyed by `mTool.toolName(tid)` — the flattened instruction tid (e.g. `m_inst_eval_mtron`). Each entry carries `inst`, `name`, `desc`, and `arg`:
+
+```mtron
+mtron> mcp_client::[host=>http://localhost:8777/mcp]@a
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host=>http://localhost:8777/mcp]@a]
+mtron> *a>>tool
+mtron> [-- => [m_inst_eval_mtron=>tool::[inst=>..., name=>m_inst_eval_mtron, desc=>..., arg=>...], ...] --]
+mtron> [-- invoke a tool by applying its inst field --]
+mtron> a/tool/m_inst_eval_mtron/inst("1+2")
+mtron> [-- => 3 --]
+```
+### WebSocket
+
+```
+mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/index-mcp;
+```
+
+
+### HTTP
+
+#### HTTP Stream
+
+Given the `mcpServers` JSON snippet below:
+
+```json
+{
+ "type": "streamable-http",
+ "url": "http://127.0.0.1:64342/stream",
+ "headers": {
+  "IJ_MCP_SERVER_PROJECT_PATH": "/home/killswitch/software/metatron"
+ }
+}
+```
+
+```
+mcp_client::[host => <http://127.0.0.1:64342/stream>]@/usr/ai/mcp/intellij; 
+```
+
+## metatron's own MCP: the message ledger (`mcp_message`)
+
+Unlike an external server, metatron's message ledger (`mcpMessageServer`) needs no `mcp_client` — it rides the runtime itself (on the live host, `ws://localhost:8555/message`) and, for DSH-backed agents, it is **already visible**: the dsh web profile registers it through `dsh-mcp-client`, so the tools surface as-is as `mcp__metatron_message__…`.
+
+### Tools (flattened tids)
+
+| tool | arguments | purpose |
+| --- | --- | --- |
+| `m_llm_mcp_mcp_message_add_message` | `root`, `kind`, `text`, `session?`, `name?`, `contents?`, `chat_id?`, `time?`, `tool_requests?`, `attributes?` | append one message to a ledger |
+| `m_llm_mcp_mcp_message_get_messages` | `root`, `session`, `max?` | read the tail of a ledger |
+| `m_llm_mcp_mcp_message_search_messages` | `root`, `pattern`, `session`, `max?` | search ledger text |
+
+`add_message` returns a **receipt**: the message it built, plus `kind`, `location`
+(the appended vid — absent when nothing was written) and `status` —
+`published` (in the ledger now), `parked` (held: its tool group is incomplete) or
+`unpaired` (refused: nothing can ever pair with it).
+
+### Ledger layout
+
+- **root** — any owned space, *absolute*, and one that serves `incrq`: ledger
+  records are appended at `<root>/message/_?incrq`, so a space that receives
+  ledger messages must be registered with `addQ(incrq())` in Java (a routed
+  prefix such as `myspaceprefix:` is fine too — the route rewrites it to the
+  absolute space). A *relative* root falls through to the ephemeral stack space
+  and the write fails with `no incrq query processor attached`. DSH harness
+  conversations are mirrored under `/usr/dsh` by the `dsh-plugins/metatron-mirror` plugin
+- **session** — envelope uri `<root>/session/<sessionId>` (one uri-safe segment); records are scoped by it
+- **records** — appended at `<root>/message/_?incrq`; the `vid` carries the increment; the ledger is append-only
+- **kinds** — `system` | `user` | `ai` | `thinking` | `tool_result` | `compaction`
+
+### Record shape (what `get_messages` returns)
+
+```
+ai::[
+  kind          => ai
+  text          => 'i will now call the probe tool'
+  tool_requests => [tool_request::[
+    name       => probe_tool,                <- uri, the tool
+    args       => '{"0":"hello"}',           <- str, the call arguments (json)
+    contents   => call_42,                   <- str, the tool call id — the join key
+    text       => probe_tool({"0":"hello"})  <- str, formatted summary
+  ]]
+  session       => /usr/dsh/session/ws-probe
+  depth         => 1
+  chat_id       => 4
+]
+```
+
+- `user` — `name` (when present) is the sender identity; harness-injected context arrives as `plugin:<name>`
+- `tool_result` — `name` is the tool (uri), `contents` the tool call id, `text` the tool output
+- `compaction` — the compaction **sentinel** (the `message/compaction` record): `text` is the resume summary; optional `in`/`out`/`compression` statistics ride the `attributes` argument. It bounds the live window — a reader takes the suffix after the newest sentinel (`SpaceChatSessionStore` `stopAt`) — and native `compactSession` writes exactly this shape (summary sentinel + pair-safe tail)
+- **join rule** — pair a `tool_result` to its request by `ai.tool_requests[i].contents == tool_result.contents`; the request's `name`/`args` complete the picture
+
+### Tool group pairing — the ledger is never half a turn
+
+A `tool_requests` ai message and its `tool_result`s form one **group**, and the
+ledger only ever holds complete groups. Both writers — the native loop
+(`SpaceChatSessionStore.updateMessages` / `ToolFeature.onToolExecuted`) and this
+bus — write through the same gate (`ToolPairGate`):
+
+- an `ai` with `tool_requests` is **held** until *every* request has a
+  `tool_result`; the group then lands ai-first, its results immediately after, in
+  request order. Until then the receipt says `status => parked`, so a client that
+  wrote the ai side knows its results are still owed;
+- a `tool_result` is held until its `ai` arrives — an out-of-order client is
+  tolerated, not corrupt — and a `tool_result` with no `contents` can never pair
+  and is refused (`status => unpaired`) rather than written orphaned;
+- a group the client leaves unanswered is closed by the next **turn boundary**: a
+  `user` message of a later (or unknown) `chat_id`, or a `compaction` sentinel.
+  The ai message is then written with `name => lost_tool_result` and the call id
+  as `contents` for each unanswered request, and a held result that never found
+  its ai message is dropped. A `user` message of the *same* `chat_id` is not a
+  boundary — its group's results may still be arriving.
+
+So a reader never meets an assistant message with `tool_calls` whose tool messages
+are missing, and never meets an orphan tool message.
+
+### Recipe: reading a dsh harness conversation
+
+```
+m_llm_mcp_mcp_message_get_messages(root='/usr/dsh', session='/usr/dsh/session/<sessionId>', max=20)
+m_llm_mcp_mcp_message_search_messages(root='/usr/dsh', pattern='probe', session='…same…', max=10)
+```
+
+Ledger order follows the conversation (the `system` prompt first; `thinking` precedes the `ai` turn it belongs to). Only message material is mirrored — dsh structural events (turns, steps, chunks) are not stored as ledger records.

@@ -1,0 +1,45 @@
+# Console wide-glyph layout test — a body whose glyphs do not cost one column per char is
+# laid out in COLUMNS: the box closes on the width it drew, a long body wraps BETWEEN
+# glyphs, and the short row is padded in columns rather than in characters.
+#
+#   bin/metatron-docker build console --steps bin/test/console-wide-glyph.steps
+#
+# CJK is the case worth driving, because its mismatch is exactly two-to-one (one char, two
+# columns), and so states cleanly as an assertion: counting chars padded an 11-glyph row by
+# 11 characters instead of 22 columns, and wrapped a 24-column body into a 22-column box,
+# so the body overran the border row by half its width — the box came apart.
+#
+# Each panel floats at its OWN anchor and carries DIFFERENT glyphs.  Both matter: a widget's
+# render is diffed against the cells already on screen, so two panels showing the same row
+# would leave the second unwritten (a needle that never appears — a fact about the renderer,
+# not about width), and a float issued while another is still painting can be dropped, so
+# each WAIT_SINCE below is also the sync that the next float waits on.  Panels tail-follow:
+# a body taller than the box shows its LAST rows, which is why the wrap case asserts the
+# short tail row.
+#
+# Rows are matched from their box edge ("│…"), which the echoed command line never carries
+# (it holds the body inside quotes), so a needle matches the render and not the echo.  The
+# harness lowercases the transcript for its case-insensitive matching.
+#
+# The horizontal half of the width model — a window landing on a glyph boundary rather than
+# half a glyph — is covered by ScrollViewTest and GraphittyTest, which drive that math
+# directly.
+
+WAIT_CONSOLE
+
+# --- a wide body fills its box exactly, and the box closes on the width it drew ---
+MARK wide
+SEND panel_widget::[title=>'wide',body=>"あいうえおかしちにつめ",style=>[anchor=>top_left,width=>22,height=>4]].display()
+WAIT_SINCE wide │あいうえおかしちにつめ│ 20
+WAIT_SINCE wide └──────────────────────┘ 20
+
+# --- a body wider than its box wraps between glyphs, and pads the tail row in columns ---
+MARK wrap
+SEND panel_widget::[title=>'wrap',body=>"さしすせそたちつてとなに",style=>[anchor=>bottom_left,width=>22,height=>4]].display()
+WAIT_SINCE wrap │に                    │ 20
+
+# --- ASCII mixed into the line still costs one column a char ---
+MARK mixed
+SEND panel_widget::[title=>'mixed',body=>"l01 日本",style=>[anchor=>top_right,width=>22,height=>4]].display()
+WAIT_SINCE mixed │l01 日本│ 20
+WAIT_SINCE mixed └────────┘ 20

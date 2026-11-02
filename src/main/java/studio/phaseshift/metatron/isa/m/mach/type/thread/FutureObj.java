@@ -1,0 +1,308 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.mach.type.thread;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Iterator;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+
+
+/*
+ * A cancellable, blocking future backed by an {@link AtomicReference}.
+ * <p>
+ * The value slot is an {@code AtomicReference<T>} stored in the inherited
+ * {@link #jvm} field.  Blocking operations use {@code synchronized (this)}
+ * with {@link Object#wait()} / {@link Object#notifyAll()} rather than
+ * busy-spinning, so a blocked {@code get()} does not consume CPU.
+ * <p>
+ * Cancellation sets the {@code volatile} flag {@code isCanceled} and
+ * wakes all waiters; it does <em>not</em> replace the {@code jvm} slot,
+ * preserving the type invariant that {@code jvm} is always an
+ * {@code AtomicReference}.
+ *
+ * @param <T> the Obj type held by this future
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class FutureObj<T extends Obj> extends MObj implements Future<T> {
+
+    /**
+     * THE FALLBACK DEADLINE, for a future nobody set one on. A round trip sets its own ({@code sendRecv} passes the
+     * trip's plus slack), so the trip's wait is the one that governs — an instruction resolving a future ARGUMENT used
+     * to impose this 5 s here ({@code resolveFuture}), which cut a 30 s round trip down to 5 s at the caller while the
+     * transport was still waiting: every slow peer read as a timeout.
+     */
+    public static final int DEFAULT_TIMEOUT_MS = 5000;
+    public static final fURI FUTURE_TID = M_ISA_TID.extend("future");
+
+    private volatile boolean isCanceled;
+    private int timeout = DEFAULT_TIMEOUT_MS;
+
+    public FutureObj() {
+        super();
+        this.jvm = new AtomicReference<T>();
+        this.tid = FUTURE_TID;
+        this.vid = null;
+        this.isCanceled = false;
+    }
+
+    // ---- Async: a call on its own virtual thread ----
+
+    /**
+     * ASYNC — evaluate the call on its own metatron {@link VirtualThread} and answer the future that thread
+     * will complete. The call is applied against {@code noobj} (a seeded chain carries its own start), and the
+     * worker inherits the caller's machine perspective, which {@code ThreadExecutor} captures before it spawns.
+     * <p>
+     * Nothing blocks until something inspects the future, so a caller can fan out N calls and pay once, at the
+     * first inspection. {@link #get()} returns as soon as the thread has stopped: with the call's value, with a
+     * {@code fail::T} when it raised, or raising {@code CancellationException} when the thread was stopped
+     * before it produced one.
+     */
+    public static FutureObj<Obj> async(final Call call) {
+        return async(call, noobj());
+    }
+
+    /**
+     * ASYNC against an explicit lhs — the call is applied to {@code lhs} on the worker thread rather than to
+     * {@code noobj}.
+     */
+    public static FutureObj<Obj> async(final Call call, final Obj lhs) {
+        return VirtualThread.virtual(call).applyAsync(lhs);
+    }
+
+    public FutureObj<T> timeout(final int millis) {
+        this.timeout = millis;
+        return this;
+    }
+
+    /**
+     * The deadline THIS future was given, or {@link #DEFAULT_TIMEOUT_MS} when none was set.
+     */
+    public int timeout() {
+        return this.timeout;
+    }
+
+    @Override
+    public AtomicReference<T> jvm() {
+        return (AtomicReference<T>) this.jvm;
+    }
+
+    /**
+     * Sets the result value and wakes all threads blocked in {@link #get()}.
+     * Must not be called after {@link #cancel(boolean)}.
+     */
+    public void setObj(final T obj) {
+        synchronized (this) {
+            if (this.isCanceled)
+                throw MTronException.of("future obj has already been canceled");
+            ((AtomicReference<T>) this.jvm).set(obj);
+            this.notifyAll();
+        }
+    }
+
+    /**
+     * Cancels this future.  Wakes all blocked {@code get()} callers so
+     * they receive a {@link CancellationException}.  Idempotent: returns
+     * {@code false} if already canceled.
+     */
+    @Override
+    public boolean cancel(final boolean mayInterruptIfRunning) {
+        synchronized (this) {
+            if (this.isCanceled)
+                return false;
+            this.isCanceled = true;
+            this.notifyAll();
+            return true;
+        }
+    }
+
+    @Override
+    public boolean isCancelled() {
+        return this.isCanceled;
+    }
+
+    @Override
+    public boolean isDone() {
+        return this.isCanceled || ((AtomicReference<T>) this.jvm).get() != null;
+    }
+
+    // ---- Delegating methods: resolve the future, then delegate ----
+
+    @Override
+    public Iterator<Obj> iterator() {
+        return this.get(this.timeout).iterator();
+    }
+
+    @Override
+    public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this.get(this.timeout).clone(jvm, tid, vid);
+    }
+
+    @Override
+    public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
+        if (this.isDone())
+            return this.get(this.timeout).self(jvm, tid, vid);
+        else
+            return MObjFactory.of().toObj(jvm, this.tid(), this.vid());
+    }
+
+    @Override
+    public Stream<Obj> stream() {
+        return this.get(this.timeout).stream();
+    }
+
+    @Override
+    public boolean isNoObj() {
+        return this.get(this.timeout).isNoObj();
+    }
+
+    @Override
+    public boolean isObjs() {
+        return this.get(this.timeout).isObjs();
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> elements() {
+        return this.get(this.timeout).elements();
+    }
+
+    // ---- isXXX() predicates: DELIBERATELY NOT delegated. A FutureObj stays opaque — a future is a future, so
+    // its type predicates answer its own /m/future tid, non-blocking. To inspect the wrapped value, unwrap()
+    // first, then test. (The blocking delegation this replaced once lived here.) ----
+
+    // ---- Blocking get variants ----
+
+    /**
+     * Blocks until a result is available or this future is canceled.
+     * Uses {@link Object#wait()} inside a {@code synchronized} block so
+     * the waiting thread does not consume CPU.
+     *
+     * @throws InterruptedException  if the waiting thread is interrupted
+     * @throws CancellationException if the future was canceled
+     * @throws ExecutionException    reserved for future use
+     */
+    @Override
+    public T get() throws InterruptedException, ExecutionException {
+        synchronized (this) {
+            if (this.isCanceled)
+                throw new CancellationException("future has been canceled");
+            while (null == ((AtomicReference<T>) this.jvm).get()) {
+                if (this.isCanceled)
+                    throw new CancellationException("future was canceled while waiting");
+                this.wait();
+            }
+            return ((AtomicReference<T>) this.jvm).get();
+        }
+    }
+
+    /**
+     * Blocks up to the given timeout for a result.
+     *
+     * @param timeout the maximum time to wait
+     * @param unit    the time unit of {@code timeout}
+     * @throws TimeoutException      if the timeout elapses with no result
+     * @throws CancellationException if the future was canceled
+     */
+    @Override
+    public T get(final long timeout, final TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        final long timeoutMs = unit.toMillis(timeout);
+        final long endTime = System.currentTimeMillis() + timeoutMs;
+        synchronized (this) {
+            if (this.isCanceled)
+                throw new CancellationException("future has already been canceled");
+            while (null == ((AtomicReference<T>) this.jvm).get()) {
+                if (this.isCanceled)
+                    throw new CancellationException("future was canceled while waiting");
+                final long remaining = endTime - System.currentTimeMillis();
+                if (remaining <= 0)
+                    throw new TimeoutException("future get timed out after " + timeoutMs + " ms");
+                this.wait(remaining);
+            }
+            return ((AtomicReference<T>) this.jvm).get();
+        }
+    }
+
+    /**
+     * Convenience: blocking get with a millisecond timeout.
+     * Wraps checked exceptions in {@link MTronException}.
+     */
+    public T get(final long timeoutMs) {
+        try {
+            return this.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    // ---- Object overrides ----
+
+    @Override
+    public boolean equals(final Object other) {
+        return this == other;  // a future is a future — never equal to the value it wraps
+    }
+
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return this.isDone() ? this.get(this.timeout).toString() : super.toString();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    public Obj resolve(final Obj lhs) {
+        return this.get(this.timeout).resolve(lhs);
+    }
+
+    @Override
+    public Obj apply(final Obj lhs) {
+        return this.get(this.timeout).apply(lhs);
+    }
+
+    /**
+     * Unwraps a {@code FutureObj} to its resolved value if the given
+     * object is a future, otherwise returns it as-is.
+     */
+    public static <O extends Obj> O resolveFuture(final Obj future) {
+        try {
+            // THE FUTURE'S OWN DEADLINE, never a hardcoded one: a trip sets its wait when it is created, and an
+            // instruction resolving it as an argument must not expire it sooner ({@code get(int)} here is millis)
+            return future instanceof FutureObj ? ((FutureObj<O>) future).get(((FutureObj<O>) future).timeout()) : (O) future;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+}

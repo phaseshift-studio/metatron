@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Icon Preview — Quick Start</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  :root {
+    --dark: #000000;
+    --primary: #a30000;
+    --mred: #7a2518;
+    --light: #6C7293;
+    --myellow: #edbf73;
+    --secondary: #191C24;
+  }
+  body {
+    background: var(--dark);
+    color: #c2c2c2;
+    font-family: 'Oswald', sans-serif;
+    padding: 3rem;
+  }
+  h1 { color: var(--mred); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
+  h2 { color: var(--light); font-size: 0.95rem; text-transform: uppercase; font-weight: 400; margin-top: 2.5rem; border-top: 1px solid #222; padding-top: 1.5rem; }
+  .row {
+    display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1rem;
+  }
+  .card {
+    background: var(--secondary);
+    border: 1px solid #2a2030;
+    border-radius: 3px;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    min-width: 130px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--mred); }
+  .card i { font-size: 2.25rem; display: block; margin-bottom: 0.6rem; }
+  .card .gold i { color: var(--myellow); }
+  .card .red i  { color: var(--primary); }
+  .card .light i { color: var(--light); }
+  .card .white i { color: #c2c2c2; }
+  .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--light); }
+  .code  { font-family: 'Courier New', monospace; font-size: 0.7rem; color: #555; margin-top: 0.3rem; }
+
+  /* nav-sim: shows how it'd look in a nav bar */
+  .nav-sim {
+    background: #0a0a0a;
+    padding: 0.85rem 1.5rem;
+    display: flex; align-items: center; gap: 2rem;
+    margin-top: 0.5rem;
+    border-radius: 3px;
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .nav-sim .brand { color: var(--primary); }
+  .nav-sim .link { color: var(--light); }
+  .nav-sim .link i { margin-right: 6px; }
+  .nav-sim .gold-link { color: var(--myellow); }
+  .nav-sim .gold-link i { margin-right: 6px; }
+  .nav-sim .red-link { color: var(--primary); }
+  .nav-sim .red-link i { margin-right: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Quick Start — Icon Candidates</h1>
+
+<!-- NAV CONTEXT -->
+<h2>1. How it reads in the navbar</h2>
+<div class="nav-sim">
+  <span class="brand">PhaseShift Studio</span>
+  <span class="link">download</span>
+  <span class="gold-link"><i class="bi bi-cursor-fill"></i>quick start</span>
+  <span class="link">instruction sets</span>
+  <span class="link">the tractatus</span>
+  <span class="link">articles</span>
+</div>
+<div class="nav-sim" style="margin-top: 0.5rem;">
+  <span class="brand">PhaseShift Studio</span>
+  <span class="link">download</span>
+  <span class="red-link"><i class="bi bi-cursor-fill"></i>quick start</span>
+  <span class="link">instruction sets</span>
+  <span class="link">the tractatus</span>
+  <span class="link">articles</span>
+</div>
+
+<!-- DIRECTIONAL / NAVIGATION -->
+<h2>2. Directional / wayfinding</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-signpost"></i></div><span class="label">signpost</span><span class="code">bi-signpost</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-signpost-2"></i></div><span class="label">signpost-2</span><span class="code">bi-signpost-2</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-signpost-split"></i></div><span class="label">signpost-split</span><span class="code">bi-signpost-split</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-sign-turn-right"></i></div><span class="label">sign-turn-right</span><span class="code">bi-sign-turn-right</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-sign-turn-slight-right"></i></div><span class="label">turn-slight-r</span><span class="code">bi-sign-turn-slight-right</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-arrow-return-right"></i></div><span class="label">arrow-return-right</span><span class="code">bi-arrow-return-right</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-chevron-double-right"></i></div><span class="label">chevron-double-r</span><span class="code">bi-chevron-double-right</span></div>
+</div>
+
+<!-- CURSOR / TERMINAL NATIVE -->
+<h2>3. Cursor / terminal</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-cursor"></i></div><span class="label">cursor</span><span class="code">bi-cursor</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-cursor-fill"></i></div><span class="label">cursor-fill</span><span class="code">bi-cursor-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-terminal"></i></div><span class="label">terminal</span><span class="code">bi-terminal (already used)</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-terminal-fill"></i></div><span class="label">terminal-fill</span><span class="code">bi-terminal-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-input-cursor"></i></div><span class="label">input-cursor</span><span class="code">bi-input-cursor</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-input-cursor-text"></i></div><span class="label">input-cursor-text</span><span class="code">bi-input-cursor-text</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-blockquote-left"></i></div><span class="label">blockquote-left</span><span class="code">bi-blockquote-left</span></div>
+</div>
+
+<!-- GEOMETRIC / MATHEMATICAL -->
+<h2>4. Geometric / mathematical</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-diamond"></i></div><span class="label">diamond</span><span class="code">bi-diamond</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-diamond-fill"></i></div><span class="label">diamond-fill</span><span class="code">bi-diamond-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-diamond-half"></i></div><span class="label">diamond-half</span><span class="code">bi-diamond-half</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-triangle"></i></div><span class="label">triangle</span><span class="code">bi-triangle</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-triangle-fill"></i></div><span class="label">triangle-fill</span><span class="code">bi-triangle-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-circle"></i></div><span class="label">circle</span><span class="code">bi-circle</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-circle-fill"></i></div><span class="label">circle-fill</span><span class="code">bi-circle-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-square"></i></div><span class="label">square</span><span class="code">bi-square</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-square-fill"></i></div><span class="label">square-fill</span><span class="code">bi-square-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-pentagon"></i></div><span class="label">pentagon</span><span class="code">bi-pentagon</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-pentagon-fill"></i></div><span class="label">pentagon-fill</span><span class="code">bi-pentagon-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-hexagon"></i></div><span class="label">hexagon</span><span class="code">bi-hexagon</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-hexagon-fill"></i></div><span class="label">hexagon-fill</span><span class="code">bi-hexagon-fill</span></div>
+</div>
+
+<!-- DOCUMENT / KNOWLEDGE -->
+<h2>5. Document / reading</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-book"></i></div><span class="label">book</span><span class="code">bi-book</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-book-half"></i></div><span class="label">book-half</span><span class="code">bi-book-half</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-journal-code"></i></div><span class="label">journal-code</span><span class="code">bi-journal-code</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-journal-text"></i></div><span class="label">journal-text</span><span class="code">bi-journal-text</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-body-text"></i></div><span class="label">body-text</span><span class="code">bi-body-text</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-card-text"></i></div><span class="label">card-text</span><span class="code">bi-card-text</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-chat-left-quote"></i></div><span class="label">chat-left-quote</span><span class="code">bi-chat-left-quote</span></div>
+</div>
+
+<!-- PLAY / START BUT NOT PARTY -->
+<h2>6. Play / start (not party)</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-caret-right"></i></div><span class="label">caret-right</span><span class="code">bi-caret-right</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-caret-right-square"></i></div><span class="label">caret-right-square</span><span class="code">bi-caret-right-square</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-caret-right-square-fill"></i></div><span class="label">caret-right-sq-fill</span><span class="code">bi-caret-right-square-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-play"></i></div><span class="label">play</span><span class="code">bi-play</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-play-fill"></i></div><span class="label">play-fill</span><span class="code">bi-play-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-power"></i></div><span class="label">power</span><span class="code">bi-power</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-lightning"></i></div><span class="label">lightning</span><span class="code">bi-lightning</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-lightning-charge"></i></div><span class="label">lightning-charge</span><span class="code">bi-lightning-charge</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-floppy"></i></div><span class="label">floppy</span><span class="code">bi-floppy</span></div>
+</div>
+
+<!-- COMPASS / ASTRONOMY -->
+<h2>7. Astronomy / navigation</h2>
+<div class="row">
+  <div class="card"><div class="gold"><i class="bi bi-compass"></i></div><span class="label">compass</span><span class="code">bi-compass</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-compass-fill"></i></div><span class="label">compass-fill</span><span class="code">bi-compass-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-star"></i></div><span class="label">star</span><span class="code">bi-star</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-star-fill"></i></div><span class="label">star-fill</span><span class="code">bi-star-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-geo-alt"></i></div><span class="label">geo-alt</span><span class="code">bi-geo-alt</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-pin"></i></div><span class="label">pin</span><span class="code">bi-pin</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-pin-fill"></i></div><span class="label">pin-fill</span><span class="code">bi-pin-fill</span></div>
+  <div class="card"><div class="gold"><i class="bi bi-pin-map"></i></div><span class="label">pin-map</span><span class="code">bi-pin-map</span></div>
+</div>
+
+</body>
+</html>

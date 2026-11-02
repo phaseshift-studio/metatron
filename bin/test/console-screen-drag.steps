@@ -1,0 +1,53 @@
+# Console screen-mode test — what the console owes the rows a floating widget covers,
+# and what only owning the screen can pay.
+#
+#   bin/metatron-console --steps bin/test/console-screen-drag.steps
+#
+# Screen mode (Console.screenMode) keeps the console's rows in a buffer the console
+# owns and paints them itself, instead of writing into the terminal and letting them
+# scroll away.  A terminal is write-only — nothing can read a row back out of it — so a
+# widget that draws over a row and then moves away leaves a hole; the buffer can be
+# repainted from the content, which is what this measures.
+#
+# The geometry is made deliberate rather than left to chance: forty filler rows fill the
+# screen, the three victim rows are printed LAST so they are the newest content (the
+# bottom of the transcript, wherever the log lines above them ended up), and the widget
+# is then dragged onto exactly those bottom rows.  When it is dragged off them, the rows
+# it was covering must be readable again.
+#
+# The needle is only looked for SINCE the mark that follows the widget landing, so a
+# passing assertion means the repair emitted those rows — the widget's own text is a
+# different string ("widget-line-.."), and no prompt cycle runs in between.
+#
+# ";" separates steps, so the mouse bytes spell it \x3b.  SGR mouse: press =
+# \x1b[<0;C;RM, motion with the button held = \x1b[<32;C;RM, release =
+# \x1b[<0;C;Rm (1-based, as sent).
+
+WAIT_CONSOLE
+
+# --- fill the screen, then print the rows that must survive being covered ---
+MARK victim
+SEND print("filler-00\nfiller-01\nfiller-02\nfiller-03\nfiller-04\nfiller-05\nfiller-06\nfiller-07\nfiller-08\nfiller-09\nfiller-10\nfiller-11\nfiller-12\nfiller-13\nfiller-14\nfiller-15\nfiller-16\nfiller-17\nfiller-18\nfiller-19\nfiller-20\nfiller-21\nfiller-22\nfiller-23\nfiller-24\nfiller-25\nfiller-26\nfiller-27\nfiller-28\nfiller-29\nfiller-30\nfiller-31\nfiller-32\nfiller-33\nfiller-34\nfiller-35\nfiller-36\nfiller-37\nfiller-38\nfiller-39")
+SLEEP 1
+SEND print("victim-row-alpha\nvictim-row-beta\nvictim-row-gamma")
+SLEEP 1
+WAIT_SINCE victim victim-row-gamma 10
+
+# --- a widget tall enough to sit on the newest rows ---
+MARK float
+SEND accordion_widget::[title=>'cover',body=>"widget-line-01\nwidget-line-02\nwidget-line-03\nwidget-line-04\nwidget-line-05\nwidget-line-06\nwidget-line-07\nwidget-line-08",style=>[anchor=>top_left,width=>30,height=>8,top=>0,left=>0]]@/usr/screen/cover.display()
+SLEEP 3
+
+# --- focus it, then park it on the bottom rows the victim text is on ---
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 1
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<32\x3b1\x3b36M\x1b[<0\x3b1\x3b36m"
+SLEEP 3
+
+# --- it is parked on them; now drag it off and ask for the rows back ---
+MARK away
+RAW b"\x1b[<0\x3b1\x3b32M\x1b[<32\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 3
+WAIT_SINCE away victim-row-gamma 10
+WAIT_SINCE away victim-row-alpha 10
+WAIT_SINCE away victim-row-beta 10

@@ -1,0 +1,43 @@
+# Console link test — clicking a {link} in the transcript types its dereference at the
+# prompt, so following a uri is one <enter> away.
+#
+#   bin/metatron-console --steps bin/test/console-screen-link.steps
+#
+# The geometry is deliberate: enough filler to fill the screen (which pins the prompt to the
+# bottom row), then the link printed LAST so it is the newest row — the bottom row of the
+# transcript, which is where the click is aimed.  A link that is not a uri is drawn plain and
+# is not clickable, so the click has to land on a real one.
+#
+# ";" separates steps, so the mouse bytes spell it \x3b.  SGR mouse: press = \x1b[<0;C;RM.
+
+WAIT_CONSOLE
+
+MARK fill
+SEND print("f00\nf01\nf02\nf03\nf04\nf05\nf06\nf07\nf08\nf09\nf10\nf11\nf12\nf13\nf14\nf15\nf16\nf17\nf18\nf19\nf20\nf21\nf22\nf23\nf24\nf25\nf26\nf27\nf28\nf29\nf30\nf31\nf32\nf33\nf34\nf35\nf36\nf37\nf38\nf39\nf40\nf41\nf42\nf43\nf44")
+SLEEP 2
+
+# --- the link, as the newest row of the transcript ---
+MARK link
+SEND print("{{link}}/sys/thread/main{{/link}}")
+SLEEP 2
+WAIT_SINCE link /sys/thread/main 10
+
+# --- click it: the uri is typed at the prompt, waiting for <enter> ---
+MARK click
+RAW b"\x1b[<0\x3b2\x3b38M\x1b[<0\x3b2\x3b38m"
+SLEEP 2
+WAIT_SINCE click */sys/thread/main 10
+
+# --- and <enter> follows the link ---
+MARK follow
+KEY enter
+SLEEP 3
+WAIT_SINCE follow == 10
+
+# --- ctrl+click: the uri is typed AND submitted, with no keystroke in between ---
+MARK ctrl
+SEND print("{{link}}/sys/thread/main{{/link}}")
+SLEEP 2
+RAW b"\x1b[<16\x3b2\x3b38M\x1b[<16\x3b2\x3b38m"
+SLEEP 3
+WAIT_SINCE ctrl == 10

@@ -1,0 +1,2124 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>mach - metatron Instruction Set</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../js/metatron.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="../css/instset_doc.css">
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
+                                src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_dcmnt.html"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_grph.html"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_db_tble.html"><img
+                                src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_db_vec.html"><img
+                            src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
+                            src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_mach.html"><img
+                                src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_math.html"><img
+                                src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_cat.html"><img
+                                src="../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_math_geo.html"><img
+                                src="../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_sys.html"><img
+                                src="../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_sys_ui.html"><img
+                                src="../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../instset/m_web.html"><img
+                                src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
+    <div class="text-center mb-2">
+        <h1 class="text-primary glow-text mb-1">
+            <span class="text-light">/m/</span>mach
+        </h1>
+        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
+the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor</p>
+
+        <p class="subtitle text-muted"
+           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
+    </div>
+    <div class="instset-accordion-wrapper">
+        <div class="accordion accordion-flush" id="accordionInstSet">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button collapsed" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#flush-collapseOne"
+                        aria-expanded="false" aria-controls="flush-collapseOne">
+                        <i class="bi bi-code-slash me-2"></i>/m/mach instset obj
+                    </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse"
+                    aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
+                    <div class="accordion-body">
+                        <pre><code>instset::[pattern=&gt;/m/mach/#,
+          q=&gt;[
+           docq::[
+            pattern=&gt;docq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+           /m/qproc/decq::[
+            pattern=&gt;decq,
+            pre_read=&gt;inst(uri::T){&lt;j&gt;},
+            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+          type=&gt;[
+           rec::T[?[
+            pattern=&gt;uri::T,
+            {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
+                            {?}pre_write=&gt;inst::T,
+                            {?}post_write=&gt;inst::T,
+                            {?}qless_write=&gt;inst::T,
+                            {?}pre_read=&gt;inst::T,
+                            {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+            {?}route=&gt;[uri::T=&gt;uri::T],
+            {?}schema=&gt;instset::T,
+            {?}on_close=&gt;&lt;#&gt;::T]]@/m/space,
+           rec::T@/m/mach/factory,
+           factory::T[][ctor?mfactory&lt;=(){&lt;j&gt;}]@/m/mach/mfactory,
+           rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component,
+           component::T[?[
+            {?}state=&gt;union(stop,run,pause),
+            {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor,
+           processor::T@/m/mach/component/processor/monad,
+           processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm,
+           component::T[?[
+            {?}parser=&gt;parser::T,
+            {?}rewriter=&gt;rewriter::T,
+            {?}resolver=&gt;resolver::T,
+            {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+           component::T@/m/mach/component/parser,
+           parser::T[][ctor?mtron_parser&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/parser/mtron_parser,
+           component::T@/m/mach/component/rewriter,
+           rewriter::T[][ctor?identity_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/identity_rewriter,
+           rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?fixpoint_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint_rewriter,
+           component::T[?[
+            {?}selector=&gt;selector::T,
+            {?}binder=&gt;binder::T]]@/m/mach/component/resolver,
+           resolver::T[][ctor?identity_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/identity_resolver,
+           resolver::T[][ctor?scoring_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring_resolver,
+           resolver::T[][ctor?firstfind_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/firstfind_resolver,
+           component::T@/m/mach/component/binder,
+           binder::T[][ctor?generic_binder&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/binder/generic_binder,
+           component::T@/m/mach/component/selector,
+           selector::T[][ctor?specificity_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/specificity_selector,
+           selector::T[][ctor?firstfind_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector,
+           component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/typer,
+           component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+           rec::T[?[
+            {?}host=&gt;uri::T,
+            {?}inst=&gt;rec::T,
+            {?}status=&gt;bool::T,
+            {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client,
+           uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/authority,
+           uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding,
+           rec::T[?[
+            origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+            {?}host=&gt;uri::T,
+            {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer,
+           rec::T[?[
+            origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+            {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+            {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener,
+           rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+           rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+           component::T[?[
+            {?}pattern=&gt;uri::T,
+            {?}host=&gt;uri::T,
+            {?}roster=&gt;[
+             {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+             {?}machine=&gt;[uri::T=&gt;uri::T]],
+            {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+             origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+             {?}host=&gt;uri::T,
+             {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+            {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+             origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+             {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+             {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
+            {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+            {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
+            {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+           rec::T[?[
+            {?}instset=&gt;rec::T[?[
+             {?}pattern=&gt;uri::T,
+             {?}const=&gt;[&lt;#&gt;::T],
+             {?}type=&gt;{?}[&lt;#&gt;::T],
+             {?}inst=&gt;{?}[inst::T],
+             {?}rewrite=&gt;{?}[inst::T],
+             {?}sugar=&gt;{?}[lst::T],
+             {?}reference=&gt;{?}[uri::T],
+             {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+            {?}compiler=&gt;component::T[?[
+             {?}parser=&gt;parser::T,
+             {?}rewriter=&gt;rewriter::T,
+             {?}resolver=&gt;resolver::T,
+             {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+            {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+            {?}network=&gt;component::T[?[
+             {?}pattern=&gt;uri::T,
+             {?}host=&gt;uri::T,
+             {?}roster=&gt;[
+              {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+              {?}machine=&gt;[uri::T=&gt;uri::T]],
+             {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+              origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+              {?}host=&gt;uri::T,
+              {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+             {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+              origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+              {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+              {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
+             {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+             {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
+             {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+            {?}processor=&gt;component::T[?[
+             {?}state=&gt;union(stop,run,pause),
+             {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+           rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
+           rec::T[?[
+            code=&gt;&lt;#&gt;::T,
+            {?}source=&gt;uri::T,
+            {?}runtime=&gt;real::T@/m/math/time,
+            {?}yield=&gt;thread::T,
+            {?}loop=&gt;real::T@/m/math/time,
+            {?}state=&gt;union(stop,run,pause),
+            {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
+           thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
+           thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual],
+          inst=&gt;[
+           push?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
+           pop?A{*}&lt;=A{?}(#{?}::T){&lt;j&gt;},
+           move?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;},
+           stay?A{*}&lt;=A{?}(){&lt;j&gt;},
+           stop?thread&lt;=thread(){&lt;j&gt;},
+           pause?thread&lt;=thread(){&lt;j&gt;},
+           resume?thread&lt;=thread(){&lt;j&gt;},
+           cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;},
+           spawn?uri&lt;=#{*}(uri::T,uri::T){&lt;j&gt;},
+           reply?block(#{*}::T,uri::T){&lt;j&gt;}],
+          rewrite=&gt;[/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}]]@/m/mach</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">34</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">1</span></a>
+    </div>
+</div><div class="container-xxl mb-4">
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0 text-primary">index</h5></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">mach</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">component</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__factory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">factory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__id_client" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">id_client</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__listener" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">listener</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__machine" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">machine</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__mfactory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mfactory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__network_supervisor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">network_supervisor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__peer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">peer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__thread" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">thread</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__thread_executor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">thread_executor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">component</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__binder" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">binder</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__compiler" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">compiler</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__memory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">memory</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__network" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">network</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__parser" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">parser</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__processor" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">processor</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__resolver" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">resolver</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__rewriter" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rewriter</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__selector" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">selector</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__typer" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">typer</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">thread</small></div><div class="d-flex flex-wrap"><a href="#__m__mach__thread__core" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">core</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__thread__virtual" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">virtual</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">binder</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__binder__generic_binder" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">generic_binder</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">network</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__network__discovery" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">discovery</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">parser</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__parser__mtron_parser" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mtron_parser</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">processor</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__processor__monad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">monad</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">resolver</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__resolver__firstfind_resolver" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">firstfind_resolver</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__resolver__identity_resolver" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">identity_resolver</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__resolver__scoring_resolver" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">scoring_resolver</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">rewriter</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__rewriter__fixpoint_rewriter" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">fixpoint_rewriter</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__rewriter__identity_rewriter" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">identity_rewriter</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">selector</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__selector__firstfind_selector" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">firstfind_selector</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__mach__component__selector__specificity_selector" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">specificity_selector</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">component/processor&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">monad</small></div></div><div class="d-flex flex-wrap"><a href="#__m__mach__component__processor__monad__swarm" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">swarm</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">insts</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__cut" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cut</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__move" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">move</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__pause" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pause</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__pop" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pop</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__push" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">push</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__reply" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">reply</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__resume" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">resume</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__spawn" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">spawn</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__stay" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">stay</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a><a href="#__m__mach__inst__stop" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">stop</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">rewrites</h6>
+    <div class="d-flex flex-wrap"><a href="#__m__mach__inst__rewrite__move_extract" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">move_extract</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a></div>
+</div></div>
+    </div>
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">34</span></h3>
+    <div class="card mb-3" id="__m__mach__component__binder">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">binder::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/binder</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/binder</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the binding contract of resolver::T — the collaborator that turns one selected candidate into the instruction a call becomes, or rejects it: it binds the candidate&#39;s generics to the lhs, gates it on the lhs domain, and resolves its arguments (compiling nested code args), returning null when the candidate cannot be made concrete; because a candidate that fails to bind must not be selectable, binding gates selection rather than following it, which is why a binder is a strategy inside the resolve stage and never a stage of its own. The candidate arrives already shaped with the call&#39;s dom/rng hints — that shaping is the selector&#39;s rule.</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__compiler">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">compiler::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/compiler</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}parser=&gt;parser::T,
+               {?}rewriter=&gt;rewriter::T,
+               {?}resolver=&gt;resolver::T,
+               {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
+  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
+  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
+  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#"the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code __compiler__typer__check}, not a global registry"" class="text-info">check}, not a global registry&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">compiler::[rewriter=&gt;fixpoint_rewriter::[max=&gt;3],resolver=&gt;scoring_resolver::[=&gt;]]   [-- wire the stages that matter; parser and typer default --]
+compiler::[parser=&gt;mtron_parser::[=&gt;]]   [-- name the read stage explicitly --]
+compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, typer --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">component::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component</code></pre></div>
+    
+    
+    
+</div><div class="card mb-3" id="__m__mach__thread__core">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">core::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__thread" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/thread::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/thread/core</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
+ {?}source=&gt;uri::T,
+ {?}runtime=&gt;real::T@/m/math/time,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;real::T@/m/math/time,
+ {?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent core thread</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">core::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.0]@~/thread/ping</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__network__discovery">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">discovery::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/network/discovery</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;bool::T]]@/m/web/discovery</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a discovery protocol — a source of machine endpoints for the one roster/machine table. Existence is its interface: construction starts it, deletion stops it, and it publishes no verbs. It requires exactly one field, status, because liveness is the only thing a consumer cannot work out for itself. Where an endpoint was learned is irrelevant: every protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one consolidated index. Distinct from /m/web/discovery, which is the protocol surface it discovers over</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself'" class="text-info">&#39;the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__factory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">factory::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/factory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/factory</code></pre></div>
+    
+    
+    
+</div><div class="card mb-3" id="__m__mach__component__resolver__firstfind_resolver">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">firstfind_resolver::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__resolver" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/resolver::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/resolver/firstfind_resolver</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resolver::T[][ctor?firstfind_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/firstfind_resolver</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__resolver" class="code inherited-link">resolver::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}selector=&gt;selector::T,
+ {?}binder=&gt;binder::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, firstfind_resolver::T is the same walk wired to firstfind_selector::T — a call resolves to the first viable candidate in read order, with no specificity scoring; the pre-scoring behavior, kept as the A/B counterpart of scoring_resolver::T</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">firstfind_resolver::[=&gt;]   [-- first match wins, no scoring --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__selector__firstfind_selector">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">firstfind_selector::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__selector" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/selector::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/selector/firstfind_selector</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">selector::T[][ctor?firstfind_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, firstfind_selector::T takes the first viable candidate in read order, with no specificity scoring, so selection is order-dependent — the pre-scoring strategy, kept as the A/B counterpart of specificity_selector::T</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">firstfind_selector::[=&gt;]   [-- first match wins, no scoring --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__rewriter__fixpoint_rewriter">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">fixpoint_rewriter::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__rewriter" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/rewriter::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/rewriter/fixpoint_rewriter</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rewriter::T[?[{?}max=&gt;isa(int::T).else(2)]][ctor?fixpoint_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/fixpoint_rewriter</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the rewrite stage of compiler::T, fixpoint_rewriter::T applies every rewrite rule registered by every instset, in turn, over the whole code, and repeats the pass until the code hash is unchanged for max consecutive passes, so a rule re-runs on every pass and must be idempotent</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)'" class="text-info">&#39;the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">fixpoint_rewriter::[max=&gt;3]   [-- accept the fixpoint after three stable passes --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__binder__generic_binder">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">generic_binder::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__binder" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/binder::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/binder/generic_binder</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">binder::T[][ctor?generic_binder&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/binder/generic_binder</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, generic_binder::T is the binding algorithm: it binds the candidate&#39;s generics to the lhs, gates on the lhs domain, resolves the call&#39;s arguments, seeds an initial inst&#39;s range from its own argument, and copies the user&#39;s query maps — returning null at any step that rejects the candidate; the call&#39;s dom/rng hints (including a cast&#39;s named type) are applied by the selector before the candidate reaches it</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">generic_binder::[=&gt;]   [-- the default binder::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__id_client">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">id_client::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/id_client</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}host=&gt;uri::T,
+         {?}inst=&gt;rec::T,
+         {?}status=&gt;bool::T,
+         {?}close=&gt;inst::T]][ctor?id_client&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/id_client</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the identity client — the identity element of the protocol-client family:
+dialing loop://&lt;name&gt; constructs one, and its eval override runs the shipped code
+in the receiver&#39;s perspective (Machine.Helper.evalAt at the root), so the caller is
+left where it stood -- the loop counterpart of the ws client&#39;s ship(). The
+executable form of the self-similarity contract: a read through a loop peer equals
+the local read.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
+  <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
+  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">id_client::[host=&gt;&lt;loop://self&gt;] [-- the identity peer: reads and writes answer locally --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__resolver__identity_resolver">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">identity_resolver::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__resolver" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/resolver::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/resolver/identity_resolver</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resolver::T[][ctor?identity_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/identity_resolver</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__resolver" class="code inherited-link">resolver::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}selector=&gt;selector::T,
+ {?}binder=&gt;binder::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, identity_resolver::T is the no-op resolver: it threads no type and resolves no instruction — it returns the code unchanged — for a compiler whose resolve stage is done elsewhere</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">identity_resolver::[=&gt;]   [-- a resolve stage that does nothing --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__rewriter__identity_rewriter">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">identity_rewriter::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__rewriter" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/rewriter::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/rewriter/identity_rewriter</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rewriter::T[][ctor?identity_rewriter&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/rewriter/identity_rewriter</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged — for a compiler that wants no rewrites at all, since fixpoint_rewriter::T is the default</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">identity_rewriter::[=&gt;]   [-- the compiler&#39;s default rewrite stage --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__listener">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">listener::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/listener</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+         {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+         {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a socket a machine answers on, and that machine&#39;s routes on it. The machine that opens
+a socket owns it, and its pop releases the port. Every machine below it inherits the
+socket and serves through it by keeping its own routing table here, which its own pop
+takes away. A connection is answered by the most specific route across every machine
+sharing the socket, and the peer it makes joins that machine&#39;s network.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#server" class="text-light">server</a> <span class="text-light">=&gt;</span> <a href="#"the protocol server holding the socket — held so the owner's pop can release the port"" class="text-info">&quot;the protocol server holding the socket — held so the owner&#39;s pop can release the port&quot;</a>
+  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the socket's service uri as spelled, scheme:____host:port — the map key is its path encoding (`ws__localhost__8555`): one socket per authority on a physical machine"" class="text-info">8555`): one socket per authority on a physical machine&quot;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#"this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket"" class="text-info">&quot;this machine&#39;s routing table on the socket, &lt;path&gt; =&gt; target; a connection is answered by the most specific route across every machine sharing the socket&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">listener::[origin=&gt;&lt;ws://0.0.0.0:8555&gt;,route=&gt;[/mtron=&gt;mtron_ws,/mcp=&gt;mcp_mtron]] [-- a machine&#39;s routes on its socket --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__machine">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">machine::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">objects = /m/mach/machine, morphisms = /m/uri, op = mult, id = &lt;.&gt;, inv = &lt;..&gt;</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = mult, id = &lt;.&gt;</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/machine</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[
+  {?}pattern=&gt;uri::T,
+  {?}const=&gt;[&lt;#&gt;::T],
+  {?}type=&gt;{?}[&lt;#&gt;::T],
+  {?}inst=&gt;{?}[inst::T],
+  {?}rewrite=&gt;{?}[inst::T],
+  {?}sugar=&gt;{?}[lst::T],
+  {?}reference=&gt;{?}[uri::T],
+  {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+         {?}compiler=&gt;component::T[?[
+          {?}parser=&gt;parser::T,
+          {?}rewriter=&gt;rewriter::T,
+          {?}resolver=&gt;resolver::T,
+          {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+         {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+         {?}network=&gt;component::T[?[
+          {?}pattern=&gt;uri::T,
+          {?}host=&gt;uri::T,
+          {?}roster=&gt;[
+           {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+           {?}machine=&gt;[uri::T=&gt;uri::T]],
+          {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+           origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           {?}host=&gt;uri::T,
+           {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+          {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+           origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+           {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+           {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
+          {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+          {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
+          {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+         {?}processor=&gt;component::T[?[
+          {?}state=&gt;union(stop,run,pause),
+          {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
+    <div class="card-body py-2">
+    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__mach__machine').showModal();" title="show the whole algebra">algebra</button>
+</div>
+<dialog class="algebra-dialog" id="algebra-__m__mach__machine" aria-label="machine::T algebra" onclick="if (event.target === this) this.close();">
+    <div class="algebra-dialog-head">
+        <span class="code text-primary">machine::T algebra</span>
+        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
+    </div>
+    <div class="algebra-tabs">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="algebra-__m__mach__machine-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-theories" type="button" role="tab" aria-controls="algebra-__m__mach__machine-theories" aria-selected="true">theories</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="algebra-__m__mach__machine-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-mtron" type="button" role="tab" aria-controls="algebra-__m__mach__machine-mtron" aria-selected="false">mtron encoding</button>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="algebra-__m__mach__machine-theories" role="tabpanel" aria-labelledby="algebra-__m__mach__machine-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-free_groupoid">free_groupoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">objects</th><td><span class="algebra-value">/m/mach/machine</span></td></tr><tr><th class="algebra-role">morphisms</th><td><span class="algebra-value">/m/uri</span></td></tr><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr><tr><th class="algebra-role">inv</th><td><span class="algebra-value">&lt;..&gt;</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr></table></div></div></div>
+        <div class="tab-pane fade" id="algebra-__m__mach__machine-mtron" role="tabpanel" aria-labelledby="algebra-__m__mach__machine-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[machine]::[obj=&gt;rec::T[?[
+  {?}instset=&gt;rec::T[?[
+   {?}pattern=&gt;uri::T,
+   {?}const=&gt;[&lt;#&gt;::T],
+   {?}type=&gt;{?}[&lt;#&gt;::T],
+   {?}inst=&gt;{?}[inst::T],
+   {?}rewrite=&gt;{?}[inst::T],
+   {?}sugar=&gt;{?}[lst::T],
+   {?}reference=&gt;{?}[uri::T],
+   {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+  {?}compiler=&gt;component::T[?[
+   {?}parser=&gt;parser::T,
+   {?}rewriter=&gt;rewriter::T,
+   {?}resolver=&gt;resolver::T,
+   {?}typer=&gt;typer::T]][ctor?compiler&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/compiler,
+  {?}memory=&gt;component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
+  {?}network=&gt;component::T[?[
+   {?}pattern=&gt;uri::T,
+   {?}host=&gt;uri::T,
+   {?}roster=&gt;[
+    {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+    {?}machine=&gt;[uri::T=&gt;uri::T]],
+   {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+    origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+    {?}host=&gt;uri::T,
+    {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+   {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+    origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+    {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+    {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
+   {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+   {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
+   {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
+  {?}processor=&gt;component::T[?[
+   {?}state=&gt;union(stop,run,pause),
+   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+                  law=&gt;[
+                   free_groupoid=&gt;/m/theory/group_theory::[
+                    objects=&gt;/m/mach/machine,
+                    morphisms=&gt;/m/uri,
+                    op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+                    id=&gt;&lt;.&gt;,
+                    inv=&gt;&lt;..&gt;],
+                   mult_monoid=&gt;/m/theory/monoid_theory::[
+                    op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
+                    id=&gt;&lt;.&gt;]],
+                  morphed_to=&gt;!λ(){&lt;j&gt;},
+                  morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
+    </div>
+</div>
+</dialog>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine integrates language, structure, and process into one context for action
+within metatron. machines form a nested stack: a parent machine&#39;s state is reachable
+from its children, and a parent defines the scope of a child machine&#39;s access to
+resources. machines communicate laterally through the network component, where a
+peer group forms a shared computing workspace that is garbage collected when the
+machine is popped off the parent stack. the absolute root of the metatron graph
+(/.) is the root machine.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#instset" class="text-light">instset</a> <span class="text-light">=&gt;</span> <a href="#"the machine's instruction set architecture"" class="text-info">&quot;the machine&#39;s instruction set architecture&quot;</a>
+  <a href="#network" class="text-light">network</a> <span class="text-light">=&gt;</span> <a href="#"the known machines and this machine's peers"" class="text-info">&quot;the known machines and this machine&#39;s peers&quot;</a>
+  <a href="#processor" class="text-light">processor</a> <span class="text-light">=&gt;</span> <a href="#'the execution axis: threads and computational state'" class="text-info">&#39;the execution axis: threads and computational state&#39;</a>
+  <a href="#compiler" class="text-light">compiler</a> <span class="text-light">=&gt;</span> <a href="#'the lowering axis: parser, rewriter, resolver, and typer'" class="text-info">&#39;the lowering axis: parser, rewriter, resolver, and typer&#39;</a>
+  <a href="#memory" class="text-light">memory</a> <span class="text-light">=&gt;</span> <a href="#"the machine's address space, bounded by the parent machine"" class="text-info">&quot;the machine&#39;s address space, bounded by the parent machine&quot;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__memory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">memory::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/memory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__mfactory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mfactory::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__factory" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/factory::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/mfactory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">factory::T[][ctor?mfactory&lt;=(){&lt;j&gt;}]@/m/mach/mfactory</code></pre></div>
+    
+    
+    
+</div><div class="card mb-3" id="__m__mach__component__processor__monad">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">monad::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__processor" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/processor::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor/monad</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T@/m/mach/component/processor/monad</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__component__parser__mtron_parser">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mtron_parser::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__parser" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/parser::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/parser/mtron_parser</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">parser::T[][ctor?mtron_parser&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/parser/mtron_parser</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the parse stage of compiler::T, mtron_parser::T reads metatron&#39;s own language through the mtron serializer, so what it accepts is exactly what a console line, a source file and a test row accept — the one parser metatron ships, and the compiler&#39;s default</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mtron_parser::[=&gt;]   [-- the default parse stage of compiler::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__network">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">network::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/network</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}pattern=&gt;uri::T,
+               {?}host=&gt;uri::T,
+               {?}roster=&gt;[
+                {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
+                {?}machine=&gt;[uri::T=&gt;uri::T]],
+               {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+                origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+                {?}host=&gt;uri::T,
+                {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer],
+               {?}listener=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
+                origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+                {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
+                {?}server=&gt;&lt;#&gt;::T]]@/m/mach/listener],
+               {?}supervisor=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
+               {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
+               {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine&#39;s network: the endpoints the system knows about, the peers the
+current machine has dialed, and the handlers that discover them. membership is
+declared, never emergent — a uri must not be able to make itself a peer merely
+by being addressed — and it is accumulating, so a child machine unions its own
+level over its parent&#39;s. the authorities this machine answers to are derived
+from its listeners — the sockets it opened and those it inherits, up to the rootrom the host every listening space
+declares.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}roster" class="text-light">{?}roster</a> <span class="text-light">=&gt;</span> <a href="#'known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme:____host:port); knowledge, not reach — a machine is reached by dialing one of them'" class="text-info">host:port); knowledge, not reach — a machine is reached by dialing one of them&#39;</a>
+  <a href="#{?}listener" class="text-light">{?}listener</a> <span class="text-light">=&gt;</span> <a href="#"the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws__localhost__8555) carrying this machine's own routes — a socket it opened, or one inherited from above"" class="text-info">8555) carrying this machine&#39;s own routes — a socket it opened, or one inherited from above&quot;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'the health method — an auto inst closing over this network, one peer::T report per declared peer'" class="text-info">&#39;the health method — an auto inst closing over this network, one peer::T report per declared peer&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#"machine's own connections, one per surface: <dial as a path> => peer::T (ws__localhost__8555__mtron), each addressable at ~__network__peer__<key> and hung up by writing noobj there"" class="text-info">&lt;key&gt; and hung up by writing noobj there&quot;</a>
+  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#"the branch this network answers as a space: <vid>__network__#, every field at its own address and every member at its key's path"" class="text-info">#, every field at its own address and every member at its key&#39;s path&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">network::[roster=&gt;[b=&gt;&lt;ws://192.168.1.42:8555&gt;]] [-- a network that knows a peer before dialing it --]
+network::[peer=&gt;[&lt;ws/localhost/39111/worker&gt;=&gt;[origin=&gt;&lt;ws://localhost:39111&gt;]]] [-- a machine whose reach is the one node it holds --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__network_supervisor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">network_supervisor::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/network_supervisor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the per-level reconciler that keeps a network&#39;s index true: it supervises the
+machine&#39;s dialed peers (redials a down link on capped backoff, drops a hung-up one,
+reports a recovered one online). One per level, minted on the first link it indexes
+and closed with the level — construction is connection, destruction is disconnect.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'supervising __ closed — the liveness marker, updated on close'" class="text-info"> closed — the liveness marker, updated on close&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">network_supervisor::[=&gt;] [-- start supervising the current machine&#39;s network --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__parser">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">parser::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/parser</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/parser</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. Because the type system supports both object-oriented and functional designs and the language is Turing-complete, most languages can map onto mtron code::T.</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__peer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">peer::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/peer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
+         {?}host=&gt;uri::T,
+         {?}client=&gt;&lt;#&gt;::T]]@/m/mach/peer</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one metatron machine as the network records it — the value of a network peer
+connection. Absent `host` and `handler` is not a broken peer: it is a peer
+reference that crossed a wire, known here and not reachable from here.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
+  <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the service this peer reaches, scheme:____host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without"" class="text-info">host:port — the map key is the dial&#39;s path encoding, this is the service, and the one field a peer cannot do without&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;,host=&gt;&lt;ws://192.168.1.42:8555/mtron&gt;] [-- a peer the current machine can ship to --]
+peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable from here --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__processor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">processor::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}state=&gt;union(stop,run,pause),
+               {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__component__resolver">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">resolver::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/resolver</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}selector=&gt;selector::T,
+               {?}binder=&gt;binder::T]]@/m/mach/component/resolver</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler&#39;s widest-reaching stage: it threads each inst&#39;s range into the next inst&#39;s domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter&#39;s {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast&#39;s range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}selector" class="text-light">{?}selector</a> <span class="text-light">=&gt;</span> <a href="#'the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)'" class="text-info">&#39;the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)&#39;</a>
+  <a href="#{?}binder" class="text-light">{?}binder</a> <span class="text-light">=&gt;</span> <a href="#"the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"" class="text-info">&quot;the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call&#39;s arguments)&quot;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">scoring_resolver::[selector=&gt;firstfind_selector::[=&gt;]]   [-- a resolver::T: the same walk, first-match selection --]
+scoring_resolver::[=&gt;]   [-- a resolver::T: both strategies default --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__rewriter">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">rewriter::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/rewriter</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/rewriter</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the rewrite contract of compiler::T — a lowering from code::T to code::T that runs before any type is resolved, so it decides what the instruction chain is: rules see generic dom/rng, and a rule-driven collapse, a native pushdown, or a distributed reduce&#39;s gather point all enter the compiled form here.</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__resolver__scoring_resolver">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">scoring_resolver::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__resolver" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/resolver::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/resolver/scoring_resolver</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resolver::T[][ctor?scoring_resolver&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/resolver/scoring_resolver</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__resolver" class="code inherited-link">resolver::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}selector=&gt;selector::T,
+ {?}binder=&gt;binder::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, scoring_resolver::T is the walk plus the default pair of collaborators: it threads each inst&#39;s range into the next inst&#39;s domain and, per inst, hands the call to its selector (specificity_selector::T by default) with its binder (generic_binder::T by default) — so which concrete inst a call becomes is settled here, per element type; wire a selector or binder entry to compose a different resolution</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">scoring_resolver::[=&gt;]   [-- the default resolution stage of compiler::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__selector">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">selector::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/selector</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T@/m/mach/component/selector</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the candidate contract of resolver::T — the collaborator that fetches the instructions a call may resolve to, orders them by its own rule, shapes each one with the call&#39;s dom/rng hints, and returns the first its binder can make concrete: the ordering rule is the whole strategy, and it is where resolution strategy varies — specificity_selector::T scores by signature specificity, firstfind_selector::T takes the first viable candidate in read order; a selector that cannot resolve an instruction returns null and leaves it for runtime resolution rather than failing the code</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__selector__specificity_selector">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">specificity_selector::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__selector" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/selector::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/selector/specificity_selector</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">selector::T[][ctor?specificity_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/specificity_selector</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> at the resolution stage of compiler::T, specificity_selector::T orders a call&#39;s candidates by how specific their signatures are and takes the first its binder can bind: a concrete domain, an exact domain base-path match, a non-base dom/rng, matching arguments, and the large bonus that makes an as() candidate whose range names the requested type win; the from/at and as() shortcuts live here, since they return a finished contract rather than a candidate and so bypass the binder. Two legacy hint forms are preserved here and named: a single candidate replaces the dom outright, while a scored field keeps the API&#39;s declared dom and takes the call&#39;s coefficient</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">specificity_selector::[=&gt;]   [-- the default selector::T --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__processor__monad__swarm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">swarm::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__processor" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/processor::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor/monad/swarm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/monad/swarm</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code the processor will evaluate'" class="text-info">&#39;the code the processor will evaluate&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__thread">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">thread::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/thread</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[code=&gt;&lt;#&gt;::T,
+         {?}source=&gt;uri::T,
+         {?}runtime=&gt;real::T@/m/math/time,
+         {?}yield=&gt;thread::T,
+         {?}loop=&gt;real::T@/m/math/time,
+         {?}state=&gt;union(stop,run,pause),
+         {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the thread base type</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}loop" class="text-light">{?}loop</a> <span class="text-light">=&gt;</span> <a href="#'delay to repeat code evaluation (default is evaluate once)'" class="text-info">&#39;delay to repeat code evaluation (default is evaluate once)&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'the datetime::T when the thread was started'" class="text-info">&#39;the datetime::T when the thread was started&#39;</a>
+  <a href="#{?}state" class="text-light">{?}state</a> <span class="text-light">=&gt;</span> <a href="#'current state of the thread'" class="text-info">&#39;current state of the thread&#39;</a>
+  <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#"the thread's executing code"" class="text-info">&quot;the thread&#39;s executing code&quot;</a>
+  <a href="#{?}runtime" class="text-light">{?}runtime</a> <span class="text-light">=&gt;</span> <a href="#"computes the thread's current running time::T"" class="text-info">&quot;computes the thread&#39;s current running time::T&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'the last result produced by the thread'" class="text-info">&#39;the last result produced by the thread&#39;</a>
+</pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__thread_executor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">thread_executor::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/thread_executor</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the gateway interface for all threads in metatron</p>
+</div>
+</div><div class="card mb-3" id="__m__mach__component__typer">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">typer::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/typer</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/typer</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
+</div><div class="card mb-3" id="__m__mach__thread__virtual">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">virtual::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__thread" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/thread::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/thread/virtual</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__thread" class="code inherited-link">thread::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,
+ {?}source=&gt;uri::T,
+ {?}runtime=&gt;real::T@/m/math/time,
+ {?}yield=&gt;thread::T,
+ {?}loop=&gt;real::T@/m/math/time,
+ {?}state=&gt;union(stop,run,pause),
+ {?}result=&gt;&lt;#&gt;::T]</code></div></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> run a concurrent virtual thread</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">virtual::[code=&gt;ping(&lt;phaseshift.studio:80&gt;),loop=&gt;second::1.5]@~/thread/ping</code></pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="instructions">
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">10</span></h3>
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+        labelled with the set that declared it, and documented on that set's page as well.
+    </p>
+    <div class="card mb-3" id="__m__mach__inst__cut">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">cut</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/cut</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__cut-doc-0-tab').click();document.getElementById('__m__mach__inst__cut-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">cut?&lt;=#{*}(uri::T,#::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> ship a chain to a peer and answer what it computes there. This is the compiled form of
+a crossing `move`, not a user instruction: the move-extractor splits the chain at the
+first move whose target names a host, and the cut carries the resolved origin and
+the tail — `5.move(&lt;//ginger/worker&gt;).plus(1)` becomes
+`5.cut(&lt;//ginger/worker&gt;, |plus(1))` — so the shipped program is the lhs, the move
+to the tail&#39;s place in the peer, and the tail, evaluated through the peer&#39;s
+`eval` and gathered back as one lane. A cut never runs locally: an origin with no
+peer dialed is a failure that names where the dial lives, because letting the
+native `eval` answer would drop the authority without a word.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the value the shipped tail starts from: it is the lhs that the cut program was cut off of" class="text-info">the value the shipped tail starts from: it is the lhs that the cut program was cut off of</a> <span class="text-light">=&gt;</span> <a href="#whatever the shipped tail answers at the peer — the one scattered lane, merged" class="text-success">whatever the shipped tail answers at the peer — the one scattered lane, merged</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">5.move(&lt;//ginger/worker&gt;).plus(1)  [-- compiles to 5.cut(&lt;//ginger/worker&gt;, |plus(1)): the plus runs at ginger --]
+cut(&lt;//ginger&gt;, |plus(1))           [-- resume at ginger&#39;s root: the tail is what the peer runs --]
+cut(&lt;//abc/a&gt;, |plus(1))            [-- refused: nothing is dialed at //abc --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__move">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">move</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/move</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__move-doc-0-tab').click();document.getElementById('__m__mach__inst__move-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">move?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> choose where the next inst will evaluate, and close nothing. The address is folded
+against the current machine, and an address that walks past the root saturates
+there rather than failing.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs flows through: move re-homes the machine the next code runs in, and the value continues untouched" class="text-info">the lhs flows through: move re-homes the machine the next code runs in, and the value continues untouched</a> <span class="text-light">=&gt;</span> <a href="#the value, unchanged — \(\mathrm{move}(t) \mapsto x\) where the machine \(t\) addresses becomes current" class="text-success">the value, unchanged — \(\mathrm{move}(t) \mapsto x\) where the machine \(t\) addresses becomes current</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">move(&lt;..&gt;)          [-- up: the parent machine, without closing this one --]
+move()              [-- the same instruction --]
+move(&lt;../b&gt;)        [-- across, to the sibling b --]
+move(&lt;a/c&gt;)         [-- down a composed path in one step --]
+move(&lt;~/..&gt;)        [-- ~ is the current machine, consumed before the fold: the parent --]
+move(&lt;../../..&gt;)    [-- past the root: saturates at the root --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__pause">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">pause</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="domain" class="code text-info">thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/pause</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__pause-doc-0-tab').click();document.getElementById('__m__mach__inst__pause-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pause?thread&lt;=thread(){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> hold a looping thread between cycles. Its `state` becomes `pause` and it sleeps until
+`resume` wakes it, its rec and `result` untouched — a pause is a hold, where a stop
+is the end. A thread that does not loop, or that is already stopped, is refused with
+a warning and left as it was: with no next cycle there is nothing to pause
+between.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the thread rec to hold: only a looping thread has a next cycle to hold between" class="text-info">the thread rec to hold: only a looping thread has a next cycle to hold between</a> <span class="text-light">=&gt;</span> <a href="#the same thread, now paused after the cycle it was in — the lhs flows through" class="text-success">the same thread, now paused after the cycle it was in — the lhs flows through</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;~/thread/ping&gt;.pause()   [-- hold the loop between cycles, result intact --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__pop">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">pop</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/pop</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__pop-doc-0-tab').click();document.getElementById('__m__mach__inst__pop-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">pop?A{*}&lt;=A{?}(#{?}::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> destructive — the one machine instruction that closes what it leaves, where move leaves
+it standing and reachable by address. It discards the machine the code is running in
+and lands on that machine&#39;s \(..\). A machine is discarded by the one that holds it,
+so an address that does not resolve to the current machine is refused rather than
+silently ignored, and the root has no \(..\) to land on: it owns the address space,
+so closing it is the shutdown path and a reset is the honest instruction. Because
+\(\mathrm{move}\) keeps no history and the containment link is what
+\(\mathrm{pop}\) follows, a machine the code only moved into has nowhere to
+return to.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs is not consulted: pop acts on the machine the code is running in" class="text-info">the lhs is not consulted: pop acts on the machine the code is running in</a> <span class="text-light">=&gt;</span> <a href="#the machine that held the one discarded — \(\mathrm{pop}(f) \mapsto \mathrm{parent}(f)\), so the current machine becomes \(f\)'s \(..\)" class="text-success">the machine that held the one discarded — \(\mathrm{pop}(f) \mapsto \mathrm{parent}(f)\), so the current machine becomes \(f\)&#39;s \(..\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">pop()               [-- discard the current machine, land on its .. --]
+pop(&lt;~&gt;)            [-- the same instruction: ~ is the current machine --]
+pop(_)              [-- and the same again with the lhs as the argument --]
+pop(&lt;../b&gt;)         [-- refused: b is not the current machine --]
+pop()               [-- at the root: refused, reset metatron instead --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__push">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">push</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/push</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__push-doc-0-tab').click();document.getElementById('__m__mach__inst__push-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">push?A{*}&lt;=A{?}(uri{?}::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> mint a machine at an address in the machine tree and make it current.
+constructive — it adds a machine, where move only chooses one.
+because the leaf is minted from the address&#39;s parent, push can cross a level as well as descend into one,
+and a sibling is therefore minted from the shared parent rather than from beside it.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#lhs is passed through" class="text-info">lhs is passed through</a> <span class="text-light">=&gt;</span> <a href="#the lhs side obj" class="text-success">the lhs side obj</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">push(xyz)                              [-- mint /xyz --]
+push(&lt;../b&gt;)                           [-- the sibling b, minted from the shared parent: = move(&lt;..&gt;).push(b) --]
+push(&lt;a/b&gt;)                            [-- the descendant /a/b, minted from the machine at /a --]
+push()                                 [-- an anonymous child, \(c = \mathrm{mintShortUUID}(\mathrm{vid}(\mathrm{here}))\) --]
+push(&lt;ws://localhost:8555/worker&gt;)     [-- refused: a peer, not a machine in this tree --]
+move(//remote).push(a/b)               [-- create a machine at a remote location by moving to that location first --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__reply">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">reply</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/reply</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__reply-doc-0-tab').click();document.getElementById('__m__mach__inst__reply-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">reply?block(#{*}::T,uri::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> evaluate a shipped payload and address the answer by the trip it belongs to. This is wire
+vocabulary, not a user instruction: a round-tripping client wraps the program it ships, so
+the frame&#39;s root is the reply and the payload is its (blocking) argument. Addressing the
+answer is what lets the client match a reply to its request without an envelope on the
+wire — the tag rides the obj it answers. An answer that is NOTHING has no address to ride
+(noobj is the zero-coefficient singleton, which no writer will render with a vid), so it
+travels as the absent-answer mark instead, and the client reads it as noobj.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the frame the payload is evaluated against — a shipped program starts at noobj" class="text-info">the frame the payload is evaluated against — a shipped program starts at noobj</a> <span class="text-light">=&gt;</span> <a href="#the payload's answer, addressed by the trip's tag; the absent-answer mark when the payload answers nothing" class="text-success">the payload&#39;s answer, addressed by the trip&#39;s tag; the absent-answer mark when the payload answers nothing</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">reply(3.plus(1), &lt;a1f30b7c&gt;)       [-- the far side answers 4@a1f30b7c --]
+reply(noobj, &lt;a1f30b7c&gt;)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__resume">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">resume</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="domain" class="code text-info">thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/resume</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__resume-doc-0-tab').click();document.getElementById('__m__mach__inst__resume-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">resume?thread&lt;=thread(){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> let a paused thread run again. Its `state` becomes `run` and its waiter is woken, so
+the next cycle follows immediately — the opposing edge of `pause`, and a no-op on a
+thread that is already running. A stopped thread is refused with a warning: `stop`
+ends a thread, so there is nothing left for a resume to restart.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the paused thread rec to wake — the lhs is the thread itself" class="text-info">the paused thread rec to wake — the lhs is the thread itself</a> <span class="text-light">=&gt;</span> <a href="#the same thread, now running again — the lhs flows through" class="text-success">the same thread, now running again — the lhs flows through</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;~/thread/ping&gt;.resume()  [-- wake the loop: the next cycle follows --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__spawn">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">spawn</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__uri" data-bs-toggle="tooltip" title="range" class="code text-success">uri</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/spawn</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__spawn-doc-0-tab').click();document.getElementById('__m__mach__inst__spawn-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">spawn?uri&lt;=#{*}(uri::T,uri::T){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> mint a peer process and declare it in the roster. When the authority is this physical
+machine a JVM is forked, its READY marker awaited, and the node retracted again when
+the machine holding it is popped; a remote authority is declared and nothing is
+forked. Idempotent by address — asking for an authority already declared finds it
+rather than forking a twin — and a half-spawn that fails leaves neither an orphan
+process nor a roster row claiming an address nothing serves. The answer is where
+the node answers, and only a dial reaches it: membership is declared, never
+emergent.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs is not consulted: spawn declares a process and a name, it computes nothing from a value" class="text-info">the lhs is not consulted: spawn declares a process and a name, it computes nothing from a value</a> <span class="text-light">=&gt;</span> <a href="#the dial uri the peer answers at, `<origin>__mtron` — an address, so reaching it is still a dial" class="text-success">mtron` — an address, so reaching it is still a dial</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">spawn(&lt;//localhost/worker&gt;)        [-- fork a node here serving /worker; answers ws://localhost:&lt;port&gt;/mtron --]
+spawn(&lt;//localhost/worker&gt;, &lt;//worker&gt;)  [-- and call it //worker: move(&lt;//worker/a&gt;) now reaches that node --]
+spawn(&lt;ws://ginger.local:8555/worker&gt;)  [-- a remote authority: declared in the roster, nothing forked --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__stay">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">stay</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{*}</span></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/stay</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__stay-doc-0-tab').click();document.getElementById('__m__mach__inst__stay-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stay?A{*}&lt;=A{?}(){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> stand in place: the identity of move, the machine pointer re-bound to itself. The
+mechanical behaviors fire — the re-binding and the perspective publish — but to the
+machine the code is already running in, so the operation is a fixed point rather
+than a noop. `stay()` is `move(&lt;~&gt;)`.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs is not consulted: stay re-stands the machine the code already runs in" class="text-info">the lhs is not consulted: stay re-stands the machine the code already runs in</a> <span class="text-light">=&gt;</span> <a href="#the machine the code is running in, re-bound to itself — \(\mathrm{stay}() \mapsto \mathrm{here}\)" class="text-success">the machine the code is running in, re-bound to itself — \(\mathrm{stay}() \mapsto \mathrm{here}\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">stay()              [-- stand in place: the machine pointer re-binds to itself --]
+stay() = move(&lt;~&gt;)  [-- the identity move: ~ is the current machine --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__mach__inst__stop">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">stop</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="domain" class="code text-info">thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__mach__thread" data-bs-toggle="tooltip" title="range" class="code text-success">thread</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/stop</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__mach__inst__stop-doc-0-tab').click();document.getElementById('__m__mach__inst__stop-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stop?thread&lt;=thread(){&lt;j&gt;}</code></pre>
+
+</div>
+</div>
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> halt a thread for good. The thread&#39;s `state` becomes `stop`, its carrier is
+interrupted and any waiter is woken: a stopped thread runs no further cycle, and
+`resume` refuses it — a stop ends a thread&#39;s life, where a pause holds it. The rec
+stays where it was, so `result` and `runtime` remain readable from the address that
+held it.</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the thread rec to halt: the lhs is the thread itself, never a value it carries" class="text-info">the thread rec to halt: the lhs is the thread itself, never a value it carries</a> <span class="text-light">=&gt;</span> <a href="#the same thread, now stopped — its state is `stop` and its carrier interrupted" class="text-success">the same thread, now stopped — its state is `stop` and its carrier interrupted</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;~/thread/ping&gt;.stop()    [-- halt the loop at ping, keeping its rec --]</code></pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="rewrites">
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">1</span></h3>
+    <div class="card mb-3" id="__m__mach__inst__rewrite__move_extract">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">move_extract</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/mach/inst/rewrite/move_extract?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/mach/inst/rewrite/move_extract?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the move-extractor: a move(&lt;authority&gt;) with a tail ships the tail, so the compiler packages it as the move&#39;s blocked-code argument — move(//host/xyz).c().d() becomes move(//host/xyz, |c().d())
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
+</div>
+</div>
+</div><div class="container-xxl py-3 text-center">
+    <hr class="border-secondary">
+    <small class="text-muted">
+        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        &copy; PhaseShift Studio, LLC
+    </small>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

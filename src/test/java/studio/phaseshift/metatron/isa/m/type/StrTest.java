@@ -1,0 +1,295 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class StrTest extends AbstractAlgebraTest {
+
+    @Override
+    protected Type carrier() {
+        return STR_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return str("abc");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.map(\"the number: ${plus(23)}\")                                                  % \"the number: 24\"",
+            "1.map(\"the number: ${+23}\")                                                       % \"the number: 24\"",
+            "1.map(\"the number: {{{plus(23)}}}\")                                               % \"the number: 24\"",
+            "1.map(\"the number: {{{+23}}}\")                                                    % \"the number: 24\"",
+            "1.map(\"nested: {{{ ${1+2} + 3 }}}\")                                               % \"nested: 6\"",
+            "1.map(\"nested: {{{ 1 + {{{ 2 }}} }}}\")                                            % \"nested: 3\"",
+            //  "[1,2,3,4].map(\"list count: ${merge().count()}\")                                   % \"list count: [4]\"",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTemplates(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testTemplateEscapeAndFailSoft() {
+        // A backslash escapes either delimiter — the backslash is consumed.
+        assertEquals(str("literal: ${plus(1)}"), str("literal: \\${plus(1)}").apply(noobj()));
+        assertEquals(str("literal: {{{plus(1)}}}"), str("literal: \\{{{plus(1)}}}").apply(noobj()));
+        // A template that fails to parse or apply is left unchanged, not thrown.
+        assertEquals(str("bad: ${{}"), str("bad: ${{}").apply(noobj()));
+        assertEquals(str("bad: {{{}"), str("bad: {{{}").apply(noobj()));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'true'.as(bool::T)                                                             % true",
+            "'false'.as(bool::T)                                                            % false",
+            "'true'.as(bool::T).as(str::T)                                                  % \"true\"",
+            "'sadf'.as(bool::T)                                                             % false",
+            "'123'.as(int::T)                                                               % 123",
+            "'123.122'.as(real::T)                                                          % 123.122",
+            "'abcd'.as(uri::T)                                                              % abcd",
+            "'abc'.as(bytes::T)                                                             % 0x616263",
+            //  "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\"",
+            // "'abc'.as(bytes::T).as?str<=bytes(str::T)                                       % \"abc\""
+
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testAsInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'123'=='\\d'                                                              % ['1','2','3']",
+            "'abcd'=='[a-z]{2}'                                                        % ['ab','cd']",
+            "'ab3cd'=='([a-z]+)(\\d?)([a-z]?)'                                         % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'=='(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)'                             % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'=='\\d*'                                                           % ['','','3','','','']",
+            "'ab3cd'.select('\\d+')                                                    % ['3']",
+            "'ab3cd'.select('\\d{2}')                                                  % [,]",
+            "'241G'.select('(\\d+)([KMGT])')                                           % [['241G','241','G']]",
+            "'241G 502G'==('(\\d+)([KMGT])')                                           % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.select('(\\w+):(\\w+)')                                         % [['foo:bar','foo','bar']]",
+            "'a1b2c3'=='([a-z])(\\d)'                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSelectInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'abc de fgh'>>=['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)]        % 'axx4fghXYZ'"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testUpdateInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'abc de fgh'.has(['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count().as(str::T)])        % 'abc de fgh'",
+            "'abc de fgh'.has(['bc' => 'xx', 'f[a-z]{2}' => +'XYZ', '\\s.{2}\\s' => -<''>-.count()?>5])                % noobj",
+            "'abc de fgh'.has('bc').has('f[a-z]{2}').has('\\s.{2}\\s')                                                 % 'abc de fgh'",
+            "'abc de fgh'.has('bc').has('f[a-z]{2}').has(['\\s.{2}\\s' => -<''>-.count()?>5])                          % noobj"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testWhereInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{'a','b','c','123'}.sum()                                                      % \"abc123\"",
+            "{'a','b','c','123'}.sum('22')                                                  % \"22abc123\"",
+            "{}.sum('22')                                                                   % \"22\"",
+            "{}.sum?str<=str{*}('')                                                         % \"\"",
+            //"{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSum(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".ucase()                                                      % \"ABC\"",
+            "\"abc\".lcase()                                                      % \"abc\"",
+            "\"AbC-DeF\".lcase()                                                  % \"abc-def\"",
+            "\"AbC-DeF\".ucase()                                                  % \"ABC-DEF\"",
+            "\"AbC23-4eF\".lcase()                                                % \"abc23-4ef\"",
+            "\"AbC23-4eF#\".ucase()                                               % \"ABC23-4EF#\"",
+            "\"123\".ucase()                                                      % \"123\"",
+            "\"123\".lcase()                                                      % \"123\"",
+    }, delimiter = '%')
+    public void testUCaseAndLCase(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'ab3cd'.has('ab.*')                                                               % \"ab3cd\"",
+            "'ab3cd'.has('bb')                                                                 % noobj",
+            "{'abc3d','aaa'}.has('a\\.')                                                       %  noobj",
+            "{'abc3d','aaa'}.has('a.*')                                                        % {\"abc3d\",\"aaa\"}",
+            "{'abc3d','aaa'}.has('a(b)?(a|c).?')                                               % {\"abc3d\",\"aaa\"}",
+            "{'abc3d','aaa'}.has('b.*')                                                        % {\"abc3d\"}",
+            "{'abc3d','aaa'}.has('c.*')                                                        % {\"abc3d\"}",
+            "{'abc3d','aaa'}.has('d.*')                                                        % \"abc3d\"",
+            "{'abc3d','aaa'}.has('d.?')                                                        % \"abc3d\"",
+            "{'abc3d','aaa'}.has('e.*')                                                        % noobj"
+            // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
+            // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testHasInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a quantified group ending in a quantifier is refused before it can backtrack: has, split, select, >>= rules
+            "'aaaa'.has('(a+)+$')                                                              % <ERROR>",
+            "'xxxy'.split('(x?)*y')                                                            % <ERROR>",
+            "'ab3cd'.select('(.*)*')                                                           % <ERROR>",
+            "'abc de fgh'>>=['(b+)+' => 'xx']                                                  % <ERROR>",
+            // ... while the same instructions still take a regex that is not that shape
+            "'aaaa'.has('a+$')                                                                 % \"aaaa\"",
+            "'a,b;c'.split('[,;]')                                                             % ['a','b','c']",
+            "'ab3cd'.select('(?:[a-z])+')                                                      % ['ab','cd']",
+            "'abc de fgh'>>=['(?:b)+' => 'xx']                                                 % \"axxc de fgh\"",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    /*@ParameterizedTest
+    @CsvSource(value = {
+            "'a.b.c'-<'.'                                                                   % ['a','b','c']",
+            "'a.b.c'-<re::'.'                                                               % [,]",
+            "'a-b-c'-<'-'                                                                   % ['a','b','c']",
+            "'a-b-c'-<re::'[a-z]'                                                           % ['','-','-']",
+            "'a-b-c'-<'-'>-                                                                 % {'a','b','c'}",
+            "'a-b-c'-<'-'>-'_'                                                              % \"a_b_c\"",
+            "'a:b-b:c-c:d'-<'-'                                                             % ['a:b','b:c','c:d']",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_                                                % [['a','b'],['b','c'],['c','d']]",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-                                             % {['a','b'],['b','c'],['c','d']}",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-.>-':'                                       % {'a:b','b:c','c:d'}",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-.>-':'.>-?<=str{*}('-')                      % \"a:b-b:c-c:d\"",
+    }, delimiter = '%')
+    public void testSplitMerge(final String code, final String expected) {
+        mTest.testCode(LOG,code,expected);
+    }*/
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'a'.plus('a')                                                                  % \"aa\"",
+            "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testPlusInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".reverse()                % \"cba\"",
+            "\"12bac2545_245\".reverse()      % \"542_5452cab21\"",
+            // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
+            //    "\"\".reverse().map(_).reverse()         % \"\"",
+            "\"\".reverse()                  % \"\"",
+            "\"a\".reverse()                 % \"a\"",
+            "\"hello world\".reverse()       % \"dlrow olleh\"",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".eq(\"abc\")               % true",
+            "\"abc\".eq(\"def\")               % false",
+            "\"abc\".eq(\"\")                  % false",
+            "\"\".eq(\"\")                     % true",
+            "\"ABC\".eq(\"abc\")               % false",
+    }, delimiter = '%')
+    public void testEquality(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".gt(\"aaa\")               % true",
+            "\"abc\".gt(\"abc\")               % false",
+            "\"abc\".gt(\"def\")               % false",
+            "\"abc\".lt(\"aaa\")               % false",
+            "\"abc\".lt(\"abc\")               % false",
+            "\"abc\".lt(\"def\")               % true",
+            "\"abc\".eq(\"abc\")               % true",
+            "\"abc\".eq(\"def\")               % false",
+            "\"abc\".gte(\"abc\")              % true",
+            "\"abc\".gte(\"aaa\")              % true",
+            "\"abc\".gte(\"def\")              % false",
+            "\"abc\".lte(\"abc\")              % true",
+            "\"abc\".lte(\"def\")              % true",
+            "\"abc\".lte(\"aaa\")              % false",
+            "\"abc\".neq(\"abc\")              % false",
+            "\"abc\".neq(\"def\")              % true",
+            "\"\".eq(\"\")                     % true",
+            "\"\".lt(\"a\")                    % true",
+            "\"z\".gt(\"a\")                   % true",
+            "\"ABC\".lt(\"abc\")               % true",
+    }, delimiter = '%')
+    public void testComparison(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"hello\".plus(\" world\")       % \"hello world\"",
+            "\"a\".plus(\"b\").plus(\"c\")    % \"abc\"",
+            "\"\".plus(\"test\")              % \"test\"",
+            "\"test\".plus(\"\")              % \"test\"",
+    }, delimiter = '%')
+    public void testConcat(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'''hello'''                   % true            % hello",
+            "'''hello'''                   % false           % '''hello'''",
+            "\"\"\"hello\"\"\"             % true            % hello",
+            "\"\"\"hello\"\"\"             % false           % \"\"\"hello\"\"\"",
+            "\"\"\"hello m'asdf\"\"\"      % true            % hello m'asdf",
+            "\"\"\"hello m'asdf\"\"\"      % false           % \"\"\"hello m'asdf\"\"\"",
+    }, delimiter = '%')
+    public void testCleanString(final String code, final boolean strip, final String expected) {
+        assertEquals(expected, Str.Helper.cleanString(str(code), strip));
+    }
+
+}

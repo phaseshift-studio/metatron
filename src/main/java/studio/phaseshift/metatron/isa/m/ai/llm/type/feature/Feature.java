@@ -1,0 +1,261 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.ai.llm.type.feature;
+
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.Agent;
+import studio.phaseshift.metatron.isa.m.ai.llm.type.ChatFrame;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Set;
+
+import static studio.phaseshift.metatron.Tokens.ROOT;
+import static studio.phaseshift.metatron.Tokens.TO;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+
+/**
+ * A capability attached to an {@link Agent}. Features are metatron Recs —
+ * their fields are the feature's parameters, their VID is their TID.  The
+ * Type system constructs them directly; no manual registry needed.
+ *
+ * <h3>Registration</h3>
+ * Define a Type in the LLM ISA with the feature's TID and a constructor
+ * that takes a parameter Rec and returns the Feature instance.  The Type
+ * constructor is a {@code Function<Obj, Obj>} — {@code config -> new
+ * ChatFeature(config.asRec().jvm(), ...)}.
+ *
+ * <h3>Lifecycle</h3>
+ * <ol>
+ *   <li>{@link #onBeforeChat(Agent)} — return {@code noobj()} to continue;
+ *       return non-noobj to short-circuit the chat.</li>
+ *   <li>Streaming hooks — observe the LLM response as it arrives.</li>
+ *   <li>{@link #onCompleteResponse(Agent, Str)} — final response received.</li>
+ *   <li>{@link #onError(Agent, Fail)} — chat failed.</li>
+ * </ol>
+ */
+public interface Feature extends Rec {
+
+    public static enum Stage {
+        on_agent_ctor,
+        on_before_chat,
+        on_partial_response,
+        on_partial_thinking,
+        on_partial_tool_call,
+        on_tool_executed,
+        on_tool_result,
+        on_complete_response,
+        on_error
+    }
+
+    /**
+     * Whether this feature is active.  Defaults to checking the
+     * {@code active} field on the backing Rec, falling back to {@code true}.
+     */
+    boolean active();
+
+    // ── Pre-chat ─────────────────────────────────────────────────
+
+    default void onAgentCtor(final Agent agent) {
+    }
+
+    /**
+     * Called after the raw user message is stored on the Agent but before the
+     * LLM is invoked.  Return {@code noobj()} to continue to the next feature
+     * or the LLM call.  Return a non-noobj value to short-circuit the chain —
+     * that value becomes the chat response immediately.
+     * <p>
+     * Same contract as {@code QProc}: noobj means "I don't have an answer,
+     * keep going."  Non-noobj means "use this, stop processing."
+     */
+    default Obj onBeforeChat(final Agent agent) {
+        return noobj();
+    }
+
+    // ── Streaming (observation) ──────────────────────────────────
+
+    default void onPartialResponse(final Agent agent, final Str text) {
+    }
+
+    /**
+     * Shape the thought as it streams — the cascading half of the thinking stage.
+     *
+     * <p>Unlike the other streaming hooks this one is a fold, and it is not dispatched
+     * by {@link Agent}: {@link ThinkFeature} owns the stage.  It seeds the thought with
+     * the raw chunk, applies it to the agent ({@code ${...}} templates resolved, and
+     * {@code <<...>>} watermark markup left untouched for the feature whose tag it is),
+     * then hands it to every feature that has this hook wired.  Each either abstains or
+     * returns the thought as it should read, and what comes back from the last of them
+     * is what gets cataloged.
+     *
+     * @param agent   the agent whose turn this is
+     * @param thought the thought so far — the chunk on the first call, and whatever the
+     *                previous feature made of it thereafter.  Deliberately an
+     *                {@code Obj}: what a feature returns need not be the {@code str::T}
+     *                it was handed.
+     * @return the thought as this feature would have it, or {@code noobj()} to leave it
+     * exactly as it arrived
+     */
+    default Obj onPartialThinking(final Agent agent, final Obj thought) {
+        return noobj();
+    }
+
+    default void onPartialToolCall(final Agent agent, final Inst request) {
+    }
+
+    // ── Tool execution ───────────────────────────────────────────
+
+    default void beforeToolExecution(final Agent agent, final Inst request) {
+    }
+
+    default void onToolExecuted(final Agent agent, final Obj result) {
+    }
+
+    default void handleTo(final Agent agent, final Obj toObj) {
+        try {
+            if (this.has(TO)) this.at(TO).apply(toObj);
+        } catch (final Exception e) {
+            this.onError(agent, fail(e));
+        }
+    }
+
+    default <R extends Obj> R getRootObj(final Agent agent) {
+        return Machine.read(this.getRoot(agent)).as();
+    }
+
+    default fURI getRoot(final Agent agent) {
+        if (this.has(ROOT))
+            return this.at(ROOT).uriValue();
+        if (agent.has(ROOT))
+            return agent.at(ROOT).uriValue().extend(this.tid().name().split("_")[0]);
+        throw MTronException.of("no root uri found on feature nor agent: %s", this.tid());
+    }
+
+    /**
+     * Shape the tool result the model is about to see — the inbound mirror of a
+     * watermark.  A watermark is the model addressing a feature; this is a feature
+     * addressing the model, riding inside the result of the call it answered.
+     *
+     * <h3>The one stage whose return value is consumed</h3>
+     * Every other hook observes a turn that has already happened and is dispatched
+     * from {@link Agent}; its result is dropped.  This one runs inside
+     * {@code mToolExecutor}, between the tool and the model, and is the <em>only</em>
+     * place a tool result can still be shaped: {@code onToolExecuted} is an
+     * observational LC4j listener that cannot alter the payload, and
+     * {@code beforeToolExecution} runs before the result exists.  So the value
+     * returned here is what the model is handed, and the features attached to the
+     * agent are folded over the payload in turn.
+     *
+     * <p>A feature that has nothing to add returns {@code result} unchanged — folding
+     * is unconditional, so pass-through must be a no-op rather than a special case in
+     * the executor.  (A feature with no {@code on_tool_result} at all evaluates to
+     * {@code noobj}, which the fold leaves out rather than letting it erase the
+     * payload.)
+     *
+     * @param agent     the agent whose tool call this was
+     * @param result    the payload as folded so far (the raw result on the first call)
+     * @param requestId the tool call id, the join key back to the ai message
+     * @return the payload to hand the model — {@code result} itself if unchanged
+     */
+    default Obj onToolResult(final Agent agent, final Obj result, final String requestId) {
+        return result;
+    }
+
+    // ── Completion ───────────────────────────────────────────────
+
+    /**
+     * Fired after the final response is received.  The {@code result} is the
+     * per-chat {@code chat_result::T} being assembled — features attach their
+     * outputs here (e.g. {@code result.putRef("cost", writtenCost)}), so
+     * future features plug in without the Agent knowing about them.  The
+     * result is persisted to the chat feature's root space by Agent after all
+     * hooks have run.
+     */
+    default void onCompleteResponse(final Agent agent, final ChatFrame result) {
+    }
+
+    // ── Error ────────────────────────────────────────────────────
+
+    default void onError(final Agent agent, final Fail fail) {
+    }
+
+    /**
+     * The service tids this feature requires to function properly — a provider of each
+     * must be attached to the same agent.  The agent is the integrator of features: it
+     * validates these against the union of every attached feature's {@link #offers()} at
+     * construction time, and a missing dependency is a composition error (a canonical
+     * {@code MTronException}), not a "debilitated" feature discovered mid-chat.  Features
+     * needing an *optional* collaboration keep their own runtime check and simply do not
+     * declare it here.
+     */
+    default Set<fURI> requires() {
+        return Set.of();
+    }
+
+    /**
+     * The service tids this feature collaborates with opportunistically — it works without
+     * them, but in a degraded (less rich) state.  Unlike {@link #requires()}, these are NOT
+     * validated at construction; access them via {@code agent.service(tid)} and check
+     * {@code isPresent()} — the collaboration may be absent.
+     */
+    default Set<fURI> uses() {
+        return Set.of();
+    }
+
+    /**
+     * The service tids this feature provides — its capabilities, looked up by consumers via
+     * {@code agent.service(tid)}.  Anything (feature or not) can offer a service tid.
+     */
+    default Set<fURI> offers() {
+        return Set.of();
+    }
+
+    /**
+     * The single Class -> feature tid association.  A feature class declares its tid
+     * once as {@code public static final fURI FEATURE_TID = LLM_<x>_FEATURE_TID;}; this
+     * reads it and caches per class.  There is no parallel Java registry — the tid on
+     * the class is the same one stamped on every instance at construction.
+     */
+    final class Helper {
+        private Helper() {
+        }
+
+        private static final ClassValue<fURI> TID_CACHE = new ClassValue<>() {
+            @Override
+            protected fURI computeValue(final Class<?> type) {
+                try {
+                    return (fURI) type.getField("FEATURE_TID").get(null);
+                } catch (final Exception e) {
+                    throw MTronException.of("feature class has no FEATURE_TID field: %s", type.getName());
+                }
+            }
+        };
+
+        public static fURI tid(final Class<? extends Feature> type) {
+            return TID_CACHE.get(type);
+        }
+    }
+}
+    

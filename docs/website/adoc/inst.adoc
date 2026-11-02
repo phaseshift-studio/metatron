@@ -1,0 +1,462 @@
+[discrete]
+== Instructions
+
+++++
+<!--
+┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
+-->
+++++
+
+mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- https://en.wikipedia.org/wiki/Domain_of_discourse[domains of discourse]. Mathematically, every instruction is a https://en.wikipedia.org/wiki/Function_(mathematics)[function] that maps a https://en.wikipedia.org/wiki/Multiset[multiset] of objs to a multiset of objs -- called streams. 
+
+[stem]
+++++
+f\left(\mathcal{P}\left(\mathtt{X}\right)\right) \rightarrow \mathcal{P}\left(\mathtt{Y}\right)
+++++
+
+An instruction maps a **left hand side** `obj` (lhs) to a **right hand side** `obj` (rhs). One-to-one, many-to-one, one-to-many, many-to-many, etc. mappings are possible as domains and ranges are specified as elements of the power set of all `objs`. When coefficients are elements of latexmath:[\mathbb{Z}], `{1,2,3}` latexmath:[\in \mathcal{P}(\texttt{obj})] has type `int{3}`. Programmatically, what is passed between instructions is a single stream of `objs`. This formulation guarantees that there is always a rhs `obj` for every lhs `obj` regardless of failure (`fail::T`) or emptiness (`obj{0}`).
+
+====
+As a side note, discussed at length elsewhere, the **mtron inst ring** is the set of `objs`, closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
+====
+
+[discrete]
+=== inst uri syntax
+
+In mtron, instructions are written according to the form:
+
+[source,mtron]
+----
+ tid{c}?rng<=dom(args){ code }@vid                                                  
+  │  │  │      │ │  │  │    │   │                                                   
+  │  │  └───┬──┘ └─┬┘  └─┬──┘   │                                                   
+  │  │      │      │     │      └────⮞ value id: the position of the instruction in code                
+  │  │      │      │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
+  │  │      │      └─────────────────⮞ arguments: dynamic parameterizations (args)    
+  │  │      └────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types                
+  │  └───────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs              
+  └──────────────────────────────────⮞ type id: the type of the instruction (opcode)
+----
+
+The instruction template above represents the typical instruction with `rng\<=dom` and `{c}` sugar syntax being used. 
+However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters. 
+When fully parsed to a legal URI, the instruction signature is denoted:
+
+[source,mtron,role="center-code"]
+----
+inst?rng=b&dom=a&c=x,y
+----
+
+Instruction query parameters are similar in function to https://en.wikipedia.org/wiki/Java_annotation[method annotations]. Query parameters encode metadata which can
+aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.
+
+[discrete]
+=== obj propagation mechanics
+
+It is important to understand the mechanics of instruction evaluation. Every instruction follows the same pattern. When a lhs `obj` is applied to an `inst` obj, the first thing that happens is the arguments of the `inst` are resolved. This is perhaps best described with an example.
+
+[mtron]
+----
+1.plus(2)                  [-- <1> --]
+1.plus(id())               [-- <2> --]
+1.plus(plus(2))            [-- <3> --]
+1.map(matches(bool::T))    [-- <4> --]
+1.map(isa(bool::T))        [-- <5> --]
+1.as(bool::T)              [-- <6> --]
+1.isa(as(bool::T))         [-- <7> --]
+----
+
+<1> `1` is applied to `2` and then `1` is added to `2` to yield `3`.
+<2> `1` is applied to the identity function to yield `1` and then `1` is added to `1` to yield `2`.
+<3> `1` is applied to the instruction `plus(2)` to yield `3` and then `1` is added to `3` to yield `4`.
+<4> `1` is applied to the instruction `matches(bool::T)` to yield and then emit `bool::false`.
+<5> `1` is applied to the instruction `isa(bool::T)` to yield and then emit `noobj` (i.e. nothing).
+<6> `1` is applied to the instruction `as()` to emit `bool::true` (`0` would emit `bool::false`).
+<7> `1` is applied to the instruction `as(bool::T)` to yield `true` and then is applied to `isa` to allow `1` to pass unfiltered (i.e. not nothing).
+
+The key point is that *call* objs (`inst`, `code`, and `noobj`) have a domain and range that are context dependent as each incoming `obj` creates a chain reaction of internal calls to ultimately yield the arg `objs` that instruction will operate with. Said another way, `calls` are types that become instances at time of application. 
+
+The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.
+
+[source,mtron,role="center-code"]
+----
+     ┌────────────────┐                                       
+ ┌───┴───────┐        │       ┌──┐     ┌────────┐            
+ │           ▼ 1      ▼ 2     │  ▼ 4   │      6 ▼            
+lhs => inst(arg1,...,argN){ inst1...instN } => rhs           
+ │                          3 ▲   │  ▲ 5                       
+ └────────────────────────────┘   └──┘
+----
+
+.the unification of function and value
+[.card]
+--
+Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `<1>?int\<=#{?}(){1}`.
+
+[mtron]
+----
+|<1>?int<=#{?}(){1}@<1>   [-- 1 --]
+<1>()                     [-- 2 --]
+10.<1>()                  [-- 3 --]
+12 + <1>()                [-- 4 --]
+----
+<1> 1 as an `inst` from maybe an `obj` to an `int` (`|` to prevent evaluation).
+<2> `noobj` applied to the 1 `inst` (the `{0}` of the domain's `{?}`).
+<3> 10 applied to the 1 `inst` (the `{1}` of the domain's `{?}`).
+<4> 12 added to the 1 `inst`.
+
+This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls) even though they return the same value regardless of input.
+--
+
+[discrete]
+=== stacks and frames
+
+Every logical thread of execution has a `/m/space/stack` patterned `<+/#>`. This pattern captures the breadth of common variable names found in most programming languages (`a`,`x`,`a_var`,`b3`,etc.) as well as hierarchical variables like `a/b/c`, etc. In short, the stack is always responsible for __schemaless relative__ uris. To ground the discussion, the current stack of the mtron code processing this documentation is shown in the collapsed accordion below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are _global variables_. Furthermore, note the `boot/` branch. This stores the data provided by the user and/or derived by the bootloader at startup (e.g. environmental variables).
+
+.the objs of the doc processors stack
+[%collapsible]
+====
+
+[mtron]
+----
+*<+/#/>
+----
+
+====
+
+[source,mtron,role="center-code"]
+----
+                                                  
+ lhs ──⮞ inst(arg1,...,argN){ inst1...instN } ──⮞ rhs           
+  │           │            │  │             │                    
+  │   push    └─────┬──────┘  └─────────────┘                
+┌─┼─────────────────┼──────┐     inst body        ┌─┐      
+│ │             inst│frame │                      │ │         
+│ ▼                 │      ├─────────────────────►│X│         
+│      stack        ▼      │          pop         │ │       
+└──────────────────────────┘                      └─┘              
+----
+
+
+When an instruction is called, the associated https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments] have the lhs `obj` applied and the result of the application is pushed onto the stack -- accessible through reference for the entirety of the 
+`inst` code block. From this architecture, the following `inst` forms are made available for use.
+
+
+[indent=0,subs="verbatim,attributes",role="primary"]
+.positional args
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{lhs}} \cdot f(\color{yellow}{\_0}, \color{yellow}{\_1},\ldots,\color{yellow}{\_n}) \mapsto \mathtt{obj}_{\mathtt{rhs}}
+++++
+--
+
+The arguments are captured as a `lst` and are accessed via their position. Realize that `<1>` is `uri::1`, not `int::1`.
+`*<0>` references the first argument of the args `lst`, `+*+<1>` the second argument, and so forth. 
+Note that for single digit numbers, a syntax sugar exists where the uri `< >` wrapper isn't required and the position references can be written as `*0`, `*1`, etc.
+
+In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
+Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
+`int` and returns either `noobj` (`{0}`) or the `int` (`{1}`). Hence, a range of `int{?}`.
+
+[source,mtron,role="center-code"]
+----
+           *0                   *1                              
+┌───────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└───────────┴────────────────────┴────────────┘
+----
+
+
+[mtron]
+----
+|inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band  [-- <1> --]
+*band                                                    [-- <2> --]
+3.band(2,8)                                              [-- <3> --]
+10.band(2,8)                                             [-- <4> --]
+----
+<1> The `|` is the `block` instruction and is necessary so the `inst` isn't evaluated but instead yielded as an `inst`.
+<2> dereference the uri `band` to yield the `inst` definition.
+<3> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
+<4> `10` is not within the band `[2,8]` and thus, the result is `noobj` which satisfies the `inst` range `int{?}`.
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.named args
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{lhs}} \cdot f(\color{yellow}{a_0} \Rightarrow x, \color{yellow}{a_1} \Rightarrow y,\ldots,a_n) \mapsto \mathtt{obj}_{\mathtt{rhs}}
+++++
+--
+
+When the arguments are provided in a `rec` form, the key of each relation of the `rec` is a https://en.wikipedia.org/wiki/Named_parameter[named argument]. Named
+arguments are resolved from the stack via their furi name.
+
+[source,mtron,role="center-code"]
+----
+            *min                  *max                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+----
+
+[mtron]
+----
+|inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band
+3.band(min=>2,max=>4)                 [-- <1> --]
+3.band(2,8)                           [-- <2> --]
+3.band(max=>8,min=>2)                 [-- <3> --]
+[ERROR] 'abc'.band(2,8)               [-- <4> --]
+----
+<1> The argument's name is it's reference on the stack.
+<2> If the argument name isn't provided, then it's position in the argument list determines its name.
+<3> When arguments are named, they can be written in any order.
+<4> The domain of `band` is `int`.
+Note where the error is thrown when `str['abc']` is provided.
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.default args
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{lhs}} \cdot f(a_0 \Rightarrow \color{yellow}{\mathtt{else}(x)},a_1 \Rightarrow \color{yellow}{\mathtt{else}(y)},\ldots,a_n) \mapsto \mathtt{obj}_{\mathtt{rhs}}
+++++
+--
+
+The `else` instruction has numerous uses. With respect to instruction arguments, the `else` instruction provides the user
+the ability to express
+https://en.wikipedia.org/wiki/Default_argument[default arguments].
+If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, otherwise it returns the incoming lhs `obj`.
+
+[source,mtron,role="center-code"]
+----
+        *min | 2             *max | 8                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+----
+
+[mtron]
+----
+|inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band
+1.band(min=>1)                        [-- <1> --]
+10.band()                             [-- <2> --]
+{2,3,4,5}.band(min=>3,max=>4)         [-- <3> --]
+----
+
+<1> No `max` is provided, so the default value of `8` is used.
+<2> No `min` nor `max` is provided, so the defaults `2` and `8`, respectively are used.
+<3> When arguments are provided, the default values are not used.
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.typed args
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{lhs}} \cdot f(a_0 \Rightarrow \color{yellow}{?\mathtt{type}_0}, a_2 \Rightarrow \color{yellow}{?\mathtt{type}_1},\ldots,a_n \Rightarrow \color{yellow}{?\mathtt{type}_2}) \mapsto \mathtt{obj}_{\mathtt{rhs}}
+++++
+--
+
+The previous examples made use of the polymorphic `id` instruction (sugar'd `_`). It's important to realize that an argument
+can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which instruction arguments are typed.
+
+[source,mtron,role="center-code"]
+----
+            *min                 *max                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+            ?>0 ───────────────────────────────⮞                    
+----
+
+[mtron]
+----
+nat  -> int::T[?>0]@nat     [-- <1> --]
+|inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }@band
+15.band(10,20)              [-- <2> --]
+-15.band(-20,-10)           [-- <3> --]
+band -> |inst?int{?}<=int(min=>as(nat::T),max=>as(nat::T)){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <4> --]
+[ERROR] -15.band(-20,-10)    [-- <5> --]
+band -> |inst?int{?}<=int(min=>?nat::T.else(throw()),max=>?nat::T.else(throw())){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <6> --]
+[ERROR] -15.band(-20,-10)    [-- <7> --]
+band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <8> --]
+-15.band(-20,-10)           [-- <9> --]
+----
+
+<1> A `nat` is an `int` greater than zero.
+<2> Argument name uniqueness does not consider query parameters.
+<3> The `?nat` query parameter requires the respective argument be some stem:[n \in \mathbb{N}].
+<4> `as(nat::T)` enforces the argument type.
+<5> A non-`nat` argument fails at the `as()`.
+<6> `?nat::T.else(throw())` throws when the typed argument is not a `nat`.
+<7> Demonstrates the throw.
+<8> `?nat::T.else(-100)` / `else(100)` fall back to the defaults when the typed argument is not a `nat`.
+<9> With the fallback band `[-100,100]`, -15 is within range.
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.anonymous inst
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{lhs}} \cdot \color{yellow}{\lambda}(a_0 \Rightarrow x, a_1 \Rightarrow y,\ldots,a_n) \mapsto \mathtt{obj}_{\mathtt{rhs}}
+++++
+--
+
+An untyped `inst` is an anonymous `inst` and behaves analogously to an
+https://en.wikipedia.org/wiki/Anonymous_function[anonymous function] in other programming environments.
+Anonymous `insts` can be both defined and evaluated in the same expression to provide
+https://en.wikipedia.org/wiki/Immediately_invoked_function_expression[immediately invoked function expression] semantics.
+Like any `inst`, anonymous `inst` arguments are scoped to the value of the `inst`, providing
+https://en.wikipedia.org/wiki/Scope_(computer_science)#Block_scope[block-scope] semantics.
+Finally, a degenerate anonymous `inst` with no specified variable frame is simply `bcode`.
+
+[mtron]
+----
+[ERROR] 10.(min=>2,max=>8){ is(and(gte(*min),lte(*max))) }                [-- <1> --]
+[ERROR] 10.(min=>minus(1),max=>plus(1)){ is(and(gte(*min),lte(*max))) }   [-- <2> --]
+[ERROR] 10.(min=>2,max=>8){ is(and(gte(*bad_min),lte(*bad_max))) }        [-- <3> --]
+[ERROR] 10.(){ is(and(gte(*min),lte(*max))) }                             [-- <4> --]
+10.is(and(gte(minus(1)),lte(plus(1))))                            [-- <5> --]
+----
+
+<1> The unnamed "band" `inst` is evaluated in line.
+<2> `min` and `max` are computed dynamically relative to the input.
+<3> The `inst` value is referencing undefined frame variables.
+<4> An anonymous `inst` is compiled to an `obj` filter-`inst`.
+<5> When arguments are embedded in the value, then the `inst` is simply `bcode`.
+=====
+
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.contextual args
+=====
+
+++++
+<!--  
+is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
+10.is_divisible(2)
+10.is_divisible('abc')
+-->
+++++
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.dependent args
+=====
+
+[.card-tight]
+--
+[stem]
+++++
+\mathtt{obj}_{\mathtt{in}} \cdot f(a_0 \Rightarrow x,a_1 \Rightarrow \color{yellow}{g(\ast a_1)},\ldots,a_n) \mapsto \mathtt{obj}_{\mathtt{out}}
+++++
+--
+
+If an argument's type is dependent on the value of another argument, then the argument is a https://en.m.wikipedia.org/wiki/Dependent_type[dependent argument].
+
+[mtron]
+----
+band -> |band?int{?}<=int(min=>_,max=>?>*min.else(*min+1)){ is(gte(*min)).is(lte(*max)) }
+2.band(min=>1,max=>1)                 [-- <1> --]
+----
+
+<1> ...
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.refined args
+=====
+
+[mtron]
+----
+is_divisible -> |is_divisble?bool<=int(by=>is(neq(0)).else(print('error').map(1))) { mod(*by).eq(0) }
+[ERROR] 10.is_divisible(2)
+[ERROR] 10.is_divisible('abc')
+----
+=====
+
+[discrete]
+=== dom/rng coefficients
+
+Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
+any fURI minus query parameters (ie. recursive `?` is not allowed). What is possible is the specification of 
+a type structure, a coefficient, and polymorphic https://en.wikipedia.org/wiki/Generic_programming[generics].
+
+[source,mtron,role="center-code"]
+----
+   /ex/inst/xyz?poly{c1,c2}[p1,p2,..,pn]<=mono{c3}     
+        ▲        ▲     ▲        ▲         ▲     ▲
+        │        │     │        │         │     │
+        │       tid  coeff    poly       tid  coeff
+        │        └─────┬────────┘         └──┬──┘    
+     inst tid         rng                   dom
+----
+
+
+An `inst` to create `int` triples can be written:
+
+[mtron]
+----
+trpl -> |inst?lst<=int{3}(){>-[,]}
+{1,2,3,4,5,6}.trpl()
+----
+
+[NOTE]
+--
+The `|` token is https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] for the `block` inst. 
+
+[source,mtron]
+----
+block?A<=#{?}(A::T)
+----
+
+A blocked instruction prevents the application of the `lhs` to the `inst` args and `inst` code.
+This ensures the uri `trpl` is not applied to the `inst` prior to the uri being bound as the reference (`->`). Without block, the result of applying `trpl` to `inst` would be what `trpl` is bound to. In this particular instance, `trpl` would reference a `fail` obj.
+
+[mtron]
+----
+[ERROR] trpl -> inst?lst[int,int,int]<=int{3}(){>-[,]}    [-- <1> --]
+trpl -> |inst?lst[int,int,int]<=int{3}(){>-[,]}           [-- <2> --]
+*trpl                                                     [-- <3> --]
+----
+<1> if the `inst` specification is not blocked, then `trple` is the failure.
+<2> the `inst` specification blocked, enabling `trple` to be bound to the spec.
+<3> dereferencing `trple` yields the `inst` specification.  
+
+--
+
+A stricter, more specific expression of `trpl` tha leverages https://en.wikipedia.org/wiki/Polymorphism_(computer_science)[polymorphic] type constructions is as follows:
+
+[mtron]
+----
+trpl -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
+{1,2,3,4,5,6}.trpl()
+----
+
+[NOTE]
+--
+The `trpl` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=\#{*}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the three (`int{3}`) incoming lhs objs.  
+--
+

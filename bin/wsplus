@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+# wsplus — a basic mtron console for a headless metatron ws:// server.
+# Connects to the server's /mtron endpoint and presents a REPL:
+#
+#   mtron> 1 + 2
+#   ==>3
+#
+# Persistent connection (session state carries across lines), readline history
+# + arrow keys when run on a TTY.
+import asyncio
+import sys
+from pathlib import Path
+from urllib.parse import urlsplit, parse_qs
+
+from lib.nanorc_highlight import load_highlighter
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+NANORC_PATH = SCRIPT_DIR.parent / "conf" / "nanorc"
+
+""" ANSI color codes """
+# ─── Foreground ───────────────────────────────────────────
+BLACK = '\u001b[0;30m'
+RED = '\u001b[0;31m'
+GREEN = '\u001b[0;32m'
+BROWN = '\u001b[0;33m'
+BLUE = '\u001b[0;34m'
+MAGENTA = '\u001b[0;35m'
+CYAN = '\u001b[0;36m'
+LIGHT_GRAY = '\u001b[0;37m'
+DARK_GRAY = '\u001b[1;30m'
+LIGHT_RED = '\u001b[1;31m'
+LIGHT_GREEN = '\u001b[1;32m'
+YELLOW = '\u001b[1;33m'
+LIGHT_BLUE = '\u001b[1;34m'
+LIGHT_PURPLE = '\u001b[1;35m'
+WHITE = '\u001b[1;37m'
+
+# ─── Background ───────────────────────────────────────────
+BG_BLACK = '\u001b[40m'
+BG_RED = '\u001b[41m'
+BG_GREEN = '\u001b[42m'
+BG_BROWN = '\u001b[43m'
+BG_BLUE = '\u001b[44m'
+BG_MAGENTA = '\u001b[45m'
+BG_CYAN = '\u001b[46m'
+BG_LIGHT_GRAY = '\u001b[47m'
+BG_DARK_GRAY = '\u001b[100m'
+BG_LIGHT_RED = '\u001b[101m'
+BG_LIGHT_GREEN = '\u001b[102m'
+BG_YELLOW = '\u001b[103m'
+BG_LIGHT_BLUE = '\u001b[104m'
+BG_LIGHT_PURPLE = '\u001b[105m'
+BG_WHITE = '\u001b[107m'
+BG_RESET = '\u001b[49m'  # reset background only
+FG_RESET = '\u001b[39m'  # reset foreground only (bonus)
+# ─── Styles ───────────────────────────────────────────────
+BOLD = '\u001b[1m'
+DIM = '\u001b[2m'
+ITALIC = '\u001b[3m'
+UNDERLINE = '\u001b[4m'
+BLINK = '\u001b[5m'
+REVERSE = '\u001b[7m'
+HIDDEN = '\u001b[8m'
+STRIKETHROUGH = '\u001b[9m'
+
+NC = '\u001b[0m'
+
+# the columns the '==>' result prompt this client writes occupies: a multi-line result shifts
+# its continuation lines past it, so they read under the value rather than under the prompt.
+# the Java writers name the same width Graphitty.RESULT_PROMPT_WIDTH
+RESULT_PROMPT_WIDTH = 3
+
+try:
+    import websockets
+except ImportError:
+    print("wsplus requires the 'websockets' package: pip install websockets")
+    sys.exit(1)
+
+history = None
+try:
+    import readline  # up-arrow history + line editing for input()
+    import atexit
+    import os
+
+    history = os.path.join(os.path.expanduser("~"), ".wsplus_history")
+    if os.access(os.path.expanduser("~"), os.W_OK):
+        atexit.register(readline.write_history_file, history)  # $HOME may be read-only (sandbox)
+    readline.set_history_length(1000)
+    readline.read_history_file(history)
+except ImportError:
+    print("no readline capability")
+    pass
+except FileNotFoundError:
+    try:
+        readline.write_history_file(history)
+    except Error:
+        pass
+    pass
+
+BANNER = rf"""{BLUE}                _        _                   
+ _ __ ___   ___| |_ __ _| |_ _ __ ___  _ __  
+| '_ ` _ \ / _ \ {CYAN}__/ _` | __| '__/ _ \| '_ \ 
+| | | | | |  __/ || (_| | |_| | | (_) | | | |
+|_|_|_| |_|\___|\__\__,_|\__|_|{WHITE}  \___/|_| |_|
+\ \ /\ / / __|{CYAN}{RED} _|{BG_RED} {BG_RESET}|_    {BLACK}PhaseShift Studio              
+{CYAN} \ V  V /\__ \{RED}|{BG_RED}_   _{BG_RESET}|                 
+{CYAN}  \_/\_/ {BLUE}/___/{RED}  |{BG_RED}_{BG_RESET}|                                         
+{DARK_GRAY} an mtron websocket console ({BROWN}ctrl-c {DARK_GRAY}to {BROWN}:quit{DARK_GRAY})({BROWN}:help{DARK_GRAY}){NC}"""
+
+
+async def repl(url):
+    hl = load_highlighter(str(NANORC_PATH) + "/mtron.nanorc", 'mtron')
+    async with websockets.connect(url) as ws:
+        while True:
+            try:
+                line = input(MAGENTA + "mtron" + GREEN + "> " + NC)
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return
+            try:
+                if not line.strip():
+                    continue
+                if line.strip() in (":help"):
+                    query_string = urlsplit(url).query
+                    params_dict = parse_qs(query_string)
+                    print(rf"""{GREEN}connection{NC}: {BLUE}{url}{NC}
+ {YELLOW}in{NC} (to metatron)   : {BLUE}{params_dict.get('in', ['application/x-mtron'])[0]}{NC}
+ {YELLOW}out{NC} (from metatron): {BLUE}{params_dict.get('out', ['application/x-mtron'])[0]}{NC}""")
+                    continue
+                if line.strip() in (":quit", ":exit"):
+                    print()
+                    return
+                await ws.send(line)
+            except:
+                print(RED + "==>ERROR")
+                continue
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                if not text.strip() or text.strip() == "noobj":  # silent for empty/noobj results
+                    continue
+                print(GREEN + "==>" + NC + hl.highlight_block(text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH)))
+            except asyncio.TimeoutError:
+                print(RED + "==>ERROR: " + NC + "timed out")
+                continue
+
+
+async def oneshot(url, exprs):
+    """evaluate one-shot expressions in a single session, then exit (non-zero on timeout)"""
+    code = 0
+    async with websockets.connect(url) as ws:
+        for expr in exprs:
+            await ws.send(expr)
+            try:
+                result = await asyncio.wait_for(ws.recv(), 30)
+                text = result.decode() if isinstance(result, bytes) else str(result)
+                text = text.strip()
+                if text and text != "noobj":
+                    print(GREEN + "==>" + NC + text.replace("\n", "\n" + " " * RESULT_PROMPT_WIDTH))
+            except asyncio.TimeoutError:
+                print(RED + "==>ERROR: " + NC + "timed out")
+                code = 2
+                break
+    return code
+
+
+def usage():
+    sys.stderr.write(
+        "usage: wsplus [-e EXPR ...] [-out MIME] [-in MIME] [URL]\n"
+        "\n"
+        "  -e <expr>   evaluate EXPR once and exit (repeatable; one shared session)\n"
+        "  -out <mime> append ?out=<mime> to the endpoint (as a bare name such as\n"
+        "              x-mtron-ui it becomes application/x-mtron-ui)\n"
+        "  -in <mime>  likewise ?in=<mime>, the inbound direction\n"
+        "  <uri>       the metatron ws endpoint (default: ws://localhost:8555/mtron)\n"
+        "\n"
+        "  supported formats\n"
+        "    <uri?out=application/x-mtron>\n"
+        "    <uri?out=application/x-mtron-ui>\n"
+        "    <uri?out=application/json>      \n"
+        "\n"
+        "without -e, an interactive REPL\n")
+
+
+def with_query(url, key, value):
+    """Attach key=value to a url, preserving whatever query it already carries."""
+    from urllib.parse import quote
+    sep = "&" if urlsplit(url).query else "?"
+    return f"{url}{sep}{key}={quote(value)}"
+
+
+def main():
+    exprs = []
+    url = None
+    out_mime = None
+    in_mime = None
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ("-h", "--help"):
+            usage()
+            return
+        elif arg in ("-out", "--out", "-in", "--in"):
+            if i + 1 >= len(sys.argv):
+                sys.stderr.write(f"==>ERROR: {arg} needs a mime type argument\n")
+                sys.exit(2)
+            mime = sys.argv[i + 1]
+            if "/" not in mime:
+                mime = "application/" + mime      # x-mtron-ui -> application/x-mtron-ui
+            if arg in ("-out", "--out"):
+                out_mime = mime
+            else:
+                in_mime = mime
+            i += 2
+        elif arg == "-e":
+            if i + 1 >= len(sys.argv):
+                sys.stderr.write("==>ERROR: -e needs an expression argument\n")
+                sys.exit(2)
+            exprs.append(sys.argv[i + 1])
+            i += 2
+        else:
+            url = arg
+            i += 1
+    if url is None:
+        url = "ws://localhost:8555/mtron"
+    if out_mime:
+        url = with_query(url, "out", out_mime)
+    if in_mime:
+        url = with_query(url, "in", in_mime)
+    if exprs:
+        try:
+            sys.exit(asyncio.run(oneshot(url, exprs)))
+        except KeyboardInterrupt:
+            print()
+        except Exception as e:
+            print(RED + "==>ERROR: " + NC + f"{e}")
+            sys.exit(1)
+    print(BANNER)
+    try:
+        asyncio.run(repl(url))
+    except KeyboardInterrupt:
+        print()
+    except Exception as e:
+        print(RED + "==>ERROR: " + NC + f"{e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

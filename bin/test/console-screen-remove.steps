@@ -1,0 +1,42 @@
+# Console screen-mode test — the rows a REMOVED widget leaves behind.
+#
+#   bin/metatron-console --steps bin/test/console-screen-remove.steps
+#
+# A drag is not the only way a widget stops covering text: a widget that is removed from
+# the space (its vid -> noobj) erases its box the same way, and the rows it was sitting on
+# are blanks until someone puts the content back.  The surface reports every row it erases
+# (FloatingSurface.damageListener) and the console repaints them from its screen
+# (Console.repairRows) — this checks the removal path.
+#
+# Geometry as in the drag test: forty filler rows, the victim rows printed last so they are
+# the newest content, and the widget (wide enough to span a line) parked on them before it
+# is removed.
+
+WAIT_CONSOLE
+
+# --- fill the screen, then print the rows that must survive being covered ---
+MARK victim
+SEND print("filler-00\nfiller-01\nfiller-02\nfiller-03\nfiller-04\nfiller-05\nfiller-06\nfiller-07\nfiller-08\nfiller-09\nfiller-10\nfiller-11\nfiller-12\nfiller-13\nfiller-14\nfiller-15\nfiller-16\nfiller-17\nfiller-18\nfiller-19\nfiller-20\nfiller-21\nfiller-22\nfiller-23\nfiller-24\nfiller-25\nfiller-26\nfiller-27\nfiller-28\nfiller-29\nfiller-30\nfiller-31\nfiller-32\nfiller-33\nfiller-34\nfiller-35\nfiller-36\nfiller-37\nfiller-38\nfiller-39")
+SLEEP 1
+SEND print("victim-row-alpha\nvictim-row-beta\nvictim-row-gamma")
+SLEEP 1
+WAIT_SINCE victim victim-row-gamma 10
+
+# --- a widget wide enough to cover a whole line ---
+MARK float
+SEND accordion_widget::[title=>'wide',body=>"widget-line-01\nwidget-line-02\nwidget-line-03\nwidget-line-04\nwidget-line-05\nwidget-line-06\nwidget-line-07\nwidget-line-08",style=>[anchor=>top_left,width=>100,height=>8,top=>0,left=>0]]@/usr/screen/remove.display()
+SLEEP 3
+
+# --- park it on the bottom rows where the victim text is ---
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 1
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<32\x3b1\x3b36M\x1b[<0\x3b1\x3b36m"
+SLEEP 3
+
+# --- remove it, and the rows it was covering must come back ---
+MARK remove
+SEND /usr/screen/remove -> noobj
+SLEEP 3
+WAIT_SINCE remove victim-row-gamma 10
+WAIT_SINCE remove victim-row-alpha 10
+WAIT_SINCE remove victim-row-beta 10

@@ -1,0 +1,1604 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>cat-instset · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">cat-instset</h1>
+        <small>The category graph at /m/math/cat: every type is an **object** (a vertex) and every inst is a **morphism** (an edge). Lift a type with .as(object::T) to read the morphisms incident to it (morphed_to out-edges, morphed_from in-edges); lift an inst with .as(morphism::T) to read its endpoints (src dom, trgt rng) and its whole-graph analysis (family, contested, orbit, position, inverse, combiner). TRIGGER: When reading a type's incident morphisms or a morphism's endpoints, when reasoning about a morphism's siblings / inverse / connected component, when classifying an edge's coefficient shape (form), set-theoretic class (class), or declared process laws (law), when wiring the algebraic theories (ring / field / rig / group / monoid / boolean / lattice), when adding a law-driven rewrite — the category *is* the rewrite table — or when lifting code itself into the graph (path::T for value code with rewrite edges, abstraction::T for its pointwise type-level image) to navigate, prune, or plan rewrites, and place::T for the location coordinate: where a chunk of code runs, how a peer is reached (the from/to/eval inst-f swap), and the liveness lattice (admissible / serves / shardTargets) that gates distribution.</small><br/>
+        <a href="cat-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>cat-instset-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>the category graph (<code>/m/math/cat</code>)</h2>
+<p><code>/m/math/cat</code> realizes types and insts as a <strong>category</strong>: types are the objects (the vertices), insts are the
+morphisms (the edges), and an inst's dom/rng are its source and target endpoints.</p>
+<pre><code class="language-mtron">mtron&gt; import(/m/math/cat,cat)
+...
+</code></pre>
+<p>The category is not part of the default boot profile: the import above is what mounts <code>/m/math/cat</code> and binds the
+<code>cat:</code> alias, and none of the lifts below resolves on a machine that has not imported it.</p>
+<p>The lift is a type constructor. An <em>object</em> is constructed from a type and a <em>morphism</em> from an inst. This structure is
+called the <strong>cat-graph</strong>.</p>
+<!-- figure source: assets/tikz/cat-lift.tex — white ink on transparent (the site theme is dark); edit there, re-render with the tikz MCP server, drop the PNG in assets/ -->
+<img src="../assets/cat-lift.png" alt="the lift: a type is a vertex, an inst is an edge" width="40%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>A <strong>vertex</strong> is a type lifted to <code>object::T</code>; an <strong>edge</strong> is an inst lifted to <code>morphism::T</code>. Every morphism is
+classified on four axes — <code>form</code> (its n-tid coefficient shape), <code>class</code> (its set-theoretic class), <code>position</code> (its
+place in the graph), and <code>law</code> (the algebraic laws it obeys) — and every object carries the structural theories it
+models. Those same declarations are what the rewriter stage consumes (see <em>the declared rewrites</em>).</p>
+<p>A law is either <strong>structural</strong>, declared at an object, or <strong>process</strong>, declared at a morphism. Both kinds of
+declaration are consumed by the later lifts: when <code>code::T</code> is modeled as a vertex on a graph of rewrite edges, the
+rules a vertex may take are read from exactly these declarations (see <em>the declared rewrites</em> and <em>the third lift</em>).</p>
+<h3>the first lift — types as objects (<code>object::T</code>)</h3>
+<pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
+==&gt;object[int]::[obj=&gt;int::T,
+                 law=&gt;[
+                  ring=&gt;/m/theory/ring_theory::[
+                   add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                   zero=&gt;0,
+                   one=&gt;1],
+                  add_group=&gt;/m/theory/group_theory::[
+                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   id=&gt;0,
+                   inv=&gt;neg?int&lt;=int(){&lt;j&gt;}],
+                  add_monoid=&gt;/m/theory/monoid_theory::[
+                   op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
+                   id=&gt;0],
+                  mult_monoid=&gt;/m/theory/monoid_theory::[
+                   op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
+                   id=&gt;1]],
+                 morphed_to=&gt;!λ(){&lt;j&gt;},
+                 morphed_from=&gt;!λ(){&lt;j&gt;}]
+</code></pre>
+<h4>the object fields</h4>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the type this object wraps (the vertex itself)</td></tr>
+<tr><td><code>morphed_to</code></td><td>the morphisms <strong>sourced from</strong> this object (the outgoing edges)</td></tr>
+<tr><td><code>morphed_from</code></td><td>the morphisms <strong>targeted at</strong> this object (the incoming edges)</td></tr>
+<tr><td><code>law</code></td><td>the structural theories this object models (see <em>the algebraic theories</em>)</td></tr>
+</tbody>
+</table>
+<pre><code class="language-mtron">mtron&gt; int::T.as(object::T).morphed_to()
+==&gt;morphism::[name=&gt;as,
+              form=&gt;typer,
+              src=&gt;!λint(){&lt;j&gt;},
+              trgt=&gt;!λstr(){&lt;j&gt;},
+              analysis=&gt;!λ(){&lt;j&gt;},
+              obj=&gt;as?str&lt;=int(str::T){&lt;j&gt;},
+              law=&gt;[pure]]
+==&gt;morphism::[name=&gt;as,
+              form=&gt;typer,
+              src=&gt;!λint(){&lt;j&gt;},
+              trgt=&gt;!λrec(){&lt;j&gt;},
+              analysis=&gt;!λ(){&lt;j&gt;},
+              obj=&gt;as?rec&lt;=int(rec::T){&lt;j&gt;},
+              law=&gt;[pure]]
+==&gt;morphism::[name=&gt;as,
+              form=&gt;typer,
+              src=&gt;!λint(){&lt;j&gt;},
+              trgt=&gt;!λbool(){&lt;j&gt;},
+              analysis=&gt;!λ(){&lt;j&gt;},
+              obj=&gt;as?bool&lt;=int(bool::T){&lt;j&gt;}]
+   ...
+</code></pre>
+<h4>the algebraic theories</h4>
+<p>An object can model several algebraic structures. <code>object::T&gt;&gt;law</code> is a rec keyed by the name given to each
+instance at declaration, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy:
+the graph holds the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;law&gt;&gt;ring&gt;&gt;add</code> yields the
+inst). The first example above is the <code>int</code> case in full: its law rec declares a <code>ring</code> and the three constituent
+group/monoid instances. <code>theory::T</code> is the nominal super-type grouping them:</p>
+<table>
+<thead>
+<tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, \(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
+<tr><td><code>field_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code>, <code>inv</code></td><td>\(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</td></tr>
+<tr><td><code>rig_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle S, +, \cdot, 0, 1 \rangle\): additive and multiplicative monoids, \(\cdot\) distributive over \(+\), no additive inverses</td></tr>
+<tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td>\(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</td></tr>
+<tr><td><code>monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</td></tr>
+<tr><td><code>boolean_theory</code></td><td><code>or</code>, <code>and</code>, <code>not</code>, <code>zero</code>, <code>one</code></td><td>\(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</td></tr>
+<tr><td><code>lattice_theory</code></td><td><code>meet</code>, <code>join</code>, <code>bottom</code>, <code>top</code></td><td>\(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</td></tr>
+<tr><td><code>semilattice_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (one side of a lattice)</td></tr>
+<tr><td><code>near_ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code></td><td>\(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a monoid, one-sided distributivity, no multiplicative \(1\)</td></tr>
+</tbody>
+</table>
+<h3>the second lift — insts as morphisms (<code>morphism::T</code>)</h3>
+<pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)
+==&gt;morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
+    name=&gt;plus,
+    form=&gt;mapper,
+    class=&gt;[endo],
+    src=&gt;!λint(){&lt;j&gt;},
+    trgt=&gt;!λint(){&lt;j&gt;},
+    analysis=&gt;!λ(){&lt;j&gt;},
+    obj=&gt;plus?int&lt;=int(int::T),
+    ...(1 more)]
+</code></pre>
+<p>The <code>|</code> in that expression is a <code>block</code> inst; it keeps the instruction from being evaluated, so that the raw inst is
+lifted rather than its result.</p>
+<h4>the morphism fields</h4>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>the operation's name</td></tr>
+<tr><td><code>obj</code></td><td>the inst this morphism wraps (the edge itself)</td></tr>
+<tr><td><code>form</code></td><td>the n-tid coefficient shape — see <em>the form axis</em></td></tr>
+<tr><td><code>class</code></td><td>the set-theoretic class (<code>endo</code>, <code>iso</code>, <code>auto</code>, <code>mono</code>, <code>epi</code>, <code>section</code>, <code>retraction</code>)</td></tr>
+<tr><td><code>src</code></td><td>the source object (the morphism's dom)</td></tr>
+<tr><td><code>trgt</code></td><td>the target object (the morphism's rng)</td></tr>
+<tr><td><code>derivation</code></td><td>the declared defining equation, <code>lhs ↦ rhs</code>, when the operation is derived (see <em>the declared rewrites</em>)</td></tr>
+<tr><td><code>law</code></td><td>the declared <strong>process</strong> laws the morphism obeys (see <em>the process laws</em>)</td></tr>
+<tr><td><code>analysis</code></td><td>a lazy sub-block of whole-graph stats — see <em>the analysis sub-block</em></td></tr>
+</tbody>
+</table>
+<h4>the form axis</h4>
+<p><code>form</code> is the morphism's n-tid coefficient shape — the <code>(dom_c, rng_c)</code> pair in regex notation:</p>
+<table>
+<thead>
+<tr><th>form</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>initial</code></td><td>maps nothing to objs (<code>dom_c = 0</code>)</td></tr>
+<tr><td><code>terminal</code></td><td>maps objs to nothing (<code>rng_c = 0</code>)</td></tr>
+<tr><td><code>mapper</code></td><td>one-to-one obj transformation (<code>dom_c = rng_c = 1</code>)</td></tr>
+<tr><td><code>filter</code></td><td>conditionally passes or drops an obj (<code>dom_c = 1, rng_c = {0,1}</code>)</td></tr>
+<tr><td><code>flatmapper</code></td><td>one-to-many obj transformation (<code>dom_c = 1, rng_c &gt; 1</code>)</td></tr>
+<tr><td><code>scatter</code></td><td>maps an obj to objs (<code>rng_c = {0,}</code>)</td></tr>
+<tr><td><code>gather</code></td><td>maps objs to objs (<code>dom_c = {0,}</code>)</td></tr>
+<tr><td><code>reducer</code></td><td>gathers objs into a single output (<code>rng_c = 1</code>)</td></tr>
+<tr><td><code>fork</code></td><td>splits objs across parallel streams</td></tr>
+<tr><td><code>join</code></td><td>merges parallel streams into a single stream</td></tr>
+<tr><td><code>catcher</code></td><td>intercepts a <code>fail</code> obj for recovery</td></tr>
+<tr><td><code>typer</code></td><td>retypes the obj's type/identity, not its value (<code>as</code>, <code>::</code>, <code>type()</code>, <code>vid()</code>, <code>tid()</code>)</td></tr>
+<tr><td><code>standard</code></td><td>an instruction with no well-defined classification</td></tr>
+</tbody>
+</table>
+<p>Two forms collapse onto the stream-ring's function subrings for the rewrite algebra: <code>scatter</code> is the linearized
+one-to-many (<code>flatmapper</code>) and <code>join</code> is the many-to-many merge (<code>gather</code>). On that projection, a coefficient floats
+through <code>mapper</code> / <code>filter</code> / <code>flatmapper</code> — the <code>floatable</code> run — and is anchored by <code>reducer</code> / <code>gather</code> — the
+<code>blocked</code> cut (see <em>the process laws</em>).</p>
+<p><code>typer</code> is the one form that is <strong>declared, not derived</strong>: <code>as?dom=A&amp;rng=B</code> is shaped like any mapper, but the
+operation's subject is the object's type/identity rather than its value, so it is opaque to a wrapper's
+<code>{self} ∪ components</code> fan-out and lies outside the <code>F</code> projection — a coefficient neither floats through it nor is
+anchored by it. The membership is declared where the operations are registered (<code>InstBuilder.declareForm</code> beside
+<code>as</code>, <code>type()</code>, <code>vid()</code> and <code>tid()</code>), staged with an instruction's other declaration facets, and drained to
+<code>?lawq</code> beside them.</p>
+<h4>the dual incidence</h4>
+<p><code>src</code>/<code>trgt</code> and <code>morphed_to</code>/<code>morphed_from</code> are the same relation seen from opposite sides:</p>
+<table>
+<thead>
+<tr><th>from</th><th>dom side (out)</th><th>rng side (in)</th></tr>
+</thead>
+<tbody>
+<tr><td>an object</td><td><code>morphed_to</code></td><td><code>morphed_from</code></td></tr>
+<tr><td>a morphism</td><td><code>src</code></td><td><code>trgt</code></td></tr>
+</tbody>
+</table>
+<p><code>morphed_to(A)</code> is \(\{ f \mid \mathrm{src} (f) = A \}\); <code>morphed_from(A)</code> is \(\{ f \mid \mathrm{trgt} (f) = A \}\).
+Composing them round-trips — from an object to its edges and back, or from an edge to its endpoints and back.</p>
+<h4>the analysis sub-block</h4>
+<p><code>analysis</code> is one lazy <code>auto()</code> — evaluated with <code>&gt;&gt;analysis</code>. Inside it, each stat is itself lazy:</p>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>family</code></td><td>the same-name siblings: \(\{ g \mid \mathrm{op}(g) = \mathrm{op}(f) \}\) — every registration of the same operator</td></tr>
+<tr><td><code>contested</code></td><td>the witness edges behind the <code>ambiguous</code> / <code>incomparable</code> labels — the competing siblings</td></tr>
+<tr><td><code>orbit</code></td><td>the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions</td></tr>
+<tr><td><code>position</code></td><td>the edge's place among its siblings (a subset of the six kinds below)</td></tr>
+<tr><td><code>inverse</code></td><td>the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\) — computed, never declared wherever the carrier's algebra states it: an <code>involution</code> is its own inverse, and a <strong>group</strong> <code>(op, id, inv)</code> makes <code>op</code>'s inverse the instruction <em>defined</em> as <code>op</code> applied to its inverted argument (<code>div ≡ mult ∘ inv</code>, so real's <code>mult</code>/<code>div</code> pair follows from its <code>mult_group</code>). A carrier whose algebra states none falls back to the declaration — int's <code>mult</code>→<code>div</code>, a truncating one-way retraction (int models a <code>mult_monoid</code>, no group), and int's <code>div</code> then has no inverse at all</td></tr>
+<tr><td><code>combiner</code></td><td>the edge a reducer's partials recombine through, \((a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)\) — computed, never declared: a fold declaring <code>monoidic</code> + <code>commutative</code> is its own, a fold defined by its <code>derivation</code> names the fold that defines it (<code>count</code> ↦ <code>sum</code>, <code>order</code> ↦ <code>kmerge</code>); a keyed fold (<code>group</code>) recombines pointwise through a chain — <code>sum</code>, then a per-key fold — that no single edge names, so it has none here</td></tr>
+</tbody>
+</table>
+<h4>the six edge kinds</h4>
+<p><code>position</code> classifies an edge against the rest of the graph into up to six labels:</p>
+<!-- figure source: assets/tikz/cat-positions.tex (same recipe) -->
+<img src="../assets/cat-positions.png" alt="the six position kinds: duplicate, ambiguous, incomparable, coupling, isochain, retract" width="100%" style="margin:0.3em 0 0 0"/>
+<table>
+<thead>
+<tr><th>kind</th><th>the relation to the graph</th></tr>
+</thead>
+<tbody>
+<tr><td><code>duplicate</code></td><td>another morphism of the same family maps the same dom to the same rng</td></tr>
+<tr><td><code>ambiguous</code></td><td>contested by an incomparable sibling that <em>overlaps</em> it — dispatch has no winner</td></tr>
+<tr><td><code>incomparable</code></td><td>contested by an incomparable, <em>disjoint</em> sibling — dispatch stays total</td></tr>
+<tr><td><code>coupling</code></td><td>an edge in the opposite direction links the same two objects — a candidate inverse pair</td></tr>
+<tr><td><code>isochain</code></td><td>endpoints linked by a chain of couplings — one orbit of the reversible core</td></tr>
+<tr><td><code>retract</code></td><td>mutually reachable and round-trip idempotent — a subobject retraction</td></tr>
+</tbody>
+</table>
+<p><code>orbit</code> is the transitive closure of <code>coupling</code> — the connected component of the <em>reversible core</em> (the subgraph of
+edges that exist in both directions). It is a reachability class, coarser than isomorphism (which needs the round trip
+to be idempotent → <code>retract</code>) and finer than raw incidence.</p>
+<h4>the class axis</h4>
+<p><code>class</code> classifies a morphism set-theoretically — as self-mapping, invertible, or split. Only the sound implications
+are computed; proper (non-split) mono/epi classification requires composition, which is not yet registered:</p>
+<table>
+<thead>
+<tr><th>class</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>endo</code></td><td>self-mapping — \(\mathrm{dom}(f) = \mathrm{rng}(f)\)</td></tr>
+<tr><td><code>auto</code></td><td>an invertible endomorphism — <code>endo</code> and <code>iso</code></td></tr>
+<tr><td><code>iso</code></td><td>invertible — the <strong>computed</strong> inverse is the edge itself (an <code>involution</code>), so <code>class</code> reads <code>analysis.inverse</code> rather than testing the law a second time</td></tr>
+<tr><td><code>mono</code></td><td>left-cancellable — \(f \cdot g = f \cdot h \Rightarrow g = h\) (here: a split monomorphism)</td></tr>
+<tr><td><code>epi</code></td><td>right-cancellable — \(g \cdot f = h \cdot f \Rightarrow g = h\) (here: a split epimorphism)</td></tr>
+<tr><td><code>section</code></td><td>split mono — \(f\) has a left inverse</td></tr>
+<tr><td><code>retraction</code></td><td>split epi — \(f\) has a right inverse</td></tr>
+</tbody>
+</table>
+<h4>the process laws</h4>
+<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the declared process
+laws):</p>
+<pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
+==&gt;[commutative,
+    right_distributive,
+    action,
+    pure]
+</code></pre>
+<table>
+<thead>
+<tr><th>law</th><th>what it asserts</th></tr>
+</thead>
+<tbody>
+<tr><td><code>commutative</code></td><td>\(a \cdot b = b \cdot a\)</td></tr>
+<tr><td><code>left_distributive</code></td><td>\(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
+<tr><td><code>right_distributive</code></td><td>\((a + b) \cdot c = a \cdot c + b \cdot c\)</td></tr>
+<tr><td><code>semi_right_distributive</code></td><td>\((a + b) \cdot c = (a \cdot c + b \cdot c) \cdot c\) — the reducer's distributivity: the two branches reduce to one object, so the law carries the re-application (Thm 19), which is what makes a shard sound rather than merely partitioned; a reducer does <strong>not</strong> obey <code>right_distributive</code> (Lemma 1 — \(\langle\mathcal{F}_r, +, \cdot\rangle\) is a near-ring, left distributive only)</td></tr>
+<tr><td><code>monoidic</code></td><td>an associative binary op with an identity</td></tr>
+<tr><td><code>magmadic</code></td><td>a bare binary op — a magma, as <code>monoidic</code> is a monoid — no identity demanded</td></tr>
+<tr><td><code>unit</code></td><td>an identity element — \(e \cdot x = x \cdot e = x\)</td></tr>
+<tr><td><code>absorbing</code></td><td>an annihilator — \(a \cdot x = a\) for every \(x\)</td></tr>
+<tr><td><code>action</code></td><td>a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</td></tr>
+<tr><td><code>involution</code></td><td>self-inverse — \(f(f(x)) = x\) (period two)</td></tr>
+<tr><td><code>idempotent</code></td><td>\(f(f(x)) = f(x)\)</td></tr>
+<tr><td><code>nilpotent</code></td><td>some power is zero — \(f^n = 0\)</td></tr>
+<tr><td><code>floatable</code></td><td>the coefficient commutes through the stream ring's parallel/serial structure</td></tr>
+<tr><td><code>blocked</code></td><td>cannot float past a barrier — a reduce anchors the coefficient</td></tr>
+<tr><td><code>pure</code></td><td>no effect: the result depends on the lhs and args alone (never inferred)</td></tr>
+<tr><td><code>partial</code></td><td>pass-through-or-drop \(\{0,1\}\) — the optional (maybe) lift of a value</td></tr>
+<tr><td><code>kleene</code></td><td>the reflexive-transitive iterate \(a^{*}\) — a Kleene closure</td></tr>
+<tr><td><code>prime</code></td><td>atomic — no nontrivial factorization</td></tr>
+<tr><td><code>zero_divisor</code></td><td>a nonzero \(a\) with \(a \cdot b = 0\) for some nonzero \(b\)</td></tr>
+<tr><td><code>cyclic</code></td><td>generated by one element — every value is a power of a single generator</td></tr>
+<tr><td><code>poset</code></td><td>the carrier is partially ordered — these insts are its comparisons</td></tr>
+</tbody>
+</table>
+<h3>the declared rewrites — laws as rules</h3>
+<p>Everything above is also the rewriter's input. A rule fires only when the operand's type <strong>declares</strong> the law that
+the rule consumes, and the category is the rewrite table: an algebra registered on a type licenses the rules of that
+type, and a type that models no such structure is left unchanged.</p>
+<p>The declared laws split into two rewrite directions, and both were already <strong>latent in the stream-ring algebra</strong>
+(<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>). <strong>Time</strong> — the <em>optimization</em> direction — rewrites
+code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leadsto \varepsilon\), $f \cdot f \leadsto
+\varepsilon$, \(f \cdot f \leadsto f\), absorption, derivation contraction) shorten a chain without moving it. <strong>Space</strong>
+— the <em>location</em> direction — moves code <em>across places</em>: that is Theorem 19's semi-right distributivity, which
+<code>law_shard</code> realizes — worked out below in the third lift, where the fold is actually partitioned.</p>
+<!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
+<img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
+<table>
+<thead>
+<tr><th>rewrite</th><th>reads</th><th>rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>theory_unit_removal</code></td><td>every theory instance of the operand's type</td><td>\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>theory_involution</code></td><td>\(\mathrm{law} \ni \mathrm{involution}\), or the declared <code>inv</code> role</td><td>\(f \cdot f \leadsto \varepsilon\)</td></tr>
+<tr><td><code>law_idempotent</code></td><td>\(\mathrm{law} \ni \mathrm{idempotent}\)</td><td>\(f \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\) for a pure \(g\) handing \(f\) one obj per obj: a mapper of the carrier, a filter too when \(f\)'s dom is non-strict, any \(g\) when \(f\) answers noobj</td></tr>
+<tr><td><code>law_monoidic</code></td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
+<tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))\), \(\min\) for <code>lt</code> — filters only: a bare <code>gt</code> answers a bool</td></tr>
+<tr><td><code>inverse_cancellation</code></td><td><code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>form_map_unwrap</code></td><td>the stream lift <code>map</code></td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
+<tr><td><code>derivation_contraction</code></td><td><code>derivation</code></td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
+<tr><td><code>branch_collapse</code></td><td>the additive role of the operand's algebra — <code>cut =&gt; [role =&gt; add]</code></td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
+<tr><td><code>branch_inline</code></td><td>the additive role — <code>cut =&gt; [role =&gt; zero]</code></td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
+<tr><td><code>law_shard</code></td><td><code>form = reducer</code> with a <code>combiner</code> declaring <code>monoidic</code>, <code>commutative</code> + a live peer roster</td><td>the seed partitions, each peer folds its shard, and the master recombines the partials through the <code>combiner</code> (Thm 19) — <code>sum</code>, <code>prod</code>, <code>count</code>, <code>order</code>, rec <code>sum</code> (distributed rec merging), and a keyed <code>group</code> pointwise (see <em>the deep merge</em>)</td></tr>
+</tbody>
+</table>
+<p><strong>Most declared laws carry no rule.</strong> Five of them back a rule directly — <code>involution</code>, <code>idempotent</code>, <code>absorbing</code>,
+<code>monoidic</code>, <code>poset</code> — and <code>floatable</code> and <code>blocked</code> do not drive a rule of their own but constrain where a
+distribution plan may anchor (its spans). <code>pure</code> constrains every rule that moves, drops or replicates code: only a
+declared-pure instruction is swallowed by <code>law_absorbing</code> or replicated into <code>law_shard</code>'s floatable run, and an
+instruction that does not declare it is effectful (<code>to</code>, <code>print</code>, <code>side</code> stay where they are). The remaining labels
+are classification predicates, recorded for the
+rewriter's guards and for reasoning, with no rewrite of their own: <code>commutative</code>, <code>unit</code>, <code>magmadic</code>, <code>nilpotent</code>,
+<code>kleene</code>, <code>partial</code>, <code>prime</code>, <code>cyclic</code>, <code>zero_divisor</code>, <code>left_distributive</code>, <code>right_distributive</code>, <code>action</code>.
+<code>commutative</code> is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
+stream (<code>{3,1,2}</code> already equals <code>{1,2,3}</code>) — while for an <code>lst</code> it would be unsound, its order being
+semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.</p>
+<p>The first two generalize a <em>ring's</em> unit and a <em>group's</em> inverse to every declared structure: the unit law is read
+for each <code>(op, id)</code> role pair a theory names (<code>add</code>/<code>zero</code>, <code>mul</code>/<code>one</code>, <code>op</code>/<code>id</code>, <code>or</code>/<code>zero</code>, <code>and</code>/<code>one</code>,
+<code>join</code>/<code>bottom</code>, <code>meet</code>/<code>top</code>), so \(x + 0\), \(x \cdot 1\), \(x \cdot \langle\rangle\) (uri), \(x \cdot .\) (machine) and
+\(x \cdot \mathrm{id}\) (code) all drop, and a bare identity <em>operation</em> (<code>code</code>'s \(\mathrm{id}\)) is the identity
+morphism. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
+<code>conjugate</code> — not only the additive group's.</p>
+<pre><code class="language-mtron">mtron&gt; 5.plus(0)
+==&gt;5
+mtron&gt; 5.id()
+==&gt;5
+mtron&gt; 5.neg().neg()
+==&gt;5
+mtron&gt; &quot;ab&quot;.reverse().reverse()
+==&gt;'ab'
+</code></pre>
+<p>The process laws act on the chain, each gated by the operand type's declaration:</p>
+<pre><code class="language-mtron">mtron&gt; &quot;ab&quot;.ucase().ucase()
+==&gt;'AB'
+mtron&gt; 2.zero().zero()
+==&gt;0
+mtron&gt; {1,2,3}.sum().sum()
+==&gt;6
+mtron&gt; 5.plus(3).zero()
+==&gt;0
+mtron&gt; {1,2,3,4,5}.is(gt(1)).is(gt(3))
+==&gt;4
+==&gt;5
+</code></pre>
+<p>The two <em>relational</em> declarations — the opposing edge and the defining equation — underlie the final two rules:</p>
+<pre><code class="language-mtron">mtron&gt; 5.plus(3).minus(3)
+==&gt;5
+mtron&gt; 6.plus(3.neg())
+==&gt;3
+mtron&gt; 6.0.mult(2.0.inv())
+==&gt;3.0
+mtron&gt; {1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }
+==&gt;6
+==&gt;9
+==&gt;12
+==&gt;15
+</code></pre>
+<p><strong>A worked compression.</strong> One expression, four of the rules above firing, and the whole chain collapses from eight
+operations to two. <code>explain()&gt;&gt;format</code> prints the <em>compiled</em> code — the op, its dom/rng, its arg and its coefficient
+shape per line — so that every rewrite applied is visible:</p>
+<pre><code class="language-mtron">mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2)
+==&gt;3
+mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&gt;&gt;format
+==&gt;&quot;&quot;&quot;
+    op     dom          rng     args  f    desc     c_dom  c_rng 
+    start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
+    minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
+   &quot;&quot;&quot;
+</code></pre>
+<p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other
+instructions were rewritten away:</p>
+<ul>
+<li><code>plus(0)</code> and <code>mult(1)</code> are the int ring's units (<code>theory_unit_removal</code>),</li>
+<li><code>neg().neg()</code> is the additive group's involution (<code>theory_involution</code>),</li>
+<li><code>plus(3.neg())</code> folds to <code>minus(3)</code> (<code>derivation_contraction</code>), and</li>
+<li><code>mult(2).div(2)</code> is a declared inverse pair (<code>inverse_cancellation</code>).</li>
+</ul>
+<p><strong>Direction.</strong> Every rule above either removes or preserves chain length, so a rule set that is only ever applied in
+that direction settles under any <code>rewriter::T</code> that iterates the rewrite stage to a fixpoint — the bundled
+<code>fixpoint_rewriter</code> (<code>fixpoint_rewriter::[max=&gt;N]</code>, bounded iterations) is one such stage, not the only one. The dual of
+<code>derivation_contraction</code>, <code>derivation_expansion</code>
+(\(\mathrm{minus} \leadsto \mathrm{plus} \cdot \mathrm{neg}\)), is deliberately <strong>not</strong> registered: it trades the
+length back, so the pair would alternate forever and no stage could settle. Lowering to a target that lacks the
+derived operation is a policy, not a law.</p>
+<h4>the deep merge — the rec monoid a keyed fold recombines through</h4>
+<p><code>+</code> on recs is a <strong>deep merge</strong>, and <code>sum</code> is its fold: \(\mathrm{sum} (\{r_1, \ldots, r_n\}) = r_1 + \cdots + r_n\).
+The keys union, and a key on both sides merges its two values by their kind:</p>
+<table>
+<thead>
+<tr><th>the two values</th><th>their merge</th><th>so</th></tr>
+</thead>
+<tbody>
+<tr><td>recs</td><td>\(r(k) + s(k)\) — recurse, key by key</td><td>a nested rec merges at every depth</td></tr>
+<tr><td>anything else, <code>lst</code>s too</td><td>\(x \uplus y\) — appended into a stream</td><td>equal values bulk, \(5 \uplus 5 = \{2\}5\); a <code>lst</code> stays whole</td></tr>
+</tbody>
+</table>
+<p>A <code>lst</code> is an <strong>atom</strong> of the merge: two colliding <code>lst</code>s make a stream of <code>lst</code>s, \([1,2,3] \uplus [2,3]\), never their
+concatenation — the union is commutative, so its fold is defined over a stream. Rec <code>sum</code> declares <code>monoidic</code> and
+<code>commutative</code>, so <code>law_shard</code> distributes a rec merge as it distributes a sum of ints: each peer merges its share of
+the recs and the master merges the partial recs. Concatenating <code>lst</code> values is said by
+the expression, with a select's <code>+</code>: \([1,2,3] \mathbin{+\!\!+} [2,3]\) is <code>[a=&gt;[1,2,3]]==[a=&gt;+[2,3]]</code>.</p>
+<p>A coefficient is a <strong>multiplicity</strong>, read the way every access reads it — the outer \(c\) multiplied into what it holds,
+\(\{c\}[k \Rightarrow v] = [k \Rightarrow \{c\}v]\), all the way down to the merge's atoms, where \(\{c\}v\) is \(v\)'s
+multiplicity in the stream (a <code>lst</code>'s too). A bulked rec therefore merges as the copies it stands for,
+\(\{c\}r = r + \cdots + r\) (\(c\) times), and a fold over a stream answers what it answers over the copies.</p>
+<p>A weekend of dog walks makes the rules concrete. Each day files one report: dog ⇒ kilometres per trail, plus the
+places visited.</p>
+<pre><code class="language-mtron">mtron&gt; /usr/walk/sat -&gt; [mama=&gt;[km=&gt;[ridge=&gt;12,lake=&gt;5],visited=&gt;[arroyo]],puppy=&gt;[km=&gt;[ridge=&gt;12]],chelsea=&gt;[km=&gt;[lake=&gt;5]]]
+==&gt;[mama=&gt;[
+     km=&gt;[ridge=&gt;12,lake=&gt;5],
+     visited=&gt;[arroyo]],
+    puppy=&gt;[km=&gt;[ridge=&gt;12]],
+    chelsea=&gt;[km=&gt;[lake=&gt;5]]]
+mtron&gt; /usr/walk/sun -&gt; [mama=&gt;[km=&gt;[ridge=&gt;9],visited=&gt;[acequia,mesa]],puppy=&gt;[km=&gt;[lake=&gt;5]],chelsea=&gt;[km=&gt;[lake=&gt;5]]]
+==&gt;[mama=&gt;[km=&gt;[ridge=&gt;9],visited=&gt;[acequia,mesa]],
+    puppy=&gt;[km=&gt;[lake=&gt;5]],
+    chelsea=&gt;[km=&gt;[lake=&gt;5]]]
+mtron&gt; */usr/walk/sat + */usr/walk/sun
+==&gt;[mama=&gt;[
+     km=&gt;[ridge=&gt;{12,9},lake=&gt;5],
+     visited=&gt;{[arroyo],[acequia,mesa]}],
+    puppy=&gt;[km=&gt;[ridge=&gt;12,lake=&gt;5]],
+    chelsea=&gt;[km=&gt;[lake=&gt;{2}5]]]
+</code></pre>
+<!-- figure source: assets/tikz/cat-deep-merge.tex (same recipe) -->
+<img src="../assets/cat-deep-merge.png" alt="the deep merge of two walk reports: framed keys merge key by key, colliding values append into a stream, colliding lsts stream whole" width="100%" style="margin:0.3em 0 0 0"/>
+<p>Every rule fires in that one merge:</p>
+<ul>
+<li>every dog is in both reports, so each dog's rec merges — and so does each <code>km</code> rec, one level down;</li>
+<li><code>mama</code>'s <code>ridge</code> is in both: <code>12</code> and <code>9</code> append into the stream <code>{12,9}</code>, while <code>mama</code>'s <code>lake</code> is Saturday's alone
+and
+is kept;</li>
+<li><code>puppy</code>'s two days share no trail, so the two <code>km</code> recs simply union;</li>
+<li><code>chelsea</code> walked the same loop on both days — two equal values, which bulk to <code>{2}5</code>;</li>
+<li><code>mama</code>'s <code>visited</code> values are <code>lst</code>s — atoms of the merge — so the two days' lists stream whole,
+<code>{[arroyo],[acequia,mesa]}</code>.</li>
+</ul>
+<p>The merge keeps every partial; a <strong>per-key fold</strong> reduces them. <code>==</code> (<code>select</code>) applies a pattern rec key by key — <code>_</code>
+matches every key and a nested pattern descends — so the weekend's totals are one select away: <code>sum</code> reads <code>{12,9}</code> as
+\(12 + 9\) and <code>{2}5</code> as \(5 + 5\), while <code>visited=&gt;_</code> keeps the stream of lists as it is.</p>
+<pre><code class="language-mtron">mtron&gt; */usr/walk/sat.plus(*/usr/walk/sun)==[_=&gt;[km=&gt;[_=&gt;sum()],visited=&gt;_]]
+==&gt;[mama=&gt;[
+     km=&gt;[ridge=&gt;21,lake=&gt;5],
+     visited=&gt;{[arroyo],[acequia,mesa]}],
+    puppy=&gt;[km=&gt;[ridge=&gt;12,lake=&gt;5]],
+    chelsea=&gt;[km=&gt;[lake=&gt;10]]]
+</code></pre>
+<p>To join the lists rather than stream them, the expression says so — a select's <code>+</code> concatenates the slots:</p>
+<pre><code class="language-mtron">mtron&gt; */usr/walk/sat==[mama=&gt;[visited=&gt;+[acequia,mesa]]]
+==&gt;[mama=&gt;[visited=&gt;[arroyo,acequia,mesa]]]
+</code></pre>
+<p>A stream of equal recs is one rec with a coefficient, and the merge reads it as the copies it stands for — the bulked
+<code>sum</code> is the explicit <code>+</code>:</p>
+<pre><code class="language-mtron">mtron&gt; {[puppy=&gt;[km=&gt;[ridge=&gt;12]]],[puppy=&gt;[km=&gt;[ridge=&gt;12]]]}
+==&gt;{2}[puppy=&gt;[km=&gt;[ridge=&gt;12]]]
+mtron&gt; {[puppy=&gt;[km=&gt;[ridge=&gt;12]]],[puppy=&gt;[km=&gt;[ridge=&gt;12]]]}.sum()
+==&gt;[puppy=&gt;[km=&gt;[ridge=&gt;{2}12]]]
+mtron&gt; [puppy=&gt;[km=&gt;[ridge=&gt;12]]] + [puppy=&gt;[km=&gt;[ridge=&gt;12]]]
+==&gt;[puppy=&gt;[km=&gt;[ridge=&gt;{2}12]]]
+</code></pre>
+<p><strong>The keyed combiner.</strong> This is how <code>law_shard</code> recombines a keyed fold. <code>group([k ⇒ h])</code> is a homomorphism from the
+stream into the recs of \(h\)'s monoid, so its combiner is computed from \(h\)'s rather than declared,
+\(\mathrm{combiner} (\mathrm{group} ([k \Rightarrow h])) = \mathrm{sum} \cdot \mathrm{select} ([\_ \Rightarrow \mathrm{combiner} (h)])\):
+the peers' partial recs deep-merge, and each key folds through \(h\)'s combiner — exactly the select above. <code>merge()</code>
+bulks equal partials (two peers answering <code>[k=&gt;1]</code> arrive as <code>{2}[k=&gt;1]</code>), and the coefficient reading is what keeps
+both counted. A <code>lst</code>-valued fold recombines the same way: an <code>order</code>'s sorted partials stream whole per key — a stream
+of
+runs, never their slots — and <code>kmerge</code> merges the runs.</p>
+<h3>the third lift — code as a vertex (<code>path::T</code>, <code>abstraction::T</code>)</h3>
+<p>The first two lifts put types and insts <em>into</em> the graph; the third puts <strong>code</strong> in. A chain lifted to <code>path::T</code>
+is a vertex whose out-edges are the rewrite rules that can move it — the rewrite graph, generated one dereference
+at a time, never materialized whole. Its pointwise image under \(\alpha\) is <code>abstraction::T</code>: the same chain with
+every instruction replaced by its <code>morphism::T</code>, i.e. <strong>value code below, type code above</strong>.</p>
+<!-- figure source: assets/tikz/cat-third-lift.tex (same recipe) -->
+<img src="../assets/cat-third-lift.png" alt="the third lift: value code below, abstraction above, joined by the lift α and the replay γ" width="100%" style="margin:0.3em 0 0 0"/>
+<h4><code>path::T</code> — value code as a vertex</h4>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the chain itself (the value code)</td></tr>
+<tr><td><code>origin</code></td><td>(optional) where the code starts — the machine's own <code>place::T</code>, attached on lift when the machine answers; absent means not placeable (<code>bind</code> requires it)</td></tr>
+<tr><td><code>where</code></td><td>(optional) the realized placement — span → place, written by the pass that applied a distribution rule: <code>{[span=&gt;at] =&gt; [place…]}</code> lists the places the shard actually shipped to</td></tr>
+<tr><td><code>peer</code></td><td>(reserved — declared in the type, not yet written by the distribution pass)</td></tr>
+<tr><td><code>&lt;rule name&gt;</code></td><td>one edge per <strong>live</strong> rewrite — the edge holds the <code>plan::T</code> (see below); <code>lower(plan)</code> applies it and re-lifts</td></tr>
+</tbody>
+</table>
+<p>Only live edges are materialized (see <em>a-priori pruning</em>): a vertex lists exactly the rules that can move it, and a
+<strong>normal form prints as its own certificate</strong> — <code>[path::[obj=&gt;...]]</code>, no out-edges, zero matches attempted. A
+traversal chain is a derivation witness: each step is labeled by the rule that justifies it (a composite 2-cell).
+The <code>==</code> between segments is a structural <code>select</code> — each segment names the step, a lift or a lower, applied to the
+previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
+three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
+<pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
+==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           theory_involution=&gt;plan::[
+            name=&gt;theory_involution,
+            cut=&gt;[law=&gt;[involution]],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
+==&gt;[path::[obj=&gt;start(5).plus(0),
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
+==&gt;[path::[obj=&gt;start(5)]]
+</code></pre>
+<p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
+rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
+equality, literal values); the pruner tests only the type-part, a <strong>necessary</strong> condition, so pruning a rule is a
+<em>proof</em> of identity (&quot;no match in the abstraction, no match in the concrete&quot;) while keeping one merely licenses the
+real match. A rule the pruner does not know is never pruned.</p>
+<h4><code>abstraction::T</code> — the α-word</h4>
+<table>
+<thead>
+<tr><th>field</th><th>description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the abstract word \(\alpha(f_1 \cdots f_n) = \alpha(f_1) \cdots \alpha(f_n)\) — each instruction as its <code>morphism::T</code>: the surface a <code>plan::T</code>'s guard reads (its law/form/theory), the code and its descent staying anchored at <code>path::T.obj</code></td></tr>
+<tr><td><code>where</code></td><td>(optional) the α <strong>place-class word</strong> — the places the code can be distributed TO (its declared roster machines and dialed peers) as a list of <code>place::T</code>; the surface a placement guard reads, the location twin of <code>obj</code>'s instruction word. Absent with no reach, and <code>law_shard</code> is then not a live morphism</td></tr>
+</tbody>
+</table>
+<p>The lift to <code>abstraction::T</code> is <strong>lossy by design</strong>: it carries the pointwise α-image — one <code>morphism::T</code> per
+instruction,
+each already carrying <code>form</code>, <code>class</code>, <code>law</code>, and <code>analysis</code> — not a second concrete chain. Nor is it a vertex one
+descends through: no traversal runs over the abstraction, because it is only the lookup surface from which a <code>plan::T</code>
+derives its rewrite. The guard reads the laws/forms/theories off the word (<code>*…/obj/1/law</code>, <code>*…/obj/2/analysis/inverse</code>)
+and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
+<code>path::T.obj</code>.</p>
+<pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
+==&gt;[abstraction::[obj=&gt;[
+                   morphism[start?args=[/m/int]]::[
+                    name=&gt;start,
+                    form=&gt;initial,
+                    src=&gt;!λ#(){&lt;j&gt;},
+                    trgt=&gt;!λ#(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;start(5)],
+                   morphism[plus?rng=int&amp;dom=int]::[
+                    name=&gt;plus,
+                    form=&gt;mapper,
+                    class=&gt;[endo],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
+   ...
+</code></pre>
+<h4><code>plan::T</code> — a rewrite rule as a value</h4>
+<p>A <code>path::T</code> out-edge is not a bare rule name — it is a <strong>plan</strong>: the rewrite rule itself, lifted to a first-class
+value. <code>plan::T</code> is the morphism of the rewrite category (<code>path → path</code>), and it is <em>data</em>, never a closure: a plan
+is introspectable and applicable wherever it is supplied.</p>
+<!-- figure source: assets/tikz/cat-plan.tex (same recipe) -->
+<img src="../assets/cat-plan.png" alt="a path::T out-edge is a plan::T (data); lower(plan::T) applies it and re-lifts, reading abstraction::T as the selector's surface" width="60%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>A plan is always the rec <code>[name, cut, where]</code>; what distinguishes a local plan from a distribution is what its <code>cut</code>
+names and where its <code>where</code> sends it:</p>
+<table>
+<thead>
+<tr><th>shape</th><th>the <code>cut</code> reads</th><th>the <code>where</code></th><th>example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>local</strong></td><td>a declared process law — <code>[law =&gt; [...]]</code> — or a theory role — <code>[role =&gt; ...]</code></td><td>stays local (<code>target =&gt; none</code> / <code>local</code>)</td><td><code>law_idempotent</code> → <code>cut =&gt; [law =&gt; [idempotent]]</code>; <code>theory_unit_removal</code> → <code>cut =&gt; [role =&gt; id]</code></td></tr>
+<tr><td><strong>distribution</strong></td><td>a <code>form</code> + <code>law</code> anchor — the laws its <code>combiner</code> must declare</td><td>ships to <code>peers</code>, with the combiner re-applied locally</td><td><code>law_shard</code> → <code>cut =&gt; [form =&gt; reducer, law =&gt; [monoidic, commutative]]</code></td></tr>
+</tbody>
+</table>
+<p>A third kind — the <strong>cut-less</strong> distribution rule — has no <code>cut</code> at all: its one placement names a <code>target</code>, and
+<code>bind</code> (not <code>lower</code>) applies it. None is registered yet, so the two rows above are the only live plans today.</p>
+<p>The application is a <strong>type method</strong>, not a field: <code>lower(plan::T)</code> is one instruction registered in
+<code>catInstSet.insts()</code>, shared by every plan. It matches the plan's <code>cut</code> against the path's code, applies the rewrite,
+and re-lifts the result to <code>path::T</code>. The plan carries no <code>result</code> λ; <code>lower</code> <em>is</em> the operator.</p>
+<p>A relocation decision in <code>plan.where</code> is <code>[shape, target?, hop?, span]</code> — <code>shape</code> is the topology token (<code>local</code> /
+<code>none</code> / <code>peer</code> / <code>peers</code> / <code>space</code> / <code>tree</code> / <code>shuffle</code>), <code>target</code> the concrete address. Each shape
+declares the laws it demands of a cut shipped to it (§3, two directions):</p>
+<table>
+<thead>
+<tr><th>shape</th><th>obligations</th></tr>
+</thead>
+<tbody>
+<tr><td><code>local</code>, <code>space</code>, <code>none</code></td><td>—</td></tr>
+<tr><td><code>peer</code>, <code>peers</code>, <code>tree</code></td><td><code>monoidic</code>, <code>commutative</code></td></tr>
+<tr><td><code>shuffle</code></td><td><code>monoidic</code></td></tr>
+</tbody>
+</table>
+<p><code>PlanBuilder.create()</code> validates a cut plan against this table (<code>obligations(shape) ⊆ cut.laws</code>); the reverse
+traversal <code>admissible(laws)</code> reads it the other way.</p>
+<p><code>bind(plan::T)</code> is the <strong>cut-less operator</strong> — the distribution rule. It is <code>lower</code> restricted to distribution plans:
+a plan with a <code>cut</code> is <code>lower</code>'s, so <code>bind</code> <strong>declines it</strong> (the code passes through unchanged). A cut-less plan
+carries exactly one placement, and <code>bind</code> requires a placement with a <code>target</code> whose scheme resolves a dialer
+(<code>Signatures.resolves</code>); otherwise it is the identity, like <code>lower</code> on a plan that matches nothing. The one cut-less
+relocation implemented is <code>move</code>: it appends a terminal <code>to(&lt;target&gt;)</code> that ships the <em>whole program</em> as a program —
+the quine rule, the payload is a program the receiver re-plans on compile, never its value. <code>chain</code>/<code>star</code>/<code>lanes</code>
+shapes are deferred to later phases, and <strong>no cut-less plan is registered in the rewrite table yet</strong> — every
+registered rewrite has a <code>cut</code> — so <code>bind</code> is currently unexercised by the default rules.</p>
+<p><strong>A distribution plan requires peers.</strong> <code>law_shard</code> is live only over a non-empty peer roster: its guard reads the
+machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
+self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
+<pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    on_message=&gt;print('received ${_}')]
+mtron&gt; */network
+</code></pre>
+<p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
+<code>machine::T</code>
+now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
+<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
+</code></pre>
+<p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
+monoidic reducers are <strong>semi-right distributive</strong>,
+\[(a+b)\cdot r \;=\; (a\cdot r + b\cdot r)\cdot r,\]
+so a fold factors across parallel branches and re-combines through the same reducer — sound, not merely partitioned.
+The two composition operators, \(+\) (parallel branching) and \(\cdot\) (serial composition), are where that law was
+latent: the split axiom \(\langle x\rangle (a+b) = \langle x\rangle a + \langle x\rangle b\) and the merge axiom say an
+object fans out across branches and merges back, and Thm 19 is the one reduce law that makes the fan-out <em>sound</em>. The
+same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r\)
+(a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
+<p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
+<code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: the seed bulk partitioned into
+shards whose fold carries the remaining hop budget (<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the
+seed), each shard shipped by a <code>select([to(peer)])</code> to its roster member, merged, and recombined at home through the
+reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+form a tree. The plan — not its
+application — is data, so the rewrite <em>schedule</em> and the out-edge
+that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
+<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
+</code></pre>
+<p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
+<code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
+<pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
+           theory_unit_removal=&gt;plan::[
+            name=&gt;theory_unit_removal,
+            cut=&gt;[role=&gt;id],
+            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
+</code></pre>
+<h4>may / must — the fiber modality</h4>
+<p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
+decided by reading the abstraction, are claims quantified over that set in one of two strengths:</p>
+<table>
+<thead>
+<tr><th>modality</th><th>the claim</th><th>example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>must</strong> □</td><td>the rule fires for <em>every</em> fiber member — its guard reads no value</td><td><code>law_shard</code> on \([\mathrm{initial}, \{\ast\}\mathrm{floatable}, \mathrm{reducer}]\)</td></tr>
+<tr><td><strong>may</strong> ◇</td><td>the rule fires for <em>some</em> members; undecidable without values</td><td>unit removal at \(\mathrm{plus}(\mathrm{int})\) — only the \(\mathrm{plus}(0)\) members</td></tr>
+</tbody>
+</table>
+<p>Thus, the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\) holds: the abstraction licenses
+a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge
+is a must-edge. Refinement is <strong>edge-antitone</strong> (order-reversing) — descending the rungs
+(\(\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)\))
+shrinks the fiber and discharges the ◇ into a □. A rule becomes <em>exact</em> at the rung whose type absorbs its residue.
+Counting instances rather than rules, the ordering reverses: one licensed move fans out to one concrete edge per
+match <em>site</em>, so the abstraction licenses more kinds of moves while the path licenses more copies of fewer kinds.</p>
+<p><strong>Planning.</strong> The lossy lift makes the fiber \(\gamma\) of a vertex an infinite family, so no descent is made from an
+arbitrary abstraction.
+What the abstract walk computes is therefore not code but a <strong>route</strong>: a sequence of rule names, chosen in the
+abstraction, where the graph is small, then <strong>replayed on the path's code</strong> (<code>path::T.obj</code>, the γ anchor), where the
+values and sites exist (the path-lifting property of a fibration). Must-edges lift unconditionally; may-edges are the
+backtrack points, known in advance — a plan's remaining ◇-count is readable as the degree gap between the path and its
+abstraction. The replayed route <em>is</em> the derivation witness.</p>
+<h3>the fourth lift — places (<code>place::T</code>)</h3>
+<p><code>place::T</code> is the <strong>location coordinate</strong>: the machine a chunk runs on, lifted into the same graph as a vertex beside
+<code>path::T</code>. It is read-through from the machine's two network tables — the <strong>roster</strong> (who is known) and the <strong>peer
+map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
+<pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
+==&gt;place::[obj=&gt;//localhost,
+           authority=&gt;[ws://localhost:8555],
+           linked_to=&gt;!λ(){&lt;j&gt;},
+           linked_from=&gt;!λ(){&lt;j&gt;},
+           status=&gt;!λ(){&lt;j&gt;}]
+</code></pre>
+<table>
+<thead>
+<tr><th>field</th><th>what it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>obj</code></td><td>the machine address <code>//host[/path]</code> — <code>host()</code> is the roster key, <code>path()</code> the frame vid (empty = the host's root machine). Who evaluates.</td></tr>
+<tr><td><code>authority</code></td><td>the transports that reach it (<code>scheme://host:port</code>); two aliases of one machine are values, never two places</td></tr>
+<tr><td><code>instset</code></td><td>(reserved — the ISAs resolvable here, the vocabulary coordinate; joined when <code>/m/math/cat/signature</code> lands)</td></tr>
+<tr><td><code>source</code></td><td>(optional) who declared it (<code>mdns</code>, boot profile, a dial)</td></tr>
+<tr><td><code>linked_to</code></td><td><strong>derived</strong> — the peers this machine dialed to this place (outbound edges)</td></tr>
+<tr><td><code>linked_from</code></td><td><strong>derived</strong> — the peers this machine accepted from this place (inbound edges)</td></tr>
+<tr><td><code>status</code></td><td><strong>derived</strong> — <code>known</code> (roster only) / <code>up</code> / <code>down</code> (dialed, probed)</td></tr>
+</tbody>
+</table>
+<p><code>obj</code> and <code>authority</code> are read from the roster once at lift; <code>linked_to</code>/<code>linked_from</code>/<code>status</code> are <code>auto</code> insts that
+re-read the live peer map each dereference (the <code>object::T.morphed_to</code> pattern). The alias quotient is
+<code>sameService</code>: a peer dialed at <code>127.0.0.1</code> links the place whose roster row says <code>0.0.0.0</code> — loopback aliases are one
+place. A wildcard peer lifts the same way — the <code>http/#</code> / <code>https/#</code> web gateway is the place
+<code>place::[obj=&gt;//#, authority=&gt;[http://#, https://#]]</code>: a location reachable in the abstract but not yet dialed to a
+concrete host.</p>
+<h4>the place/peer capability — the inst-f swap</h4>
+<p>A <code>place::T</code> is a coordinate; a <code>peer::T</code> is how you <em>talk</em> to it. The bridge is the peer's <strong>client</strong>, which declares
+a <strong>mini-instset</strong> — <code>inst =&gt; { tid =&gt; override }</code>. Each override is the native instruction with a different <code>f()</code> and
+nothing else: <code>Network.Helper.accepts</code> checks the override has the instruction's own signature (base, dom, rng, arg
+types), and <code>Network.Helper.dispatch</code> binds to the native definition then swaps <code>f()</code>. An override <em>is</em> the
+instruction it replaces, with another body — the transport, serialization and protocol particulars live in the body,
+the signature stays the same.</p>
+<!-- figure source: assets/tikz/cat-place-capability.tex (same recipe) -->
+<img src="../assets/cat-place-capability.png" alt="a place::T is a machine; a peer::T is how you talk to it — its client's inst is a mini-instset of from/to/eval overrides, reached by swapping f() alone" width="90%" style="margin:0.3em 0 0 0"/>
+<p>The three wire instructions are <code>from</code> (read), <code>to</code> (write) and <code>eval</code> (evaluate). <code>from</code>/<code>to</code> take an address, which
+computes to itself; <code>eval?block(code)</code> ships the code as a <em>payload</em> — the <code>?block</code> keeps it raw so the far side is
+the one that evaluates it (without the block the code is evaluated here and only its result ships). Which instructions
+a client overrides is its protocol's capability:</p>
+<table>
+<thead>
+<tr><th>client</th><th>overrides</th></tr>
+</thead>
+<tbody>
+<tr><td><code>http_client</code></td><td><code>from</code> (GET), <code>to</code> (POST) — no <code>eval</code>: a web document is read or written, never asked to evaluate</td></tr>
+<tr><td><code>ws_client</code></td><td><code>eval</code>, <code>from</code>, <code>to</code> — the full set over the socket</td></tr>
+<tr><td><code>id_client</code> (<code>loop</code>)</td><td><code>eval</code>, <code>from</code>, <code>to</code> — all local: <code>eval</code> applies against this machine, <code>from</code>/<code>to</code> read/write it</td></tr>
+<tr><td><code>mcp_client</code> (tools)</td><td>one override per tool, keyed by the tool's tid — a tool answers as <code>eval</code>, another as <code>from</code>, …</td></tr>
+<tr><td><code>mqtt_client</code> (planned)</td><td><code>from</code> (SUBSCRIBE), <code>to</code> (PUBLISH) — no <code>eval</code>; the client is not yet isolated (<code>mqttspace::T</code> speaks the protocol today)</td></tr>
+</tbody>
+</table>
+<p>The planned <code>mqtt_client</code> speaks the same two verbs over MQTT: <code>to</code> is a <strong>retained PUBLISH</strong> (plus a write to a
+local cache, since a publisher never receives its own publish), and <code>from</code> is the clever half — MQTT has no read, so
+the space <strong>SUBSCRIBEs</strong> to its topic filter once (retained messages replayed) and serves reads from a local cache
+the callback fills; on a broker reconnect it <strong>RESUBSCRIBEs</strong> (<code>resubscribeIfSessionExpired</code>) so a broker that
+restarted with no memory of the client is rejoined with its filter intact and the retained replay resyncs the cache.</p>
+<p><code>Network.Helper.atPeer</code> does the <strong>compile-time binding</strong>: when the resolver binds <code>from(&lt;uri&gt;)</code> / <code>to(&lt;uri&gt;)</code> /
+<code>eval?block(code)</code> and the uri's authority names a dialed peer that overrides it, the peer's body is swapped in, so
+the <em>compiled code shows which peer's body runs</em> — the <code>eval?&lt;=code(&lt;ws://booger.local:8555&gt;)</code> a <code>law_shard</code> layout
+emits. A call whose authority no peer overrides, or whose address is computed at run time, resolves native and still
+reaches the peer through the run-time dispatch.</p>
+<h4>the location liveness lattice</h4>
+<!-- figure source: assets/tikz/cat-location-lattice.tex (same recipe) -->
+<img src="../assets/cat-location-lattice.png" alt="the location liveness lattice: origin → reachable → admissible (declared) → serves (realized) → shardTargets, addressed by wire authority" width="55%" style="float:right; margin:0 0 0.9em 1.5em"/>
+<p>Distribution liveness has the same declared/realized split as a-priori pruning, on the location side. A place is a
+candidate (<strong>declared</strong>) when some authority's scheme has a dialer in the ISA — <code>Signatures.resolves(scheme)</code>, the
+<code>ws → ws_client</code>, <code>http</code>/<code>https → http_client</code>, <code>loop → id_client</code> table, read with no dial attempted. A dialed peer
+can <em>take</em> a placement (<strong>realized</strong>) when its client <strong>overrides every instruction the placement requires</strong> and is
+<code>online</code> — <code>Places.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an <code>http_client</code>
+(no <code>eval</code>) is not a shard target; an offline peer is not a target either, so an outage <em>shrinks</em> the fan-out rather
+than poisoning the reduction.</p>
+<p><code>law_shard</code> fans out over the surviving set: <code>shardTargets</code> keeps only <strong>dialed</strong> peers (they carry a <code>host</code> — the
+out/in marker, where to dial them back) that <code>serve</code> the route, and ships to their <strong>wire authority</strong> (never the
+local map key, which is a path that would ship the shard nowhere). The seed bulk is factored over whatever is left,
+so nothing is dropped and nothing is computed twice.</p>
+<h4>origin and the two <code>where</code>s</h4>
+<p>Three location fields, three questions — easy to conflate because two share the name <code>where</code>:</p>
+<table>
+<thead>
+<tr><th>field</th><th>on</th><th>computed by</th><th>the question it answers</th></tr>
+</thead>
+<tbody>
+<tr><td><code>origin</code></td><td><code>path::T</code></td><td><code>Places.self()</code> at lift</td><td>where the code <strong>starts</strong> — this machine's listeners (<code>//0.0.0.0</code>); absent → not placeable</td></tr>
+<tr><td><code>where</code></td><td><code>path::T</code></td><td><code>realizedWhere()</code> after a distribution</td><td>where it <strong>went</strong> — <code>{[span=&gt;at] =&gt; [place…]}</code>, read back off the emitted <code>select([to(…)])</code> hosts</td></tr>
+<tr><td><code>where</code></td><td><code>abstraction::T</code></td><td><code>placeWord()</code> — <code>Places.reachable()</code>, or the realized <code>path.where</code> places after a distribution</td><td>where it <strong>can go</strong> — roster ∪ dialed peers (the α place-class word)</td></tr>
+</tbody>
+</table>
+<p><code>Places.reachable()</code> deliberately excludes the origin — it is where the code starts, not where it can go. The
+<code>path::T.where</code> is the <em>realized</em> placement (the shard actually shipped); the <code>abstraction::T.where</code> is the <em>reach</em> a
+plan's placement guard reads to decide liveness. <code>law_shard</code> is a live out-edge only over a non-empty reach, and
+<code>bind</code> applies a distribution rule to whatever code it is handed — the lift, not <code>bind</code>, marks placeability by
+attaching (or omitting) the <code>origin</code>. <code>place.instset</code> (the vocabulary coordinate) and <code>path.peer</code> (the peers a
+deployment used) are declared but not yet written — reserved slots, pending <code>/m/math/cat/signature</code>.</p>
+<h4>the two fibers — a plan as a natural transformation</h4>
+<p>The third and fourth lifts are the <em>same construction over two words</em>. A <code>path::T</code> anchors both: its <code>obj</code> is the
+value code — the <strong>instruction fiber</strong>, α-lifted to <code>abstraction::T.obj</code> — and its <code>origin</code>/<code>where</code> are the actual
+places — the <strong>location fiber</strong>, α-lifted to <code>abstraction::T.where</code>. A <code>plan::T</code> acts over both at once: its <code>cut</code>
+over the code, its <code>where</code> over the location. That simultaneity is what makes the plan a single rewrite rather than
+two unrelated ones — a natural transformation whose two components read the two α-words, and whose one application
+(<code>lower</code>/<code>bind</code>) moves the path on both.</p>
+<!-- figure source: assets/tikz/cat-fibration.tex (same recipe) -->
+<img src="../assets/cat-fibration.png" alt="the two fibers: the instruction fiber (path::T ⇄ abstraction::T) and the location fiber (origin/where ⇄ reachable), with a plan::T acting over both via cut and where" width="90%" style="margin:0.3em 0 0 0"/>
+<p>The naturality is a <strong>commuting square</strong>: the location projection \(L\) (a path's place — <code>origin</code> before, <code>where</code>
+after) makes the plan's code-side and location-side agree. Applying the rewrite and then reading the location (top →
+right) equals reading the location and then applying the relocation (left → bottom):
+\(\mathrm{where} \circ \mathrm{lower} (\mathrm{plan}) = \mathrm{plan.where} \circ \mathrm{origin}\).</p>
+<!-- figure source: assets/tikz/cat-commute.tex (same recipe) -->
+<img src="../assets/cat-commute.png" alt="the commuting square: lower/bind(plan) on the code edge, plan.where on the location edge, origin and where as the location projection — the square commutes" width="80%" style="margin:0.3em 0 0 0"/>
+<h4>the machine ring — process, dual of the stream ring</h4>
+<p><code>catInstSet</code> models <em>data</em> as a category (types/insts as objects/morphisms) and <em>place</em> as its location coordinate.
+The machine those places address is its own algebra — the <strong>machine ring</strong>, dual of the stream ring over process:
+<code>+</code> (union the data fibers, branch the processor) and <code>·</code> (<code>move</code> navigation, identity <code>stay()</code>), with Thm 19 as the
+distributive law that makes <code>law_shard</code> sound. Sketched in <code>docs/design/machine-ring.md</code>. Only what <code>catInstSet</code>
+already needs is encoded today — <code>move</code>/<code>stay</code>/<code>pop</code> and <code>law_shard</code> — the explicit <code>0</code> element and the <code>+</code> operator
+are future work.</p>
+<h3>see also</h3>
+<ul>
+<li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>
+<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
+<li><a href="math-instset-mtron.html">math instruction set</a> — <code>/m/math</code>, where the category and its theories live.</li>
+<li><a href="../metatron/references/rewrite-system-java.html">rewrite system</a> — the <code>rewriter::T</code> stage and rewrite instructions.</li>
+<li><a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a> — the coefficient algebra the laws speak:
+<code>floatable</code> / <code>blocked</code>, and Thm 19 which <code>law_shard</code> realizes.</li>
+<li>figure sources — <code>assets/tikz/cat-*.tex</code> (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
+<code>assets/</code>).</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

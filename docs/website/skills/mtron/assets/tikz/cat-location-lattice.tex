@@ -1,0 +1,58 @@
+% cat-location-lattice.tex — the funnel from "where code starts" to "where it ships".
+% Rendered with the tikz MCP server (compile_tikz); the PNG drops in assets/ as
+% cat-location-lattice.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are UNFILLED and offset clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE. The location side of a distribution rewrite, read the
+% way the type-part/value-residue split is read on the code side: a DECLARED test
+% (admissible — some authority's scheme has a dialer) and a REALIZED test (serves —
+% the dialed peer's client overrides every instruction the placement requires, and is
+% online). origin is where the code starts (this machine's listeners); reachable is
+% where it can go (roster ∪ dialed peers); shardTargets is the subset a plan actually
+% ships to, addressed by WIRE authority (never the local map key).
+%
+%       origin              where the code STARTS      Places.self()
+%         │                    (this machine's listeners)
+%         ▼
+%       reachable            where it CAN GO           Places.reachable()
+%         │                    roster ∪ dialed peers
+%         │
+%         ├─ admissible       DECLARED: some authority's scheme resolves a dialer
+%         ▼
+%       serves               REALIZED: the client overrides every placement.inst,
+%         │                     and the link is online          Places.serves()
+%         ▼
+%       shardTargets         dialed (has host) + serves, shipped to the WIRE authority
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=26mm, minimum height=6.5mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  note/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+
+% ---- the funnel ----
+\node[c] (o)  at (0,0)  {\texttt{origin}};
+\node[c] (r)  at (0,-1.6) {\texttt{reachable}};
+\node[c] (s)  at (0,-3.2) {\texttt{serves}};
+\node[c] (t)  at (0,-4.8) {\texttt{shardTargets}};
+
+\draw[e] (o) -- node[el,right=2pt]{$\mathrm{self}()$} (r);
+\draw[e] (r) -- node[el,right=2pt]{$\mathrm{admissible}$} (s);
+\draw[e] (s) -- node[el,right=2pt]{} (t);
+
+% ---- right column: what each is ----
+\node[sub, anchor=west, align=left] at (1.9,0)  {where the code STARTS\\ (this machine's listeners)};
+\node[sub, anchor=west, align=left] at (1.9,-1.6) {where it CAN GO\\ (roster $\cup$ dialed peers)};
+\node[sub, anchor=west, align=left] at (1.9,-3.2) {client overrides every\\ \texttt{placement.inst}, and is online};
+\node[sub, anchor=west, align=left] at (1.9,-4.8) {dialed (has \texttt{host}) + serves,\\ shipped to the WIRE authority};
+
+% ---- the declared / realized split ----
+\node[sub, anchor=east, align=right] at (-1.9,-2.4) {DECLARED:\\ some scheme\\ resolves a dialer};
+\node[sub, anchor=east, align=right] at (-1.9,-4.0) {REALIZED:\\ overrides + online};
+\end{tikzpicture}

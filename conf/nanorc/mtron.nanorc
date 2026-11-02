@@ -1,0 +1,101 @@
+## metatron 1.0-alpha ##################################
+# @author Marko A. Rodriguez <http://markorodriguez.com>
+#
+# created for JLine nano syntax highlighter
+#  only color, icolor, and syntax commands supported
+#  design principle: 
+#   highlight as a single uri and then convert sub components into more refined obj highlights
+#   necessary as a uri is any parse that isn't some other obj type
+
+syntax "mtron" ".*\.(mtron)$"
+
+# assume everything is a uri
+color blue ".*"
+### qs
+color yellow "\?" "\^" "&"
+# f (j,m,?)
+color yellow "\{.\}"
+color red "\{\?\}"
+### int
+color yellow "(0)|(-?[1-9][0-9]*)"
+# common sugars
+color green "[.:;,+|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
+color yellow "[*]"
+### real
+icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+(E[-+]?[0-9]+)?"
+# common structural tokens
+color green "\[" "\]" "\(" "\)" "\{" "\}"
+# real exponent
+icolor yellow "(\.|[0-9])+E[-+]?[0-9]+"
+# uri slash or schema
+icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+# rec/rel uri key — applied after generic <> coloring below
+color green "=>"
+### bytes
+icolor yellow "0x([0-9]|[A-F]|[a-f])+"
+color yellow,underline "0x"
+### uri <>
+color blue "[<][^>]*[>]"
+color green "<" ">"
+# qProc keys
+icolor cyan "&?(|#|\+|[a-z]|-|_|\{.\})+(&|=|<=)(?!>)"
+icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
+icolor cyan "(<=|&)([a-z]|[0-9]|_|-|/|#|\+)+"
+icolor blue "([a-z]|[0-9]|/|#|\+)+::"
+color green "=" "::"
+# c coefficients
+color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
+### fail
+color red "\\_[a-z|A-Z|_|:]+"
+color red "=X"
+color yellow "\.\.\."
+color green "==>"
+color yellow "/=>"
+color red "X=>"
+### auto resolve
+color yellow "!\*" "!" "\^\*" 
+### "\{<j>\}"
+color green "\{|\}"
+color green "\{\}"
+###  uri
+color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
+icolor blue "[,a-z0-9_/-]+::"
+color green "::"
+### bool
+color yellow "(^|[^/])(true|false)([^/]|$)"
+### uri key — overrides generic <> cyan before =>
+icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>\s*=>"
+icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*\s*=>"
+color yellow "\$\{[^}]*\}" "<="
+### fail
+color red "([a-z]|[0-9]|/)*fail::"
+color red "(=>)?X=>"
+color yellow "(=>)?/=>"
+### sugars and structures
+color magenta "=>" ">-" "-<" "==" "_/" "\\_" "=?=" ">>="
+color yellow "<=" "&"
+color green "\(" "\)" "\[" "\]" ","
+### noobj 
+color magenta "noobj"
+### type
+color magenta "::T"
+### @vid
+color yellow "@<(/|[a-zA-Z0-9]|\.|#|\+| |:|-|_|~|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|#|\+|-|_|~|\?|\^)+" "λ"
+### str
+color yellow "[\"][^\"]*[\"]"
+color yellow "['][^']*[']"
+color yellow start="\"\"\"" end="\"\"\""
+color gray "<[^>]>"
+### comments
+color gray start="\[--" end="--]"
+color gray start="\[==" end="==]"
+
+
+### X=> match marker vs identifiers ending in X (e.g. PREFIX=>)
+# The red "X=>" marker above is meant for type-match positions printed at a
+# boundary (indented diagnostics, [X=>Y]).  An identifier whose name ends in
+# 'X' followed by '=>' (PREFIX=>, myX=>) is a plain rec key — the trailing X
+# must not turn red.  Later rules win, so repaint those spans in the rec-key
+# cyan here (arrow restored to the sugar color right after).
+color cyan "[[:alnum:]_]+X=>"
+color magenta "=>"

@@ -1,0 +1,21 @@
+[discrete]
+== Instruction Sets
+
+[stem]
+++++
+\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
+++++
+
+An instruction set is defined as a **record** (`rec`) of the form:
+
+[mtron]
+----
+*instset
+----
+
+[stem]
+++++
+\begin{align*}
+\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
+\end{align*}
+++++

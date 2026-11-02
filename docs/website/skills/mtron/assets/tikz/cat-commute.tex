@@ -1,0 +1,52 @@
+% cat-commute.tex — the commuting square of path::T, plan::T, place::T.
+% Rendered with the tikz MCP server (compile_tikz); the PNG drops in assets/ as cat-commute.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are UNFILLED and offset clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE. The location projection L (path ↦ its place: origin before,
+% where after) makes the plan a natural transformation: applying the plan's code rewrite and
+% then reading the location (top → right) equals reading the location and then applying the
+% plan's relocation (left → bottom). plan::T is the morphism of both horizontal arrows — its
+% cut drives the top edge (lower/bind), its where drives the bottom edge (the relocation).
+%
+%        path::T ── lower/bind(plan::T) ──► path::T'
+%           │                                  │
+%     origin│        ┌───────────────┐         │ where (realized)
+%           │        │    plan::T    │         │
+%           ▼        │ [name,cut,where]         ▼
+%        place::T ── plan.where (relocation) ─► place::T'
+%
+%     the square commutes:  where ∘ lower(plan) = plan.where ∘ origin
+
+\begin{tikzpicture}[
+  c/.style={draw, rounded corners=2pt, thick, minimum width=14mm, minimum height=6.5mm,
+            font=\small, inner sep=1.2mm},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\tiny, text=white!60!black, align=left, inner sep=1pt},
+  note/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+
+% ---- the four corners ----
+\node[c] (p)   at (0,0)      {\texttt{path::T}};
+\node[c] (pp)  at (6.9,0)    {\texttt{path::T}'};
+\node[c] (pl)  at (0,-2.9)   {\texttt{place::T}};
+\node[c] (plp) at (6.9,-2.9) {\texttt{place::T}'};
+
+% ---- top: the code rewrite (the plan applied) ----
+\draw[e] (p)  -- node[el,above=2pt]{$\mathrm{lower}/\mathrm{bind}(\texttt{plan::T})$} (pp);
+% ---- bottom: the location relocation (the plan's where) ----
+\draw[e] (pl) -- node[el,below=2pt]{$\texttt{plan.where}$\ \ (relocation)} (plp);
+% ---- left/right: the location projection ----
+\draw[e] (p)  -- node[el,left=2pt]{$\texttt{origin}$} (pl);
+\draw[e] (pp) -- node[el,right=2pt]{$\texttt{where}$ (realized)} (plp);
+
+% ---- the plan: the morphism of both horizontal edges ----
+\node[c] (plan) at (3.45,-1.45) {\texttt{plan::T}};
+\node[sub, anchor=south, align=center] at (3.45,-0.85) {\texttt{[name, cut, where]}\\ $\mathrm{cut}$ $\mapsto$ the code edge\\ $\mathrm{where}$ $\mapsto$ the location edge};
+
+% ---- the commuting claim ----
+\node[note, anchor=north, align=center] at (3.45,-3.6) {the square commutes:\\ $\texttt{where}\circ\mathrm{lower}(\texttt{plan}) = \texttt{plan.where}\circ\texttt{origin}$};
+\end{tikzpicture}

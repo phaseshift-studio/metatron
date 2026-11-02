@@ -1,0 +1,9 @@
+WAIT_CONSOLE
+SEND 'abc
+WAIT "missing closing" 25
+MARK
+SEND "abc
+WAIT "missing closing" 25
+MARK
+SEND """abc
+WAIT "missing closing" 25
