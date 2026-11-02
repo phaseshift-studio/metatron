@@ -435,13 +435,13 @@ public class mParser {
                         of('}').trim()).pick(1),
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
-                .map(t -> (Inst) new MInst(Triplet.with(
+                .map(t -> Inst.Helper.fullSignature((Inst) new MInst(Triplet.with(
                         pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
                                 lst(mParser.<List<Obj>>pick(t, 1)) :
                                 rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         noobj()), // todo: encode seed in parser
-                        pick(t, 0), pick(t, 3)));
+                        pick(t, 0), pick(t, 3))));
     }
 
     /**

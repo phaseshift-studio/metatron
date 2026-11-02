@@ -547,7 +547,7 @@ an instruction set to manipulate docker and docker compose</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -606,11 +606,12 @@ an instruction set to manipulate docker and docker compose</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">compose::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/compose</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[services=&gt;[=&gt;]]]@/m/inst/compose</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker compose stack — refines rec::T</p>
@@ -623,7 +624,7 @@ matches docker_compose::T</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">container::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__dev__dckr__resource" class="instset-doc-small-code text-info code">/m/dev/dckr/resource::T</a></span>
+            <span class="ms-2">refines <a href="#__m__dev__dckr__resource" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/dev/dckr/resource::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/container</small>
     </div>
@@ -637,6 +638,7 @@ matches docker_compose::T</code></pre>
               {?}ports=&gt;[uri::T],
               {?}network=&gt;&lt;#&gt;::T,
               {?}mount=&gt;&lt;#&gt;::T]]@/m/dev/dckr/container</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dev__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
@@ -651,7 +653,7 @@ matches docker_container::T</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">container_state::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__uri" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/uri::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/container_state</small>
     </div>
@@ -661,6 +663,7 @@ matches docker_container::T</code></pre>
               restarting,
               exited,
               dead)]@/m/dev/dckr/container_state</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> docker container state — union of created|running|paused|restarting|exited|dead</p>
@@ -673,13 +676,14 @@ stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">image::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__dev__dckr__resource" class="instset-doc-small-code text-info code">/m/dev/dckr/resource::T</a></span>
+            <span class="ms-2">refines <a href="#__m__dev__dckr__resource" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/dev/dckr/resource::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/image</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}repo_tags=&gt;[uri::T],
               {?}size=&gt;real::T@/m/math/datasize,
               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/image</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dev__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
@@ -694,13 +698,14 @@ matches docker_image::T</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">networks::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__dev__dckr__resource" class="instset-doc-small-code text-info code">/m/dev/dckr/resource::T</a></span>
+            <span class="ms-2">refines <a href="#__m__dev__dckr__resource" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/dev/dckr/resource::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/networks</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,
               {?}scope=&gt;uri::T,
               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/networks</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dev__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
@@ -711,13 +716,14 @@ matches docker_image::T</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">resource::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/resource</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[id=&gt;uri::T,
          {?}created=&gt;uri::T,
          {?}labels=&gt;[uri::T=&gt;str::T]]]@/m/dev/dckr/resource</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> base type for docker resources — id + created + labels (label name =&gt; str)</p>
@@ -726,13 +732,14 @@ matches docker_image::T</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">volume::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__dev__dckr__resource" class="instset-doc-small-code text-info code">/m/dev/dckr/resource::T</a></span>
+            <span class="ms-2">refines <a href="#__m__dev__dckr__resource" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/dev/dckr/resource::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/dev/dckr/volume</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">resource::T[?[{?}driver=&gt;uri::T,
               {?}mountpoint=&gt;uri::T,
               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/volume</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__dev__dckr__resource" class="code inherited-link">resource::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[id=&gt;uri::T,
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
@@ -747,7 +754,7 @@ matches docker_image::T</code></pre>
         <a href="m_dev_dckr_space_dckrspace.html" class="code text-primary fw-bold text-decoration-none">dckrspace</a>
         <small class="text-muted code">/m/dev/dckr/space/dckrspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][/m/inst/ctor?/m/dev/dckr/space/dckrspace&lt;=(dckrspace::T)]@dckrspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -770,8 +777,8 @@ matches docker_image::T</code></pre>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

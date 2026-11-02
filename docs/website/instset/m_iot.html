@@ -516,7 +516,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">9</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">9</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -565,11 +565,12 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">button::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__haos__entity" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/haos/entity::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/button</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T@/m/iot/haos/button</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
  {?}icon=&gt;uri::T,
  {?}name=&gt;str::T,
@@ -593,7 +594,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">entity::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/entity</small>
     </div>
@@ -617,15 +618,17 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
           {?}name=&gt;str::T]]]@/m/iot/haos/entity</code></pre></div>
     
     
+    
 </div><div class="card mb-3" id="__m__iot__haos__space__haos">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">haos::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__space__mqttspace" class="instset-doc-small-code text-info code">/m/iot/space/mqttspace::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__space__mqttspace" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/space/mqttspace::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/space/haos</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst?haos&lt;=#(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -641,13 +644,14 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">light::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__haos__entity" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/haos/entity::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/light</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[{?}payload_on=&gt;&lt;#&gt;::T,
                         {?}payload_off=&gt;&lt;#&gt;::T,
                         {?}command_topic=&gt;uri::T]]@/m/iot/haos/light</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
  {?}icon=&gt;uri::T,
  {?}name=&gt;str::T,
@@ -671,11 +675,12 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mqtt_server::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_mach.html#__m__mach__listener" class="instset-doc-small-code text-info code">/m/mach/listener::T</a></span>
+            <span class="ms-2">refines <a href="m_mach.html#__m__mach__listener" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/listener::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/mqtt/mqtt_server</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">listener::T[?[{?}SYS=&gt;[uri::T=&gt;&lt;#&gt;::T]]][ctor?mqtt_server&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/mqtt/mqtt_server</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_mach.html#__m__mach__listener" class="code inherited-link">listener::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
  {?}route=&gt;[uri::T=&gt;&lt;#&gt;::T],
  {?}server=&gt;&lt;#&gt;::T]</code></div></div>
@@ -684,18 +689,19 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mqtt_session::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/mqtt/mqtt_session</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[client=&gt;str::T,keepAlive=&gt;int::T]]@/m/iot/mqtt/mqtt_session</code></pre></div>
     
     
+    
 </div><div class="card mb-3" id="__m__iot__haos__number">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">number::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__haos__entity" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/haos/entity::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/number</small>
     </div>
@@ -704,6 +710,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
                         {?}enabled=&gt;bool::T,
                         {?}optimistic=&gt;bool::T,
                         {?}command_topic=&gt;uri::T]]@/m/iot/haos/number</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
  {?}icon=&gt;uri::T,
  {?}name=&gt;str::T,
@@ -727,13 +734,14 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">sensor::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__haos__entity" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/haos/entity::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/sensor</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/iot/haos/entity::T[?[device_class=&gt;is(or(uri::T,str::T)),
                         unit_of_measurement=&gt;&lt;#&gt;::T,
                         {?}command_topic=&gt;uri::T]]@/m/iot/haos/sensor</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
  {?}icon=&gt;uri::T,
  {?}name=&gt;str::T,
@@ -757,7 +765,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">switch::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__iot__haos__entity" class="instset-doc-small-code text-info code">/m/iot/haos/entity::T</a></span>
+            <span class="ms-2">refines <a href="#__m__iot__haos__entity" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/iot/haos/entity::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/switch</small>
     </div>
@@ -766,6 +774,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
                         {?}enabled=&gt;bool::T,
                         {?}optimistic=&gt;bool::T,
                         {?}command_topic=&gt;uri::T]]@/m/iot/haos/switch</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__haos__entity" class="code inherited-link">entity::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}entity_category=&gt;&lt;#&gt;::T,
  {?}icon=&gt;uri::T,
  {?}name=&gt;str::T,
@@ -793,7 +802,7 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
         <a href="m_iot_space_mqttspace.html" class="code text-primary fw-bold text-decoration-none">mqttspace</a>
         <small class="text-muted code">/m/iot/space/mqttspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][/m/inst/ctor?/m/iot/space/mqttspace&lt;=(&lt;#{*}&gt;::T)]@mqttspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T]][ctor?mqttspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/space/mqttspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -809,8 +818,8 @@ mqtt, esp32, home assistant, and more accessible within the metatron</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

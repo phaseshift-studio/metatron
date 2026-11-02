@@ -110,6 +110,11 @@ of a live console are in [docs/agents/console-harness.md](docs/agents/console-ha
 - Don't create new terms for rec keys unless you absolutely have to. Instead, review `Tokens.java` as that is our
   running list of terms used across the code base. Best to reuse existing terms instead of creating an ever-growing set
   of synonyms.
+- **Never return `Optional<Rec>` (or `Optional<Lst>`) — answer the collection.** A rec query answers a `Rec`,
+  the empty rec is `rec0()` (an empty lst is `lst()`), and the empty value COMPOSES: `at(key)` answers `noobj`,
+  `stream()` answers nothing, `isEmpty()`/`isNoObj()` answer truthfully. An `Optional` forces every caller to
+  unwrap before asking its next question, and it makes the empty case a different shape than the present one.
+  A query that found nothing returns the empty collection, never `null` and never an `Optional`.
 - **Never shape-inspect a read result.** `Objs` — a *Java* notion; in mtron a multiplicity is a tid coefficient, e.g.
   `int{4}::T` — is a stream, and `stream()` is defined on `Obj` itself, so `obj.stream().forEach(...)` covers one match
   and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when

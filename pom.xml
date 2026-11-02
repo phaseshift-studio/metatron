@@ -40,8 +40,9 @@
         </license>
     </licenses>
     <properties>
-        <!-- the inst `args`-in-tid switch: override on the command line with -Dmtron.inst.args-in-tid=true -->
-        <mtron.inst.args-in-tid>false</mtron.inst.args-in-tid>
+        <!-- the inst `args`-in-tid switch, ON by default: disable for a byte-identical legacy spelling with
+             -Dmtron.inst.args-in-tid=false (the tests run ON; a legacy run opts out) -->
+        <mtron.inst.args-in-tid>true</mtron.inst.args-in-tid>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>

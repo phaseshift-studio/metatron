@@ -51,26 +51,26 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * algorithms as instructions, and the encodings that turn a geometry into text and back.
  *
  * <p>A sibling of {@code /m/math/cat} under {@link studio.phaseshift.metatron.isa.m.math.mathInstSet}. The names carry
- * no {@code geo_} prefix — the instruction set's NAMESPACE is the prefix — so, imported as
- * {@code import(/m/math/geo,geo)}, the types read {@code geo:point::T}, {@code geo:polygon::T}, … and the instructions
- * read {@code geo:distance()}, {@code geo:inside()}, … .
+ * no {@code geo_} prefix &mdash; the instruction set's NAMESPACE is the prefix &mdash; so, imported as
+ * {@code import(/m/math/geo,geo)}, the types read {@code geo:point::T}, {@code geo:polygon::T}, &hellip; and the instructions
+ * read {@code geo:distance()}, {@code geo:inside()}, &hellip; .
  *
  * <h2>Types</h2>
  *
  * <p>There is no "plural" type: "one or more positions" is the COEFFICIENT {@code position{+}}, spelled
  * {@code lst[position{+}]} where a JSON array needs a list. The kinds declare their payload inline.
  *
- * <p>The eight geometry kinds of RFC 7946 §3.1 (Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon,
- * GeometryCollection, and the Position they are built from), plus {@link #FEATURE_TID} and
- * {@link #FEATURECOLLECTION_TID}, which the RFC's §3.2/§3.3 add and without which no real document can be read. Every
- * kind is present because every kind is typical: the multi- forms are not exotica — a parcel layer, a lake layer and a
- * boundary layer are routinely MultiPolygon. What the RFC's §3.1 lists and this model does NOT type:
+ * <p>The eight geometry kinds of RFC 7946 &sect;3.1 (Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon,
+ * GeometryCollection, and the Position they are built from),
+ * which the RFC's &sect;3.2/&sect;3.3 add and without which no real document can be read. Every
+ * kind is present because every kind is typical: the multi- forms are not exotica &mdash; a parcel layer, a lake layer and a
+ * boundary layer are routinely MultiPolygon. What the RFC's &sect;3.1 lists and this model does NOT type:
  *
  * <ul>
- *   <li><b>§3.1.9 Antimeridian Cutting</b> — a rule about how a producer writes a ring that crosses \(\pm 180^\circ\)
+ *   <li><b>&sect;3.1.9 Antimeridian Cutting</b> &mdash; a rule about how a producer writes a ring that crosses \(\pm 180^\circ\)
  *       (and how a renderer splits it), not a kind. The model reads a ring as its coordinates spell it; a
  *       {@code geo:cut()} would be an instruction, and is not implemented.</li>
- *   <li><b>§3.1.10 Uncertainty and Precision</b> — there is nothing to declare: a position is a double. Rounding is
+ *   <li><b>&sect;3.1.10 Uncertainty and Precision</b> &mdash; there is nothing to declare: a position is a double. Rounding is
  *       an instruction's business, never a refinement (a rounded position is still a position).</li>
  * </ul>
  *
@@ -79,18 +79,18 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <h2>Instructions, and why they exist at all</h2>
  *
- * <p>A space with native spatial support — PostGIS behind {@code /m/db/tble}, MongoDB's {@code $geoWithin} behind
- * {@code /m/db/dcmnt}, a graph database with a geo predicate — should never run these: its planner turns
+ * <p>A space with native spatial support &mdash; PostGIS behind {@code /m/db/tble}, MongoDB's {@code $geoWithin} behind
+ * {@code /m/db/dcmnt}, a graph database with a geo predicate &mdash; should never run these: its planner turns
  * {@code from(<path>).geo:inside(<polygon>)} into the native operator and the payload never enters the VM. That is the
  * rewrite's job, and {@link geoRewrite} is the door those spaces register their native operators through.
  *
  * <p>These VM implementations are for every space that has NO spatial support: a {@code memSpace}, a filesystem read, a
  * plain {@code lst} of features, a {@code rec} that arrived over a wire. The algorithms are honest about their frames
- * of reference — see {@link GeoUtil} — because a distance computed on the wrong sphere is worse than no distance.
+ * of reference &mdash; see {@link GeoUtil} &mdash; because a distance computed on the wrong sphere is worse than no distance.
  *
  * <h2>The encodings</h2>
  *
- * <p>Three text forms map onto the rec model, and each is an {@code as} instruction — the same door the web
+ * <p>Three text forms map onto the rec model, and each is an {@code as} instruction &mdash; the same door the web
  * instruction set uses for its document types (<em>a document is reified by its content type</em>):
  *
  * <ul>
@@ -158,10 +158,9 @@ public class geoInstSet extends AbstractInstSet {
     public void setup() {
         this.selfTID(GEO_ISA_TID);
         // the types must exist before the instructions that name them are built, so register them off the same call
-        final Obj types = geoTypes.registered(this);
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(GEO_ISA_TID.extend(ALL)),
-                uri(TYPE), types,
+                uri(TYPE), geoTypes.registered(this),
                 uri(INST), lst(this.instructions()),
                 uri(REWRITE), lst()));
         // register the family's process laws before anything resolves a morphism through the router
@@ -244,21 +243,14 @@ public class geoInstSet extends AbstractInstSet {
                 Map.of(ALL_TYPE, "the container: a geometry, or a \\(\\mathrm{geo{:}bbox2d}::T\\) envelope"),
                 "the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \\(a.inside(b) \\iff b.has(a)\\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec",
                 "geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]"));
-        return insts;
-    }
+        /**
+         * The {@code as} instructions: a GeoJSON or WKT string onto any geo type, a plain rec onto any geo type (the
+         * normalization door — an integer coordinate becomes a real), a bare coordinate list onto its coordinate type, and
+         * a geo value onto a {@code json::T} document — because GeoJSON IS a json document, and {@code as(json::T)} is how
+         * every other document type in this system is written (the web instruction set's {@code html::T}, {@code xml::T},
+         * {@code markdown::T} family).
+         */
 
-    /// ////////////////////////////////////////////////////////////////////////////////////////////
-    // the casts — text and rec into the hierarchy, and the geo value out as a json document
-
-    /**
-     * The {@code as} instructions: a GeoJSON or WKT string onto any geo type, a plain rec onto any geo type (the
-     * normalization door — an integer coordinate becomes a real), a bare coordinate list onto its coordinate type, and
-     * a geo value onto a {@code json::T} document — because GeoJSON IS a json document, and {@code as(json::T)} is how
-     * every other document type in this system is written (the web instruction set's {@code html::T}, {@code xml::T},
-     * {@code markdown::T} family).
-     */
-    private List<Obj> casts() {
-        final List<Obj> insts = new ArrayList<>();
         // the list-shaped coordinate types are cast from a lst, not a rec: a payload with no envelope about it
         final Map<fURI, Type> coordinates = new LinkedHashMap<>();
         coordinates.put(POINT_TID, POINT_TYPE);
@@ -266,6 +258,7 @@ public class geoInstSet extends AbstractInstSet {
         coordinates.put(POLYGON_TID, POLYGON_TYPE);
         coordinates.put(BBOX2D_TID, BBOX2D_TYPE);
         coordinates.put(BBOX3D_TID, BBOX3D_TYPE);
+        /////////////////////////////////////////////////////////////////
         coordinates.forEach((tid, type) -> insts.add(docWrap(
                 instC(AS_INST_TID.dom(LST_TID).rng(tid), lst(ALL_TYPE),
                         (lhs, inst) -> cast(lhs, inst.arg(0).vidOrTid())),
@@ -284,7 +277,7 @@ public class geoInstSet extends AbstractInstSet {
      * The kinds that answer a GeoJSON document: every geometry kind, plus the two containers (a document is as often
      * a feature or a collection as it is a bare geometry).
      */
-    private static Map<fURI, Type> castableOut() {
+    /*private static Map<fURI, Type> castableOut() {
         final Map<fURI, Type> types = new LinkedHashMap<>(castable());
         types.remove(BBOX2D_TID);
         types.remove(BBOX3D_TID);
@@ -299,7 +292,7 @@ public class geoInstSet extends AbstractInstSet {
         types.put(BBOX2D_TID, BBOX2D_TYPE);
         types.put(BBOX3D_TID, BBOX3D_TYPE);
         return types;
-    }
+    }*/
 
     /**
      * The one cast: through the wire form, then a kind check. A mismatch is a {@code fail}, never a silent

@@ -525,7 +525,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -559,10 +559,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__db__vec__inst__dot" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">dot</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__db__vec__inst__sqrt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sqrt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
@@ -584,18 +584,19 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">cmplx::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/vec/cmplx</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T[?[real::T,real::T]]@/m/math/cmplx</code></pre></div>
     
     
+    
 </div><div class="card mb-3" id="__m__db__vec__embedding">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">embedding::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/vec/embedding</small>
     </div>
@@ -604,26 +605,29 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
          {?}meta=&gt;rec::T]]@/m/db/vec/embedding</code></pre></div>
     
     
+    
 </div><div class="card mb-3" id="__m__db__vec__mtrx">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mtrx::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/vec/mtrx</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/db/vec/mtrx</code></pre></div>
     
     
+    
 </div><div class="card mb-3" id="__m__db__vec__vec">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">vec::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/db/vec/vec</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/db/vec/vec</code></pre></div>
+    
     
     
 </div>
@@ -634,7 +638,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <a href="m_db_vec_space_vecspace.html" class="code text-primary fw-bold text-decoration-none">vecspace</a>
         <small class="text-muted code">/m/db/vec/space/vecspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,driver=&gt;uri::T,config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][/m/inst/ctor?/m/db/vec/space/vecspace&lt;=(rec::T)]@vecspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,
+           driver=&gt;uri::T,
+           config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -649,34 +655,46 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">2</span></h3>
-    <div class="card mb-3" id="__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec">
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+        labelled with the set that declared it, and documented on that set's page as well.
+    </p>
+    <div class="card mb-3" id="__m__db__vec__inst__dot">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">dot</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__db__vec__vec" data-bs-toggle="tooltip" title="domain" class="code text-info">vec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#</span></span></span>
         </span>
-        <small class="text-muted code">/m/db/vec/inst/dot?rng=#&amp;dom=/m/db/vec/vec</small>
+        <small class="text-muted code">/m/db/vec/inst/dot</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec-doc-0-tab').click();document.getElementById('__m__db__vec__inst__dot?rng=#&dom=__m__db__vec__vec-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">dot?<span class="code text-success">#</span><=vec(vec::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__dot-doc-0-tab').click();document.getElementById('__m__db__vec__inst__dot-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">dot?#&lt;=vec(vec::T){&lt;j&gt;}</code></pre>
+
+</div>
 </div>
     
-</div><div class="card mb-3" id="__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real">
+    
+</div><div class="card mb-3" id="__m__db__vec__inst__sqrt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sqrt</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="domain" class="code text-info">real</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
-        <small class="text-muted code">/m/db/vec/inst/sqrt?rng=/m/real&amp;dom=/m/real</small>
+        <small class="text-muted code">/m/db/vec/inst/sqrt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real-doc-0-tab').click();document.getElementById('__m__db__vec__inst__sqrt?rng=__m__real&dom=__m__real-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?real<=real(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__vec__inst__sqrt-doc-0-tab').click();document.getElementById('__m__db__vec__inst__sqrt-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sqrt?real&lt;=real(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

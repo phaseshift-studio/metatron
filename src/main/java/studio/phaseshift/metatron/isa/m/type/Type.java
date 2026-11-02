@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Type extends Obj {
 
@@ -1001,6 +1002,24 @@ public interface Type extends Obj {
          */
         private static final Map<fURI, Rec> LAWS = new ConcurrentHashMap<>();
 
+        /**
+         * THE INSTRUCTIONS A TYPE DECLARED — the {@code .inst(...)} rows of every builder, keyed by the
+         * declaring type's vid. Staged beside {@link #LAWS} and for the very same reason: a type is built
+         * before the instset that registers it is mounted, so its instruction declarations cannot be
+         * recorded at {@code create()} time.
+         * <p>
+         * The DRAIN is what records them ({@link #drain(Type, InstSet)}): the registering set appends them
+         * to its OWN {@code inst} declaration list — the list that answers "what did this instruction set
+         * provide", and the one a reader walks to attribute a contract to its author. That question is not
+         * the same as "whose address is it at": a {@code /m/math/geo} type declaring
+         * {@code as?point<=str} writes that contract into /m's table (memory routes by address), so without
+         * this list /m would present a geo contract as its own and geo would never show it at all.
+         * <p>
+         * Staging only — the instruction itself is already registered by {@link #create()}; each VM boot
+         * re-records the declaration, so the map is never drained.
+         */
+        private static final Map<fURI, Set<Inst>> INSTS = new ConcurrentHashMap<>();
+
         public static Builder build() {
             return new Builder();
         }
@@ -1118,6 +1137,51 @@ public interface Type extends Obj {
                 studio.phaseshift.metatron.furi.q.QCollection.lawWrap(type, law);
         }
 
+        public static Rec fetchLaw(final Type type) {
+            if (null == type || null == type.vid())
+                return rec0();
+            return LAWS.get(type.vid());
+        }
+
+        public static Rec fetchLaw(final fURI vid) {
+            if (null == vid)
+                return rec0();
+            return LAWS.get(vid);
+        }
+
+        /**
+         * PERSIST a type's declarations — its algebra ({@code ?lawq}) and, with it, the INSTRUCTIONS the type
+         * declared: those are APPENDED to the registering set's own {@code inst} list, which is the record of
+         * what that instruction set provided ({@link #INSTS}).
+         * <p>
+         * Why the set needs them: an instruction's address and its author are two different facts. Memory
+         * routes a write to the most specific instruction set, so a set that declares {@code as?point<=str}
+         * puts that contract in /m's table — /m's address — while the declaration was made here. Without this
+         * record a documentation build (or any other reader asking "who provided this?") can only see the
+         * address, and it then attributes a contributor's contract to the address's owner and loses it from
+         * the contributor's own page.
+         */
+        public static void drain(final Type type, final InstSet instSet) {
+            drain(type);
+            if (null == type || null == type.vid() || null == instSet)
+                return;
+            final Set<Inst> declared = INSTS.get(type.vid().basePath());
+            if (null == declared || declared.isEmpty())
+                return;
+            // KEYED BY FULL TID: one operation name is many contracts, and they are distinguished by their
+            // dom/rng/args — the same identity the instset's own tables use.
+            final Map<String, Inst> rows = new LinkedHashMap<>();
+            final Obj existing = instSet.jvm().get(uri(Tokens.INST));
+            if (null != existing && existing.isLst())
+                for (final Obj row : existing.lstValue())
+                    if (row.isInst())
+                        rows.putIfAbsent(row.tid().toString(), row.as());
+            declared.forEach(inst -> rows.putIfAbsent(inst.tid().toString(), inst));
+            // A DIRECT PUT, NEVER `at(..., MUTABLE)`: Rec.at APPENDS when the entry already holds an Objs,
+            // which doubles the coefficients on every registration (the trap BasicInstSet.refer documents).
+            instSet.jvm().put(uri(Tokens.INST), lst(new ArrayList<>(rows.values())));
+        }
+
         public Builder constructor(final Supplier<Obj> supplier) {
             if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
@@ -1151,6 +1215,10 @@ public interface Type extends Obj {
             assert this.tid != null;
             //assert this.vid != null;
             this.insts.forEach(inst -> Machine.current().memory().write(inst.tid(), inst));
+            // ... AND STAGE WHO DECLARED THEM, for the instset that registers this type to record in its own
+            // `inst` list (see INSTS). Staged at create(), not at .inst(), so builder ordering cannot hide a row.
+            if (null != this.vid && !this.insts.isEmpty())
+                INSTS.computeIfAbsent(this.vid.basePath(), _k -> ConcurrentHashMap.newKeySet()).addAll(this.insts);
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }
