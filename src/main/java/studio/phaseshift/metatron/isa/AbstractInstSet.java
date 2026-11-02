@@ -299,8 +299,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             }
         });
         Machine.current().memory().write(this.vid(), this);
-        // the space is mounted: persist any algebra its types declared in their builder (?lawq)
-        this.types().forEach(Type.Builder::drain);
+        // the space is mounted: persist any algebra its types declared in their builder (?lawq) AND record the
+        // instructions those types declared in THIS level's own `inst` list — the declaration list is what
+        // attributes a contract to the set that provided it, which its ADDRESS cannot (memory routes a
+        // cross-set declaration into another set's table).
+        this.types().forEach(type -> Type.Builder.drain(type, this));
         this.insts().forEach(InstBuilder::drain);
         // THE MOUNT-TIME POPULATION IS THE VERSION'S POINT. Setup fills the tables directly (so no write door above
         // sees it), migrates a pattern-less rule into the level that owns it, and drains the builders' algebra — all

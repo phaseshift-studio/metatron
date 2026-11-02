@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -294,7 +295,7 @@ public final class InstBuilder {
      */
     public Inst create() {
         if (null == this.tid)
-            throw studio.phaseshift.metatron.util.MTronException.of("tid must be set before creating an inst");
+            throw MTronException.of("tid must be set before creating an inst");
         final fURI composed = null == this.dom || null == this.rng ? this.tid : this.tid.dom(this.dom).rng(this.rng);
         // the declared ARGUMENT types complete the contract (A x B -> C) in the tid's `args` component — a no-op
         // unless MInst.ARGS_IN_TID says a tid is where the contract is carried

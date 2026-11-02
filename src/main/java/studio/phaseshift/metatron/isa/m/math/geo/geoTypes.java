@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.math.geo;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -35,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.geo.geoInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -177,10 +179,47 @@ public class geoTypes {
                     }
                     return fail(MTronException.of("%s is not a %s", arg, vid.name()));
                 })
-                .inst(AS_INST_TID.dom(STR_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
-                .inst(AS_INST_TID.dom(WEB_JSON_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid))
-                .inst(AS_INST_TID.dom(vid).rng(WEB_JSON_TID), lst(T(WEB_JSON_TID)), (lhs, inst) -> geoInstSet.json(lhs))
+                .inst(castInFromText(vid))
+                .inst(castInFromJson(vid))
+                .inst(castOutToJson(vid))
                 .create();
+    }
+
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////
+    // THE `as` CONTRACTS A KIND DECLARES — at /m/inst/as, which is /m's address. Declared here, so the
+    // contract is documented on /m's page (its address) AND on this set's page (its author), and the geo
+    // types it names are what says which instruction set it is meant to be used with.
+    /// ////////////////////////////////////////////////////////////////////////////////////////////
+
+    /** read a GeoJSON or Well-Known Text document as {@code vid} — the two text dialects a payload arrives in */
+    private static Inst castInFromText(final fURI vid) {
+        return docWrap(instC(AS_INST_TID.dom(STR_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid)),
+                "the GeoJSON or Well-Known Text document",
+                "a \\(\\mathrm{" + vid.name() + "}::T\\)",
+                Map.of(),
+                "read a GeoJSON or WKT document as " + vid.name() + "::T",
+                "\"POINT (-123.13 44.47)\".as(geo:" + vid.name() + "::T)");
+    }
+
+    /** read a GeoJSON document (a json::T) as {@code vid}, normalizing its numbers onto the type */
+    private static Inst castInFromJson(final fURI vid) {
+        return docWrap(instC(AS_INST_TID.dom(WEB_JSON_TID).rng(vid), lst(T(vid)), (lhs, inst) -> geoInstSet.cast(lhs, vid)),
+                "a GeoJSON document",
+                "the " + vid.name() + "::T it normalizes to",
+                Map.of(),
+                "read a GeoJSON document as " + vid.name() + "::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped",
+                "json::[\"type\"=>\"Point\",\"coordinates\"=>[-123,44]].as(geo:" + vid.name() + "::T)");
+    }
+
+    /** write {@code vid} as a GeoJSON document — GeoJSON IS a json document */
+    private static Inst castOutToJson(final fURI vid) {
+        return docWrap(instC(AS_INST_TID.dom(vid).rng(WEB_JSON_TID), lst(T(WEB_JSON_TID)), (lhs, inst) -> geoInstSet.json(lhs)),
+                "the " + vid.name() + "::T to write",
+                "the GeoJSON document it is, as json::T",
+                Map.of(),
+                "write the " + vid.name() + "::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through",
+                "geo:" + vid.name() + "::[-123.13,44.47].as(json::T)");
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////

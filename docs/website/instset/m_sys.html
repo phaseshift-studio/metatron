@@ -547,7 +547,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -578,36 +578,42 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__sys__inst__bash" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">bash</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__close?rng=noobj{0}&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__close" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">close</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__edit_file" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">edit_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__find_file?rng=__m__lst&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__find_file" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">find_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__read_file?rng=__m__lst&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__read_file" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">read_file</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__redirect?rng=__m__rec&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__redirect" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">redirect</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__sleep?rng=A{?}&dom=A{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__sleep" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sleep</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__stdin?rng=__m__str&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__stdin" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stdin</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__stdout?rng=#{?}&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__stdout" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stdout</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__sys__inst__sys_stat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sys_stat</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">as</span>
+    <span class="pill-label badge bg-info ms-2">D</span>
 </a></div>
 </div></div>
     </div>
@@ -617,11 +623,12 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">dir::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__uri" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/uri::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/sys/dir</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a reference to a directory within fsspace</p>
@@ -630,11 +637,12 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">file::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__uri" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/uri::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/sys/file</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a reference to a file within fsspace, resolved through the router&#39;s redirects</p>
@@ -643,11 +651,12 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">image::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__sys__file" class="instset-doc-small-code text-info code">/m/sys/file::T</a></span>
+            <span class="ms-2">refines <a href="#__m__sys__file" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/sys/file::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/sys/file/image</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">file::T@/m/dev/dckr/image</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> a file reference that decodes to an image renderable as ascii art</p>
@@ -656,13 +665,14 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">log_entry::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/sys/log_entry</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[level=&gt;union(info,trace,warn,error,debug),
          source=&gt;&lt;#&gt;::T,
          message=&gt;str::T]]@/m/sys/log_entry</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a structured log entry — level, datetime, source, and message</p>
@@ -675,7 +685,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         <a href="m_sys_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/sys/space/fsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][/m/inst/ctor?/m/sys/space/fsspace&lt;=(&lt;#{*}&gt;::T)]@fsspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -694,7 +704,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         <a href="m_sys_space_serialspace.html" class="code text-primary fw-bold text-decoration-none">serialspace</a>
         <small class="text-muted code">/m/sys/space/serialspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][/m/inst/ctor?/m/sys/space/serialspace&lt;=(&lt;#{*}&gt;::T)]@serialspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -711,17 +721,25 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">10</span></h3>
-    <div class="card mb-3" id="__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}">
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+        labelled with the set that declared it, and documented on that set's page as well.
+    </p>
+    <div class="card mb-3" id="__m__sys__inst__bash">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">bash</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst[__m__str]" data-bs-toggle="tooltip" title="range" class="code text-success">str]</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/bash?rng=/m/lst[/m/str]&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/bash</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__bash?rng=__m__lst[__m__str]&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?lst[str]<=(cmd=>str::T,
-                {?}timeout=>union(time::T,int::T)){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__bash-doc-0-tab').click();document.getElementById('__m__sys__inst__bash-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">bash?lst[str]&lt;=(cmd=&gt;str::T,
+                {?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> evaluate bash command. *important* the timeout argument takes a real not an int -- e.g. millis::1000.0 or second::1.0.
 note that this field is optional, so when in doubt, just don&#39;t fill it out
@@ -741,35 +759,43 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
 </code></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__close?rng=noobj{0}&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__close">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">close</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj{0}</span></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/close?rng=noobj{0}&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/close</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__close?rng=noobj{0}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?{0}<=(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__close-doc-0-tab').click();document.getElementById('__m__sys__inst__close-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">close?{0}&lt;=(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> close the lhs — release its resources; a router exits the vm, and a noobj runs the boot loader teardown
 maps objs to nothing (rng_c = 0)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__edit_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">edit_file</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/edit_file?rng=/m/rec&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/edit_file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rec<=(file=>uri::T,
-                text=>str::T,
-                min=>int::T,
-                {?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__edit_file-doc-0-tab').click();document.getElementById('__m__sys__inst__edit_file-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">edit_file?rec&lt;=(file=&gt;uri::T,
+                text=&gt;str::T,
+                min=&gt;int::T,
+                {?}max=&gt;int::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> write text to a file in fsspace::T. the min and max values represent the range to write.
 if no max is provided, then the text is inserted at the line number (shifting existing text down).
@@ -778,26 +804,30 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
-  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__find_file?rng=__m__lst&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__find_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">find_file</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/find_file?rng=/m/lst&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/find_file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?lst<=(name=>str::T,
-                {?}root=>uri::T,
-                pattern=>bool::T,
-                {?}max=>int::T,
-                {?}depth=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__find_file-doc-0-tab').click();document.getElementById('__m__sys__inst__find_file-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">find_file?lst&lt;=(name=&gt;str::T,
+                {?}root=&gt;uri::T,
+                pattern=&gt;bool::T,
+                {?}max=&gt;int::T,
+                {?}depth=&gt;int::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> recursively search directory for named file by regex or partial string match</p>
 </div><div class="card-body py-2">
@@ -810,18 +840,22 @@ if both min and max are provided, then those lines are removed and the text is i
   <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__read_file?rng=__m__lst&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__read_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">read_file</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/read_file?rng=/m/lst&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/read_file</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file?rng=__m__lst&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?lst<=(file=>uri::T,
-                {?}min=>int::T,
-                {?}max=>int::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__read_file-doc-0-tab').click();document.getElementById('__m__sys__inst__read_file-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">read_file?lst&lt;=(file=&gt;uri::T,
+                {?}min=&gt;int::T,
+                {?}max=&gt;int::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read a file from an fsspace::T. the min and max values represent the range to read.
 if no min, nor max is provided, then the entire file is read.
@@ -835,16 +869,20 @@ if only a min is provided, then the file is read from that line till the end.
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__redirect?rng=__m__rec&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__redirect">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">redirect</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/redirect?rng=/m/rec&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/redirect</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__redirect?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__redirect?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">redirect?rec<=(uri::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__redirect-doc-0-tab').click();document.getElementById('__m__sys__inst__redirect-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">redirect?rec&lt;=(uri::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> map a uri to its registered redirect forms — returning [short, long] of the rewritten uri</p>
 </div><div class="card-body py-2">
@@ -853,16 +891,20 @@ if only a min is provided, then the file is read from that line till the end.
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__sleep?rng=A{?}&dom=A{?}">
+</div><div class="card mb-3" id="__m__sys__inst__sleep">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sleep</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">A{?}</span></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/sleep?rng=A{?}&amp;dom=A{?}</small>
+        <small class="text-muted code">/m/sys/inst/sleep</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sleep?rng=A{?}&dom=A{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sleep?<span class="code text-info"><span class="code text-success">A{?}</span></span><=<span class="code text-info"><span class="code text-success">A{?}</span></span>(time::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sleep-doc-0-tab').click();document.getElementById('__m__sys__inst__sleep-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> pauses the current thread for arg amount of time</p>
 </div><div class="card-body py-2">
@@ -871,57 +913,150 @@ if only a min is provided, then the file is read from that line till the end.
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the amount of time to pause the current thread'" class="text-info">&#39;the amount of time to pause the current thread&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__stdin?rng=__m__str&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__stdin">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stdin</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/stdin?rng=/m/str&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/stdin</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdin?rng=__m__str&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdin?str<=(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdin-doc-0-tab').click();document.getElementById('__m__sys__inst__stdin-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdin?str&lt;=(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> read a line of input from the running terminal</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a single line of input" class="text-success">a single line of input</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__stdout?rng=#{?}&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__stdout">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stdout</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{?}</span></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/stdout?rng=#{?}&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/stdout</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout?rng=#{?}&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?<span class="code text-info"><span class="code text-success">#{?}</span></span><=(<span class="code text-info"><span class="code text-success">#{?}</span></span>::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__stdout-doc-0-tab').click();document.getElementById('__m__sys__inst__stdout-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> prints arg jvm object to the terminal and emits lhs obj as rhs obj</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#maybe an obj" class="text-success">maybe an obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}">
+</div><div class="card mb-3" id="__m__sys__inst__sys_stat">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sys_stat</span>
             <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{?}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/sys/inst/sys_stat?rng=/m/rec&amp;dom=#{?}</small>
+        <small class="text-muted code">/m/sys/inst/sys_stat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0-tab').click();document.getElementById('__m__sys__inst__sys_stat?rng=__m__rec&dom=#{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sys_stat?rec<=(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__sys__inst__sys_stat-doc-0-tab').click();document.getElementById('__m__sys__inst__sys_stat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sys_stat?rec&lt;=(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> a summary of thread counts</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="m.html#__m__rec" class="text-success">rec</a></pre>
 </div>
 </div>
+</div><div class="container-xxl mb-4" id="defined">
+    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">2</span></h3>
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        contracts declared HERE whose address belongs to another instruction set — so they are
+        documented there too. Declared by
+        <span class="code text-info">/m/sys</span>, for use with the types it introduces.
+    </p>
+    <div class="card mb-3" id="defined-__m__inst__as">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">as</span>
+            
+        </span>
+        <small class="text-muted code">/m/inst/as</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=uri(bytes::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image&lt;=bytes(image::T,
+                else(1.0)){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+</div>
+    <div class="card-body border-top py-2">
+    <small class="text-muted">for use with <a href="#__m__sys__file__image" class="code text-primary">image::T</a></small>
+</div>
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="defined-__m__inst__as-content">
+        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a file uri to its raw bytes — the file must resolve to an fsspace
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__bytes" class="text-success">bytes</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__bytes'" class="text-info">bytes&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/README.md.as(bytes::T)   [-- the file&#39;s raw bytes --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> render an image&#39;s bytes as ascii art — the second arg scales the rendering (default 1.0)
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__bytes" class="text-info">bytes</a> <span class="text-light">=&gt;</span> <a href="#__m__sys__file__image" class="text-success">image</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'__m__code'" class="text-info">code&#39;</a>
+  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__sys__file__image'" class="text-info">image&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]</code></pre>
+</div>
+</div>
+    </div>
+</div>
+</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

@@ -491,8 +491,7 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/geo::[pattern=&gt;/m/math/geo/#,
-              q=&gt;[
+                        <pre><code>/m/math/geo::[q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -504,6 +503,7 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+              pattern=&gt;/m/math/geo/#,
               type=&gt;[
                lst::T@/m/math/geo/geometry,
                lst::T@/m/math/geo/bbox,
@@ -527,7 +527,27 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
                has?geometry{?}&lt;=geometry(#::T){&lt;j&gt;},
                has?bbox2d{?}&lt;=bbox2d(#::T){&lt;j&gt;},
                has?bbox3d{?}&lt;=bbox3d(#::T){&lt;j&gt;},
-               inside?geometry{?}&lt;=geometry(#::T){&lt;j&gt;}],
+               inside?geometry{?}&lt;=geometry(#::T){&lt;j&gt;},
+               as?point&lt;=lst(#::T){&lt;j&gt;},
+               as?line&lt;=lst(#::T){&lt;j&gt;},
+               as?polygon&lt;=lst(#::T){&lt;j&gt;},
+               as?bbox2d&lt;=lst(#::T){&lt;j&gt;},
+               as?bbox3d&lt;=lst(#::T){&lt;j&gt;},
+               as?point&lt;=str(point::T){&lt;j&gt;},
+               as?point&lt;=json(point::T){&lt;j&gt;},
+               as?json&lt;=point(json::T){&lt;j&gt;},
+               as?line&lt;=str(line::T){&lt;j&gt;},
+               as?line&lt;=json(line::T){&lt;j&gt;},
+               as?json&lt;=line(json::T){&lt;j&gt;},
+               as?polygon&lt;=str(polygon::T){&lt;j&gt;},
+               as?polygon&lt;=json(polygon::T){&lt;j&gt;},
+               as?json&lt;=polygon(json::T){&lt;j&gt;},
+               as?bbox2d&lt;=str(bbox2d::T){&lt;j&gt;},
+               as?bbox2d&lt;=json(bbox2d::T){&lt;j&gt;},
+               as?json&lt;=bbox2d(json::T){&lt;j&gt;},
+               as?bbox3d&lt;=str(bbox3d::T){&lt;j&gt;},
+               as?bbox3d&lt;=json(bbox3d::T){&lt;j&gt;},
+               as?json&lt;=bbox3d(json::T){&lt;j&gt;}],
               rewrite=&gt;[,]]@/m/math/geo</code></pre>
                     </div>
                 </div>
@@ -536,7 +556,7 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">6</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">23</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -567,24 +587,33 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
 </a></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__math__geo__inst__area?rng=__m__real&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__math__geo__inst__area" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">area</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__geo__inst__coordinates?rng=__m__lst&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__geo__inst__coordinates" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">coordinates</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__geo__inst__distance?rng=__m__math__metric__meter&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__geo__inst__distance" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">distance</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__geo__inst__inside?rng=__m__math__geo__geometry{?}&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__geo__inst__inside" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">inside</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__geo__inst__length?rng=__m__math__metric__meter&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__geo__inst__length" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">length</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__math__geo__inst__wkt?rng=__m__str&dom=__m__math__geo__geometry" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__math__geo__inst__wkt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">wkt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">as</span>
+    <span class="pill-label badge bg-info ms-2">D</span>
+</a><a href="#defined-__m__inst__has" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">has</span>
+    <span class="pill-label badge bg-info ms-2">D</span>
 </a></div>
 </div></div>
     </div>
@@ -594,11 +623,12 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bbox::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/bbox</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/math/geo/bbox</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the nominal base of an envelope. It declares no poly: geo:bbox2d and geo:bbox3d do</p>
@@ -607,11 +637,12 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bbox2d::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__geo__bbox" class="instset-doc-small-code text-info code">/m/math/geo/bbox::T</a></span>
+            <span class="ms-2">refines <a href="#__m__math__geo__bbox" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/math/geo/bbox::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/bbox2d</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">bbox::T[?[real::T,real::T,real::T,real::T]][ctor?bbox2d&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/bbox2d</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a 2D envelope — four reals, \([\lambda_{\min}, \varphi_{\min}, \lambda_{\max}, \varphi_{\max}]\)</p>
@@ -630,7 +661,7 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bbox3d::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__geo__bbox" class="instset-doc-small-code text-info code">/m/math/geo/bbox::T</a></span>
+            <span class="ms-2">refines <a href="#__m__math__geo__bbox" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/math/geo/bbox::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/bbox3d</small>
     </div>
@@ -641,16 +672,17 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
           real::T,
           real::T]][ctor?bbox3d&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/bbox3d</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a 3D envelope — six reals, \([\lambda_{\min}, \varphi_{\min}, h_{\min}, \lambda_{\max}, \varphi_{\max}, h_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
-  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
-  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the minimum z'" class="text-info">&#39;the minimum z&#39;</a>
-  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
   <span class="text-light">4</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
   <span class="text-light">5</span> <span class="text-light">=&gt;</span> <a href="#'the maximum z'" class="text-info">&#39;the maximum z&#39;</a>
+  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
+  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
+  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the minimum z'" class="text-info">&#39;the minimum z&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -660,11 +692,12 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">geometry::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/geometry</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/math/geo/geometry</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the nominal base of every geometry: a list of reals at whatever depth its kind nests. It declares no poly — a point, a line and a polygon each declare their own</p>
@@ -673,11 +706,12 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">line::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__geo__geometry" class="instset-doc-small-code text-info code">/m/math/geo/geometry::T</a></span>
+            <span class="ms-2">refines <a href="#__m__math__geo__geometry" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/math/geo/geometry::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/line</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a line — an ORDERED list of points. A multi-point is a bag, a line is a sequence, and the wire has no way to say the difference</p>
@@ -689,11 +723,12 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">point::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__geo__geometry" class="instset-doc-small-code text-info code">/m/math/geo/geometry::T</a></span>
+            <span class="ms-2">refines <a href="#__m__math__geo__geometry" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/math/geo/geometry::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/point</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a point — a coordinate pair, or a triple with an altitude. \([\lambda, \varphi[, h]]\)</p>
@@ -712,11 +747,12 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">polygon::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__math__geo__geometry" class="instset-doc-small-code text-info code">/m/math/geo/geometry::T</a></span>
+            <span class="ms-2">refines <a href="#__m__math__geo__geometry" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/math/geo/geometry::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/math/geo/polygon</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line]][ctor?polygon&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/polygon</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a polygon — a shell line followed by zero or more hole lines (a ring is a line whose first and last points coincide, which the RFC requires and this type does not enforce)</p>
@@ -727,16 +763,24 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">6</span></h3>
-    <div class="card mb-3" id="__m__math__geo__inst__area?rng=__m__real&dom=__m__math__geo__geometry">
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+        labelled with the set that declared it, and documented on that set's page as well.
+    </p>
+    <div class="card mb-3" id="__m__math__geo__inst__area">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">area</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span><span class="law-chip law-blocked" title="blocked">blocked</span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__real" data-bs-toggle="tooltip" title="range" class="code text-success">real</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/area?rng=/m/real&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/area</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__area?rng=__m__real&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__area?rng=__m__real&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">area?real<=geometry(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__area-doc-0-tab').click();document.getElementById('__m__math__geo__inst__area-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">area?real&lt;=geometry(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the \(2\)-dimensional measure of the polygonal part: shells positive, holes negative, by the planar shoelace formula scaled at the polygon&#39;s mean latitude — tight for parcels and districts, wrong for continents
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -746,16 +790,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 5.3e8 --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__coordinates?rng=__m__lst&dom=__m__math__geo__geometry">
+</div><div class="card mb-3" id="__m__math__geo__inst__coordinates">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">coordinates</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__lst" data-bs-toggle="tooltip" title="range" class="code text-success">lst</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/coordinates?rng=/m/lst&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/coordinates</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__coordinates?rng=__m__lst&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__coordinates?rng=__m__lst&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">coordinates?lst<=geometry(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__coordinates-doc-0-tab').click();document.getElementById('__m__math__geo__inst__coordinates-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">coordinates?lst&lt;=geometry(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the flattening: whatever the nesting depth, the points a geometry is ultimately made of
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -765,16 +813,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:coordinates()   [-- [geo:point::[-123.13,44.47],geo:point::[-121.18,45.61]] --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__distance?rng=__m__math__metric__meter&dom=__m__math__geo__geometry">
+</div><div class="card mb-3" id="__m__math__geo__inst__distance">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">distance</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__metric__meter" data-bs-toggle="tooltip" title="range" class="code text-success">meter</a></span></span><span class="law-chip law-commutative" title="commutative">commutative</span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__metric__meter" data-bs-toggle="tooltip" title="range" class="code text-success">meter</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/distance?rng=/m/math/metric/meter&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/distance</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__distance?rng=__m__math__metric__meter&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__distance?rng=__m__math__metric__meter&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">distance?meter<=geometry(geometry::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__distance-doc-0-tab').click();document.getElementById('__m__math__geo__inst__distance-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">distance?meter&lt;=geometry(geometry::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the geodesic distance \(d(a,b)\), and \(0\) when the geometries intersect — a point inside a polygon is at distance zero, not at the distance to its nearest vertex
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -787,16 +839,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].geo:distance(geo:point::[-122.68,45.52])   [-- meter::121998.59… (the Columbia gorge, about 122 km) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__inside?rng=__m__math__geo__geometry{?}&dom=__m__math__geo__geometry">
+</div><div class="card mb-3" id="__m__math__geo__inst__inside">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inside</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="range" class="code text-success">geometry</a></span></span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="range" class="code text-success">geometry</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/inside?rng=/m/math/geo/geometry{?}&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/inside</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__inside?rng=__m__math__geo__geometry{?}&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__inside?rng=__m__math__geo__geometry{?}&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inside?geometry{?}<=geometry(#::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__inside-doc-0-tab').click();document.getElementById('__m__math__geo__inst__inside-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inside?geometry{?}&lt;=geometry(#::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \(a.inside(b) \iff b.has(a)\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec</p>
 </div><div class="card-body py-2">
@@ -808,16 +864,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__length?rng=__m__math__metric__meter&dom=__m__math__geo__geometry">
+</div><div class="card mb-3" id="__m__math__geo__inst__length">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">length</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__metric__meter" data-bs-toggle="tooltip" title="range" class="code text-success">meter</a></span></span><span class="law-chip law-blocked" title="blocked">blocked</span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_math.html#__m__math__metric__meter" data-bs-toggle="tooltip" title="range" class="code text-success">meter</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/length?rng=/m/math/metric/meter&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/length</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__length?rng=__m__math__metric__meter&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__length?rng=__m__math__metric__meter&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">length?meter<=geometry(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__length-doc-0-tab').click();document.getElementById('__m__math__geo__inst__length-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">length?meter&lt;=geometry(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the \(1\)-dimensional measure: the geodesic distance along each part&#39;s consecutive points; a point has length zero
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -827,16 +887,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()   [-- meter::198845.05… (Portland to The Dalles) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__wkt?rng=__m__str&dom=__m__math__geo__geometry">
+</div><div class="card mb-3" id="__m__math__geo__inst__wkt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">wkt</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span><span class="law-chip law-pure" title="pure">pure</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__math__geo__geometry" data-bs-toggle="tooltip" title="domain" class="code text-info">geometry</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
         </span>
-        <small class="text-muted code">/m/math/geo/inst/wkt?rng=/m/str&amp;dom=/m/math/geo/geometry</small>
+        <small class="text-muted code">/m/math/geo/inst/wkt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__wkt?rng=__m__str&dom=__m__math__geo__geometry-doc-0-tab').click();document.getElementById('__m__math__geo__inst__wkt?rng=__m__str&dom=__m__math__geo__geometry-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">wkt?str<=geometry(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__wkt-doc-0-tab').click();document.getElementById('__m__math__geo__inst__wkt-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">wkt?str&lt;=geometry(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the other string encoding — the one every spatial database&#39;s \(\mathrm{ST\_GeomFromText}\) takes. There is no \(\mathrm{wkt}::T\) document type to cast onto, so this is an instruction rather than an \(\mathrm{as}\)
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -847,11 +911,575 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].geo:wkt()   [-- &#39;POINT (-123.13 44.47)&#39; --]</code></pre>
 </div>
 </div>
+</div><div class="container-xxl mb-4" id="defined">
+    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">23</span></h3>
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        contracts declared HERE whose address belongs to another instruction set — so they are
+        documented there too. Declared by
+        <span class="code text-info">/m/math/geo</span>, for use with the types it introduces.
+    </p>
+    <div class="card mb-3" id="defined-__m__inst__as">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">as</span>
+            
+        </span>
+        <small class="text-muted code">/m/inst/as</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox2d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox2d&lt;=str(bbox2d::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-2-tab').click();document.getElementById('defined-__m__inst__as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox2d&lt;=json(bbox2d::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-3-tab').click();document.getElementById('defined-__m__inst__as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox3d&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-4-tab').click();document.getElementById('defined-__m__inst__as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox3d&lt;=str(bbox3d::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-5-tab').click();document.getElementById('defined-__m__inst__as-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bbox3d&lt;=json(bbox3d::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-6-tab').click();document.getElementById('defined-__m__inst__as-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-7-tab').click();document.getElementById('defined-__m__inst__as-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=str(line::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-8-tab').click();document.getElementById('defined-__m__inst__as-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?line&lt;=json(line::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-9-tab').click();document.getElementById('defined-__m__inst__as-doc-9').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-10-tab').click();document.getElementById('defined-__m__inst__as-doc-10').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=str(point::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-11-tab').click();document.getElementById('defined-__m__inst__as-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?point&lt;=json(point::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-12-tab').click();document.getElementById('defined-__m__inst__as-doc-12').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=lst(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-13-tab').click();document.getElementById('defined-__m__inst__as-doc-13').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=str(polygon::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-14-tab').click();document.getElementById('defined-__m__inst__as-doc-14').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?polygon&lt;=json(polygon::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-15-tab').click();document.getElementById('defined-__m__inst__as-doc-15').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=bbox2d(json::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-16-tab').click();document.getElementById('defined-__m__inst__as-doc-16').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=bbox3d(json::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-17-tab').click();document.getElementById('defined-__m__inst__as-doc-17').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=line(json::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-18-tab').click();document.getElementById('defined-__m__inst__as-doc-18').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=point(json::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-19-tab').click();document.getElementById('defined-__m__inst__as-doc-19').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?json&lt;=polygon(json::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+</div>
+    <div class="card-body border-top py-2">
+    <small class="text-muted">for use with <a href="#__m__math__geo__bbox2d" class="code text-primary">bbox2d::T</a>, <a href="#__m__math__geo__bbox3d" class="code text-primary">bbox3d::T</a>, <a href="#__m__math__geo__line" class="code text-primary">line::T</a>, <a href="#__m__math__geo__point" class="code text-primary">point::T</a>, <a href="#__m__math__geo__polygon" class="code text-primary">polygon::T</a></small>
+</div>
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-2"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 3
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-3-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-3"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 4
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-4-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-4"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 5
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-5-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-5"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 6
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-6-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-6"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 7
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-7-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-7"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 8
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-8-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-8"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 9
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-9-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-9"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 10
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-10-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-10"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 11
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-11-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-11"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 12
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-12-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-12"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 13
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-13-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-13"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 14
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-14-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-14"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 15
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-15-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-15"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 16
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-16-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-16"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 17
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-17-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-17"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 18
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-18-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-18"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 19
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-19-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-19"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 20
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="defined-__m__inst__as-content">
+        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize an integer-valued coordinate list onto bbox2d
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a list of numbers" class="text-info">a list of numbers</a> <span class="text-light">=&gt;</span> <a href="#the coordinate value retyped onto bbox2d" class="text-success">the coordinate value retyped onto bbox2d</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#bbox::T[?[real::T,real::T,real::T,real::T]][ctor?bbox2d<=(#{*}::T){<j>}]@__m__math__geo__bbox2d" class="text-light">bbox2d</a> <span class="text-light">=&gt;</span> <a href="#'the target type'" class="text-info">&#39;the target type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(bbox2d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as bbox2d::T
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the GeoJSON or Well-Known Text document" class="text-info">the GeoJSON or Well-Known Text document</a> <span class="text-light">=&gt;</span> <a href="#a \(\mathrm{bbox2d}::T\)" class="text-success">a \(\mathrm{bbox2d}::T\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:bbox2d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-2-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as bbox2d::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a GeoJSON document" class="text-info">a GeoJSON document</a> <span class="text-light">=&gt;</span> <a href="#the bbox2d::T it normalizes to" class="text-success">the bbox2d::T it normalizes to</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:bbox2d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-3" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-3-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize an integer-valued coordinate list onto bbox3d
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a list of numbers" class="text-info">a list of numbers</a> <span class="text-light">=&gt;</span> <a href="#the coordinate value retyped onto bbox3d" class="text-success">the coordinate value retyped onto bbox3d</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#bbox::T[?[real::T,
+          real::T,
+          real::T,
+          real::T,
+          real::T,
+          real::T]][ctor?bbox3d<=(#{*}::T){<j>}]@__m__math__geo__bbox3d" class="text-light">bbox3d</a> <span class="text-light">=&gt;</span> <a href="#'the target type'" class="text-info">&#39;the target type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(bbox3d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-4" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-4-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as bbox3d::T
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the GeoJSON or Well-Known Text document" class="text-info">the GeoJSON or Well-Known Text document</a> <span class="text-light">=&gt;</span> <a href="#a \(\mathrm{bbox3d}::T\)" class="text-success">a \(\mathrm{bbox3d}::T\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:bbox3d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-5" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-5-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as bbox3d::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a GeoJSON document" class="text-info">a GeoJSON document</a> <span class="text-light">=&gt;</span> <a href="#the bbox3d::T it normalizes to" class="text-success">the bbox3d::T it normalizes to</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:bbox3d::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-6" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-6-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize an integer-valued coordinate list onto line
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a list of numbers" class="text-info">a list of numbers</a> <span class="text-light">=&gt;</span> <a href="#the coordinate value retyped onto line" class="text-success">the coordinate value retyped onto line</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@__m__math__geo__point]][ctor?line<=(#{*}::T){<j>}]@__m__math__geo__line" class="text-light">line</a> <span class="text-light">=&gt;</span> <a href="#'the target type'" class="text-info">&#39;the target type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(line::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-7" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-7-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as line::T
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the GeoJSON or Well-Known Text document" class="text-info">the GeoJSON or Well-Known Text document</a> <span class="text-light">=&gt;</span> <a href="#a \(\mathrm{line}::T\)" class="text-success">a \(\mathrm{line}::T\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:line::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-8" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-8-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as line::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a GeoJSON document" class="text-info">a GeoJSON document</a> <span class="text-light">=&gt;</span> <a href="#the line::T it normalizes to" class="text-success">the line::T it normalizes to</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:line::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-9" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-9-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize an integer-valued coordinate list onto point
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a list of numbers" class="text-info">a list of numbers</a> <span class="text-light">=&gt;</span> <a href="#the coordinate value retyped onto point" class="text-success">the coordinate value retyped onto point</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@__m__math__geo__point" class="text-light">point</a> <span class="text-light">=&gt;</span> <a href="#'the target type'" class="text-info">&#39;the target type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(point::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-10" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-10-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as point::T
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the GeoJSON or Well-Known Text document" class="text-info">the GeoJSON or Well-Known Text document</a> <span class="text-light">=&gt;</span> <a href="#a \(\mathrm{point}::T\)" class="text-success">a \(\mathrm{point}::T\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:point::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-11" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-11-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as point::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a GeoJSON document" class="text-info">a GeoJSON document</a> <span class="text-light">=&gt;</span> <a href="#the point::T it normalizes to" class="text-success">the point::T it normalizes to</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:point::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-12" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-12-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> normalize an integer-valued coordinate list onto polygon
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a list of numbers" class="text-info">a list of numbers</a> <span class="text-light">=&gt;</span> <a href="#the coordinate value retyped onto polygon" class="text-success">the coordinate value retyped onto polygon</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#geometry::T[?[geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@__m__math__geo__point]][ctor?line<=(#{*}::T){<j>}]@__m__math__geo__line]][ctor?polygon<=(#{*}::T){<j>}]@__m__math__geo__polygon" class="text-light">polygon</a> <span class="text-light">=&gt;</span> <a href="#'the target type'" class="text-info">&#39;the target type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[-123,44].as(polygon::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-13" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-13-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON or WKT document as polygon::T
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the GeoJSON or Well-Known Text document" class="text-info">the GeoJSON or Well-Known Text document</a> <span class="text-light">=&gt;</span> <a href="#a \(\mathrm{polygon}::T\)" class="text-success">a \(\mathrm{polygon}::T\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;POINT (-123.13 44.47)&quot;.as(geo:polygon::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-14" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-14-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a GeoJSON document as polygon::T — an integer coordinate becomes a real, so the value is normalized onto the type rather than merely retyped
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a GeoJSON document" class="text-info">a GeoJSON document</a> <span class="text-light">=&gt;</span> <a href="#the polygon::T it normalizes to" class="text-success">the polygon::T it normalizes to</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">json::[&quot;type&quot;=&gt;&quot;Point&quot;,&quot;coordinates&quot;=&gt;[-123,44]].as(geo:polygon::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-15" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-15-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the bbox2d::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bbox2d::T to write" class="text-info">the bbox2d::T to write</a> <span class="text-light">=&gt;</span> <a href="#the GeoJSON document it is, as json::T" class="text-success">the GeoJSON document it is, as json::T</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:bbox2d::[-123.13,44.47].as(json::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-16" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-16-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the bbox3d::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the bbox3d::T to write" class="text-info">the bbox3d::T to write</a> <span class="text-light">=&gt;</span> <a href="#the GeoJSON document it is, as json::T" class="text-success">the GeoJSON document it is, as json::T</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:bbox3d::[-123.13,44.47].as(json::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-17" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-17-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the line::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the line::T to write" class="text-info">the line::T to write</a> <span class="text-light">=&gt;</span> <a href="#the GeoJSON document it is, as json::T" class="text-success">the GeoJSON document it is, as json::T</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[-123.13,44.47].as(json::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-18" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-18-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the point::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the point::T to write" class="text-info">the point::T to write</a> <span class="text-light">=&gt;</span> <a href="#the GeoJSON document it is, as json::T" class="text-success">the GeoJSON document it is, as json::T</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].as(json::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-19" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-19-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> write the polygon::T as a GeoJSON document — GeoJSON IS a json document, so this is the same door every other document type in this system is written through
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the polygon::T to write" class="text-info">the polygon::T to write</a> <span class="text-light">=&gt;</span> <a href="#the GeoJSON document it is, as json::T" class="text-success">the GeoJSON document it is, as json::T</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[-123.13,44.47].as(json::T)</code></pre>
+</div>
+</div>
+    </div>
+</div>
+</div><div class="card mb-3" id="defined-__m__inst__has">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">has</span>
+            
+        </span>
+        <small class="text-muted code">/m/inst/has</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__has-doc-0-tab').click();document.getElementById('defined-__m__inst__has-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?bbox2d{?}&lt;=bbox2d(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__has" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__has-doc-1-tab').click();document.getElementById('defined-__m__inst__has-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?bbox3d{?}&lt;=bbox3d(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__has" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__has-doc-2-tab').click();document.getElementById('defined-__m__inst__has-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?geometry{?}&lt;=geometry(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__has" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+</div>
+    <div class="card-body border-top py-2">
+    <small class="text-muted">for use with <a href="#__m__math__geo__bbox2d" class="code text-primary">bbox2d::T</a>, <a href="#__m__math__geo__bbox3d" class="code text-primary">bbox3d::T</a>, <a href="#__m__math__geo__geometry" class="code text-primary">geometry::T</a></small>
+</div>
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__has-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="defined-__m__inst__has-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__has-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__has-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__has-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__has-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__has-doc-2"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 3
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="defined-__m__inst__has-content">
+        <div class="tab-pane fade show active" id="defined-__m__inst__has-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__has-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the box form of {@code has}: the query a spatial index answers from the envelope alone</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs envelope" class="text-info">the lhs envelope</a> <span class="text-light">=&gt;</span> <a href="#the envelope itself when the arg lies inside it, otherwise \(\mathrm{noobj}\)" class="text-success">the envelope itself when the arg lies inside it, otherwise \(\mathrm{noobj}\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'the geometry to look for'" class="text-info">&#39;the geometry to look for&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:bbox2d::[-123.2,44.4,-122.9,44.6].geo:has(geo:point::[-123.05,44.5])   [-- the box --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__has-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__has-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the box form of {@code has}: the query a spatial index answers from the envelope alone</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs envelope" class="text-info">the lhs envelope</a> <span class="text-light">=&gt;</span> <a href="#the envelope itself when the arg lies inside it, otherwise \(\mathrm{noobj}\)" class="text-success">the envelope itself when the arg lies inside it, otherwise \(\mathrm{noobj}\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'the geometry to look for'" class="text-info">&#39;the geometry to look for&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:bbox2d::[-123.2,44.4,-122.9,44.6].geo:has(geo:point::[-123.05,44.5])   [-- the box --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__has-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__has-doc-2-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the containment predicate as a filter: \(a \sqsupset b\) when every position of \(b\) lies inside \(a\). Because it answers the object rather than a bool, a fibered rec lifts it — \(*marko.has(region)\) is marko, or a miss</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry (the container)" class="text-info">the lhs geometry (the container)</a> <span class="text-light">=&gt;</span> <a href="#the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool" class="text-success">the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'what to look for: a geometry (inside the lhs), or a \(\mathrm{geo{:}bbox2d}::T\) envelope'" class="text-info">&#39;what to look for: a geometry (inside the lhs), or a \(\mathrm{geo{:}bbox2d}::T\) envelope&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:has(geo:point::[-123.05,44.5])   [-- the polygon --]
+geo:point::[-123.05,44.5].geo:has(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- noobj: a point holds nothing --]</code></pre>
+</div>
+</div>
+    </div>
+</div>
+</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

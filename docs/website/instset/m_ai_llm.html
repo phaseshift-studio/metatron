@@ -764,7 +764,7 @@ large language model think and reason within the metatron</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">45</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">7</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">45</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">7</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">5</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -909,24 +909,30 @@ large language model think and reason within the metatron</p>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
-    <div class="d-flex flex-wrap"><a href="#__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <div class="d-flex flex-wrap"><a href="#__m__ai__llm__inst__chat" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">chat</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__ai__llm__inst__compact?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__ai__llm__inst__compact" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">compact</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__ai__llm__inst__embed?rng=__m__db__vec__vec&dom=__m__ai__llm__model" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__ai__llm__inst__embed" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">embed</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__ai__llm__inst__interrupt?rng=noobj{0}&dom=__m__ai__llm__agent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__ai__llm__inst__interrupt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">interrupt</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__ai__llm__inst__summary?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__ai__llm__inst__summary" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">summary</span>
     <span class="pill-label badge bg-success ms-2">I</span>
-</a><a href="#__m__ai__llm__inst__sweep?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+</a><a href="#__m__ai__llm__inst__sweep" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">sweep</span>
     <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">as</span>
+    <span class="pill-label badge bg-info ms-2">D</span>
 </a></div>
 </div></div>
     </div>
@@ -936,7 +942,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">agent::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/agent</small>
     </div>
@@ -944,24 +950,26 @@ large language model think and reason within the metatron</p>
          {?}desc=&gt;str::T,
          {?}feature=&gt;lst::T]][ctor?agent&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/agent</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an agent is an llm enriched with embodied capabilities</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a convenient name for the agent'" class="text-info">&#39;a convenient name for the agent&#39;</a>
   <a href="#feature" class="text-light">feature</a> <span class="text-light">=&gt;</span> <a href="#'the ordered lst of capabilities attached to the agent'" class="text-info">&#39;the ordered lst of capabilities attached to the agent&#39;</a>
+  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'a description of the agent given to the agent in their system prompt'" class="text-info">&#39;a description of the agent given to the agent in their system prompt&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__ai__llm__feature__agent_concept_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">agent_concept_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/agent_concept_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?agent_concept_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/agent_concept_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -981,7 +989,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">ai::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/ai</small>
     </div>
@@ -991,6 +999,7 @@ large language model think and reason within the metatron</p>
               {?}args=&gt;str::T,
               text=&gt;str::T,
               {?}contents=&gt;str::T]]@/m/ai/llm/message/tool_request]]]@/m/ai/llm/message/ai</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an ai/assistant message</p>
@@ -1005,11 +1014,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">audit_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/audit_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?audit_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/audit_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1029,7 +1039,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">chat_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/chat_feature</small>
     </div>
@@ -1048,6 +1058,7 @@ large language model think and reason within the metatron</p>
    out=&gt;!*/m/math/currency]]][ctor?model&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/model,
              {?}response=&gt;{?}[{?}to=&gt;&lt;#&gt;::T,{?}complete=&gt;&lt;#&gt;::T],
              {?}format=&gt;&lt;#&gt;::T]][ctor?chat_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/chat_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1067,7 +1078,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">chat_result::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/chat_result</small>
     </div>
@@ -1082,6 +1093,7 @@ large language model think and reason within the metatron</p>
                                  {?}index=&gt;int::T,
                                  {?}stage=&gt;uri::T]]@/m/ai/llm/watermark],
          {?}error=&gt;fail::T]]@/m/ai/llm/chat_result</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a response message from a chat interaction</p>
@@ -1098,7 +1110,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">claim::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/claim</small>
     </div>
@@ -1110,6 +1122,7 @@ large language model think and reason within the metatron</p>
          {?}source=&gt;[&lt;#&gt;::T],
          {?}concept=&gt;[&lt;#&gt;::T],
          {?}tier=&gt;isa(nat::T).else(1)]]@/m/ai/llm/claim</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a distilled claim with provenance — the proposition layer above concept nouns</p>
@@ -1129,7 +1142,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">compaction::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/compaction</small>
     </div>
@@ -1137,22 +1150,23 @@ large language model think and reason within the metatron</p>
              {?}in=&gt;int::T,
              {?}out=&gt;int::T,
              {?}compression=&gt;real::T]]@/m/ai/llm/message/compaction</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a compaction represents a stop point for message retrieval and provides a summary of all previous messages</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
-  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
-  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}compression" class="text-light">{?}compression</a> <span class="text-light">=&gt;</span> <a href="#'fraction of tokens removed — 1 - out__in (0.0 to 1.0)'" class="text-info">in (0.0 to 1.0)&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the summary of all previous messages and compactions'" class="text-info">&#39;the summary of all previous messages and compactions&#39;</a>
+  <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'total tokens processed (the input digest estimate)'" class="text-info">&#39;total tokens processed (the input digest estimate)&#39;</a>
+  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'total tokens generated (the summary estimate)'" class="text-info">&#39;total tokens generated (the summary estimate)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__ai__llm__feature__compaction_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">compaction_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/compaction_feature</small>
     </div>
@@ -1171,6 +1185,7 @@ large language model think and reason within the metatron</p>
    out=&gt;!*/m/math/currency]]][ctor?model&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/model,
              {?}threshold=&gt;real::T,
              {?}context=&gt;int::T]][ctor?compaction_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/compaction_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1196,7 +1211,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">concept::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/concept</small>
     </div>
@@ -1204,26 +1219,28 @@ large language model think and reason within the metatron</p>
          {?}concept=&gt;{?}[concept::T],
          {?}message=&gt;{?}[message::T]]]@/m/ai/llm/concept</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a concept related to other concepts and messages.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
-  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related concepts'" class="text-info">&#39;a lst of related concepts&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'the concept name'" class="text-info">&#39;the concept name&#39;</a>
+  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'a lst of related messages'" class="text-info">&#39;a lst of related messages&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__ai__llm__feature__cost_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">cost_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/cost_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[rate=&gt;[in=&gt;!*/m/math/currency,
                     out=&gt;!*/m/math/currency]]][ctor?cost_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/cost_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1251,7 +1268,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">embed_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/embed_feature</small>
     </div>
@@ -1267,6 +1284,7 @@ large language model think and reason within the metatron</p>
                                 {?}cost=&gt;{?}[
                                  in=&gt;!*/m/math/currency,
                                  out=&gt;!*/m/math/currency]]][ctor?model&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/model]][ctor?embed_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/embed_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1286,7 +1304,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature</small>
     </div>
@@ -1302,6 +1320,7 @@ large language model think and reason within the metatron</p>
          {?}on_tool_result=&gt;&lt;#&gt;::T,
          {?}on_complete_response=&gt;&lt;#&gt;::T,
          {?}on_error=&gt;&lt;#&gt;::T]]@/m/ai/llm/feature</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> each concrete feature refines llm_feature::T with its own hook implementations</p>
@@ -1325,7 +1344,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">iteration::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/iteration</small>
     </div>
@@ -1335,6 +1354,7 @@ large language model think and reason within the metatron</p>
          {?}next=&gt;uri::T,
          {?}message=&gt;lst::T,
          time=&gt;!*/m/math/time]]@/m/ai/llm/iteration</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an iteration groups the messages of a single chat turn within a session and links to prev/next iterations</p>
@@ -1352,7 +1372,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">lambda_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/lambda_feature</small>
     </div>
@@ -1365,6 +1385,7 @@ large language model think and reason within the metatron</p>
       on_tool_result,
       on_complete_response,
       on_error)=&gt;lst::T]]][ctor?lambda_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/lambda_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1388,7 +1409,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">loop_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/loop_feature</small>
     </div>
@@ -1396,6 +1417,7 @@ large language model think and reason within the metatron</p>
              {?}max_time=&gt;real::T@/m/math/time,
              {?}delay=&gt;real::T@/m/math/time,
              {?}preserve=&gt;lst::T]][ctor?loop_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/loop_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1425,7 +1447,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">loose_end::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/loose_end</small>
     </div>
@@ -1438,6 +1460,7 @@ large language model think and reason within the metatron</p>
          {?}source=&gt;[&lt;#&gt;::T],
          {?}claim=&gt;[&lt;#&gt;::T],
          {?}time=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime]]@/m/ai/llm/loose_end</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an open problem a future session can pick up cold — the continuation point carried across sessions</p>
@@ -1458,11 +1481,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">lucene_concept_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/lucene_concept_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?lucene_concept_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/lucene_concept_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1482,13 +1506,14 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_message::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web.html#__m__web__mcp__mcp_server" class="instset-doc-small-code text-info code">/m/web/mcp/mcp_server::T</a></span>
+            <span class="ms-2">refines <a href="m_web.html#__m__web__mcp__mcp_server" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/web/mcp/mcp_server::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/mcp/mcp_message</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mcp_server::T[?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],
                 {?}resource=&gt;&lt;#&gt;::T,
                 {?}prompt=&gt;&lt;#&gt;::T]][ctor?mcp_message&lt;=(rec::T){&lt;j&gt;}]@/m/ai/llm/mcp/mcp_message</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__mcp__mcp_server" class="code inherited-link">mcp_server::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}tool=&gt;{?}[uri::T=&gt;inst::T],
  {?}resource=&gt;&lt;#&gt;::T,
  {?}prompt=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m_web.html#__m__web__protocol" class="code inherited-link">protocol::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?union(http::T,
@@ -1503,11 +1528,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">message::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}session=&gt;uri::T]]@/m/ai/llm/message</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column</p>
@@ -1516,11 +1542,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">midchat_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/midchat_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?midchat_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/midchat_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1540,7 +1567,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">model::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/model</small>
     </div>
@@ -1557,18 +1584,19 @@ large language model think and reason within the metatron</p>
           in=&gt;!*/m/math/currency,
           out=&gt;!*/m/math/currency]]][ctor?model&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/model</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> populate a model reference rec using data from the ai provider&#39;s http-endpoint</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
-  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cost" class="text-light">{?}cost</a> <span class="text-light">=&gt;</span> <a href="#'the cost per million tokens to use this llm (in__out costs)'" class="text-info">out costs)&#39;</a>
   <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#"the model's context window size in tokens"" class="text-info">&quot;the model&#39;s context window size in tokens&quot;</a>
   <a href="#{?}provider" class="text-light">{?}provider</a> <span class="text-light">=&gt;</span> <a href="#'optional name of ai model provider'" class="text-info">&#39;optional name of ai model provider&#39;</a>
   <a href="#{?}size" class="text-light">{?}size</a> <span class="text-light">=&gt;</span> <a href="#'the size of the model'" class="text-info">&#39;the size of the model&#39;</a>
   <a href="#{?}quant" class="text-light">{?}quant</a> <span class="text-light">=&gt;</span> <a href="#'the level of quantization of the model'" class="text-info">&#39;the level of quantization of the model&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#"the ai model provider's http rest endpoint"" class="text-info">&quot;the ai model provider&#39;s http rest endpoint&quot;</a>
   <a href="#protocol" class="text-light">protocol</a> <span class="text-light">=&gt;</span> <a href="#'the http rest endpoint protocol (ollama, openai, anthropic)'" class="text-info">&#39;the http rest endpoint protocol (ollama, openai, anthropic)&#39;</a>
+  <a href="#llm" class="text-light">llm</a> <span class="text-light">=&gt;</span> <a href="#'the name of a model offered by the ai provider'" class="text-info">&#39;the name of a model offered by the ai provider&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1578,11 +1606,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">persisted_frame_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/persisted_frame_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?persisted_frame_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/persisted_frame_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1602,13 +1631,14 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">session::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/session</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[agent=&gt;uri::T,
          user=&gt;uri::T,
          algorithm=&gt;rec::T]]@/m/ai/llm/session</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*</p>
@@ -1630,6 +1660,7 @@ large language model think and reason within the metatron</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">session_or_agent::T[?union(agent::T,
                            session::T)]</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a session::T or agent::T union</p>
 </div>
@@ -1637,7 +1668,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">skill::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/skill</small>
     </div>
@@ -1649,6 +1680,7 @@ large language model think and reason within the metatron</p>
                         {?}desc=&gt;str::T,
                         text=&gt;str::T]],
          {?}tool=&gt;[&lt;#&gt;::T]]]@/m/ai/llm/skill</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a skill.md specification to augment llm with specialized abilities</p>
@@ -1669,11 +1701,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">skill_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/skill_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?skill_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/skill_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1693,11 +1726,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">summarize_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/summarize_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?summarize_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/summarize_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1717,11 +1751,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">system::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/system</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/ai/llm/message/system</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a system message provides behavioral and response-style instructions to the model</p>
@@ -1734,11 +1769,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">system_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/system_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?system_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/system_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1758,11 +1794,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tagging_concept_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/tagging_concept_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?tagging_concept_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/tagging_concept_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1782,11 +1819,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">think_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/think_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?think_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/think_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1806,11 +1844,12 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">thinking::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/thinking</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[text=&gt;str::T]]@/m/ai/llm/message/thinking</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window</p>
@@ -1823,7 +1862,7 @@ large language model think and reason within the metatron</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">todo::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/todo</small>
     </div>
@@ -1836,6 +1875,7 @@ large language model think and reason within the metatron</p>
          {?}message=&gt;[message::T],
          {?}reference=&gt;lst::T]]@/m/ai/llm/todo</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a todo represents a task to be completed.
 links to concepts and messages are automatically attached to the todo at creation.
@@ -1843,12 +1883,12 @@ reference to artifacts in metatron can be attached.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
-  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
-  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}message" class="text-light">{?}message</a> <span class="text-light">=&gt;</span> <a href="#'messages associated with todo'" class="text-info">&#39;messages associated with todo&#39;</a>
   <a href="#{?}concept" class="text-light">{?}concept</a> <span class="text-light">=&gt;</span> <a href="#'concepts associated with todo'" class="text-info">&#39;concepts associated with todo&#39;</a>
   <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the todo information'" class="text-info">&#39;the todo information&#39;</a>
   <a href="#{?}reference" class="text-light">{?}reference</a> <span class="text-light">=&gt;</span> <a href="#'artifacts associated with todo'" class="text-info">&#39;artifacts associated with todo&#39;</a>
+  <a href="#{?}time" class="text-light">{?}time</a> <span class="text-light">=&gt;</span> <a href="#'datetime of todo creation (default: datetime_now())'" class="text-info">&#39;datetime of todo creation (default: datetime_now())&#39;</a>
+  <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'current status of todo (default: open)'" class="text-info">&#39;current status of todo (default: open)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1858,11 +1898,12 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">todo_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/todo_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?todo_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/todo_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1882,7 +1923,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">token_counter_tool::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/ui/tool/token_counter_tool</small>
     </div>
@@ -1895,14 +1936,15 @@ reference to artifacts in metatron can be attached.
           {?}tool=&gt;int::T,
           {?}system=&gt;int::T]]][ctor?token_counter_tool&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/ui/tool/token_counter_tool</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
-  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
-  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#"the context window's size in tokens — the bar's window: the sections are its share, in__max the percent, the rest the unused tail"" class="text-info">max the percent, the rest the unused tail&quot;</a>
   <a href="#{?}in" class="text-light">{?}in</a> <span class="text-light">=&gt;</span> <a href="#'actual input tokens of the chat'" class="text-info">&#39;actual input tokens of the chat&#39;</a>
+  <a href="#{?}out" class="text-light">{?}out</a> <span class="text-light">=&gt;</span> <a href="#'actual output tokens of the chat (counted for the record, not drawn)'" class="text-info">&#39;actual output tokens of the chat (counted for the record, not drawn)&#39;</a>
+  <a href="#{?}est" class="text-light">{?}est</a> <span class="text-light">=&gt;</span> <a href="#'the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]'" class="text-info">&#39;the estimated composition of the window: [system=&gt;int, ai=&gt;int, user=&gt;int, tool=&gt;int]&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1912,11 +1954,12 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">token_message_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/token_message_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?token_message_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/token_message_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1936,7 +1979,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tool::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/tool</small>
     </div>
@@ -1945,27 +1988,29 @@ reference to artifacts in metatron can be attached.
          desc=&gt;str::T,
          {?}arg=&gt;&lt;#&gt;::T]]@/m/ai/llm/tool</code></pre></div>
     
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool function for the llm to use</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a tool specification" class="text-info">a tool specification</a> <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
-  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
-  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#desc" class="text-light">desc</a> <span class="text-light">=&gt;</span> <a href="#'tool description'" class="text-info">&#39;tool description&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'tool name'" class="text-info">&#39;tool name&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#'tool instruction'" class="text-info">&#39;tool instruction&#39;</a>
+  <a href="#{?}arg" class="text-light">{?}arg</a> <span class="text-light">=&gt;</span> <a href="#'tool arguments'" class="text-info">&#39;tool arguments&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__ai__llm__feature__tool_feature">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tool_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/tool_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[{?}tool=&gt;lst::T,
              {?}max=&gt;isa(int::T).else(-1)]][ctor?tool_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/tool_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -1985,7 +2030,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tool_request::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/tool_request</small>
     </div>
@@ -1993,6 +2038,7 @@ reference to artifacts in metatron can be attached.
              {?}args=&gt;str::T,
              text=&gt;str::T,
              {?}contents=&gt;str::T]]@/m/ai/llm/message/tool_request</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution request — nested inside an ai message&#39;s tool_requests list</p>
@@ -2008,7 +2054,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tool_result::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/tool_result</small>
     </div>
@@ -2016,6 +2062,7 @@ reference to artifacts in metatron can be attached.
              text=&gt;str::T,
              {?}chat=&gt;&lt;#&gt;::T,
              {?}id=&gt;str::T]]@/m/ai/llm/message/tool_result</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a tool execution result message</p>
@@ -2031,11 +2078,12 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">transient_frame_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/transient_frame_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[][ctor?transient_frame_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/transient_frame_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -2055,13 +2103,14 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">user::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__message" class="instset-doc-small-code text-info code">/m/ai/llm/message::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__message" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/message::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/message/user</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">message::T[?[{?}name=&gt;str::T,
              {?}text=&gt;str::T,
              {?}contents=&gt;&lt;#&gt;::T]]@/m/ai/llm/message/user</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__message" class="code inherited-link">message::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}session=&gt;uri::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a user message</p>
@@ -2076,7 +2125,7 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">watermark::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#__m__rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/watermark</small>
     </div>
@@ -2087,6 +2136,7 @@ reference to artifacts in metatron can be attached.
          {?}error=&gt;fail::T,
          {?}index=&gt;int::T,
          {?}stage=&gt;uri::T]]@/m/ai/llm/watermark</code></pre></div>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text</p>
@@ -2105,11 +2155,12 @@ reference to artifacts in metatron can be attached.
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">window_message_feature::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="#__m__ai__llm__feature" class="instset-doc-small-code text-info code">/m/ai/llm/feature::T</a></span>
+            <span class="ms-2">refines <a href="#__m__ai__llm__feature" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/ai/llm/feature::T</code></pre></a></span>
         </span>
         <small class="text-muted code">/m/ai/llm/feature/window_message_feature</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">feature::T[?[session=&gt;uri::T]][ctor?window_message_feature&lt;=(#{*}::T){&lt;j&gt;}]@/m/ai/llm/feature/window_message_feature</code></pre></div>
+    
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__ai__llm__feature" class="code inherited-link">feature::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}root=&gt;uri::T,
  {?}to=&gt;&lt;#&gt;::T,
  {?}on_agent_ctor=&gt;&lt;#&gt;::T,
@@ -2128,32 +2179,99 @@ reference to artifacts in metatron can be attached.
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">7</span></h3>
-    <div class="card mb-3" id="__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent">
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+        labelled with the set that declared it, and documented on that set's page as well.
+    </p>
+    <div class="card mb-3" id="__m__ai__llm__inst__chat">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">chat</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__agent" data-bs-toggle="tooltip" title="domain" class="code text-info">agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__ai__llm__chat_result" data-bs-toggle="tooltip" title="range" class="code text-success">chat_result</a></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/chat?rng=/m/ai/llm/chat_result&amp;dom=/m/ai/llm/agent</small>
+        <small class="text-muted code">/m/ai/llm/inst/chat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?chat_result<=agent(str::T,
-                        rec{?}::T){<j>}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__chat?rng=__m__ai__llm__chat_result&dom=__m__ai__llm__agent-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?chat_result<=agent(str::T,
-                        rec::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__chat-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__chat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?chat_result&lt;=agent(str::T,
+                        rec{?}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__chat-doc-1-tab').click();document.getElementById('__m__ai__llm__inst__chat-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?chat_result&lt;=agent(str::T,
+                        rec::T){&lt;j&gt;}</code></pre>
+
+</div>
 </div>
     
-</div><div class="card mb-3" id="__m__ai__llm__inst__compact?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}">
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="__m__ai__llm__inst__chat-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="__m__ai__llm__inst__chat-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__ai__llm__inst__chat-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__ai__llm__inst__chat-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__ai__llm__inst__chat-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="__m__ai__llm__inst__chat-content">
+        <div class="tab-pane fade show active" id="__m__ai__llm__inst__chat-doc-0" role="tabpanel" aria-labelledby="__m__ai__llm__inst__chat-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> communicate with an agent. if the agent is already executing, the chat message is pushed on their stack at *&lt;agent&gt;/message_stack
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent to chat with" class="text-info">an agent to chat with</a> <span class="text-light">=&gt;</span> <a href="#chat result rec — monos inline (chat, user, time), feature outputs as !* refs" class="text-success">chat result rec — monos inline (chat, user, time), feature outputs as !* refs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the message to send the agent'" class="text-info">&#39;the message to send the agent&#39;</a>
+  <span class="text-light">{?}1</span> <span class="text-light">=&gt;</span> <a href="#'a rec::T schema for a structured response'" class="text-info">&#39;a rec::T schema for a structured response&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@agent.chat(&#39;what is a database?&#39;)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__ai__llm__inst__chat-doc-1" role="tabpanel" aria-labelledby="__m__ai__llm__inst__chat-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> communicate with am llm enriched by tools, skills, etc. and receive response in particular format
+one-to-one obj transformation (dom_c = rng_c = 1)</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a model to chat with" class="text-info">a model to chat with</a> <span class="text-light">=&gt;</span> <a href="#the models chat response" class="text-success">the models chat response</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the message to send the model'" class="text-info">&#39;the message to send the model&#39;</a>
+  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the desired response format'" class="text-info">&#39;the desired response format&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)],think=&gt;to(/ai/thoughts/_?incrq)].chat(&#39;what is 4+2?&#39;,[answer=&gt;int::T])</code></pre>
+</div>
+</div>
+    </div>
+</div>
+</div><div class="card mb-3" id="__m__ai__llm__inst__compact">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">compact</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__session_or_agent" data-bs-toggle="tooltip" title="domain" class="code text-info">session_or_agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/compact?rng=/m/rec&amp;dom=/m/ai/llm/session_or_agent{?}</small>
+        <small class="text-muted code">/m/ai/llm/inst/compact</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__compact?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__compact?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">compact?rec<=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,
-                                 {?}model=>model::T,
-                                 {?}prompt=>str::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__compact-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__compact-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">compact?rec&lt;=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,
+                                 {?}model=&gt;model::T,
+                                 {?}prompt=&gt;str::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> compact a session&#39;s message ledger into a resume summary sentinel — the same call as the &lt;&lt;mtron:compaction&gt;&gt; block (they share the argument rec::T vocabulary: agent, model, prompt)</p>
 </div><div class="card-body py-2">
@@ -2167,16 +2285,20 @@ reference to artifacts in metatron can be attached.
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@dr.compact()  [-- fluent --]  |  compact(@dr)  [-- function --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__ai__llm__inst__embed?rng=__m__db__vec__vec&dom=__m__ai__llm__model">
+</div><div class="card mb-3" id="__m__ai__llm__inst__embed">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">embed</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__model" data-bs-toggle="tooltip" title="domain" class="code text-info">model</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_db_vec.html#__m__db__vec__vec" data-bs-toggle="tooltip" title="range" class="code text-success">vec</a></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/embed?rng=/m/db/vec/vec&amp;dom=/m/ai/llm/model</small>
+        <small class="text-muted code">/m/ai/llm/inst/embed</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__embed?rng=__m__db__vec__vec&dom=__m__ai__llm__model-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__embed?rng=__m__db__vec__vec&dom=__m__ai__llm__model-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">embed?vec<=model(#::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__embed-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__embed-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">embed?vec&lt;=model(#::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> embed an object with an llm
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -2189,36 +2311,44 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;.embed(&#39;what is a database?&#39;)</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__ai__llm__inst__interrupt?rng=noobj{0}&dom=__m__ai__llm__agent">
+</div><div class="card mb-3" id="__m__ai__llm__inst__interrupt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">interrupt</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__agent" data-bs-toggle="tooltip" title="domain" class="code text-info">agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">noobj{0}</span></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/interrupt?rng=noobj{0}&amp;dom=/m/ai/llm/agent</small>
+        <small class="text-muted code">/m/ai/llm/inst/interrupt</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__interrupt?rng=noobj{0}&dom=__m__ai__llm__agent-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__interrupt?rng=noobj{0}&dom=__m__ai__llm__agent-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">interrupt?{0}<=agent(){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__interrupt-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__interrupt-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">interrupt?{0}&lt;=agent(){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-terminal">terminal</span> interrupt the agent mid-process
 maps objs to nothing (rng_c = 0)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__ai__llm__agent" class="text-info">agent</a> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__ai__llm__inst__summary?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}">
+</div><div class="card mb-3" id="__m__ai__llm__inst__summary">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">summary</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__session_or_agent" data-bs-toggle="tooltip" title="domain" class="code text-info">session_or_agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/summary?rng=/m/rec&amp;dom=/m/ai/llm/session_or_agent{?}</small>
+        <small class="text-muted code">/m/ai/llm/inst/summary</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__summary?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__summary?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summary?rec<=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,
-                                 {?}model=>/m/inst/choose([/m/inst/isa(rec::T[?[{?}provider=>uri::T,host=>uri::T,protocol=>uri::T,llm=>uri::T,{?}api_key=>str::T,{?}timeout=>!*/m/math/time,{?}size=>!*/m/math/datasize,{?}quant=>int::T,{?}context=>int::T,{?}cost=>{?}[in=>!*/m/math/currency,out=>!*/m/math/currency]]][/m/inst/ctor?/m/ai/llm/model<=(<#{*}>::T)]@model)=>/m/inst/id(),/m/inst/isa(rec::T[?[agent=>uri{+}::T,user=>uri{+}::T,algorithm=>rec::T]]@session)=>*/m/inst/rshift(agent)./m/inst/mult(model)])./m/inst/rshift(),
-                                 {?}scope=>union(time::T,datetime::T),
-                                 {?}kind=>lst::T,
-                                 {?}concept=>lst::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__summary-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__summary-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">summary?rec&lt;=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,
+                                 {?}model=&gt;/m/inst/choose([/m/inst/isa(rec::T[?[{?}provider=&gt;uri::T,host=&gt;uri::T,protocol=&gt;uri::T,llm=&gt;uri::T,{?}api_key=&gt;str::T,{?}timeout=&gt;!*/m/math/time,{?}size=&gt;!*/m/math/datasize,{?}quant=&gt;int::T,{?}context=&gt;int::T,{?}cost=&gt;{?}[in=&gt;!*/m/math/currency,out=&gt;!*/m/math/currency]]][/m/inst/ctor?/m/ai/llm/model&lt;=(&lt;#{*}&gt;::T)]@model)=&gt;/m/inst/id(),/m/inst/isa(rec::T[?[agent=&gt;uri{+}::T,user=&gt;uri{+}::T,algorithm=&gt;rec::T]]@session)=&gt;*/m/inst/rshift(agent)./m/inst/mult(model)])./m/inst/rshift(),
+                                 {?}scope=&gt;union(time::T,datetime::T),
+                                 {?}kind=&gt;lst::T,
+                                 {?}concept=&gt;lst::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> distill a session&#39;s message ledger into claim::T and loose_end::T recs via a mini-task — the same call as the &lt;&lt;mtron:summarize&gt;&gt; block (they share the argument rec::T vocabulary: session, model, scope, kind, concept, to)</p>
 </div><div class="card-body py-2">
@@ -2227,18 +2357,22 @@ maps objs to nothing (rng_c = 0)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@dr/session/1.summarize(_)  [-- fluent --]  |  summarize(@dr/session/1)  [-- function --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__ai__llm__inst__sweep?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}">
+</div><div class="card mb-3" id="__m__ai__llm__inst__sweep">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sweep</span>
             <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__ai__llm__session_or_agent" data-bs-toggle="tooltip" title="domain" class="code text-info">session_or_agent</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
-        <small class="text-muted code">/m/ai/llm/inst/sweep?rng=/m/rec&amp;dom=/m/ai/llm/session_or_agent{?}</small>
+        <small class="text-muted code">/m/ai/llm/inst/sweep</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__sweep?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__sweep?rng=__m__rec&dom=__m__ai__llm__session_or_agent{?}-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sweep?rec<=session_or_agent{?}({?}session_or_agent=>session_or_agent{?}::T,
-                               {?}repair=>bool::T,
-                               {?}prune=>bool::T){<j>}</code></pre>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__ai__llm__inst__sweep-doc-0-tab').click();document.getElementById('__m__ai__llm__inst__sweep-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sweep?rec&lt;=session_or_agent{?}({?}session_or_agent=&gt;session_or_agent{?}::T,
+                               {?}repair=&gt;bool::T,
+                               {?}prune=&gt;bool::T){&lt;j&gt;}</code></pre>
+
 </div>
+</div>
+    
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> fsck a chat ledger: [duplicate=&gt;[call ids written twice], orphan=&gt;[requests whose result is nowhere], misplaced=&gt;[requests whose result is not next to them], misscoped=&gt;[requests whose results stand next to them but are stamped into another scope, so the store&#39;s projection tears the group apart], orphan_result=&gt;[results no request precedes]]. A provider requires the results of an assistant message&#39;s tool_calls to sit immediately after it, as the store projects that turn (one session, one depth, one chat id) — anything else breaks every later chat with insufficient tool messages following tool_calls message. repair restores validity without deleting anything: an unanswered request is dropped, and a misscoped result is moved into the scope of the request it answers; prune is the opt-in to deletion, and is separate because a duplicate&#39;s surviving copy may not carry the same text</p>
 </div><div class="card-body py-2">
@@ -2255,11 +2389,159 @@ maps objs to nothing (rng_c = 0)</p>
 @/usr/dr/session/1.sweep(repair=&gt;true,prune=&gt;true).at(&#39;duplicate&#39;)    [-- and delete the duplicates --]</code></pre>
 </div>
 </div>
+</div><div class="container-xxl mb-4" id="defined">
+    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">5</span></h3>
+    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+        contracts declared HERE whose address belongs to another instruction set — so they are
+        documented there too. Declared by
+        <span class="code text-info">/m/ai/llm</span>, for use with the types it introduces.
+    </p>
+    <div class="card mb-3" id="defined-__m__inst__as">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">as</span>
+            
+        </span>
+        <small class="text-muted code">/m/inst/as</small>
+    </div>
+    <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?model&lt;=rec(model::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=agent(skill::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-2-tab').click();document.getElementById('defined-__m__inst__as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=uri(skill::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-3-tab').click();document.getElementById('defined-__m__inst__as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=inst(tool::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-4-tab').click();document.getElementById('defined-__m__inst__as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?tool&lt;=docs(tool::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
+
+</div>
+</div>
+    <div class="card-body border-top py-2">
+    <small class="text-muted">for use with <a href="#__m__ai__llm__model" class="code text-primary">model::T</a>, <a href="#__m__ai__llm__agent" class="code text-primary">agent::T</a>, <a href="#__m__ai__llm__skill" class="code text-primary">skill::T</a>, <a href="#__m__ai__llm__tool" class="code text-primary">tool::T</a></small>
+</div>
+    <div class="card-body border-top p-0">
+    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
+        <li class="nav-item disabled me-2">
+            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
+        </li>
+        <li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2 active text-start h-100"
+        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
+        type="button" role="tab" aria-selected="true"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 1
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 2
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-2"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 3
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-3-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-3"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 4
+    </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="defined-__m__inst__as-doc-4-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-4"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 5
+    </button>
+</li>
+    </ul>
+    <div class="tab-content" id="defined-__m__inst__as-content">
+        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps a rec to a model
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec" class="text-info">a rec</a> <span class="text-light">=&gt;</span> <a href="#a model" class="text-success">a model</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a rec shaped like a model'" class="text-info">&#39;a rec shaped like a model&#39;</a>
+</pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an agent to a skill by aggregating its features&#39; tools and resources
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an agent" class="text-info">an agent</a> <span class="text-light">=&gt;</span> <a href="#a skill aggregating the agent's capabilities" class="text-success">a skill aggregating the agent&#39;s capabilities</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)]].as(skill::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-2-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps a directory to an llm skill where the dir follows the standard SKILL.md structure
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a dir uri containing the llm SKILL.md file" class="text-info">a dir uri containing the llm SKILL.md file</a> <span class="text-light">=&gt;</span> <a href="#a mtron encoding of the specified skill" class="text-success">a mtron encoding of the specified skill</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the skill type'" class="text-info">&#39;the skill type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-3" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-3-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an instruction to a tool specification for llm use
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an instruction" class="text-info">an instruction</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
+</div>
+</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-4" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-4-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> maps an instruction doc to a tool specification for llm use
+retypes the obj&#39;s type/identity, not its value</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#instruction documentation" class="text-info">instruction documentation</a> <span class="text-light">=&gt;</span> <a href="#a tool specification" class="text-success">a tool specification</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the tool type'" class="text-info">&#39;the tool type&#39;</a>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
+</div>
+</div>
+    </div>
+</div>
+</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-0.1-SNAPSHOT<br>
-        (c) PhaseShift Studio, LLC
+        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">

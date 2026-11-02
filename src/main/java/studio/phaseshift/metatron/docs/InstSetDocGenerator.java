@@ -20,9 +20,12 @@ package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.algebra.Algebra;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -31,16 +34,18 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.INST;
 import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Generates HTML documentation for metatron instruction sets by querying the
@@ -57,16 +62,41 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 public class InstSetDocGenerator {
 
     private static final GraphittyLogger LOG = Graphitty.log(InstSetDocGenerator.class);
-    private static ObjmtronSerializer SER;
+    /**
+     * THE UI SERIALIZER, because every string on these pages is read by a person: it is the one
+     * that renders the {@code ?rng<=dom(args)} shorthand a signature is written in, and
+     * {@link ObjmtronUISerializer#prettyPrint()} is the instance for a file — nested and
+     * indented, unclipped so a spec is never cut short, and with no color markup or pager,
+     * which a page cannot resolve. The base {@link studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer}
+     * is for DATA EXCHANGE (round-tripped text, raw query components), never for display; note
+     * that {@code Obj.toString()} answers the data form.
+     * <p>
+     * ASSIGNED AFTER THE VM BOOTS ({@link #initSerializers()}), never in a field initializer: constructing the UI
+     * serializer touches the mtron type system, whose {@code Obj.toString} answers through
+     * {@code Obj.Helper.SERIALIZER} — a field that is still null while these classes are initializing, so an
+     * eager initializer here fails the whole boot with an NPE from inside {@code objToString}.
+     */
+    private static ObjmtronUISerializer SER;
+
+    /** The one place the page renderer's serializer is chosen — called by {@link #main} after {@code boot}. */
+    static void initSerializers() {
+        SER = ObjmtronUISerializer.prettyPrint();
+    }
 
     private static final Path CSS_PATH = Path.of("docs/website/css/instset_doc.css");
-
-    private static final Pattern SHORTHAND_PAT = Pattern.compile("\\?(?:rng=([^&]+))?(?:&?dom=([^&]+))?");
 
     /**
      * Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}.
      */
     private static Set<String> ALL_INSTSET_VIDS;
+
+    /**
+     * THE DOCUMENTED SETS — the scope every address question is answered in. {@link #main} sets it from the
+     * command line; a test sets it directly so attribution can be exercised without a page build.
+     */
+    static void documented(final Collection<String> vids) {
+        ALL_INSTSET_VIDS = new LinkedHashSet<>(vids);
+    }
 
     // ========================================================================
     // Lightweight instset metadata (replaces InstSetInfo model record)
@@ -74,6 +104,20 @@ public class InstSetDocGenerator {
 
     private record Meta(String vid, String name, String desc, String parent,
                         List<String> children, String full) {
+    }
+
+    /**
+     * ONE PAGE'S MATERIAL, read before anything is rendered — the two passes exist because a page cannot be
+     * complete on its own: the contracts a set declared at ANOTHER set's address live in that set's table,
+     * so the attribution index has to be built from every page before the first one is written.
+     *
+     * @param insts       the insts whose ADDRESS this set holds (its own table, filtered to its jurisdiction)
+     * @param declared    every contract this set DECLARED (its own rec {@code inst} list), own and elsewhere
+     * @param contributed the declared subset whose address belongs to some other instruction set
+     */
+    private record Page(Meta meta, Set<Type> types, Set<Inst> insts, Set<Inst> rewrites,
+                        List<SpaceEntry> spaces, Set<Obj> consts, List<Inst> declared,
+                        List<Inst> contributed) {
     }
 
     // ========================================================================
@@ -129,7 +173,7 @@ public class InstSetDocGenerator {
             System.exit(1);
         }
 
-        ALL_INSTSET_VIDS = instsetVids;
+        documented(instsetVids);
 
         final Path outputPath = Path.of(outputDir).toAbsolutePath().normalize();
         Files.createDirectories(outputPath);
@@ -140,97 +184,62 @@ public class InstSetDocGenerator {
         SER = ObjmtronUISerializer.prettyPrint();
         final String depth = relativeDepth;
         try {
-            final List<Meta> metas = new ArrayList<>();
-            final List<Set<Type>> allTypes = new ArrayList<>();
-            final List<Set<Inst>> allInsts = new ArrayList<>();
-            final List<Set<Obj>> allConsts = new ArrayList<>();
-            final List<Set<Inst>> allRewrites = new ArrayList<>();
-            final List<List<SpaceEntry>> allSpaces = new ArrayList<>();
+            /** inst tid => the instruction set that DECLARED it (not the one whose address holds it). */
+            final Map<String, String> declaring = new LinkedHashMap<>();
+            final List<Page> pages = new ArrayList<>();
+            final Set<String> built = new LinkedHashSet<>(instsetVids);
 
+            // THE SCOPE, MOUNTED FIRST — every requested set is imported before ANY page is read. A page
+            // must not depend on the order its siblings were named in: a contribution is written into its
+            // address owner's table only once its DECLARING set is imported, and /m is named first, so with
+            // the import inside the read loop geo's as/has contracts were absent from /m's tables when /m
+            // was read — and geo's own page never lists them either (their address is /m's). Published nowhere.
+            for (final String vid : instsetVids) {
+                if (vid.equals("/m")) continue;
+                try {
+                    InstSet.importInstSet(f(vid));
+                } catch (final Throwable e) {
+                    LOG.info("Failed to import " + vid + ": " + e.getMessage());
+                }
+            }
+
+            // PASS ONE — read every page, collecting the declaration index as we go.
             for (final String vid : instsetVids) {
                 try {
-                    if (!vid.equals("/m"))
-                        InstSet.importInstSet(f(vid));
                     LOG.info("fetching: " + vid);
-                    final InstSet is = (InstSet) Machine.read(f(vid));
-                    LOG.info("  read " + vid + " type=" + is.getClass().getSimpleName() + " noObj=" + is.isNoObj());
-
-                    final Meta meta = extractMeta(is, vid);
-
-                    // Types, insts, rewrites, consts come directly from the
-                    // instset's own tables.  However, checkPattern permits child-
-                    // instset items when patterns overlap (e.g. /m/* matches
-                    // /m/db/tble/rrow).  Filter to only items whose most-specific
-                    // matching instset prefix is the current one.
-                    final fURI spacePattern = f(vid + "/space/#");
-                    final Set<Type> types = is.types().stream()
-                            .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
-                            .filter(t -> !t.vid().test(spacePattern))
-                            .collect(Collectors.toSet());
-                    final Set<Inst> insts = is.insts().stream()
-                            .filter(inst -> owns(inst.tid().toString(), vid, instsetVids))
-                            .collect(Collectors.toSet());
-                    final Set<Inst> rewrites = is.rewrites().stream()
-                            .filter(rw -> owns(rw.tid().toString(), vid, instsetVids))
-                            .collect(Collectors.toSet());
-                    final Set<Obj> consts = is.consts().stream()
-                            .filter(c -> c.vid() != null && owns(c.vid().toString(), vid, instsetVids))
-                            .collect(Collectors.toSet());
-                    // Spaces are types whose VID matches /{instSet}/space/#
-                    final List<SpaceEntry> spaces = is.types().stream()
-                            .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, instsetVids))
-                            .filter(t -> t.vid().test(spacePattern))
-                            .map(s -> new SpaceEntry(s.vid().toString(), s.vid().name(), s, s.toString()))
-                            .toList();
-                    consts.removeIf(c -> c.vid().equals(f(vid)));
-
-                    // Move consts whose VIDs map to Type objects into types
-                    final List<Obj> constsToMove = new ArrayList<>();
-                    for (final Obj c : consts) {
-                        try {
-                            final Obj resolved = Machine.read(c.vid());
-                            if (resolved != null && !resolved.isNoObj() && resolved.isType()) {
-                                types.add(resolved.asType());
-                                constsToMove.add(c);
-                            }
-                        } catch (final Exception ignored) {
-                        }
-                    }
-                    consts.removeAll(constsToMove);
-
-                    LOG.info("  " + vid + ": " + types.size() + " types, " + insts.size() + " insts, "
-                            + rewrites.size() + " rewrites, " + spaces.size() + " spaces, " + consts.size() + " consts");
-                    if (vid.equals("/m")) {
-                        LOG.info("  /m types: " + types.stream().map(t -> String.valueOf(t.vid())).collect(Collectors.joining(", ")));
-                        LOG.info("  /m spaces: " + spaces.stream().map(s -> s.vid()).collect(Collectors.joining(", ")));
-                    }
-
-                    final String html = generateHtml(meta, types, insts, rewrites, spaces, consts,
-                            websiteTemplate, depth, buildNumber);
-                    final String filename = vidToFilename(vid);
-                    Files.writeString(outputPath.resolve(filename), html);
-                    LOG.info("  -> " + outputPath.resolve(filename));
-
-                    metas.add(meta);
-                    allTypes.add(types);
-                    allInsts.add(insts);
-                    allConsts.add(consts);
-                    allRewrites.add(rewrites);
-                    allSpaces.add(spaces);
-                } catch (final Throwable e) {   // TEMP DIAGNOSTIC: was Exception
+                    final Page page = readPage(vid);
+                    pages.add(page);
+                    // FIRST DECLARATION WINS: a contract declared by two sets is attributed to the one read
+                    // first (the caller's vid order) — the nearest-vocabulary rule the VM uses elsewhere.
+                    for (final Inst inst : page.declared())
+                        declaring.putIfAbsent(inst.tid().toString(), vid);
+                } catch (final Throwable e) {
                     LOG.info("Failed to process " + vid + ": " + e.getMessage());
                     e.printStackTrace();
                 }
             }
 
-            if (metas.size() > 1) {
-                final String indexHtml = generateIndexHtml(metas, allTypes, allInsts, allSpaces,
-                        allRewrites, allConsts, websiteTemplate, depth, buildNumber);
+            // PASS TWO — render. Every page now sees the COMPLETE declaration index, so an address page can
+            // label a contract with its author and a declaring page can list what it provided elsewhere.
+            for (final Page page : pages) {
+                try {
+                    final String html = generateHtml(page, declaring, built, websiteTemplate, depth, buildNumber);
+                    final String filename = vidToFilename(page.meta().vid());
+                    Files.writeString(outputPath.resolve(filename), html);
+                    LOG.info("  -> " + outputPath.resolve(filename));
+                } catch (final Throwable e) {
+                    LOG.info("Failed to render " + page.meta().vid() + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+
+            if (pages.size() > 1) {
+                final String indexHtml = generateIndexHtml(pages, websiteTemplate, depth);
                 Files.writeString(outputPath.resolve("index.html"), indexHtml);
                 LOG.info("  -> " + outputPath.resolve("index.html"));
             }
 
-            LOG.info("Done. " + metas.size() + " instset(s) generated.");
+            LOG.info("Done. " + pages.size() + " instset(s) generated.");
         } finally {
             BootLoader.close();
             System.exit(0);
@@ -352,22 +361,144 @@ public class InstSetDocGenerator {
         return obj == null || obj.tid() == null ? null : fetchDoc(obj.tid());
     }
 
+    /**
+     * THE DOC FOR THIS VERY CONTRACT — an instruction's {@code ?docq} answers by base path and then admits
+     * on the dom/rng PATH, so an overloaded operation legitimately returns several docs (one of them a
+     * sibling's, admitted because its dom refines the query's). A doc page must not show a sibling's prose,
+     * so the doc whose {@code obj} field IS this inst wins; a single unambiguous doc is the fallback, and an
+     * ambiguous answer is no doc at all (the row is still listed — better silent than wrong).
+     * <p>
+     * This matters more since {@code MInst.ARGS_IN_TID}: two contracts that differ only in their argument
+     * types now coexist at the same base path, and the doc lookup compares dom/rng alone.
+     */
+    private static Rec fetchInstDoc(final Inst inst) {
+        if (inst == null || inst.tid() == null) return null;
+        final String tid = inst.tid().toString();
+        Rec sole = null;
+        int found = 0;
+        for (final Obj candidate : Machine.read(inst.tid().addQ("docq")).stream().toList()) {
+            if (!(candidate instanceof Rec doc)) continue;
+            final String desc = fieldStr(doc, "desc");
+            if (desc == null || desc.isEmpty() || "no documentation available".equals(desc)) continue;
+            final Obj described = doc.at("obj");
+            if (described != null && described.isInst() && tid.equals(described.tid().toString()))
+                return doc;
+            sole = doc;
+            found++;
+        }
+        return found == 1 ? sole : null;
+    }
+
+    /**
+     * WHAT AN INSTRUCTION SET DECLARED — its own {@code inst} rec list, unioned with its table.
+     * <p>
+     * The rec list is the AUTHOR's record and the table is the ADDRESS's, and they differ exactly where this
+     * generator used to go wrong: memory routes a write to the most specific instruction set, so a set that
+     * declares a contract at another set's address has it placed in THAT set's table (and its docs written
+     * into that set's doc space) while the declaration stays in the declaring set's list. Reading the
+     * address alone therefore loses the author.
+     * <p>
+     * Read through {@code jvm()}, never {@code at()}: a union level's {@code at()} walks the enclosing
+     * machine, which would answer the parent's declarations as this level's.
+     */
+    static List<Inst> declaredInsts(final InstSet is) {
+        final Map<String, Inst> rows = new LinkedHashMap<>();
+        final Obj declared = is.jvm().get(uri(INST));
+        if (declared != null && !declared.isNoObj() && declared.isLst())
+            for (final Obj row : declared.lstValue())
+                if (row.isInst())
+                    rows.putIfAbsent(row.tid().toString(), row.as());
+        // THE REC LIST IS THE AUTHOR'S RECORD AND IT IS COMPLETE where it exists, so the table is NOT unioned
+        // in: a set's table also holds contracts OTHER sets declared at its addresses, and adding those would
+        // make the address's owner claim its contributors' work. Only a set that keeps no declaration list
+        // (it reports its insts from a static set) falls back to the table.
+        if (rows.isEmpty())
+            is.insts().forEach(inst -> rows.putIfAbsent(inst.tid().toString(), inst));
+        return new ArrayList<>(rows.values());
+    }
+
+    /**
+     * READ ONE PAGE — its metadata and the four kinds, separated into what this set HOLDS (address) and
+     * what it DECLARED (author).
+     */
+    private static Page readPage(final String vid) {
+        final InstSet is = (InstSet) Machine.read(f(vid));
+        LOG.info("  read " + vid + " type=" + is.getClass().getSimpleName() + " noObj=" + is.isNoObj());
+        final Meta meta = extractMeta(is, vid);
+
+        // Types, insts, rewrites, consts come directly from the instset's own tables.  However,
+        // checkPattern permits child-instset items when patterns overlap (e.g. /m/* matches
+        // /m/db/tble/rrow).  Filter to only items whose most-specific matching instset prefix is the
+        // current one.
+        final fURI spacePattern = f(vid + "/space/#");
+        final Set<Type> types = is.types().stream()
+                .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, ALL_INSTSET_VIDS))
+                .filter(t -> !t.vid().test(spacePattern))
+                .collect(Collectors.toSet());
+        final Set<Inst> insts = is.insts().stream()
+                .filter(inst -> owns(inst.tid().toString(), vid, ALL_INSTSET_VIDS))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        final Set<Inst> rewrites = is.rewrites().stream()
+                .filter(rw -> owns(rw.tid().toString(), vid, ALL_INSTSET_VIDS))
+                .collect(Collectors.toSet());
+        final Set<Obj> consts = is.consts().stream()
+                .filter(c -> c.vid() != null && owns(c.vid().toString(), vid, ALL_INSTSET_VIDS))
+                .collect(Collectors.toSet());
+        // Spaces are types whose VID matches /{instSet}/space/#
+        final List<SpaceEntry> spaces = is.types().stream()
+                .filter(t -> t.vid() != null && owns(t.vid().toString(), vid, ALL_INSTSET_VIDS))
+                .filter(t -> t.vid().test(spacePattern))
+                .map(s -> new SpaceEntry(s.vid().toString(), s.vid().name(), s, SER.write(s)))
+                .toList();
+        consts.removeIf(c -> c.vid().equals(f(vid)));
+
+        // Move consts whose VIDs map to Type objects into types
+        final List<Obj> constsToMove = new ArrayList<>();
+        for (final Obj c : consts) {
+            try {
+                final Obj resolved = Machine.read(c.vid());
+                if (resolved != null && !resolved.isNoObj() && resolved.isType()) {
+                    types.add(resolved.asType());
+                    constsToMove.add(c);
+                }
+            } catch (final Exception ignored) {
+            }
+        }
+        consts.removeAll(constsToMove);
+
+        // THE AUTHOR'S LIST — the contracts declared here, whether they landed at this address or another's.
+        final List<Inst> declared = declaredInsts(is).stream()
+                .filter(inst -> inst.tid() != null)
+                .sorted(Comparator.comparing(inst -> inst.tid().toString()))
+                .toList();
+        final List<Inst> contributed = declared.stream()
+                .filter(inst -> !owns(inst.tid().toString(), vid, ALL_INSTSET_VIDS))
+                .toList();
+
+        LOG.info("  " + vid + ": " + types.size() + " types, " + insts.size() + " insts, "
+                + rewrites.size() + " rewrites, " + spaces.size() + " spaces, " + consts.size() + " consts, "
+                + declared.size() + " declared (" + contributed.size() + " elsewhere)");
+        if (vid.equals("/m")) {
+            LOG.info("  /m types: " + types.stream().map(t -> String.valueOf(t.vid())).collect(Collectors.joining(", ")));
+            LOG.info("  /m spaces: " + spaces.stream().map(s -> s.vid()).collect(Collectors.joining(", ")));
+        }
+        return new Page(meta, types, insts, rewrites, spaces, consts, declared, contributed);
+    }
+
     // ========================================================================
     // HTML GENERATION
     // ========================================================================
 
-    private static String generateHtml(final Meta meta,
-                                       final Set<Type> types, final Set<Inst> insts,
-                                       final Set<Inst> rewrites, final List<SpaceEntry> spaces,
-                                       final Set<Obj> consts,
+    private static String generateHtml(final Page page,
+                                       final Map<String, String> declaring, final Set<String> built,
                                        final boolean websiteTemplate, final String depth,
                                        final int buildNumber) {
         if (websiteTemplate) {
-            final String header = SiteChrome.header(depth, DocsUtil.esc(meta.name()) + " - metatron Instruction Set",
+            final String header = SiteChrome.header(depth, DocsUtil.esc(page.meta().name()) + " - metatron Instruction Set",
                     "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">");
             final String footer = SiteChrome.footer(depth);
             if (!header.isEmpty() && !footer.isEmpty()) {
-                return header + bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber) + footer;
+                return header + bodyContent(page, declaring, built, buildNumber) + footer;
             }
         }
         return """
@@ -389,25 +520,26 @@ public class InstSetDocGenerator {
                     <script>hljs.highlightAll();</script>
                 </body>
                 </html>
-                """.formatted(DocsUtil.esc(meta.name()), depth, depth,
-                bodyContent(meta, types, insts, rewrites, spaces, consts, buildNumber), depth, depth);
+                """.formatted(DocsUtil.esc(page.meta().name()), depth, depth,
+                bodyContent(page, declaring, built, buildNumber), depth, depth);
     }
 
-    private static String bodyContent(final Meta meta,
-                                      final Set<Type> types, final Set<Inst> insts,
-                                      final Set<Inst> rewrites, final List<SpaceEntry> spaces,
-                                      final Set<Obj> consts,
+    private static String bodyContent(final Page page,
+                                      final Map<String, String> declaring, final Set<String> built,
                                       final int buildNumber) {
+        final String instsetVid = page.meta().vid();
         final StringBuilder sb = new StringBuilder();
-        sb.append(sectionHeader(meta));
-        sb.append(sectionNav(consts.size(), types.size(), insts.size(), spaces.size(), rewrites.size()));
-        sb.append(sectionToc(meta.vid(), meta.name(), types, insts, rewrites, spaces, consts));
-        sb.append(sectionConsts(meta.vid(), consts));
-        sb.append(sectionTypes(meta.vid(), types));
-        sb.append(sectionSpaces(spaces, meta.vid()));
-        sb.append(sectionInsts(meta.vid(), insts));
-        sb.append(sectionRewrites(meta.vid(), rewrites));
-        sb.append(sectionFooter(buildNumber));
+        sb.append(sectionHeader(page.meta()));
+        sb.append(sectionNav(page.consts().size(), page.types().size(), page.insts().size(),
+                page.spaces().size(), page.rewrites().size(), page.contributed().size()));
+        sb.append(sectionToc(page));
+        sb.append(sectionConsts(instsetVid, page.consts()));
+        sb.append(sectionTypes(instsetVid, page.types(), built));
+        sb.append(sectionSpaces(page.spaces(), instsetVid));
+        sb.append(sectionInsts(instsetVid, page.insts(), declaring, built));
+        sb.append(sectionContributed(instsetVid, page.contributed(), declaring, built));
+        sb.append(sectionRewrites(instsetVid, page.rewrites()));
+        sb.append(sectionFooter());
         return sb.toString();
     }
 
@@ -458,7 +590,7 @@ public class InstSetDocGenerator {
     // ── Section: Navigation pills ──────────────────────────────────────
 
     private static String sectionNav(final int consts, final int types, final int insts,
-                                     final int spaces, final int rewrites) {
+                                     final int spaces, final int rewrites, final int contributed) {
         return """
                 <div class="container-xxl mb-4">
                     <div class="d-flex justify-content-center gap-2 flex-wrap">
@@ -469,6 +601,7 @@ public class InstSetDocGenerator {
                         navBtn("types", "types", types, "bg-primary") +
                         navBtn("spaces", "spaces", spaces, "bg-info") +
                         navBtn("instructions", "insts", insts, "bg-success") +
+                        navBtn("defined", "defined elsewhere", contributed, "bg-info") +
                         navBtn("rewrites", "rewrites", rewrites, "bg-warning"));
     }
 
@@ -483,10 +616,14 @@ public class InstSetDocGenerator {
 
     // ── Section: Table of Contents ─────────────────────────────────────
 
-    private static String sectionToc(final String instsetVid, final String instsetName,
-                                     final Set<Type> types, final Set<Inst> insts,
-                                     final Set<Inst> rewrites, final List<SpaceEntry> spaces,
-                                     final Set<Obj> consts) {
+    private static String sectionToc(final Page page) {
+        final String instsetVid = page.meta().vid();
+        final String instsetName = page.meta().name();
+        final Set<Type> types = page.types();
+        final Set<Inst> insts = page.insts();
+        final Set<Inst> rewrites = page.rewrites();
+        final List<SpaceEntry> spaces = page.spaces();
+        final Set<Obj> consts = page.consts();
         final StringBuilder cols = new StringBuilder();
 
         // Constants
@@ -506,18 +643,34 @@ public class InstSetDocGenerator {
                         .map(s -> tocPill(vidToAnchor(s.vid()), s.name(), "bg-info text-dark", "S"))
                         .collect(Collectors.joining()));
 
-        // Instructions
+        // Instructions — ONE PILL PER OPERATION, anchored at its base path (never at a variant's full tid:
+        // that carries the variant that happened to be first, dom/rng/args query included, and is neither
+        // stable across runs nor a usable link target for another page).
         tocFlatGroup(cols, "insts", "bg-success", "I",
                 insts.stream()
                         .filter(inst -> inst.tid() != null)
                         .collect(Collectors.toMap(
                                 inst -> inst.tid().name(),
-                                inst -> inst.tid().toString(),
+                                inst -> vidToAnchor(inst.tid().basePath().toString()),
                                 (a, b) -> a,
                                 LinkedHashMap::new))
                         .entrySet().stream()
                         .sorted(Map.Entry.comparingByKey())
-                        .map(e -> tocPill(vidToAnchor(e.getValue()), e.getKey(), "bg-success", "I"))
+                        .map(e -> tocPill(e.getValue(), e.getKey(), "bg-success", "I"))
+                        .collect(Collectors.joining()));
+
+        // Defined elsewhere — the contracts this set declared at ANOTHER set's address. They are documented
+        // on the address's page too; this is the page that says who wrote them.
+        tocFlatGroup(cols, "defined elsewhere", "bg-info", "D",
+                page.contributed().stream()
+                        .collect(Collectors.toMap(
+                                inst -> inst.tid().name(),
+                                inst -> "defined-" + vidToAnchor(inst.tid().basePath().toString()),
+                                (a, b) -> a,
+                                LinkedHashMap::new))
+                        .entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .map(e -> tocPill(e.getValue(), e.getKey(), "bg-info", "D"))
                         .collect(Collectors.joining()));
 
         // Rewrites
@@ -526,12 +679,12 @@ public class InstSetDocGenerator {
                         .filter(r -> r.tid() != null)
                         .collect(Collectors.toMap(
                                 r -> r.tid().name(),
-                                r -> r.tid().toString(),
+                                r -> vidToAnchor(r.tid().basePath().toString()),
                                 (a, b) -> a,
                                 LinkedHashMap::new))
                         .entrySet().stream()
                         .sorted(Map.Entry.comparingByKey())
-                        .map(e -> tocPill(vidToAnchor(e.getValue()), e.getKey(), "bg-warning text-dark", "R"))
+                        .map(e -> tocPill(e.getValue(), e.getKey(), "bg-warning text-dark", "R"))
                         .collect(Collectors.joining()));
 
         if (cols.isEmpty()) return "";
@@ -678,27 +831,220 @@ public class InstSetDocGenerator {
 
     // ── Section: Types ─────────────────────────────────────────────────
 
-    // ── Category badges (algebraic law / theory chips) ─────────────────
+    // ── Category badges (algebraic theory chips) ───────────────────────
 
     /**
-     * Render the algebraic theories a type models — via the {@code as(object::T)}
-     * lift — as theory chips. Distinct theories ({@code ring}, {@code group}, …)
-     * are deduped; each chip carries a hover tooltip with its docq description and
+     * THE TYPE'S ALGEBRA, resolved once: the {@code law} block — {@code ring => /m/theory/ring_theory::[…]},
+     * {@code add_group => …} — that says which algebraic structures the type models.
+     * <p>
+     * Read through {@link LawTable#typeLawsOf(Type)}, the CONSOLIDATED door: the algebra a type declares
+     * beside itself (the {@code ?lawq} block a builder stages) is resolved first, the instruction set's in-code
+     * law table second, and the longest matching table owns the answer. Reading the builder's staging map
+     * directly would answer {@code rec0()} for every type whose algebra lives in its set's table, i.e. for
+     * most of them, and reading the {@code as(object::T)} lift directly would resolve the same block a second
+     * way — so this asks the one place both of those drain into.
+     */
+    private static Algebra typeAlgebra(final Type t) {
+        final Algebra laws = LawTable.typeLawsOf(t);
+        return null == laws ? Algebra.empty() : laws;
+    }
+
+    /**
+     * Render the algebraic theories a type models as theory chips. Distinct theories ({@code ring},
+     * {@code group}, …) are deduped; each chip carries a hover tooltip with its {@code ?docq} description and
      * declared roles. An unmodeled type yields nothing.
      */
     private static String theoryChips(final Type t) {
-        final Obj object = catInstSet.OBJECT_TYPE.constructor().apply(t);
-        if (!(object instanceof Rec r)) return "";
-        final Obj law = r.at(LAW);
-        if (!(law instanceof Rec lawRec) || lawRec.jvm().isEmpty()) return "";
+        final Algebra law = typeAlgebra(t);
+        if (law.isEmpty()) return "";
         final Map<String, Rec> theories = new TreeMap<>();
-        for (final Obj value : lawRec.jvm().values())
+        for (final Obj value : law.jvm().values())
             if (value instanceof Rec instance)
                 theories.putIfAbsent(instance.tid().name().replace("_theory", ""), instance);
         final StringBuilder chips = new StringBuilder();
         for (final Map.Entry<String, Rec> e : theories.entrySet())
             chips.append(theoryChip(e.getKey(), e.getValue()));
         return chips.toString();
+    }
+
+    /**
+     * THE WHOLE ALGEBRA, one click away — a native {@code <dialog>} holding the type's {@code as(object::T)}
+     * rec, the block a reader types at the console to see the theory instances, their role bindings, and the
+     * morphism pair ({@code morphed_to}/{@code morphed_from}) in one place. The chips state WHICH structures
+     * the type models (and whether it models any at all comes from {@link LawTable#typeLawsOf(Type)}); this
+     * states WHAT each role is bound to, which is too much for a header and too little for a page of its own.
+     * <p>
+     * NATIVE {@code <dialog>}, NOT a Bootstrap modal, and that is a correctness choice: the site wraps every
+     * page in {@code <main>} and styles it {@code position:relative; z-index:1}, which makes it a STACKING
+     * CONTEXT. A fixed-position modal rendered inside it is painted below the body-level
+     * {@code .modal-backdrop}, so the whole page (panel included) dims and the close button cannot be
+     * clicked. {@code showModal()} puts the dialog in the browser's TOP LAYER, which escapes every ancestor
+     * stacking context, so it opens above the backdrop and closes on the X, on the backdrop, or on Escape
+     * with no library involved.
+     */
+    static String algebraModal(final Type t, final String typeAnchor, final Set<String> built) {
+        final Algebra algebra = typeAlgebra(t);
+        if (algebra.isEmpty()) return "";
+        final Obj lifted = catInstSet.OBJECT_TYPE.constructor().apply(t);
+        final String id = "algebra-" + typeAnchor;
+        // TWO TABS, NOT ONE LONG SCROLL: the structured read says which structures the type models and what
+        // each role is bound to; the mtron rec is the same fact in the language's own spelling. They are the
+        // same information at two densities, so they are offered side by side rather than stacked.
+        final String body = algebraTabs(id,
+                algebraTheories(algebra, built),
+                algebraEncoding(SER.write(lifted instanceof Rec r ? r : algebra)));
+        return algebraDialogHtml(id,
+                DocsUtil.esc(t.vid() != null ? t.vid().name() : "") + "::T algebra", body);
+    }
+
+    /**
+     * THE PANEL'S TWO VIEWS AS TABS — "theories" (the structured table) and "mtron encoding" (the rec). Bootstrap
+     * tab semantics, with ids derived from the dialog's own id so several type panels can coexist on a page.
+     */
+    static String algebraTabs(final String id, final String theories, final String encoding) {
+        return """
+                <div class="algebra-tabs">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="%1$s-theories-tab" data-bs-toggle="tab" \
+                data-bs-target="#%1$s-theories" type="button" role="tab" \
+                aria-controls="%1$s-theories" aria-selected="true">theories</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="%1$s-mtron-tab" data-bs-toggle="tab" \
+                data-bs-target="#%1$s-mtron" type="button" role="tab" \
+                aria-controls="%1$s-mtron" aria-selected="false">mtron encoding</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="%1$s-theories" role="tabpanel" \
+                aria-labelledby="%1$s-theories-tab">%2$s</div>
+                        <div class="tab-pane fade" id="%1$s-mtron" role="tabpanel" \
+                aria-labelledby="%1$s-mtron-tab">%3$s</div>
+                    </div>
+                </div>""".formatted(id, theories, encoding);
+    }
+
+    /**
+     * THE WEB VIEW OF AN ALGEBRA — one block per structural theory the type models, read through the
+     * {@link Algebra} view rather than by rec-at ceremony: {@code algebra.theories()} is the order the
+     * declaration was written in, {@code algebra.theory(name)} the instance's role bindings.
+     * <p>
+     * Each role is a table row, and its value is the thing a reader wants to follow: an operation role
+     * ({@code add => plus}) LINKS to that instruction's card on the page that documents it, while an element
+     * role ({@code zero => 0}, {@code one => 1}) is the literal itself. The theory's own {@code ?docq}
+     * description sits UNDER its name (its own line — a long definition squashed beside the chip made the
+     * first grid row unreadable), and the chip itself is a link to the page that defines the theory type.
+     */
+    static String algebraTheories(final Algebra algebra, final Set<String> built) {
+        if (null == algebra || algebra.isEmpty()) return "";
+        final StringBuilder sb = new StringBuilder("<div class=\"algebra-theories\">");
+        for (final fURI theory : algebra.theories()) {
+            // a query answers the declaration, and rec0() is the EMPTY rec — never an Optional, and never
+            // noobj, so presence is `isEmpty()`, not `isNoObj()`
+            final Rec declaration = algebra.theory(theory);
+            if (declaration.isEmpty()) continue;
+            final String name = theory.name();
+            final String chip = "<span class=\"theory-chip theory-" + DocsUtil.esc(name) + "\">"
+                    + DocsUtil.esc(name) + "</span>";
+            final String href = theoryHref(declaration, built);
+            sb.append("<div class=\"algebra-theory\">")
+                    .append("<div class=\"algebra-theory-head\">")
+                    .append(null == href ? chip
+                            : "<a class=\"text-decoration-none\" href=\"" + href + "\">" + chip + "</a>")
+                    .append(theoryLink(declaration, built));
+            final Rec doc = fetchDoc(declaration.tid());
+            final String desc = null == doc ? null : fieldStr(doc, "desc");
+            if (null != desc && !desc.isEmpty())
+                sb.append("<span class=\"algebra-theory-desc\">").append(DocsUtil.esc(specRest(desc))).append("</span>");
+            sb.append("</div><table class=\"algebra-roles\">");
+            for (final Map.Entry<Obj, Obj> role : declaration.jvm().entrySet()) {
+                sb.append("<tr><th class=\"algebra-role\">")
+                        .append(DocsUtil.esc(role.getKey().uriValue().name())).append("</th><td>")
+                        .append(roleValueHtml(role.getValue(), built)).append("</td></tr>");
+            }
+            sb.append("</table></div>");
+        }
+        return sb.append("</div>").toString();
+    }
+
+    /**
+     * WHERE THE THEORY TYPE IS DOCUMENTED — {@code <page>#<anchor of /m/theory/ring_theory>} — or null when this
+     * build does not produce that page. One place, because the chip, its type label, and any later reader must
+     * agree on the target.
+     */
+    private static String theoryHref(final Rec declaration, final Set<String> built) {
+        final fURI tid = declaration.tid();
+        if (null == tid) return null;
+        final String home = extractInstset(tid.toString());
+        if (home.isEmpty() || !built.contains(home)) return null;
+        return vidToFilename(home) + "#" + vidToAnchor(tid.toString());
+    }
+
+    /**
+     * A THEORY INSTANCE'S TYPE, as a link to the page that defines it ({@code /m/theory/ring_theory}) —
+     * the structure's OWN identity, which the instance's name alone does not say.
+     */
+    private static String theoryLink(final Rec declaration, final Set<String> built) {
+        final fURI tid = declaration.tid();
+        if (null == tid) return "";
+        final String label = DocsUtil.esc(tid.name());
+        final String href = theoryHref(declaration, built);
+        return null == href
+                ? "<small class=\"algebra-theory-type code\">" + label + "</small>"
+                : "<a class=\"algebra-theory-type code\" href=\"" + href + "\">" + label + "</a>";
+    }
+
+    /**
+     * ONE ROLE'S BOUND VALUE. An operation role dereferences to the instruction that plays it — linked to
+     * that instruction's card, because that is the next thing a reader wants to see — and every other role is
+     * a literal, printed as the language spells it.
+     */
+    static String roleValueHtml(final Obj value, final Set<String> built) {
+        final Obj deref = value.dereference();
+        if (deref.isInst()) {
+            final Inst inst = deref.as();
+            final String home = extractInstset(inst.tid().toString());
+            final String label = mtronInline(inst.tid().name() + "()");
+            if (home.isEmpty() || !built.contains(home) || null == inst.tid().basePath())
+                return "<span class=\"algebra-value\">" + label + "</span>";
+            return "<a class=\"text-decoration-none\" href=\"" + vidToFilename(home) + "#"
+                    + vidToAnchor(inst.tid().basePath().toString()) + "\">" + label + "</a>";
+        }
+        return "<span class=\"algebra-value\">" + DocsUtil.esc(roleValue(value)) + "</span>";
+    }
+
+    /**
+     * The SAME algebra in the language's own spelling — the {@code as(object::T)} rec, in the panel's second
+     * tab. It scrolls inside its own box (with the site's slim dark-red scrollbar) rather than growing the
+     * dialog, because a deep rec is long and the reader is here for the structure.
+     */
+    static String algebraEncoding(final String mtron) {
+        return "<pre class=\"algebra-mtron\"><code class=\"language-mtron\">"
+                + DocsUtil.esc(mtron) + "</code></pre>";
+    }
+
+    /**
+     * THE PANEL ITSELF — the trigger chip and the dialog that holds the body. Split from
+     * {@link #algebraModal(Type, String, Set)} so the SHAPE can be pinned by a test without a booted VM: the
+     * stacking-context escape is a markup fact, not an algebra fact.
+     */
+    static String algebraDialogHtml(final String id, final String title, final String body) {
+        return """
+                <div class="card-body py-2">
+                    <button type="button" class="law-chip theory-chip algebra-open" \
+                onclick="document.getElementById('%s').showModal();" \
+                title="show the whole algebra">algebra</button>
+                </div>
+                <dialog class="algebra-dialog" id="%s" aria-label="%s" \
+                onclick="if (event.target === this) this.close();">
+                    <div class="algebra-dialog-head">
+                        <span class="code text-primary">%s</span>
+                        <button type="button" class="btn-close btn-close-white" \
+                onclick="this.closest('dialog').close();" aria-label="close"></button>
+                    </div>
+                    %s
+                </dialog>""".formatted(id, id, title, title, body);
     }
 
     /**
@@ -762,30 +1108,7 @@ public class InstSetDocGenerator {
         return s.endsWith(".") ? s + "0" : s;
     }
 
-    /**
-     * Render the process laws an inst obeys — via the {@code as(morphism::T)} lift —
-     * as law chips. An inst with no declared laws yields nothing.
-     */
-    private static String lawChips(final Inst inst) {
-        final Obj morphism = catInstSet.MORPHISM_TYPE.constructor().apply(inst);
-        if (!(morphism instanceof Rec r)) return "";
-        final Obj law = r.at(LAW);
-        if (!(law instanceof Lst lawLst) || lawLst.jvm().isEmpty()) return "";
-        final Set<String> names = new TreeSet<>();
-        for (final Obj label : lawLst.jvm())
-            names.add(label.uriValue().name());
-        final StringBuilder chips = new StringBuilder();
-        for (final String name : names)
-            chips.append(chip("law", name));
-        return chips.toString();
-    }
-
-    private static String chip(final String kind, final String name) {
-        return "<span class=\"" + kind + "-chip " + kind + "-" + name + "\" title=\"" + name + "\">"
-                + DocsUtil.esc(name) + "</span>";
-    }
-
-    private static String sectionTypes(final String instsetVid, final Set<Type> types) {
+    private static String sectionTypes(final String instsetVid, final Set<Type> types, final Set<String> built) {
         if (types.isEmpty()) return "";
         final StringBuilder cards = new StringBuilder();
         for (final Type t : types.stream()
@@ -801,6 +1124,7 @@ public class InstSetDocGenerator {
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
                     + DocsUtil.esc(defn) + "</code></pre></div>" : "";
             final String inheritedFields = renderInheritedFields(t, instsetVid);
+            final String algebra = algebraModal(t, gid, built);
             final Rec doc = fetchDocByVid(t);
             cards.append("""
                     <div class="card mb-3" id="%s">
@@ -814,8 +1138,9 @@ public class InstSetDocGenerator {
                         %s
                         %s
                         %s
+                        %s
                     </div>""".formatted(gid, DocsUtil.esc(name), refines, DocsUtil.esc(uri),
-                    defnBlock, inheritedFields, renderDoc(doc, gid, instsetVid)));
+                    defnBlock, algebra, inheritedFields, renderDoc(doc, gid, instsetVid)));
         }
         return """
                 <div class="container-xxl mb-4" id="types">
@@ -943,6 +1268,17 @@ public class InstSetDocGenerator {
         return SER.write(t.predicate());
     }
 
+    /**
+     * "refines {@code <parent>::T}" — painted by HIGHLIGHT.JS, not by us.
+     * <p>
+     * The text is mtron: a URI, a {@code ::T} refinement, an identifier. The page already ships a mtron
+     * grammar and runs {@code hljs.highlightAll()}, which selects {@code pre code}, so the line is wrapped in
+     * an inline {@code pre > code.language-mtron} and the grammar decides the colors. Our own cyan is gone:
+     * a token should have one color scheme on a page, and this one is the highlighter's.
+     * <p>
+     * The whole {@code pre} sits inside the link, so navigation survives the hand-off: the highlighter
+     * replaces the CODE's contents, never the anchor around it.
+     */
     private static String superTypeRefines(final Type t, final String instsetVid) {
         if (t == null || t.isRootType()) return "";
         final Type parent = t.parentType();
@@ -951,83 +1287,242 @@ public class InstSetDocGenerator {
         final fURI superVid = parent.vid();
         if (superVid == null) return "";
 
-        final String superName = superVid.name();
         final String superShort = superVid.toString();
         final String superInstset = extractInstset(superShort);
         final String anchor = vidToAnchor(superShort);
+        final String target = (superInstset != null && !superInstset.isEmpty() && !superInstset.equals(instsetVid))
+                ? vidToFilename(superInstset) + "#" + anchor
+                : "#" + anchor;
+        return "<span class=\"ms-2\">refines "
+                + "<a href=\"" + target + "\" class=\"text-decoration-none text-reset\">"
+                + mtronInline(superShort + "::T")
+                + "</a></span>";
+    }
 
-        if (superInstset != null && !superInstset.isEmpty() && !superInstset.equals(instsetVid)) {
-            final String target = vidToFilename(superInstset) + "#" + anchor;
-            return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
-                    "<a href=\"" + target + "\" class=\"instset-doc-small-code text-info code\">" +
-                    DocsUtil.esc(superShort) + "::T</a></span>";
-        }
-        return "<span class=\"ms-2 text-muted instset-doc-small-code\">refines " +
-                "<a href=\"#" + anchor + "\" class=\"instset-doc-small-code text-info code\">" +
-                DocsUtil.esc(superShort) + "::T</a></span>";
+    // ── Instruction declarations: process laws, inverse, derivation ────────────────────────────
+
+    /**
+     * AN INSTRUCTION'S DECLARED FACETS — the process {@link Law}s it obeys, its {@code inverse}, and its
+     * {@code derivation} — as the badges and lines under its signature.
+     * <p>
+     * Read through {@link LawTable#lawsOf(fURI)}, the CONSOLIDATED door: an instruction's laws may be declared
+     * in code by the instruction set's law table, OR beside the instruction by
+     * {@code InstBuilder}/{@code Type.Builder} (persisted to {@code ?lawq}), and the lookup answers BOTH —
+     * the in-code row, the declaration registry, the store, and the inverse the carrier's algebra derives.
+     * Reading one source directly would silently miss the other, which is how half the instructions would
+     * have rendered without badges.
+     * <p>
+     * The declarations are PER CONTRACT (the entry is keyed by the contract's tid), so two specializations of
+     * one operation can declare different laws — which is why these belong on the variant's own row and not
+     * once in the card header.
+     */
+    private static String declarationLine(final Inst inst, final Set<String> built) {
+        final LawTable.Entry declared = LawTable.lawsOf(inst.tid());
+        if (null == declared) return "";
+        final StringBuilder sb = new StringBuilder();
+        for (final Obj law : declared.laws().jvm())
+            sb.append(lawChip(Law.valueOf(law.uriValue().name())));
+        if (null != declared.inverse())
+            sb.append("<span class=\"text-muted instset-doc-small-code ms-2\">inverse:</span> ")
+                    .append(inverseHtml(declared.inverse(), built));
+        final Derivation derivation = declared.derivation();
+        if (null != derivation)
+            sb.append("<span class=\"text-muted instset-doc-small-code ms-2\">derivation:</span> ")
+                    .append(mtronInline(SER.write(derivation.lhs())))
+                    .append("<span class=\"mx-1 text-muted\">\u2261</span>")
+                    .append(mtronInline(SER.write(derivation.rhs())));
+        if (sb.isEmpty()) return "";
+        return "<div class=\"declared-row\">" + sb + "</div>";
+    }
+
+    /**
+     * ONE LAW BADGE with a prose+LaTeX tooltip. The tooltip is DOM (a nested {@code .chip-tip}, hidden by
+     * opacity rather than {@code display:none}) because MathJax only typesets markup it can see, and a
+     * {@code title} attribute would show the raw {@code \(…\)}.
+     */
+    private static String lawChip(final Law law) {
+        final String name = law.name();
+        final String doc = lawDoc(law);
+        final StringBuilder tip = new StringBuilder("<span class=\"chip-tip-name\">")
+                .append(DocsUtil.esc(name)).append("</span>");
+        if (!doc.isEmpty())
+            tip.append("<span class=\"chip-tip-desc\">").append(DocsUtil.esc(doc)).append("</span>");
+        return "<span class=\"law-chip law-" + name + "\">" + DocsUtil.esc(name)
+                + "<span class=\"chip-tip\">" + tip + "</span></span>";
+    }
+
+    /**
+     * The prose+LaTeX description of a process law — the equations from {@link Law}'s own javadoc, written
+     * here because a compiler cannot read javadoc at run time and a reader of this page still needs them.
+     */
+    static String lawDoc(final Law law) {
+        return LAW_DOC.getOrDefault(law.name(), "");
+    }
+
+    private static final Map<String, String> LAW_DOC = Map.ofEntries(
+            Map.entry("absorbing", "an annihilator: \\(a \\cdot x = a\\) for every \\(x\\) — the operation's absorbing element"),
+            Map.entry("kleene", "the reflexive-transitive iterate — \\(a^{n}\\) over the operation, a Kleene closure"),
+            Map.entry("partial", "pass-through or drop \\(A \\to A^{?}\\) — the optional, zeroable lift of a value (\\(\\{0,1\\}\\))"),
+            Map.entry("floatable", "commutes through the stream ring's parallel/serial structure — the coefficient floats off \\(F \\backslash F_r\\)"),
+            Map.entry("blocked", "cannot float past a barrier — a reduce anchors the coefficient in place"),
+            Map.entry("pure", "the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred"),
+            Map.entry("action", "a monoid/group acting on a carrier — \\(f(gh)x = f(g)f(h)x\\)"),
+            Map.entry("prime", "an atomic, indecomposable element — no \\(b, c\\) with \\(a = b \\cdot c\\) and neither a unit"),
+            Map.entry("left_distributive", "distributes over \\(+\\) on the left — \\(a(b+c) = ab + ac\\)"),
+            Map.entry("right_distributive", "distributes over \\(+\\) on the right — \\((a+b)c = ac + bc\\)"),
+            Map.entry("semi_right_distributive", "distributes over \\(+\\) on the right with a RE-APPLICATION — \\((a+b)c = (ac+bc)c\\), the reducer's distributivity (a near-ring, left-distributive only)"),
+            Map.entry("magmadic", "a bare binary operation \\(A \\times A \\to A\\) — a magma: closure only, neither associativity nor an identity demanded"),
+            Map.entry("monoidic", "an associative binary operation with an identity — \\((a \\cdot b) \\cdot c = a \\cdot (b \\cdot c)\\), \\(e \\cdot a = a \\cdot e = a\\)"),
+            Map.entry("commutative", "\\(a \\cdot b = b \\cdot a\\)"),
+            Map.entry("poset", "the carrier is partially ordered, and these instructions are its comparisons \\((A \\times A \\to bool)\\)"),
+            Map.entry("unit", "the identity element — \\(e \\cdot x = x \\cdot e = x\\)"),
+            Map.entry("involution", "self-inverse, period two — \\(f(f(x)) = x\\)"),
+            Map.entry("complement", "the complemented-lattice law — \\(a \\cdot \\mathrm{inv}(a) = \\mathrm{inv}(\\mathrm{id})\\) (for a Boolean algebra, \\(a \\wedge \\neg a = \\bot\\))"),
+            Map.entry("idempotent", "\\(f(f(x)) = f(x)\\)"),
+            Map.entry("nilpotent", "some power is zero — \\(f^{n} = 0\\)"),
+            Map.entry("zero_divisor", "a nonzero \\(a\\) with \\(a \\cdot b = 0\\) for some nonzero \\(b\\)"),
+            Map.entry("cyclic", "generated by one element — every value is \\(g^{n}\\) for a single generator \\(g\\)"));
+
+    /**
+     * A mtron fragment that the page's highlighter paints: {@code pre > code.language-mtron} is what
+     * {@code hljs.highlightAll()} selects, so this is the ONLY shape that gets grammar colors on an inline
+     * fragment (a bare {@code code} is never highlighted).
+     * <p>
+     * The {@code mtron-inline} class is LOAD-BEARING, not decoration. The site chrome loads
+     * {@code highlightjs-copy}, which puts a copy BUTTON inside every highlighted block; on a one-line
+     * fragment that button covers the text (the reader sees "refines" and a "Copy to clipboard" rollover,
+     * with the URI itself hidden underneath). The stylesheet hides that button for this class and strips the
+     * block padding the button needs, so the fragment reads as part of the sentence it sits in. It is the
+     * same suppression {@code docs/website/uri.html} applies to its terminal boxes.
+     */
+    static String mtronInline(final String text) {
+        return "<pre class=\"d-inline mb-0 align-baseline mtron-inline\"><code class=\"language-mtron\">"
+                + DocsUtil.esc(text) + "</code></pre>";
+    }
+
+    /**
+     * THE INVERSE, clickable when the instruction it names is documented on a page of this build: the inverse
+     * is a sibling CONTRACT, so its own card is the target (anchored by its operation, which is where the link
+     * lands even when the inverse is another specialization of the same name).
+     */
+    private static String inverseHtml(final fURI inverse, final Set<String> built) {
+        final Obj resolved = Machine.read(inverse);
+        final Inst inst = resolved.isInst() ? resolved.as() : null;
+        final String text = null == inst ? inverse.toString() : SER.write(inst);
+        final String home = extractInstset(inverse.toString());
+        if (home.isEmpty() || !built.contains(home) || null == inverse.basePath())
+            return mtronInline(text);
+        return "<a href=\"" + vidToFilename(home) + "#" + vidToAnchor(inverse.basePath().toString())
+                + "\" class=\"text-decoration-none text-reset\">" + mtronInline(text) + "</a>";
     }
 
     // ── Section: Instructions ──────────────────────────────────────────
 
-    private static String sectionInsts(final String instsetVid, final Set<Inst> insts) {
+    private static String sectionInsts(final String instsetVid, final Set<Inst> insts,
+                                       final Map<String, String> declaring, final Set<String> built) {
         if (insts.isEmpty()) return "";
+        return """
+                <div class="container-xxl mb-4" id="instructions">
+                    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
+                    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+                        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
+                        labelled with the set that declared it, and documented on that set's page as well.
+                    </p>
+                    %s
+                </div>""".formatted(insts.size(),
+                instCards(instsetVid, insts, declaring, built, false));
+    }
 
+    /**
+     * THE SAME CONTRACTS, SEEN FROM THEIR AUTHOR — what this instruction set declared at another set's
+     * address. The row is documented on the address's page too (that is where a reader looks for
+     * {@code /m/inst/as}); this is the page that states who provided it and which of ITS types the contract
+     * is for, which is the fact an address can never carry.
+     */
+    private static String sectionContributed(final String instsetVid, final List<Inst> contributed,
+                                             final Map<String, String> declaring, final Set<String> built) {
+        if (contributed.isEmpty()) return "";
+        return """
+                <div class="container-xxl mb-4" id="defined">
+                    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">%d</span></h3>
+                    <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
+                        contracts declared HERE whose address belongs to another instruction set — so they are
+                        documented there too. Declared by
+                        <span class="code text-info">%s</span>, for use with the types it introduces.
+                    </p>
+                    %s
+                </div>""".formatted(contributed.size(), DocsUtil.esc(instsetVid),
+                instCards(instsetVid, new LinkedHashSet<>(contributed), declaring, built, true));
+    }
+
+    /**
+     * THE INST CARDS — one card per operation name, one clickable signature per contract (polymorphism is
+     * what makes one address hold many contracts).
+     *
+     * @param contributedSection true when rendering the AUTHOR's view: each row is an address elsewhere and
+     *                           gets a link back to the page that owns it, instead of a "defined by" chip
+     */
+    private static String instCards(final String instsetVid, final Set<Inst> insts,
+                                    final Map<String, String> declaring, final Set<String> built,
+                                    final boolean contributedSection) {
         // Group by name
         final Map<String, List<Inst>> groups = new LinkedHashMap<>();
         for (final Inst inst : insts) {
             if (inst.tid() == null) continue;
-            final String name = inst.tid().name();
-            groups.computeIfAbsent(name, _k -> new ArrayList<>()).add(inst);
+            groups.computeIfAbsent(inst.tid().name(), _k -> new ArrayList<>()).add(inst);
         }
 
         final StringBuilder cards = new StringBuilder();
         for (final String name : groups.keySet().stream().sorted().toList()) {
             final List<Inst> group = groups.get(name);
-            final String gid = vidToAnchor(group.get(0).tid().toString());
+            // THE BASE PATH IS THE OPERATION'S STABLE IDENTITY — one card per name, whatever contracts it
+            // holds. A variant's full tid carries whichever dom/rng/args happened to sort first, which is
+            // neither stable across runs nor linkable from another page.
+            final fURI basePath = group.get(0).tid().basePath();
+            final String gid = (contributedSection ? "defined-" : "") + vidToAnchor(basePath.toString());
 
             // Collect unique docs across polymorphic variants
             final List<Rec> uniqueDocs = new ArrayList<>();
             final Map<String, Integer> seenRaw = new HashMap<>();
             final Map<String, Integer> variantTab = new HashMap<>();
             for (final Inst inst : group) {
-                final Rec doc = fetchDocByTid(inst);
+                final Rec doc = fetchInstDoc(inst);
                 if (doc != null) {
                     final String raw = SER.write(doc);
                     if (!seenRaw.containsKey(raw)) {
                         seenRaw.put(raw, uniqueDocs.size());
                         uniqueDocs.add(doc);
                     }
-                    variantTab.put(inst.tid() != null ? inst.tid().toString() : "", seenRaw.get(raw));
+                    variantTab.put(inst.tid().toString(), seenRaw.get(raw));
                 }
             }
 
-            // Render signatures
+            // Render signatures — the UI serializer already renders a contract as `?rng<=dom(args)`, so the
+            // text is used as it comes: string surgery on it cannot linkify (it prints short names) and,
+            // with args in the tid, could only corrupt it. The row carries its OWN declared facets: laws are
+            // keyed per CONTRACT, so two specializations of one operation can declare different ones.
             final StringBuilder sigs = new StringBuilder();
             for (final Inst inst : group) {
-                String sig = convertShorthand(SER.write(inst));
-                // Make dom/rng type references in the shorthand clickable
-                final Type dom = inst.dom();
-                final Type rng = inst.rng();
-                if (dom != null) {
-                    final String domStr = dom.vid() != null ? dom.vid().toString() : dom.tid().toString();
-                    sig = sig.replace(domStr, typeLink(domStr, "text-info", "domain", instsetVid));
-                }
-                if (rng != null) {
-                    final String rngStr = rng.vid() != null ? rng.vid().toString() : rng.tid().toString();
-                    sig = sig.replace(rngStr, typeLink(rngStr, "text-success", "range", instsetVid));
-                }
-                final int tabIdx = variantTab.getOrDefault(inst.tid() != null ? inst.tid().toString() : "", 0);
+                final String sig = SER.write(inst);
+                final int tabIdx = variantTab.getOrDefault(inst.tid().toString(), 0);
                 final String tabId = gid + "-doc-" + tabIdx;
                 sigs.append("""
+                        <div class="variant-row">
                         <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" \
                         onclick="document.getElementById('%s-tab').click();\
                         document.getElementById('%s').scrollIntoView({behavior:'smooth',block:'center'});">\
-                        <code class="language-mtron">%s</code></pre>
-                        """.formatted(tabId, tabId, sig));
+                        <code class="language-mtron">%s</code>%s</pre>
+                        %s
+                        </div>
+                        """.formatted(tabId, tabId, DocsUtil.esc(sig),
+                        provenanceChip(inst, instsetVid, declaring, built, contributedSection),
+                        declarationLine(inst, built)));
             }
 
-            final String typeSig = typeSignatureHtml(instsetVid, group.get(0)) + lawChips(group.get(0));
-            final String vidStr = group.get(0).tid() != null ? group.get(0).tid().toString() : "";
+            // the header's dom=>rng is the FIRST variant's, which is arbitrary for a polymorphic operation —
+            // on the author's view every variant states its own, so the header carries none
+            final String typeSig = contributedSection ? "" : typeSignatureHtml(instsetVid, group.get(0));
+            final String intended = contributedSection ? intendedFor(instsetVid, group) : "";
             cards.append("""
                     <div class="card mb-3" id="%s">
                         <div class="card-header d-flex justify-content-between align-items-center py-2 \
@@ -1040,15 +1535,71 @@ public class InstSetDocGenerator {
                         </div>
                         <div class="card-body p-2">%s</div>
                         %s
-                    </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(vidStr),
-                    sigs.toString(), renderMultiDoc(uniqueDocs, gid, instsetVid)));
+                        %s
+                    </div>""".formatted(gid, DocsUtil.esc(name), typeSig, DocsUtil.esc(basePath.toString()),
+                    sigs.toString(), intended, renderMultiDoc(uniqueDocs, gid, instsetVid)));
         }
+        return cards.toString();
+    }
 
+    /**
+     * THE CHIP A ROW NEEDS TO STAY HONEST. On an address page: "defined by <set>", linking to the
+     * declaring page's own section for that operation. On a declaring page: "address: <set>", linking to
+     * the page that documents the address. A row this page both owns and declared gets nothing.
+     */
+    static String provenanceChip(final Inst inst, final String instsetVid,
+                                         final Map<String, String> declaring, final Set<String> built,
+                                         final boolean contributedSection) {
+        final String anchor = vidToAnchor(inst.tid().basePath().toString());
+        if (contributedSection) {
+            final String home = extractInstset(inst.tid().toString());
+            if (home.isEmpty() || home.equals(instsetVid)) return "";
+            // THE ADDRESS IS NOT OURS, so it is drawn in red: this contract lives at that set's operation,
+            // documented there, and only DECLARED here.
+            final String red = "<span class=\"text-danger\">" + DocsUtil.esc(home) + "</span>";
+            return built.contains(home)
+                    ? " <a href=\"" + vidToFilename(home) + "#" + anchor + "\" class=\"badge bg-secondary text-decoration-none ms-1\""
+                    + " title=\"this operation's address belongs to " + DocsUtil.esc(home) + "\">address: " + red + "</a>"
+                    : " <span class=\"badge bg-secondary ms-1\" title=\"address " + DocsUtil.esc(home) + "\">address: " + red + "</span>";
+        }
+        final String declaredBy = declaring.getOrDefault(inst.tid().toString(), instsetVid);
+        if (declaredBy.isEmpty() || declaredBy.equals(instsetVid)) return "";
+        final String title = "defined by " + DocsUtil.esc(declaredBy) + " — documented there as well";
+        final String label = "defined by " + DocsUtil.esc(DocsUtil.leafName(declaredBy));
+        return built.contains(declaredBy)
+                ? " <a href=\"" + vidToFilename(declaredBy) + "#defined-" + anchor + "\" class=\"badge bg-info text-decoration-none ms-1\""
+                + " title=\"" + title + "\">" + label + "</a>"
+                : " <span class=\"badge bg-info ms-1\" title=\"" + title + "\">" + label + "</span>";
+    }
+
+    /**
+     * "FOR USE WITH" — the types THIS set introduced that the contributed contracts name in their signature.
+     * Derived, not asserted: a dom/rng/argument whose owner is this set is exactly what the contract is for,
+     * which is the half of the story an address cannot tell.
+     */
+    private static String intendedFor(final String instsetVid, final List<Inst> group) {
+        final Set<String> owned = new LinkedHashSet<>();
+        for (final Inst inst : group) {
+            collectOwnedType(inst.dom(), instsetVid, owned);
+            collectOwnedType(inst.rng(), instsetVid, owned);
+            if (inst.args() instanceof Lst args)
+                args.jvm().forEach(arg -> collectOwnedType(arg, instsetVid, owned));
+        }
+        if (owned.isEmpty()) return "";
+        final String links = owned.stream()
+                .map(vid -> "<a href=\"#" + vidToAnchor(vid) + "\" class=\"code text-primary\">"
+                        + DocsUtil.esc(DocsUtil.leafName(vid)) + "::T</a>")
+                .collect(Collectors.joining(", "));
         return """
-                <div class="container-xxl mb-4" id="instructions">
-                    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
-                    %s
-                </div>""".formatted(insts.size(), cards.toString());
+                <div class="card-body border-top py-2">
+                    <small class="text-muted">for use with %s</small>
+                </div>""".formatted(links);
+    }
+
+    private static void collectOwnedType(final Obj obj, final String instsetVid, final Set<String> owned) {
+        if (obj == null || !obj.isType() || obj.vid() == null) return;
+        final String vid = obj.vid().toString();
+        if (instsetVid.equals(extractInstset(vid))) owned.add(vid);
     }
 
     // ── Section: Rewrites ──────────────────────────────────────────────
@@ -1061,22 +1612,11 @@ public class InstSetDocGenerator {
                 .toList()) {
             final String name = rw.tid().name();
             final String uri = rw.tid().toString();
-            final String gid = vidToAnchor(uri);
-            String sig = convertShorthand(SER.write(rw));
-            // Make dom/rng type references in the shorthand clickable
-            final Type rwDom = rw.dom();
-            final Type rwRng = rw.rng();
-            if (rwDom != null) {
-                final String domStr = rwDom.vid() != null ? rwDom.vid().toString() : rwDom.tid().toString();
-                sig = sig.replace(domStr, typeLink(domStr, "text-info", "domain", instsetVid));
-            }
-            if (rwRng != null) {
-                final String rngStr = rwRng.vid() != null ? rwRng.vid().toString() : rwRng.tid().toString();
-                sig = sig.replace(rngStr, typeLink(rngStr, "text-success", "range", instsetVid));
-            }
+            final String gid = vidToAnchor(rw.tid().basePath().toString());
+            final String sig = SER.write(rw);
             final String sigBlock = !sig.isEmpty()
                     ? "<div class=\"card-body p-2\"><pre class=\"mb-0\"><code class=\"language-mtron\">"
-                    + sig + "</code></pre></div>" : "";
+                    + DocsUtil.esc(sig) + "</code></pre></div>" : "";
             final String typeSig = typeSignatureHtml(instsetVid, rw);
             final Rec doc = fetchDocByTid(rw);
             cards.append("""
@@ -1140,16 +1680,24 @@ public class InstSetDocGenerator {
 
     // ── Section: Footer ────────────────────────────────────────────────
 
-    private static String sectionFooter(final int buildNumber) {
-        final String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    private static String sectionFooter() {
         return """
                 <div class="container-xxl py-3 text-center">
                     <hr class="border-secondary">
                     <small class="text-muted">
-                        generated by metatron instset doc generator on build %d-%s<br>
-                        (c) PhaseShift Studio, LLC
+                        generated by metatron instset doc generator &mdash; last built %s<br>
+                        &copy; PhaseShift Studio, LLC
                     </small>
-                </div>""".formatted(0, "0.1-SNAPSHOT");//buildNumber, ts);
+                </div>""".formatted(DocsUtil.esc(lastBuilt()));
+    }
+
+    /**
+     * WHEN THIS PAGE WAS WRITTEN — "last built November 12, 2026 10:34MST". The zone is the BUILDING MACHINE's,
+     * because that is the fact a reader wants when a page looks stale: not the UTC instant, but when the build
+     * ran where it ran (a 10:34 build is the morning's, not "17:34").
+     */
+    static String lastBuilt() {
+        return ZonedDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy HH:mmz", Locale.US));
     }
 
     // ── Documentation rendering ────────────────────────────────────────
@@ -1383,7 +1931,7 @@ public class InstSetDocGenerator {
      * <p>
      * Example: item "/m/db/tble/rrow" owns to "/m/db/tble", not "/m".
      */
-    private static boolean owns(final String itemVid, final String instsetVid,
+    static boolean owns(final String itemVid, final String instsetVid,
                                 final Collection<String> allInstsetVids) {
         if (itemVid == null || itemVid.isEmpty()) return false;
         String best = "";
@@ -1400,17 +1948,11 @@ public class InstSetDocGenerator {
     // INDEX PAGE
     // ========================================================================
 
-    private static String generateIndexHtml(final List<Meta> metas,
-                                            final List<Set<Type>> allTypes,
-                                            final List<Set<Inst>> allInsts,
-                                            final List<List<SpaceEntry>> allSpaces,
-                                            final List<Set<Inst>> allRewrites,
-                                            final List<Set<Obj>> allConsts,
-                                            final boolean websiteTemplate, final String depth,
-                                            final int buildNumber) {
+    private static String generateIndexHtml(final List<Page> pages,
+                                            final boolean websiteTemplate, final String depth) {
         final StringBuilder cards = new StringBuilder();
-        for (int i = 0; i < metas.size(); i++) {
-            final Meta meta = metas.get(i);
+        for (final Page page : pages) {
+            final Meta meta = page.meta();
             final String filename = vidToFilename(meta.vid());
             final String iconName = iconName(DocsUtil.leafName(meta.vid()));
             final String iconPath = depth + "/images/icons/space/" + iconName + "-icon.svg";
@@ -1423,11 +1965,12 @@ public class InstSetDocGenerator {
                 desc = autoDescription(meta.vid());
             }
 
-            final int nTypes = allTypes.get(i).size();
-            final int nInsts = allInsts.get(i).size();
-            final int nSpaces = allSpaces.get(i).size();
-            final int nConsts = allConsts.get(i).size();
-            final int nRewrites = allRewrites.get(i).size();
+            final int nTypes = page.types().size();
+            final int nInsts = page.insts().size();
+            final int nSpaces = page.spaces().size();
+            final int nConsts = page.consts().size();
+            final int nRewrites = page.rewrites().size();
+            final int nContributed = page.contributed().size();
 
             cards.append("""
                     <div class="col-xl-4 col-md-6">
@@ -1445,13 +1988,14 @@ public class InstSetDocGenerator {
                                         <div><span class="stat-label">types</span><span class="stat-val">%d</span></div>
                                         <div><span class="stat-label">spaces</span><span class="stat-val">%d</span></div>
                                         <div><span class="stat-label">insts</span><span class="stat-val">%d</span></div>
+                                        <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">%d</span></div>
                                         <div><span class="stat-label">rewrites</span><span class="stat-val">%d</span></div>
                                     </div>
                                 </div>
                             </div>
                         </a>
                     </div>""".formatted(filename, iconPath, DocsUtil.esc(meta.vid()), DocsUtil.esc(desc),
-                    nConsts, nTypes, nSpaces, nInsts, nRewrites));
+                    nConsts, nTypes, nSpaces, nInsts, nContributed, nRewrites));
         }
 
         final String content = """
@@ -1464,11 +2008,11 @@ public class InstSetDocGenerator {
                     <div class="py-3 text-center mt-4">
                         <hr class="border-secondary">
                         <small class="text-muted">
-                            metatron instset doc generator — build %d<br>
+                            metatron instset doc generator &mdash; last built %s<br>
                             &copy; PhaseShift Studio, LLC
                         </small>
                     </div>
-                </div>""".formatted(cards.toString(), buildNumber);
+                </div>""".formatted(cards.toString(), DocsUtil.esc(lastBuilt()));
 
         if (websiteTemplate) {
             final String header = SiteChrome.header(depth, "metatron instruction sets",
@@ -1539,33 +2083,6 @@ public class InstSetDocGenerator {
         final Obj val = r.at(field);
         if (val == null || val.isNoObj()) return null;
         return val instanceof Str s ? s.jvm() : SER.write(val);
-    }
-
-    /**
-     * Convert ?rng=X&dom=Y to the ?X<=Y shorthand form.
-     */
-    static String convertShorthand(final String text) {
-        if (!text.contains("?")) return text;
-        final Matcher m = Pattern.compile("\\?[^()\\[]*").matcher(text);
-        final StringBuilder sb = new StringBuilder();
-        while (m.find()) {
-            final String query = m.group().substring(1);
-            final Matcher qm = SHORTHAND_PAT.matcher(query);
-            String replacement;
-            if (qm.find()) {
-                final String rng = qm.group(1);
-                final String dom = qm.group(2);
-                if (rng != null && dom != null) replacement = "?" + rng + "<=" + dom;
-                else if (rng != null) replacement = "?" + rng;
-                else if (dom != null) replacement = "?<=" + dom;
-                else replacement = m.group();
-            } else {
-                replacement = m.group();
-            }
-            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
-        }
-        m.appendTail(sb);
-        return sb.toString();
     }
 
     /**

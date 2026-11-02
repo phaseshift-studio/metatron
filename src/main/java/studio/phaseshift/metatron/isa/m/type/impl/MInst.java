@@ -48,7 +48,15 @@ public class MInst extends MObj implements Inst {
      * flag flipped later only affects insts minted afterwards. Off keeps every tid rendering byte-identically (the
      * {@code fURI.args(List)} contract: an empty list carries no key at all).
      */
-    public static volatile boolean ARGS_IN_TID = Boolean.getBoolean("mtron.inst.args-in-tid");
+    /**
+     * Does an instruction's tid carry its declared argument types in the {@code args} component?
+     * <p>
+     * ON BY DEFAULT — the signature is the instruction's identity, and an identity that omits half the contract
+     * cannot tell two contracts apart. The switch is an OPT-OUT for a byte-identical legacy spelling:
+     * {@code -Dmtron.inst.args-in-tid=false}. Read ONCE, at class-init: the instsets register during boot, so a
+     * value changed after boot cannot retroactively re-key what is already registered.
+     */
+    public static volatile boolean ARGS_IN_TID = Boolean.parseBoolean(System.getProperty("mtron.inst.args-in-tid", "true"));
 
     /**
      * the {@code args} query key: an operation's DECLARED argument types. A key with a value lists them in order

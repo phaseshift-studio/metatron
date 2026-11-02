@@ -47,6 +47,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
@@ -475,6 +476,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             .map(t -> rel(uri(t.name()), BOOL_FALSE))
                             .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
+            /// /// INSTRUCTION SIGNATURE ENCODING /// ///
+            // the `args` component of an instruction tid is OPT-IN and read from a JVM system property ONCE, at
+            // MInst's class-init -- so the instsets' boot-time registrations are minted long before anything can
+            // ask. Print the state: otherwise a tid expectation that lacks `args=[...]` looks like a resolver bug
+            // when it is only that `-Dmtron.inst.args-in-tid=true` never reached this JVM (the pom property feeds
+            // surefire, not a console/launcher JVM).
+            // ON is the norm, so it is INFO; OFF is a deliberate opt-out and says so at WARN — an accidental
+            // `-Dmtron.inst.args-in-tid=false` is the failure that would otherwise look like a resolver bug (tids
+            // that "lost" their args).
+            if (MInst.ARGS_IN_TID)
+                LOG.info("{{c}}inst args in tid{{X}}: true — instruction tids carry their declared argument types");
+            else
+                LOG.warn("{{c}}inst args in tid{{X}}: false — instruction tids omit their declared argument types");
             /// /// SET THE TYPER'S CHECK STATE /// ///
             // the typer IS the state: its `check` field names the type-check points, and the boot default is every
             // point ON except code_resolve. A boot profile names only the points it wants to OVERRIDE

@@ -57,7 +57,7 @@
 }
 
 pre code.hljs {
-    padding: 0.1rem !important;
+    padding: 0.3rem !important;
 }
 
 /* Let highlight.js handle the code styling inside pre */
@@ -481,13 +481,15 @@ pre code.hljs {
     border-color: rgba(224, 163, 92, 0.6);
 }
 
-/* tooltip for theory chips — kept in the DOM (hidden via opacity/visibility,
+/* tooltip for theory and law chips — kept in the DOM (hidden via opacity/visibility,
    NOT display:none) so MathJax typesets the description's \(…\) math on load */
-.theory-chip {
+.theory-chip,
+.law-chip {
     position: relative;
     cursor: help;
 }
-.theory-chip .chip-tip {
+.theory-chip .chip-tip,
+.law-chip .chip-tip {
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
@@ -510,17 +512,27 @@ pre code.hljs {
     pointer-events: none;
     transition: opacity 0.12s ease, visibility 0.12s ease;
 }
-.theory-chip:hover .chip-tip {
+/* a law's tooltip takes the law hue, not the theory gold */
+.law-chip .chip-tip {
+    border-color: rgba(127, 212, 216, 0.55);
+}
+.theory-chip:hover .chip-tip,
+.law-chip:hover .chip-tip {
     opacity: 1;
     visibility: visible;
 }
-.theory-chip .chip-tip-name {
+.theory-chip .chip-tip-name,
+.law-chip .chip-tip-name {
     display: block;
     font-weight: 700;
     color: #e0a35c;
     margin-bottom: 0.2rem;
 }
-.theory-chip .chip-tip-desc {
+.law-chip .chip-tip-name {
+    color: #7fd4d8;
+}
+.theory-chip .chip-tip-desc,
+.law-chip .chip-tip-desc {
     display: block;
 }
 .theory-chip .chip-tip-roles {
@@ -530,3 +542,287 @@ pre code.hljs {
     font-size: 0.72rem;
     color: #7fd4d8;
 }
+
+/* ==========================================================================
+   The declared row under an instruction signature — its process laws, its
+   inverse, its defining equation.
+   ========================================================================== */
+.declared-row {
+    margin: -0.15rem 0 0.45rem 0.1rem;
+    font-size: 0.78rem;
+    color: #d8d4e4;
+}
+.declared-row .law-chip {
+    padding: 0.06rem 0.45rem;
+    font-size: 0.66rem;
+}
+
+/* the algebra button is a chip (a button, so the pill look must be re-asserted) */
+.algebra-open {
+    cursor: pointer;
+    background: rgba(25, 28, 36, 0.85);
+    border-width: 1px;
+    border-style: solid;
+    font-family: inherit;
+}
+
+/* ==========================================================================
+   Inline mtron fragments — the "refines" line, an inverse, a derivation.
+
+   These are pre > code so Highlight.js colors them, which ALSO makes the
+   site's highlightjs-copy plugin drop a copy BUTTON into each one. On a
+   one-line fragment that button sits over the text (the reader sees the
+   surrounding words and a "Copy to clipboard" rollover, with the mtron text
+   hidden underneath), so the button is suppressed here exactly as
+   docs/website/uri.html suppresses it on its terminal boxes — and the block
+   padding the button needs is stripped so the fragment reads inline.
+   ========================================================================== */
+.mtron-inline,
+.instset-doc .mtron-inline {
+    display: inline !important;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+}
+.instset-doc .mtron-inline code,
+.mtron-inline code {
+    /* THE HIGHLIGHTER'S OWN RULE MAKES THE CODE A BLOCK: metatron.css has
+       `.hljs { display: block; overflow-y: scroll; ... }`, and hljs puts that class on the <code>.
+       An inline <pre> containing a block breaks the line before it — which is what pushed
+       "refines /m/qproc::T" onto two lines. Force the fragment's code back to inline flow. */
+    display: inline !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    background: transparent;
+    white-space: pre-wrap;
+}
+.mtron-inline .hljs-copy-button,
+.instset-doc .mtron-inline .hljs-copy-button {
+    display: none !important;
+}
+
+/* THE COPY PLUGIN ALSO DECORATES THE PARENT, and for an INLINE fragment that is what pushed the URI onto
+   its own line: it adds `hljs-copy-wrapper` (position:relative; overflow:hidden; transform:translateZ(0)) to
+   our <pre> and appends a BLOCK <div class="hljs-copy-container"> as a child — an inline box cannot contain
+   a block, so the browser broke the line around it. Undo the wrapper's three properties and remove the
+   injected node; the fragment is then a plain inline box again. */
+.mtron-inline.hljs-copy-wrapper {
+    position: static !important;
+    overflow: visible !important;
+    transform: none !important;
+}
+.mtron-inline .hljs-copy-container,
+.mtron-inline .hljs-copy-alert {
+    display: none !important;
+}
+
+/* ONE COLOUR FOR AN INLINE REFERENCE. A one-word mtron fragment is a POINTER, not a code block: a reader
+   follows it, never studies its tokens, so every token in it — the URI, the `::T` refinement, the
+   operation name — is painted the site's URI blue (--mblue, the colour mtron presentation already uses
+   for uris) rather than inheriting the highlighter's cyan/teal token palette. */
+.mtron-inline code,
+.mtron-inline code *,
+.instset-doc .mtron-inline code,
+.instset-doc .mtron-inline code * {
+    color: var(--mblue) !important;
+}
+
+/* ==========================================================================
+   The algebra dialog — the type's structural theories, on the site's dark
+   ground. A NATIVE <dialog> (showModal): the page lives inside <main>, which
+   metatron.css makes a stacking context (position:relative; z-index:1), so a
+   fixed-position Bootstrap modal would be painted under the body backdrop.
+   The top layer escapes that.
+   ========================================================================== */
+.algebra-dialog {
+    max-width: min(1100px, 92vw);
+    max-height: 82vh;
+    padding: 1rem 1.2rem;
+    border: 1px solid rgba(224, 163, 92, 0.45);
+    border-radius: 10px;
+    background: #151820;
+    color: #d8d4e4;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    overflow: auto;
+}
+.algebra-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.62);
+}
+.algebra-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.7rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(224, 163, 92, 0.25);
+}
+.algebra-dialog pre {
+    margin: 0;
+    padding: 0;
+    background: #10121a;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.algebra-dialog .hljs-copy-button {
+    display: none !important;
+}
+
+/* ── the web view of an algebra: one block per structural theory ─────────── */
+.algebra-theories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+}
+.algebra-theory {
+    /* tight inside the card: the role rows are one line each, so a generous box
+       bottom made the panel read as mostly empty space */
+    padding: 0.3rem 0.55rem 0.1rem 0.55rem;
+    border: 1px solid rgba(224, 163, 92, 0.22);
+    border-radius: 8px;
+    background: rgba(22, 25, 34, 0.85);
+}
+/* TWO COLUMNS ON THE FIRST LINE (the chip and the theory type's name), and the
+   description on a line of its own BELOW them: a long definition flowed beside
+   the chip and squashed into the card's right edge. */
+.algebra-theory-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 0.45rem;
+    row-gap: 0.02rem;
+    margin-bottom: 0.05rem;
+}
+.algebra-theory-head .theory-chip {
+    margin: 0;
+    cursor: pointer;
+}
+.algebra-theory-type {
+    font-size: 0.78rem;
+    color: var(--mblue) !important;
+    text-decoration: none;
+    justify-self: start;
+}
+.algebra-theory-desc {
+    grid-column: 1 / -1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #a9a4bb;
+}
+.algebra-roles {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.algebra-roles th,
+.algebra-roles td {
+    padding: 0.01rem 0.35rem 0.01rem 0;
+    line-height: 1.15;
+    text-align: left;
+    vertical-align: baseline;
+    border-bottom: 1px solid rgba(108, 114, 147, 0.16);
+}
+.algebra-roles tr:last-child th,
+.algebra-roles tr:last-child td {
+    border-bottom: none;
+}
+.algebra-role {
+    width: 5.5rem;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #c9a7e8;
+}
+/* THE ROLE VALUES ARE THE SMALLEST TEXT IN THE PANEL, not the largest: they are a
+   pointer to the operation's card, and the mtron-inline pre inherits the page's
+   code size unless this rule wins. */
+.algebra-roles .mtron-inline code,
+.algebra-roles .mtron-inline code * {
+    font-size: 0.74rem !important;
+}
+.algebra-roles .mtron-inline {
+    line-height: 1.2;
+}
+.algebra-roles a,
+.algebra-value {
+    font-size: 0.74rem;
+}
+
+/* ── the panel's tabs: theories | mtron encoding ──────────────────────────── */
+.algebra-tabs {
+    margin-top: 0;
+}
+.algebra-tabs .nav-tabs {
+    border-bottom: 1px solid rgba(224, 163, 92, 0.22);
+}
+.algebra-tabs .nav-link {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    color: #a9a4bb;
+    font-size: 0.8rem;
+}
+.algebra-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #e0a35c;
+}
+.algebra-tabs .nav-link.active {
+    background: rgba(22, 25, 34, 0.9);
+    border-color: rgba(224, 163, 92, 0.35) rgba(224, 163, 92, 0.35) transparent;
+    color: #e0a35c;
+}
+.algebra-tabs .tab-content {
+    padding-top: 0.45rem;
+}
+
+/* the encoding scrolls inside its own box, with the site's slim dark-red scrollbar
+   (metatron.css's dropdown recipe: an 8px thumb on an invisible track) */
+.algebra-mtron {
+    max-height: 58vh;
+    margin: 0;
+    padding: 0.5rem 0.7rem;
+    overflow: auto;
+    background: #10121a;
+    border-radius: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+.algebra-mtron code {
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.algebra-dialog {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+.algebra-mtron::-webkit-scrollbar,
+.algebra-dialog::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.algebra-mtron::-webkit-scrollbar-track,
+.algebra-dialog::-webkit-scrollbar-track {
+    background: transparent;
+}
+.algebra-mtron::-webkit-scrollbar-thumb,
+.algebra-dialog::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.algebra-mtron::-webkit-scrollbar-thumb:hover,
+.algebra-dialog::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mred);
+}
+
+
+
+

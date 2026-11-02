@@ -99,23 +99,19 @@ public class InstArgsEncodingTest extends AbstractMetatronTest {
     }
 
     @Test
-    void theFlagIsOffByDefaultAndAddsNoKeyToTheTid() {
-        // a build that OPTS IN (`-Dmtron.inst.args-in-tid=true`) is not the default case this test states
-        Assumptions.assumeFalse(Boolean.getBoolean("mtron.inst.args-in-tid"),
-                "the encoding was opted into for this build");
-        assertFalse(MInst.ARGS_IN_TID, "the declaration in the tid must be opt-in");
-        final Inst off = this.probe(lst(STR_TYPE));
-        assertFalse(off.tid().hasArgs());
-        assertFalse(off.tid().toString().contains("args"));
-        assertEquals(this.probeTid(), off.tid());
-        // the switch is the only difference: on encodes, and off again renders byte-identically to before
-        final String before = off.tid().toString();
+    void theFlagIsOnByDefaultAndOffOnlyExplicitly() {
+        // the field AGREES WITH THE PROPERTY, defaulting ON when the property is absent: `args` is the signature's
+        // argument half, so a tid that dropped it could not tell two contracts apart. The legacy spelling is the
+        // opt-out, `-Dmtron.inst.args-in-tid=false`, and this assertion holds in every configuration.
+        assertEquals(Boolean.parseBoolean(System.getProperty("mtron.inst.args-in-tid", "true")), MInst.ARGS_IN_TID,
+                "the args component is ON by default, disabled only by an explicit -Dmtron.inst.args-in-tid=false");
+        // and the SWITCH is what decides the spelling, whichever way the field currently answers
         MInst.ARGS_IN_TID = true;
-        final String encoded = this.probe(lst(STR_TYPE)).tid().toString();
+        assertTrue(this.probe(lst(STR_TYPE)).tid().hasArgs(), "on: the tid states its declared argument types");
         MInst.ARGS_IN_TID = false;
-        final String after = this.probe(lst(STR_TYPE)).tid().toString();
-        assertEquals(before, after);
-        assertNotEquals(before, encoded);
+        final Inst off = this.probe(lst(STR_TYPE));
+        assertFalse(off.tid().hasArgs(), "off: no args key at all");
+        assertEquals(this.probeTid(), off.tid(), "off: byte-identical to the legacy spelling");
     }
 
     @Test

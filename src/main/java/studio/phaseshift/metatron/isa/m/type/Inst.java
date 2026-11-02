@@ -763,10 +763,17 @@ public interface Inst extends Call {
          * <p>
          * The declaration is the {@code args} query component of the candidate's tid ({@code inst?…&args=[int,rec]},
          * written when it was minted under {@code MInst.ARGS_IN_TID}); an inst whose tid carries none declares
-         * nothing, which is why resolving against an instset minted with the flag off is unchanged. Types are
-         * compared by BASE NAME — {@link fURI#basePath()}'s {@link fURI#name()} — the same notion the law matcher
-         * uses, so a declared {@code /m/int} and an argument whose specific type id is {@code int} agree, and
-         * nothing has to be minted to ask.
+         * nothing.
+         * <p>
+         * A SLOT ADMITS WHAT CONFORMS TO IT, by the type hierarchy and then by structure — never by name. A name is
+         * the carrier's own spelling and states nothing about refinement, so name comparison refused exactly the
+         * arguments a contract exists to accept: {@code plus(cmphx::[...])} against a slot declaring {@code cmplx}
+         * (cmphx IS a cmplx), a {@code datetime} against a slot declaring {@code time}, a {@code meter} against one
+         * declaring {@code metric}. Each refusal fell through to the ancestor's operation — {@code lst} plus
+         * concatenated two complex numbers. The rule is: the argument's type tests by ID against the declared type
+         * (nominal subsumption), or the argument itself satisfies it (structural, so a value carrying an unresolvable
+         * label is still admitted when its shape conforms). BASE-NAME equality survives only as the last resort, for
+         * a declaration that cannot be resolved as a type at all.
          *
          * @param candidate the candidate definition as declared
          * @param user      the call whose arguments would fill its slots
@@ -803,10 +810,37 @@ public interface Inst extends Call {
                 final fURI actual = Obj.Helper.specificTypeId(arg);
                 if (null == actual || actual.isGeneric())
                     continue;
+                // A DECLARED SLOT ADMITS WHAT CONFORMS TO IT — the TYPE HIERARCHY, not the name. A name is the
+                // carrier's own spelling and says nothing about refinement: `plus(cmphx::[...])` must satisfy a slot
+                // declaring `cmplx` (cmphx IS a cmplx), a `datetime` must satisfy a slot declaring `time`, and a
+                // `meter` must satisfy one declaring `metric`. Comparing base names refused all of those and sent
+                // the call to the ancestor's operation (lst plus concatenated two cmplx values).
+                if (conforms(arg, wanted))
+                    continue;
                 if (!wantedName.equals(baseName(actual)))
                     return false;
             }
             return true;
+        }
+
+        /**
+         * Whether {@code arg} is an instance of the DECLARED type {@code declared} — the conformance test a slot
+         * makes, by the hierarchy rather than by name ({@code cmphx} conforms to {@code cmplx}, {@code datetime} to
+         * {@code time}, {@code meter} to {@code metric}). A declaration that cannot be resolved as a type states
+         * nothing, so it refuses nothing and the name comparison decides.
+         */
+        private static boolean conforms(final Obj arg, final fURI declared) {
+            try {
+                final Type declaredType = T(declared);
+                if (declaredType.isRootType())
+                    return true;                    // a slot declaring the root type admits anything
+                // NOMINAL first (cheap: the hierarchy walk), then STRUCTURAL — a value whose own label states no
+                // useful type (an unknown name, `cmphx::[0.0,0.0]`) is still a cmplx if it satisfies cmplx's
+                // predicate, and the slot is about what the argument IS, not what it is called.
+                return Obj.Helper.specificType(arg).testByID(declaredType) || arg.test(declaredType);
+            } catch (final Exception e) {
+                return false;                       // an unresolvable declaration: let the caller fall back to names
+            }
         }
 
         /**

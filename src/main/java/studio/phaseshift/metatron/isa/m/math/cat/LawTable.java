@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.Derivation;
@@ -38,7 +39,6 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -108,7 +108,7 @@ public abstract class LawTable {
     private final Map<fURI, Entry> table = new HashMap<>();
     private final Map<fURI, Entry> resolved = new ConcurrentHashMap<>();
 
-    private final Map<fURI, Rec> typeLawsCache = new ConcurrentHashMap<>();
+    private final Map<fURI, Algebra> typeLawsCache = new ConcurrentHashMap<>();
 
     /**
      * Whether a derivation is in flight on this thread — the guard {@link #lookup} answers the declared row under.
@@ -772,16 +772,24 @@ public abstract class LawTable {
     }
 
     /**
-     * The entry of an inst, resolved from the law table of the instset that owns it — the sibling of
-     * {@link #typeLawsOf(Type)}, and the oracle a rewrite consults to learn an instruction's declared
-     * process laws before firing. Longest-prefix wins, so an inst address under {@code /m/math} routes to
-     * the math table rather than the {@code /m} table. Null when no table declares the inst.
+     * The entry of an inst — the oracle a rewrite consults to learn an instruction's declared process laws before
+     * firing, and the sibling of {@link #typeLawsOf(Type)}.
+     * <p>
+     * TWO SOURCES, IN THIS ORDER. LONGEST-PREFIX DISPATCH first: the table of the instset that owns the row's
+     * carrier answers, so an inst address under {@code /m/math} routes to the math table rather than the
+     * {@code /m} table. ADDRESS-KEYED FALLBACK second, when no registered table owns the address: the declaration
+     * the instruction wrote beside itself ({@link #declaredRow}) — the build-time registry, then one {@code ?lawq}
+     * read. A user's OWN instset never constructs a table ({@link LawTable}'s constructor is {@code protected} and
+     * only in-tree families call it), so without the fallback an instruction the user declared reads as undeclared
+     * and no law-driven rewrite can fire on it, even though the store holds the claim.
+     * <p>
+     * Null only when neither source answers.
      */
     public static Entry lawsOf(final fURI instTid) {
         if (null == instTid)
             return null;
         final LawTable owner = ownerOfRow(instTid);
-        return null == owner ? null : owner.lookup(instTid);
+        return null == owner ? declaredRow(instTid) : owner.lookup(instTid);
     }
 
     /**
@@ -794,14 +802,16 @@ public abstract class LawTable {
     }
 
     /**
-     * The structural theories the type models, keyed by each theory instance's name.
+     * The structural theories the type models, keyed by each theory instance's name — the block as an
+     * {@link Algebra}, which IS the rec it answers ({@link Algebra#toRec()}), so nothing is translated on the way
+     * out.
      */
-    public final Rec typeLaws(final Type type) {
+    public final Algebra typeLaws(final Type type) {
         // keyed by the VID: the block is about the type, and two refinements of one base (nat, or a pair of
         // int-refinements) share a tid, so a tid-keyed cache would answer one's algebra for the other
         if (null == type.vid())
-            return rec0();
-        final Rec cached = this.typeLawsCache.get(type.vid().basePath());
+            return Algebra.empty();
+        final Algebra cached = this.typeLawsCache.get(type.vid().basePath());
         if (null != cached)
             return cached;
         // THE DECLARATION BESIDE THE TYPE WINS: an algebra written through `?lawq` (the builder's job, at
@@ -811,9 +821,11 @@ public abstract class LawTable {
         final Obj declared = lawOf(type);
         final boolean spaceAnswered = declared.isRec();
         final Rec laws = spaceAnswered && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
+        // the view COPIES the block (see Algebra.of), so the memo is a value no caller can write back through
+        final Algebra algebra = Algebra.of(laws);
         if (memoizable(laws, spaceAnswered))
-            this.typeLawsCache.putIfAbsent(type.vid().basePath(), laws);
-        return laws;
+            this.typeLawsCache.putIfAbsent(type.vid().basePath(), algebra);
+        return algebra;
     }
 
     /**
@@ -834,10 +846,19 @@ public abstract class LawTable {
     /**
      * The structural theories of the type, resolved from the law table of the instset that owns the type — the
      * dispatcher that lets several sibling law tables share the category without one knowing the others.
+     * <p>
+     * LONGEST-PREFIX DISPATCH first: the table of the instset whose address is the type's longest prefix answers.
+     * ADDRESS-KEYED FALLBACK second, when no registered table owns the address: one {@code ?lawq} read of the
+     * type's own address (see {@link #typeLaws(Type)}, which reads the same declaration first). A user's OWN
+     * instset never constructs a table ({@link LawTable}'s constructor is {@code protected} and only in-tree
+     * families call it), so without the fallback a type the user declared an algebra for answers nothing.
+     * <p>
+     * The fallback is deliberately NOT memoized: a blind read is a fact about the machine asking, which is exactly
+     * what {@link #memoizable} refuses to keep — these tables are static singletons that outlive every boot.
      */
-    public static Rec typeLawsOf(final Type type) {
+    public static Algebra typeLawsOf(final Type type) {
         if (null == type.vid())
-            return rec0();                      // a type with no address is listed in no table
+            return Algebra.empty();             // a type with no address is listed in no table
         final String vid = type.vid().basePath().toString();
         LawTable owner = null;
         int best = -1;
@@ -848,7 +869,11 @@ public abstract class LawTable {
                 best = prefix.length();
             }
         }
-        return null == owner ? rec0() : owner.typeLaws(type);
+        if (null != owner)
+            return owner.typeLaws(type);
+        // NO TABLE OWNS THE ADDRESS: the declaration beside the type is the only source, read once and not kept
+        final Obj declared = lawOf(type);
+        return declared.isRec() ? Algebra.of(declared.asRec()) : Algebra.empty();
     }
 
     /**
