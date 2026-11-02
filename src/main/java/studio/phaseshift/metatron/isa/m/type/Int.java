@@ -18,10 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MInt;
 
 import java.nio.ByteBuffer;
@@ -126,18 +124,7 @@ public interface Int extends Mono {
                     instC(AS_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.intValue() > 0, inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(ByteBuffer.allocate(8).putLong(lhs.intValue()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.intValue().doubleValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    InstBuilder.build().tid(PLUS_INST_TID, "add the argument int to the lhs int")
-                            .dom(INT_TID, "the lhs int")
-                            .rng(INT_TID, "the result of the addition")
-                            .argLst(INT_TYPE, "the int to add to the lhs")
-                            .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))
-                            .example("1.plus(2)          [-- 3                    --]",
-                                    "1+2                [-- 3 sugar'd form       --]",
-                                    "1.plus(plus(1))    [-- 3 nested application --]",
-                                    "1+(+1)             [-- 3 sugar nested form  --]")
-                            .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
-                            .create()
+                    instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
             ));
         }
     }

@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -261,6 +263,35 @@ public final class PendingWrites {
      * @param prefix the address whose jurisdiction is being drained
      * @return the number of writes published, 0 when no machine is up or the prefix is null
      */
+
+    /**
+     * A FACET ALREADY ANSWERED IS ALREADY PUBLISHED. {@code ?docq}/{@code ?decq} live in the q-proc's own space,
+     * which outlives a set's mount; a fresh mount (a test builds a new instset per method) therefore has nothing to
+     * republish. A fresh BOOT has a fresh q-proc, answers noobj, and publishes normally -- so this dedupe needs no
+     * boot identity to be correct.
+     */
+    /**
+     * INSTALL THE READER HOOK: a {@code ?docq}/{@code ?decq} is published by the first reader that misses it. The
+     * hook is installed by the BOOT, never from a static initializer -- {@link PendingWrites} is first touched from
+     * {@code mTypes}' class initialization, and forcing {@code QCollection} from there closes the documented
+     * {@code mTypes -> mInstSet.AS_INST_TID} cycle.
+     */
+    public static void install() {
+        QCollection.LAZY_PUBLISH = PendingWrites::publish;
+    }
+
+    public static boolean publish(final fURI address) {
+        final Write write = null == address ? null : WRITES.get(address);
+        if (null == write || !Machine.loaded())
+            return false;
+        Machine.write(write.address(), write.value());
+        return true;
+    }
+
+    private static boolean isFacet(final fURI address) {
+        return address.hasQ(QCollection.DECQ) || address.hasQ(QCollection.DOCQ);
+    }
+
     public static int drainUnder(final fURI prefix) {
         if (null == prefix)
             return 0;
@@ -272,7 +303,10 @@ public final class PendingWrites {
         // the RANGE narrows the candidates in O(log n + k); `under` keeps the exact jurisdiction rule (the address
         // itself, or a CHILD segment -- a text prefix alone would let /m/mathx answer /m/math)
         for (final Write write : INDEX.subMap(text, true, text + '\uffff', false).values()) {
-            if (!under(write.address(), prefix))
+            // A FACET IS NOT PUBLISHED AT MOUNT. ?docq/?decq live in the q-proc's own store and are published
+            // lazily by the reader that misses them (QCollection's preRead), so a fresh mount costs nothing for
+            // the thousands of declarations a set carries.
+            if (!under(write.address(), prefix) || isFacet(write.address()))
                 continue;
             Machine.write(write.address(), write.value());
             drained++;
@@ -304,9 +338,12 @@ public final class PendingWrites {
         // doc/declaration writes per boot, and a boot per test class.
         // ONLY AN INSTRUCTION SET'S MOUNT PUBLISHES ITS OWN JURISDICTION; a plain space (a scratch space, a
         // test's memSpace) never drains, so its facets are residue and must still be published here.
-        return drain(write -> (write.address().hasQ(QCollection.DECQ) || write.address().hasQ(QCollection.DOCQ))
-                && !(memory.hasSpaceFor(write.address())
-                        && memory.getSpaceFor(write.address()) instanceof studio.phaseshift.metatron.isa.m.type.InstSet));
+        // THE SWEEP IS THE OBJECT RESIDUE: a facet is published by its reader (lazy); an OBJECT is published
+        // when the space does not answer it yet. That is what lets a declaration written AFTER a set mounted
+        // reach that set's own write door -- which is where it is indexed into the set's `inst` list.
+        return drain(write -> !isFacet(write.address())
+                && memory.hasSpaceFor(write.address())
+                && Machine.read(write.address()).isNoObj());
     }
 
     /**
@@ -370,7 +407,7 @@ public final class PendingWrites {
             return 0;
         int drained = 0;
         for (final Write write : writes()) {
-            if (!jurisdiction.test(write))
+            if (!jurisdiction.test(write) || isFacet(write.address()))
                 continue;
             Machine.write(write.address(), write.value());
             drained++;

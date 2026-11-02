@@ -244,13 +244,18 @@ public class PendingWritesTest extends AbstractMetatronTest {
         PendingWrites.write(f("/pendingwrites/three?docq"), third);
         PendingWrites.write(plain, third);              // an OBJECT write: the sweep must leave it alone
 
-        assertEquals(3, PendingWrites.drainRest(), "the sweep publishes the declaration writes, whatever their prefix");
+        // A FACET IS NOT SWEPT: ?docq/?decq live in the q-proc's own store and are published by the first READER
+        // that misses them, not by the boot sweep (which would repay every declaration on every mount). The sweep
+        // publishes the OBJECT residue alone.
+        assertEquals(1, PendingWrites.drainRest(), "the sweep publishes the object residue, whatever its prefix");
+        assertEquals(rec(uri("count"), jnt(1)), Machine.read(f("/pendingwrites/one?decq")),
+                "a declaration is staged, not swept: the first READER publishes it, and the read answers it");
         assertEquals(4, PendingWrites.size(), "the log is retained, so no address left the stage");
         assertEquals(4, PendingWrites.writes().size(), "the ordered snapshot agrees with the count");
-        assertTrue(Machine.read(plain).isNoObj(),
-                "an instruction or type write is not swept: only a declaration may be published into a live space");
-        assertEquals(3, PendingWrites.drainRest(),
-                "a second sweep publishes the same declarations again — a declaration write is idempotent");
+        assertEquals(third, Machine.read(plain),
+                "the OBJECT residue is what the sweep publishes: no mount claimed this address");
+        assertEquals(0, PendingWrites.drainRest(),
+                "a published object is ANSWERED by its space, so a second sweep finds no residue");
         assertEquals(4, PendingWrites.size(), "and still removes nothing");
         PendingWrites.clear();
         assertEquals(0, PendingWrites.drainRest(), "a sweep over an empty log is a no-op answering 0");

@@ -101,7 +101,7 @@ public class dcmntInstSet extends AbstractInstSet {
                 uri(CONSTQ), lst(ObjJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
                         COLLECTION_TYPE,
-                        DCMNT_SPACE_TYPE = docWrap(TypeBuilder.build()
+                        DCMNT_SPACE_TYPE = TypeBuilder.build()
                                         .tid(SPACE_TID)
                                         .vid(DCMNT_SPACE_TID)
                                         .isaPredicate(rec(
@@ -114,28 +114,27 @@ public class dcmntInstSet extends AbstractInstSet {
                                         ))
                                         .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
                                                 lst(REC_TYPE),
-                                                (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create().asType(),
-                                "a rec describing a document database connection",
-                                "a rec with fields for configuring a document database connection",
-                                Map.of(
+                                                (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                                        .refinement("a rec describing a document database connection", "a rec with fields for configuring a document database connection", Map.of(
                                         uri(PATTERN), "the pattern for accessing documents",
                                         uri(HOST), "connection uri (mongodb://host:port/database?options)",
                                         uri(SERIALIZER).maybe(), "the serializer for BSON documents",
                                         uri(ROUTE), "the route for accessing documents",
                                         uri(ROOT).maybe(), "the root type constraint — writes at document root must satisfy this type; defaults to rec::T",
                                         uri(SCHEMA).maybe(), "an instset of collection types auto-discovered from the live database"
-                                ),
-                                "an interface to document-oriented databases (MongoDB wire protocol)",
-                                """
+                                ))
+                                        .desc("an interface to document-oriented databases (MongoDB wire protocol)")
+                                        .example("""
                                 dcmntspace::[pattern => moviedb:#,
                                              host    => <mongodb://localhost:27017/movies>,
                                              root    => rec::T,
                                              route   => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
-                                """,
-                                """
+                                """)
+                                        .example("""
                                 *moviedb:schema
                                 *moviedb:movie/
-                                """)),
+                                """)
+                                        .create().asType()),
                 uri(INST), lst(
                         instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
                         docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().memory().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),

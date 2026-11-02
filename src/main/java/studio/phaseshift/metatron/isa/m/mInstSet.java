@@ -162,7 +162,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI MINUS_INST_TID = M_ISA_INST_TID.extend("minus");
     public static final fURI NAME_INST_TID = M_ISA_INST_TID.extend("name");
     public static final fURI MAP_INST_TID = M_ISA_INST_TID.extend("map");
-    public static final fURI MAPP_INST_TID = M_ISA_INST_TID.extend("mapp");
     public static final fURI PARENT_INST_TID = M_ISA_INST_TID.extend("parent");
     public static final fURI FILTER_INST_TID = M_ISA_INST_TID.extend("filter");
     public static final fURI SIDE_INST_TID = M_ISA_INST_TID.extend("side");
@@ -272,7 +271,16 @@ public class mInstSet extends AbstractInstSet {
                     uri(QPROC).maybe(), lst(QPROC_TYPE.maybe().asType()),
                     uri(ROUTE).maybe(), rec(T(URI_TID.maybe()), URI_TYPE),
                     uri(SCHEMA).maybe(), T(INSTSET_TID), // nominal-only: avoids structural recursion in InstSet
-                    uri(ON_CLOSE).maybe(), ALL_TYPE)).create();
+                    uri(ON_CLOSE).maybe(), ALL_TYPE))
+            .slots(Map.of(
+                    uri(PATTERN), "the uri address region the space will manage",
+                    uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
+                    uri(ROUTE).maybe(), "a secondary router after global router for inter and intra-space redirects",
+                    uri(SCHEME).maybe(), "an instset defining the type structure of the space objs",
+                    uri(ON_CLOSE).maybe(), "an optional shutdown down hook"))
+            .desc("storage systems structured as uri addressed objs")
+            .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko")
+            .create();
 
     public static final Type REWRITER_TYPE = TypeBuilder.build()
             .tid(REC_TID)
@@ -292,13 +300,22 @@ public class mInstSet extends AbstractInstSet {
                     uri(Typer.INST_RNG.name()), BOOL_TYPE,
                     uri(Typer.TYPE_PRED.name()), BOOL_TYPE,
                     uri(Typer.CODE_RESOLVE.name()), BOOL_TYPE,
-                    uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)))
+                    uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)), mutableMap(
+                    uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
             .constructor(state -> rec(uri(Typer.CHECK), rec(
                     uri(Typer.INST_DOM.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_DOM)).orElse(BOOL_FALSE),
                     uri(Typer.INST_RNG.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_RNG)).orElse(BOOL_FALSE),
                     uri(Typer.TYPE_PRED.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.TYPE_PRED)).orElse(BOOL_FALSE),
                     uri(Typer.CODE_RESOLVE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.CODE_RESOLVE)).orElse(BOOL_FALSE),
-                    uri(Typer.OBJ_WRITE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.OBJ_WRITE)).orElse(BOOL_FALSE)))).create();
+                    uri(Typer.OBJ_WRITE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.OBJ_WRITE)).orElse(BOOL_FALSE))))
+            .desc("""
+                    the check points where the type checker should be applied.
+                    the more stages that are active, the slower instructions evaluate.
+                    however, more active stages reduces potential for data corruption.
+                    typically use many stages when designing code and once stable,
+                    remove stages accordingly for increased performance.
+                    """)
+            .create();
     public static final Type TRACER_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(TRACER_TYPE_TID)
@@ -308,6 +325,14 @@ public class mInstSet extends AbstractInstSet {
             .constructor(stacks -> rec(uri("stack"), rec(
                     uri(Tracer.mtron_stack.name()), stacks.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
                     uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
+            .slots(mutableMap(
+                    uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
+                    uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"))
+            .desc("""
+                    diagnostic stages for surfacing internal java state.
+                    useful for debugging native java issues that mtron instructions
+                    trigger but cannot introspect.
+                    """)
             .create();
 
     public static final fURI EXPLANATION_TID = EXPLAIN_INST_TID.extend("explanation");
@@ -333,7 +358,16 @@ public class mInstSet extends AbstractInstSet {
                             uri(Tokens.F).maybe().asUri(), ALL_TYPE,
                             uri(FORM), URI_TYPE,
                             uri(C_DOM), INT_TYPE,
-                            uri(C_RNG), INT_TYPE))))
+                            uri(C_RNG), INT_TYPE))), Map.of(
+                    uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
+                    uri(DESC), "expression-level metadata of the COMPILED chain: whole-expression dom/rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)",
+                    uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)"))
+            .desc("a structured explanation of a resolved expression produced by explain()")
+            .example("1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]")
+            .example("1.plus(2).explain()>>per_inst      [-- per-inst recs: [op=>start,args=>[1],form=>initial,c_dom=>0,c_rng=>1], [op=>plus,dom=>int,rng=>int,args=>[2],f=>'<j>',form=>mapper,c_dom=>1,c_rng=>1] --]")
+            .example("1.plus(2).explain()>>format         [-- the str::T text table --]")
+            .example("6.plus(0).explain()>>desc>>insts    [-- 1 — the reported chain is the COMPILED one, so the unit law already dropped plus(0) --]")
+            .example("6.plus(0).explain()>>desc>>rewrite  [-- the SUBMITTED rec: >>insts is 2 (start, plus), the expression as written --]")
             .create();
     public static final fURI PROFILING_TID = PROFILE_INST_TID.extend("profiling");
 
@@ -387,7 +421,19 @@ public class mInstSet extends AbstractInstSet {
                     // reports of the places below it.
                     // NOTE: keyed with the base uri::T for now; a dedicated path-encoded refinement does not
                     // exist yet, so the encoding is a writer convention until the type states it.
-                    T(PATH_ENCODING_TID.maybe()), T(PROFILING_TID.maybe())))
+                    T(PATH_ENCODING_TID.maybe()), T(PROFILING_TID.maybe())), Map.of(
+                    uri(FORMAT), "lazily constructed pretty print format",
+                    uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)",
+                    uri(INSTS), "the resolved instruction count",
+                    uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)",
+                    uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)",
+                    uri(APPLY), "processor sub-stages (split/apply/next)",
+                    uri(PER_INST), "per-instruction monad/coefficient flow + time",
+                    uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)",
+                    uri(CACHE), "type-graph cache hit/miss/hit-rate"))
+            .desc("a structured profile report produced by profile()")
+            .example("{1,2,3}.sum().profile()>>format    [-- the str::T text table --]")
+            .example("{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]")
             .create();
     
    /* public static final Type MONO_TYPE = TypeBuilder.build()
@@ -429,6 +475,11 @@ public class mInstSet extends AbstractInstSet {
     }
 
     public void setup() {
+        // RE-STAGED EVERY BOOT, not once per JVM. The algebra recs point at LIVE operation insts (`!*plus`, `!*mult`,
+        // their roles), and the retained log would otherwise hand a later boot the objects of an earlier machine --
+        // the role pointers then name dead spaces and an algebra reads as "no role-bearing operation".
+        mTypes.declareAlgebras();
+        mTypes.declareAxioms();
         this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
@@ -495,16 +546,6 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
-                        docWrap(INSTSET_TYPE,
-                                "an extension of space with structural requirements regarding obj construction",
-                                "creates the instset and registers it with the global router",
-                                mutableMap(
-                                        uri(CONST).maybe(), "constants used across the instset",
-                                        uri(TYPE).maybe(), "types used to structure objs of the instset",
-                                        uri(INST).maybe(), "instructions associated with the types of the instset",
-                                        uri(REWRITE).maybe(), "code<=code instructions that capture the algebraic equalities of the instset",
-                                        uri(SUGAR).maybe(), "custom instruction syntax sugars given to the parser"),
-                                "an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse"),
                         docWrap(INST_TYPE, "a call with apply defined by an lhs obj, a poly of args, and an body of code",
                                 "abc(?int::T,?int::T){ *<0> + *<1> }        [-- position args inst    --]",
                                 "abc(a=>?int::T,b=>?int::T){ *a + *b }      [-- named args inst       --]",
@@ -521,66 +562,17 @@ public class mInstSet extends AbstractInstSet {
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]"),
                         /// ///////////////////////////////////
-                        docWrap(TYPER_TYPE, null, null, mutableMap(
-                                        uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"),
-                                """
-                                        the check points where the type checker should be applied.
-                                        the more stages that are active, the slower instructions evaluate.
-                                        however, more active stages reduces potential for data corruption.
-                                        typically use many stages when designing code and once stable,
-                                        remove stages accordingly for increased performance.
-                                        """),
-                        docWrap(TRACER_TYPE, null, null, mutableMap(
-                                        uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
-                                        uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"),
-                                """
-                                        diagnostic stages for surfacing internal java state.
-                                        useful for debugging native java issues that mtron instructions
-                                        trigger but cannot introspect.
-                                        """),
-                        docWrap(PROFILING_TYPE,
-                                Map.of(
-                                        uri(FORMAT), "lazily constructed pretty print format",
-                                        uri(STAGE), "per-pipeline-stage min/max wall-clock timings (rewrite/resolve/apply)",
-                                        uri(INSTS), "the resolved instruction count",
-                                        uri(RESOLVE), "resolve sub-stages (inst-resolve/generic-binding/inst-composition)",
-                                        uri(REWRITE), "per-rewrite-rule instruction reduction (rules + net total)",
-                                        uri(APPLY), "processor sub-stages (split/apply/next)",
-                                        uri(PER_INST), "per-instruction monad/coefficient flow + time",
-                                        uri(FLOW), "bulk-compression flow (monads propagated vs coefficient sum)",
-                                        uri(CACHE), "type-graph cache hit/miss/hit-rate"),
-                                "a structured profile report produced by profile()",
-                                "{1,2,3}.sum().profile()>>format    [-- the str::T text table --]",
-                                "{1,2,3}.sum().profile()>>flow      [-- [monads=>…,coeff_sum=>…,compression=>…,processors=>…] --]"),
-                        docWrap(EXPLANATION_TYPE,
-                                Map.of(
-                                        uri(FORMAT), "lazily constructed pretty-print format (the current text table) — a lazy inst, materialized interactively",
-                                        uri(DESC), "expression-level metadata of the COMPILED chain: whole-expression dom/rng, inst count, and the rewrite chain — desc.rewrite is the SUBMITTED expression's explanation ({?}), which terminates the chain (noobj)",
-                                        uri(PER_INST), "lst of per-instruction stage recs (op/dom/rng/args/f/form/c_dom/c_rng) — args are the real objs, not their string renderings; f is the wrapped function ('<j>' = java/opaque)"),
-                                "a structured explanation of a resolved expression produced by explain()",
-                                "1.plus(2).explain()>>desc>>rng     [-- int — the type flowing out of the expression --]",
-                                "1.plus(2).explain()>>per_inst      [-- per-inst recs: [op=>start,args=>[1],form=>initial,c_dom=>0,c_rng=>1], [op=>plus,dom=>int,rng=>int,args=>[2],f=>'<j>',form=>mapper,c_dom=>1,c_rng=>1] --]",
-                                "1.plus(2).explain()>>format         [-- the str::T text table --]",
-                                "6.plus(0).explain()>>desc>>insts    [-- 1 — the reported chain is the COMPILED one, so the unit law already dropped plus(0) --]",
-                                "6.plus(0).explain()>>desc>>rewrite  [-- the SUBMITTED rec: >>insts is 2 (start, plus), the expression as written --]"),
-                        docWrap(SPACE_TYPE, null, null, Map.of(
-                                        uri(PATTERN), "the uri address region the space will manage",
-                                        uri(QPROC).maybe(), "query processors (qproc) that augment space capabilities",
-                                        uri(ROUTE).maybe(), "a secondary router after global router for inter and intra-space redirects",
-                                        uri(SCHEME).maybe(), "an instset defining the type structure of the space objs",
-                                        uri(ON_CLOSE).maybe(), "an optional shutdown down hook"),
-                                "storage systems structured as uri addressed objs",
-                                "memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko"),
-                        docWrap(MEM_SPACE_TYPE = TypeBuilder.build()
-                                        .tid(SPACE_TID)
-                                        .vid(MEM_SPACE_TID)
-                                        // .isaPredicate(rec(uri(DATA).maybe().asUri(), URI_TYPE).maybe())
-                                        .constructor(
-                                                instC(INST_CTOR_TID.rng(MEM_SPACE_TID),
-                                                        lst(isa_(REC_TYPE).tryToInst()),
-                                                        (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create(), "", "",
-                                Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"),
-                                "an in-memory space with objs indexed by a topic trie"),
+                        MEM_SPACE_TYPE = TypeBuilder.build()
+                                .tid(SPACE_TID)
+                                .vid(MEM_SPACE_TID)
+                                // .isaPredicate(rec(uri(DATA).maybe().asUri(), URI_TYPE).maybe())
+                                .constructor(
+                                        instC(INST_CTOR_TID.rng(MEM_SPACE_TID),
+                                                lst(isa_(REC_TYPE).tryToInst()),
+                                                (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())),
+                                        Map.of(uri(DATA).maybe(), "a file location to save space state (reads on creation and writes on close)"))
+                                .desc("an in-memory space with objs indexed by a topic trie")
+                                .create(),
                         /*docWrap(ESTORE_SPACE_TYPE = TypeBuilder.build()
                                         .tid(SPACE_TID)
                                         .vid(ESTORE_SPACE_TID)
@@ -666,7 +658,6 @@ public class mInstSet extends AbstractInstSet {
                         Inst.InstType.insts().stream(),
                         Rel.RelType.insts().stream(),
                         Lst.LstType.insts().stream(),
-                        RecType.insts().stream(),
                         Code.CodeType.insts().stream(),
                         Fail.FailType.insts().stream(),
                         //  Objs.ObjsType.insts().stream(),

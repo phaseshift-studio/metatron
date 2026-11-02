@@ -203,7 +203,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .constructor(arg -> LLMFactory.createModel(arg.asRec()))
                                         .example("model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]")
                                         .create(),
-                        docWrap(LLM_TOOL_TYPE = TypeBuilder.build()
+                        LLM_TOOL_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_TOOL_TID)
                                         .isaPredicate(rec(
@@ -211,14 +211,13 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(NAME), URI_TYPE,
                                                 uri(DESC), STR_TYPE,
                                                 uri(ARG).maybe(), ALL_TYPE /*rec(URI_TYPE, T(ALL)).maybe())*/))
-                                        .create(),
-                                "a tool specification", "",
-                                Map.of(
+                                        .refinement("a tool specification", "", Map.of(
                                         uri(INST), "tool instruction",
                                         uri(NAME), "tool name",
                                         uri(DESC), "tool description",
-                                        uri(ARG).maybe(), "tool arguments"),
-                                "a tool function for the llm to use"),
+                                        uri(ARG).maybe(), "tool arguments"))
+                                        .desc("a tool function for the llm to use")
+                                        .create(),
                         //////////////////////////////////////////////////
                         LLM_SESSION_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
@@ -474,7 +473,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
                                         .create(),
                         //////////////////////////////////////////////////
-                        docWrap(LLM_SKILL_TYPE = TypeBuilder.build()
+                        LLM_SKILL_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_SKILL_TID)
                                         .isaPredicate(rec(
@@ -486,16 +485,16 @@ public class llmInstSet extends AbstractInstSet {
                                                         uri(NAME).maybe(), STR_TYPE,
                                                         uri(DESC).maybe(), STR_TYPE,
                                                         uri(TEXT), STR_TYPE)),
-                                                uri(TOOL).maybe(), lst(ALL_TYPE))).create(),
-                                "a skill.md specification", "",
-                                mutableMap(
+                                                uri(TOOL).maybe(), lst(ALL_TYPE)))
+                                        .refinement("a skill.md specification", "", mutableMap(
                                         uri(NAME), "skill name",
                                         uri(DESC), "skill description",
                                         uri(CONTENT).maybe(), "skill.md document content",
                                         uri(RESOURCE).maybe(), "skill assets, references, and scripts",
-                                        uri(TOOL).maybe(), "skill tools"),
-                                "a skill.md specification to augment llm with specialized abilities",
-                                "*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]"),
+                                        uri(TOOL).maybe(), "skill tools"))
+                                        .desc("a skill.md specification to augment llm with specialized abilities")
+                                        .example("*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
+                                        .create(),
                         LLM_FEATURE_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_FEATURE_TID, "each concrete feature refines llm_feature::T with its own hook implementations")
