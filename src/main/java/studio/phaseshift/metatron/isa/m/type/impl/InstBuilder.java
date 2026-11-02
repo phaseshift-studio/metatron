@@ -111,6 +111,12 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     private String domDesc;
     private String rngDesc;
     private final List<String> argDocList = new ArrayList<>();
+
+    /**
+     * THE ARGUMENT DOCS KEYED BY THE ARGUMENT'S OWN KEY — the form a {@code rec(...)} argument list needs, where a
+     * position is not the identity.
+     */
+    private final Map<Obj, String> keyedArgDocs = new LinkedHashMap<>();
     private Obj seed;
     private Inst.Form form;
 
@@ -151,6 +157,17 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * The declared arguments with their docs inline, one doc per POSITION — so two arguments of the same type are
      * two documented positions rather than one collapsed key.
      */
+    /**
+     * THE ARGUMENT DOCS KEYED BY THE ARGUMENT'S OWN KEY — the form a {@code rec(...)} argument list needs, where a
+     * position is not the identity (an {@code apply(lhs, args)} contract documents {@code lhs} and {@code args},
+     * not "arg 0"). Merges into the doc rec's {@code args} slot beside any positional docs.
+     */
+    public InstBuilder argDocs(final Map<Obj, String> docs) {
+        if (null != docs)
+            this.keyedArgDocs.putAll(docs);
+        return this;
+    }
+
     public InstBuilder argLst(final Obj arg0, final String arg0Desc) {
         this.argDocList.add(arg0Desc);
         return this.argLst(arg0);
@@ -336,7 +353,11 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     private Rec docRec(final Inst inst) {
         final String domDoc = null == this.domDesc ? (null == this.dom ? null : this.dom.toString()) : this.domDesc;
         final String rngDoc = null == this.rngDesc ? (null == this.rng ? null : this.rng.toString()) : this.rngDesc;
-        final Obj argsDoc = this.argDocList.isEmpty() ?
+        final Map<Obj, Obj> keyed = new LinkedHashMap<>();
+        this.keyedArgDocs.forEach((key, doc) -> keyed.put(key, str(doc)));
+        final Obj argsDoc = !keyed.isEmpty()
+                ? rec(keyed)
+                : this.argDocList.isEmpty() ?
                 noobj() :
                 lst(this.argDocList.stream().map(doc -> (Obj) str(null == doc ? "" : doc)).toList());
         final List<Obj> examples = this.examples.stream().map(example -> (Obj) str(example)).toList();

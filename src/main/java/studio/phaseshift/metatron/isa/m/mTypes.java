@@ -107,11 +107,13 @@ public final class mTypes {
             // Law.register() (at the type's address and at every law's address) once the machine is up instead.
             .vid(Law.LAW_TID)
             .predicate((lhs, inst) -> {
-                /*if (!Machine.loaded() || null == lhs || !lhs.isUri())
+                if (!Machine.loaded() || null == lhs || !lhs.isUri())
                     return noobj();
                 final String label = lhs.uriValue().name();
-                return Machine.read(Law.LAW_TID.extend("+")).);*/
-                return LAWS_SET.contains(lhs.uriValue().name()) ? lhs : noobj();
+                // the preconstructed set answers the built-in vocabulary without a read; a law WRITTEN at
+                // /m/law/<label> is admitted because law is where the uri lives, not a compiled-in list
+                return LAWS_SET.contains(label) || !Machine.read(Law.LAW_TID.extend(label)).isNoObj()
+                        ? lhs : noobj();
             })
             .create();
 

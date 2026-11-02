@@ -21,6 +21,7 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -574,6 +575,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdout"), f("/sys/io/stdout"));
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
+            // THE READER HOOK AND THE CACHES COME FIRST: an algebra read happens during a set's own setup, so the
+            // lazy `?decq` publication must be installed before the first mount, and the law tables' memo must not
+            // carry a previous boot's algebra views.
+            LawTable.reset();
+            PendingWrites.install();
             // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own
             // instset. Hand-registering these three with addSpace alone is why `instset()` could not answer for
             // /m — the base language — while it answered for every ISA imported later through `import`.

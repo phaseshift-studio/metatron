@@ -485,6 +485,13 @@ public final class QCollection {
         }
     }
 
+    /**
+     * THE READER HOOK FOR LAZY FACETS: a {@code ?docq}/{@code ?decq} is staged by its writer and published the
+     * first time a reader asks for it. It is installed by {@code PendingWrites} itself (the class that owns the
+     * log), so this package does not import that one and no class-initialisation cycle is created.
+     */
+    public static volatile java.util.function.Predicate<fURI> LAZY_PUBLISH = address -> false;
+
     public static QProc docQ() {
         return docQ(noobj());
     }
@@ -512,7 +519,28 @@ public final class QCollection {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
                         return Machine.read(vidBig);
-                    final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
+                    if (INST_DOCS.read(vidBig.removeQ(DOCQ)).isNoObj()
+                            && OBJ_DOCS.read(vidBig.removeQ(DOCQ)).isNoObj()) {
+                        LAZY_PUBLISH.test(vid);
+                        // A DOC IS ABOUT THE OPERATION: a builder queues it at the full tid (args in tid), while a
+                        // reader asks at the operation address -- ask for the operation's own doc as well.
+                        final fURI opAddr = Inst.Helper.operationTid(vidBig.removeQ(DOCQ)).addQ(DOCQ);
+                        if (INST_DOCS.read(opAddr.removeQ(DOCQ)).isNoObj()
+                                && OBJ_DOCS.read(opAddr.removeQ(DOCQ)).isNoObj())
+                            LAZY_PUBLISH.test(opAddr);
+                    }
+                    // A DOC IS KEYED BY THE INST'S OWN TID (the builder queues it at the address carrying
+                    // args/rng), while a reader asks at the bare operation address: resolve through the live inst.
+                    Obj looked = INST_DOCS.read(vidBig.removeQ(DOCQ));
+                    if (looked.isNoObj()) {
+                        final Obj live = Machine.read(vidBig.removeQ(DOCQ));
+                        if (live.isInst()) {
+                            final fURI full = live.<Inst>as().tid();
+                            LAZY_PUBLISH.test(full.addQ(DOCQ));
+                            looked = INST_DOCS.read(full);
+                        }
+                    }
+                    final Obj instDoc = looked;
                     final Obj doc = instDoc.isNoObj() ?
                             OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.Helper.readLocal(Machine.current(), vidBig.removeQ(DOCQ))))) :
                             instDoc;
@@ -574,7 +602,13 @@ public final class QCollection {
                 })
                 .preRead((vid) -> {
                     final fURI vidBig = vid.big();
-                    return vidBig.equals(vid) ? declarations.read(vidBig.removeQ(DECQ)) : Machine.read(vidBig);
+                    if (!vidBig.equals(vid))
+                        return Machine.read(vidBig);
+                    final Obj staged = declarations.read(vidBig.removeQ(DECQ));
+                    // LAZY PUBLICATION: the writer staged the declaration; this read is the first to ask for it
+                    if (staged.isNoObj() && LAZY_PUBLISH.test(vid))
+                        return declarations.read(vidBig.removeQ(DECQ));
+                    return staged;
                 })
                 .create();
         if (!initialDeclarations.isNoObj())
@@ -617,12 +651,22 @@ public final class QCollection {
                 Machine.current().memory().getSpaceFor(objID) : null;
         if (null == objSpace)
             return noobj();
-        return objSpace.qs().jvm().stream()
+        final Obj read = objSpace.qs().jvm().stream()
                 .filter(q -> q.tid().basePath().equals(DECQ_TID))
                 .map(Obj::<QProc>as)
                 .findAny()
                 .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
                 .orElse(noobj());
+        // LAZY: the declaration is staged by its writer and published by the first reader that asks. This door
+        // reads the q-proc's own space directly, so it must make the same ask the q-proc's preRead does.
+        if (read.isNoObj() && LAZY_PUBLISH.test(objID.addQ(DECQ)))
+            return objSpace.qs().jvm().stream()
+                    .filter(q -> q.tid().basePath().equals(DECQ_TID))
+                    .map(Obj::<QProc>as)
+                    .findAny()
+                    .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
+                    .orElse(noobj());
+        return read;
     }
 
     /**

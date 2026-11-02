@@ -199,6 +199,17 @@ public final class mInsts {
                         .body((lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
                         .law(Law.pure)
                         .inverse(AS_INST_TID.dom(STR_TID).rng(INT_TID))
+                        .create(),
+                InstBuilder.build().tid(PLUS_INST_TID, "add the argument int to the lhs int")
+                        .dom(INT_TID, "the lhs int")
+                        .rng(INT_TID, "the result of the addition")
+                        .argLst(INT_TYPE, "the int to add to the lhs")
+                        .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))
+                        .example("1.plus(2)          [-- 3                    --]",
+                                "1+2                [-- 3 sugar'd form       --]",
+                                "1.plus(plus(1))    [-- 3 nested application --]",
+                                "1+(+1)             [-- 3 sugar nested form  --]")
+                        .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
                         .create()
         ));
     }
@@ -695,16 +706,24 @@ public final class mInsts {
                         .body((lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed()))
                         .law(Law.involution, Law.pure)
                         .create(),
+               /* InstBuilder.build().tid(MAP_INST_TID, "apply arg to every element of lhs lst")
+                        .dom(LST_TID, "the lhs lst containing elements to map")
+                        .rng(LST_TID, "the lhs lst with mapped elements")
+                        .argLst(ALL_TYPE, "a lst element mapping to obj")
+                        .body((lhs, inst) -> lhs.jvm(lhs.lstValue().stream().map(e -> inst.arg(0).apply(e)).collect(CommonUtil.ListCollector.single())))
+                        .law(Law.pure)
+                        .form(Inst.Form.mapper)
+                        .create(), */
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the lst monoid")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the empty lst")
                         .argLst()
-                        .body((lhs, inst) -> lhs.asLst().zero())
+                        .body((lhs, _) -> lhs.asLst().zero())
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "append the slots of the argument lst onto the slots of the lhs lst")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the concatenated lst")
                         .argLst(LST_TYPE, "the lst to append")
-                        .body((lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).map(o -> ((Obj) o).clone().as()).toList()))
+                        .body((lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Obj>elements(), inst.arg(0).<Obj>elements()).map(o -> ((Obj) o).clone().<Obj>as()).collect(CommonUtil.ListCollector.single())))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "remove the slots of the argument lst from the lhs lst")
@@ -854,6 +873,14 @@ public final class mInsts {
                         .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
                         .law(Law.pure)
                         .create(),
+              /*  InstBuilder.build().tid(MAP_INST_TID, "apply arg to every rel of lhs lst. \\(\\mathsf{map} : \\big((k \\mapsto v) \\to (k' \\mapsto v')\\big) \\to \\mathrm{rec}(K,V) \\to \\mathrm{rec}(K',V')\\)")
+                        .dom(REC_TID, "the lhs rec containing rel fields to map")
+                        .rng(REC_TID, "the lhs rec with mapped rel fields")
+                        .argLst(ALL_TYPE, "a rel field mapping to rel")
+                        .body((lhs, inst) -> lhs.jvm(lhs.asRec().elements().map(e -> inst.arg(0).apply(e).asRel()).collect(CommonUtil.MapCollector.single())))
+                        .law(Law.pure)
+                        .form(Inst.Form.mapper)
+                        .create(),*/
                 InstBuilder.build().tid(AS_INST_TID, "convert an int into the rec the argument rec type constructs")
                         .dom(INT_TID, "the int to convert").rng(REC_TID, "the lhs int as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
@@ -1089,6 +1116,15 @@ public final class mInsts {
      */
     public static Set<Inst> objs_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build()
+                        .tid(ID_INST_TID)
+                        .dom(A, "the lhs obj to pass to the rhs")
+                        .rng(A, "an rhs obj is the lhs obj")
+                        .argLst()
+                        .desc("the obj identity function \\(f(x)\\to x\\)")
+                        .body((lhs, _) -> lhs)
+                        .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
+                        .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)
                         .dom(A, "the lhs to swap for the swap arg")

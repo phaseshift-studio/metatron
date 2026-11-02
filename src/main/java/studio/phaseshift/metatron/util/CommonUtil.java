@@ -678,6 +678,89 @@ public final class CommonUtil {
         }
     }
 
+    public static class ListCollector implements Collector<Obj, List<Obj>, List<Obj>> {
+
+        private static final ListCollector INSTANCE = new ListCollector();
+
+        private ListCollector() {
+            // do nothing
+        }
+
+        public static ListCollector single() {
+            return INSTANCE;
+        }
+
+        @Override
+        public Supplier<List<Obj>> supplier() {
+            return ArrayList::new;
+        }
+
+        @Override
+        public BiConsumer<List<Obj>, Obj> accumulator() {
+            return List::add;
+        }
+
+        @Override
+        public BinaryOperator<List<Obj>> combiner() {
+            return (a, b) -> {
+                a.addAll(b);
+                return a;
+            };
+        }
+
+        @Override
+        public Function<List<Obj>, List<Obj>> finisher() {
+            return m -> m;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
+        }
+    }
+
+    public static class MapCollector implements Collector<Rel, Map<Obj, Obj>, Map<Obj, Obj>> {
+
+        private static final MapCollector INSTANCE = new MapCollector();
+
+        private MapCollector() {
+            // do nothing
+        }
+
+        public static MapCollector single() {
+            return INSTANCE;
+        }
+
+        @Override
+        public Supplier<Map<Obj, Obj>> supplier() {
+            return LinkedHashMap::new;
+        }
+
+        @Override
+        public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
+            return (map, rel) -> map.put(rel.first(), rel.second());
+        }
+
+        @Override
+        public BinaryOperator<Map<Obj, Obj>> combiner() {
+            return (a, b) -> {
+                a.putAll(b);
+                return a;
+            };
+        }
+
+        @Override
+        public Function<Map<Obj, Obj>, Map<Obj, Obj>> finisher() {
+            return m -> m;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
+        }
+    }
+
+
     public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {
 
         final fURI vid;
@@ -993,4 +1076,51 @@ public final class CommonUtil {
         }
     }
 
+    public static class ObjProjectionComparator implements Comparator<Obj> {
+
+        private final Obj selector;
+
+        private ObjProjectionComparator(final Obj selector) {
+            this.selector = selector;
+        }
+
+        public static final ObjProjectionComparator of(final Obj projection) {
+            return new ObjProjectionComparator(projection);
+        }
+
+        @Override
+        public int compare(final Obj o1, final Obj o2) {
+            final Object v1 = this.selector.apply(o1).jvm();
+            final Object v2 = this.selector.apply(o2).jvm();
+            if (!(v1 instanceof Comparable))
+                throw MTronException.of("selector %s does not return a comparable value for %s", this.selector, v1);
+            if (!(v2 instanceof Comparable))
+                throw MTronException.of("selector %s does not return a comparable value for %s", this.selector, v2);
+            return ((Comparable) v1).compareTo(v2);
+        }
+    }
+
+    public static class ObjComparator implements Comparator<Obj> {
+
+        private static final ObjComparator INSTANCE = new ObjComparator();
+
+        public static ObjComparator single() {
+            return INSTANCE;
+        }
+
+        private ObjComparator() {
+//do nothing
+        }
+
+        @Override
+        public int compare(Obj o1, Obj o2) {
+            final Object v1 = o1.jvm();
+            final Object v2 = o2.jvm();
+            if (!(v1 instanceof Comparable))
+                throw MTronException.of("%s is notcomparable", v1);
+            if (!(v2 instanceof Comparable))
+                throw MTronException.of("%s is not comparable", v2);
+            return ((Comparable) v1).compareTo(v2);
+        }
+    }
 }

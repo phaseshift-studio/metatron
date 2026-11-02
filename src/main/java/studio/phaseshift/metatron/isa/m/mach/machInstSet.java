@@ -199,7 +199,14 @@ public class machInstSet extends AbstractInstSet {
                             uri(YIELD).maybe(), T(MACH_THREAD_TID),
                             uri(LOOP).maybe(), TIME_TYPE,
                             uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
-                            uri(RESULT).maybe(), T(ALL.maybeSome())))
+                            uri(RESULT).maybe(), T(ALL.maybeSome())), Map.of(
+                            uri(CODE), "the thread's executing code",
+                            uri(TIME).maybe(), "the datetime::T when the thread was started",
+                            uri(RUNTIME).maybe(), "computes the thread's current running time::T",
+                            uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
+                            uri(STATE).maybe(), "current state of the thread",
+                            uri(RESULT).maybe(), "the last result produced by the thread"))
+            .desc("the thread base type")
             .create();
     public static Type MACH_CORE_THREAD_TYPE;
     public static Type MACH_MACHINE_TYPE;
@@ -294,12 +301,13 @@ public class machInstSet extends AbstractInstSet {
                                 .tid(MACH_PROCESSOR_TID)
                                 .vid(MACH_MONAD_PROCESSOR_TID)
                                 .create(),
-                        MACH_SWARM_PROCESSOR_TYPE = docWrap(TypeBuilder.build()
+                        MACH_SWARM_PROCESSOR_TYPE = TypeBuilder.build()
                                         .tid(MACH_PROCESSOR_TID)
                                         .vid(MACH_SWARM_PROCESSOR_TID)
-                                        .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
-                                        .create(), null, null, Map.of(uri(CODE), "the code the processor will evaluate"),
-                                "a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result"),
+                                        .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()),
+                                                Map.of(uri(CODE), "the code the processor will evaluate"))
+                                        .desc("a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result")
+                                        .create(),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = TypeBuilder.build()
                                         .tid(MACH_MACHINE_COMPONENT_TID)
@@ -711,14 +719,6 @@ public class machInstSet extends AbstractInstSet {
                                         .tid(REC_TID)
                                         .vid(THREAD_EXECUTOR_TID, "the gateway interface for all threads in metatron")
                                         .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
-                        docWrap(MACH_THREAD_TYPE, null, null,
-                                Map.of(
-                                        uri(CODE), "the thread's executing code",
-                                        uri(TIME).maybe(), "the datetime::T when the thread was started",
-                                        uri(RUNTIME).maybe(), "computes the thread's current running time::T",
-                                        uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
-                                        uri(STATE).maybe(), "current state of the thread",
-                                        uri(RESULT).maybe(), "the last result produced by the thread"), "the thread base type"),
                         MACH_CORE_THREAD_TYPE = TypeBuilder.build()
                                         .tid(MACH_THREAD_TID)
                                         .vid(MACH_CORE_THREAD_TID, "run a concurrent core thread")

@@ -122,6 +122,19 @@ public abstract class LawTable {
     private final Map<fURI, Algebra> typeLawsCache = new ConcurrentHashMap<>();
 
     /**
+     * A BOOT IS A FRESH WORLD. The table instances are process-wide singletons ({@code INSTANCE} fields) while the
+     * algebras they memoize hold ROLE POINTERS into the spaces of the boot that read them; a second VM in the same
+     * JVM (one per test class) would answer the previous boot's algebra, whose pointers name dead spaces -- measured
+     * as "the type declares no role-bearing operation" and "the declared algebras were read without their pointers".
+     * {@link #reset()} is called before any set mounts.
+     */
+    public static void reset() {
+        STORE_DERIVATIONS = Map.of();
+        LOG_DERIVATIONS = Map.of();
+        TABLES.values().forEach(table -> table.typeLawsCache.clear());
+    }
+
+    /**
      * Whether a derivation is in flight on this thread — the guard {@link #lookup} answers the declared row under.
      */
     private static final ThreadLocal<Boolean> DERIVING = ThreadLocal.withInitial(() -> Boolean.FALSE);
@@ -863,6 +876,15 @@ public abstract class LawTable {
         final Obj stored = decOf(type);
         if (stored.isRec() && !stored.asRec().isEmpty())
             return stored;
+        // THE FIRST READ OF A BOOT IS THE ONE THE STORE CANNOT ANSWER: the algebra is staged by class
+        // initialisation, which may run AFTER the boot's publication window, so ?decq is empty the first time a
+        // reader asks. Publish from the retained log HERE, on the read, and re-read -- the store is still
+        // authoritative, it is simply empty until this write.
+        if (PendingWrites.publish(PendingWrites.decq(type.vid()))) {
+            final Obj published = decOf(type);
+            if (published.isRec() && !published.asRec().isEmpty())
+                return published;
+        }
         final Obj staged = PendingWrites.find(PendingWrites.decq(type.vid()));
         return null != staged && staged.isRec() && !staged.asRec().isEmpty() ? staged : stored;
     }

@@ -82,7 +82,7 @@ public class geoTypes {
      * The registered type blocks — the {@code lst} the instset's setup puts at {@code /type}.
      *
      * @param self the registering instset
-     * @return the docwrapped type registrations
+     * @return the type registrations
      */
     public static studio.phaseshift.metatron.isa.m.type.Lst registered(final InstSet self) {
         final studio.phaseshift.metatron.isa.m.type.Lst types = lst(
@@ -96,41 +96,44 @@ public class geoTypes {
                                 .vid(BBOX_TID, "the nominal base of an envelope. It declares no poly: geo:bbox2d and geo:bbox3d do")
                                 .create(),
                 // ── the shapes ────────────────────────────────────────────────────────────────────────────────
-                docWrap(POINT_TYPE = shapeType(POINT_TID, GEOMETRY_TID,
+                POINT_TYPE = kindBuilder(POINT_TID, GEOMETRY_TID,
                                 lst(REAL_TYPE, REAL_TYPE, REAL_TYPE.c(cInt.MAYBE())), GeoUtil::isPoint,
                                 arg -> GeoUtil.isLine(GeoUtil.payload(arg)) || GeoUtil.isPolygon(GeoUtil.payload(arg))
-                                        ? GeoUtil.point(GeoUtil.centroid(arg)) : null),
-                        Map.of(jnt(0), "the x (longitude) coordinate",
+                                        ? GeoUtil.point(GeoUtil.centroid(arg)) : null)
+                        .slots(Map.of(jnt(0), "the x (longitude) coordinate",
                                 jnt(1), "the y (latitude) coordinate",
-                                jnt(2).maybe(), "the z (altitude) coordinate"),
-                        "a point — a coordinate pair, or a triple with an altitude. \\([\\lambda, \\varphi[, h]]\\)",
-                        "geo:point::[-123.13,44.47]", "geo:point::[-123.13,44.47,1240.0]"),
-                docWrap(LINE_TYPE = shapeType(LINE_TID, GEOMETRY_TID,
-                                lst(T(POINT_TID).c(cInt.SOME())), GeoUtil::isLine),
-                        Map.of(),
-                        "a line — an ORDERED list of points. A multi-point is a bag, a line is a sequence, and the wire has no way to say the difference",
-                        "geo:line::[[-123.13,44.47],[-122.98,44.52]]"),
-                docWrap(POLYGON_TYPE = shapeType(POLYGON_TID, GEOMETRY_TID,
-                                lst(T(LINE_TID).c(cInt.SOME())), GeoUtil::isPolygon),
-                        Map.of(),
-                        "a polygon — a shell line followed by zero or more hole lines (a ring is a line whose first and last points coincide, which the RFC requires and this type does not enforce)",
-                        "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.4]]]"),
+                                jnt(2).maybe(), "the z (altitude) coordinate"))
+                        .desc("a point — a coordinate pair, or a triple with an altitude. \\([\\lambda, \\varphi[, h]]\\)")
+                        .example("geo:point::[-123.13,44.47]", "geo:point::[-123.13,44.47,1240.0]")
+                        .create(),
+                LINE_TYPE = kindBuilder(LINE_TID, GEOMETRY_TID,
+                                lst(T(POINT_TID).c(cInt.SOME())), GeoUtil::isLine)
+                        .desc("a line — an ORDERED list of points. A multi-point is a bag, a line is a sequence, and the wire has no way to say the difference")
+                        .example("geo:line::[[-123.13,44.47],[-122.98,44.52]]")
+                        .create(),
+                POLYGON_TYPE = kindBuilder(POLYGON_TID, GEOMETRY_TID,
+                                lst(T(LINE_TID).c(cInt.SOME())), GeoUtil::isPolygon)
+                        .desc("a polygon — a shell line followed by zero or more hole lines (a ring is a line whose first and last points coincide, which the RFC requires and this type does not enforce)")
+                        .example("geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.4]]]")
+                        .create(),
                 // ── the envelopes ─────────────────────────────────────────────────────────────────────────────
-                docWrap(BBOX2D_TYPE = shapeType(BBOX2D_TID, BBOX_TID,
+                BBOX2D_TYPE = kindBuilder(BBOX2D_TID, BBOX_TID,
                                 lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox2d,
                                 arg -> GeoUtil.isBbox3d(arg) ? GeoUtil.bbox2dOf(arg)
                                         : GeoUtil.isLine(GeoUtil.payload(arg)) || GeoUtil.isPolygon(GeoUtil.payload(arg))
-                                        || GeoUtil.isPoint(GeoUtil.payload(arg)) ? GeoUtil.bbox(arg) : null),
-                        Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y",
-                                jnt(2), "the maximum x", jnt(3), "the maximum y"),
-                        "a 2D envelope — four reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\)",
-                        "geo:bbox2d::[-123.2,44.4,-122.9,44.6]"),
-                docWrap(BBOX3D_TYPE = shapeType(BBOX3D_TID, BBOX_TID,
-                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox3d),
-                        Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y", jnt(2), "the minimum z",
-                                jnt(3), "the maximum x", jnt(4), "the maximum y", jnt(5), "the maximum z"),
-                        "a 3D envelope — six reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, h_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}, h_{\\max}]\\)",
-                        "geo:bbox3d::[-123.2,44.4,0.0,-122.9,44.6,1300.0]"));
+                                        || GeoUtil.isPoint(GeoUtil.payload(arg)) ? GeoUtil.bbox(arg) : null)
+                        .slots(Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y",
+                                jnt(2), "the maximum x", jnt(3), "the maximum y"))
+                        .desc("a 2D envelope — four reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}]\\)")
+                        .example("geo:bbox2d::[-123.2,44.4,-122.9,44.6]")
+                        .create(),
+                BBOX3D_TYPE = kindBuilder(BBOX3D_TID, BBOX_TID,
+                                lst(REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE, REAL_TYPE), GeoUtil::isBbox3d)
+                        .slots(Map.of(jnt(0), "the minimum x", jnt(1), "the minimum y", jnt(2), "the minimum z",
+                                jnt(3), "the maximum x", jnt(4), "the maximum y", jnt(5), "the maximum z"))
+                        .desc("a 3D envelope — six reals, \\([\\lambda_{\\min}, \\varphi_{\\min}, h_{\\min}, \\lambda_{\\max}, \\varphi_{\\max}, h_{\\max}]\\)")
+                        .example("geo:bbox3d::[-123.2,44.4,0.0,-122.9,44.6,1300.0]")
+                        .create());
         publish();
         return types;
     }
@@ -149,10 +152,11 @@ public class geoTypes {
     /**
      * A KIND: a nominal refinement of a base ({@code geometry} or {@code bbox}) that DECLARES its list shape. The poly
      * is the whole type — no rec, no {@code coordinates} key — and the constructor only refuses a value the declaration
-     * would not accept.
+     * would not accept. The kind's BUILDER is handed back rather than its type, so the kind states its own docs
+     * ({@code slots}/{@code desc}/{@code example}) and creates the type itself.
      */
-    private static Type shapeType(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid) {
-        return shapeType(vid, base, shape, valid, null);
+    private static TypeBuilder kindBuilder(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid) {
+        return kindBuilder(vid, base, shape, valid, null);
     }
 
     /**
@@ -160,8 +164,8 @@ public class geoTypes {
      * plane is the centroid, {@code as(bbox2d::T)} on a line is the envelope). Returns {@code null} when the value is
      * not reducible, so the constructor can refuse it.
      */
-    private static Type shapeType(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid,
-                                  final Function<Obj, Obj> reduce) {
+    private static TypeBuilder kindBuilder(final fURI vid, final fURI base, final Obj shape, final Predicate<Obj> valid,
+                                           final Function<Obj, Obj> reduce) {
         // the text and document doors belong to the GEOJSON kinds: a bbox is not a GeoJSON object, it is a field on
         // one, so it has no document form to be read from or written to
         final boolean geojson = GEOMETRY_TID.equals(base);
@@ -182,7 +186,7 @@ public class geoTypes {
         if (geojson)
             builder.inst(castInFromText(vid)).inst(castInFromJson(vid)).inst(castInFromRec(vid))
                     .inst(castOutToJson(vid));
-        return builder.create();
+        return builder;
     }
 
 

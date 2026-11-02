@@ -71,18 +71,28 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>DOCUMENTATION IS INLINE, exactly as in {@link AbstractObjBuilder}: the doc string is the second argument of the
  * declaration it documents ({@code vid(vid, "…")}, {@code predicate(call, "…")}, {@code inst(tid, args, func, "…")}).
  * The composed doc rec is the same shape {@code QCollection.Docs} writes — {@code obj}, {@code desc}, {@code example},
- * and the instruction slots {@code dom}/{@code rng}/{@code args} where the object is an instruction.
+ * and the instruction slots {@code dom}/{@code rng}/{@code args} where the object is an instruction. A TYPE states
+ * those same slots from its own refinement: {@link #refinement(String, String)} is the prose of its predicate and
+ * constructor sides, and {@link #slots(Map)} (or {@link #isaPredicate(Obj, Map)}) says what each slot of its shape is.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
 
     /**
-     * WHAT EACH PREDICATE SLOT IS, keyed by the slot's own key — stated through {@link #isaPredicate(Obj, Map)} or
-     * {@link #isaPredicate(DocArg...)}, and published with the type's documentation at {@code ?docq} (the
-     * {@code args} slot), so the doc describes the shape the type claims.
+     * WHAT EACH SLOT OF THE TYPE IS, keyed by the slot's own key — stated through {@link #isaPredicate(Obj, Map)},
+     * {@link #isaPredicate(DocArg...)}, {@link #slots(Map)} or {@link #constructor(Call, Map)}, and published with the
+     * type's documentation at {@code ?docq} (the {@code args} slot), so the doc describes the shape the type claims.
      */
-    private final Map<Obj, String> predicateArgDocs = new LinkedHashMap<>();
+    private final Map<Obj, String> slotDocs = new LinkedHashMap<>();
+
+    /**
+     * THE PROSE OF THE TYPE'S TWO REFINEMENT SIDES — what its predicate accepts and what its constructor produces.
+     * A type has no dom/rng SLOTS, so these are not a contract: they are the two lines the documentation renders as
+     * the type's signature, carried in the doc rec's {@code dom}/{@code rng} slots.
+     */
+    private String predicateDoc;
+    private String constructorDoc;
 
     /**
      * THE LAW-BLOCK NAMES of the conventional theory instances the role sugar composes — the same spellings
@@ -193,8 +203,49 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
      * carries ({@code rec(uri("role"), URI_TYPE)}). Its contract is minted here so the caller states the shape alone.
      */
     public TypeBuilder isaPredicate(final Obj predicate) {
-        this.predicateArgDocs.clear();
+        this.slotDocs.clear();
         return this.predicate(isa_(predicate).tryToInst());
+    }
+
+    /**
+     * State the type's two REFINEMENT SIDES as prose — what its predicate accepts and what its constructor produces.
+     * A type has no dom/rng SLOTS (those belong to an instruction's contract); its two sides are its predicate and its
+     * constructor, and the doc rec's {@code dom}/{@code rng} slots are where their prose lives, so the documentation
+     * renders the type as the signature {@code predicate => constructor}.
+     * <p>
+     * The strings are prose only: null or blank omits that side, exactly as {@code QCollection.Docs.doc} composes it,
+     * and the authored prose is preserved verbatim (no prefix is added here).
+     */
+    public TypeBuilder refinement(final String predicateDoc, final String constructorDoc) {
+        this.predicateDoc = predicateDoc;
+        this.constructorDoc = constructorDoc;
+        return this;
+    }
+
+    /**
+     * {@link #refinement(String, String)} together with the docs of the type's SLOTS — the whole shape a
+     * {@code docWrap(type, predicateProse, constructorProse, slots, description, examples…)} call stated in one
+     * breath, stated by the builder that owns the declaration instead.
+     */
+    public TypeBuilder refinement(final String predicateDoc, final String constructorDoc,
+                                  final Map<Obj, String> slotDocs) {
+        return this.refinement(predicateDoc, constructorDoc).slots(slotDocs);
+    }
+
+    /**
+     * State WHAT EACH SLOT OF THE TYPE IS — one line per slot, keyed by the slot's own key and published in the doc
+     * rec's {@code args} slot. A key addresses the type's shape: a predicate's top-level key, a key nested below one,
+     * or a position when the shape is a declared list. Accumulates across calls, so a chain may state the slots where
+     * they are declared.
+     * <p>
+     * An {@code isa} type that states its predicate AND its slot docs in one call uses
+     * {@link #isaPredicate(Obj, Map)}; this is the form for a shape whose keys are not the predicate's own top-level
+     * keys, and for the constructor's arguments ({@link #constructor(Call, Map)}).
+     */
+    public TypeBuilder slots(final Map<Obj, String> slotDocs) {
+        if (null != slotDocs)
+            this.slotDocs.putAll(slotDocs);
+        return this;
     }
 
     /**
@@ -203,9 +254,8 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
      * predicate's own keys, so a doc can never describe a slot the predicate does not have.
      */
     public TypeBuilder isaPredicate(final Obj predicate, final Map<Obj, String> argDocs) {
-        this.predicateArgDocs.clear();
-        if (null != argDocs)
-            this.predicateArgDocs.putAll(argDocs);
+        this.slotDocs.clear();
+        this.slots(argDocs);
         return this.predicate(isa_(predicate).tryToInst());
     }
 
@@ -241,14 +291,14 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
      */
     public TypeBuilder isaPredicate(final DocArg... args) {
         final Map<Obj, Obj> predicate = new LinkedHashMap<>();
-        this.predicateArgDocs.clear();
+        this.slotDocs.clear();
         if (null != args)
             for (final DocArg arg : args) {
                 if (null == arg)
                     continue;
                 predicate.put(arg.key(), arg.type());
                 if (null != arg.doc())
-                    this.predicateArgDocs.put(arg.key(), arg.doc());
+                    this.slotDocs.put(arg.key(), arg.doc());
             }
         return this.predicate(isa_(rec(predicate)).tryToInst());
     }
@@ -272,13 +322,31 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
     }
 
     /**
+     * {@link #constructor(Call)} with the docs of its ARGUMENTS. A constructor IS an instruction
+     * ({@code INST_CTOR_TID}), so what it reads is the doc rec's {@code args} slot — stated at the constructor the docs
+     * belong to, rather than at the type whose name happens to carry them.
+     */
+    public TypeBuilder constructor(final Call constructor, final Map<Obj, String> argDocs) {
+        this.constructor = constructor;
+        return this.slots(argDocs);
+    }
+
+    /**
      * State the constructor as the JVM function that lifts one obj. The type must already be NAMED ({@code vid}): the
      * constructor's range is the type's own address.
      */
     public TypeBuilder constructor(final Function<Obj, Obj> function) {
+        return this.constructor(function, null);
+    }
+
+    /**
+     * {@link #constructor(Function)} with the docs of its ARGUMENTS — the JVM-function form of
+     * {@link #constructor(Call, Map)}, for a constructor minted here rather than stated as an instruction.
+     */
+    public TypeBuilder constructor(final Function<Obj, Obj> function, final Map<Obj, String> argDocs) {
         if (null == this.vid)
             throw MTronException.of("vid must be set prior to specifying constructor");
-        return this.constructor(instC(Tokens.INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(Tokens.ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))));
+        return this.constructor(instC(Tokens.INST_CTOR_TID.dom(ALL.maybe()).rng(this.vid), lst(T(Tokens.ALL_STAR)), (lhs, inst) -> function.apply(inst.arg(0))), argDocs);
     }
 
     /**
@@ -465,9 +533,11 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
         // address is one), so there is no location to publish a type at and the write is skipped rather than staged.
         if (null != this.vid && !this.vid.c().isZero()) {
             PendingWrites.write(this.vid, type);
-            if (null != this.description || !this.examples.isEmpty() || !this.predicateArgDocs.isEmpty()) {
+            if (null != this.description || !this.examples.isEmpty() || !this.slotDocs.isEmpty()
+                    || null != this.predicateDoc || null != this.constructorDoc) {
                 final fURI docAddress = PendingWrites.docq(this.vid);
-                final Rec doc = docRec(type, null, null, this.predicateArgDocs, this.description, this.examples.toArray(String[]::new));
+                final Rec doc = docRec(type, this.predicateDoc, this.constructorDoc,
+                        this.slotDocs, this.description, this.examples.toArray(String[]::new));
                 PendingWrites.write(docAddress, doc);
             }
             final Algebra declared = null == this.algebra ? this.composedAlgebra() : this.algebra;
