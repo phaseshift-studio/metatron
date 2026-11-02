@@ -105,15 +105,18 @@ public final class PeerSpawn {
             return address(authority);
         final boolean here = authority.isLoopbackHost();
         try {
+            final Path log = Files.createTempFile("metatron-node-" + authority.port() + "-", ".log");
+            long pid = -1;
             if (here) {
-                final Path log = Files.createTempFile("metatron-node-" + authority.port() + "-", ".log");
+
                 final Process process = fork(authority, log);
+                pid = process.pid();
                 FORKED.put(key, new Forked(process, log));
                 awaitReady(process, log, authority);
             }
             final fURI address = address(authority);
             declare(key, address);
-            LOG.warn("spawned node %s (forked=%s)", key, here);
+            LOG.warn("{{g}}spawned{{/g}} node {{b}}%s{{/b}} [pid=%d][log=%s]\n", key, pid, log.toAbsolutePath());
             return address;
         } catch (final IOException | RuntimeException e) {
             // a half-spawned peer must leave nothing behind: no orphan process, and no roster entry claiming an
@@ -228,7 +231,7 @@ public final class PeerSpawn {
         command.add(String.valueOf(authority.port()));
         // the node's namespace is the LOCALIZED path — what the parent sends over the wire, not the parent's spelling
         command.add(authority.localize().toString());
-        LOG.warn("forking node %s on port %d", authority.origin(), authority.port());
+        LOG.warn("{{y}}forking{{/y}} node {{b}}%s{{/b}}\n", authority.origin());
         return new ProcessBuilder(command)
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectErrorStream(true)
@@ -266,7 +269,7 @@ public final class PeerSpawn {
             Thread.currentThread().interrupt();
             process.destroyForcibly();
         }
-        LOG.warn("reaped node %s (pid %d)", key, process.pid());
+        LOG.warn("{{y}}reaped{{/y}} node %s [pid=%d]\n", key, process.pid());
     }
 
     private static String trace(final Path log) {

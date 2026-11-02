@@ -105,8 +105,11 @@ mqtt_server::[origin => <mqtt://0.0.0.0:1883>];
   make spawns ws_client::T peers.
 ==]
 harvest?ws_client{*}<=int{*}(){
+  id?int<=int().to(i).
   spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>).
-  -<[host=>_].as(ws_client::T)}@harvest;
+    -<[host=>_].
+  as(ws_client::T).
+    -<[*i => >>host].sum() }@harvest;
         [=====================]
         [======= DOCKER ======]
         [=====================]
