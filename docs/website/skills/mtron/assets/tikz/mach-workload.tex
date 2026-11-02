@@ -1,0 +1,66 @@
+% mach-workload.tex — one master, three satellites, one shared backend: the master ships a workload per satellite,
+% each satellite connects its own space to the backend, pulls its partition and pushes its result, and the master
+% latches on the acknowledgements before it reads the results back.
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/mach-workload.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Labels are UNFILLED and set clear of the strokes.
+%
+% THE FIGURE, IN ONE PICTURE.
+%                         master  (creates every table, ships, latches, reads)
+%            w_1 ↓↑ ack        w_2 ↓↑ ack        w_3 ↓↑ ack
+%         satellite 1       satellite 2       satellite 3        (each evaluates its workload)
+%         xyz=>'east'       xyz=>'west'       xyz=>'north'
+%                pull ↓↑ push      ↓↑              ↓↑
+%                          MariaDB /usr/data/#
+%   dotted, master → MariaDB: the master's own writes (every table, first) and reads (the results, after the latch)
+
+\begin{tikzpicture}[
+  k/.style={draw, rounded corners=2pt, thick, minimum height=7mm, minimum width=22mm, inner sep=1.4mm, font=\small, align=center},
+  db/.style={draw, thick, cylinder, shape border rotate=90, aspect=0.2, minimum height=15mm, minimum width=27mm, font=\small, align=center},
+  ship/.style={thick, -{Stealth[length=2.2mm]}},
+  ack/.style={thick, dashed, -{Stealth[length=2.2mm]}},
+  own/.style={thick, dotted, -{Stealth[length=2.2mm]}},
+  lab/.style={font=\scriptsize, inner sep=1pt},
+  sub/.style={font=\scriptsize, text=white!60!black, inner sep=1pt},
+  color=white
+]
+% the three machines and the backend they share
+\node[k] (m)  at (0,2.9)    {master};
+\node[k] (s1) at (-3.6,0)   {satellite 1};
+\node[k] (s2) at (0,0)      {satellite 2};
+\node[k] (s3) at (3.6,0)    {satellite 3};
+\node[db] (b) at (0,-3.0)   {MariaDB\\[-1pt]\scriptsize\texttt{/usr/data/\#}};
+
+% each satellite's binding, read from its workload
+\node[sub, anchor=north] at ([yshift=-2pt]s1.south) {\texttt{xyz=>'east'}};
+\node[sub, anchor=north] at ([yshift=-2pt]s2.south) {\texttt{xyz=>'west'}};
+\node[sub, anchor=north] at ([yshift=-2pt]s3.south) {\texttt{xyz=>'north'}};
+
+% the workloads go down (solid), the acknowledgements come back up (dashed) into the latch
+\foreach \s in {s1, s2, s3} {
+  \draw[ship] (m.south) to[bend right=9] (\s.north);
+  \draw[ack]  (\s.north) to[bend right=9] (m.south);
+}
+\node[lab, anchor=east] at ([xshift=-4mm, yshift=1mm]$(m.south)!0.5!(s1.north)$) {\texttt{w\textsubscript{1}}};
+\node[lab, anchor=west] at ([xshift=4mm, yshift=1mm]$(m.south)!0.5!(s3.north)$)  {\texttt{w\textsubscript{3}}};
+\node[lab, anchor=west] at ([xshift=2.5mm]$(m.south)!0.5!(s2.north)$)            {\texttt{w\textsubscript{2}}};
+
+% pull the partition, push the result
+\foreach \s in {s1, s2, s3}
+  \draw[thick, {Stealth[length=2.2mm]}-{Stealth[length=2.2mm]}] ([yshift=-4.6mm]\s.south) -- (b.north);
+\node[lab, anchor=west, align=left] at ([xshift=11mm, yshift=-3mm]$(s3.south)!0.5!(b.north)$) {pull \texttt{xyz/+}\\push \texttt{result/xyz}};
+
+% the master's own reads and writes, around the side
+\draw[own] (m.west) .. controls (-7.2,2.9) and (-7.2,-3.0) .. node[lab, pos=0.5, left] {\begin{tabular}{r}1.\ creates every table\\3.\ reads \texttt{result/+}\end{tabular}} (b.west);
+
+% the latch, at the master
+\node[sub, anchor=south] at ([yshift=2pt]m.north) {2.\ \texttt{start([w\textsubscript{1},w\textsubscript{2},w\textsubscript{3}]).select([to(s\textsubscript{1}),to(s\textsubscript{2}),to(s\textsubscript{3})]).merge()}};
+
+% the legend
+\node[sub, anchor=north, align=center] at (0,-4.25)
+  {solid --- a workload \texttt{[db, xyz, code]} ships; evaluating it constructs the satellite's own space (construction is connection)\\[2pt]
+   dashed --- the acknowledgements: \texttt{merge()} is the latch (no fail, counted through coefficients) \qquad dotted --- the master's own writes and reads};
+\end{tikzpicture}

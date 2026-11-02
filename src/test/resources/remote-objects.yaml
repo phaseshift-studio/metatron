@@ -1,0 +1,7 @@
+# example JanusGraph remote connection configuration for production use.
+# tests use TestContainers-managed JanusGraph instances — see JanusGraphContainer.java.
+hosts: [localhost]
+port: 8182
+serializer: {
+  className: org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1,
+  config: { ioRegistries: [org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry] }}

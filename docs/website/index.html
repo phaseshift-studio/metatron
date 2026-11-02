@@ -1,0 +1,978 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>metatron</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="index.html" title="metatron"><img src="images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="instset/m.html"><img
+                            src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_ai_llm.html"><img
+                                src="images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_dcmnt.html"><img
+                            src="images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_grph.html"><img
+                            src="images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_db_tble.html"><img
+                                src="images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_db_vec.html"><img
+                            src="images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_dev_dckr.html"><img
+                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="instset/m_dev_ide.html"><img
+                            src="images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="instset/m_iot.html"><img
+                            src="images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_mach.html"><img
+                                src="images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_math.html"><img
+                                src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_math_cat.html"><img
+                                src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_math_geo.html"><img
+                                src="images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_sys.html"><img
+                                src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_sys_ui.html"><img
+                                src="images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="instset/m_web.html"><img
+                                src="images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><!--------------------->
+<!----- METATRON ------>
+<!--------------------->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <h1 class="text-uppercase mb-4 neon-text" style="font-size: 4.25rem;">metatron&trade;</h1>
+                <p class="text-primary subtitle">Interconnect Heterogeneous Data Sources and
+                    Processes</p>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <p class="mb-0"><b class="metatron-name">metatron</b> offers a concise,
+                            expressive, and efficient way to
+                            define and manipulate data structures encoded within and between data
+                            sources.
+                            It can be used for a wide range of applications including
+                            an enthusiast's home automation project, an organization's large-scale master
+                            data
+                            management
+                            system, or an agent's tailor-made harness in a data-rich environment.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-0"><b class="metatron-name">metatron</b> is founded on a
+                            referential record-oriented data model and schema. Higher-order
+                            structures are captured across a cluster of relational databases, graph
+                            databases,
+                            web servers, JSON documents, MQTT brokers, AI memory, IoT microprocessors,
+                            file systems,
+                            and more.
+                        </p>
+                    </div>
+                </div>
+<!-- ------ REMOVE WHEN STABLE ---------- -->
+                <div class="row">
+                <div class="col-md-12">
+<div class="openblock card">
+<div class="content">
+<div class="paragraph">
+  <p><small><b class="metatron-name">metatron</b> is in its pre-release
+                                                development stage. Documentation, source code, and artifact distributions
+                                                are in flux. For those interested in using the codebase, track the project via <a
+                                                        href="https://github.com/phaseshift-studio/metatron">github</a>.</small></p>
+</div>
+</div>
+</div>
+
+                </div>
+                </div>
+<!-- ----------------------------------  -->
+            </div>
+            <div class="col-lg-4">
+                <img src="images/metatron-character.png" width="100%" />
+            </div>
+        </div>
+    </div>
+</div>
+<!-- METATRON FEATURES -->
+<div class="container">
+    <div class="text-center mx-auto">
+        <h2 class="text-uppercase text-primary" style="background-color: var(--maincolor);">Features</h2>
+    </div>
+    <div class="row g-5">
+        <!-- MTRON -->
+        <div id="mtron_feature" data-title="mtron" data-icon="images/icons/mtron-icon.svg" data-back-image="images/modal/mtron-modal.svg">
+            <div class="feature-front">
+                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">mtron</b> (pronounced /ɛm.trɒn/) is the primary query and transformation language for the metatron virtual machine. It provides a type-safe environment for processing data across a diverse set of spaces.</p>
+                <img src="images/modal/mtron-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
+                 <p>
+                In mtron, URIs and instructions are both first class citizens. The URI's structure is capitalized on throughout the language where, for example, query parameters encode instruction domain and range types. This leads to URIs referencing code composed of URIs which provides a unique level of software reflection without abandoning a functional structure.
+                 </p>
+            </div>
+            <script type="text/javascript">featurePanel("mtron_feature");</script>
+        </div>
+        <!-- URI -->
+        <div id="uri_feature" data-title="fURI" data-icon="images/icons/link-icon.svg" data-back-image="images/modal/furi-modal.svg">
+            <div class="feature-front">
+                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where processes can seamlessly traverse across different data sources
+            </div>
+            <div class="feature-modal">
+                <p>The <b class="metatron-name">fURI</b> (<i>functional</i> URI) is the cornerstone of metatron's memory model. Every piece of data, regardless of its underlying storage, is addressed via a consistent URI scheme. The primary ramification is that any bit of data can refer to any other bit of data regardless of its physical location and underlying storage system and format. For instance, a line of text in a <code>.txt</code> file on a hard drive can reference some specific tag in an HTML page on the web. Atop the space-based URI graph, there exists a URI-aware machine capable of processing that data in a storage-agnostic manner.
+                </p>
+                <img src="images/modal/furi-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("uri_feature");</script>
+        </div>
+        <!-- SPACE -->
+        <div id="space_feature" data-title="space" data-icon="images/icons/space-icon.svg" data-back-image="images/modal/space-modal.svg">
+            <div class="feature-front">
+                data sources are logically abstracted as <b class="metatron-name">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data
+            </div>
+            <div class="feature-modal">
+                <p>A <b class="metatron-name">space</b> is a storage and/or processing system that is responsible for maintaining some subset of the full URI address space. Spaces include but are not limited to, relational databases, graph databases, key/value stores, document stores,
+                file systems, large language model catalogs, and more. Spaces can range from the small (a microprocessor's on-board memory), to the large (the world wide web).</p>
+                <img src="images/modal/space-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("space_feature");</script>
+        </div>
+        <!-- RING -->
+        <div id="ring_feature" data-title="ring" data-icon="images/icons/ring-icon.svg" data-back-image="images/modal/ring-modal.svg">
+            <div class="feature-front">
+                the typical functional programming monad/monoid is extended with a <b class="metatron-name">"ringad"/ringoid</b> processor, where <b class="metatron-name">*</b> is function composition and <b class="metatron-name">+</b> is function branching
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">Ring theory</b> describes the underlying algebra of metatron. The virtual machine's instructions can be serially composed (<b>*</b>) and parallelly branched (<b>+</b>) to form program structures that are subject to the axioms and theorems of <a href="https://metatron.phaseshift.studio/articles/stream-ring-theory.pdf">stream ring theory</a> (a Turing Complete stream computing algebra). Ring theorems realize execution optimization strategies (bulking coefficients), program compiler rewrites (ring equalities), and evaluation semantics (parallel, reducing, and serial execution stages).</p>
+                <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("ring_feature");</script>
+        </div>
+        <!-- MONAD -->
+        <div id="monad_feature" data-title="monad" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/monad-modal.svg">
+            <div class="feature-front">
+                Processes are realized as the propagation of atomic <b class="metatron-name">monads</b> maintaining a pointer to their current location in the instruction graph (program counter) and their current location in the data graph (reference in space)
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">Monads</b> provide a logical abstraction that cleanly separates the evaluation of a program from the program itself, allowing swarms of monads to operate in parallel over the same instruction/data graphs, where their collective synchronization need only occur when certain "barrier instructions" are reached. The theory of monads is applicable across many areas of applied computing, such as execution stacks, exception handling, I/O management, reflection, program traces, and state history, to name but a few.</p>
+                <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("monad_feature");</script>
+        </div>
+        <!-- INSTSET -->
+        <div id="instset_feature" data-title="instset" data-icon="images/icons/instset-icon.svg" data-back-image="images/modal/instset-modal.svg">
+            <div class="feature-front">
+                metatron <b class="metatron-name">instruction sets</b> (or instset) are packages that encode a domain of discourse within a set of types, instructions, constants, rewrites, and sugars.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors, with the docq query processor being of particular importance in that it associates documentation with any obj. These objs enable the automatic generation of human-readable HTML documentation as well as agent-readable tool and skill specifications.</p>
+            <table>
+                <tr>
+                  <th style="text-align: center;">*instset</th>
+                  <th style="text-align: center;">*instset?docq</th>
+                </tr>
+                <td>
+                <pre><code>
+rec::T[?[
+ {?}constq =>[#::T],
+ {?}type   =>[T::T],
+ {?}inst   =>[inst::T],
+ {?}rewrite=>[inst::T],
+ {?}sugar  =>[lst::T]]]@instset
+                </code></pre>
+                </td><td>
+<pre><code>
+docs::[
+ obj    =>instset::T,
+ args   =>[
+  {?}type   =>"types used to structure of the instset'...",
+  {?}rewrite=>'code<=code instructions that capture th...',
+  {?}inst   =>'instructions associated with the types ...',
+  {?}sugar  =>'custom instruction syntax sugars given ...',
+  {?}constq =>'constants used across the instset'],
+ desc   =>'an aggregate of consts, types, insts, r...',
+ example=>[,]]
+</code></pre>
+                </td>
+</tr>
+</table>
+            </div>
+            <script type="text/javascript">featurePanel("instset_feature");</script>
+        </div>
+       <!-- EMBED -->
+        <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
+            <div class="feature-front">
+                A data structure can have an inter- or intra-space <b class="metatron-name">embedding</b> such that each subset of its form can take advantage of the respective time-space tradeoffs of the underlying storage system.
+            </div>
+            <div class="feature-modal">
+                <p>A data structure such as a vertex in a graph can have many incoming and outgoing edges with different edge labels and properties. Such diversity entails not all edges will require the same read/write performance characteristics. In metatron, it's possible to <b class="metatron-name">embed</b> one edge set in a space optimized for fast retrievals (e.g. an in-memory space) and another subset in a space optimized for static, long-term storage (e.g. a disk-backed space). Other considerations may include the indices associated with a space and whether certain properties of an edge can be indexed for non-linear access.</p>
+                <img src="images/modal/embed-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("embed_feature");</script>
+        </div>
+        <!-- TYPE -->
+        <div id="type_feature" data-title="type" data-icon="images/icons/type-icon.svg" data-back-image="images/type-diagram.svg">
+            <div class="feature-front">
+               objs are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types with constructs for expressing cardinality, optionals, generics, predicates, and more.
+            </div>
+            <div class="feature-modal">
+                <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to an obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
+                <img src="images/type-diagram.svg" class="img-fluid mb-3 icon-color" style="max-height: 400px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("type_feature");</script>
+        </div>
+        <!-- OLTP -->
+        <div id="oltp_feature" data-title="oltp" data-icon="images/icons/oltp-icon.svg" data-back-image="images/modal/oltp-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad iterator</b> machine supports speedy traversals over localized regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLTP</b> (online transactional processing) provides a straightforward means for accessing a small region of space with a machine that iterates a stream of monads through code from the first instruction to the last.</p>
+                <img src="images/modal/oltp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("oltp_feature");</script>
+        </div>
+        <!-- OLRP -->
+        <div id="olrp_feature" data-title="olrp" data-icon="images/icons/olrp-icon.svg" data-back-image="images/modal/olrp-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLRP</b> (online real-time processing) realizes computing as a swarm of asynchronous, distributed monads traversing a data graph whose paths through that graph are guided by an instruction graph. Hundreds of thousands of monads can traverse vast swathes of the data landscape, across different physical machines, all in pursuit of a solution to a problem that has been formally captured within the structure of an obj called code.</p>
+                <img src="images/modal/olrp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("olrp_feature");</script>
+        </div>
+        <!-- OLAP -->
+        <div id="olap_feature" data-title="olap" data-icon="images/icons/olap-icon.svg" data-back-image="images/modal/olap-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLAP</b> (online analytical processing) operations are handled by a machine that frames computing as a bulk synchronous process where a series of parallelly executing stages are demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes forms the heartbeat of the computation.</p>
+                <img src="images/modal/olap-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("olap_feature");</script>
+        </div>
+        <!-- WEB -->
+        <div id="web_feature" data-title="web" data-icon="images/icons/web-icon.svg" data-back-image="images/modal/web-modal.svg">
+            <div class="feature-front">
+                a multi-protocol <b class="metatron-name">web-oriented instset</b> expose space resources to external clients as well as realize the external web as a metatron space in and of itself.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">HTTP space</b> translates the <code>GET/PUT</code> semantics of <code>http://</code> to the read/write semantics of a metatron space -- enabling the selective access, referencing, and manipulation of HTML, XML, and JSON documents. Similarly, <b class="metatron-name">WebSocket space</b> offers session-based interactions via a simple string-based mtron evaluation protocol, or an MCP server, or a custom protocol if needed.</p>
+                <table>
+                <tr>
+                <td>
+                <pre><code>
+rec::T[?[
+     host         =>uri::T,
+     pattern      =>uri::T,
+     route        =>[uri::T=>uri::T],
+     {?}client    =>[uri::T],
+     {?}on_open   =>#::T,
+     {?}on_error  =>#::T,
+     {?}on_message=>#::T,
+     {?}on_close  =>#::T]][
+        inst?rng=wsspace&dom=#{?}(rec::T){<j>}
+     ]@/m/web/space/wsspace
+                </code></pre>
+                </td><td>
+                <img src="images/modal/web-modal.svg" class="img-fluid mb-3 icon-color" style="height: 165px; display: block; margin: auto;"/>
+                </td></tr></table>
+            </div>
+            <script type="text/javascript">featurePanel("web_feature");</script>
+        </div>
+        <!-- IOT COMPATIBLE -->
+        <div id="iot_feature" data-title="IoT" data-icon="images/icons/iot-icon.svg" data-back-image="images/modal/iot-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space
+            </div>
+            <div class="feature-modal">
+                <p>a <b class="metatron-name">micropython</b> version of metatron enables the numerous ESP32, RapberryPI, etc. processors to maintain a section of the uri
+                 address space. These processors' memory and peripherials are accessible to any other metatron device and vice versa. Finally, a MQTT space makes integrating an IoT cluster into metatron a straightforward exercise.</p>
+                <img src="images/modal/iot-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("iot_feature");</script>
+        </div>
+        <!-- LLM COMPATIBLE -->
+        <div id="llm_feature" data-title="llm" data-icon="images/icons/llm-icon.svg" data-back-image="images/modal/llm-modal.svg">
+            <div class="feature-front">
+                <b class="metatron-name">large language models</b> and their enriching extensions are objs, where self-reflection, introspection, knowledge access, and
+                    simulation are natural consequences of metatron's unified address space.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">LLMs</b> are encoded within, operate within, and are knowledgeable about metatron spaces. LLM memory can be persisted or transient. LLM tools can be any mtron instruction, where MCP servers are represented as instructions. LLM skills can be files, web links, or composed of multiple objs across different spaces as long as the result is a markdown obj. Finally, LLM querying is an instruction that can be evaluated by humans and agents alike and/or composed into larger instruction graphs known as workflows.</p>
+                <img src="images/modal/llm-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("llm_feature");</script>
+        </div>
+        <!-- CONSOLE -->
+        <div id="console_feature" data-title="console" data-icon="images/icons/console-icon.svg" data-back-image="images/modal/console-modal.svg">
+            <div class="feature-front">
+                A terminal repl and web-based <b class="metatron-name">console</b> offer a natural way to move through and manipulate the metatron.
+            </div>
+            <div class="feature-modal">
+                <p>The <b class="metatron-name">console</b> offers a suite of useful features including syntax highlighting, "step-through" compilation, domain/range type checking, auto-complete, AI pair programming via split
+                screen collaborations, and a pluggable framework for custom extensions.</p>
+                <img src="images/dashboard-screenshot.png" class="img-fluid zoomable" style="border-style:solid; border-width:2px; border-color:var(--primarycolor); max-height: 400px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("console_feature");</script>
+        </div>
+    </div>
+    <div style="height: 100px;"></div>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

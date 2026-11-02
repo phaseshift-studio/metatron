@@ -1,0 +1,1276 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>type-system-mtron · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">type-system-mtron</h1>
+        <small>mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, poly types and their three readings (tensor, fibered, path), lifting and covariance</small><br/>
+        <a href="type-system-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>type-system-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>mtron type system</h2>
+<h3>core concepts</h3>
+<h4>vid and tid</h4>
+<p>Every type in mtron is defined by two URIs:</p>
+<table>
+<thead>
+<tr><th>Component</th><th>Meaning</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>tid</strong></td><td>The <strong>type being refined</strong> (its base)</td><td><code>rec</code> in <code>rec::T[?[age=&gt;int::T]]</code></td></tr>
+<tr><td><strong>vid</strong></td><td>The <strong>type being defined/named</strong></td><td><code>person</code> in <code>rec::T[?[...]]@person</code></td></tr>
+</tbody>
+</table>
+<p>For <strong>values</strong> (instances), the roles are analogous:</p>
+<ul>
+<li><strong>tid</strong> = the value's type (what kind of thing it is)</li>
+<li><strong>vid</strong> = the value's location in space (its address/identity)</li>
+</ul>
+<pre><code>person::[name=&gt;'marko',age=&gt;29]@marko
+  ^^^^^                          ^^^^^
+  tid (what it is)               vid (where it is)
+</code></pre>
+<h4>the <code>::T</code> suffix</h4>
+<p><code>::T</code> lifts an object to the <strong>type-of</strong> that object. <code>int::T</code> means &quot;the type of integers.&quot; <code>person::T</code> means &quot;the type
+named person.&quot;</p>
+<p>Without <code>::T</code>, <code>int</code> is a value (the integer zero). <code>int::0</code> is a typed value (an integer zero). <code>int::T</code> is the integer
+type itself.</p>
+<h4>base types (nominal)</h4>
+<p>The built-in primitive types. Every type ultimately refines one of these. Base types are <strong>nominal</strong> — their tid equals
+their vid (e.g., <code>int::T</code> = <code>int::T@int</code>). There is nothing structural distinguishing an <code>int</code> from a <code>str</code> save the
+name:</p>
+<table>
+<thead>
+<tr><th>Type</th><th>URI</th><th>Cardinality</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>int::T</code></td><td><code>/m/int</code></td><td>1</td><td>64-bit signed integer</td></tr>
+<tr><td><code>real::T</code></td><td><code>/m/real</code></td><td>1</td><td>64-bit IEEE 754 float</td></tr>
+<tr><td><code>str::T</code></td><td><code>/m/str</code></td><td>1</td><td>UTF-8 string</td></tr>
+<tr><td><code>bool::T</code></td><td><code>/m/bool</code></td><td>1</td><td>true / false</td></tr>
+<tr><td><code>uri::T</code></td><td><code>/m/uri</code></td><td>1</td><td>fURI reference</td></tr>
+<tr><td><code>bytes::T</code></td><td><code>/m/bytes</code></td><td>1</td><td>raw byte array</td></tr>
+<tr><td><code>rec::T</code></td><td><code>/m/rec</code></td><td>1</td><td>record (key-value map)</td></tr>
+<tr><td><code>lst::T</code></td><td><code>/m/lst</code></td><td>1</td><td>list (ordered collection)</td></tr>
+<tr><td><code>rel::T</code></td><td><code>/m/rel</code></td><td>1</td><td>relation (key=&gt;value pair)</td></tr>
+<tr><td><code>inst::T</code></td><td><code>/m/inst</code></td><td>1</td><td>instruction (function)</td></tr>
+<tr><td><code>code::T</code></td><td><code>/m/code</code></td><td>1</td><td>multi-instruction block</td></tr>
+<tr><td><code>objs::T</code></td><td><code>/m/objs</code></td><td>any</td><td>heterogeneous bag</td></tr>
+<tr><td><code>fail::T</code></td><td><code>/m/fail</code></td><td>?</td><td>error/failure</td></tr>
+<tr><td><code>noobj::T</code></td><td><code>noobj</code></td><td>0</td><td>nothing / empty</td></tr>
+</tbody>
+</table>
+<h3>coefficients (cardinality)</h3>
+<p>Every type has a <strong>coefficient</strong> — a <code>[min,max]</code> range constraining cardinality. Written with braces:
+<code>type{min,max}::T</code>.</p>
+<table>
+<thead>
+<tr><th>Syntax</th><th>cInt range</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>int::T</code></td><td><code>{1,1}</code></td><td>exactly one (default)</td></tr>
+<tr><td><code>int{2}::T</code></td><td><code>{2,2}</code></td><td>exactly two integers</td></tr>
+<tr><td><code>int{2,5}::T</code></td><td><code>{2,5}</code></td><td>two to five integers</td></tr>
+<tr><td><code>int{?}::T</code></td><td><code>{0,1}</code></td><td>zero or one (maybe)</td></tr>
+<tr><td><code>int{*}::T</code></td><td><code>{0,∞}</code></td><td>zero or more (maybe some)</td></tr>
+<tr><td><code>int{+}::T</code></td><td><code>{1,∞}</code></td><td>one or more (some)</td></tr>
+<tr><td><code>int{#}::T</code></td><td><code>{-∞,∞}</code></td><td>any cardinality</td></tr>
+<tr><td><code>int{0}::T</code></td><td><code>{0,0}</code></td><td>zero (noobj)</td></tr>
+<tr><td><code>int{**,}::T</code></td><td><code>{-∞,0}</code></td><td>zero or negative</td></tr>
+</tbody>
+</table>
+<p>Coefficients compose through multiplication (<code>mult</code>), addition (<code>plus</code>), and spanning (<code>span</code>). Two types combine their
+coefficients when their values are combined — e.g., appending an <code>int{2}</code> to an <code>int{3}</code> yields <code>int{5}</code>.</p>
+<h3>universal type</h3>
+<p><code>#{*}::T</code> is the <strong>universal type</strong> — the root of the type hierarchy. <code>#</code> matches any type VID (polymorphic wildcard),
+and <code>{*}</code> matches any cardinality (0 to ∞). Every value and every type is a <code>#{*}::T</code>. It has no predicate and accepts
+everything.</p>
+<p>Shorthand: <code>#::T</code> is often used when cardinality is known to be <code>{1}</code> (the default). <code>/+/+::T</code> is an alternate spelling.</p>
+<h3>type definition</h3>
+<h4>creating a type</h4>
+<p>A type is created with <code>tid::T[predicate][constructor]@vid</code> — a bare statement; the predicate, the constructor, and the
+vid are each optional, and a type without a vid is a <strong>lambda</strong> (ephemeral) type:</p>
+<pre><code class="language-mtron">creating types
+mtron&gt; import(/m/math,math)      [-- module import, namespaced math — its types read math:nat, math:minute, ... --]
+mtron&gt; int::T[is(gt(0))]@posint  [-- a new member of the hierarchy: integers greater than zero --]
+mtron&gt; posint::T[is(gt(100))]@hundreds
+mtron&gt; int::T[is(gt(0))][mult(10)]@int2x
+mtron&gt; rec::T[?[name=&gt;str::T,age=&gt;int::T]]@being
+</code></pre>
+<p>A created type is first-class: it refines (<code>posint</code> refines <code>int</code>), is refined (<code>hundreds</code> refines <code>posint</code>), builds
+values under its own name, and other values can be cast onto it. The stock types the VM ships with (base types,
+<code>person</code>, and the module types the boot loads) are created the same way — you just don't spell the creation.</p>
+<p>One distinction that matters: <code>xxx -&gt; &lt;type&gt;</code> is <em>not</em> type creation. The arrow writes a <strong>type value</strong> to the uri
+<code>/xxx</code> — a reference (an alias) that takes over the short name for value lookups (<code>*xxx</code>) — while type references
+(<code>xxx::T</code>) still resolve to the real type when one exists. A refinement built on a bare reference with no type behind
+it (<code>xxx::T[?]@yyy</code>) lands off the type hierarchy; types refine types, not references.</p>
+<h4>instantiation</h4>
+<pre><code class="language-mtron">mtron&gt; hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
+==&gt;hundreds::150
+mtron&gt; 23.as(posint::T)               [-- posint::23 --]
+==&gt;posint::23
+mtron&gt; being::[name=&gt;'marko',age=&gt;29] [-- a rec built under its type --]
+==&gt;being::[name=&gt;'marko',age=&gt;29]
+mtron&gt; int::42@the_answer             [-- a plain value, addressed in the space --]
+==&gt;42@the_answer
+</code></pre>
+<h3>predicates</h3>
+<p>A predicate is a <strong>constraint</strong> that values must satisfy to be members of the type. Two families:</p>
+<h4>isa-predicates (structural)</h4>
+<p>Created with <code>?[...]</code> — defines a required <strong>record structure</strong> (<code>being</code>, created above, is one of these):</p>
+<pre><code class="language-mtron">mtron&gt; rec::T[?[age=&gt;int::T]]                              [-- a lambda type: a rec whose age field is an int --]
+mtron&gt; rec::T[?[name=&gt;str::T, address=&gt;str{?}::T]]         [-- address optional (str{?}::T) --]
+mtron&gt; rec::T[?[flag=&gt;str{2}::T, member=&gt;being{+}::T]]@roster
+</code></pre>
+<p>A field's type can be any type — including a lambda type or a created one like <code>being</code>.</p>
+<p><strong>Multi-level stacking</strong>: every refinement inherits the <strong>whole predicate stack</strong> of its ancestors, and the stack is
+checked level by level:</p>
+<pre><code class="language-mtron">mtron&gt; [-- hundreds::T = [is(gt(100))] on top of posint's [is(gt(0))] on top of int --]
+mtron&gt; hundreds::150                [-- 150  (passes both levels) --]
+==&gt;hundreds::150
+mtron&gt; hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
+==&gt;fail::[parse error at line 1, col 1: 50 is not a posint::T[is(gt(100))]@hundreds
+   	while parsing: hundreds::50]
+</code></pre>
+<h4>non-isa predicates (nominal)</h4>
+<p>Freeform functional constraints using instructions:</p>
+<pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]
+mtron&gt; int::T[?&gt;0]
+mtron&gt; int::T[?=42]
+mtron&gt; int::T[?&gt;0.?&lt;120]
+</code></pre>
+<p>The <code>.</code> operator chains predicates: <code>p1.p2</code> means &quot;apply p1, then apply p2 to the result.&quot; Both must succeed (AND
+semantics).</p>
+<p><strong>OR semantics</strong> use split/merge:</p>
+<pre><code class="language-mtron">mtron&gt; [-- value must be &gt; 0 OR &lt; 120 --]
+mtron&gt; int::T[-&lt;[?&gt;0,?&lt;120]&gt;-]
+</code></pre>
+<h4>predicate vs no predicate</h4>
+<p>A type <strong>without</strong> a predicate is the most general type at its level — it accepts any value with the correct base type
+and coefficient:</p>
+<pre><code class="language-mtron">mtron&gt; int::T        [-- accepts any integer --]
+mtron&gt; int::T[?&gt;0]   [-- only accepts positive integers --]
+</code></pre>
+<h4>type constructors</h4>
+<p>A type can also carry a <strong>constructor</strong> — an instruction the type applies to values. The constructor sits alongside
+the predicate in the type definition:</p>
+<pre><code>int::T[is(gt(0))][abs]@intabs
+  │    │            │
+  │    │            └── constructor (an instruction, applied to the value)
+  │    └───────────── predicate (tests whether a value fits)
+  └────────────────── tid (type being refined)
+</code></pre>
+<p>Two doors take a value through a type, and they treat the constructor differently.</p>
+<p><strong>Construction applies the constructor.</strong> <code>type::value</code> builds the value by running the constructor, so at this door
+a negative is welcome — it is simply made positive on the way in (created below with an absolute-value constructor):</p>
+<pre><code class="language-mtron">construction: type::value runs the constructor
+mtron&gt; int::T[is(gt(0))][-&lt;|[is(lt(0)) =&gt; * -1, _ =&gt; _]&gt;&gt;]@intabs
+mtron&gt; intabs::-2                       [-- intabs::2  (the constructor ran on the way in) --]
+==&gt;intabs::2
+mtron&gt; intabs::2                        [-- intabs::2 --]
+==&gt;intabs::2
+</code></pre>
+<p><strong>Casting tests first.</strong> <code>.as(type)</code> checks the predicate before the constructor gets a turn, so a value that cannot
+fit is refused rather than coerced; a value that does fit still goes through the constructor:</p>
+<pre><code class="language-mtron">casting: the predicate gates before the constructor
+mtron&gt; 2.isa(intabs::T)                 [-- 2  (the predicate admits it) --]
+==&gt;2
+mtron&gt; -2.isa(intabs::T)                [-- noobj  (the filter drops it: the verdict doubles as the output) --]
+mtron&gt; 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch of the ctor leaves it as-is) --]
+==&gt;intabs::2
+mtron&gt; -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]
+</code></pre>
+<p>A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:</p>
+<pre><code class="language-mtron">a converting constructor (int2x, created above)
+mtron&gt; int2x::2                         [-- int2x::20  (the constructor mult(10) ran on the way in) --]
+==&gt;int2x::20
+mtron&gt; 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, then converted) --]
+==&gt;int2x::20
+mtron&gt; -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][mult(10)]@int2x [structural] (at /m/inst/as@1)]
+</code></pre>
+<p>A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
+nothing to run them through.</p>
+<h3>nominal vs structural types</h3>
+<p>The distinction depends solely on the existence of a <strong>predicate</strong>:</p>
+<table>
+<thead>
+<tr><th>Kind</th><th>Has predicate?</th><th>Has vid?</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>structural</strong></td><td>yes</td><td>optional</td><td><code>int::T[?&gt;0]@posint</code> — constraint defines membership</td></tr>
+<tr><td><strong>nominal</strong></td><td>no</td><td>yes (tid ≠ vid)</td><td><code>int::T@age</code> — label defines membership</td></tr>
+<tr><td><strong>base type</strong> (structural)</td><td>no</td><td>yes (tid == vid)</td><td><code>int::T</code> (= <code>int::T@int</code>) — primitive</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>structural</strong> = any type with a predicate. The predicate specifies the structural requirements a value must satisfy.
+Isa predicates (<code>?[...]</code>) constrain record fields; non-isa predicates (<code>is(gt(0))</code>) constrain by computation.</li>
+<li><strong>nominal</strong> (no predicate) = type distinguished purely by name/vid. When <code>B::T == A::T</code> structurally (same values) but
+have different vids, there exists only a nominal difference. A value of <code>int::T@age</code> is not the same type as a value
+of <code>int::T@zipcode</code>.</li>
+<li><strong>base types</strong> are structural: <code>int::T</code> = <code>int::T@int</code>. An <code>int</code> is an <code>int</code> because of an internal structure outside
+the purview of the metatron vm.</li>
+</ul>
+<p>A type can carry <strong>both</strong> a predicate and a VID: <code>rec::T[?[age=&gt;int::T]]@person</code>. This type is structural (has a
+predicate) AND named (has a VID). The predicate determines which values qualify; the vid allows nominal discrimination
+from other structurally-identical types.</p>
+<h4>why nominal types matter</h4>
+<p>Structural types alone can over-match. A <code>rec::T</code> with name and age could represent both a human and a chicken. Nominal
+types prevent this:</p>
+<pre><code class="language-mtron">mtron&gt; being::T@human                 [-- nominal siblings under being --]
+mtron&gt; being::T@chicken
+mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
+mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]
+</code></pre>
+<p>This is the difference between <strong>experiential knowledge</strong> (structural — what can be observed) and <strong>authoritative
+knowledge</strong> (nominal — what has been declared).</p>
+<h3>type hierarchy and refinement</h3>
+<p>Types form a tree rooted at <code>#{*}::T</code> (ALL). Each type has exactly one parent — the type its tid refines:</p>
+<ul>
+<li>If <code>tid == vid</code> (base type or self-referential): parent is <code>#{*}::T</code></li>
+<li>Otherwise: parent is <code>T(tid)</code> — the base type being refined</li>
+</ul>
+<pre><code>hundreds::T  →  posint::T  →  int::T      (the int-branch, built above)
+[is(gt(100))]   [is(gt(0))]   (base)
+</code></pre>
+<p>You can walk the hierarchy back to the root:</p>
+<pre><code class="language-mtron">[-- the hierarchy walk — verified under a production VM boot --]
+hundreds::T.type()                  [-- posint — the parent --]
+hundreds::T.type().type()           [-- int --]
+hundreds::T.repeat?&lt;=int(code=&gt;type(),until=&gt;vid().?=#,emit=&gt;true)
+                                    [-- the whole chain, emitted one type per line, until the universal root --]
+</code></pre>
+<h3>pattern and generic types</h3>
+<p>URIs with wildcards create <strong>pattern types</strong> that match multiple concrete types:</p>
+<table>
+<thead>
+<tr><th>Pattern</th><th>Matches</th></tr>
+</thead>
+<tbody>
+<tr><td><code>#{*}::T</code></td><td>everything (universal: any vid × any cardinality)</td></tr>
+<tr><td><code>#::T</code></td><td>any type vid (default cardinality {1})</td></tr>
+<tr><td><code>/m/+::T</code></td><td>any base type under <code>/m/</code></td></tr>
+<tr><td><code>/m/+/+::T</code></td><td>any type two levels under <code>/m/</code></td></tr>
+<tr><td><code>int{*}::T</code></td><td>integers of any cardinality</td></tr>
+<tr><td><code>int{?}::T</code></td><td>zero or one integer</td></tr>
+</tbody>
+</table>
+<p><strong>Generic types</strong> use polymorphic URIs — <code>#{*}::T</code> is the universal type that every value belongs to, which is why
+it shows up in every contract: <code>inst?rng=#{*}&amp;dom=#{?}(&lt;#&gt;::T)</code> reads &quot;an instruction from maybe some of <em>any</em>
+input to any output,&quot; and it is the notation <code>?docq</code> prints for the insts you see everywhere in these docs:</p>
+<pre><code class="language-mtron">mtron&gt; 1.isa(#{*}::T)                   [-- 1  (every value is a citizen of the universal type) --]
+==&gt;1
+mtron&gt; 'mtron'.isa(#{*}::T)             [-- 'mtron' --]
+==&gt;'mtron'
+mtron&gt; int::T.isa(#{*}::T)              [-- noobj  (the `isa` rows admit values, not types) --]
+</code></pre>
+<p>Note the direction: values test against <code>#{*}::T</code> and pass, while type-vs-type — &quot;is <code>posint</code> a refinement of
+<code>int</code>?&quot; — is asked of the type <em>hierarchy</em> (see <em>type hierarchy and refinement</em> above), not of a value.</p>
+<h3>poly types: three readings of the bracket</h3>
+<p>A type's bracket — the <code>[...]</code> after its name — has exactly one meaning per base type. The general category is <strong>poly
+types</strong>; <code>lst</code>, <code>rec</code> and <code>rel</code> are its <em>readings</em>, not three words for the same construct.</p>
+<h4>the three readings</h4>
+<table>
+<thead>
+<tr><th>construct</th><th>name</th><th>poly denotes</th><th>verb</th></tr>
+</thead>
+<tbody>
+<tr><td><code>lst[A,B]</code></td><td>TENSOR TYPE</td><td>the position types — the coordinates of an A × B (rank = bracket length, extent = the coefficient)</td><td>CONTAINS</td></tr>
+<tr><td><code>rec[F1,F2]</code></td><td>FIBERED TYPE</td><td>the FIBERS (named, distinct objects)</td><td>EXPOSES</td></tr>
+<tr><td><code>rel[A,B,C]</code></td><td>PATH TYPE</td><td>the vertices of the right-nested chain <code>A =&gt; (B =&gt; C)</code></td><td>CHAINS</td></tr>
+</tbody>
+</table>
+<p><strong>graded</strong> says something about rank × extent — how many coordinates, and how far each one runs. It is a property of a
+tensor, never a synonym for <em>poly</em>.</p>
+<h4>content vs object: why the readings do not collapse</h4>
+<p>The reading decides what the bracket's entries <em>are</em>, and that decides what a call does to the value.</p>
+<p><strong>A tensor's positions are the object's content.</strong> <code>lst[int]</code> is a list whose positions hold ints — it is not an
+<code>int</code>. Position is the coordinate, so the type speaks about the value's own contents, one entry per position, and its
+entries are not separate objects a call can reach: <code>[29,'94103']</code> satisfies <code>lst[age,zipcode]::T</code> (position 0 is an
+age, position 1 a zipcode) and fails <code>lst[zipcode,age]::T</code>, where the coordinates are swapped.
+Two consequences, and they are the same consequence twice: there is no lifting <em>into</em> a tensor's positions (<code>lst[int]</code>
+hands a call no second candidate), and a tensor's entries name no other type (<code>lst[int]</code> is never an <code>int</code> — a list of
+ints is not an int). The coefficient is where extent lives, not another coordinate: <code>lst[int{4}]</code> is ONE position
+holding four ints, while <code>lst[int,int,int,int]</code> is four positions.</p>
+<p><strong>A fibered type's entries are distinct objects.</strong> <code>person[ninja]</code> is a person <em>and</em> a ninja; the ninja is not the
+bundle's content but an object the bundle exposes. So a value of that type is acceptable where <code>ninja::T</code> is
+expected (its base or any fiber — see <em>acceptance and covariance</em>), and an instruction declared on <code>ninja</code> applies to
+the fiber's value as if it had been declared top-level.</p>
+<h4>a bracket entry's coefficient: the multiplicity of the value AT that position or vertex</h4>
+<p>A bracket entry is a <em>position</em> (a tensor position, a path vertex), so a <strong>suffix coefficient is the multiplicity of the
+value at that position</strong> — not another position, and not another hop. <code>lst[int{2},str]</code> is a two-position list whose
+FIRST position holds two ints; <code>rel[int,person{2}]</code> is a two-vertex chain whose SECOND vertex holds two people
+(<code>1=&gt;{bob,marko}</code>, two people at that vertex — not two hops):</p>
+<pre><code class="language-mtron">a suffix coefficient is the multiplicity of the value AT that position / vertex
+mtron&gt; wayfarer -&gt; rec::T@wayfarer
+mtron&gt; lst[int{2},str]::[{1,2},'a']              [-- position 0 is an int{2}: one position, two ints --]
+==&gt;lst[int{2},str]::[{1,2},'a']
+mtron&gt; rel[int,wayfarer{2}]::(1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']})   [-- the second vertex holds two wayfarers --]
+==&gt;rel[int,wayfarer{2}]::(1=&gt;{wayfarer::[name=&gt;'bob'],wayfarer::[name=&gt;'marko']})
+mtron&gt; lst[int{2},str]::[1,'a']          [-- one int is an int{1}: too few for an int{2} position --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match /m/lst[/m/int{2},/m/str]::T
+     [[1,'a']
+         X=&gt;
+     lst[int{2},str]::T
+     ──────────────────
+     [X=&gt;1,==&gt;'a']]
+     predicate apply failed on poly
+   	while parsing: lst[int{2},str]::[1,'a']]
+mtron&gt; rel[int,wayfarer{2}]::(1=&gt;wayfarer::[name=&gt;'bob'])   [-- one wayfarer is too few for a wayfarer{2} vertex --]
+==&gt;fail::[parse error at line 1, col 1: obj does not match /m/rel[/m/int,wayfarer{2}]::T
+     [1=&gt;wayfarer::[name=&gt;'bob']
+         X=&gt;
+     rel[int,wayfarer{2}]::T
+     ─────────────────────────────────
+     [==&gt;1,X=&gt;wayfarer::[name=&gt;'bob']]]
+     predicate apply failed on poly
+   	while parsing: rel[int,wayfarer{2}]::(1=&gt;wayfarer::[name=&gt;'bob'])]
+</code></pre>
+<p>The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:</p>
+<table>
+<thead>
+<tr><th>entry</th><th>value at that position</th></tr>
+</thead>
+<tbody>
+<tr><td><code>T</code> / <code>T{1}</code></td><td>exactly one</td></tr>
+<tr><td><code>T{n}</code></td><td>exactly n (<code>lst[int{2},str]</code> ⇒ <code>[{1,2},'a']</code>)</td></tr>
+<tr><td><code>T{n,m}</code></td><td>an inclusive range — n, …, m</td></tr>
+<tr><td><code>T{+}</code></td><td>at least one, so the position is REQUIRED</td></tr>
+<tr><td><code>T{?}</code></td><td>zero or one — ABSENT, or one that is still its type</td></tr>
+<tr><td><code>T{*}</code></td><td>zero or more — absent is legal, and so is a multiplicity</td></tr>
+</tbody>
+</table>
+<p><strong>Absence</strong> is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — <code>lst[str,int{?}]</code> accepts <code>['a']</code>. In
+a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — <code>rel[int,wayfarer{?},str]</code> accepts
+<code>1=&gt;'tally'</code> (the middle vertex skipped) while <code>rel[int,wayfarer{+},str]</code> does not. A present value must still be the
+entry's type at both: <code>{?}</code> is zero-or-one, not &quot;anything when present&quot;.</p>
+<p><strong>Not yet supported: a PREFIX coefficient, and repetition.</strong> <code>lst[{4}int]</code> — &quot;the list is composed of four ints&quot;,
+spelled before the entry rather than after it — is not matchable today. Neither is a position <em>repetition</em>: a suffix
+coefficient judges the multiplicity of the value already at that position, and nothing reads it as &quot;this entry
+repeats, so the chain is longer&quot; (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
+coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.</p>
+<h4>declaring a fibered type vs instantiating one</h4>
+<p>Three words, used consistently from here on:</p>
+<ul>
+<li><strong>bundle</strong> — a value of a <em>fibered type</em>: the outer <code>rec::T</code> (<code>person[ninja]::[…]</code>). Formerly called the bundle.</li>
+<li><strong>fiber</strong> — a particular field of that <code>rec::T</code> that its bracket LIFTS: the key/value becomes a virtual sibling of
+the rec's other fields, so an instruction can reach it as if it stood alone (<code>role</code> holding the ninja).</li>
+<li><strong>field</strong> — any <code>key=&gt;value</code> pair of a <code>rec::T</code>. Every fiber is a field; most fields are not fibers.</li>
+</ul>
+<p>A fibered type is spelled twice, and the two brackets say different things:</p>
+<pre><code>rec[role,position]::T[?[name=&gt;str::T, role=&gt;rec::T, position=&gt;rec::T]]@person
+    ^^^^^^^^^^^^^^ the DECLARATION's poly NAMES the fibers (field names)
+
+person[ninja,position]::[...]
+       ^^^^^^^^^^^^^^^ the INSTANCE's poly gives their TYPES (their contents)
+</code></pre>
+<ul>
+<li>the DECLARATION's poly is a list of <strong>field names</strong> — the fibers this bundle exposes (its key range);</li>
+<li>the INSTANCE's poly is a list of <strong>type arguments</strong> — what each fiber's value is (its value range). A KEY belongs
+in the declaration's bracket, never the instance's: <code>human[geo]</code> would type a fiber with the key's own name.</li>
+</ul>
+<p>The declaration's entries are parameters and the instance's are arguments, so resolution substitutes one for the
+other positionally: <code>person[role]</code> + <code>[ninja]</code> → <code>person[ninja]</code>, an unclaimed parameter keeps its declared entry, and
+a request that names nothing leaves the declaration as it stands (<code>Type.Helper.instantiate</code>).</p>
+<p>This asymmetry is why <code>fURI.test</code> — which compares <strong>names</strong>, never types — answers <code>person[ninja].test(person[role])</code>
+as false: the lhs is a specialization and <code>role</code> is not the name <code>ninja</code>. The two are still related, at the type
+layer, by that bound substitution rather than by the bracket claim.</p>
+<h4>lifting (dispatch into a fiber)</h4>
+<p>An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: <code>fight?&lt;=ninja()</code> on a
+<code>person[ninja]</code> bundle reaches the <code>ninja</code> object inside it, not the bundle.</p>
+<p>Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE <strong>plus the values
+of its FIBERS</strong>, and each subject is selected and invoked on its own — so the &quot;selection&quot; is ordinary resolution, not
+a lookup table keyed by the declaration:</p>
+<ul>
+<li>an <strong>untyped call lifts over all fibers</strong>; <code>?&lt;=T</code> selects one subject, because a named domain is the subject the
+call is about.</li>
+<li>a <strong>base-typed domain is about a subject's own form, never its name</strong>: <code>?&lt;=rec(...)</code> reaches the bundle AND a
+fiber whose own type refines <code>rec</code> — <code>ninja::T</code> is a <code>rec::T</code>, so the ninja answers a rec-typed instruction as
+itself — while <code>?&lt;=lst(...)</code> reaches neither, and <code>?&lt;=int(...)</code> reaches only an int-valued fiber
+(<code>ex::[o=&gt;12].plus?&lt;=int</code> adds at <code>o</code>, since the bundle is a rec, not an int).</li>
+<li>a <strong>named domain</strong> splits the two levels. The <strong>bundle</strong> answers as the very type it instantiates — a bracket does
+not change the name (<code>dojo[master]</code> is a <code>dojo</code>; a predicated domain additionally requires the same predicates) —
+and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A <strong>fiber</strong> answers as the
+value it holds, so a <em>structural</em> type (<code>weaponed -&gt; rec::T[?[weapon=&gt;str::T]]</code>) is also satisfied by a fiber's own
+shape: the ninja at <code>role</code> carrying a weapon answers <code>?&lt;=weaponed(...)</code> as itself. That is why <code>?&lt;=weaponed</code> reaches
+the ninja and never the bundle.</li>
+<li><strong>the fiber bundle speaks first</strong>: when the domain NAMES a type the bundle itself is, the bundle is the subject
+and its fibers are not asked — <code>weaponed[weaponed]::[weapon=&gt;'axe',role=&gt;weaponed::[weapon=&gt;'knife']]</code> answers
+<code>?&lt;=weaponed(weapon)</code> with <code>'axe'</code> alone, not <code>{'axe','knife'}</code>. A domain that names no single subject — a generic
+one, or a base FORM (about every subject of that form) — does not supersede: <code>?&lt;=rec</code> and an untyped read still
+sum over both levels.</li>
+<li><strong>a FILTER asks the bundle first too</strong>: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
+so <code>*marko.?weaponed::T</code> answers <code>*marko</code> (the bundle is accepted as a weaponed through the ninja it exposes; the
+filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
+fibers, and a <code>fail::</code> from the bundle still propagates.</li>
+<li><code>noobj</code> is the multiplicity identity, so <code>{noobj, 29}</code> = <code>29</code>: a subject the instruction is not about contributes
+nothing. A <code>fail::</code> is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
+would read as a success.</li>
+<li>subjects are <strong>one level deep</strong>: a fiber that is itself a bundle is applied to as the object it is, never expanded
+again.</li>
+<li><code>Inst.Form.typer</code> — <code>as</code>, <code>::</code>, <code>type</code>, <code>vid</code>, <code>tid</code> — <strong>never lifts</strong>. A typer retypes the one object it is given,
+so it is opaque: <code>as(person::T)</code> is both the narrowing escape from a fan-out and the exception to it (it changes the
+basis, so it cannot be distributed over the old one).</li>
+<li>ref-writes (<code>&lt;uri&gt; -&gt; obj</code>) are address-precise and never lift. <code>update</code> (<code>&gt;&gt;=</code>) does fan out, since its domain is
+any obj; <code>as(T)</code> first, or <code>?&lt;=T</code> on the call, is what narrows it back to one basis.</li>
+<li>a fan-out result is an <strong>unordered multiplicity</strong>. When order or provenance matters the user writes the keyed rec
+explicitly — one key per fiber, each narrowing its own call (<code>[role =&gt; *marko.describe?&lt;=ninja(), position =&gt; *marko.describe?&lt;=position()]</code>). There is no keyed projection that does it for you.</li>
+<li>a bundle on which <strong>no subject</strong> applies yields <code>noobj</code> — a miss is not a failure. The same miss on a non-bundle
+value is still a loud <code>unable to locate inst-f</code>, because there is nothing else to try.</li>
+</ul>
+<h4>acceptance and covariance</h4>
+<p>Two questions, and they must not be confused: <em>may I pass this value here</em> (acceptance) and <em>which object does this
+instruction run on</em> (dispatch).</p>
+<ul>
+<li><strong>A fiber named at coefficient one must be there.</strong> The value is tested against the declaration, and a field it
+does not have fails that test. Absence is legal only where the fiber's coefficient admits zero —
+<code>rec[role,position{?}]</code> — and reading a missing key still yields <code>noobj</code>. <code>noobj</code> is a value, not a hole.</li>
+<li><strong>A predicated fiber type is satisfied by the FIBER'S VALUE.</strong> A poly entry types one of the bundle's fibers
+(<code>person[ninja]</code> puts a ninja at the field the declaration calls <code>role</code>), so the object a trait's shape is about
+(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>bundle&gt;&gt;role</code> — not the bundle's declaration. A
+<em>shaped nominal</em> trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+asked of <code>bundle&gt;&gt;role</code>, which is why <code>kestrel[falconer]</code> is a <code>falconer</code> although the bundle itself declares no
+<code>name</code>. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
+value, and a field the bundle's declaration itself types incompatibly (<code>name=&gt;str</code> where the trait wants
+<code>name=&gt;int</code>) is a veto. A field the declaration stays silent about is not a contradiction — that is exactly the case
+the fiber's value exists to answer.</li>
+<li><strong>Covariance: a fibered value is acceptable where its base OR ANY fiber is expected.</strong> <code>person[ninja]</code> is a
+<code>person</code> and a <code>ninja</code>. The scope guard matters as much as the rule: this is <code>rec</code> only — <code>lst[int]</code> is not an
+<code>int</code>, and <code>object[int]</code> is not an <code>int</code>.</li>
+<li><strong>Covariance is type acceptance only, never dispatch.</strong> A bundle that merely <em>borrows</em> a fiber by covariance does
+not thereby fire that fiber's instructions; the object the definition was written for is the object it runs on.</li>
+<li><strong>Dispatch is an identity question</strong>: a named domain selects the subject that IS that type — the fiber whose own
+type is that name (or whose own <em>shape</em> satisfies a structural one: a ninja carrying a weapon IS a <code>weaponed</code>), or
+the bundle when the name is the bundle's DECLARATION (<code>dojo[master]</code> is a <code>dojo</code>). Borrowed names are not
+identities, and neither is a bundle's own field bag: the bundle is what it instantiates. |</li>
+</ul>
+<p>A shaped nominal trait asks the value at the fiber, not the bundle:</p>
+<pre><code class="language-mtron">acceptance is asked of the fiber's value, not the bundle's declaration
+mtron&gt; [-- the bundle declares ONLY the fiber it exposes --]
+mtron&gt; kestrel -&gt; rec[role]::T[?[role=&gt;rec::T]]@kestrel
+mtron&gt; [-- the shaped nominal trait declares the shape of the fiber's value --]
+mtron&gt; falconer -&gt; rec::T[?[name=&gt;str::T]]@falconer
+mtron&gt; jarl -&gt; kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
+==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
+mtron&gt; [-- the bundle declares no name; the falconer at `role` carries one, so jarl is a falconer --]
+mtron&gt; *jarl.isa(falconer::T)
+==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]
+mtron&gt; [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
+mtron&gt; skald -&gt; kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
+==&gt;kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
+mtron&gt; *skald.isa(falconer::T)
+</code></pre>
+<p>The claim rule is what keeps the declaration/instance asymmetry valid at the uri layer:</p>
+<table>
+<thead>
+<tr><th>lhs</th><th>rhs</th><th>test</th></tr>
+</thead>
+<tbody>
+<tr><td><code>person</code></td><td><code>person[ninja]</code></td><td>true</td></tr>
+<tr><td><code>person[ninja]</code></td><td><code>person</code></td><td>false</td></tr>
+<tr><td><code>person[ninja]</code></td><td><code>person[A]</code></td><td>true</td></tr>
+<tr><td><code>person[ninja]</code></td><td><code>person[role]</code></td><td>false</td></tr>
+</tbody>
+</table>
+<h4>worked example: two fibers</h4>
+<p>The declaration names both fibers; the instance types them. <code>position</code> is declared <strong>bare</strong> (<code>rec::T@position</code>) on
+purpose — a trait declared <em>with</em> a shape asks the bundle's declaration to pass its test, and this bundle declares
+<code>name</code>, <code>age</code>, <code>role</code> and <code>position</code>, not a position's <code>title</code>/<code>rank</code>:</p>
+<pre><code class="language-mtron">a fibered type: the declaration names the fibers, the instance types them
+mtron&gt; person -&gt; rec[role,position]::T[?[name=&gt;str::T,age=&gt;nat::T,role=&gt;rec::T,position=&gt;rec::T]]@person
+mtron&gt; ninja -&gt; rec::T@ninja
+mtron&gt; position -&gt; rec::T@position
+mtron&gt; marko -&gt; person[ninja,position]::[name=&gt;'marko',age=&gt;29,role=&gt;ninja::[name=&gt;'dark_assassin'],position=&gt;position::[title=&gt;'sniper',rank=&gt;5]]@marko
+==&gt;person[ninja,position]::[
+    name=&gt;'marko',
+    age=&gt;29,
+    role=&gt;ninja::[name=&gt;'dark_assassin'],
+    position=&gt;position::[title=&gt;'sniper',rank=&gt;5]]@marko
+mtron&gt; [-- untyped: both the bundle and the role fiber carry a name --]
+mtron&gt; *marko&gt;&gt;name
+==&gt;'marko'
+==&gt;'dark_assassin'
+mtron&gt; [-- only the position fiber carries a title; noobj is the identity --]
+mtron&gt; *marko&gt;&gt;title
+==&gt;'sniper'
+mtron&gt; [-- a bundle's own field reads alone --]
+mtron&gt; *marko&gt;&gt;age
+==&gt;29
+</code></pre>
+<p>The instantiation is carried by the value's own type, so <code>*marko.type()</code> reports the DECLARATION instantiated with
+both arguments — <code>rec[role,position]::T[?[…]]@person[ninja,position]</code> — while <code>*marko</code> still prints the value under
+that type.</p>
+<p>A named domain picks the subject that IS that type — the role fiber, or the position fiber, never the bundle that
+merely borrows them. A body that reads a key its own fiber does not carry has nothing to answer:</p>
+<pre><code class="language-mtron">dispatch is identity: a named domain reaches the fiber whose own type is that name
+mtron&gt; aim -&gt; |inst?&lt;=position(){ &gt;&gt;title }
+mtron&gt; shadow -&gt; |inst?&lt;=ninja(){ &gt;&gt;name }
+mtron&gt; *marko.aim()                    [-- dom=position: the position fiber's title --]
+==&gt;'sniper'
+mtron&gt; *marko.aim?&lt;=position()         [-- the same call with its type named at the call site --]
+==&gt;'sniper'
+mtron&gt; *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
+==&gt;'dark_assassin'
+</code></pre>
+<p>An untyped call is about every subject, so an instruction both fibers declare answers twice; <code>?&lt;=T</code> narrows it, and
+a typer stays on the bundle alone:</p>
+<pre><code class="language-mtron">untyped fans out, ?&lt;=T selects, a typer does not lift
+mtron&gt; describe?dom=ninja -&gt; |inst?&lt;=ninja(){ 'a shadow' }
+mtron&gt; describe?dom=position -&gt; |inst?&lt;=position(){ 'sniper report' }
+mtron&gt; *marko.describe()               [-- both fibers declare a body: an unordered multiplicity --]
+==&gt;'a shadow'
+==&gt;'sniper report'
+mtron&gt; *marko.describe?&lt;=position()    [-- one fiber, one answer --]
+==&gt;'sniper report'
+mtron&gt; *marko.as(person::T)            [-- a typer is opaque: the bundle alone, the instantiation erased --]
+==&gt;person::[name=&gt;'marko',
+            age=&gt;29,
+            role=&gt;ninja::[name=&gt;'dark_assassin'],
+            position=&gt;position::[title=&gt;'sniper',rank=&gt;5]]
+</code></pre>
+<h3>type checking and casting</h3>
+<h4><code>.test()</code> — predicate membership</h4>
+<p>Tests whether a value satisfies a type's predicate (and nominal ancestry):</p>
+<pre><code class="language-mtron">mtron&gt; 1.isa(int::T)           [-- 1  (admitted: the value is printed) --]
+==&gt;1
+mtron&gt; 'a string'.isa(int::T)  [-- noobj  (refused: the filter prints nothing) --]
+mtron&gt; 2.isa(posint::T)        [-- 2  (admitted: 2 &gt; 0) --]
+==&gt;2
+mtron&gt; -1.isa(posint::T)       [-- noobj  (refused: -1 is not &gt; 0) --]
+</code></pre>
+<p>So the filter's verdict doubles as its output: admit and the value comes back, refuse and there is nothing to
+print. (Refining <em>type against type</em> — &quot;is <code>hundreds</code> a refinement of <code>posint</code>?&quot; — is a question for the type
+hierarchy, seen in <em>type hierarchy and refinement</em>.)</p>
+<h4><code>.as()</code> — the cast</h4>
+<p><code>.as(type)</code> is the cast: the type's predicate tests the value first, and only an admitted value is re-stamped
+with the type's vid (and, if the type carries one, run through its constructor — see <em>type constructors</em> above):</p>
+<pre><code class="language-mtron">mtron&gt; [-- intabs has a constructor (absolute value), but the gate still runs first --]
+mtron&gt; 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
+==&gt;intabs::2
+mtron&gt; -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))][choose([is(lt(0))=&gt;mult(-1),id()=&gt;id()]).rshift()]@intabs [structural] (at /m/inst/as@1)]
+mtron&gt; [-- Without a constructor the cast is a pure test --]
+mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
+==&gt;fail::[inst apply failure: -2 is not a int::T[is(gt(0))] [structural] (at /m/inst/as@1)]
+</code></pre>
+<p><code>.as()</code> is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
+and the stamp records the fit:</p>
+<pre><code class="language-mtron">mtron&gt; [name=&gt;'fuzzy feet',age=&gt;2].as(chicken::T)    [-- chicken::[name=&gt;'fuzzy feet',age=&gt;2]  (nominally a being: the stamp goes on) --]
+==&gt;chicken::[name=&gt;'fuzzy feet',age=&gt;2]
+mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
+==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]
+</code></pre>
+<p>Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
+<code>chicken</code> demands <code>age=&gt;int::T</code>, and the rec supplies it. A stamped <code>human</code>, though, carries a lineage — <code>human</code>
+and <code>chicken</code> are <em>siblings</em> under <code>being</code>, and a sibling does not refine a sibling. Nominal fit follows the actual
+refinement path, not structural overlap.</p>
+<h3>lowest common denominator</h3>
+<p>The most specific type that subsumes a set of types. The VM computes LCDs on the way: a mapped result over mixed
+values, a rec whose fields carry different types, a poly whose members disagree — each settles on the LCD of the
+pieces it is combining.</p>
+<p>The <code>lcd()</code> instruction asks for one on demand over a set of related types — verified under a production VM boot:</p>
+<pre><code class="language-mtron">int::T[?&gt;1]@aa
+aa::T[?&gt;2]@bb
+bb::T[?&gt;3]@cc
+aa::T[?&gt;22]@aabb
+aabb::T[?&gt;33]@cccc
+lcd(aabb::T,bb::T,cccc::T)      [-- aabb, the set's denominator --]
+lcd(bb::T,cc::T)
+</code></pre>
+<p><code>type + type</code> itself has no instruction — summing types is refused (the fail text you get today, shown not run):</p>
+<pre><code class="language-mtron">posint::T + hundreds::T         [-- fail: int::T[is(gt(0))]@posint [type] unable to convert int::T (at plus) --]
+</code></pre>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

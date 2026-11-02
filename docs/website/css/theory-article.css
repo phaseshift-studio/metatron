@@ -1,0 +1,118 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* The "theory article" species: paper typography over the shared site chrome.
+ * Distinct from the sans-serif skill/instset docs — serif, a wide measure (see
+ * below), and italic theorem/pull-quote blockquotes. Colors inherit from
+ * metatron.css.
+ *
+ * The measure is 140ch, not a reading-optimised ~70ch: the articles are
+ * maths-dense (long display equations, wide arrays), and on a large display the
+ * narrow column left most of the page empty. It is a max-width, so a narrow
+ * viewport still fills edge to edge. The title block uses the same value so the
+ * two stay aligned. */
+
+.article-doc {
+    max-width: 140ch;
+    margin: 0 auto 1.5rem;
+}
+
+.article-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.article-subtitle {
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    color: var(--light, #6C7293);
+}
+
+/* Frontmatter byline and citation: the paper's title block. The author keeps the
+ * line shape it was authored with (`|` block → <br>), the citation reads as a
+ * small reference line rather than body prose. */
+.article-author {
+    font-family: Georgia, "Times New Roman", serif;
+    margin-top: 0.75rem;
+}
+
+.article-citation {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--light, #6C7293);
+    margin-top: 0.45rem;
+}
+
+.article-body {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    max-width: 140ch;
+    margin: 0 auto;
+}
+
+/* The article's figures show at 75% of the size they are rendered at, centred in the
+ * measure. Their intrinsic size is ~200dpi (bin/render-tikz.py `--scale`), which is right
+ * for reading a diagram standalone but 25% too large inside the text, so the page scales
+ * the whole group down in one place. `zoom` is the only CSS that scales an element's
+ * layout box by a factor (percent widths would resolve against the column, not the
+ * image); `display: block` with auto margins is what centres a replaced element, and every
+ * figure sits alone in its own paragraph, so no text is displaced. Scoped to the body: the
+ * chrome's nav icons and favicon are shared by every page and keep their size. The
+ * markdown surface is untouched — it has no stylesheet, so GitHub shows the SVG at its
+ * intrinsic size. */
+.article-body img {
+    display: block;
+    margin: 0 auto;
+    zoom: 0.75;
+}
+
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+    font-family: Georgia, "Times New Roman", serif;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid rgba(108, 114, 147, 0.28);
+    padding-bottom: 0.35rem;
+    margin-top: 2.1rem;
+}
+
+.article-body table {
+    margin: 1.25rem 0;
+}
+
+.article-body table th,
+.article-body table td {
+    border-color: rgba(108, 114, 147, 0.35);
+}
+
+.article-body blockquote {
+    border-left: 3px solid var(--mmagenta, #9f4040);
+    font-style: italic;
+    margin: 1.2em 0;
+    padding: 0.4em 1.2em;
+    color: inherit;
+}
+
+.article-body code,
+.article-body pre {
+    font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}

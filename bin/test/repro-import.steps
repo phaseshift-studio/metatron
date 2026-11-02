@@ -1,0 +1,16 @@
+WAIT_CONSOLE
+WAIT metatron successfully booted
+SLEEP 2
+MARK m1
+SEND import(#)
+WAIT_SINCE m1 ==> 120
+MARK m2
+SEND 1.plus(2)
+WAIT_SINCE m2 ==> 30
+MARK m3
+SEND */m/inst/plus?int<=int
+WAIT_SINCE m3 ==> 30
+MARK m4
+SEND 1+2
+WAIT_SINCE m4 ==> 30
+NOTE import-repro-complete

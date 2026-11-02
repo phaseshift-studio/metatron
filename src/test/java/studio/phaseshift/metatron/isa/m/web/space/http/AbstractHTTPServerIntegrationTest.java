@@ -1,0 +1,247 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.web.space.http;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.HTTP;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.web.webHelper.isTemplated;
+import static studio.phaseshift.metatron.isa.m.web.webInstSet.WEB_ISA_TID;
+
+/**
+ * Abstract base for integration-testing HttpRec implementations against a
+ * real http_server and live HTTP connection.
+ * <p>
+ * Subclasses implement exactly one method:
+ * <pre>
+ *   protected Listener createHTTPServer();
+ * </pre>
+ * Everything — scheme, host, port, routes — is derived from the returned server, so a server with an
+ * {@code https://} host runs the same suite over tls (with {@link #createHttpClient()} trusting its certificate).
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@Isolated
+//@Execution(ExecutionMode.SAME_THREAD)
+public abstract class AbstractHTTPServerIntegrationTest extends AbstractMetatronTest {
+
+    protected Listener server;
+    protected String httpScheme;
+    protected String httpHost;
+    protected int httpPort;
+    protected HttpClient httpClient;
+
+    // ========================================
+    // Single abstract method
+    // ========================================
+
+    /**
+     * Create and return the fully configured, serving http_server under test ({@code httpServer.of(...)}).
+     * A constructed http_server is already listening on its host/port.
+     * Use {@link #generatePort()} inside this method to pick a free port.
+     */
+    protected abstract Listener createHTTPServer();
+
+    /**
+     * The client the helpers send with. Override to dial a server that serves tls with a certificate the JDK does not
+     * already trust.
+     */
+    protected HttpClient createHttpClient() {
+        return HttpClient.newHttpClient();
+    }
+
+    // ========================================
+    // Derived helpers
+    // ========================================
+
+    /**
+     * This machine's routes on the server's socket, as its listener entry keeps them.
+     */
+    protected Obj routes() {
+        final Obj entry = Machine.current().network().listener(this.server.origin().pathEncoding());
+        return entry.isRec() ? entry.asRec().at(uri(ROUTE)) : noobj();
+    }
+
+    /**
+     * The primary HTTP route path for this test, derived from the
+     * first entry in {@link #routes()}.
+     */
+    protected String primaryRoutePath() {
+        final Obj routes = this.routes();
+        if (routes.isNoObj()) return "/";
+        return routes.asRec().elements()
+                .map(r -> r.first().uriValue().toString())
+                .findFirst()
+                .orElse("/");
+    }
+
+    protected String baseUrl() {
+        return httpScheme + "://" + httpHost + ":" + httpPort;
+    }
+
+    // ========================================
+    // Lifecycle
+    // ========================================
+    @BeforeAll
+    public void setupHTTPServer() {
+        InstSet.importInstSet(WEB_ISA_TID);
+        this.server = createHTTPServer();
+        assertNotNull(this.server, "the http_server should be created");
+
+        // derived from the server's socket; a constructed http_server is already listening
+        this.httpScheme = null == this.server.origin().scheme() ? HTTP : this.server.origin().scheme();
+        this.httpHost = this.server.origin().host();
+        this.httpPort = this.server.origin().port();
+
+        this.httpClient = this.createHttpClient();
+    }
+
+    @AfterAll
+    public void teardownHTTPServer() {
+        if (this.httpClient != null) {
+            this.httpClient.close();
+            this.httpClient = null;
+        }
+        if (this.server != null) {
+            // the inverse of the construction: this machine stops serving, and the socket it opened is released
+            Machine.current().network().unlisten(this.server.origin());
+            Machine.current().memory().removeSpace(WEB_ISA_TID);
+            this.server = null;
+        }
+    }
+
+    // ========================================
+    // HTTP client helpers
+    // ========================================
+
+    protected HttpResponse<String> httpGet(final String path) throws IOException, InterruptedException {
+        final HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .GET()
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        return httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> httpPost(final String path, final String body, final String sessionId)
+            throws IOException, InterruptedException {
+        final HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(10));
+        if (sessionId != null) {
+            builder.header("Mcp-Session-Id", sessionId);
+        }
+        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> httpPut(final String path, final String body)
+            throws IOException, InterruptedException {
+        final HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        return httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> httpPatch(final String path, final String body)
+            throws IOException, InterruptedException {
+        final HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .header("Content-Type", "application/json")
+                .method("PATCH", HttpRequest.BodyPublishers.ofString(body))
+                .timeout(Duration.ofSeconds(10))
+                .build();
+        return httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+    }
+
+    protected HttpResponse<String> httpDelete(final String path, final String sessionId)
+            throws IOException, InterruptedException {
+        final HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl() + path))
+                .timeout(Duration.ofSeconds(10))
+                .DELETE();
+        if (sessionId != null) {
+            builder.header("Mcp-Session-Id", sessionId);
+        }
+        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    // ========================================
+    // Base integration tests
+    // ========================================
+
+    @Test
+    public void testHandlerTypeIsRegisteredInRouter() {
+        final Obj routes = this.routes();
+        assertFalse(routes.isNoObj(), "the http_server should keep a route table");
+        routes.asRec().elements().forEach(r -> {
+            // A templated route value names no address until a request exists — there is nothing for the Router
+            // to resolve here, which is exactly what makes it a per-request mount (docs/design/webspace.md
+            // §8.1.2) — and an instruction or a code value none until it is applied. Every other value is held to the
+            // invariant.
+            if (isTemplated(r.second()) || r.second().isObjInst() || r.second().isCode())
+                return;
+            final Obj type = Machine.current().memory().read(r.second().uriValue());
+            assertFalse(type.isNoObj(),
+                    "Type should be registered in Router at " + r.second().uriValue());
+            // commented out so extending tests can run threaded
+            //            assertTrue(type.isType(),
+            //         "Registered object should be a Type, got: " + type);
+        });
+    }
+
+    @Test
+    public void testHttpConnection() throws Exception {
+        final HttpResponse<String> resp = httpGet(primaryRoutePath());
+        assertNotNull(resp, "HTTP response should not be null");
+        // Handler routes may return 405/501 for unsupported methods, but should respond
+        assertTrue(resp.statusCode() >= 200, "HTTP should respond");
+    }
+
+    @Test
+    public void testPostReturnsResponse() throws Exception {
+        final HttpResponse<String> resp = httpPost(primaryRoutePath(),
+                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}", null);
+        assertNotNull(resp, "POST should return a response");
+        assertTrue(resp.statusCode() >= 200 && resp.statusCode() < 600,
+                "POST should return a valid HTTP status");
+    }
+}

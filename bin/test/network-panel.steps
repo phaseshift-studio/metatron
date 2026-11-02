@@ -1,0 +1,13 @@
+# Network panel smoke — the panel is a foldable accordion: it floats to its corner, names the empty wire, and
+# carries the fold marker in its header.
+#
+#   bin/metatron-console --steps bin/test/network-panel.steps
+
+WAIT_CONSOLE
+
+# --- the panel: anchored, so it is pinned and the prompt stays live ---
+MARK panel
+SEND network_panel_tool::[max=>6,style=>style::[anchor=>bottom_right,width=>70,height=>8]].display()
+WAIT net
+WAIT no peers have spoken
+WAIT [-]

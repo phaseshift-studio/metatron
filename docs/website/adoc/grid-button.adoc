@@ -1,0 +1,4 @@
+[subs="attributes"]
+++++
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-{card-id}" aria-expanded="false" aria-controls="card-{card-id}" {card-disabled}>{card-title}</button></div>
+++++

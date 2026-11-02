@@ -1,0 +1,543 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron;
+
+import studio.phaseshift.metatron.furi.fURI;
+
+import java.util.Set;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public final class Tokens {
+    public static final fURI MACH = f("mach");
+
+    private Tokens() {
+        // do nothing
+    }
+
+    // furi tokens
+    public static final fURI LOCALHOST = f("localhost");
+    public static final String LAMBDA = "λ";
+    public static final fURI LAMBDA_TID = f(LAMBDA);
+    public static final fURI M_ISA_TID = f("/m");
+    public static final fURI MACH_ISA_TID = M_ISA_TID.extend(MACH);
+    public static final fURI DB_ISA_TID = M_ISA_TID.extend("db");
+    public static final fURI DEV_ISA_TID = M_ISA_TID.extend("dev");
+    public static final fURI AI_ISA_TID = M_ISA_TID.extend("ai");
+    public static final fURI SPACE_TID = M_ISA_TID.extend("space");
+    public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI INST_TID = M_ISA_INST_TID;
+    public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
+    public static final fURI INST_PRED_TID = M_ISA_INST_TID.extend("pred").rng(ALL.maybe());
+    public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
+    public static final fURI REC_TID = M_ISA_TID.extend("rec");
+    public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
+    public static final fURI TYPE_TID = M_ISA_TID.extend("type");
+    public static final fURI CODE_TID = M_ISA_TID.extend("code");
+    public static final fURI NOOBJ_TID = f("noobj").zero();
+    public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
+    public static final fURI REL_TID = M_ISA_TID.extend("rel");
+    public static final fURI LST_TID = M_ISA_TID.extend("lst");
+    public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
+    public static final fURI URI_TID = M_ISA_TID.extend("uri");
+    public static final fURI STR_TID = M_ISA_TID.extend("str");
+    public static final fURI REAL_TID = M_ISA_TID.extend("real");
+    public static final fURI INT_TID = M_ISA_TID.extend("int");
+    public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
+    public static final Set<fURI> BASE_TYPES = Set.of(
+            FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
+            STR_TID, URI_TID, REL_TID,
+            LST_TID, REC_TID, M_ISA_INST_TID,
+            CODE_TID, OBJS_TID, NOOBJ_TID);
+    public static final fURI ALL_STAR = ALL.maybeSome();
+
+    /// / string tokens
+    public static final String MTRON = "mtron";
+    public static final String METATRON = "metatron";
+    public static final String MTRON_ID = "mid_";
+    public static final String METATRON_VERSION = "0.1-SNAPSHOT";
+    public static final fURI HASH_FURI = f("#");
+    public static final fURI PLUS_FURI = f("+");
+    public static final fURI STACK_PATTERN = f("+/#");
+    public static final String OPENAI = "openai";
+    public static final String LOCALAI = "localai";
+    public static final String ANTHROPIC = "anthropic";
+    public static final String OLLAMA = "ollama";
+    public static final String RESULT = "result";
+    public static final String MACHINE = "machine";
+    public static final String CMD = "cmd";
+    public static final String ALLOW = "allow";
+    public static final String REJECT = "reject";
+    public static final String PROJECT = "project";
+    public static final String DATA = "data";
+    public static final String TO = "to";
+    public static final String OPEN = "open";
+    public static final String CLOSED = "closed";
+    public static final String CONCEPT = "concept";
+    public static final String MESSAGE_STACK = "message_stack";
+    public static final String PENDING_MESSAGES = "pending_messages";
+    public static final String CLIP = "clip";
+    public static final String JUSTIFY = "justify";
+    public static final String JSONRPC = "jsonrpc";
+    public static final String REQUIRED = "required";
+    public static final String EMBED = "embed";
+    public static final String SRC = "src";
+    public static final String TRGT = "trgt";
+    public static final String TARGET = "target";
+    public static final String CLASS = "class";
+    public static final String MEMBER = "member";
+    public static final String USR = "usr";
+    public static final String EXPIRE = "expire";
+    public static final String INCR = "incr";
+    public static final String FORMAT = "format";
+    public static final String PROVIDER = "provider";
+    public static final String API_KEY = "api_key";
+    public static final String ORG = "org";
+    public static final String BLOCK = "block";
+    public static final String AI = "ai";
+    public static final String TIME = "time";
+    public static final String HASH = "hash";
+    public static final String POSTGRESQL = "postgresql";
+    public static final String ENTRY = "entry";
+    public static final String RAG = "rag";
+    public static final String FEATURE = "feature";
+    public static final String ALGORITHM = "algorithm";
+    public static final String WATERMARK = "watermark";
+    public static final String ID = "id";
+    public static final String IN = "in";
+    public static final String OUT = "out";
+    public static final String ADD = "add";
+    public static final String MUL = "mul";
+    public static final String OP = "op";
+    public static final String INV = "inv";
+    public static final String ZERO = "zero";
+    public static final String ONE = "one";
+    public static final String ROLE = "role";
+    public static final String OR = "or";
+    public static final String AND = "and";
+    public static final String NOT = "not";
+    public static final String MEET = "meet";
+    public static final String JOIN = "join";
+    public static final String BOTTOM = "bottom";
+    public static final String TOP = "top";
+    public static final String COMPOSE = "compose";
+    public static final String TOTAL = "total";
+    public static final String CONTEXT = "context";
+    public static final String THRESHOLD = "threshold";
+    public static final String COMPRESSION = "compression";
+    public static final String TOKEN = "token";
+    public static final String EST = "est";
+    public static final String COEFFICIENT = "coefficient";
+    public static final String PRE_COEFFICIENT = "preCoefficient";
+    public static final String QUERY = "query";
+    public static final String DOM = "dom";
+    public static final String RNG = "rng";
+    public static final String TID = "tid";
+    public static final String VID = "vid";
+    public static final String SIZE = "size";
+    public static final String SKILL = "skill";
+    public static final String URL = "url";
+    public static final String MIME_TYPE = "mimeType";
+    public static final String LLM = "llm";
+    public static final String MCP = "mcp";
+    public static final String PANE = "pane";
+    public static final String LICENSE = "license";
+    public static final String THINK = "think";
+    public static final String COST = "cost";
+    public static final String RATE = "rate";
+    public static final String THOUGHT = "thought";
+    public static final String MEMORY = "memory";
+    public static final String SESSION = "session";
+    public static final String ITERATION = "iteration";
+    public static final String PREV = "prev";
+    public static final String PREVIOUS = "previous";
+    public static final String NEXT = "next";
+    public static final String INDEX = "index";
+    public static final String NOTE = "note";
+    public static final String CHAT = "chat";
+    public static final String HISTORY = "history";
+    public static final String HREF = "href";
+    public static final String TOOL = "tool";
+    public static final String TOOLS = "tools";
+    public static final String TOOL_ARGUMENTS = "arguments";
+    // -- Feature hook tokens ---------------------------------------------------
+    public static final String ON_AGENT_CTOR = "on_agent_ctor";
+    public static final String ON_BEFORE_CHAT = "on_before_chat";
+    public static final String ON_PARTIAL_RESPONSE = "on_partial_response";
+    public static final String ON_PARTIAL_THINKING = "on_partial_thinking";
+    public static final String ON_PARTIAL_TOOL_CALL = "on_partial_tool_call";
+    public static final String BEFORE_TOOL_EXECUTION = "before_tool_execution";
+    public static final String ON_TOOL_EXECUTED = "on_tool_executed";
+    public static final String ON_TOOL_RESULT = "on_tool_result";
+    public static final String ON_COMPLETE_RESPONSE = "on_complete_response";
+    public static final String PROMPT = "prompt";
+    public static final String RESOURCE = "resource";
+    public static final String RESPONSE = "response";
+    public static final String OBJECT = "object";
+    public static final String TYPE = "type";
+    public static final String THINKING = "thinking";
+    public static final String TOOL_REQUESTS = "tool_requests";
+    public static final String CONTENTS = "contents";
+    public static final String ATTRIBUTES = "attributes";
+    public static final String DEPTH = "depth";
+    public static final String CHAT_ID = "chat_id";
+    public static final String PARENT = "parent";
+    public static final String TEXT = "text";
+    public static final String KIND = "kind";
+    public static final String UNTIL = "until";
+    public static final String EMIT = "emit";
+    public static final String LOOPBACK = "loopback";
+    public static final String MONAD = "monad";
+    public static final String MONAD_IN = "monad_in";
+    public static final String MONAD_OUT = "monad_out";
+    public static final String REPEAT = "repeat";
+    public static final String SHORT = "short";
+    public static final String LONG = "long";
+    public static final String ONLINE = "online";
+    public static final String OFFLINE = "offline";
+    public static final String HTML = "html";
+    public static final String RDF = "rdf";
+    public static final String HEAD = "head";
+    public static final String P = "p";
+    public static final String BODY = "body";
+    public static final String B_LIST = "b_list";
+    public static final String O_LIST = "o_list";
+    public static final String TAG = "tag";
+    public static final String DIV = "div";
+    public static final String QUOTE = "quote";
+    public static final String CODE = "code";
+    public static final String ESC = "esc";
+    public static final String LANG = "lang";
+    public static final String START = "start";
+    public static final String END = "end";
+    public static final String INTERRUPT = "interrupt";
+    public static final String METHOD = "method";
+    public static final String MESSAGE = "message";
+    public static final String RUN = "run";
+    public static final String HALTED = "halted";
+    public static final String STOP = "stop";
+    public static final String PAUSE = "pause";
+    public static final String BARRIER = "barrier";
+    public static final String REASON = "reason";
+    public static final String SUPER = "super";
+    public static final String ROUTE = "route";
+    public static final String WHERE = "where";
+    public static final String ORIGIN = "origin";
+    public static final String PEER = "peer";
+    public static final String ROSTER = "roster";
+    /**
+     * a socket a machine answers on — the network's presence, beside its {@link #ROSTER} (knowledge) and
+     * {@link #PEER} (reach)
+     */
+    public static final String LISTENER = "listener";
+    public static final String NETWORK = "network";
+    public static final String SUPERVISOR = "supervisor";
+    public static final String CACHE = "cache";
+    public static final String CONST = "const";
+    public static final String CONSTQ = "constq";
+    public static final String CLIENT = "client";
+    // -- MQTT tokens -----------------------------------------------------------
+    public static final String KEEP_ALIVE = "keepAlive";
+    public static final String WILL = "will";
+    public static final String QOS = "qos";
+    public static final String RETAIN = "retain";
+    public static final String TOPIC = "topic";
+    public static final String PAYLOAD = "payload";
+    public static final String QUEUE = "queue";
+    public static final String OFFER = "offer";
+    public static final String SCRIPT = "script";
+    public static final String REWRITE = "rewrite";
+    public static final String SUGAR = "sugar";
+    public static final String QPROC = "q";
+    public static final String ICON = "icon";
+    public static final String T = "T";
+    public static final String COLON = ":";
+    public static final String COEFF = "c";
+    public static final String MQL = "mql";
+    public static final String MIN = "min";
+    public static final String MAX = "max";
+    public static final String XREF = "xref";
+    public static final String FLATTEN = "flatten";
+    public static final String EXPAND = "expand";
+    public static final String PATH = "path";
+    public static final String POLY = "poly";
+    public static final String PERSIST = "persist";
+    public static final String SCHEME = "scheme";
+    public static final String DIALER = "dialer";
+    public static final String CAPABILITY = "capability";
+    public static final String AUTHORITY = "authority";
+    public static final String SUB = "sub";
+    public static final String SUBQ = "subq";
+    public static final String PATTERN = "pattern";
+    public static final String SERIALIZER = "serializer";
+    public static final String LOGG = "log";
+    public static final String DRIVER = "driver";
+    /**
+     * The scope that owns what a space creates — a label on docker objects, and the selection key a
+     * reaper uses to answer "what belongs to me?" (see dckrSpace).
+     */
+    public static final String OWNER = "owner";
+    public static final String SEND = "send";
+    public static final String SEND_RECV = "send_recv";
+    public static final String CLOSE = "close";
+    public static final String TABLE = "table";
+    public static final String CTOR = "ctor";
+    /// ////////////////////////////////////////////////////////
+    public static final fURI INST_CTOR_TID = M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe());
+    public static final String SPARQL = "sparql";
+    public static final String COLLECTION = "collection";
+    public static final String REFERENCE = "reference";
+    public static final String VALUE = "value";
+    public static final String FURI = "furi";
+    public static final String OBJ = "obj";
+    public static final String JDBC = "jdbc:";
+    public static final String STATUS = "status";
+    public static final String DISCOVER = "discover";
+    public static final String TODO = "todo";
+    public static final String ON_KEY = "on_key";
+    public static final String KEY = "key";
+    public static final String ON_OPEN = "on_open";
+    public static final String ON_ERROR = "on_error";
+    public static final String ON_MESSAGE = "on_message";
+    public static final String ON_CLOSE = "on_close";
+    public static final String ON_GET = "on_get";
+    public static final String ON_POST = "on_post";
+    public static final String ON_PUT = "on_put";
+    public static final String ON_DELETE = "on_delete";
+    public static final String ON_PATCH = "on_patch";
+    public static final String ON_HEAD = "on_head";
+    public static final String ON_OPTIONS = "on_options";
+    public static final String ON_SELECT = "on_select";
+    public static final String HOST = "host";
+    public static final String HEADERS = "headers";
+    public static final String HEADER = "header";
+    public static final String RUNTIME = "runtime";
+    public static final String TRANSPORT = "transport";
+    public static final String PROTOCOL = "protocol";
+    /**
+     * the protocol SURFACE a wire endpoint speaks — {@code mtron_ws}, {@code mtron_http}, {@code mcp_ws}, …: the
+     * refinements of {@code ws_handler::T} / {@code http_handler::T} that webSpace registers in a space's route
+     * table. Distinct from {@link #PROTOCOL} (the wire dialect itself) and from {@link #TRANSPORT} (the client
+     * that carries a message to it).
+     */
+    public static final String HANDLER = "handler";
+    public static final String SERVICE = "service";
+    public static final String VERSION = "version";
+    public static final String INTERFACE = "interface";
+    public static final String COMMAND = "command";
+    public static final String SERVER = "server";
+    public static final String LOCAL = "local";
+    public static final String PORT = "port";
+    public static final String USER = "user";
+    public static final String SYSTEM = "system";
+    public static final String PASS = "pass";
+    /**
+     * the certificate a tls listener serves — a PKCS12 (or JKS) key store, opened with {@link #PASS}
+     */
+    public static final String KEYSTORE = "keystore";
+    public static final String NAME = "name";
+    public static final String ORDINAL = "ordinal";
+    public static final String BUILD = "build";
+    public static final String TEST = "test";
+    public static final String DEFAULT = "default";
+    public static final String BASE = "base";
+    public static final String CREATOR = "creator";
+    public static final String LEVEL = "level";
+    public static final String SPACE = "space";
+    public static final String STACK = "stack";
+    public static final String INST = "inst";
+    public static final String SQL = "sql";
+    public static final String STORE = "store";
+    public static final String LOOP = "loop";
+    public static final String GRAPH = "graph";
+    public static final String PREFIX = "prefix";
+
+    /**
+     * the NAME INDEX — {@code <short name> => <the paths it denotes>}, the table {@code fURI.big()/small()} read.
+     * Distinct from {@link #ROUTE}, which is a space's path→handler routing: this is a name→address index.
+     */
+    public static final String REDIRECT = "redirect";
+    public static final String USER_HOME = "user.home";
+    public static final String PREPEND = "prepend";
+    public static final String LOAD = "load";
+    public static final String NATIVE = "native";
+    public static final String HTTP = "http";
+    public static final String HTTPS = "https";
+    public static final String STREAMABLE_HTTP = "streamable-http";
+    public static final String STDIO = "stdio";
+    public static final String WS = "ws";
+    public static final String WSS = "wss";
+    public static final String MQTT = "mqtt";
+    public static final String EMPTY = "";
+    public static final String ARG = "arg";
+    public static final String YIELD = "yield";
+    public static final String DESC = "desc";
+    public static final String DIR = "dir";
+    public static final String FILE = "file";
+    public static final String CONTENT = "content";
+    public static final String EXAMPLE = "example";
+    public static final String MODEL = "model";
+    public static final String STAGE = "stage";
+    public static final String SELECT = "select";
+    public static final String DOC = "doc";
+    public static final String LHS = "lhs";
+    public static final String RHS = "rhs";
+    public static final String AGENT = "agent";
+    public static final String GGUF_KEY = "gguf";
+    public static final String QUANT = "quant";
+    public static final String TIMEOUT = "timeout";
+    public static final String FAMILY = "family";
+    public static final String ANALYSIS = "analysis";
+    public static final String MORPH = "morph";
+    public static final String MORPHED_FROM = "morphed_from";
+    public static final String MORPHED_TO = "morphed_to";
+    public static final String LINKED_FROM = "linked_from";
+    public static final String LINKED_TO = "linked_to";
+    public static final String FORM = "form";
+    public static final String CUT = "cut";
+    public static final String SPAN = "span";
+    public static final String FLAGS = "flags";
+    public static final String SHAPE = "shape";
+    public static final String HOP = "hop";
+    public static final String PLACE = "place";
+    public static final String POSITION = "position";
+    public static final String CONTESTED = "contested";
+    public static final String ORBIT = "orbit";
+    public static final String LAW = "law";
+    /**
+     * THE ALGEBRA REPORT KEYS — the counters an {@code AlgebraTool.Report} carries and {@code Report.toRec()}
+     * renders ({@code {type, inst, claimed, holds, failed, unchecked, uncheckable, ok}}). They are {@code fURI} (not
+     * {@code String}) because a report is read key-by-key ({@code rec.atDirect(uri(CLAIMED))}), so the constant is
+     * the key itself. Declared beside the verdict vocabulary every law rec shares — {@link #LAW}, {@link #REASON},
+     * {@link #LHS}, {@link #RHS}, {@link #ROLE}.
+     */
+    public static final fURI CLAIMED = f("claimed");
+    public static final fURI HOLDS = f("holds");
+    public static final fURI FAILED = f("failed");
+    public static final fURI UNCHECKED = f("unchecked");
+    public static final fURI UNCHECKABLE = f("uncheckable");
+    public static final fURI OK = f("ok");
+    public static final fURI GOT = f("got");
+    public static final String INVERSE = "inverse";
+    public static final String COMBINER = "combiner";
+    public static final String DERIVATION = "derivation";
+    public static final String FROM = "from";
+    public static final String PROB = "prob";
+    public static final String FIELD = "field";
+    public static final String CLUSTER = "cluster";
+    public static final String BOOT = "boot";
+    public static final String TITLE = "title";
+    public static final String STYLE = "style";
+    public static final String POST = "post";
+    public static final String PRE = "pre";
+    public static final String ROW = "row";
+    public static final String METADATA = "metadata";
+    public static final String META = "meta";
+    public static final String HR = "hr";
+    //public static final String ON_RECV = "on_recv";
+    public static final String HOSTNAME = "HOSTNAME";
+    public static final String SCHEMA = "schema";
+    public static final String INSTSET = "instset";
+    public static final String COMPILER = "compiler";
+    public static final String PROCESSOR = "processor";
+    public static final String PARSER = "parser";
+    public static final String REWRITER = "rewriter";
+    public static final String RESOLVER = "resolver";
+    public static final String TYPER = "typer";
+    public static final String SELECTOR = "selector";
+    public static final String BINDER = "binder";
+    // profiling::T rec keys — the structured profile() report
+    public static final String RESOLVE = "resolve";
+    public static final String APPLY = "apply";
+    public static final String SPLIT = "split";
+    public static final String FLOW = "flow";
+    public static final String RULES = "rules";
+    public static final String INSTS = "insts";
+    public static final String INST_RESOLVE = "inst_resolve";
+    public static final String GENERIC_BINDING = "generic_binding";
+    public static final String INST_COMPOSITION = "inst_composition";
+    public static final String PER_INST = "per_inst";
+    public static final String C_IN = "c_in";
+    public static final String C_OUT = "c_out";
+    public static final String C_DOM = "c_dom";
+    public static final String C_RNG = "c_rng";
+    public static final String F = "f"; // function the instruction wraps ("<j>" = opaque java body, or the mtron body itself)
+    public static final String MONADS = "monads";
+    public static final String C_SUM = "c_sum";
+    public static final String PROCESSORS = "processors";
+    public static final String HITS = "hits";
+    public static final String MISSES = "misses";
+    public static final String HIT_RATE = "hit_rate";
+    public static final String ALT = "alt";
+    public static final String REFERENCES = "references";
+    public static final String URI = "uri";
+    public static final String LABEL = "label";
+    public static final String VERTEX = "vertex";
+    public static final String EDGE = "edge";
+    public static final String CONFIG = "config";
+    public static final String SOURCE = "source";
+    public static final String SCOPE = "scope";
+    public static final String LOCATION = "location";
+    // -- GeoJSON tokens (RFC 7946) ---------------------------------------------
+    // the wire format dictates these spellings, so the rec keys are the RFC's own names rather than synonyms: a geo
+    // rec reads as the GeoJSON object it stands for. TYPE, ID, FEATURE, POSITION, PLACE, SHAPE and LOCATION are the
+    // existing terms the metatron side reuses (see geoInstSet).
+    public static final String COORDINATES = "coordinates";
+    public static final String GEOMETRY = "geometry";
+    public static final String GEOMETRIES = "geometries";
+    public static final String PROPERTIES = "properties";
+    public static final String FEATURES = "features";
+    public static final String BBOX = "bbox";
+    public static final String STATE = "state";
+    public static final String ROOT = "root";
+    public static final String WEB_ROOT = "web_root";
+    public static final String DEFAULT_PAGE = "default_page";
+    public static final String READ_ONLY = "read_only";
+    public static final String AUDIT = "audit";
+    public static final String INFO = "info";
+    public static final String WARN = "warn";
+    public static final String SUCCESS = "success";
+    public static final String ERROR = "error";
+    public static final String DEBUG = "debug";
+    public static final String TRACE = "trace";
+    public static final String ARGS = "args";
+    public static final String ENV = "env";
+    public static final String MCP_SERVERS = "mcpServers";
+    public static final String ACTIVE = "active";
+   /* public static final String INACTIVE = "inactive";
+    public static final String ACTIVE = "active";
+    public static final String DESKTOP = "desktop";
+    public static final String LAYOUT = "layout";
+    public static final String PANELS = "panels";
+    public static final String THEME = "theme";
+    public static final String VERSION = "version";
+    public static final String GRID = "grid";
+    public static final String SNAP = "snap";
+    public static final String COLUMNS = "columns";
+    public static final String PANEL = "panel";
+    public static final String PANEL_TYPE = "panel_type";
+    public static final String PANEL_STATE = "panel_state";
+    public static final String PANEL_ID = "panel_id";*/
+
+
+}

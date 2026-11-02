@@ -1,0 +1,50 @@
+# Console live-line test — what the user types must stay the characters in front of them.
+#
+#   bin/metatron-console --from classes --steps bin/test/console-line-typing.steps
+#
+# The line the reader is editing is the user's OWN text, so graphitty markup in it is literal:
+# before the <enter> AND after it.  A name in braces is not a rule, an unclosed tag does not
+# swallow the line, and {{XX}} does not clear the screen out from under the cursor.  Three
+# scenarios are checked, each behind its own mark so only the repaint is asserted on and never
+# the original keystroke echo:
+#
+#   1. the echo of a submitted line — the exact shape that was reported broken:
+#      """{{link}}/m/inst/+{{/link}}""" must come back verbatim, with the result on the next row
+#   2. output landing mid-line, while a job is still running (the widget/trace redraw path)
+#   3. a clear-screen rule typed by hand is characters, not a clear
+#
+# The assertion is deliberately on the literal markup: resolution SWALLOWS it, so a line that
+# came back as /m/inst/+ rather than {{link}}/m/inst/+{{/link}} is exactly the failure hunted.
+#
+# (alt+right splitting a pane is NOT asserted on here: in split mode the line is drawn inside a
+# pane whose borders clip it, so a missing string says nothing about whether it was resolved.)
+#
+# Colored by an ignoreGraphitty highlighter (Highlighter.line) — the same construction the
+# reader's own highlighter uses for the line as it is typed.
+
+WAIT_CONSOLE
+
+# --- 1: the reported repro — a submitted line is echoed verbatim ---
+MARK submit
+SEND """{{link}}/m/inst/+{{/link}}"""
+SLEEP 2
+WAIT_SINCE submit {{link}}/m/inst/+{{/link}} 10
+WAIT_SINCE submit '/m/inst/+' 10
+
+# --- 2: a job's result lands while the line is being typed ---
+SEND 1.sleep(second::4.0)
+SLEEP 0.4
+TYPE {{b}}Aldebaran{{/b}}
+SLEEP 0.5
+MARK typed
+SLEEP 5
+WAIT_SINCE typed {{b}}Aldebaran{{/b}} 10
+
+# --- 3: a clear-screen rule typed by the user is characters, not a clear ---
+# Asserted on the echo rather than on the keystrokes: jline redraws the line between keystrokes,
+# so the raw characters do not arrive contiguously (the carriage returns are stripped), while the
+# echo of the line is one write.
+MARK clearrule
+SEND {{XX}}
+SLEEP 2
+WAIT_SINCE clearrule {{XX}} 10

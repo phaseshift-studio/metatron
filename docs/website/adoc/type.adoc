@@ -1,0 +1,686 @@
+[discrete]
+== A Hybrid Structural/Nominal Type System
+
+[discrete]
+[%collapsible]
+.documentation setup
+====
+[mtron]
+----
+import(/m/math)
+int::T[?>0]@nat
+----
+====
+
+Every obj in mtron has a **type**.
+A https://en.wikipedia.org/wiki/Data_type[type] is either a base type or a https://en.wikipedia.org/wiki/Refinement_type[refinement] on a base type.
+For instance, `int::5` is a https://en.wikipedia.org/wiki/Value_(computer_science)[value] with type `int::T` (a https://en.wikipedia.org/wiki/Primitive_data_type[base type]).
+An example refinement of `int::T` is the type `int::T[?<10]`.
+The refinement type states that a value of this type is any `int::T` less than 10. A similar, though more consequential example is the set of natural numbers latexmath:[\mathbb{N}] being a subset of the set of integers latexmath:[\mathbb{Z}].
+That is, latexmath:[\mathbb{N} \subset \mathbb{Z}].
+The set of natural numbers is defined in mtron as:
+
+.a structural type
+[source,mtron,role="center"]
+----
+          int::T[?>0]@nat
+          │    │ │    │
+          │    │ │    └──────────── type vid (type being defined)
+          │    │ └───────────────── predicate inst pred?int{?}<=int(int::T)
+          │    └─────────────────── type token
+          └──────────────────────── type tid (type being refined)
+----
+
+Non-base types will be notated `B::T < A::T`: " `B::T` captures a subset of the values captured by `A::T`." When notated
+`B::T == A::T`: " `B::T` has the same values as `A::T` ".
+When two types have the same values but different names (vids), there exists only a https://en.wikipedia.org/wiki/Nominal_type_system[nominal] difference between `A::T` and `B::T`.
+In such situation, values of `A::T` and values of `B::T` are different in that they are being type/classified as being distinct through label (through name).
+As an example, the type `int::T@age` is not the same as `int::T@zipcode`.
+The structure of a nominal type is specified as:
+
+.a nominal type
+[source,mtron,role="center"]
+----
+          int::T@nat
+          │    |  │
+          │    │  └──────────────── type vid (type being named)
+          │    └─────────────────── type token
+          └──────────────────────── type tid (type being renamed)
+----
+
+IMPORTANT: The distinction between structural and nominal types depends solely on the existence of a predicate which specifies the structural requirements a value must satisfy to be considered that type.
+With no constraint on structure, then the implied constraint is on vid, i.e. name.
+
+[discrete]
+=== Structural Types
+
+[discrete]
+==== Type Predicates
+
+A https://en.wikipedia.org/wiki/First-order_logic[predicate] is any `inst` of the form
+
+\[
+\tt pred?A\{?\} \Leftarrow A()\{ code \}, \]
+
+such that a lhs value of type `A` is mapped by `code` to a rhs value of either type `A::T` (*true*) or `A{0}::T` (*false*).
+Hence, `A{?}` which is sugar for `A{0,1}`.
+
+IMPORTANT: A structural type is any type defined with a predicate.
+
+[mtron]
+----
+int::4                                         [-- <1> --]
+nat::4                                         [-- <2> --]
+int::-4                                        [-- <3> --]
+[ERROR] nat::-4                                [-- <4> --]
+rec::T[?[name=>str::T,age=>int::T]]@chicken    [-- <5> --]
+chicken::[name=>'snowbutt',age=>7]             [-- <6> --]
+[ERROR] chicken::[name=>'punky',age=>'four']   [-- <7> --]
+----
+
+<1> The value 4 is an integer.
+<2> The value 4 is a natural number.
+<3> The value -4 is an integer.
+<4> The value -4 is *not* a natural number.
+<5> A chicken is defined as a `rec::T` with a name and an age.
+<6> Snowbutt is a 7 year old chicken.
+<7> Punky's age is an string, not an integer and thus, not a chicken by definition.
+
+[discrete]
+==== Structural Type Hierarchy
+
+A structural type can be refined with further structural requirements.
+An example is the concept of age.
+No human being in modern recorded history has been reported to be over the age of 120 years old.
+Furthermore, no person has a negative age as at birth, the age is 0. Together, age can be defined as any natural number less than 120 (`0 < age < 120`).
+
+NOTE: The examples below make use of mtron's `as?B\<=A(B::T)` instruction.
+For the purpose of these examples, `as()` is being used to determine whether a value meets the structural requirements of the respective type.
+The `as()` instruction also handles type constructors, and this aspect of a type is discussed later.
+
+[mtron]
+----
+int::T[?>0]@nat                                 [-- <1> --]
+nat::T[?<120]@age                               [-- <2> --]
+21.as(int::T).as(nat::T).as(age::T)             [-- <3> --]
+[ERROR] -21.as(int::T).as(nat::T).as(age::T)    [-- <4> --]
+[ERROR] 121.as(int::T).as(nat::T).as(age::T)    [-- <5> --]
+rec::T[?[name=>str::T,age=>age::T]]@chicken     [-- <6> --]
+chicken::[name=>'snowbutt',age=>7]              [-- <7> --]
+[ERROR] chicken::[name=>'punky',age=>444]       [-- <8> --]
+----
+
+<1> A natural number is any integer greater than 0.
+<2> An age is any natural number less than 120.
+<4> 21 is an int, nat, and age.
+<5> -21 is an int, but not a nat and thus, not an age.
+<6> 121 is an int, nat, but not an age.
+<7> A chicken's age has been redefined to be an `age::T`.
+<8> Snowbutt is still, according to the new definition, a chicken.
+<9> Punky's specified age places him outside the definition of a chicken.
+
+=== Nominal Types
+
+As stated in at the beginning of this document, mtron supports both structural and nominal type specifications.
+A nominal type is any type with no specified predicate.
+This means that all the base types (e.g. `int::T`, `bool::T`, `rec::T`, etc.) are nominal types.
+A base type is any type whose tid is equal to its vid.
+For example, and analogously for the other base types, `int::T` is defined as:
+
+[mtron]
+----
+int::T@int
+----
+
+From mtron's vantage point at it's level of abstraction in computing, there is nothing in the definition of a base type that distinguishes it from another base type save the vid/name.
+
+IMPORTANT: An `int` is an `int` because it is named `int`.
+
+[mtron]
+----
+str::T@re                    [-- <1> --]
+*select?<=str&docq           [-- <2> --]
+'marko'=='m.{3}o'            [-- <3> --]
+'marko'==re::'m.{3}o'        [-- <4> --]
+----
+
+<1> `re::T` is a regular expression string.
+<2> `select?<=str` performs a projection from a `str::T`.
+<3> a `str::T` is not an `re::T` nominally.
+<4> `regex` is a particular type of nominally defined string.
+
+
+==== Integrating Nominal Types with Structural Types
+
+With structural types, any `rec::T` can be a `chicken::T` as long as it meets the structural requirements of `chicken::T`.
+This means, that if a `rec::T` denotes (in the mind of the engineer) a human (who has a name and age), that human is also a chicken.
+This can be problematic.
+For those situations when the value has no other discriminating qualities for a predicate to leverage, then an assigned type label becomes a useful taxonomical criteria.
+
+[mtron]
+----
+rec::T[?[name=>str::T,age=>age::T]]@being               [-- <1> --]
+being::T@human                                          [-- <2> --]
+being::T@chicken                                        [-- <3> --]
+[ERROR] human::[name=>'marko',age=>29].as(chicken::T)   [-- <4> --]
+[ERROR] chicken::[name=>'snowbutt',age=>7].as(human::T) [-- <5> --]
+[name=>'fuzzy feet',age=>2].as(chicken::T)              [-- <6> --]
+[ERROR] chicken::'punky'                                [-- <7> --]
+----
+
+<1> A being is a `rec::T` with a name and age.
+<2> A person is a type of being.
+<3> A chicken is a type of being.
+<4> The person named marko is not a chicken.
+<5> The chicken name snowbutt is not a person.
+<6> A base type value can be nominalized...
+<7> ...as long as the base type of the nominal type matches.
+
+Structurally speaking, there is nothing that prevents the person named marko from also being a chicken.
+However, nominally, that is not the case.
+The person named marko has been nominally relegated to the taxonomical classification of a person.
+In this way, nominal and structural types co-exist in mtron in order to satisfy two different understandings of type (type by name and type by structure).
+
+IMPORTANT: Realize the distinction between structural and nominal types is one of convenience.
+It is true that there exists structural features of marko that make this person not a chicken (e.g. DNA, weight and size, etc.).
+However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate effectively using said classification.
+This is the difference between **experiential knowledge** (structural) and **authoritative knowledge** (nominal).
+
+NOTE: Type definitions in space are **monotonic**: once a type is defined with a predicate or constructor, subsequent redefinitions can only *add* structural constraints, never remove them.
+If `person::T` is written as a structural type and later referenced as `being::T\@person` (a nominal definition with no predicate), the existing predicate is inherited — the type remains structural.
+This prevents retroactive invalidation of values already constructed and checked against the original type contract.
+To define a fresh nominal type at a point in space that previously held a structural type, explicitly clear the type from space first (e.g., `person \-> noobj`).
+
+[discrete]
+=== Type Constructors
+
+[source,mtron,role="center"]
+----
+          nat::T[?>0][-<|[?<0 => * -1,_ => _]>>] 
+          │    │ │    │
+          │    │ │    └──────────── constructor
+          │    │ └───────────────── predicate
+          │    └─────────────────── type symbol
+          └──────────────────────── tid
+----
+
+A quick explanation of the type predicate and constructor `code` is as follows:
+
+1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
+2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`*`) by -1, else do (`\=>`) nothing (`_`).
+Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
+
+Example usage of the defined `nat` type is presented below.
+
+[mtron]
+----
+natc -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]  [-- <1> --]
+*natc                                                 [-- <2> --]
+natc::2                                               [-- <3> --]
+natc::-2                                              [-- <4> --]
+2.as(natc::T)                                         [-- <5> --]
+[ERROR] -2.as(natc::T)                                [-- <6> --]
+[ERROR] natc::2 * -1                                  [-- <7> --]
+----
+
+<1> A natural number with a constructor: the predicate keeps only positive `int`s, and the constructor component turns any `int` into a positive one (i.e. the absolute value).
+<2> The `natc` _tid_ references the respective `natc` type `obj`.
+<3> 2 is a `natc`.
+<4> -2 is not a `natc`, but given the constructor, it is construed as the `natc` 2.
+<5> 2 satisfies the `natc` predicate.
+<6> -2 fails the `natc` predicate.
+<7> `natc::2 * -1` is -2, which fails the `natc` predicate.
+
+While every `type` is an `obj`, not every `obj` is a `type`.
+Those `objs` that are not `types` are _instances_ of some `type`.
+This is the foundation for all other `objs` in [metatron].
+
+[discrete]
+==== cascading type constructions
+
+[discrete]
+[[sec-mono-types]]
+=== mono types
+
+An `obj` that is not composed of other `objs` is a mono type. The mono types are exhaustively itemized in the table below.
+
+[cols="5,7",frame="none",separator=🧱]
+|===
+a🧱
+
+[cols="1,2,6",options=header]
+!===
+! type     ! jvm object   ! description
+!`bytes`   ! `ByteBuffer` ! ...
+!`bool`    ! `Boolean`    ! ...
+!`int`     ! `Long`       ! ...
+!`real`    ! `Double`     ! ...
+!`str`     ! `String`     ! ...
+!`uri`     ! `fURI`       ! ...
+!===
+a🧱
+
+[mtron]
+----
+0xabcd + 0x1234    [-- <1> --]
+true + false       [-- <2> --]
+1 + 2              [-- <3> --]
+1.34 + 2.45        [-- <4> --]
+"abc" + "def"      [-- <5> --]
+a/b/c * d/e/f      [-- <6> --]
+----
+
+|===
+
+The code below demonstrates the typical, expected uses of the mono types.
+
+[discrete]
+==== bytes
+
+The `bytes` type represents binary data as a sequence of bytes.
+
+**Examples:**
+
+[mtron]
+----
+'metatron'.as(bytes::T)        [-- <1> --]
+0x48656c6c6f                  [-- <2> --]
+----
+
+<1> Convert string to bytes
+<2> Create bytes from the hexadecimal representation of 'hello'
+
+**Type Conversion with `.as()`:**
+
+Byte units can be converted between each other using the `.as()` instruction:
+
+[mtron]
+----
+kB::1024.0.as(mB::T)          [-- <1> --]
+mB::1.0.as(kB::T)             [-- <2> --]
+gB::5.0.as(mB::T)             [-- <3> --]
+pB::1.0.as(tB::T)             [-- <4> --]
+----
+
+<1> Convert 1024 kilobytes to megabytes (result: 1 mB)
+<2> Convert 1 megabyte to kilobytes (result: 1024 kB)
+<3> Convert 5 gigabytes to megabytes (result: 5120 mB)
+<4> Convert 1 petabyte to terabytes (result: 1024 tB)
+
+**Equality Comparison with `.eq()`:**
+
+Byte units of different types can be compared for equality:
+
+[mtron]
+----
+mB::1024.0.eq(gB::1.0)          [-- <1> --]
+kB::1024.0.eq(mB::1.0)          [-- <2> --]
+gB::2.0.eq(mB::2048.0)          [-- <3> --]
+tB::1.0.eq(gB::1024.0)          [-- <4> --]
+----
+
+<1> Check if 1024 megabytes equals 1 gigabyte (result: true)
+<2> Check if 1024 kilobytes equals 1 megabyte (result: true)
+<3> Check if 2 gigabytes equals 2048 megabytes (result: true)
+<4> Check if 1 terabyte equals 1024 gigabytes (result: true)
+
+**Common Use Cases:**
+
+* **File size calculations**: `file_size.as(mB::T)` to convert to megabytes
+* **Storage capacity**: `disk_capacity.as(gB::T)` to express in gigabytes
+* **Data transfer rates**: Compare bandwidth in different units
+* **Memory allocation**: Express memory sizes in appropriate units
+* **Quota management**: Set and compare storage quotas
+
+**Binary vs Decimal Units:**
+
+Metatron's byte units follow the **binary (base-2) convention** where:
+
+* 1 kB = 1024 bytes (not 1000)
+* 1 mB = 1024 kB = 1,048,576 bytes (not 1,000,000)
+* 1 gB = 1024 mB = 1,073,741,824 bytes (not 1,000,000,000)
+
+This is consistent with how computer systems typically measure memory and storage internally.
+
+[discrete]
+[[sec-poly-types]]
+=== poly types
+
+Poly types are **branched structures** where each element or entry represents a separate branch.
+The two primary poly types are:
+
+**lst (List)** - Ordered collection where each element is a branch:
+
+[mtron]
+----
+[a,b,c]                     [-- <1> --]
+[1,2,3]                     [-- <2> --]
+[,]                         [-- <3> --]
+----
+
+<1> List with three branches: a, b, and c
+<2> List with three integer branches
+<3> Empty list (no branches)
+
+**rec (Record)** - Key-value pairs where each entry is a branch:
+
+[mtron]
+----
+[a=>1,b=>2,c=>3]            [-- <1> --]
+[name=>'Alice',age=>30]     [-- <2> --]
+[=>]                        [-- <3> --]
+----
+
+<1> Record with three branches: a=>1, b=>2, and c=>3
+<2> Record representing a person
+<3> Empty record (no branches)
+
+**Key Characteristics:**
+
+* Each element/entry is a separate branch
+* `.count()` returns 1 (the poly object itself)
+* `>-.count()` merges branches and counts elements/entries
+* Branches can be processed in parallel
+* Support pattern matching and wildcards
+
+**Branching in Action:**
+
+[mtron]
+----
+[1,2,3]                     [-- <1> --]
+[1,2,3].count()             [-- <2> --]
+[1,2,3]>-.count()           [-- <3> --]
+[a=>1,b=>2].count()         [-- <4> --]
+[a=>1,b=>2]>-.count()       [-- <5> --]
+----
+
+<1> List with 3 branches
+<2> Returns 1 (the list object itself)
+<3> Returns 3 (merges branches, counts elements)
+<4> Returns 1 (the record object itself)
+<5> Returns 2 (merges branches, counts entries)
+
+**Operations on Poly Types:**
+
+[mtron]
+----
+[1,2,3].reverse()                     [-- <1> --]
+[1,2,3].plus([4,5])                   [-- <2> --]
+[1,2,3].merge()                       [-- <3> --]
+[a=>1,b=>2].dom()                     [-- <4> --]
+[a=>1,b=>2].rng()                     [-- <5> --]
+[a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6> --]
+----
+
+<1> Reverse list order
+<2> Concatenate lists
+<3> Merge list into a set
+<4> Get domain (keys) of record
+<5> Get range (values) of record
+<6> Select specific keys from record
+
+[discrete]
+[[sec-call-types]]
+==== call types
+
+Call types represent function invocations and method calls in Metatron.
+
+**Method Call Syntax:**
+
+```mtron
+object.method(args)
+```
+
+**Chained Calls:**
+
+```mtron
+[1,2,3].reverse().merge()
+```
+
+**Function Composition:**
+Functions can be composed using the ring multiplication operator (`.`):
+
+```mtron
+f · g               % Compose functions f and g
+```
+
+**Lambda Expressions:**
+
+```mtron
+(x,y){x + y}        % Lambda function
+```
+
+[discrete]
+[[sec-instructions]]
+==== instructions
+
+An `inst` is an `obj` of the form:
+
+++++
+\begin{align*}
+\texttt{inst} = \left(\texttt{uri} \times \left( \texttt{poly} \times \texttt{code} \right) \times \texttt{uri} \right),
+\end{align*}
+++++
+
+where each component is:
+
+1. `uri`: the `inst` type (e.g. `/m/inst/plus`).
+2. `poly`: the `inst` arguments which can either be a `lst` or a `rec`.
+3. `code`: the `code` that defines the behavior or function of the `inst`.
+4. `uri`: the `inst` location in space.
+
+[discrete]
+[[sec-variables]]
+=== variables
+
+Variables in Metatron can be scoped at different levels: frame stack, thread cache, local, and distributed.
+
+**Variable Assignment and Dereferencing:**
+
+[mtron]
+----
+x -> 42                                                   [-- <1> --]
+*x                                                        [-- <2> --]
+y -> [a=>1,b=>2,c=>3]                                     [-- <3> --]
+*y                                                        [-- <4> --]
+----
+
+<1> Assign 42 to variable x
+<2> Dereference x with `*x`
+<3> Assign record to variable y
+<4> Dereference y
+
+**Variables in Computations:**
+
+[mtron]
+----
+base -> 10                                                [-- <1> --]
+result -> *base.plus(5).mult(2)                           [-- <2> --]
+*result                                                   [-- <3> --]
+----
+
+<1> Store base value
+<2> Compute and store result
+<3> Retrieve computed result
+
+**Variables with Collections:**
+
+[mtron]
+----
+nums -> {1,2,3,4,5}                                       [-- <1> --]
+filtered -> *nums.-<[is(?>3) => _, _ => noobj]>>          [-- <2> --]
+*filtered                                                 [-- <3> --]
+----
+
+<1> Store collection
+<2> Filter and store results
+<3> Retrieve filtered collection
+
+[source,mtron]
+----
+    ........─►.age::T.◄─.......    
+    .            ▲            .    
+    .            │            .    
+    ▼            │            ▼    
+odd::T ....... nat::T ......even::T
+    ▲            ▲            ▲    
+    │            │            │
+    │            │            │    
+    └──────────int::T─────────┘    
+----
+
+[mtron]
+----
+nat  -> int::T[?>0]                 [-- <1> --]
+age  -> nat::T[?<120]               [-- <2> --]
+odd  -> int::T[is(mod(2).eq(1))]    [-- <3> --]
+even -> int::T[is(mod(2).eq(0))]    [-- <4> --]
+----
+
+<1> A `nat` is an `int` greater than 0.
+<2> A `age` is a `nat` (is an `int` greater than 0) less than 120.
+<3> An `odd` is an `int` that is not divisible by 2.
+<4> An `even` is an `int` that is divisible by 2.
+
+[source,mtron]
+----
+   age::T
+     |   \ 
+   nat::T even::T
+     |   /
+   int::T
+----
+
+[mtron]
+----
+age::T[?even::T]
+----
+
+For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero.
+In mtron, this is written:
+
+[stem]
+++++
+\tt{int::T[?>0]}
+++++
+
+The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`).
+This constraint is a refinement of `int` (a well defined subset).
+
+[mtron]
+----
+nat -> int::T[?>0]@nat
+nat::10
+[ERROR] nat::-10
+[ERROR] int::-10.as(nat::T)
+----
+
+When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of that `obj`.
+
+Every mtron `obj` has a type.
+
+metatron `objs` are typed.
+Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space.
+The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
+
+[discrete]
+[[sec-core-types]]
+=== mtron core types
+
+The fundamental types are organized into the 5 categories presented in the table below.
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱kind            🧱 description 🧱 examples
+🧱universal types 🧱             🧱 noobj::T, #::T
+🧱mono types      🧱             🧱 bytes::T, bool::T, int::T, real::T, str::T, uri::T
+🧱poly types      🧱             🧱 rel::T, lst::T, rec::T
+🧱call types      🧱             🧱 inst::T, code::T
+🧱error types     🧱             🧱 fail::T, caught::T
+🧱machine types   🧱             🧱 monad::T, machine::T
+|===
+
+A natural number is a positive integer greater than zero.
+In order to constrain an `int` to this definition, a **refinement type** can be constructed.
+
+[mtron]
+----
+nat -> int::T[?>0]@nat 
+nat::10
+[ERROR] nat::-10
+[ERROR] int::-10.as(nat::T)
+----
+
+Type inheritance is possible through type chaining.
+In the example below, the `age` type has a value id of `age`, but a type id of `nat`.
+Moreover, `nat` has a value id of `nat` and a type id of `int`.
+In this way, when `age` is resolved, its associated predicate (`?<120`) and inherited predicates (`?>0`) must hold for the respective value to be considered an `age`.
+
+[mtron]
+----
+age -> nat::T[?<120]
+age::T
+nat::T
+int::T
+----
+
+[mtron]
+----
+nat::125
+[ERROR] age::125
+[ERROR] nat::125.as(age::T)
+[ERROR] 125.as(nat::T).as(age::T)
+----
+
+[mtron]
+----
+name    -> str::T[-<''>-count().?<30]
+personx -> rec::T[?[name  => str::T, /
+                    age   => age::T, /
+                    knows => personx{*}::T]]
+marko -> personx::[name=>'marko',age=>29,knows=>!*grant]
+grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
+*marko>>knows>>name
+*marko>>knows>>knows>>name
+*marko>>knows>>knows
+----
+
+[discrete]
+[[sec-isa-types]]
+=== instruction set architecture types
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱instruction set 🧱 description 🧱 examples
+🧱mach            🧱             🧱 monad::T, machine::T
+🧱math            🧱             🧱 bB::T, kB::T, mB::T, gB::T, tB::T, pB::T
+🧱web             🧱             🧱 html::T, json::T, xml::T
+🧱iot             🧱             🧱 device::T, entity::T
+🧱llm             🧱             🧱 llm::T, memory::T
+🧱grph            🧱             🧱 elmnt::T, vrtx::T, edge::T
+|===
+
+[source,mtron]
+----
+nat    -> int::T[?>0]
+person -> rec::T[?[name        =>str::T,
+                   uri{?}::age =>nat::T,
+                   knows       =>person{*}::T]]
+people  -> person{*}::T 
+----
+
+[source,mtron]
+----
+sumer -> people::{
+ enoch -> person::[name=>'enoch',age=>29],
+ enki  -> person::[name=>'enki',knows=>!*enoch]}
+----
+
+[source,mtron]
+----
+mtron> *enki>>knows>>name
+==>'enoch'
+mtron> *#.as[name      => _,
+             coauthor  => >>knows.where[>>age.?>21]>>name]
+==>[name=>'enki', coauthor=>'enoch']
+----

@@ -1,0 +1,828 @@
+/*
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* ==========================================================================
+   Metatron Instruction Set Documentation Stylesheet
+   Extends metatron.css and Bootstrap 5 for instset-specific styling
+   ========================================================================== */
+
+/* ==========================================================================
+   Code Blocks - highlight.js compatibility
+   ========================================================================== */
+.accordion-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem;
+    margin: 5px;
+    font-size: 1rem;
+    color: var(--primary);
+    text-align: center;
+    background-color: var(--maincolor); 
+    border: 1px solid var(--mred);
+    border-radius: 2px;
+    overflow-anchor: none;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out,border-radius 0.15s ease;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--maincolor);
+    background-color: var(--primary);
+}
+
+
+/* Pre blocks containing highlight.js code */
+.instset-doc pre {
+    margin: 0.25rem 0;
+   /* border: 1px solid var(--mdarkgray);
+    border-radius: 4px;*/
+    overflow: hidden;
+}
+
+pre code.hljs {
+    padding: 0.3rem !important;
+}
+
+/* Let highlight.js handle the code styling inside pre */
+.instset-doc pre code.hljs {
+  /*  background: var(--dark);*/
+    padding: 0.5rem 0.75rem;
+    border-radius: 0;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    font-size: 1.0rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ==========================================================================
+   Card Overrides for Instset Docs
+   ========================================================================== */
+.instset-doc-small-code {
+    font-size: 0.9rem !important;
+}
+
+.instset-doc-small-code > a,
+.instset-doc-small-code .code {
+    font-size: 0.9rem !important;
+}
+
+.instset-doc .card {
+    margin: 0;
+    padding: 0;
+}
+
+.instset-doc .card-header {
+    background: var(--maincolor);
+    border-bottom: 1px solid var(--mdarkgray);
+}
+
+.card-body pre {
+    overflow: hidden;
+}
+
+.instset-doc .card-body {
+    background: var(--secondarycolor);
+}
+
+.instset-doc .text-bright {
+    color: var(--myellow);
+}
+
+/* ==========================================================================
+   List Group Overrides
+   ========================================================================== */
+
+.instset-doc .list-group-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.instset-doc .list-group-item:hover {
+    background: var(--maincolor) !important;
+}
+
+/* ==========================================================================
+   Button Overrides
+   ========================================================================== */
+
+.instset-doc .btn-outline-primary {
+    border-color: var(--mred);
+    color: var(--primary);
+}
+
+.instset-doc .btn-outline-primary:hover {
+    background-color: var(--mred);
+    border-color: var(--mred);
+    color: var(--white);
+}
+
+/* ==========================================================================
+   Typography Adjustments
+   ========================================================================== */
+
+.instset-doc h1 {
+    line-height: 1.2;
+}
+
+.instset-doc h3 {
+    font-size: 1.5rem;
+}
+
+/* ==========================================================================
+   Index Page Card Hover Effect
+   ========================================================================== */
+
+.instset-doc .card:hover {
+    border-color: var(--primary);
+    transition: border-color 0.2s ease;
+}
+
+/* ==========================================================================
+   Anchor Offset for Fixed Navbar
+   ========================================================================== */
+
+/* Offset anchor targets so they're not hidden behind the fixed navbar */
+.instset-doc [id] {
+    scroll-margin-top: 80px;
+}
+
+/* Section headings need offset too */
+.instset-doc h3[id] {
+    scroll-margin-top: 90px;
+}
+
+/* ==========================================================================
+   Index Multi-Column Layout
+   ========================================================================== */
+
+.instset-doc .index-columns {
+    column-count: 6;
+    column-gap: 0.75rem;
+}
+
+.instset-doc .index-columns .list-group-item {
+    break-inside: avoid;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Rewrites use 4 columns (wider for longer signatures) */
+.instset-doc .index-columns-rewrites {
+    column-count: 4;
+    column-gap: 0.75rem;
+}
+
+.instset-doc .index-columns-rewrites .list-group-item {
+    break-inside: avoid;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Clip long text in index with ellipsis */
+.instset-doc .index-columns .list-group-item .code,
+.instset-doc .index-columns-rewrites .list-group-item .code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px); /* Reserve space for badge */
+    display: inline-block;
+}
+
+/* Responsive column counts */
+@media (max-width: 1400px) {
+    .instset-doc .index-columns {
+        column-count: 5;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 1200px) {
+    .instset-doc .index-columns {
+        column-count: 4;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 992px) {
+    .instset-doc .index-columns {
+        column-count: 3;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .instset-doc .index-columns {
+        column-count: 2;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 576px) {
+    .instset-doc .index-columns {
+        column-count: 1;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 1;
+    }
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .instset-doc .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.25rem;
+    }
+
+    .instset-doc .card-header small {
+        font-size: 0.7rem;
+    }
+}
+
+/* ==========================================================================
+   Pill badge legibility — darker backgrounds for white text
+   ========================================================================== */
+.pill-label.badge.bg-primary {
+    background-color: var(--mred) !important;
+}
+.pill-label.badge.bg-success {
+    background-color: #0a5c32 !important;
+}
+
+/* ==========================================================================
+   Type fields table — borderless grid for predicate / constructor rows
+   ========================================================================== */
+
+.type-fields-table {
+    border: none;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.type-fields-table td {
+    padding: 1px 8px 1px 0;
+    vertical-align: top;
+    border: none;
+}
+
+.field-label {
+    color: var(--text-muted, #888);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    text-align: left;
+    width: 1%;
+    user-select: none;
+}
+
+/* ==========================================================================
+   Refinement chain — inherited fields from ancestor types
+   ========================================================================== */
+
+.inherited-fields {
+    opacity: 0.65;
+    font-size: 0.9rem;
+}
+
+.inherited-fields:hover {
+    opacity: 0.9;
+}
+
+.inherited-row {
+    line-height: 1.6;
+}
+
+.inherited-link {
+    color: var(--text-muted, #888) !important;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.inherited-link:hover {
+    color: var(--primary) !important;
+    text-decoration: underline;
+}
+
+.inherited-code {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* ==========================================================================
+   Splash / index page card grid
+   ========================================================================== */
+
+.splash-card {
+    background: var(--maincolor);
+    border: 1px solid var(--mdarkgray);
+    border-radius: 4px;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.splash-card:hover {
+    border-color: var(--mred);
+    box-shadow: 0 0 18px rgba(151, 2, 7, 0.25);
+    transform: translateY(-2px);
+}
+
+.splash-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(1);
+}
+
+.splash-title {
+    font-size: 1.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.splash-desc {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin-bottom: 0.35rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.splash-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 14px;
+    border-top: 1px solid var(--mdarkgray);
+    padding-top: 0.3rem;
+    margin-top: auto;
+}
+
+.splash-stats > div {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+}
+
+.stat-label {
+    color: var(--text-muted, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.stat-val {
+    color: var(--primary);
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, monospace;
+}
+
+/* ==========================================================================
+   Anchor scroll offset — compensate for the sticky navbar (~80px)
+   ========================================================================== */
+.card[id] {
+    scroll-margin-top: 5.5rem;
+}
+
+/* ==========================================================================
+   Spec / form badges — the doc prefixes [nominal], [structural], [generic],
+   [mapper], [fork], ... are rendered as small pill chips.
+   Base hue (violet-blue) = instruction forms; nominal/structural = type
+   kind (gold); generic = unspecified dom/rng side (slate).
+   ========================================================================== */
+.spec-chip {
+    display: inline-block;
+    padding: 0.08rem 0.55rem;
+    margin-right: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    vertical-align: 0.08em;
+    white-space: nowrap;
+    background: rgba(25, 28, 36, 0.85);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.55), inset 0 0 4px rgba(0, 0, 0, 0.4);
+    color: #b18ae0;
+    border-color: rgba(177, 138, 224, 0.55);
+}
+
+.spec-nominal {
+    color: #edbf73;
+    border-color: rgba(237, 191, 115, 0.6);
+}
+
+.spec-structural {
+    color: #8cc084;
+    border-color: rgba(140, 192, 132, 0.6);
+}
+
+.spec-generic {
+    color: #b6b2c2;
+    border-color: rgba(182, 178, 194, 0.55);
+}
+
+/* ==========================================================================
+   Algebraic law / theory chips — the category badges.
+   law = the process laws a morphism obeys; theory = the algebraic structures
+   an object models. Same pill as .spec-chip, distinct hues.
+   ========================================================================== */
+.law-chip,
+.theory-chip {
+    display: inline-block;
+    padding: 0.08rem 0.55rem;
+    margin: 0 0.35rem;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+    vertical-align: 0.08em;
+    white-space: nowrap;
+    background: rgba(25, 28, 36, 0.85);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.55), inset 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.law-chip {
+    color: #7fd4d8;
+    border-color: rgba(127, 212, 216, 0.55);
+}
+
+.theory-chip {
+    color: #e0a35c;
+    border-color: rgba(224, 163, 92, 0.6);
+}
+
+/* tooltip for theory and law chips — kept in the DOM (hidden via opacity/visibility,
+   NOT display:none) so MathJax typesets the description's \(…\) math on load */
+.theory-chip,
+.law-chip {
+    position: relative;
+    cursor: help;
+}
+.theory-chip .chip-tip,
+.law-chip .chip-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1080;
+    width: max-content;
+    max-width: 460px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: #1b1e27;
+    border: 1px solid rgba(224, 163, 92, 0.55);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #d8d4e4;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0.12s ease;
+}
+/* a law's tooltip takes the law hue, not the theory gold */
+.law-chip .chip-tip {
+    border-color: rgba(127, 212, 216, 0.55);
+}
+.theory-chip:hover .chip-tip,
+.law-chip:hover .chip-tip {
+    opacity: 1;
+    visibility: visible;
+}
+.theory-chip .chip-tip-name,
+.law-chip .chip-tip-name {
+    display: block;
+    font-weight: 700;
+    color: #e0a35c;
+    margin-bottom: 0.2rem;
+}
+.law-chip .chip-tip-name {
+    color: #7fd4d8;
+}
+.theory-chip .chip-tip-desc,
+.law-chip .chip-tip-desc {
+    display: block;
+}
+.theory-chip .chip-tip-roles {
+    display: block;
+    margin-top: 0.3rem;
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #7fd4d8;
+}
+
+/* ==========================================================================
+   The declared row under an instruction signature — its process laws, its
+   inverse, its defining equation.
+   ========================================================================== */
+.declared-row {
+    margin: -0.15rem 0 0.45rem 0.1rem;
+    font-size: 0.78rem;
+    color: #d8d4e4;
+}
+.declared-row .law-chip {
+    padding: 0.06rem 0.45rem;
+    font-size: 0.66rem;
+}
+
+/* the algebra button is a chip (a button, so the pill look must be re-asserted) */
+.algebra-open {
+    cursor: pointer;
+    background: rgba(25, 28, 36, 0.85);
+    border-width: 1px;
+    border-style: solid;
+    font-family: inherit;
+}
+
+/* ==========================================================================
+   Inline mtron fragments — the "refines" line, an inverse, a derivation.
+
+   These are pre > code so Highlight.js colors them, which ALSO makes the
+   site's highlightjs-copy plugin drop a copy BUTTON into each one. On a
+   one-line fragment that button sits over the text (the reader sees the
+   surrounding words and a "Copy to clipboard" rollover, with the mtron text
+   hidden underneath), so the button is suppressed here exactly as
+   docs/website/uri.html suppresses it on its terminal boxes — and the block
+   padding the button needs is stripped so the fragment reads inline.
+   ========================================================================== */
+.mtron-inline,
+.instset-doc .mtron-inline {
+    display: inline !important;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+}
+.instset-doc .mtron-inline code,
+.mtron-inline code {
+    /* THE HIGHLIGHTER'S OWN RULE MAKES THE CODE A BLOCK: metatron.css has
+       `.hljs { display: block; overflow-y: scroll; ... }`, and hljs puts that class on the <code>.
+       An inline <pre> containing a block breaks the line before it — which is what pushed
+       "refines /m/qproc::T" onto two lines. Force the fragment's code back to inline flow. */
+    display: inline !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    background: transparent;
+    white-space: pre-wrap;
+}
+.mtron-inline .hljs-copy-button,
+.instset-doc .mtron-inline .hljs-copy-button {
+    display: none !important;
+}
+
+/* THE COPY PLUGIN ALSO DECORATES THE PARENT, and for an INLINE fragment that is what pushed the URI onto
+   its own line: it adds `hljs-copy-wrapper` (position:relative; overflow:hidden; transform:translateZ(0)) to
+   our <pre> and appends a BLOCK <div class="hljs-copy-container"> as a child — an inline box cannot contain
+   a block, so the browser broke the line around it. Undo the wrapper's three properties and remove the
+   injected node; the fragment is then a plain inline box again. */
+.mtron-inline.hljs-copy-wrapper {
+    position: static !important;
+    overflow: visible !important;
+    transform: none !important;
+}
+.mtron-inline .hljs-copy-container,
+.mtron-inline .hljs-copy-alert {
+    display: none !important;
+}
+
+/* ONE COLOUR FOR AN INLINE REFERENCE. A one-word mtron fragment is a POINTER, not a code block: a reader
+   follows it, never studies its tokens, so every token in it — the URI, the `::T` refinement, the
+   operation name — is painted the site's URI blue (--mblue, the colour mtron presentation already uses
+   for uris) rather than inheriting the highlighter's cyan/teal token palette. */
+.mtron-inline code,
+.mtron-inline code *,
+.instset-doc .mtron-inline code,
+.instset-doc .mtron-inline code * {
+    color: var(--mblue) !important;
+}
+
+/* ==========================================================================
+   The algebra dialog — the type's structural theories, on the site's dark
+   ground. A NATIVE <dialog> (showModal): the page lives inside <main>, which
+   metatron.css makes a stacking context (position:relative; z-index:1), so a
+   fixed-position Bootstrap modal would be painted under the body backdrop.
+   The top layer escapes that.
+   ========================================================================== */
+.algebra-dialog {
+    max-width: min(1100px, 92vw);
+    max-height: 82vh;
+    padding: 1rem 1.2rem;
+    border: 1px solid rgba(224, 163, 92, 0.45);
+    border-radius: 10px;
+    background: #151820;
+    color: #d8d4e4;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    overflow: auto;
+}
+.algebra-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.62);
+}
+.algebra-dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.7rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(224, 163, 92, 0.25);
+}
+.algebra-dialog pre {
+    margin: 0;
+    padding: 0;
+    background: #10121a;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.algebra-dialog .hljs-copy-button {
+    display: none !important;
+}
+
+/* ── the web view of an algebra: one block per structural theory ─────────── */
+.algebra-theories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+}
+.algebra-theory {
+    /* tight inside the card: the role rows are one line each, so a generous box
+       bottom made the panel read as mostly empty space */
+    padding: 0.3rem 0.55rem 0.1rem 0.55rem;
+    border: 1px solid rgba(224, 163, 92, 0.22);
+    border-radius: 8px;
+    background: rgba(22, 25, 34, 0.85);
+}
+/* TWO COLUMNS ON THE FIRST LINE (the chip and the theory type's name), and the
+   description on a line of its own BELOW them: a long definition flowed beside
+   the chip and squashed into the card's right edge. */
+.algebra-theory-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 0.45rem;
+    row-gap: 0.02rem;
+    margin-bottom: 0.05rem;
+}
+.algebra-theory-head .theory-chip {
+    margin: 0;
+    cursor: pointer;
+}
+.algebra-theory-type {
+    font-size: 0.78rem;
+    color: var(--mblue) !important;
+    text-decoration: none;
+    justify-self: start;
+}
+.algebra-theory-desc {
+    grid-column: 1 / -1;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #a9a4bb;
+}
+.algebra-roles {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.algebra-roles th,
+.algebra-roles td {
+    padding: 0.01rem 0.35rem 0.01rem 0;
+    line-height: 1.15;
+    text-align: left;
+    vertical-align: baseline;
+    border-bottom: 1px solid rgba(108, 114, 147, 0.16);
+}
+.algebra-roles tr:last-child th,
+.algebra-roles tr:last-child td {
+    border-bottom: none;
+}
+.algebra-role {
+    width: 5.5rem;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #c9a7e8;
+}
+/* THE ROLE VALUES ARE THE SMALLEST TEXT IN THE PANEL, not the largest: they are a
+   pointer to the operation's card, and the mtron-inline pre inherits the page's
+   code size unless this rule wins. */
+.algebra-roles .mtron-inline code,
+.algebra-roles .mtron-inline code * {
+    font-size: 0.74rem !important;
+}
+.algebra-roles .mtron-inline {
+    line-height: 1.2;
+}
+.algebra-roles a,
+.algebra-value {
+    font-size: 0.74rem;
+}
+
+/* ── the panel's tabs: theories | mtron encoding ──────────────────────────── */
+.algebra-tabs {
+    margin-top: 0;
+}
+.algebra-tabs .nav-tabs {
+    border-bottom: 1px solid rgba(224, 163, 92, 0.22);
+}
+.algebra-tabs .nav-link {
+    padding: 0.3rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    color: #a9a4bb;
+    font-size: 0.8rem;
+}
+.algebra-tabs .nav-link:hover {
+    border-color: transparent;
+    color: #e0a35c;
+}
+.algebra-tabs .nav-link.active {
+    background: rgba(22, 25, 34, 0.9);
+    border-color: rgba(224, 163, 92, 0.35) rgba(224, 163, 92, 0.35) transparent;
+    color: #e0a35c;
+}
+.algebra-tabs .tab-content {
+    padding-top: 0.45rem;
+}
+
+/* the encoding scrolls inside its own box, with the site's slim dark-red scrollbar
+   (metatron.css's dropdown recipe: an 8px thumb on an invisible track) */
+.algebra-mtron {
+    max-height: 58vh;
+    margin: 0;
+    padding: 0.5rem 0.7rem;
+    overflow: auto;
+    background: #10121a;
+    border-radius: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+.algebra-mtron code {
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.algebra-dialog {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+.algebra-mtron::-webkit-scrollbar,
+.algebra-dialog::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.algebra-mtron::-webkit-scrollbar-track,
+.algebra-dialog::-webkit-scrollbar-track {
+    background: transparent;
+}
+.algebra-mtron::-webkit-scrollbar-thumb,
+.algebra-dialog::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+.algebra-mtron::-webkit-scrollbar-thumb:hover,
+.algebra-dialog::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mred);
+}
+
+
+
+

@@ -1,0 +1,50 @@
+[== boot args ==]
+[space  => /sys/space,
+ web    => [
+   http/origin  => <http://localhost:8777>,
+   ws/origin    => <ws://localhost:8555>],
+ typer/check  => [inst_dom     => true, 
+                  inst_rng     => true,
+                  type_pred    => true,
+                  obj_write    => true,
+                  code_resolve => false],
+ header        => """
+                 _,.---._      _,.----.    ,-,--.                   
+   _,..---._   ,-.' , -  `.  .' .' -   \ ,-.'-  _\                  
+ /==/,   -  \ /==/_,  ,  - \/==/  ,  ,-'/==/_ ,_.'                  
+ |==|   _   _\==|   .=.     |==|-   |  .\==\  \                     
+ |==|  .=.   |==|_ : ;=:  - |==|_   `-' \\==\ -\                    
+ |==|,|   | -|==| , '='     |==|   _  , |_\==\ ,\                   
+ |==|  '='   /\==\ -    ,_ /\==\.       /==/\/ _ | .=.              
+ |==|-,   _`/  '.='. -   .'  `-.`.___.-'\==\ - , /:=; :             
+ `-.`.____.'     `--`--''                `--`---'  `=`              
+          ___  ,--.--------.               _,.---._    .-._         
+   .-._ .'=.'\/==/,  -   , -\.-.,.---.   ,-.' , -  `. /==/ \  .-._  
+  /==/ \|==|  \==\.-.  - ,-./==/  `   \ /==/_,  ,  - \|==|, \/ /, / 
+  |==|,|  / - |`--`\==\- \ |==|-, .=., |==|   .=.     |==|-  \|  |  
+  |==|  \/  , |     \==\_ \|==|   '='  /==|_ : ;=:  - |==| ,  | -|  
+  |==|- ,   _ |     |==|- ||==|- ,   .'|==| , '='     |==| -   _ |  
+  |==| _ /\   |     |==|, ||==|_  . ,'. \==\ -    ,_ /|==|  /\ , |  
+  /==/  / / , /     /==/ -//==/  /\ ,  ) '.='. -   .' /==/, | |- |  
+  `--`./  `--`      `--`--``--`-`--`--'    `--`--''   `--`./  `--`   
+"""]
+[===============]
+[== metatron example boot ==]
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/web);
+   
+[== mount computing spaces ==]
+ memspace::[pattern   => /usr/#,                                 
+       q              => [typeq::[=>],mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
+ fsspace::[pattern    => local:#,
+            route     => [local:=><~/>],
+            script    => !*boot/script]@/sys/space/fs;         
+ fsspace::[pattern    => mtronfs:#,
+           route      => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
+           
+print(*boot/args/header)          
+

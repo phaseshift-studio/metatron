@@ -1,0 +1,27 @@
+% cat-lift.tex — the lift: a type is a vertex, an inst is an edge
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document (default preamble: tikz, amsmath, amssymb + common TikZ
+% libraries) and writes docs/website/skills/mtron/assets/cat-lift.png.
+%
+% INK: white on a transparent background — the site's theme is dark (--maincolor
+% #000000, panels #191C24). Edge labels are deliberately UNFILLED (no
+% `fill=black` patch), so no text box shows against the page; labels are offset
+% clear of the strokes instead. Panels use black!85 / black!75 so they read as
+% slightly lighter than the page.
+
+\begin{tikzpicture}[
+  v/.style={draw, rounded corners=2pt, thick, minimum width=14mm, minimum height=8mm, font=\small},
+  e/.style={-{Stealth[length=2.2mm]}, thick},
+  el/.style={font=\scriptsize, inner sep=1pt},
+  color=white
+]
+\node[v] (int)  at (0,0)      {\texttt{int}};
+\node[v] (real) at (3.8,0)    {\texttt{real}};
+\node[v] (bool) at (3.8,-2.1) {\texttt{bool}};
+\node[v] (str)  at (0,-2.1)   {\texttt{str}};
+
+\draw[e] (int) to[out=130,in=50,looseness=5] node[el,above=2pt]{plus} (int);
+\draw[e] (real) to[out=130,in=50,looseness=5] node[el,above=2pt]{neg} (real);
+\draw[e] (int) -- node[el,above=2pt]{gt} (bool);
+\draw[e] (int) -- node[el,left=3pt]{as} (str);
+\end{tikzpicture}

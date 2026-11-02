@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <title>metatron — PhaseShift Studio</title>
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <style>
+        /* ==========================================================================
+           METATRON — BBS TERMINAL
+           Burgundy, charcoal, gray. ANSI block-art character. Menu system.
+           ========================================================================== */
+
+        :root {
+            --bg: #000;
+            --fg: #c2c2c2;
+            --dim: #797585;
+            --dark: #494554;
+            --red: #952e1e;
+            --red-bright: #a30000;
+            --red-dark: #7a2518;
+            --amber: #9e7535;
+            --surface: #191C24;
+            --font: 'Liberation Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
+            --text-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.6), 0 -0.5px 0 rgba(255, 220, 200, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            overflow-y: scroll;
+        }
+
+        body {
+            background: #000;
+            color: var(--fg);
+            font-family: var(--font);
+            font-weight: bold;
+            line-height: 1.35;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            text-shadow: var(--text-shadow);
+        }
+
+        /* ── GRID BACKGROUND ──────────────────────────────────────── */
+        .grid-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.35;
+            background-image: linear-gradient(rgba(122, 37, 24, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(122, 37, 24, 0.05) 1px, transparent 1px);
+            background-size: 48px 48px;
+            background-position: center center;
+            mask-image: radial-gradient(ellipse at 50% 40%, black 25%, transparent 68%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 25%, transparent 68%);
+            animation: gridPulse 12s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ── Red glow column — textures the background ────────────── */
+        .glow-column {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: radial-gradient(ellipse at 65% 40%, rgba(122, 37, 24, 0.14) 0%, rgba(122, 37, 24, 0.05) 25%, transparent 50%),
+            radial-gradient(ellipse at 55% 55%, rgba(150, 40, 20, 0.07) 0%, transparent 35%);
+            pointer-events: none;
+            animation: glowColumnPulse 30s ease-in-out infinite;
+        }
+
+        @keyframes glowColumnPulse {
+            0%, 100% {
+                opacity: 0.55;
+            }
+            50% {
+                opacity: 0.85;
+            }
+        }
+
+        /* ── TERMINAL WINDOW ───────────────────────────────────────── */
+        .terminal {
+            width: 100%;
+            max-width: 880px;
+            padding: 1.5rem 1.25rem 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ==========================================================================
+           SPLASH HEADER — ANSI CHARACTER BREAKS THE FRAME
+           ========================================================================== */
+
+        .splash {
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .splash-header {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .splash-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .splash-left h1 {
+            font-family: var(--font);
+            font-size: 1.85rem;
+            font-weight: bold;
+            color: var(--red);
+            letter-spacing: -0.5px;
+            line-height: 1;
+            margin-bottom: 0.1rem;
+        }
+
+        .splash-left .tagline {
+            color: var(--amber);
+            font-size: 0.78rem;
+            letter-spacing: 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .splash-left .blurb {
+            color: var(--dim);
+            font-size: 0.72rem;
+            line-height: 1.4;
+            max-width: 480px;
+        }
+
+        .splash-left .blurb strong {
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        /* ── Doom ANSI logo — color-shifting METATRON wordmark ────── */
+        .doom-logo {
+            font-family: var(--font);
+            font-size: 0.52rem;
+            line-height: 1.05;
+            white-space: pre;
+            margin: 0 0 0.3rem 0;
+            color: var(--fg);
+            overflow: visible;
+        }
+
+        .doom-r {
+            color: #a30000;
+        }
+
+        .doom-y {
+            color: #edbf73;
+        }
+
+        .doom-rb {
+            color: #ff2040;
+        }
+
+        .doom-yb {
+            color: #ffe08a;
+        }
+
+        .doom-g {
+            color: #6b8e23;
+        }
+
+        @media (max-width: 720px) {
+            .doom-logo {
+                font-size: 0.38rem;
+            }
+        }
+
+        /* ── SVG character — fills the right void ─────────────────── */
+        .char-svg-wrap {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            margin-top: -1rem;
+            margin-right: -1.5rem;
+            margin-bottom: -1rem;
+            animation: charBreathe 8s ease-in-out infinite;
+        }
+
+        @keyframes charBreathe {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        .char-svg-wrap img {
+            width: 300px;
+            height: auto;
+            display: block;
+        }
+
+        .char-svg-wrap .char-svg {
+            mask-image: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.85) 25%, rgba(0, 0, 0, 0.5) 50%, transparent 78%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.85) 25%, rgba(0, 0, 0, 0.5) 50%, transparent 78%);
+        }
+
+        .char-svg-wrap .char-ansi {
+            position: absolute;
+            top: 0; left: 0;
+            opacity: 0;
+            image-rendering: pixelated;
+            pointer-events: none;
+        }
+
+        .char-svg-wrap:hover .char-svg {
+            animation: glitchMorph 0.6s steps(8) forwards;
+        }
+
+        .char-svg-wrap:hover .char-ansi {
+            animation: glitchReveal 0.6s steps(8) forwards;
+        }
+
+        @keyframes glitchMorph {
+            0%   { opacity: 1; transform: translateX(0); }
+            10%  { opacity: 0.7; transform: translateX(-3px); }
+            20%  { opacity: 0.3; transform: translateX(4px); }
+            25%  { opacity: 0.8; transform: translateX(-1px); }
+            35%  { opacity: 0.1; transform: translateX(6px); clip-path: inset(0 0 60% 0); }
+            45%  { opacity: 0.5; transform: translateX(-5px); clip-path: inset(40% 0 0 0); }
+            55%  { opacity: 0.0; transform: translateX(2px); clip-path: inset(0 0 0 0); }
+            65%  { opacity: 0.4; transform: translateX(-4px); }
+            75%  { opacity: 0.05; transform: translateX(8px); }
+            85%  { opacity: 0.15; transform: translateX(-2px); clip-path: inset(30% 0 30% 0); }
+            100% { opacity: 0; transform: translateX(0); clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes glitchReveal {
+            0%   { opacity: 0; transform: translateX(0); }
+            15%  { opacity: 0.2; transform: translateX(-4px); }
+            30%  { opacity: 0.6; transform: translateX(3px); clip-path: inset(50% 0 0 0); }
+            40%  { opacity: 0.1; transform: translateX(-6px); clip-path: inset(0 0 40% 0); }
+            50%  { opacity: 0.7; transform: translateX(1px); clip-path: inset(0 0 0 0); }
+            60%  { opacity: 0.0; transform: translateX(5px); }
+            70%  { opacity: 0.5; transform: translateX(-3px); }
+            80%  { opacity: 0.85; transform: translateX(2px); }
+            90%  { opacity: 0.4; transform: translateX(-1px); clip-path: inset(20% 0 20% 0); }
+            100% { opacity: 1; transform: translateX(0); clip-path: inset(0 0 0 0); }
+        }
+
+        @media (max-width: 720px) {
+            .char-svg-wrap {
+                margin: 0;
+                animation: none;
+            }
+
+            .char-svg-wrap img {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .splash-header {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .splash-left {
+                text-align: center;
+            }
+
+            .splash-left .blurb {
+                max-width: 100%;
+            }
+
+            .ansi-char-wrap {
+                margin: 0;
+                animation: none;
+            }
+
+            #ansi-character {
+                font-size: 7px;
+                line-height: 5.5px;
+            }
+        }
+
+        /* ==========================================================================
+           DIVIDERS
+           ========================================================================== */
+
+        .divider-double {
+            color: var(--dark);
+            font-size: 0.55rem;
+            text-align: center;
+            margin: 0.2rem 0 1rem;
+            user-select: none;
+            white-space: pre;
+            overflow: hidden;
+        }
+
+        .divider-single {
+            color: var(--red-dark);
+            font-size: 0.72rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1.25rem 0 1rem;
+            user-select: none;
+            white-space: pre;
+            overflow: hidden;
+            letter-spacing: 2px;
+        }
+
+        /* ==========================================================================
+           MENU SECTIONS
+           ========================================================================== */
+
+        .menu-section {
+            margin-bottom: 1rem;
+        }
+
+        .menu-section-header {
+            color: var(--amber);
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.3rem;
+            padding-bottom: 0.1rem;
+            border-bottom: 1px solid var(--red-dark);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-items {
+            list-style: none;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            padding: 0.12rem 0.25rem;
+            font-size: 0.7rem;
+            line-height: 1.35;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.08s;
+        }
+
+        .menu-item:hover {
+            background: rgba(122, 37, 24, 0.2);
+        }
+
+        .menu-item .hotkey {
+            color: var(--amber);
+            font-weight: bold;
+            min-width: 1.5rem;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .menu-item .hotkey-wide {
+            color: var(--amber);
+            font-weight: bold;
+            min-width: 2.4rem;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .menu-item .label {
+            color: var(--fg);
+            flex-shrink: 0;
+        }
+
+        .menu-item .desc {
+            color: var(--dim);
+            font-size: 0.66rem;
+            margin-left: auto;
+            text-align: right;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .menu-item .cmd {
+            color: var(--fg);
+            font-size: 0.68rem;
+        }
+
+        .menu-item .cmd-badge {
+            font-size: 0.52rem;
+            color: var(--red-dark);
+            margin-left: 0.3rem;
+            flex-shrink: 0;
+        }
+
+        .menu-item .icon-sm {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            filter: invert(17%) sepia(67%) saturate(5238%) hue-rotate(356deg) brightness(97%) contrast(91%);
+        }
+
+        .menu-item.spacer {
+            height: 0.25rem;
+            cursor: default;
+        }
+
+        .menu-item.spacer:hover {
+            background: transparent;
+        }
+
+        /* ── Feature grid (two-column menu) ────────────────────────── */
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.5rem;
+        }
+
+        .feature-grid > .menu-items {
+            min-width: 0;
+        }
+
+        @media (max-width: 650px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature-grid .menu-item .desc {
+            margin-left: 0;
+            text-align: left;
+            white-space: normal;
+        }
+
+        /* ── Inline expansion for feature detail ───────────────────── */
+
+        .feature-expand {
+            display: none;
+            padding: 0.6rem 0.8rem 0.6rem 3.2rem;
+            font-size: 0.66rem;
+            color: var(--dim);
+            line-height: 1.5;
+            border-left: 1px solid var(--red-dark);
+            margin-left: 1.2rem;
+            margin-bottom: 0.4rem;
+            background: rgba(122, 37, 24, 0.06);
+        }
+
+        .feature-expand.open {
+            display: block;
+        }
+
+        .feature-expand p {
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-expand strong {
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        .feature-expand img {
+            max-width: 420px;
+            display: block;
+            margin: 0.5rem 0 0.5rem -0.5rem;
+        }
+
+        /* SVG diagrams — illuminated manuscript: red-amber glow behind dark ink */
+        .feature-expand img[src$=".svg"] {
+            filter: drop-shadow(0 0 12px rgba(180, 80, 50, 0.45)) drop-shadow(0 0 35px rgba(160, 60, 30, 0.25));
+            background: radial-gradient(ellipse at center, rgba(180, 75, 45, 0.08) 0%, rgba(160, 60, 30, 0.04) 40%, rgba(140, 50, 30, 0.02) 70%, transparent 100%);
+            padding: 1.25rem;
+            border-radius: 2px;
+        }
+
+        .feature-expand table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5rem 0;
+            font-size: 0.58rem;
+        }
+
+        .feature-expand td, .feature-expand th {
+            border: 1px solid var(--dark);
+            padding: 0.25rem 0.4rem;
+        }
+
+        .feature-expand th {
+            color: var(--amber);
+            background: rgba(122, 37, 24, 0.15);
+            text-align: left;
+        }
+
+        .feature-expand pre {
+            font-size: 0.55rem;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .feature-expand code {
+            color: var(--amber);
+        }
+
+        .feature-expand a {
+            color: var(--amber);
+        }
+
+        /* ==========================================================================
+           TICKER
+           ========================================================================== */
+
+        .ticker {
+            border: 1px solid var(--red-dark);
+            padding: 0.25rem 0.6rem;
+            margin: 1rem 0;
+            font-size: 0.62rem;
+            color: var(--dim);
+            display: flex;
+            gap: 0.5rem;
+            align-items: baseline;
+            overflow: hidden;
+        }
+
+        .ticker-label {
+            color: var(--red);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .ticker-text {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* ==========================================================================
+           STATUS BAR
+           ========================================================================== */
+
+        .status-bar {
+            border-top: 2px solid var(--red-dark);
+            margin-top: 1.5rem;
+            padding-top: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.58rem;
+            color: var(--dark);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .status-bar a {
+            color: var(--dim);
+            text-decoration: none;
+        }
+
+        .status-bar a:hover {
+            color: var(--amber);
+        }
+
+        .status-bar .online {
+            color: var(--red-bright);
+        }
+
+        /* ==========================================================================
+           PAGE SWEEP
+           ========================================================================== */
+
+        .page-sweep {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.08s ease-in;
+            pointer-events: none;
+        }
+
+        .page-sweep.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .page-sweep.exit {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+
+        .page-sweep::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: var(--red-bright);
+            transform: scaleY(0);
+            transition: transform 0.18s ease-in;
+        }
+
+        .page-sweep.active::after {
+            transform: scaleY(600);
+        }
+
+        /* ── Scrollbar ─────────────────────────────────────────────── */
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--dark);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--red-dark);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="grid-layer"></div>
+<div class="glow-column"></div>
+<div id="pageSweep" class="page-sweep"></div>
+
+<div class="terminal">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SPLASH HEADER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="splash">
+        <div class="splash-header">
+            <div class="splash-left">
+                <pre class="doom-logo" id="ansi-logo"></pre>
+                <p class="tagline">interconnect heterogeneous data sources &amp; processes</p>
+                <p class="blurb">
+                    <strong>metatron</strong> offers a concise, expressive, and efficient way to
+                    define and manipulate data structures encoded within and between data sources
+                    — from the enthusiast's home automation project to an organization's large-scale
+                    master data management system. Founded on a referential record-oriented data
+                    model and schema, higher-order structures are captured across relational databases,
+                    graph databases, web servers, JSON documents, MQTT brokers, AI memory, IoT
+                    microprocessors, file systems, and more.
+                </p>
+            </div>
+            <div class="char-svg-wrap" id="ansiCharWrap">
+                <img class="char-svg" src="images/metatron-character-small.svg" alt="metatron character">
+                <img class="char-ansi" src="images/metatron-character-ansi.png" alt="metatron character ANSI">
+            </div>
+        </div>
+    </div>
+
+    <div class="divider-single">&#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552; features &#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;
+    </div>
+
+    <div class="menu-section">
+        <div class="feature-grid" id="featureGrid">
+            <ul class="menu-items">
+                <li class="menu-item" data-feature="mtron" data-icon="images/icons/mtron-icon.svg">
+                    <span class="hotkey-wide">mtron</span>
+                    <span class="desc">functional, type-safe data flow language for multi-model data environments</span>
+                    <div class="fx-html" hidden><p><strong>mtron</strong> (pronounced /ɛm.trɒn/) is the primary query
+                        and transformation language for the metatron virtual machine. It provides a type-safe
+                        environment for processing data across a diverse set of spaces.</p><img
+                            src="images/modal/mtron-modal.svg" style="width:400px;">
+                        <p>URIs and instructions are both first class citizens. Query parameters encode instruction
+                            domain and range types — URIs referencing code composed of URIs provides a unique level of
+                            software reflection without abandoning a functional structure.</p></div>
+                </li>
+                <li class="menu-item" data-feature="fURI" data-icon="images/icons/link-icon.svg">
+                    <span class="hotkey-wide">fURI</span>
+                    <span class="desc">unified URI address space — traverse across data sources seamlessly</span>
+                    <div class="fx-html" hidden><p>The <strong>fURI</strong> (functional URI) is the cornerstone of
+                        metatron's memory model. Every piece of data, regardless of its underlying storage, is addressed
+                        via a consistent URI scheme.</p><img src="images/modal/furi-modal.svg" style="width:400px;">
+                    </div>
+                </li>
+                <li class="menu-item" data-feature="space" data-icon="images/icons/space-icon.svg">
+                    <span class="hotkey-wide">space</span>
+                    <span class="desc">data sources abstracted as spaces — stitch together disparate systems</span>
+                    <div class="fx-html" hidden><p>A <strong>space</strong> maintains a subset of the URI address space.
+                        Includes relational DBs, graph DBs, K/V stores, document stores, filesystems, LLM catalogs, and
+                        more.</p><img src="images/modal/space-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="ring" data-icon="images/icons/ring-icon.svg">
+                    <span class="hotkey-wide">ring</span>
+                    <span class="desc">"ringad"/ringoid processor — * composition, + branching, ring algebra</span>
+                    <div class="fx-html" hidden><p><strong>Ring theory</strong> describes the underlying algebra.
+                        Instructions compose serially (*) and branch parallelly (+) under the axioms of <a
+                                href="https://metatron.phaseshift.studio/articles/stream-ring-theory.pdf">stream ring
+                            theory</a> (a Turing Complete stream computing algebra).</p><img
+                            src="images/modal/ring-modal.svg" style="width:400px;"></div>
+                </li>
+                <li class="menu-item" data-feature="monad" data-icon="images/icons/cluster-icon.svg">
+                    <span class="hotkey-wide">monad</span>
+                    <span class="desc">atomic monads propagate through instruction + data graphs in parallel</span>
+                    <div class="fx-html" hidden><p><strong>Monads</strong> separate program evaluation from the program
+                        itself, enabling swarms of monads to operate in parallel over shared instruction/data graphs.
+                    </p><img src="images/modal/monad-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="instset" data-icon="images/icons/instset-icon.svg">
+                    <span class="hotkey-wide">instset</span>
+                    <span class="desc">packages of types, instructions, constants, rewrites &amp; sugars</span>
+                    <div class="fx-html" hidden><p><strong>instsets</strong> are spaces that encode a domain of
+                        discourse. The docq query processor associates documentation with any obj for auto-generated
+                        human + agent-readable docs.</p></div>
+                </li>
+                <li class="menu-item" data-feature="embed" data-icon="images/icons/storage-icon.svg">
+                    <span class="hotkey-wide">embed</span>
+                    <span class="desc">intra-/inter-space embedding for per-substructure storage optimization</span>
+                    <div class="fx-html" hidden><p><strong>Embed</strong> one edge set in a space optimized for fast
+                        retrieval and another in a space for static long-term storage — each substructure gets the right
+                        time-space tradeoff.</p><img src="images/modal/embed-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="type" data-icon="images/icons/type-icon.svg">
+                    <span class="hotkey-wide">type</span>
+                    <span class="desc">structural type system — inherited, refined, dependent, recursive types</span>
+                    <div class="fx-html" hidden><p>The <strong>structural type system</strong> ensures that if an obj
+                        meets the constraints of a type, it is that type — making distinctions between SQL rows, HTML
+                        tags, graph vertices, and K/V entries differences of name, not function.</p><img
+                            src="images/type-diagram.svg" style="max-height:320px;"></div>
+                </li>
+            </ul>
+            <ul class="menu-items">
+                <li class="menu-item" data-feature="OLTP" data-icon="images/icons/oltp-icon.svg">
+                    <span class="hotkey-wide">OLTP</span>
+                    <span class="desc">monad iterator — speedy traversals over localized space regions</span>
+                    <div class="fx-html" hidden><p><strong>OLTP</strong> (online transactional processing) iterates a
+                        stream of monads through code from first instruction to last for accessing a small region of
+                        space.</p><img src="images/modal/oltp-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="OLRP" data-icon="images/icons/olrp-icon.svg">
+                    <span class="hotkey-wide">OLRP</span>
+                    <span class="desc">monad swarm — async, parallel, distributed traversals over large space</span>
+                    <div class="fx-html" hidden><p><strong>OLRP</strong> (online real-time processing) realizes
+                        computing as a swarm of asynchronous, distributed monads traversing data graphs guided by
+                        instruction graphs.</p><img src="images/modal/olrp-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="OLAP" data-icon="images/icons/olap-icon.svg">
+                    <span class="hotkey-wide">OLAP</span>
+                    <span class="desc">monad vector — stateful bulk synchronous processing at massive scale</span>
+                    <div class="fx-html" hidden><p><strong>OLAP</strong> (online analytical processing) uses a bulk
+                        synchronous machine where parallel stages are demarcated by serializing barriers — the heartbeat
+                        of computation.</p><img src="images/modal/olap-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="web" data-icon="images/icons/web-icon.svg">
+                    <span class="hotkey-wide">web</span>
+                    <span class="desc">multi-protocol web instset — HTTP space, WebSocket, MCP servers</span>
+                    <div class="fx-html" hidden><p><strong>HTTP space</strong> translates GET/PUT to space read/write.
+                        <strong>WebSocket space</strong> offers session-based mtron evaluation, MCP servers, or custom
+                        protocols.</p><img src="images/modal/web-modal.svg" style="height:130px;"></div>
+                </li>
+                <li class="menu-item" data-feature="IoT" data-icon="images/icons/iot-icon.svg">
+                    <span class="hotkey-wide">IoT</span>
+                    <span class="desc">micropython implementation — ESP32, Raspberry Pi as space-aware processors</span>
+                    <div class="fx-html" hidden><p>A <strong>micropython</strong> version enables ESP32, Raspberry Pi,
+                        etc. to maintain sections of the URI address space. MQTT space integrates IoT clusters
+                        naturally.</p><img src="images/modal/iot-modal.svg" style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="LLM" data-icon="images/icons/llm-icon.svg">
+                    <span class="hotkey-wide">LLM</span>
+                    <span class="desc">LLMs as objs — self-reflection, introspection, tools, skills, memory</span>
+                    <div class="fx-html" hidden><p><strong>LLMs</strong> are encoded within, operate within, and are
+                        knowledgeable about metatron spaces. Tools are mtron instructions (MCP servers included). Skills
+                        are markdown objs composable across spaces.</p><img src="images/modal/llm-modal.svg"
+                                                                            style="max-height:240px;"></div>
+                </li>
+                <li class="menu-item" data-feature="console" data-icon="images/icons/console-icon.svg">
+                    <span class="hotkey-wide">console</span>
+                    <span class="desc">terminal REPL + web console — syntax highlighting, AI pair programming</span>
+                    <div class="fx-html" hidden><p>The <strong>console</strong> offers syntax highlighting, step-through
+                        compilation, domain/range type checking, auto-complete, AI pair programming, and a pluggable
+                        framework for extensions.</p><img src="images/dashboard-screenshot.png"
+                                                          style="border:1px solid var(--red-dark);max-height:300px;">
+                    </div>
+                </li>
+                <li class="menu-item" data-feature="thread" data-icon="images/icons/oltp-icon.svg">
+                    <span class="hotkey-wide">thread</span>
+                    <span class="desc">concurrent monad execution with barrier synchronization primitives</span>
+                    <div class="fx-html" hidden><p><strong>Threading</strong> support enables concurrent monad execution
+                        with barrier synchronization — monads can fork, run in parallel, and rejoin at synchronization
+                        points defined by the instruction graph.</p></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="divider-double">&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;</div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         MAIN MENU
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <div class="menu-section">
+        <div class="menu-section-header">&#9670; documentation</div>
+        <ul class="menu-items">
+            <a class="menu-item" href="tractatus.html">
+                <span class="hotkey">[1]</span>
+                <span class="label">the tractatus</span>
+                <span class="desc">Tractatus Algebraicus Metatronicus — language reference &amp; theory</span>
+            </a>
+            <a class="menu-item" href="./instset/m.html">
+                <span class="hotkey">[2]</span>
+                <span class="label">instruction sets</span>
+                <span class="desc">/m /m/tble /m/dcmnt /m/grph /m/web /m/llm /m/iot /m/math /m/mach</span>
+            </a>
+            <a class="menu-item" href="./articles/stream-ring-theory.pdf">
+                <span class="hotkey">[3]</span>
+                <span class="label">articles</span>
+                <span class="desc">stream ring theory &bull; parametric identities in ring theory</span>
+            </a>
+        </ul>
+    </div>
+
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+        <div class="menu-section" style="flex:1;min-width:280px;">
+            <div class="menu-section-header">&#9670; download</div>
+            <ul class="menu-items">
+                <li class="menu-item"><span class="hotkey">[a]</span><span class="cmd">npm i -g metatron-vm</span></li>
+                <li class="menu-item"><span class="hotkey">[b]</span><span class="cmd">docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</span>
+                </li>
+                <li class="menu-item"><span class="hotkey">[c]</span><span class="cmd">git clone https://github.com/phaseshift-studio/metatron.git</span><span
+                        class="cmd-badge">[linux tested]</span></li>
+                <li class="menu-item"><span class="hotkey">[d]</span><span class="cmd">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</span><span
+                        class="cmd-badge">[linux tested]</span></li>
+            </ul>
+        </div>
+        <div class="menu-section" style="flex:1;min-width:200px;">
+            <div class="menu-section-header">&#9670; interact</div>
+            <ul class="menu-items">
+                <a class="menu-item" href="./console/index.html">
+                    <span class="hotkey">[e]</span><span class="label">console</span>
+                    <span class="desc">terminal REPL &bull; syntax highlighting &bull; AI pair programming</span>
+                </a>
+            </ul>
+            <div class="menu-section-header" style="margin-top:0.75rem;">&#9670; guild</div>
+            <ul class="menu-items">
+                <a class="menu-item" href="https://github.com/phaseshift-studio/metatron">
+                    <span class="hotkey">[f]</span><span class="label">github</span>
+                </a>
+                <a class="menu-item" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                    <span class="hotkey">[g]</span><span class="label">mailing list</span>
+                </a>
+                <a class="menu-item" href="https://opencollective.com/metatron">
+                    <span class="hotkey">[h]</span><span class="label">open collective</span>
+                </a>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         TICKER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="ticker">
+        <span class="ticker-label">// news</span>
+        <span class="ticker-text">metatron v0.1-alpha — ring-oriented computing — AGPLv3 — PhaseShift Studio, LLC — 2025-2026</span>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         STATUS BAR
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="status-bar">
+        <div>
+            <span class="online">&#9679; online</span>
+            &nbsp; metatron v0.1-alpha
+        </div>
+        <div>
+            <a href="mailto:info@phaseshift.studio">info@phaseshift.studio</a>
+            &nbsp; &copy; 2025-2026 PhaseShift Studio, LLC &nbsp; AGPLv3
+        </div>
+    </div>
+
+</div><!-- /.terminal -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PAGE SWEEP
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div id="pageSweep" class="page-sweep"></div>
+
+<script>
+    (function () {
+
+        /* ======================================================================
+           ANSI HEADERS — randomly picked on each page load
+           From conf/ansi_headers.txt — 13 styles
+           ====================================================================== */
+
+        // {{color}} → HTML converter
+        function colorTemplate(text) {
+            var map = {
+                'r': '#a30000', 'y': '#edbf73', 'R': '#ff2040', 'Y': '#ffe08a',
+                'g': '#6b8e23', 'b': '#4669dd', 'c': '#0082ae', 'm': '#9f4040',
+                'w': '#c2c2c2'
+            };
+            return text.replace(/\{\{(\w)\}\}/g, function (m, c) {
+                return c === 'X' ? '</span>' : '<span style="color:' + (map[c] || '#c2c2c2') + '">';
+            }).replace(/\n/g, '\n');
+        }
+
+        // Mini ANSI parser for the keyboard header (uses real escape codes)
+        function ansiToHtml(text) {
+            var ansiColors = {
+                '30': '#000', '31': '#a30000', '32': '#4cff4c', '33': '#edbf73',
+                '34': '#4669dd', '35': '#9f4040', '36': '#0082ae', '37': '#c2c2c2',
+                '40': '#000', '41': '#7a2518', '42': '#0a3d0a', '43': '#8a6d3b',
+                '44': '#191C24', '45': '#825181', '46': '#005566', '47': '#e8dcc8'
+            };
+            // The keyboard header doesn't have ESC chars in file — raw codes start with [
+            // We'll handle it as raw ANSI sequences
+            var html = '';
+            var fg = '37', bg = '40', bold = false;
+            var i = 0;
+            while (i < text.length) {
+                if (text[i] === '\x1b' && text[i + 1] === '[') {
+                    var end = text.indexOf('m', i);
+                    if (end === -1) {
+                        i++;
+                        continue;
+                    }
+                    var codes = text.substring(i + 2, end).split(';');
+                    for (var j = 0; j < codes.length; j++) {
+                        var c = codes[j];
+                        if (c === '0') {
+                            fg = '37';
+                            bg = '40';
+                            bold = false;
+                        } else if (c === '1') {
+                            bold = true;
+                        } else if (c >= '30' && c <= '37') {
+                            fg = c;
+                        } else if (c >= '40' && c <= '47') {
+                            bg = c;
+                        }
+                    }
+                    i = end + 1;
+                    continue;
+                }
+                if (text[i] === '\n') {
+                    html += '\n';
+                    i++;
+                    continue;
+                }
+                if (text[i] === '\r') {
+                    i++;
+                    continue;
+                }
+                var ch = text[i] === '&' ? '&amp;' : text[i] === '<' ? '&lt;' : text[i] === '>' ? '&gt;' : text[i];
+                if (ch === ' ') {
+                    html += ' ';
+                } else {
+                    var style = 'color:' + ansiColors[fg] + ';';
+                    if (bg !== '40') style += 'background-color:' + ansiColors[bg] + ';';
+                    if (bold) style += 'font-weight:bold;';
+                    html += '<span style="' + style + '">' + ch + '</span>';
+                }
+                i++;
+            }
+            return html;
+        }
+
+        var HEADERS = [
+            {
+                name: 'doom',
+                html: function () {
+                    return colorTemplate(
+                        '{{r}} ___  ___ _____ _____ ___ ___________ _____ _   _\n' +
+                        '{{r}}|  \\/  ||  ___|_   _/ _ \\_   _| ___ \\  _  | \\ | |\n' +
+                        '{{y}}| .  . || |__   | |/ /_\\ \\| | | |_/ / | | |  \\| |\n' +
+                        '{{R}}| |\\/| ||  __|  | ||  _  || | |    /| | | | . ` |\n' +
+                        '{{r}}| |  | || |___  | || | | |{{Y}}| | | |\\ \\\\ \\_/ / |\\  |\n' +
+                        '{{r}}\\_|  |_/\\____/  \\_/\\_| |_/\\_/ \\_| \\_|\\___/\\_| \\_/\n' +
+                        '{{g}}                                PhaseShift Studio{{X}}'
+                    );
+                }
+            },
+            {
+                name: 'bulbhead',
+                html: function () {
+                    return colorTemplate(
+                        '{{c}} __  __  ____  ____   __   ____  ____  _____  _  _\n' +
+                        '{{y}}(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n' +
+                        '{{g}} )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  (\n' +
+                        '{{c}}(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_){{X}}'
+                    );
+                }
+            },
+            {
+                name: 'cybermedium',
+                html: function () {
+                    return colorTemplate(
+                        '{{b}}_  _ ____ ___ ____ ___ ____ ____ _  _\n' +
+                        '|\\/| |___  |  {{y}}|__|  |  |__/ |  | |\\ |\n' +
+                        '|  | |___  |  |  |  |  |  {{g}}\\ |__| | \\|{{X}}'
+                    );
+                }
+            },
+            {
+                name: 'shadow',
+                html: function () {
+                    return colorTemplate(
+                        '{{b}}  \\  |{{m}} ____|{{c}}__ __|{{y}}  \\ {{c}}__ __|{{m}} _ \\ {{b}}     \\{{r}}  \\   |\n' +
+                        '{{b}} |\\/ |{{m}} __|  {{c}}   |  {{y}} _ \\ {{c}}  |  {{m}}|   |{{b}}  |   |{{r}}     |\n' +
+                        '{{b}} |   |{{m}} |    {{c}}   |  {{y}}___ \\{{c}}  |  {{m}}  __/{{b}}  |   |{{r}}| \\  |\n' +
+                        '{{b}}_|  _|{{m}}_____|{{c}}  _|{{y}}_/    _\\{{c}}_|  {{m}}_| _\\{{b}}\\____/{{r}}_|  \\_|{{X}}'
+                    );
+                }
+            },
+            {
+                name: 'speed',
+                html: function () {
+                    return colorTemplate(
+                        '{{y}}______  ____________________________________________________   __\n' +
+                        '{{y}}___   {{m}}|/  /__  ____/__  __{{y}}/__    |__  __/__  __ \\_  __ \\__  | / /\n' +
+                        '{{y}}__  {{m}}/|_/ /__  __/  __  /  {{y}}__  /| |_  /  __  /_/ /  / / /_   |/ /\n' +
+                        '{{y}}_  {{m}}/  / / _  /___  _  /   {{y}}_  ___ |  /   _  _, _// /_/ /_  /|  /\n' +
+                        '{{m}}/_/  /_/  /_____/  /_/    {{y}}/_/  |_/_/    /_/ |_| \\____/ /_/ |_/{{X}}'
+                    );
+                }
+            },
+            {
+                name: 'keyboard',
+                html: function () {
+                    return ansiToHtml(
+                        '\x1b[37;40m ____ ____ ____ ____ ____ ____ ____ ____ \x1b[0m\n' +
+                        '\x1b[37;40m|\x1b[30;47m|M |\x1b[37;40m|\x1b[30;47m|E |\x1b[37;40m|\x1b[30;47m|T |\x1b[37;40m|\x1b[30;47m|A |\x1b[37;40m|\x1b[30;47m|T |\x1b[37;40m|\x1b[30;47m|R |\x1b[37;40m|\x1b[30;47m|O |\x1b[37;40m|\x1b[30;47m|N |\x1b[37;40m|\x1b[0m\n' +
+                        '\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[30;47m|__|\x1b[37;40m|\x1b[0m\n' +
+                        '\x1b[37;40m|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|/__\\|\x1b[0m\n' +
+                        '\x1b[30;47mP   H A  S E  S H  I F  T S  T U  D I   O\x1b[37;40m\x1b[0m'
+                    );
+                }
+            },
+            {
+                name: 'small',
+                html: function () {
+                    return colorTemplate(
+                        '{{g}} __  __ ___ _____ _ _____ ___  ___  _  _\n' +
+                        '|  \\/  {{y}}| __|_   _/_\\_   _| _ \\/ _ \\| \\| |\n' +
+                        '| |\\/| | _|  | {{b}}|/ _ \\| | |   / (_) | .` |\n' +
+                        '|_|  |_|___| |_/_/ {{m}}\\_\\_| |_|_\\\\___/|_|\\_|{{X}}'
+                    );
+                }
+            },
+            {
+                name: 'epic',
+                html: function () {
+                    return colorTemplate(
+                        '                 {{b}}Pha{{c}}seSh{{g}}ift{{w}} {{y}}St{{g}}udio {{c}}Pre{{b}}sents\n' +
+                        '{{b}} _______ _______________________________________ _______ _\n' +
+                        '{{b}}({{c}}       {{c}}(  ____ \\__   __(  ___  \\__   __(  ____ (  ___  ( (    /{{b}}|\n' +
+                        '{{b}}|{{c}} {{c}}() () | (    \\/  ) (  | (   ) |  ) (  | (    )| (   ) |  \\  ( {{b}}|\n' +
+                        '{{b}}|{{g}} || || | (__      | |  | (___) |  | |  | (____)| |   | |   \\ |{{c}} {{b}}|\n' +
+                        '{{b}}|{{c}} {{y}}|(_)| |  __)     | |  |  ___  |  | |  |     __| |   | | (\\ \\) {{b}}|\n' +
+                        '{{b}}|{{c}} {{g}}|   | | (        | |  | (   ) |  | |  | (\\ (  | |   | | | \\{{c}}   {{b}}|\n' +
+                        '{{b}}|{{c}} {{c}})   ( | (____/\\  | |  | )   ( |  | |  | ) \\ \\_| (___) | )  \\{{y}}  {{b}}|\n' +
+                        '{{b}}|/     \\(_______/  )_(  |/     \\|  )_(  |/   \\__(_______|/    )_){{X}}'
+                    );
+                }
+            },
+            {
+                name: 'squeaky',
+                html: function () {
+                    return colorTemplate(
+                        '                            {{b}}Phase{{m}}Shift {{c}}Studi{{m}}o Pres{{b}}ents\n' +
+                        '{{b}} ___      ___   _______  ___________   __  ___________  _______     ______    _____  ___\n' +
+                        '|"  \\    /"  | /"     "|("     _   ") /""\\("     _   ")/"      \\   /    " \\  (\\"   \\|"  \\\n' +
+                        ' \\   \\  //   |(: ______) )__/  \\\\__/ /    \\)__/  \\\\__/|:        | // ____  \\ |.\\\\   \\    |\n' +
+                        ' /\\\\  \\/.    | \\/    |{{m}}      \\\\_ /   /\' /\\  \\  \\\\_ /   |_____/   )/  /    ) :)|: \\.   \\\\  |\n' +
+                        '|: \\.        | // ___)_     |.  |  //  __\'  \\ |.  |    //      /(: (____/ // |.  \\    \\. |\n' +
+                        '|.  \\    /:  |(:      "|    \\:  | /   / {{c}} \\\\  \\\\:  |   |:  __   \\ \\        /  |    \\    \\ |\n' +
+                        '|___|\\__/|___| \\_______)     \\__|(___/    \\___)\\__|   |__| {{g}} \\___) \\"_____/    \\___|\\____\\){{X}}'
+                    );
+                }
+            },
+            {
+                name: 'slipandfall',
+                html: function () {
+                    return colorTemplate(
+                        '{{y}} _____ ______   _______  _________  ________  _________  ________  ________  ________\n' +
+                        '{{r}}|\\   _ \\  _   \\|\\  ___ \\|\\___   ___\\\\   __  \\|\\___   ___\\\\   __  \\|\\   __  \\|\\   ___  \\\n' +
+                        '{{y}}\\ \\  \\\\\\__\\ \\  \\ \\   __/\\|___ \\  \\_\\ \\  \\|\\  \\|___ \\  \\_\\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\\\ \\  \\\n' +
+                        '{{r}} \\ \\  \\\\|__| \\  \\ \\  \\_|/__  \\ \\  \\ \\ \\   __  \\   \\ \\  \\ \\ \\   _  _\\ \\  \\\\\\  \\ \\  \\\\ \\  \\\n' +
+                        '{{y}}  \\ \\  \\    \\ \\  \\ \\  \\_|\\ \\  \\ \\  \\ \\ \\  \\ \\  \\   \\ \\  \\ \\ \\  \\\\  \\\\ \\  \\\\  \\ \\  \\\\ \\  \\\n' +
+                        '{{r}}   \\ \\__\\    \\ \\__\\ \\_______\\  \\ \\__\\ \\ \\__\\ \\__\\   \\ \\__\\ \\ \\__\\\\ _\\\\ \\_______\\ \\__\\\\ \\__\\\n' +
+                        '{{y}}    \\|__|     \\|__|\\|_______|   \\|__|  \\|__|\\|__|    \\|__|  \\|__|\\|__|\\|_______|\\|__| \\|__|\n' +
+                        '                                                        {{g}}A PhaseShift Studio Production{{X}}'
+                    );
+                }
+            }
+        ];
+
+        // Pick random header on load
+        (function () {
+            var logo = document.getElementById('ansi-logo');
+            if (!logo) return;
+            var h = HEADERS[Math.floor(Math.random() * HEADERS.length)];
+            logo.innerHTML = h.html();
+            // Store name for debugging / optional display
+            logo.setAttribute('data-header', h.name);
+        })();
+
+        /* ======================================================================
+           CLIPBOARD COPY — download commands
+           ====================================================================== */
+
+        document.querySelectorAll('.menu-item .cmd').forEach(function (cmdEl) {
+            var item = cmdEl.closest('.menu-item');
+            if (!item) return;
+            item.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var text = cmdEl.textContent.trim();
+                var hotkey = item.querySelector('.hotkey');
+                var origText = hotkey ? hotkey.textContent : '';
+                navigator.clipboard.writeText(text).then(function () {
+                    flash(item);
+                    if (hotkey) {
+                        hotkey.textContent = 'copied';
+                        hotkey.style.color = '#6b8e23';
+                        setTimeout(function () {
+                            hotkey.textContent = origText;
+                            hotkey.style.color = '';
+                        }, 1200);
+                    }
+                }).catch(function () {
+                    // Fallback for older browsers
+                    var ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    flash(item);
+                    if (hotkey) {
+                        hotkey.textContent = 'copied';
+                        hotkey.style.color = '#6b8e23';
+                        setTimeout(function () {
+                            hotkey.textContent = origText;
+                            hotkey.style.color = '';
+                        }, 1200);
+                    }
+                });
+            });
+        });
+
+        // Enter key on a download item also copies
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && focusedIdx >= 0 && focusedIdx < items.length) {
+                var el = items[focusedIdx];
+                if (el.querySelector('.cmd')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.click();
+                }
+            }
+        }, true); // capture phase to run before the other Enter handler
+
+        /* ======================================================================
+           PRE-EXPAND RANDOM FEATURES — one per column, on load
+           ====================================================================== */
+
+        (function () {
+            var grid = document.getElementById('featureGrid');
+            if (!grid) return;
+            var columns = grid.querySelectorAll(':scope > .menu-items');
+            if (columns.length < 2) return;
+
+            function pickAndExpand(col) {
+                var feats = col.querySelectorAll('.menu-item[data-feature]');
+                if (feats.length === 0) return;
+                var pick = feats[Math.floor(Math.random() * feats.length)];
+                if (pick) pick.click();
+            }
+
+            // Small delay so the page renders first, then expand
+            setTimeout(function () {
+                pickAndExpand(columns[0]);
+                pickAndExpand(columns[1]);
+            }, 400);
+        })();
+
+        /* ======================================================================
+           PAGE SWEEP
+           ====================================================================== */
+
+        var sweep = document.getElementById('pageSweep');
+
+        function triggerSweep(url) {
+            if (!sweep) {
+                window.location.href = url;
+                return;
+            }
+            sweep.classList.add('active');
+            setTimeout(function () {
+                window.location.href = url;
+            }, 220);
+        }
+
+        if (sweep) {
+            sweep.classList.add('active');
+            setTimeout(function () {
+                sweep.classList.add('exit');
+                setTimeout(function () {
+                    sweep.classList.remove('active', 'exit');
+                }, 300);
+            }, 60);
+        }
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('a');
+            if (!link) return;
+            var href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('http')) return;
+            var pages = ['index.html', 'tractatus.html', 'index-retro.html'];
+            var cur = window.location.pathname.split('/').pop() || 'index.html';
+            var tgt = href.split('/').pop().split('#')[0] || 'index.html';
+            if (pages.indexOf(tgt) >= 0 && tgt !== cur) {
+                e.preventDefault();
+                triggerSweep(href);
+            }
+        });
+
+        /* ======================================================================
+           INLINE FEATURE EXPANSION
+           ====================================================================== */
+
+        document.querySelectorAll('.menu-item[data-feature]').forEach(function (el) {
+            el.addEventListener('click', function (e) {
+                e.stopPropagation();
+
+                // Find expand that belongs to THIS item (immediately after it)
+                var myExpand = el.nextElementSibling;
+                var isMine = myExpand && myExpand.classList.contains('feature-expand');
+
+                // If my expand is already open, toggle it closed
+                if (isMine && myExpand.classList.contains('open')) {
+                    myExpand.classList.remove('open');
+                    return;
+                }
+
+                // Close all other expands in the same list
+                var list = el.parentNode;
+                list.querySelectorAll('.feature-expand.open').forEach(function (ex) {
+                    ex.classList.remove('open');
+                });
+
+                // If I already have an expand div, just open it
+                if (isMine) {
+                    myExpand.classList.add('open');
+                    setTimeout(function () {
+                        var rect = myExpand.getBoundingClientRect();
+                        if (rect.bottom > window.innerHeight - 20) {
+                            myExpand.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        }
+                    }, 50);
+                    return;
+                }
+
+                // Create new expand div
+                var htmlEl = el.querySelector('.fx-html');
+                if (!htmlEl) return;
+                var expand = document.createElement('div');
+                expand.className = 'feature-expand open';
+                expand.innerHTML = htmlEl.innerHTML;
+                el.after(expand);
+                // Scroll into view after DOM settles
+                setTimeout(function () {
+                    var rect = expand.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight - 20) {
+                        expand.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                }, 50);
+            });
+        });
+
+        /* ======================================================================
+           KEYBOARD + ARROW NAVIGATION
+           ====================================================================== */
+
+        // Track focusable menu items
+        var allItems = document.querySelectorAll('.menu-item');
+        var items = [];
+        allItems.forEach(function (el, i) {
+            el.setAttribute('tabindex', '-1');
+            el.setAttribute('data-idx', i);
+            items.push(el);
+        });
+
+        var focusedIdx = -1;
+
+        function focusItem(idx) {
+            if (idx < 0 || idx >= items.length) return;
+            // Un-focus previous
+            if (focusedIdx >= 0 && focusedIdx < items.length) {
+                items[focusedIdx].style.outline = '';
+                items[focusedIdx].style.background = '';
+            }
+            focusedIdx = idx;
+            var el = items[idx];
+            el.style.outline = '1px solid var(--amber)';
+            el.style.outlineOffset = '-1px';
+            el.style.background = 'rgba(122,37,24,0.25)';
+            // Scroll into view smoothly only on arrow nav, not click
+            var rect = el.getBoundingClientRect();
+            if (rect.bottom > window.innerHeight - 40) {
+                el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            } else if (rect.top < 80) {
+                el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }
+        }
+
+        function activateFocused() {
+            if (focusedIdx < 0 || focusedIdx >= items.length) return;
+            var el = items[focusedIdx];
+            flash(el);
+            if (el.tagName === 'A') {
+                var href = el.getAttribute('href');
+                if (href && href.startsWith('http')) {
+                    window.open(href, '_blank');
+                } else if (el.click) {
+                    el.click();
+                }
+            } else {
+                el.click();
+            }
+        }
+
+        // Flash an element briefly
+        function flash(el) {
+            if (!el) return;
+            el.style.transition = 'none';
+            el.style.background = 'rgba(122,37,24,0.5)';
+            setTimeout(function () {
+                el.style.transition = 'background 0.4s ease-out';
+                el.style.background = '';
+            }, 80);
+        }
+
+        // Close any open feature expansions
+        function closeAllExpands() {
+            document.querySelectorAll('.feature-expand.open').forEach(function (ex) {
+                ex.classList.remove('open');
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            var key = e.key;
+
+            // ── Arrow keys ──────────────────────────────────────────
+            if (key === 'ArrowDown' || key === 'ArrowUp') {
+                e.preventDefault();
+                var dir = key === 'ArrowDown' ? 1 : -1;
+                var next = focusedIdx + dir;
+                if (next < 0) next = items.length - 1;
+                if (next >= items.length) next = 0;
+                var attempts = 0;
+                while (attempts < items.length) {
+                    var el = items[next];
+                    if (el.offsetParent !== null && !el.classList.contains('spacer')) break;
+                    next += dir;
+                    if (next < 0) next = items.length - 1;
+                    if (next >= items.length) next = 0;
+                    attempts++;
+                }
+                focusItem(next);
+                return;
+            }
+
+            // ── Left/Right arrows: jump between feature grid columns ─
+            if (key === 'ArrowRight' || key === 'ArrowLeft') {
+                e.preventDefault();
+                if (focusedIdx < 0) return;
+                var current = items[focusedIdx];
+                if (!current.hasAttribute('data-feature')) return; // only in feature grid
+                // Find position within the feature grid
+                var allFeatures = document.querySelectorAll('.menu-item[data-feature]');
+                var featureIdx = -1;
+                for (var fi = 0; fi < allFeatures.length; fi++) {
+                    if (allFeatures[fi] === current) {
+                        featureIdx = fi;
+                        break;
+                    }
+                }
+                if (featureIdx < 0) return;
+                var colSize = Math.ceil(allFeatures.length / 2); // items per column
+                var col = featureIdx < colSize ? 0 : 1;
+                var row = col === 0 ? featureIdx : featureIdx - colSize;
+                var targetCol = key === 'ArrowRight' ? 1 : 0;
+                if (targetCol === col) return; // already in that column
+                var targetIdx = targetCol === 0 ? row : row + colSize;
+                if (targetIdx >= 0 && targetIdx < allFeatures.length) {
+                    for (var fj = 0; fj < items.length; fj++) {
+                        if (items[fj] === allFeatures[targetIdx]) {
+                            focusItem(fj);
+                            break;
+                        }
+                    }
+                }
+                return;
+            }
+
+            if (key === 'Enter') {
+                e.preventDefault();
+                if (focusedIdx >= 0) {
+                    activateFocused();
+                }
+                return;
+            }
+
+            // ── Escape: close all feature expansions ────────────────
+            if (key === 'Escape') {
+                closeAllExpands();
+                // Also un-focus
+                if (focusedIdx >= 0) {
+                    items[focusedIdx].style.outline = '';
+                    items[focusedIdx].style.background = '';
+                    focusedIdx = -1;
+                }
+                return;
+            }
+
+            // ── Hotkey map: [1-3] docs, [4] console, [5-7] guild ────
+            var keyLower = key.toLowerCase();
+            var keyMap = {
+                '1': 'a[href="tractatus.html"]',
+                '2': 'a[href="./instset/m.html"]',
+                '3': 'a[href="./articles/stream-ring-theory.pdf"]',
+                '4': 'a[href="./console/index.html"]',
+                '5': 'a[href="https://github.com/phaseshift-studio/metatron"]',
+                '6': 'a[href="https://groups.google.com/u/1/g/metatron-phaseshift"]',
+                '7': 'a[href="https://opencollective.com/metatron"]'
+            };
+
+            // ── Feature shortcuts: type first letter of feature name ─
+            var featureKeyMap = {
+                'm': 'mtron', 'f': 'fURI', 's': 'space', 'r': 'ring',
+                'n': 'monad', 'i': 'instset', 'e': 'embed', 't': 'type',
+                'o': 'OLTP', 'l': 'OLRP', 'p': 'OLAP',
+                'w': 'web', 'c': 'IoT', 'h': 'LLM'
+            };
+
+            if (featureKeyMap[keyLower]) {
+                var featureName = featureKeyMap[keyLower];
+                var featureEl = document.querySelector('.menu-item[data-feature="' + featureName + '"]');
+                if (featureEl) {
+                    closeAllExpands();
+                    flash(featureEl);
+                    featureEl.click();
+                    return;
+                }
+            }
+
+            if (keyMap[keyLower]) {
+                var link = document.querySelector(keyMap[keyLower]);
+                if (link) {
+                    flash(link);
+                    if (link.getAttribute('href').startsWith('http')) {
+                        window.open(link.getAttribute('href'), '_blank');
+                    } else {
+                        link.click();
+                    }
+                }
+                return;
+            }
+        });
+
+        // Click on a menu item also sets arrow-key focus
+        document.addEventListener('click', function (e) {
+            var item = e.target.closest('.menu-item');
+            if (item) {
+                var idx = parseInt(item.getAttribute('data-idx'));
+                if (!isNaN(idx)) focusItem(idx);
+            }
+        });
+
+        // ── Persistent keyboard legend ─────────────────────────────
+        (function () {
+            var hintEl = document.createElement('div');
+            hintEl.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:9990;'
+                + 'background:rgba(0,0,0,0.92);border:1px solid var(--red-dark);'
+                + 'padding:0.45rem 0.7rem;font-family:var(--font);font-size:0.52rem;'
+                + 'color:var(--dim);max-width:320px;line-height:1.45;pointer-events:none;'
+                + 'opacity:0;transition:opacity 0.6s;';
+            hintEl.innerHTML = '&#8593;&#8595; navigate &nbsp; &#8592;&#8594; jump columns &nbsp; &#8629; select &nbsp; esc close<br>'
+                + '[1-3] docs &nbsp; [4] console &nbsp; [5-7] guild &nbsp; [a-z] features';
+            document.body.appendChild(hintEl);
+
+            var hideTimer = null;
+
+            function showLegend() {
+                hintEl.style.opacity = '1';
+                clearTimeout(hideTimer);
+                // Auto-hide after 30s of no keyboard activity
+                hideTimer = setTimeout(function () {
+                    hintEl.style.opacity = '0';
+                }, 30000);
+            }
+
+            function hideLegend() {
+                hintEl.style.opacity = '0';
+            }
+
+            document.addEventListener('keydown', showLegend);
+            // Hide on mouse click (user switched to mouse)
+            document.addEventListener('click', function () {
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(hideLegend, 2000);
+            });
+        })();
+
+    })();
+</script>
+
+</body>
+</html>

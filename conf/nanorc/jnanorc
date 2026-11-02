@@ -1,0 +1,16 @@
+# metatron's own syntaxes first: jline resolves a syntax name by EXACT equality
+# and stops at the first file that declares it, so a system nanorc listed ahead
+# of these would win for a name both sides declare (python, yaml) — and the same
+# token would then highlight differently on a host that ships /usr/share/nano
+# and one that does not.  The directory is optional; a missing glob is ignored.
+include mtron.nanorc
+include java.nanorc
+include json.nanorc
+include javascript.nanorc
+include sql.nanorc
+include yaml.nanorc
+include python.nanorc
+include html.nanorc
+include xml.nanorc
+include markdown.nanorc
+include /usr/share/nano/*.nanorc

@@ -1,0 +1,632 @@
+[discrete]
+== Uniform Resource Identifiers
+
+[source,mtron]
+----
+file://domain.local:22/usr/data/abc{*}?sub
+  │    └──────────┘ │  └──────────┘ │  └────⮞ q(uery)
+  │          │      │        │      └───────⮞ c(oefficient)   
+  │          │      │        └──────────────⮞ path
+  │          │      └───────────────────────⮞ port
+  │          └──────────────────────────────⮞ host
+  └─────────────────────────────────────────⮞ scheme
+----
+
+[cols="7a,5a",separator=🧱,role=noborder]
+|===
+🧱
+
+metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various peculiarities between.
+
+metatron's `uri` addressing scheme makes it possible to encode arbitrary data structures into a metatron-specific construct called "space". In space, `uris` are coupled together with `objs`, where the `uri` component is called the https://en.wikipedia.org/wiki/Reference[__reference__], the `obj` component __the referent__, and the act of retrieving an `obj` by its associated `uri` is called https://en.wikipedia.org/wiki/Pointer_(computer_programming)[__dereferencing__] (or resolving). The primitive instructions enabling referencing and dereferencing are the `from` and `to` instructions which have the signatures
+
+[source,mtron]
+----
+from?B{*}<=A{?}(?uri::T)
+to?A{?}<=A{?}(?uri::T)
+----
+
+and example usages
+
+[source,mtron]
+----
+1.to(a) [-- write 1 to a  --]
+from(a) [-- read 1 from a --]
+----
+
+These two reference-oriented instructions have sugar forms:
+
+[source,mtron]
+----
+a -> 1  [-- write 1 to a --]
+*a      [-- read 1 from a --]
+----
+
+From `to` and `from` more complex spatial read/write patterns are realized such as `select` and `update` (discussed elsewhere in the Tractatus).
+
+[source,mtron]
+----
+               ┌─────── a/b       
+ ┌─────────────┼────────────── b       
+ │     ┌───────┼─────────── a/b/c      
+ │     │   ┌───┼─── http://localhost:8080                
+ │   ┌─▼┐  │  ┌▼┐                           
+┌▼─┐ │  │  │  └─┘                           
+│  │ └──┘┌─▼┐    ┌──┐                       
+└──┘  ┌─┐└──┘ ┌─┐│  ◄──────── a.local         
+ ┌────►─┘     └▲┘└──┘                       
+ │ ┌─┐ ┌─◄┐┌──┐│    ┌◄─────── xyz        
+ │ └▲┘ └─┘││  ││    └┘                      
+ │  │ ┌──┐│└─▲┘└─────── mtron:ab            
+ │  │ │  ││  └───────────── z        
+ │  │ └─▲┘└────────────────── /a/b        
+ │  │   └────────────── xx:host.com/abc        
+ │  └───────────────────────── yy       
+ └────────────────────── xx     
+----
+
+|===
+
+Any `obj` can be referenced by a `uri` -- from simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc.
+Poly objs provide another layer of addressing in that once a poly obj has a `uri` reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
+This inter/intra-poly sub-reference resolution is called a __cascading resolution__.
+
+[cols="7a,7a",separator=🧱]
+|===
+
+
+.^🧱
+The **router** is the __space resolver__ responsible for identifying the space containing the referenced obj data.
+
+The **space** is the __obj resolver__ responsible for identifying the `obj` containing the referenced data.
+
+The **obj** is the __data resolver__ responsible for identifying the data being referenced.
+
+When the `uri` references beyond the boundaries of the `obj` (polys), the extended address resolution is handled through inter-
+and intra-poly traversals called cascades.
+
+a🧱
+
+[source,mtron]
+----
+                                                    
+         ┌──space────────────────────────┐         
+         │                       ┌─obj─┐ │         
+         │                       │ ▲──┐│ │         
+         │       ┌──space idx───►│    ││ │         
+         │       │               │ ▲  ││ │         
+         │       │               └─┼──┼┘ │         
+         │       │                 │  │c │         
+         │       │                 │  │a │         
+         │       │        ┌obj──┐  │  │s │         
+         │       │        │   ──┼──┘  │c │         
+router ──┼space idx───────►─┐  ▲│     │a │         
+         │       │        │ ▼ ─┘◄───┐ │d │         
+         │       │        └─────┘   │ │i │         
+         │       │                  │ │n │         
+         │       │                  │ │g │         
+         │       │               ┌──┼─┼┐ │         
+         │       │               │  │ ││ │         
+         │       └──space idx───►│    ▼│ │         
+         │                       │     │ │         
+         │                       └─obj─┘ │         
+         └───────────────────────────────┘         
+----
+
+🧱
+[source,mtron]
+----   
+g     -> 'ping'◄───────────┐
+a/b/c -> [x,[y=>[z=>2,zz=>!*g]]]
+         ▲▲ ▲   ▲   ▲      ▲
+         ││ │   │   │      └─ a/b/c/y/zz    <6>  
+         ││ │   │   └──────── a/b/c/y/z     <5>
+         ││ │   └──────────── a/b/c/1/y     <4>
+         ││ └──────────────── a/b/c/1       <3>
+         │└────────────────── a/b/c/0       <2>
+         └─────────────────── a/b/c         <1>
+----
+
+[mtron]
+----
+g     -> 'ping'                  [-- <1> --]          
+a/b/c -> [x,[y=>[z=>2,zz=>!*g]]] [-- <2> --]  
+*a/b/c                           [-- <3> --]
+*a/b/c/0                         [-- <4> --]
+*a/b/c/1                         [-- <5> --]
+*a/b/c/1/y                       [-- <6> --]
+*a/b/c/1/y/z                     [-- <7> --]
+*a/b/c/1/y/zz                    [-- <8> --]
+----
+
+🧱
+<1> the uri `g` references the `str` "ping".
+<2> the uri `a/b/c` references a nested `poly`.
+<3> the uri `a/b` references a space containing a `lst` poly at `a/b/c`.
+<4> the resolution of the uri `a/b/c/0` cascades into an intra-`lst` `uri` mono.
+<5> the uri resolution of `a/b/c/1` cascades into an intra-`rec` poly.
+<6> the uri resolution of `a/b/c/1/y` cascades into another nested, intra-`rec` poly.
+<7> the cascading resolution of the uri `a/b/c/1/y/z` reaches a doubly nested intra-`int` mono.
+<8> the uri `a/b/c/1/y/zz` cascade breaks the poly boundary yielding an inter-`obj` resolution.
+|===
+
+[discrete]
+=== Spatial Embeddings
+
+[discrete]
+==== The Uri Reference Ring
+
+When a nested poly structure is written to space an ambiguity emerges.
+This ambiguity touches at the heart of ring theory -- the relationship between latexmath:[+] and latexmath:[*] -- and provides just enough "sleight of hand wiggle room" for useful consequences to emerge in distributed computing.
+
+[discrete]
+===== Referential Distributivity
+
+This section aims to demonstrate that the two data structures in the table below are referentially equivalent.
+
+[cols="8a,8a",frame="all"]
+|===
+|
+[cols="5a,5a",option="header",frame="all",grid="cols"]
+!===
+^!
+**form A**
+^!
+**form B**
+!
+[source,mtron]
+----
+[a=>[b=>1,c=>2]] 
+----
+!
+[source,mtron]
+----
+{[a=>[b=>1]],
+ [a=>[c=>2]]}
+----
+!
+[source,mtron]
+----
+  ┌──b──⮞1
+a─┤
+  └──c──⮞2
+----
+!
+[source,mtron]
+----
+a──b──⮞1
+
+a──c──⮞2  
+----
+!===
+<1> the uri ring defines multiplication as "extension", where latexmath:[x \cdot y] is `x/y`.
+<2> the uri ring defines addition as "branching", where latexmath:[x + y] is `{x,y}`.
+
+The characteristic marks of latexmath:[\ast] are `.`,`\=>`,`\<=`. +
+The characteristic marks of latexmath:[+] are `,`, `-<`,`>-`.
+|
+The two examples are __referentially equivalent__ because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are iso-referential structures within the category of the obj ring. The form **A** is captured by the equation:
+
+\[
+a \cdot (b + c) = \{1,2\}
+\]
+
+Form **B** has the equation:
+
+\[
+(a \cdot b) + (a \cdot c) = \{1,2\}
+\]
+
+Thus, due to the latexmath:[\small{+/*}]-coupling axiom of ring theory which states that multiplication distributes over addition, the two equations, while __typographically__ different, are, in fact, algebraically equivalent. Thus, the two structures, while __structurally__ different, are referentially equivalent.
+
+\[
+\begin{align}
+a \cdot (b + c)  &= (a \cdot b) + (a \cdot c)         \\
+a (b + c)        &= ab + ac \\
+\end{align}
+\]
+
+|===
+
+[cols="5a,5a",separator=🧱,frame=all]
+|===
+.^🧱
+If the implication of these equalities is not readily apparent, then understand the following. The multiplicative union of uris to an obj is a **dependent relationship**. There exists a colocational requirement that `a` couples `b` and `c` into a single structure.
+
+
+
+[source,mtron]
+----
+  ┌──b──⮞1
+a─┤
+  └──c──⮞2
+----
+
+🧱
+
+
+On the other hand, the additive union of the uris is an **independent relationship**. There are two representations of `a` and thus, `a/b \=> 1` is distinct, requiring no colocation with `a/c \=> 2`. This means that `a/b` can be stored in a document database in Japan and `a/c` can be stored in a `.txt` file on some file system in Ohio and when resolved, the same `{1,2}` result is returned upon query (albeit with different space/time characteristics compared to the multiplicative, colocated representation of the data).
+
+[source,mtron]
+----
+a──b──⮞1
+
+a──c──⮞2  
+----
+
+.^🧱
+[mtron]
+----
+x0 -> [a=>[b=>1,c=>2]]
+x1 -> {[a=>[b=>1]],[a=>[c=>2]]}
+----
+
+🧱
+
+[mtron]
+----
+[x0,x1]>-.-<[*(* /a/b)]
+[x0,x1]>-.-<[*(* /a/c)]
+[x0,x1]>-.-<[*(* /a/+)]
+[x0,x1]>-.-<[*(* /+/+)]
+[x0,x1]>-.-<[*(* /+/b)]
+[x0,x1]>-.-<[*(* /+/c)]
+----
+
+|===
+
+[discrete]
+===== Referential Factoring
+
+If references form a ring, then references can be __factored__.
+Sub-uri decompositions maintain referential integrity.
+Assume that the additive branches of the running example thus far now end with a `d` entry.
+It stands that the following equalities hold.
+
+[source,mtron]
+----
+a──b──d──⮞1          ┌──b──d──⮞1          ┌──b──┐                  a──b──┐ 
+               =   a─┤              =   a─┤      ├─d──⮞{1,2}   =          ├─d──⮞{1,2}
+a──c──d──⮞2          └──c──d──⮞2          └──c──┘                  a──c──┘ 
+----
+
+The symbolic notation below reiterates what is stated diagrammatically above.
+
+[cols="2a,4",separator=🧱]
+|===
+
+.^🧱
+\[
+\begin{align}
+\;         & (a \cdot b \cdot d) & + \;\; & (a \cdot c \cdot d)                &=& \; \{1,2\} \\
+a \cdot \; & ( (b \cdot d)       & + \;\; & (c \cdot d) )                      &=& \; \{1,2\} \\
+a \cdot \; & ( b                 & + \;\; & c )                   \cdot \; d   &=& \; \{1,2\} \\
+( & (a \cdot b)                    & + \;\; & (a \cdot c))       \cdot \; d   &=&  \; \{1,2\}
+\end{align}
+\]
+
+a🧱
+
+.rings of rings
+[.card]
+--
+Why the unordered set latexmath:[\{1,2\}] and not latexmath:[1+2=3]?
+
+\[
+\begin{align}
++\_\text{uri}: (\text{uri} \times \text{uri}) \rightarrow \text{uri} \\
+\cdot_\text{uri}:(\text{uri} \times \text{uri}) \rightarrow \text{uri}
+\end{align}
+\]
+
+is not
+
+\[
+\begin{align}
++\_\text{int}: (\text{int} \times \text{int}) \rightarrow \text{uri} \\
+\cdot_\text{int}:(\text{int} \times \text{int}) \rightarrow \text{uri}.
+\end{align}
+\]
+
+These are two different + and * operators (binary functions). The + and * operators that unify the uri ring and the int ring is + and * of the obj ring. In the obj ring, 1 + 2 = {1,2}  and 1 * 2 = (1 \=> 2).
+--
+
+|===
+
+Finally, the programmatic expression below captures the equivalent aforementioned representations.
+
+[mtron]
+----
+x0 -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}
+x1 -> [a=>[b=>[d=>1],c=>[d=>2]]]
+x2 -> [a=>[b=>!*d,[c=>!*d]]];d->{1,2};
+x3 -> {[a=>[b=>!*d]],[a=>[c=>!*d]]};d->{1,2}
+----
+
+[mtron]
+----
+[x0,x1]>-.-<[*(* /a/b/d)]
+[x0,x1]>-.-<[*(* /a/b/+)]
+[x0,x1]>-.-<[*(* /a/+/+)]
+[x0,x1]>-.-<[*(* /+/+/+)]
+[x0,x1]>-.-<[*(* /+/+/d)]
+[x0,x1]>-.-<[*(* /+/c/d)]
+[x0,x1]>-.-<[*(* /+/c/+)]
+[x0,x1]>-.-<[*(* /a/+/d)]
+----
+
+A subsequent, practical entailment states that all ring-based addressing schemes can be transformed from a **concatenative/multiplicative** form to a **union/additive** form so as to maintain one subset of the data in a specialized space optimized for its production requirements and the other subset can be contained in another space specialized accordingly to its requirements.
+For example, some data can be "hot in cache" in order to satisfy demand, while some other data can be "archivally iced" when the production usage doesn't require a rapid response time and production costs can be reduced with cheaper disk storage.
+The fundamental mathematics and the subsequent algorithmic embodiment in metatron enables the symbolic manipulation of referentially consistent structural partitions. **Ring-theoretic references** make this possible.
+
+[discrete]
+===== The Type-Level Ring: `[]` and `{}`
+
+The reference ring is usually stated over *values* — `[a=>{b,c}]` against its `{...}`-branched form — but the same
+two operators are the components of the *type* itself, carried in the `uri`/`tid`:
+
+* `[]` — the list — is `·` (extension). A list *extends* by position: `lst[{2}str]` is two `str` slots addressed
+  as `…/0`, `…/1`, which is exactly latexmath:[x \cdot y = x/y].
+* `{}` — the stream — is `+` (branching). A stream *branches*: `str{3}` is three `str`s, which is exactly
+  latexmath:[x + y = \{x,y\}].
+
+A type such as `lst[{2}str{3}]::T{2}` is therefore a *term* in the uri ring:
+
+[source,mtron]
+----
+lst[{2}str{3}]::T{2}   ≡   ((str+str+str) · (str+str+str))  +  ((str+str+str) · (str+str+str))
+----
+
+where `·` gives the _rank_ (how many slots extend) and `+` gives the _extent_ (how many branches), alternating
+through the nesting. The value `[{'a','b','c'},{'d','e','f'}]` is an instance of that term and obeys the same laws:
+the outer `[]` extends (rank), the inner `{}` branches (extent). `{}` never nests because addition flattens —
+latexmath:[a+(b+c) = a+b+c] — while `[]` nests because multiplication extends. Hence the single invariant: no
+`{{ }}` — a stream binds to a list slot, never to another stream.
+
+The point is that `[]` and `{}` are not merely *nominal* markers on a type: they are the value-level `·` and `+`
+lifted to the type level. A type and its instances obey the *identical* algebra, so distributivity
+latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c] holds for both.
+
+[discrete]
+==== Isomorphic != Identical
+
+A _matrix_ is an latexmath:[n \times m] data structure composed of latexmath:[n] vectors/row, each with latexmath:[m] elements/columns.
+A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining iso-referential with respect to the structural ring algebra.
+
+[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols,role="center"]
+|===
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+ \    |   |    /
+ [■] [■] [■] [■]
+
+-[■] [■] [■] [■]-
+
+ [■] [■] [■] [■]
+ /    |   |    \
+
+----
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+​
+[■]-[■]-[■]-[■]
+
+[■]-[■]-[■]-[■]
+
+[■]-[■]-[■]-[■]
+​
+----
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+​
+[■]-[■]-[■]-[■]
+ |   |   |   |
+[■]-[■]-[■]-[■]
+ |   |   |   |
+[■]-[■]-[■]-[■]
+​
+----
+
+a🧱
+
+[mtron]
+----
+m/0/0 -> 0
+m/0/1 -> 1
+m/0/2 -> 2
+m/0/3 -> 3
+m/1/0 -> 4
+m/1/1 -> 5
+m/1/2 -> 6
+m/1/3 -> 7
+m/2/0 -> 8
+m/2/1 -> 9
+m/2/2 -> 10
+m/2/3 -> 11
+*m/0/0       [-- <1> --]
+*m/0/+       [-- <2> --]
+*m/+/0       [-- <3> --]
+----
+
+a🧱
+
+[mtron]
+----
+m/0 -> [0,1,2,3]
+m/1 -> [4,5,6,7]
+m/2 -> [8,9,10,11]
+
+*m/0/0       [-- <1> --]
+*m/0/+       [-- <2> --]
+*m/+/0       [-- <3> --]
+----
+
+a🧱
+
+[mtron]
+----
+m -> [[0,1,2,3],  /
+      [4,5,6,7],  /
+      [8,9,10,11]]
+
+*m/0/0       [-- <1> --]
+*m/0/+       [-- <2> --]
+*m/+/0       [-- <3> --]
+----
+
+|===
+
+<1> Retrieve the first element of matrix `m`.
+<2> Retrieve the first row of matrix `m`.
+<3> Retrieve the first column of matrix `m`.
+
+The above example demonstrates what is possible with referentially consistent structural embeddings.
+The platonic matrix latexmath:[m] was embedded in a space using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
+Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
+The expression used to read from each of the three embeddings is the same (typographically verbatim) and so is the result (algebraically isomorphic).
+
+Why does the same read return the same result from all three embeddings? Because each embedding is a different
+_factorization_ of the same ring term. In the uri ring, `·` is extension and `+` is branching, with distributivity
+latexmath:[a \cdot (b+c) = a \cdot b + a \cdot c]:
+
+* _entry-wise_ is the fully branched form — every element is a separate `+` leaf: latexmath:[m/0/0 + m/0/1 + \ldots].
+* _row-wise_ factors the row `·` out of each row's `+`: latexmath:[m/0 \cdot (0+1+2+3)].
+* _row-column-wise_ factors the whole matrix into one `·` tree:
+  latexmath:[m \cdot (\,(0 \cdot 1 \cdot 2 \cdot 3) + (4 \cdot 5 \cdot 6 \cdot 7) + \ldots\,)].
+
+Distributivity moves `·` past `+` (or vice versa), so the three embeddings are the *same term* rearranged — hence
+`*m/0/+` (a row) or `*m/+/0` (a column) resolves to the same value in all three. The time/space tables differ only
+because each factorization chooses a different *physical* layout; the *logical* term — and so every reference into
+it — is unchanged.
+
+.Amortized Costs in Terms of Time
+[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
+|===
+| [.red]#embedding#              | [.red]#single-element#| [.red]#row-access#  | [.red]#column-access#
+| [.red]#entry#          | \[O(1)\]       | \[O(n)\]    | \[O(m)\]
+| [.red]#row#            | \[O(m)\]       | \[O(1)\]    | \[O(m)\]
+| [.red]#row_column#     | \[O(1)\]       | \[O(1)\]    | \[O(1)\]
+|===
+
+The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective `uri`.
+
+.Amortized Costs in Terms of Space
+[.center]
+[%header,width=50%,cols="l1,c1,c1,c1",role="small center"]
+|===
+| [.red]#embedding#              | [.red]#single-element# | [.red]#row-access#    | [.red]#column-access#
+| [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
+| [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
+| [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
+|===
+
+[discrete]
+=== The Algebraic Structure of Data
+
+The examples thus far using algebra to construct and deconstruct data structures have been relatively basic.
+It's important to note that such equalities are recursive, and to demonstrate the point, a more complicated factorization will be presented.
+
+In mathematics, addition is denoted with a latexmath:[+] as in latexmath:[a + b].
+In code, addition is represented with a `,`.
+A `,` separates two independent `objs` as in `[a,b]`.
+For multiplication, mathematical notation uses latexmath:[a \cdot b] or latexmath:[a \ast b] or simply character incidence as in latexmath:[ab].
+In code, `.` denotes multiplication.
+For instance, `a.b`.
+Given this rule, the following metatron `rec`
+
+[mtron]
+----
+x0 -> [a=>[b=>[c=>1,d=>2],          /
+           e=>[c=>3,d=>4,f=>5]],    /
+       g=>[b=>[c=>6]]]
+----
+
+...
+++++
+<!--
+
+
+can be systematically and unambiguously transformed into the equation:
+
+\[
+\begin{align}
+    a(b(c \cdot 1) + (d \cdot 2)) + (e( (c \cdot 3)  + (d \cdot 4) +  (f \cdot 5) )) +  (g(b(c \cdot 6))) \\
+(a+e+g)(b(c\cdot 1) + b(c\cdot 3) + b(c \cdot 6)) + (a+e)(d\cdot 2 + d \cdot 4) \\
+(a+e+g)(b(c(1+3))) + (a+e)(d(2 + 4))
+\end{align}
+\]
+
+Common left side variables amongst summed components can be factored to the left. Likewise, right side variable can be factored to the right. From the inverse of distributivity, the `rec` can be written:
+
+[mtron]
+----
+x1 -> [a/b => [c=>1,d=>2], /
+       a/e/c => 3,         /
+       a/e/d => 4,         /
+       a/e/f => 5,         /
+       g/b => [c=>6]]
+x2 -> [a/b/c => 1,         /
+       a/b/d => 2,         /
+       a/e/c => 3,         /
+       a/e/d => 4,         /
+       a/e/f => 5,         /
+       g/b/c => 6]       
+----
+
+[mtron]
+----
+[x0,x1,x2]>-.-<[*(* a/b/c)]
+[x0,x1,x2]>-.-<[*(* a/b/+)]
+[x0,x1,x2]>-.-<[*(* a/+/+)]
+[x0,x1,x2]>-.-<[*(* +/b/+)]
+[x0,x1,x2]>-.-<[*(* +/b/c)]
+[x0,x1,x2]>-.-<[*(* a/+/c)]
+[x0,x1,x2]>-.-<[*(* +/+/c)]
+[x0,x1,x2]>-.-<[*(* g/+/+)]
+----
+-->
+++++
+
+[discrete]
+=== Navigating the Reference Structure
+
+Metatron is address-first: `a` answers the *address*, `*a` answers the *value*.
+The uri is the reference; the obj is the referent — and the same operator walks either side of the reference.
+The address space is first-class, obj-free navigation; the referent is what you fetch when you choose.
+
+[mtron]
+----
+n/m/r -> 1                        [-- seed a leaf --]
+n/m/r/s -> 2                      [-- seed a deeper leaf --]
+*n/m                              [-- <1> --]
+n/m >> r                          [-- <2> --]
+n/m/r <<                          [-- <3> --]
+n/m/r/s << r/s                    [-- <4> --]
+n/m/r >> 0                        [-- <5> --]
+----
+
+<1> the **branch**: the child uris of `n/m`, each with its subtree.
+<2> the **walk**: descend to the child `r` through the address tree.
+<3> **retract** one level: the parent uri.
+<4> **retract** a matching postfix.
+<5> descend zero — the uri itself (the identity).
+
+`>>` on a **poly** selects a branch — keyed on a `rec`, indexed on a `lst` (the referent walk). `>>` on a **uri** extends — descends the address tree (the reference walk, nothing resolves). `<<` is pure uri arithmetic — the uri carries its own parent in its segments, never an obj parent link.
+The `@` anchor collapses the bridge: `5@a` is the value *with* its address, so writes flow back (pass-by-value@reference).
+
+Navigation never invents an address: `uri >> <path>` returns the child only if it *exists* (it resolves through the space); otherwise `noobj`.
+Walking the reference is safe because the reference is real — a made-up path is not an address, it is a lie.
+See `docs/design/ring-uri.md` for the full theory.

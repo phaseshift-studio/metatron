@@ -1,0 +1,87 @@
+% distributed-patterns.tex — the menu (A–S) as a taxonomy tree.
+% Rendered with the tikz MCP server (compile_tikz), which wraps this body in a
+% standalone document and writes the PNG beside this file. INK: white on a
+% transparent background (the site theme is dark). Implemented patterns are
+% GREEN (✅ in the table); open patterns are white.
+
+\begin{tikzpicture}[
+  cat/.style={draw, rounded corners=3pt, thick, minimum width=24mm, minimum height=9mm, font=\small, align=center, color=white},
+  law/.style={draw, rounded corners=2pt, thick, minimum width=20mm, minimum height=9mm, font=\scriptsize, align=center, color=white},
+  leaf/.style={draw, rounded corners=1pt, thick, minimum size=6.5mm, font=\scriptsize, color=white},
+  done/.style={draw=green!60!white, rounded corners=1pt, thick, minimum size=6.5mm, font=\scriptsize, text=green!60!white},
+  e/.style={thick, color=white}
+]
+
+% ---- root ----
+\node[cat] (root) at (0,0) {distribution\\the menu (A--S)};
+
+% ---- categories ----
+\node[cat] (data)  at (-8.5,-2.3) {the anchor's law};
+\node[cat] (loc)   at (4.3,-2.3)  {the location};
+\node[cat] (orth)  at (9.0,-2.3)  {orthogonal};
+\node[cat] (comp)  at (13.5,-2.3) {composite};
+\draw[e] (root) -- (data);
+\draw[e] (root) -- (loc);
+\draw[e] (root) -- (orth);
+\draw[e] (root) -- (comp);
+
+% ---- data-side laws ----
+\node[law] (free) at (-15.0,-4.9) {free\\floatable (Thm 6)};
+\node[law] (star) at (-9.5,-4.9)  {star\\comm. monoid (Thm 19)};
+\node[law] (pipe) at (-4.5,-4.9)  {pipeline\\associative};
+\node[law] (shuf) at (0.0,-4.9)   {shuffle\\keyed};
+\draw[e] (data) -- (free);
+\draw[e] (data) -- (star);
+\draw[e] (data) -- (pipe);
+\draw[e] (data) -- (shuf);
+
+% ---- data-side leaves ----
+\node[done] (O) at (-15.0,-6.9) {O};
+\draw[e] (free) -- (O);
+
+% star — the reduce family, implemented first (A E G) then the open refinements
+\node[done] (A) at (-12.0,-6.9) {A};
+\node[done] (E) at (-10.6,-6.9) {E};
+\node[done] (G) at (-9.2,-6.9)  {G};
+\node[leaf] (J) at (-7.8,-6.9)  {J};
+\node[leaf] (K) at (-11.3,-7.7) {K};
+\node[leaf] (L) at (-9.9,-7.7)  {L};
+\node[leaf] (H) at (-8.5,-7.7)  {H};
+\draw[e] (star) -- (A);
+\draw[e] (star) -- (E);
+\draw[e] (star) -- (G);
+\draw[e] (star) -- (J);
+\draw[e] (star) -- (K);
+\draw[e] (star) -- (L);
+\draw[e] (star) -- (H);
+
+\node[leaf] (F) at (-4.5,-6.9) {F};
+\draw[e] (pipe) -- (F);
+
+% ---- location leaves (native / delegation) ----
+\node[leaf] (B) at (2.5,-4.9) {B};
+\node[leaf] (C) at (3.7,-4.9) {C};
+\node[leaf] (Q) at (4.9,-4.9) {Q};
+\node[leaf] (P) at (6.1,-4.9) {P};
+\draw[e] (loc) -- (B);
+\draw[e] (loc) -- (C);
+\draw[e] (loc) -- (Q);
+\draw[e] (loc) -- (P);
+
+% ---- orthogonal leaves ----
+\node[done] (D) at (8.2,-4.9) {D};
+\node[leaf] (S) at (9.8,-4.9) {S};
+\draw[e] (orth) -- (D);
+\draw[e] (orth) -- (S);
+
+% ---- composite leaves ----
+\node[leaf] (N) at (12.0,-4.9) {N};
+\node[leaf] (R) at (13.5,-4.9) {R};
+\node[leaf] (M) at (15.0,-4.9) {M};
+\node[leaf] (I) at (16.5,-4.9) {I};
+\draw[e] (comp) -- (N);
+\draw[e] (comp) -- (R);
+\draw[e] (comp) -- (M);
+\draw[e] (comp) -- (I);
+
+\end{tikzpicture}

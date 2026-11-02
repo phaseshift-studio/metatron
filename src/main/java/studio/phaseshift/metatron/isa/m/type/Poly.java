@@ -1,0 +1,694 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type;
+
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.*;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+public interface Poly<P extends Poly<P, J>, J> extends Obj {
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> APPEND = (poly, jvm) -> {
+        Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
+        return poly;
+    };
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
+        Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
+        return poly;
+    };
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> IMMUTABLE = (poly, jvm) -> poly.clone(jvm, poly.tid(), poly.vid());
+
+    long count();
+
+    default boolean isEmpty() {
+        return 0 == this.count();
+    }
+
+    <O extends Obj> Stream<O> elements();
+
+    <O extends Obj> Stream<O> valueElements();
+
+    /// ////////////////////////////////////////////////////////////////////////////////////
+
+    Poly<?, ?> zero();
+
+    <O extends Obj> O atDirect(final Obj key);
+
+    default <O extends Obj> O atDirect(final String key) {
+        return this.atDirect(uri(key));
+    }
+
+    default <O extends Obj> O atDirect(final fURI key) {
+        return this.atDirect(uri(key));
+    }
+
+    <O extends Obj> O at(final Obj key);
+
+    default <O extends Obj> O at(final String key) {
+        return this.at(uri(key));
+    }
+
+    default <O extends Obj> O at(final fURI key) {
+        return this.at(uri(key));
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////
+
+    P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
+
+    default P at(final fURI key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        return this.at(uri(key), value, operation);
+    }
+
+    default P at(final String key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        return this.at(uri(key), value, operation);
+    }
+
+    default P at(final Obj key, final Obj value) {
+        return this.at(key, value, IMMUTABLE);
+    }
+
+    default P at(final fURI key, final Obj value) {
+        return this.at(uri(key), value, IMMUTABLE);
+    }
+
+    default P at(final String key, final Obj value) {
+        return this.at(uri(key), value, IMMUTABLE);
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////
+
+    default boolean has(final Obj key) {
+        return !this.at(key).isNoObj();
+    }
+
+    default boolean has(final String key) {
+        return this.has(uri(key));
+    }
+
+    default boolean has(final fURI key) {
+        return this.has(uri(key));
+    }
+
+    default boolean has(final long index) {
+        return index < this.count();
+    }
+
+    /// /////////////////////////////////////////////////////////////////////////////////////
+
+    default Stream<Rel> indexedStream() {
+        return Stream.of(rel(this.vid().toUri(), this));
+    }
+
+    Stream<Obj> values();
+
+    Stream<Obj> keys();
+
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return true;
+    }//return this.elements().allMatch(x -> x.isResolved(nested));
+    
+
+  /*  @Override
+    default Obj autoResolve(final Obj obj) {
+        return Obj.super.autoResolve(obj).parent(this);
+    }*/
+
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////
+
+    class Helper {
+        public static <OBJ extends Obj> OBJ autoToggle(final Obj parent, final Obj obj, final boolean autoResolve) {
+            return null == obj ? (OBJ) noobj() : (null != parent && autoResolve ? obj.autoResolve(parent) : obj).parent(parent);
+        }
+
+        public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
+            return IteratorUtil.indexedStream(lhs.lstValue().iterator())
+                    .map(r -> rel(jnt(r.get0()), r.get1()))
+                    .collect(new CommonUtil.RecCollector(tid, vid, () -> new TreeMap<>(CommonUtil.REC_KEY_ORDER)));
+        }
+
+        public static Lst transformRecToLst(final Rec lhs, final fURI tid, final fURI vid) {
+            final List<Map.Entry<Obj, Obj>> entries = new ArrayList<>(lhs.recValue().entrySet());
+            // int keys ascending; non-int keys stable at the tail (original map
+            // order — List.sort is stable, and this comparator never throws)
+            entries.sort((e1, e2) -> {
+                final boolean i1 = e1.getKey().isInt();
+                final boolean i2 = e2.getKey().isInt();
+                if (i1 != i2)
+                    return i1 ? 1 : -1;
+                if (!i1)
+                    return 0;
+                try {
+                    return Long.compare(((Number) e1.getKey().jvm()).longValue(), ((Number) e2.getKey().jvm()).longValue());
+                } catch (final Exception ex) {
+                    return 0;
+                }
+            });
+            return lst(IteratorUtil.indexedStream(entries.iterator())
+                    .map(r -> rel(jnt(r.get0()), rel(r.get1().getKey(), r.get1().getValue())))
+                    .reduce(new ArrayList<>(), (a, b) -> {
+                        a.add(b);
+                        return a;
+                    }, (a, b) -> {
+                        a.addAll(b);
+                        return a;
+                    }), tid, vid);
+        }
+
+        public static Obj selectPolyRecursion(final Poly<?, ?> lhs, final Poly<?, ?> rhs, final boolean verify) {
+            if (lhs.isRec()) {
+                if (rhs.isRec())
+                    return selectRecRecursion(lhs.asRec(), rhs.asRec(), verify);
+            } else if (lhs.isLst()) {
+                if (rhs.isLst())
+                    return selectLstLstRecursion(lhs.asLst(), rhs.asLst(), verify);
+                else if (rhs.isRec())
+                    return selectLstRecRecursion(lhs.asLst(), rhs.asRec(), verify);
+            } else if (lhs.isRel() && rhs.isRel())
+                return selectRelRecursion(lhs.asRel(), rhs.asRel(), verify);
+            if (verify)
+                throw ProjectionFailureException.instance();
+            return noobj();
+        }
+
+        public static Obj selectLstLstRecursion(final Lst lhs, final Lst rhs, final boolean verify) {
+            final List<Obj> result = selectLstLstRecursionRaw(lhs, rhs, (a, b) -> selectPolyRecursion(a.as(), b.as(), verify), verify);
+            return lst(result, rhs.tid(), rhs.vid());
+        }
+
+        public static List<Obj> selectLstLstRecursionRaw(final Lst lhs, final Lst rhs, final BiFunction<Poly<?, ?>, Poly<?, ?>, Obj> polyRecursion, final boolean verify) {
+            final List<Obj> result = new ArrayList<>();
+            final List<Obj> rhsList = rhs.lstValue();
+            final List<Obj> lhsList = lhs.lstValue();
+            for (int i = 0; i < Math.min(lhsList.size(), rhsList.size()); i++) {
+                final Obj selectKey = jnt(i);
+                final Obj rhsValue = rhs.at(selectKey);
+                final Obj lhsValue = lhs.at(selectKey).selfVID(null);
+                final Obj newValue = (lhsValue.isPoly() && rhsValue.isPoly() ? polyRecursion.apply(lhsValue.as(), rhsValue.as()) : rhsValue.apply(lhsValue)).selfVID(null);
+                if (verify && newValue.isNothing())
+                    throw ProjectionFailureException.instance();
+                if (!newValue.isNone())
+                    result.add(newValue);
+            }
+            return result;
+        }
+
+        public static Object selectRelRecursionRaw(final Rel lhs, final Rel rhs, final BiFunction<Poly<?, ?>, Poly<?, ?>, Obj> polyRecursion) {
+            final Obj newFirst = rhs.jvm().get0().apply(lhs.first());
+            final Obj newSecond = rhs.jvm().get1().apply(lhs.second());
+            if (lhs.second().isPoly() && newSecond.isPoly())
+                return polyRecursion.apply(lhs.second().as(), newSecond.as());
+            else
+                return Tuple.Pair.with(newFirst, newSecond);
+        }
+
+        public static Obj selectRelRecursion(final Rel lhs, final Rel rhs, final boolean verify) {
+            final Object result = selectRelRecursionRaw(lhs, rhs, (a, b) -> selectPolyRecursion(a.as(), b.as(), verify));
+            return result instanceof Obj ? (Obj) result : rel(((Tuple.Pair<Obj, Obj>) result).get0(), ((Tuple.Pair<Obj, Obj>) result).get1());
+        }
+
+        public static Obj selectRecRecursion(final Rec lhs, final Rec rhs, final boolean verify) {
+            final Map<Obj, Obj> result = selectRecRecursionRaw(lhs, rhs, (a, b) -> selectPolyRecursion(a.as(), b.as(), verify), verify);
+            return result.isEmpty() ? noobj() : rec(result, rhs.tid(), rhs.vid());
+        }
+
+        public static Lst selectLstRecRecursion(final Lst lhs, final Rec rhs, final boolean verify) {
+            final List<Obj> result = new ArrayList<>();
+            IteratorUtil.indexedStream(lhs.jvm().iterator()).forEach(pair -> {
+                final Obj newElement = rhs.jvm().entrySet().stream()
+                        .filter(kv -> jnt(pair.get0()).test(kv.getKey()))
+                        .map(kv -> (pair.get1().isPoly() && kv.getValue().isPoly()) ?
+                                Poly.Helper.selectPolyRecursion(pair.get1().asPoly(), kv.getValue().asPoly(), verify) :
+                                kv.getValue().apply(pair.get1())).findFirst().orElse(noobj());
+                if (verify && newElement.isNoObj())
+                    throw ProjectionFailureException.instance();
+                if (!newElement.isNone())
+                    result.add(newElement);
+            });
+            return lst(result);
+        }
+
+        public static Map<Obj, Obj> selectRecRecursionRaw(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Poly<?, ?>, Obj> polyRecursion, final boolean verify) {
+            final Map<Obj, Obj> result = new LinkedHashMap<>();
+            rhs.jvm().forEach((rKey, rValue) -> {
+                final AtomicBoolean found = new AtomicBoolean(false);
+                final Obj lSelectKeys = objs(lhs.jvm().keySet().stream().map(rKey).filter(lKey -> !lKey.isNoObj()));
+                lSelectKeys.stream().filter(k -> !k.isNoObj()).forEach(lSelectKey -> {
+                    final Obj selectKeyOne = lSelectKey.c(cInt::one);
+                    if (!lSelectKey.isNoObj()) {
+                        final Obj lhsValue = lhs.asRec().at(selectKeyOne);
+                        if (!lhsValue.isNoObj()) {
+                            found.set(true);
+                            final Obj rhsValue = rValue.autoResolve(rhs);
+                            final Obj selectValue = (lhsValue.isPoly() && rhsValue.isPoly() ?
+                                    polyRecursion.apply(lhsValue.as(), rhsValue.as()) :
+                                    verify ? (lhsValue.test(rhsValue) ? lhsValue : noobj()) :
+                                            rhsValue.apply(lhsValue)).selfVID(null);
+                            if (selectValue.isNoObj() && verify)
+                                throw ProjectionFailureException.instance();
+                            if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
+                                result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : (b.isObjCall() ? b.apply(selectValue) : b.append(selectValue))); // TODO: the c(1) may not be necessary
+                        } else if (verify)
+                            throw ProjectionFailureException.instance();
+                    }
+                });
+                if (!found.get() && verify)
+                    throw ProjectionFailureException.instance();
+
+            });
+            return result;
+        }
+
+        /// //////////////////////////////////////////////////////////////////////////
+
+        public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final Obj result;
+            if (lhs.isObjs() && rhs.isPoly())
+                result = objs(lhs.asObjs().elements()
+                        .map(e -> updateRecursion(e, rhs, operation).vid(e.vid()))
+                        .filter(e -> !e.isNoObj()));
+            else if (lhs.isPoly() && (rhs.isPoly() || rhs.isObjCall()))
+                result = updatePolyRecursion(lhs.as(), rhs, operation);
+            else
+                result = rhs.apply(lhs);
+            return (lhs.baseTypeID().basePath().equals(result.baseTypeID().basePath()) ? result.tid(lhs.tid().c(result.c())) : result).vid(lhs.vid());
+        }
+
+
+        public static Obj updatePolyRecursion(final Poly<?, ?> lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final Obj result;
+            if (rhs.isNoObj() || rhs.isNone())
+                result = rhs;
+            else if (rhs.isObjCall()) {
+                // Structural instruction — compute against LHS directly, don't
+                // recurse into updateRecRecursion (which SELECT-filters).
+                // The top-level UPDATE instruction handles the space write.
+                final Obj computed;
+                /*if (lhs.isRec() && rhs.tid().basePath().toString().endsWith("/plus")) {
+                    computed = lhs.asRec().plus(rhs.asInst().arg(0).asRec());
+                } else {*/
+                computed = rhs.apply(lhs);
+                //}
+                result = computed.isFail() ? lhs : computed;
+            } else if (lhs.isRec() && rhs.isRec())
+                result = updateRecRecursion(lhs.asRec(), rhs.asRec(), operation);
+            else if (lhs.isLst() && rhs.isLst())
+                result = updateLstRecursion(lhs.asLst(), rhs.asLst(), operation);
+            else if (lhs.isLst() && rhs.isRec())
+                result = updateLstRecRecursion(lhs.asLst(), rhs.asRec(), operation);
+            else if (lhs.isRel() && rhs.isRel())
+                result = updateRelRecursion(lhs.asRel(), rhs.asRel(), operation);
+            else
+                result = rhs.apply(lhs);
+            return result;
+        }
+
+        private static Obj updateRecRecursion(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final Rec lhsClone = lhs.jvm().entrySet().stream().map(kv -> rel(kv.getKey().clone(), kv.getValue().clone())).collect(new CommonUtil.RecCollector());
+            final Map<Obj, Obj> rhsApplied = Poly.Helper.selectRecRecursionRaw(lhsClone, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation), false);
+            lhsClone.jvm().forEach((lhsKey, lhsValue) -> rhsApplied.compute(lhsKey.c(cInt::one), (rhsKey, rhsValue) -> {
+                if (null == rhsValue)
+                    return lhsValue;
+                if (rhsValue.isNoObj())
+                    return noobj();
+                if (rhsValue.isNone())
+                    return noobj();
+                return rhsValue;
+
+            }));
+            final Obj result = operation.apply(lhsClone, rhsApplied);
+            return CommonUtil.orderIntRec(result, lhs).vid(lhs.vid()).tid(lhs.tid());
+        }
+
+        private static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final List<Obj> lhsList = lhs.lstValue();
+            final List<Obj> rhsList = rhs.lstValue();
+            final List<Obj> result = new ArrayList<>();
+            // The rhs IS the list's new shape: it is walked element-by-element (a `_` keeps the lhs
+            // element, `none` drops it), so a shorter rhs shortens the list and a longer one grows
+            // it.  This is asserted by mInstSetTest's update rows — do NOT append the lhs tail here:
+            // mInstSetTest.testUpdate (`>>= [b=>[c=>[_,parent...]]]`) and testPolySpace
+            // (`@a>>=[_,7,_,_]`) both depend on the rhs defining the arity.
+            for (int i = 0; i < Math.min(lhsList.size(), rhsList.size()); i++) {
+                final Obj newElement = updateRecursion(lhs.at(i), rhs.at(i), operation);
+                if (!newElement.isNone())
+                    result.add(newElement);
+            }
+            return operation.apply(lhs, result).vid(lhs.vid()).tid(lhs.tid());
+        }
+
+        public static Obj updateLstRecRecursion(final Lst lhs, final Rec rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final List<Obj> result = new ArrayList<>();
+            IteratorUtil.indexedStream(lhs.jvm().iterator()).forEach(pair -> {
+                final Obj newElement = rhs.jvm().entrySet().stream()
+                        .filter(kv -> jnt(pair.get0()).test(kv.getKey()))
+                        .map(kv -> (pair.get1().isPoly() && kv.getValue().isPoly()) ?
+                                Poly.Helper.updatePolyRecursion(pair.get1().asPoly(), kv.getValue().asPoly(), operation) :
+                                kv.getValue().apply(pair.get1())).findFirst().orElse(pair.get1());
+                if (!newElement.isNone())
+                    result.add(newElement);
+            });
+            return operation.apply(lhs, result);
+        }
+
+        private static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            final Object result = Poly.Helper.selectRelRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+            return result instanceof Obj ? (Obj) result : operation.apply(lhs, result);
+        }
+
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        private static final Uri GOOD = uri("=");
+        private static final Uri SORTA = uri("/");
+        private static final Uri FAIL = uri("X");
+
+        public static Obj diffTypeRecursion(final Obj lhs, final Type rhs) {
+            return lhs.isRec() ? diffTypeRecRecursion(lhs.asRec(), rhs)
+                    : lhs.isRel() ? diffTypeRelRecursion(lhs.asRel(), rhs)
+                    // a lst's bracket names the types at its indices, each with its own coefficient
+                    : rhs.isTensored() ? diffTypeLstPolyRecursion(lhs.asLst(), rhs)
+                    : diffTypeLstRecursion(lhs.asLst(), rhs);
+        }
+
+        /**
+         * THE PATH DIFF, vertex by vertex — the index diff's shape, chain-shaped. A rel poly names the vertex types
+         * ({@link Type.Helper#testPaths} is the verdict), so the failure report pairs each vertex of the path
+         * with the type at its depth, {@code =} where they agree and {@code X} where they do not, and shows an
+         * ordinary {@code second} as the closing vertex. Diagnostic only: it must never throw.
+         */
+        public static Lst diffTypeRelRecursion(final Rel lhs, final Type rhs) {
+            final Lst result = lst();
+            Obj vertex = lhs;
+            for (final Obj expected : rhs.relPaths()) {
+                final Obj actual = vertex.isRel() ? vertex.asRel().first() : vertex;
+                result.jvm().add(rel(actual.test(expected) ? GOOD : FAIL, actual));
+                if (!vertex.isRel())
+                    break;
+                vertex = vertex.asRel().second();
+            }
+            return result;
+        }
+
+        /**
+         * THE INDEX DIFF, index by index — the tensor's answer to the path diff above. A lst poly IS the value's
+         * shape ({@code lst[int,str]} is a two-index list holding an int and a str), so the failure report pairs each
+         * element of the value with the type at its index, {@code =} where they agree and {@code X} where they do
+         * not: the pairing {@link Lst#test(Obj)} decides against the same {@code polyParsed()} types, and the pairing
+         * the path diff renders for a chain, so a lst mismatch and a rel mismatch read as siblings. An index the
+         * value does not fill is judged by its own coefficient (an index that admits zero conforms), and an element
+         * the poly has no index for is an arity mark, so both are shown in place. Diagnostic only: it must never
+         * throw.
+         */
+        public static Lst diffTypeLstPolyRecursion(final Lst lhs, final Type rhs) {
+            final List<Type> indices = rhs.lstIndices();
+            final List<Obj> values = lhs.lstValue();
+            final Lst result = lst();
+            boolean conforming = true;
+            for (int i = 0; i < Math.max(indices.size(), values.size()); i++) {
+                // an unfilled index is rendered as the type it wanted, an extra element as the value that has nowhere to go
+                final Obj declared = i < indices.size() ? indices.get(i) : noobj();
+                final Obj value = i < values.size() ? values.get(i) : noobj();
+                final boolean good = !declared.isNoObj() && (value.isNoObj() ? declared.c().isZeroable() : value.test(declared));
+                conforming &= good;
+                result.jvm().add(rel(good ? GOOD : FAIL, value.isNoObj() ? declared : value));
+            }
+            // EVERY INDEX CONFORMS while the value still failed, so the failure is the type's own predicates: the
+            // index reading alone would show no X at all, so keep the predicate chain's reading too.
+            if (conforming)
+                result.jvm().addAll(diffTypeLstRecursion(lhs, rhs).jvm());
+            return result;
+        }
+
+        public static Lst diffTypeLstRecursion(final Lst lhs, final Type rhs) {
+            Type temp = rhs;
+            final Lst result = lst();
+            while (!temp.isRootType() && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
+                result.jvm().addAll(Poly.Helper.diffLstRecursion(lhs.asLst(), Type.Helper.typePredicateObj(temp).asLst()).jvm());
+                temp = temp.parentType();
+            }
+            return result;
+        }
+
+        public static Rec diffTypeRecRecursion(final Rec lhs, final Type rhs) {
+            Type temp = rhs;
+            final Rec result = rec();
+            while (!temp.isRootType() && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
+                final Obj typePredObj = Type.Helper.typePredicateObj(temp);
+                if (typePredObj.isRec())
+                    result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), typePredObj.asRec()).jvm());
+                else
+                    result.jvm().put(lhs, Poly.Helper.diffObjRecursion(lhs, typePredObj));
+                temp = temp.parentType();
+            }
+            return result;
+        }
+
+        public static Obj diffObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return diffRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return diffLstRecursion(lhs.asLst(), rhs.asLst());
+            else {
+                if (lhs.test(rhs)) {
+                    return rel(lhs, rel(GOOD, rhs));
+                } else {
+                    return rel(lhs, rel(FAIL, rhs));
+                }
+            }
+        }
+
+        /**
+         * The failed child expression inside obj, if any: when an argument
+         * is itself a fail, the deepest such (one that carries its own
+         * cause chain wins over a bare one). This is what belongs in the
+         * parent's cause chain — never stringified into the parent's
+         * message.
+         */
+        public static Fail failChild(final Obj obj) {
+            final Fail[] found = {null, null};
+            obj.stream().forEach(o -> {
+                if (o.isFail()) {
+                    final Fail f = o.asFail();
+                    if (null == found[0])
+                        found[0] = f;
+                    if (f.cause().isPresent())
+                        found[1] = f;
+                }
+            });
+            return null != found[1] ? found[1] : found[0];
+        }
+
+        /**
+         * Compact one-line description of an args/rng mismatch: which slot
+         * failed, the expected type, and — only when the failing value is a
+         * plain value — a short rendering of it. A fail value is described
+         * as "fail": its own text lives in the cause chain (the next
+         * bracket), not duplicated here.
+         */
+        public static String mismatchText(final Obj expected, final Obj actual) {
+            final List<String> notes = new ArrayList<>();
+            if (expected.isRec() && actual.isRec()) {
+                final Rec exp = expected.asRec();
+                actual.asRec().elements().forEach(kv -> {
+                    final Obj slotExpect = exp.at(kv.first());
+                    if (null == slotExpect || !slotExpect.test(kv.second()))
+                        notes.add(slotName(kv.first()) + " expected " + (null == slotExpect ? "?" : slotExpect.tid()) + " (got " + compactValue(kv.second()) + ")");
+                });
+            } else if (expected.isRec() || actual.isRec())
+                notes.add("expected " + (expected.isRec() ? expected.tid() : actual.tid()) + " (got " + compactValue(actual) + ")");
+            else
+                notes.add("expected " + expected.tid() + " (got " + compactValue(actual) + ")");
+            return notes.isEmpty() ? "type mismatch" : String.join("; ", notes);
+        }
+
+        private static String slotName(final Obj key) {
+            return key.c().isZeroable() ? "arg" : key.toCleanString();
+        }
+
+        private static String compactValue(final Obj value) {
+            if (value.isFail())
+                return "fail";
+            final String text = value.toCleanString();
+            final int nl = text.indexOf('\n');
+            final String single = nl < 0 ? text : text.substring(0, nl);
+            return single.length() > 40 ? single.substring(0, 40) + "…" : single;
+        }
+
+        public static Lst diffLstRecursion(final Lst lhs, final Lst rhs) {
+            final List<Obj> result = new ArrayList<>();
+            final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());
+            for (int i = 0; i < max; i++) {
+                final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
+                final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
+                if (!x.test(y))
+                    result.add(rel(FAIL, x));
+                else
+                    result.add(rel(GOOD, x));
+            }
+            return lst(result);
+        }
+
+
+        public static Rec diffRecRecursion(final Rec lhs, final Rec rhs) {
+            final Rec result = rec();
+            rhs.elements().forEach(x -> {
+                final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first()) && y.second().test(x.second())).findFirst();
+                if (kvMatch.isPresent())
+                    result.at(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
+                else {
+                    final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first())).findFirst();
+                    if (kMatch.isPresent())
+                        result.at(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
+                    else if (!x.first().c().isZeroable() && !x.second().c().isZeroable())
+                        result.at(rel(noobj(), rel(FAIL, x.first())), rel(noobj(), rel(FAIL, x.second())), MUTABLE);
+                    else if (!x.second().c().isZeroable())
+                        result.at(rel(noobj(), rel(GOOD, x.first())), rel(noobj(), rel(SORTA, x.second())), MUTABLE);
+                    else
+                        result.at(rel(noobj(), rel(x.first().c().isZeroable() ? GOOD : SORTA, x.first())), rel(noobj(), rel(GOOD, x.second())), MUTABLE);
+                }
+            });
+            return result;
+        }
+
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static Obj applyObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return applyRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return applyLstRecursion(lhs.asLst(), rhs.asLst());
+            else {
+                final Obj result = rhs.apply(lhs);
+                if (result.isNone())
+                    return noobj();
+                return result;
+            }
+        }
+
+        public static Lst applyLstRecursion(final Lst lhs, final Lst rhs) {
+            final List<Obj> result = new ArrayList<>();
+            final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());
+            for (int i = 0; i < max; i++) {
+                final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
+                final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
+                if (!x.test(y))
+                    result.add(fail(MTronException.of("lhs does not match rhs: %s %s", x, y)));
+                else
+                    result.add(applyObjRecursion(x, y));
+            }
+            return lst(result);
+        }
+
+
+        public static Rec applyRecRecursion(final Rec lhs, final Rec rhs) {
+            final Rec result = rec();
+            rhs.asRec().elements().forEach(x -> {
+                try {
+                    final Optional<Rel> kvMatch = lhs.asRec().elements()
+                            .filter(y -> y.first().test(x.first()))
+                            .filter(y -> y.second().test(x.second()))
+                            .map(y -> rel(applyObjRecursion(y.first(), x.second()), applyObjRecursion(y.second(), x.second())))
+                            .findFirst();
+                    if (kvMatch.isPresent())
+                        result.at(kvMatch.get().first(), kvMatch.get().jvm().get1().isNone() ? noobj() : kvMatch.get().second(), MUTABLE);
+                    else {
+                        if (x.first().c().isZeroable())
+                            result.at(x.first(), x.jvm().get1().isNone() ? noobj() : x.second().apply(), MUTABLE);
+                        else
+                            result.at(x.first(), noobj(), MUTABLE);
+                    }
+                } catch (final Exception e) {
+                    result.at(x.first(), fail(MTronException.of("error applying %s to %s", x.second(), x.first()), fail(e)), MUTABLE);
+                }
+            });
+            return result;
+        }
+
+        /**
+         * The deep union of two colliding values: recs merge key-by-key (recursing), and anything else appends into an
+         * objs set. This is the flattening behind {@code rec + rec} — e.g. {@code [a=>[c=>e]] + [a=>[c=>d]]} yields
+         * {@code [a=>[c=>{e,d}]]} in one pass instead of {@code [a=>{[c=>e],[c=>d]}]}.
+         * <p>
+         * A LST IS AN ATOM OF THE MERGE: two colliding lsts make a bag of lsts, each kept whole —
+         * {@code [a=>[1,2,3]] + [a=>[2,3]]} is {@code [a=>{[1,2,3],[2,3]}]} — so the union is commutative and its fold
+         * ({@code sum}) is defined over a bag. Concatenating lst values is a select's {@code +}, said by the expression:
+         * {@code [a=>[1,2,3]]==[a=>+[2,3]]} is {@code [a=>[1,2,3,2,3]]}.
+         * <p>
+         * A COEFFICIENT IS A MULTIPLICITY, read as every access reads it: the outer {@code c} multiplied into what it
+         * holds ({@code {2}[a=>2]} holds {@code a=>{2}2}). A bulked operand therefore merges as the copies it stands for —
+         * {@code [=>] + {2}[a=>[b=>2]]} is {@code [a=>[b=>{2}2]]}, the value {@code [a=>[b=>2]] + [a=>[b=>2]]} computes —
+         * so a fold over a bulked stream ({@code sum}) answers what it answers over the copies.
+         */
+        public static Obj mergeObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return mergeRecRecursion(lhs.asRec(), rhs.asRec());
+            else
+                return lhs.append(rhs);
+        }
+
+        /**
+         * The rhs's entries merged into the lhs's. The lhs's own coefficient is the stream's ({@code {2}[a=>1] + [b=>2]}
+         * is that merge twice), so it stays on the result. Each rhs entry is read through its rel —
+         * {@link Rel#secondDirect()}: the rhs's {@code c} multiplied in, nothing auto-resolved. What the union multiplies
+         * is {@link #distributed} — the values of a bulked rhs, which are its copies, and both values of a collision, so
+         * no deeper merge is handed a coefficient — and a value it does not multiply is stored as it is, from either side.
+         */
+        private static Rec mergeRecRecursion(final Rec lhs, final Rec rhs) {
+            final boolean bulked = !rhs.c().isOne();
+            final Map<Obj, Obj> newMap = new LinkedHashMap<>(lhs.recValue());
+            rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v
+                    ? (bulked ? distributed(o.secondDirect()) : o.secondDirect())
+                    : mergeObjRecursion(distributed(v), distributed(o.secondDirect()))));
+            // build a fresh rec (not this.jvm()/clone(), which a Space no-ops) and re-tag it in place
+            return rec(newMap).self(newMap, lhs.tid(), lhs.vid());
+        }
+
+        /**
+         * A value with its coefficient carried into what it holds — the form the union stores, so that a bulked operand
+         * and the copies it stands for merge to the same value. A rec pushes it into its entries, all the way down
+         * ({@code {2}[b=>[c=>1]]} is {@code [b=>[c=>{2}1]]}), read through its rels so nothing is auto-resolved; anything
+         * else keeps it — an atom of the merge, a lst included, whose coefficient already is its multiplicity in an objs
+         * set ({@code {2}1}, {@code {2}[1,2]}).
+         */
+        private static Obj distributed(final Obj value) {
+            if (value.c().isOne() || !value.isRec())
+                return value;
+            final Map<Obj, Obj> none = new LinkedHashMap<>();
+            return mergeRecRecursion(rec(none).self(none, value.c(cInt::one).tid(), value.vid()), value.asRec());
+        }
+    }
+}

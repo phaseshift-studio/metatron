@@ -1,0 +1,188 @@
+[discrete]
+== Control Structures
+
+[source,mtron,role="float-right-code"]
+----
+┌────────────────────────────────┐ 
+│data  o.   o...o  ..oo    o     │ 
+│     o . :  o ▲ o    :  ..  o   │ 
+│         o    │       o..   o   │ 
+└──────────────┼─────────────────┘  
+               @                  
+               └────┐             
+┌───────────────────┼────────────┐
+│       ▲──────┐    ▼─────►    ▲ │
+│  ─────┘      ▼────┘     │    │ │
+│instructions             └────┘ │
+└────────────────────────────────┘
+----
+
+A fundamental requirement for general-purpose computing is https://en.wikipedia.org/wiki/Branch_(computer_science)[branching]. Branching occurs when a process chooses 
+one of the myriad of paths through a body of code. This path is the process trace and in classical, non-quantum computing 
+this trace is the result of numerous choices made by the process altering its state given its current instruction and data.
+Common branching idioms include *if/else* or *while/do* or *switch/case*. These structures typically reside outside the referential
+purview of the executing process and serve as an existential scaffolding that guides the unwitting process through 
+the code and over the data -- instruction by instruction and pointer by pointer.
+
+mtron has no language construct for branching. Instead, branching is realized as an epiphenomena of the evaluation of two 
+instructions: *split* and *merge* (enabled through their respective coefficients). 
+
+[stem]
+++++
+\begin{align*}
+\tt{split}&\tt{?}A\{*\} \Leftarrow A & \\ 
+\tt{merge}&\tt{?}A\{*\} \Leftarrow A\{*\} &
+\end{align*}
+++++
+
+
+Individually, `split` and `merge` are "proto"-instructions in that, algebraically, they are not a complete
+computational step in and of themselves, but when combined, the two yield the abelian group of the mtron `inst` ring -- 
+i.e. the addition operator. When split, but not yet merged, the process is in a state akin to a
+https://en.wikipedia.org/wiki/Quantum_superposition[quantum superposition]. In fact, when coefficients are complex numbers, 
+then constructive and destructive interference occurs, effectively rendering the mathematics of Schrödinger's
+https://en.wikipedia.org/wiki/Schr%C3%B6dinger_equation[wave function] equation, which for the computationally inclined,
+is perhaps best conceptualized by Feynman's https://en.wikipedia.org/wiki/Path_integral_formulation[path integrals].
+
+[stem]
+++++
+\begin{align*}
+\tt{apply}&\tt{?} B\{\tt{*}\}\Leftarrow A \{\tt{*}\}
+\end{align*}
+++++
+
+The additive component of the mtron ring, `split/merge` (sugar'd `-<`/`>-`), is https://en.wikipedia.org/wiki/Distributive_property[distributive] over the ring's
+multiplicative https://en.wikipedia.org/wiki/Monoid[monoid], `apply` (sugar'd `.`). The relationship between `split/merge` and `apply` is significant, with mtron coefficients serving as the glue which renders
+this coupling algebraically sound (closed under the ring operators). A complete analysis of this algebra is discussed elsewhere. For now, when seen in isolation as a https://en.wikipedia.org/wiki/Abelian_group[commutative group], the following axioms hold.
+
+[stem]
+\[
+\small
+\begin{aligned}
+&\tt{sm}(ca,noobj)        &=&\; \tt{ca} + \tt{noobj}          &=&\; \tt{ca}                & (\text{zero identity})\\
+&\tt{sm}(ca,cb)           &=&\; \tt{ca} + \tt{cb}             &=&\; \tt{sm}(cb,ca)         & (\text{commutative})\\
+&\tt{sm}(ca,{\text{-}ca}) &=&\; \tt{ca} - \tt{ca}             &=&\; \tt{noobj}             & (\text{inverse})\\
+&\tt{sm}(ca,sm(cb,cd))   &=&\; \tt{ca} + (\tt{cb} + \tt{cd}) &=&\; \tt{sm(sm(ca,cb),cd)}  & (\text{associative}).\\
+\end{aligned}
+\]
+
+When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below for both `rec`
+
+[stem]
+\[
+\small
+\tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
+\begin{aligned}
+\tt{obj} \cdot& \tt{dom({rec}_{0})}   & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\tt{obj} \cdot& \tt{dom({rec}_{1})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{1})} \\
+\tt{obj} \cdot& \tt{dom({rec}_{2})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{2})} \\
+\vdots        &                      & \Rightarrow &\; \vdots \\
+\tt{obj} \cdot& \tt{dom({rec}_{n})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{n})}
+\end{aligned}
+\right]
+\]
+
+and `lst`
+
+[stem]
+\[
+\small
+\tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
+\begin{aligned}
+\tt{obj} \cdot & \tt{dom({lst}_{0})} \\
+\tt{obj} \cdot & \tt{rng({lst}_{1})} \\
+\vdots &\\
+\tt{obj} \cdot & \tt{rng({lst}_{n})} \\
+\end{aligned}
+\right].
+\]
+
+These constructions appear at odds with what is required for branching -- namely, discrimination. The ability to choose one branch of code over another
+is entirely absent in the semantics of `split`. Every relation in a `rec` argument and every element in `lst` argument has the lhs `obj`
+applied to it -- indiscriminately. Selective discrimination is a consequence of the properties of the abelian monoid (commutative/associative) and its zero element (`noobj`). 
+Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through *filtering*.
+That is, given `rec` relations,
+
+[mtron]
+----
+[a=>1,b=>noobj,noobj=>3]
+----
+
+then,
+
+[mtron]
+----
+{1,2}                                          [-- <1> --]
+{1,2}.split([is(lt(2))  => plus(9), /
+             is(gte(2)) => plus(3)])
+{1,2}.split([is(lt(2))  => plus(9), /
+             is(gte(2)) => plus(3)]).rshift()  [-- <2> --]
+----
+
+<1> two `int` objs in a stream.
+<2> each `int` obj is split (copied) across the branch arguments (the `rels` of the `rec` arg).
+<3> `gte?bool\<=int(int::T)` is a one-to-one function which sets up a binary switch (the process is in "superposition").
+<4> `is?int{?}\<=int(bool::T)` is a one-to-maybe function that filters paths given a binary signal (the process has chosen its path).
+<5> `merge?int\<=int{*}` collapses the two stream pathways into a single stream (the process has "collapsed" into a single branch). 
+
+The above written once more using sugar syntax:
+
+[cols="3a,3a",separator=🧱]
+|===
+
+🧱
+
+[mtron]
+----
+{1,2}-<[?<2=>+9,?>=2=>+3]
+{1,2}-<[?<2=>+9,?>=2=>+3]>>
+----
+
+🧱
+
+* `-<` split.
+* `?<` is less than.
+* `?>` is greater than.
+* `>-` merge.
+|===
+
+
+Unlike `rec`, `lst` can have `noobj` elements. However, when merged into a single stream, `noobj` are discarded.
+
+[mtron]
+----
+{1,2}-<[gte(2),gt(3)]            [-- <1> --]
+{1,2}-<[?>=2,?>3]                [-- <2> --]
+{1,2}-<[?>=2,?>3]>-              [-- <3> --]
+----
+
+<1> Each incoming `obj` is split across each "branch" (position) of the `lst`.
+<2> a `lst` can have `noobj` elements (empty positions).
+<3> The `lst` is merged into a single stream, thus, filtering out `noobj` branches.
+
+
+While `gte?bool\<=int(int::T)` yields a `bool`, `is?int{?}\<=int(bool::T)` yields the requisite _switch_ behavior in that the lhs `obj`
+is either allowed to pass or not depending on the `bool` argument. Given `inst` evaluation semantics, the value of the `bool::T` argument of `is` is
+ultimately dependent on the incoming lhs `obj`, where
+
+[stem]
+++++
+\tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
+++++
+
+In this way, the mechanics of `inst` lhs-resolution, `noobj` as the `0`-element of the `obj` ring, and it's dual usage in both `*` (filter) and `+` (clone) provide sufficient infrastructure to render branch semantics in mtron.
+
+
+[indent=0,subs="verbatim,attributes",role="primary"]
+.if/else
+=====
+
+[mtron]
+----
+[NO_HEADER]
+{1,2,3,4,5}-<[?>2 => "${_} greater than 2", /
+              ?>5 => "${_} greater than 5", /
+              _   => "${_} is something."]
+----
+
+=====

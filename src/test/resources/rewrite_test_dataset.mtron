@@ -1,0 +1,10 @@
+$$/1 -> [id=>1, value=>1, name=>'item1', weight=>1.5];
+$$/2 -> [id=>2, value=>2, name=>'item2', weight=>2.5];
+$$/3 -> [id=>3, value=>3, name=>'item3', weight=>3.5];
+$$/4 -> [id=>4, value=>4, name=>'item4', weight=>4.5];
+$$/5 -> [id=>5, value=>5, name=>'item5', weight=>5.5];
+$$/6 -> [id=>6, value=>6, name=>'item6', weight=>6.5];
+$$/7 -> [id=>7, value=>7, name=>'item7', weight=>7.5];
+$$/8 -> [id=>8, value=>8, name=>'item8', weight=>8.5];
+$$/9 -> [id=>9, value=>9, name=>'item9', weight=>9.5];
+$$/10 -> [id=>10, value=>10, name=>'item10', weight=>10.5];

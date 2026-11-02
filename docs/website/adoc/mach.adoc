@@ -1,0 +1,28 @@
+[discrete]
+== Machines
+
+Every mtron expression is evaluated by a __machine__. There are various types of machines, each optimized for a particular data processing scenario. Every machine is refinement of `virtual::T` (a virtual thread).
+
+[mtron]
+----
+*virtual
+*machine
+----
+
+The consequence of this type dependence is many fold:
+
+1. **pause/resume**: every machine can be paused mid-computation, manipulated/serialized, and restarted.
+2. **source**: every machine has a source thread that spawned its creation. This source can be another machine (in the case of nested expressions) or a thread (the thread of execution).
+3. **call stack**: the data structure formed by the `!*` source relations yields a nested call stack that can be walked in a manner aligned with debugging tools.
+4. **pure state**: the machine's state, when separated from its thread of execution is a `rec` of objs. The relations of the machine include its running monads, its barrier monads, and its halted monads. Thus, the full state of the computation is contained within the machine (where `!*` is considered containment in simulated co-located sense),
+
+[discrete]
+=== Swarm Machine
+
+A `swarm::T` realizes the computation as a "swarm" of independent, autonomous monads moving over the `insts` of the machine's `code` and, as dictated by the code, over the objs in space. The only coordination that exists in `swarm::T` is at __barrier_ instructions. A barrier aggregates all monads up to that point, and when no monads are left outside the barrier, the barrier then drains the monads -- allowing them to once again independently execute.
+
+[mtron]
+----
+{1,2,3}-<[+1,+2,+3]>-.sum()
+*/sys/machine/+/
+----

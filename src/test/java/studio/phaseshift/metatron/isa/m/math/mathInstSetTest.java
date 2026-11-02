@@ -1,0 +1,757 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.math;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class mathInstSetTest extends AbstractInstSetTest {
+
+    public mathInstSetTest() {
+        super(mathInstSet::new);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // addition / subtraction / multiplication / division
+            "cmplx::[1.0,2.0] + cmplx::[-1.0,3.0]                  % cmplx::[0.0,5.0]",
+            "cmplx::[1.0,2.0] - cmplx::[3.0,4.0]                   % cmplx::[-2.0,-2.0]",
+            "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]                   % cmplx::[-5.0,10.0]",
+            "cmplx::[1.0,2.0].div(cmplx::[1.0,1.0])                % cmplx::[1.5,0.5]",
+            // unary
+            "cmplx::[1.0,2.0].neg()                                % cmplx::[-1.0,-2.0]",
+            "cmplx::[1.0,1.0].inv()                                % cmplx::[0.5,-0.5]",
+            "cmplx::[1.0,2.0].conjugate()                          % cmplx::[1.0,-2.0]",
+            "cmplx::[3.0,4.0].abs()                                % 5.0",
+            "cmplx::[1.0,1.0].arg()                                % 0.7853981633974483",
+            // zero / one
+            "cmplx::[1.0,2.0].zero()                               % cmplx::[0.0,0.0]",
+            "cmplx::[1.0,2.0].one()                                % cmplx::[1.0,0.0]",
+            // ring_theory_unit_removal — plus(zero) / mult(one) collapse to the operand
+            "cmplx::[1.0,2.0] + cmplx::[0.0,0.0]                   % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0] * cmplx::[1.0,0.0]                   % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].plus(cmphx::[0.0,0.0])               % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].mult(cmphx::[1.0,0.0])               % cmplx::[1.0,2.0]",
+            // group_theory_involution — neg().neg() collapses to identity
+            "cmplx::[1.0,2.0].neg().neg()                          % cmplx::[1.0,2.0]",
+            "cmplx::[1.0,2.0].neg().neg().plus(cmphx::[3.0,4.0])   % cmplx::[4.0,6.0]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testComplex(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // int to byte units
+            "1024.0.as(kB::T)                                                                    % kB::1024.0",
+
+            // bB conversions (identity and upward)
+            "bB::1024.0.as(bB::T)                                                                % bB::1024.0",
+            "bB::1024.0.as(kB::T)                                                                % kB::1.0",
+            "bB::1048576.0.as(mB::T)                                                             % mB::1.0",
+            "bB::1073741824.0.as(gB::T)                                                          % gB::1.0",
+
+            // kB conversions (downward, identity, and upward)
+            "kB::1.0.as(bB::T)                                                                   % bB::1024.0",
+            "kB::1024.0.as(kB::T)                                                                % kB::1024.0",
+            "kB::1024.0.as(mB::T)                                                                % mB::1.0",
+            "kB::1048576.0.as(gB::T)                                                             % gB::1.0",
+            "kB::1073741824.0.as(tB::T)                                                          % tB::1.0",
+
+            // mB conversions (downward, identity, and upward)
+            "mB::1.0.as(bB::T)                                                                   % bB::1024.0.mult(1024.0)",
+            "mB::1.0.as(kB::T)                                                                   % kB::1024.0",
+            "mB::1.0.as(mB::T)                                                                   % mB::1.0",
+            "mB::1024.0.as(gB::T)                                                                % gB::1.0",
+            "mB::1048576.0.as(tB::T)                                                             % tB::1.0",
+            "mB::1073741824.0.as(pB::T)                                                          % pB::1.0",
+
+            // gB conversions (downward, identity, and upward)
+            "gB::1.0.as(bB::T)                                                                   % bB::1024.0.mult(1024.0).mult(1024.0)",
+            "gB::1.0.as(kB::T)                                                                   % kB::1024.0.mult(1024.0)",
+            "gB::1.0.as(mB::T)                                                                   % mB::1024.0",
+            "gB::1.0.as(gB::T)                                                                   % gB::1.0",
+            "gB::1024.0.as(tB::T)                                                                % tB::1.0",
+            "gB::1048576.0.as(pB::T)                                                             % pB::1.0",
+
+            // tB conversions (downward, identity, and upward)
+            "tB::1.0.as(bB::T)                                                                   % bB::1024.0.mult(1024.0).mult(1024.0).mult(1024.0)",
+            "tB::1.0.as(kB::T)                                                                   % kB::1024.0.mult(1024.0).mult(1024.0)",
+            "tB::1.0.as(mB::T)                                                                   % mB::1024.0.mult(1024.0)",
+            "tB::1.0.as(gB::T)                                                                   % gB::1024.0",
+            "tB::1.0.as(tB::T)                                                                   % tB::1.0",
+            "tB::1024.0.as(pB::T)                                                                % pB::1.0",
+
+            // pB conversions (downward and identity)
+            "pB::1.0.as(bB::T)                                                                   % bB::1024.0.mult(1024.0).mult(1024.0).mult(1024.0).mult(1024.0)",
+            "pB::1.0.as(kB::T)                                                                   % kB::1024.0.mult(1024.0).mult(1024.0).mult(1024.0)",
+            "pB::1.0.as(mB::T)                                                                   % mB::1024.0.mult(1024.0).mult(1024.0)",
+            "pB::1.0.as(gB::T)                                                                   % gB::1024.0.mult(1024.0)",
+            "pB::1.0.as(tB::T)                                                                   % tB::1024.0",
+            "pB::1.0.as(pB::T)                                                                   % pB::1.0",
+
+            // Multi-step conversions (skip levels)
+            "bB::1099511627776.0.as(tB::T)                                                       % tB::1.0",
+            "bB::1125899906842624.0.as(pB::T)                                                    % pB::1.0",
+            "kB::1099511627776.0.as(pB::T)                                                       % pB::1.0",
+
+            // Larger values
+            "kB::2048.0.as(mB::T)                                                                % mB::2.0",
+            "mB::2048.0.as(gB::T)                                                                % gB::2.0",
+            "gB::2048.0.as(tB::T)                                                                % tB::2.0",
+            "tB::2048.0.as(pB::T)                                                                % pB::2.0",
+            "pB::2.0.as(tB::T)                                                                   % tB::2048.0",
+            "tB::2.0.as(gB::T)                                                                   % gB::2048.0",
+            "gB::2.0.as(mB::T)                                                                   % mB::2048.0",
+            "mB::2.0.as(kB::T)                                                                   % kB::2048.0",
+            "kB::2.0.as(bB::T)                                                                   % bB::2048.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testConversions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testNominalTyping() {
+        assertTrue(real(43.0, MATH_NANOS_TID, null).testNominally(NANOS_TYPE));
+        assertTrue(real(43.0, MATH_NANOS_TID, null).testNominally(TIME_TYPE));
+        assertTrue(real(43.0, MATH_MICROS_TID, null).testNominally(MICROS_TYPE));
+        assertTrue(real(43.0, MATH_MICROS_TID, null).testNominally(TIME_TYPE));
+        assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(MILLIS_TYPE));
+        assertTrue(real(43.0, MATH_MILLIS_TID, null).testNominally(TIME_TYPE));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // eq() - Equality tests with exact conversions (smaller to larger unit)
+            "kB::1024.0.eq(mB::1.0)                                                               % true",
+            "mB::1024.0.eq(gB::1.0)                                                               % true",
+            "gB::1024.0.eq(tB::1.0)                                                               % true",
+            "tB::1024.0.eq(pB::1.0)                                                               % true",
+            "bB::1024.0.eq(kB::1.0)                                                               % true",
+
+            // eq() - Long-range equality tests
+            "bB::1048576.0.eq(mB::1.0)                                                            % true",
+            "bB::1073741824.0.eq(gB::1.0)                                                         % true",
+            "kB::1048576.0.eq(gB::1.0)                                                            % true",
+            "mB::1048576.0.eq(tB::1.0)                                                            % true",
+
+            // neq() - Not equal tests
+            "kB::1024.0.neq(mB::1.0)                                                              % false",
+            "mB::1024.0.neq(gB::1.0)                                                              % false",
+
+            // lt() and gt() - Basic comparison tests
+            "kB::1024.0.lt(mB::1.0)                                                               % false",
+            "kB::1024.0.gt(mB::1.0)                                                               % false",
+
+            // lte() and gte() - Less/greater than or equal tests
+            "kB::1024.0.lte(mB::1.0)                                                              % true",
+            "kB::1024.0.gte(mB::1.0)                                                              % true",
+
+            // NOTE: Comparison operations with non-exact conversions fail due to implementation bugs
+            // TODO: Byte unit types need to support real values for accurate bidirectional conversions
+            // TODO: Fix comparison logic to handle non-exact unit conversions correctly
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testConversionRelations(final String code, final boolean match) {
+        assertEquals(match, ObjmtronSerializer.parse(code).apply().boolValue());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Byte unit as() conversions - verifies resolver picks correct as?X<=Y instruction
+            "bB::1024.0.as(kB::T)         | *kB   | true",
+            "kB::1024.0.as(mB::T)         | *mB   | true",
+            "mB::1024.0.as(gB::T)         | *gB   | true",
+            "gB::1024.0.as(tB::T)         | *tB   | true",
+            "tB::1024.0.as(pB::T)         | *pB   | true",
+            // Downward conversions
+            "kB::1.0.as(bB::T)            | *bB   | true",
+            "mB::1.0.as(kB::T)            | *kB   | true",
+            "gB::1.0.as(mB::T)            | *mB   | true",
+            "tB::1.0.as(gB::T)            | *gB   | true",
+            "pB::1.0.as(tB::T)            | *tB   | true",
+    }, delimiter = '|')
+    public void testAs(String code, String expectedType, boolean shouldMatch) {
+        Obj result = ObjmtronSerializer.parse(code);
+        Obj expected = ObjmtronSerializer.parse(expectedType);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "bB::1500.0.normalize()    % bB::1500.0",
+            "kB::1000.0.normalize()    % kB::1000.0",
+
+            // cascade upward until stable
+            "bB::1048576.0.normalize() % kB::1024.0",
+            "kB::2048.0.normalize()    % mB::2.0",
+            "gB::4096.0.normalize()    % tB::4.0",
+            "tB::2048.0.normalize()    % pB::2.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // raw real to time unit (no conversion — re-tagging only)
+            "30000.0.as(minute::T)                                                              % minute::30000.0",
+            "7.0.as(nanos::T)                                                                   % nanos::7.0",
+
+            // nanos conversions (identity and upward)
+            "nanos::500.0.as(nanos::T)                                                          % nanos::500.0",
+            "nanos::1000.0.as(micros::T)                                                        % micros::1.0",
+            "nanos::1000000.0.as(millis::T)                                                     % millis::1.0",
+            "nanos::1000000000.0.as(second::T)                                                  % second::1.0",
+            "nanos::60000000000.0.as(minute::T)                                                 % minute::1.0",
+            "nanos::3600000000000.0.as(hour::T)                                                 % hour::1.0",
+
+            // micros conversions (identity and upward)
+            "micros::500.0.as(micros::T)                                                        % micros::500.0",
+            "micros::1000.0.as(millis::T)                                                       % millis::1.0",
+            "micros::1000000.0.as(second::T)                                                    % second::1.0",
+            "micros::60000000.0.as(minute::T)                                                   % minute::1.0",
+            "micros::3600000000.0.as(hour::T)                                                   % hour::1.0",
+
+            // millis conversions (identity and upward)
+            "millis::1000.0.as(millis::T)                                                        % millis::1000.0",
+            "millis::1000.0.as(second::T)                                                        % second::1.0",
+            "millis::60000.0.as(minute::T)                                                       % minute::1.0",
+            "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
+
+            // second conversions (downward, identity, and upward)
+            "second::1.0.as(nanos::T)                                                            % nanos::1000000000.0",
+            "second::1.0.as(micros::T)                                                           % micros::1000000.0",
+            "second::1.0.as(millis::T)                                                           % millis::1000.0",
+            "second::60.0.as(second::T)                                                          % second::60.0",
+            "second::60.0.as(minute::T)                                                          % minute::1.0",
+            "second::3600.0.as(hour::T)                                                          % hour::1.0",
+
+            // minute conversions (downward, identity, and upward)
+            "minute::1.0.as(nanos::T)                                                            % nanos::60000000000.0",
+            "minute::1.0.as(micros::T)                                                           % micros::60000000.0",
+            "minute::1.0.as(millis::T)                                                           % millis::1000.0.mult(60.0)",
+            "minute::1.0.as(second::T)                                                           % second::60.0",
+            "minute::1.0.as(minute::T)                                                           % minute::1.0",
+            "minute::60.0.as(hour::T)                                                            % hour::1.0",
+
+            // hour conversions (downward and identity)
+            "hour::1.0.as(nanos::T)                                                              % nanos::3600000000000.0",
+            "hour::1.0.as(micros::T)                                                             % micros::3600000000.0",
+            "hour::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0)",
+            "hour::1.0.as(second::T)                                                             % second::60.0.mult(60.0)",
+            "hour::1.0.as(minute::T)                                                             % minute::60.0",
+            "hour::1.0.as(hour::T)                                                               % hour::1.0",
+
+            // day conversions (downward, identity, and upward)
+            "day::1.0.as(nanos::T)                                                               % nanos::86400000000000.0",
+            "day::1.0.as(micros::T)                                                              % micros::86400000000.0",
+            "day::1.0.as(millis::T)                                                             % millis::1000.0.mult(60.0).mult(60.0).mult(24.0)",
+            "day::1.0.as(second::T)                                                             % second::60.0.mult(60.0).mult(24.0)",
+            "day::1.0.as(minute::T)                                                             % minute::60.0.mult(24.0)",
+            "day::1.0.as(hour::T)                                                               % hour::24.0",
+            "day::1.0.as(day::T)                                                                % day::1.0",
+
+            // smaller units → day
+            "nanos::86400000000000.0.as(day::T)                                                 % day::1.0",
+            "micros::86400000000.0.as(day::T)                                                   % day::1.0",
+            "millis::86400000.0.as(day::T)                                                      % day::1.0",
+            "second::86400.0.as(day::T)                                                         % day::1.0",
+            "minute::1440.0.as(day::T)                                                          % day::1.0",
+            "hour::24.0.as(day::T)                                                              % day::1.0",
+
+            // Multi-step and fractional day conversions
+            "millis::172800000.0.as(day::T)                                                     % day::2.0",
+            "hour::36.0.as(day::T)                                                              % day::1.5",
+            "day::1.5.as(hour::T)                                                               % hour::36.0",
+            "day::2.5.as(minute::T)                                                             % minute::3600.0",
+            "day::0.5.as(second::T)                                                             % second::43200.0",
+
+            // time units require real values — int-backed time is a type violation
+            "day::2.as(millis::T)                                                              % <ERROR>",
+            "hour::2.as(minute::T)                                                             % <ERROR>",
+            "nanos::2.as(millis::T)                                                            % <ERROR>",
+            "micros::2.as(millis::T)                                                           % <ERROR>",
+
+            // Multi-step conversions (skip levels)
+            "nanos::3600000000000.0.as(hour::T)                                                  % hour::1.0",
+            "micros::3600000000.0.as(hour::T)                                                    % hour::1.0",
+            "millis::3600000.0.as(hour::T)                                                       % hour::1.0",
+            "second::3600.0.as(hour::T)                                                          % hour::1.0",
+
+            // Larger / fractional values
+            "nanos::5400000000000.0.as(hour::T)                                                  % hour::1.5",
+            "micros::5400000000.0.as(hour::T)                                                    % hour::1.5",
+            "micros::1500000.0.as(second::T)                                                      % second::1.5",
+            "second::1.5.as(micros::T)                                                            % micros::1500000.0",
+            "hour::0.5.as(nanos::T)                                                              % nanos::1800000000000.0",
+            "millis::1800000.0.as(minute::T)                                                     % minute::30.0",
+            "millis::7200000.0.as(hour::T)                                                       % hour::2.0",
+            "second::90.0.as(minute::T)                                                          % minute::1.5",
+            "second::5400.0.as(hour::T)                                                          % hour::1.5",
+            "minute::90.0.as(hour::T)                                                            % hour::1.5",
+            "hour::2.5.as(minute::T)                                                             % minute::150.0",
+            "hour::0.5.as(second::T)                                                             % second::1800.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeConversions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // eq() - Equality tests with exact conversions
+            "nanos::1000.0.eq(micros::1.0)                                                       % true",
+            "nanos::1000000.0.eq(millis::1.0)                                                    % true",
+            "nanos::1000000000.0.eq(second::1.0)                                                 % true",
+            "nanos::60000000000.0.eq(minute::1.0)                                                % true",
+            "nanos::86400000000000.0.eq(day::1.0)                                                % true",
+            "micros::1000.0.eq(millis::1.0)                                                      % true",
+            "micros::1000000.0.eq(second::1.0)                                                   % true",
+            "micros::60000000.0.eq(minute::1.0)                                                  % true",
+            "micros::86400000000.0.eq(day::1.0)                                                  % true",
+            "millis::1000.0.eq(second::1.0)                                                       % true",
+            "second::60.0.eq(minute::1.0)                                                         % true",
+            "minute::60.0.eq(hour::1.0)                                                           % true",
+            "millis::60000.0.eq(minute::1.0)                                                      % true",
+            "millis::3600000.0.eq(hour::1.0)                                                      % true",
+            "second::3600.0.eq(hour::1.0)                                                         % true",
+
+            // neq() - Not equal tests
+            "nanos::1000000.0.neq(millis::1.0)                                                    % false",
+            "micros::1000.0.neq(millis::1.0)                                                      % false",
+            "millis::1000.0.neq(second::1.0)                                                      % false",
+            "second::60.0.neq(minute::1.0)                                                        % false",
+
+            // lt() and gt() - Basic comparison tests
+            "micros::500.0.lt(millis::1.0)                                                        % true",
+            "millis::1.0.gt(micros::500.0)                                                        % true",
+            "nanos::500000.0.lt(millis::1.0)                                                      % true",
+            "millis::1.0.gt(nanos::500000.0)                                                      % true",
+            "millis::500.0.lt(second::1.0)                                                        % true",
+            "second::1.0.gt(millis::500.0)                                                        % true",
+            "millis::1000.0.lt(second::1.0)                                                       % false",
+            "millis::1000.0.gt(second::1.0)                                                       % false",
+
+            // lte() and gte() - Less/greater than or equal tests
+            "micros::1000.0.lte(millis::1.0)                                                      % true",
+            "micros::1000.0.gte(millis::1.0)                                                      % true",
+            "nanos::1000000.0.lte(millis::1.0)                                                    % true",
+            "nanos::1000000.0.gte(millis::1.0)                                                    % true",
+            "millis::1000.0.lte(second::1.0)                                                      % true",
+            "millis::1000.0.gte(second::1.0)                                                      % true",
+            "minute::60.0.lte(hour::1.0)                                                          % true",
+            "minute::60.0.gte(hour::1.0)                                                          % true",
+
+            // day conversions
+            "day::1.0.eq(hour::24.0)                                                             % true",
+            "hour::24.0.eq(day::1.0)                                                             % true",
+            "day::2.0.eq(hour::48.0)                                                             % true",
+            "day::1.0.eq(millis::86400000.0)                                                     % true",
+            "day::1.0.neq(hour::23.0)                                                            % true",
+            "hour::12.0.lt(day::1.0)                                                             % true",
+            "day::1.0.gt(hour::12.0)                                                             % true",
+            "day::1.0.lte(hour::24.0)                                                            % true",
+            "day::1.0.gte(hour::24.0)                                                            % true",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeConversionRelations(final String code, final boolean match) {
+        assertEquals(match, ObjmtronSerializer.parse(code).apply().boolValue());
+    }
+
+    @ParameterizedTest
+    @Training.SkipTraining(reason = "too complicated -- requires reasoning on the compiler's behavior")
+    @CsvSource(value = {
+            // Time unit as() conversions - verifies resolver picks correct as?X<=Y instruction
+            "nanos::1000.0.as(micros::T)    | *micros   | true",
+            "nanos::1000000.0.as(millis::T)  | *millis   | true",
+            "nanos::1000000000.0.as(second::T) | *second | true",
+            "nanos::86400000000000.0.as(day::T) | *day   | true",
+            "micros::1000.0.as(millis::T)   | *millis   | true",
+            "micros::1000000.0.as(second::T) | *second  | true",
+            "micros::86400000000.0.as(day::T) | *day    | true",
+            "millis::1000.0.as(second::T)   | *second   | true",
+            "second::60.0.as(minute::T)     | *minute   | true",
+            "minute::60.0.as(hour::T)       | *hour     | true",
+            // Downward conversions
+            "micros::1.0.as(nanos::T)        | *nanos    | true",
+            "millis::1.0.as(nanos::T)        | *nanos    | true",
+            "millis::1.0.as(micros::T)       | *micros   | true",
+            "second::1.0.as(nanos::T)        | *nanos    | true",
+            "second::1.0.as(micros::T)       | *micros   | true",
+            "second::1.0.as(millis::T)       | *millis   | true",
+            "minute::1.0.as(second::T)       | *second   | true",
+            "hour::1.0.as(minute::T)         | *minute   | true",
+            // day conversions
+            "day::1.0.as(nanos::T)           | *nanos    | true",
+            "day::1.0.as(micros::T)          | *micros   | true",
+            "day::1.0.as(hour::T)            | *hour     | true",
+            "day::1.0.as(minute::T)          | *minute   | true",
+            "day::1.0.as(day::T)             | *day      | true",
+            "hour::24.0.as(day::T)           | *day      | true",
+            "minute::1440.0.as(day::T)       | *day      | true",
+            "second::86400.0.as(day::T)      | *day      | true",
+            "millis::86400000.0.as(day::T)   | *day      | true",
+    }, delimiter = '|')
+    public void testTimeAs(String code, String expectedType, boolean shouldMatch) {
+        Obj result = ObjmtronSerializer.parse(code);
+        Obj expected = ObjmtronSerializer.parse(expectedType);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @Disabled("plus in inst registry causing havoc")
+    @ParameterizedTest
+    @CsvSource(value = {
+            // time + time = time — same unit
+            "hour::1.0.plus(hour::2.0)                                                          % hour::3.0",
+            "day::1.0.plus(day::2.0)                                                            % day::3.0",
+            "minute::30.0.plus(minute::30.0)                                                    % minute::60.0",
+            "second::30.0.plus(second::30.0)                                                    % second::60.0",
+
+            // time + time = time — cross unit, result carries the lhs unit
+            "hour::24.0.plus(day::2.0)                                                          % hour::72.0",
+            "day::1.0.plus(hour::12.0)                                                          % day::1.5",
+            "day::2.0.plus(hour::12.0)                                                          % day::2.5",
+            "minute::30.0.plus(second::30.0)                                                    % minute::30.5",
+            "second::30.0.plus(millis::500.0)                                                   % second::30.5",
+            "millis::1000.0.plus(second::1.0)                                                   % millis::2000.0",
+            "hour::12.0.plus(minute::720.0)                                                     % hour::24.0",
+
+            // bare real rhs is treated as the lhs unit
+            "hour::24.0.plus(2.0)                                                               % hour::26.0",
+            "day::1.0.plus(0.5)                                                                 % day::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeAddition(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "nanos::1999.0.normalize()   % nanos::1999.0",
+            "micros::1999.0.normalize()  % micros::1999.0",
+            "millis::1500.0.normalize()  % millis::1500.0",
+
+            // cascade upward until stable
+            "nanos::2000.0.normalize()   % micros::2.0",
+            "micros::2000.0.normalize()  % millis::2.0",
+            "millis::9000.0.normalize()  % second::9.0",
+            "minute::150.0.normalize()   % hour::2.5",
+            "hour::72.0.normalize()      % day::3.0",
+
+            // cascade through more than one unit
+            "nanos::9000000000.0.normalize()  % second::9.0",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTimeNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // bare real to metric unit (no conversion — re-tagging only)
+            "5.0.as(meter::T)                                                                    % meter::5.0",
+
+            // mm conversions (identity and upward)
+            "mm::10.0.as(mm::T)                                                                  % mm::10.0",
+            "mm::10.0.as(cm::T)                                                                  % cm::1.0",
+            "mm::100.0.as(dm::T)                                                                 % dm::1.0",
+            "mm::1000.0.as(meter::T)                                                             % meter::1.0",
+            "mm::1000000.0.as(km::T)                                                             % km::1.0",
+
+            // cm conversions (downward, identity, and upward)
+            "cm::1.0.as(mm::T)                                                                   % mm::10.0",
+            "cm::10.0.as(cm::T)                                                                  % cm::10.0",
+            "cm::10.0.as(dm::T)                                                                  % dm::1.0",
+            "cm::100.0.as(meter::T)                                                              % meter::1.0",
+            "cm::100000.0.as(km::T)                                                              % km::1.0",
+
+            // dm conversions (downward, identity, and upward)
+            "dm::1.0.as(mm::T)                                                                   % mm::100.0",
+            "dm::1.0.as(cm::T)                                                                   % cm::10.0",
+            "dm::10.0.as(dm::T)                                                                  % dm::10.0",
+            "dm::10.0.as(meter::T)                                                               % meter::1.0",
+            "dm::10000.0.as(km::T)                                                               % km::1.0",
+
+            // meter conversions (downward, identity, and upward)
+            "meter::1.0.as(mm::T)                                                                % mm::1000.0",
+            "meter::1.0.as(cm::T)                                                                % cm::100.0",
+            "meter::1.0.as(dm::T)                                                                % dm::10.0",
+            "meter::1000.0.as(meter::T)                                                          % meter::1000.0",
+            "meter::1000.0.as(km::T)                                                             % km::1.0",
+
+            // km conversions (downward and identity)
+            "km::1.0.as(mm::T)                                                                   % mm::1000000.0",
+            "km::1.0.as(cm::T)                                                                   % cm::100000.0",
+            "km::1.0.as(dm::T)                                                                   % dm::10000.0",
+            "km::1.0.as(meter::T)                                                                % meter::1000.0",
+            "km::1.0.as(km::T)                                                                   % km::1.0",
+
+            // multi-step conversions (skip levels)
+            "mm::1500000.0.as(km::T)                                                             % km::1.5",
+            "mm::127.0.as(dm::T)                                                                 % dm::1.27",
+            "km::0.5.as(cm::T)                                                                   % cm::50000.0",
+
+            // inch conversions (identity and upward)
+            "inch::12.0.as(inch::T)                                                              % inch::12.0",
+            "inch::12.0.as(foot::T)                                                              % foot::1.0",
+            "inch::36.0.as(yard::T)                                                              % yard::1.0",
+            "inch::63360.0.as(mile::T)                                                           % mile::1.0",
+
+            // foot conversions (downward, identity, and upward)
+            "foot::1.0.as(inch::T)                                                               % inch::12.0",
+            "foot::12.0.as(foot::T)                                                              % foot::12.0",
+            "foot::3.0.as(yard::T)                                                               % yard::1.0",
+            "foot::5280.0.as(mile::T)                                                            % mile::1.0",
+
+            // yard conversions (downward, identity, and upward)
+            "yard::1.0.as(inch::T)                                                               % inch::36.0",
+            "yard::1.0.as(foot::T)                                                               % foot::3.0",
+            "yard::2.0.as(yard::T)                                                               % yard::2.0",
+            "yard::1760.0.as(mile::T)                                                            % mile::1.0",
+
+            // mile conversions (downward and identity)
+            "mile::1.0.as(inch::T)                                                               % inch::63360.0",
+            "mile::1.0.as(foot::T)                                                               % foot::5280.0",
+            "mile::1.0.as(yard::T)                                                               % yard::1760.0",
+            "mile::1.0.as(mile::T)                                                               % mile::1.0",
+
+            // multi-step conversions (skip levels)
+            "inch::18.0.as(foot::T)                                                              % foot::1.5",
+            "foot::6.0.as(yard::T)                                                               % yard::2.0",
+            "yard::2200.0.as(mile::T)                                                            % mile::1.25",
+            "mile::1.5.as(inch::T)                                                               % inch::95040.0",
+
+            // cross-system metric → imperial (bridged through 25.4 mm per inch)
+            "meter::1.0.as(inch::T)                                                              % inch::39.37007874015748",
+            "meter::1.0.as(foot::T)                                                              % foot::3.2808398950131235",
+            "meter::1.5.as(foot::T)                                                              % foot::4.921259842519685",
+            "mm::127.0.as(inch::T)                                                               % inch::5.0",
+            "cm::1.0.as(inch::T)                                                                 % inch::0.3937007874015748",
+            "dm::1.0.as(inch::T)                                                                 % inch::3.937007874015748",
+            "km::1.0.as(mile::T)                                                                 % mile::0.6213711922373341",
+            "km::1.0.as(foot::T)                                                                 % foot::3280.8398950131236",
+
+            // cross-system imperial → metric
+            "inch::1.0.as(mm::T)                                                                 % mm::25.4",
+            "inch::1.0.as(cm::T)                                                                 % cm::2.54",
+            "inch::1.0.as(dm::T)                                                                 % dm::0.254",
+            "inch::1.0.as(meter::T)                                                              % meter::0.0254",
+            "yard::1.0.as(meter::T)                                                              % meter::0.9144",
+            "mile::1.0.as(mm::T)                                                                 % mm::1609344.0",
+            "mile::1.0.as(meter::T)                                                              % meter::1609.344",
+            "mile::1.0.as(km::T)                                                                 % km::1.609344",
+
+            // within-system equality (routes through type constructors, not the as-instruction)
+            "foot::1.0.eq(inch::12.0)                                                            % true",
+            "yard::1.0.eq(foot::3.0)                                                             % true",
+            "mile::1.0.eq(yard::1760.0)                                                          % true",
+            "mile::1.0.eq(foot::5280.0)                                                          % true",
+            "meter::1.0.eq(mm::1000.0)                                                           % true",
+            "km::1.0.eq(meter::1000.0)                                                           % true",
+            "foot::12.0.eq(yard::1.0)                                                            % false",
+            "mm::5.0.eq(cm::1.0)                                                                 % false",
+
+            // nominal typing of metric and imperial units
+            "mm::5.0.matches(metric::T)                                                          % true",
+            "km::1.0.matches(metric::T)                                                          % true",
+            "inch::5.0.matches(imperial::T)                                                      % true",
+            "mile::1.0.matches(imperial::T)                                                      % true",
+            "mm::5.0.matches(imperial::T)                                                        % false",
+            "meter::5.0.matches(imperial::T)                                                     % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDistanceConversions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "mm::19.0.normalize()                       % mm::19.0",
+            "cm::15.0.normalize()                       % cm::15.0",
+            "dm::15.0.normalize()                       % dm::15.0",
+            "meter::1999.0.normalize()                  % meter::1999.0",
+
+            // cascade upward until stable
+            "mm::150.0.normalize()                      % cm::15.0",
+            "cm::25.0.normalize()                       % dm::2.5",
+            "dm::25.0.normalize()                       % meter::2.5",
+            "meter::2500.0.normalize()                  % km::2.5",
+
+            // already the largest unit — stays put
+            "km::1.5.normalize()                        % km::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testMetricNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // below threshold — stays put
+            "inch::23.0.normalize()                     % inch::23.0",
+            "foot::5.0.normalize()                      % foot::5.0",
+            "yard::3519.0.normalize()                   % yard::3519.0",
+
+            // cascade upward until stable
+            "inch::48.0.normalize()                     % foot::4.0",
+            "foot::15.0.normalize()                     % yard::5.0",
+            "yard::7200.0.normalize()                   % mile::4.090909090909091",
+
+            // already the largest unit — stays put
+            "mile::1.5.normalize()                      % mile::1.5",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testImperialNormalize(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest()
+    @Training(instruction = "what is the human readable form of {{{datetime}}}?", output = "{{{expected}}}")
+    @CsvSource(value = {
+            // Winter date, negative offset
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>   % Wednesday, December 25, 2024 09:00:00 AM -05:00",
+            // Summer date, UTC
+            "datetime::<//2026.08:9/10/14/24/508?tz=+0000>     % Sunday, August 9, 2026 10:14:24 AM +00:00",
+            // Midnight, New Year's Day
+            "datetime::<//2026.01:1/00/00/00/000?tz=+0000>     % Thursday, January 1, 2026 12:00:00 AM +00:00",
+            // Noon, west coast US
+            "datetime::<//2026.07:4/12/00/00/000?tz=-0800>     % Saturday, July 4, 2026 12:00:00 PM -08:00",
+            // 11:59 PM, positive half-hour offset (India)
+            "datetime::<//2026.12:31/23/59/59/999?tz=+0530>    % Thursday, December 31, 2026 11:59:59 PM +05:30",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDateTime(final String datetime, final String expected) {
+        final Obj parse = ObjmtronSerializer.parse(datetime).apply();
+        assertEquals(expected, mathInstSet.humanReadableDatetime(parse.asUri()));
+        assertTrue(parse.testNominally(DATETIME_TYPE));
+        assertFalse(uri("a/b/c").testNominally(DATETIME_TYPE));
+        assertTrue(parse.testNominally(URI_TYPE));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // datetime::T type checking
+            "datetime_now().matches(datetime::T)                                    % true",
+            "<http://example.com>.matches(datetime::T)                              % false",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % true",
+            // Structural projections (host/path/q → uri, port → int)
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host                            % <2024.12>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port                            % 25",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>path>>1                         % <09>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>path>>4                         % <000>",
+            // Datetime vocabulary >> (named projections, only on typed datetimes)
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year                 % 2024",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month                % 12",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>day                  % 25",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>hour                 % 9",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>minute               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>second               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>millis               % 0",
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>tz                   % '-0500'",
+            // Poly projection and dt_now
+            "datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>{year,month,day}     % {2024,12,25}",
+            // Select (==) mutation — host takes uri, not str
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>_]>>port                 % 25",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[host=><2025.01>]>>host         % <2025.01>",
+            // q mutation via .as(rec::T) and >>=
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz    % '+0000'",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q/tz     % '+0000'",
+            // TODO: bug in rec update: "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q/tz=>'+0000']>>q>>tz       % '+0000'",
+            // Record → URI → datetime round-trip (fixed Rec→URI q field handling)
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T).as(str::T)    % 'Wednesday, December 25, 2024 09:00:00 AM -05:00'",
+            "[host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(datetime::T).as(uri::T)    % <//2024.12:25/09/00/00/000?tz=-0500>",
+            // isa filter
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25].as(uri::T)           % <//2024.12:25/09/00/00/000?tz=-0500>",
+            "<//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26].as(uri::T)           % noobj",
+            // Predicate rejects invalid datetimes
+            "<//99.99:99/99/99/99/999?tz=X>.matches(datetime::T)                    % false",
+            "<//2024.13:25/09/00/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/25/00/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/09/60/00/000?tz=-0500>.matches(datetime::T)              % false",
+            "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
+            "<//99.99:99/99/99/99/999?tz=X>?datetime::T                    % noobj",
+            "<//2024.13:25/09/00/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/25/00/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/09/60/00/000?tz=-0500>?datetime::T              % noobj",
+            "<//2024.12:25/09/00/00>?datetime::T                           % noobj",
+            // str → datetime parsing (ISO-8601 and Docker timestamp formats)
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T).matches(datetime::T)         % true",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>year                        % 2026",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>month                       % 8",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>day                         % 1",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>hour                        % 23",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>minute                      % 37",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>second                      % 33",
+            "'2026-08-01T23:37:33-06:00'.as(datetime::T)>>tz                          % '-0600'",
+            // Docker timestamp format (space instead of T, space before tz, tz name)
+            "'2026-08-01 23:37:33 -0600 MDT'.as(datetime::T)>>year                    % 2026",
+            "'2026-08-01 23:37:33 -0600 MDT'.as(datetime::T)>>tz                      % '-0600'",
+            // UTC / Zulu
+            "'2024-12-25T09:00:00Z'.as(datetime::T)>>day                              % 25",
+            "'2024-12-25T09:00:00Z'.as(datetime::T)>>tz                               % '+0000'",
+            // Date only (defaults to midnight UTC)
+            "'2024-12-25'.as(datetime::T)>>month                                       % 12",
+            "'2024-12-25'.as(datetime::T).matches(datetime::T)                         % true",
+            // Invalid strings rejected
+            "'not-a-date'.as(datetime::T)                                              % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testDateTimeCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testConstants() {
+        Machine.current().memory().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
+        assertEquals(jnt(34), ObjmtronSerializer.parse("/abc/xyz -> 34").apply());
+        assertEquals(jnt(34), ObjmtronSerializer.parse("*/abc/xyz").apply());
+        assertEquals(jnt(99), ObjmtronSerializer.parse("/abc/xyz -> 99").apply());
+        assertEquals(jnt(99), ObjmtronSerializer.parse("*/abc/xyz").apply());
+        assertFalse(ObjmtronSerializer.parse("*/abc/xyz?constq").apply().boolValue());
+        assertEquals(noobj(), ObjmtronSerializer.parse("/abc/xyz?constq -> noobj").apply());
+        assertEquals(jnt(989), ObjmtronSerializer.parse("/abc/xyz?constq -> 989").apply());
+        assertTrue(ObjmtronSerializer.parse("*/abc/xyz?constq").apply().boolValue());
+        //assertEquals(jnt(989), mParser.eval("*/abc/xyz"));
+        assertTrue(ObjmtronSerializer.parse("/abc/xyz -> 100").apply().isFail());
+        assertEquals(jnt(88), ObjmtronSerializer.parse("/abc/xyz?constq -> 88").apply());
+        //assertEquals(jnt(88), mParser.eval("*/abc/xyz"));
+    }
+}

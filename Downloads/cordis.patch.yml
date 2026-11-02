@@ -1,0 +1,79 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+- id: ui-theme
+  name: "@deepseek-ai/dsh-client-ui-theme"
+  config:
+    preference: dark
+    fontSize: 20
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      ollama:
+        displayName: ollama
+        api: openai-completions
+        baseURL: http://192.168.1.72:11434/v1
+        models:
+          - id: nimble:latest
+            name: nimble:latest
+          - id: qwen3-vl:latest
+            name: qwen3-vl:latest
+          - id: mtron-qwen-14b:assistant-thinking
+            name: mtron-qwen-14b:assistant-thinking
+          - id: mtron-qwen-14b:assistant
+            name: mtron-qwen-14b:assistant
+          - id: mtron-qwen-14b:latest
+            name: mtron-qwen-14b:latest
+          - id: mtron-qwen3.8-27b:latest
+            name: mtron-qwen3.8-27b:latest
+          - id: qwen3.8:27b
+            name: qwen3.8:27b
+          - id: gemma4-26b:latest
+            name: gemma4-26b:latest
+          - id: qwen3-embedding:4b
+            name: qwen3-embedding:4b
+          - id: qwen3.6:latest
+            name: qwen3.6:latest
+        apiKeyEnv: OLLAMA_API_KEY
+      metatron:
+        displayName: metatron
+        apiKeyEnv: METATRON_API_KEY
+        api: openai-completions
+        baseURL: http://192.168.1.61:8777/v1
+        models:
+          - id: dr.stynx
+            name: dr.stynx
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+    reasoningEffort: high
+- id: compaction-policy
+  name: dsh-compaction-policy
+  config:
+    enabled: true
+- id: metatron_core
+  name: "@deepseek-ai/dsh-mcp-client"
+- id: bookmarks
+  disabled: false
+- insert:
+    - id: mcp-mcp_steroid
+      name: "@deepseek-ai/dsh-mcp-client"
+      config:
+        transport: streamable-http
+        serverName: mcp_steroid
+        url: http://192.168.1.61:64342/stream
+        headers:
+          IJ_MCP_SERVER_PROJECT_PATH: /home/killswitch/software/metatron
+    - id: mcp-metatron_mcp
+      name: "@deepseek-ai/dsh-mcp-client"
+      config:
+        transport: streamable-http
+        serverName: metatron_mcp
+        url: http://192.168.1.61:8777/mcp

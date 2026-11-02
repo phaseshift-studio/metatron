@@ -1,0 +1,104 @@
+# =============================================================================
+#  metatron — optional space backends  (an OVERRIDE file, not the distribution)
+#
+#  dist/docker/compose.yaml starts ONE service: the metatron VM, which pulls
+#  whatever a deployment needs itself through the host socket (dckrspace::T and
+#  the boot modules under boot/space/).  This file is the other philosophy, kept
+#  out of that file on purpose so the shipped compose cannot be misread as the
+#  place where backends belong: here compose owns the backend lifecycle, and a
+#  boot dials each backend by name through its own boot args.
+#
+#  USE
+#      docker compose -f compose.yaml -f compose.infra.yaml up -d
+#      docker compose -f compose.yaml -f compose.infra.yaml down
+#
+#  There is no profile to enable here — the `-f` IS the opt-in, and the project
+#  name, network and restart policy are inherited from compose.yaml.
+#
+#  DIAL THEM FROM A BOOT PROFILE (boot args, so the boot file reads them):
+#      mariadb/host=><mariadb>,mariadb/port=>3306,
+#      chroma/host=><chroma>,chroma/port=>8000,
+#      gremlin/host=><gremlin>,gremlin/port=>8182
+#
+#  The container names below are the ones the boot modules probe before
+#  composing their own (`from(docker:container/metatron_mariadb)`, ...), and the
+#  volume names match the ones those modules give their own dckrspace stacks —
+#  so switching between "compose owns it" and "dckrspace pulls it" reuses the
+#  same data instead of starting empty.
+# =============================================================================
+
+services:
+  mariadb:
+    image: ${METATRON_MARIADB_IMAGE:-mariadb:11.2}
+    container_name: metatron_mariadb
+    restart: ${METATRON_RESTART:-unless-stopped}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${METATRON_DB_PASSWORD:-metatron}
+      MYSQL_DATABASE: ${METATRON_DB_NAME:-metatron}
+      MYSQL_USER: ${METATRON_DB_USER:-metatron}
+      MYSQL_PASSWORD: ${METATRON_DB_PASSWORD:-metatron}
+    # Published only to reach the server from the host (a host SQL client);
+    # in-network boots address it as mariadb:3306.
+    ports:
+      - "${METATRON_MARIADB_PORT:-3308}:3306"
+    volumes:
+      - metatron-mariadb:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "--silent", "-h", "127.0.0.1",
+             "-u${METATRON_DB_USER:-metatron}", "-p${METATRON_DB_PASSWORD:-metatron}"]
+      interval: 5s
+      retries: 60
+      start_period: 5s
+    networks:
+      - metatron-net
+
+  gremlin:
+    image: ${METATRON_GREMLIN_IMAGE:-janusgraph/janusgraph:1.1.0}
+    container_name: metatron_gremlin
+    restart: ${METATRON_RESTART:-unless-stopped}
+    environment:
+      janusgraph.storage.backend: inmemory
+      janusgraph.storage.hostname: 0.0.0.0
+      GREMLIN_REMOTE_HOSTS: localhost
+      JANUS_PROPS_TEMPLATE: inmemory
+    ports:
+      - "${METATRON_GREMLIN_PORT:-8182}:8182"
+    volumes:
+      - metatron-gremlin:/janusgraph/inmemory
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8182' || exit 1"]
+      interval: 5s
+      retries: 60
+      start_period: 30s
+    networks:
+      - metatron-net
+
+  chroma:
+    image: ${METATRON_CHROMA_IMAGE:-chromadb/chroma:1.5.3}
+    container_name: metatron_chroma
+    restart: ${METATRON_RESTART:-unless-stopped}
+    environment:
+      IS_PERSISTENT: "TRUE"
+      ANONYMIZED_TELEMETRY: "FALSE"
+    ports:
+      - "${METATRON_CHROMA_PORT:-8025}:8000"
+    volumes:
+      - metatron-chroma:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8000' || exit 1"]
+      interval: 5s
+      retries: 60
+      start_period: 5s
+    networks:
+      - metatron-net
+
+volumes:
+  # Names match the volumes the boot modules create for their own dckrspace
+  # stacks (metatron_mariadb, ...), so switching between "compose owns it" and
+  # "dckrspace pulls it" reuses the same data instead of starting empty.
+  metatron-mariadb:
+    name: ${METATRON_MARIADB_VOLUME:-metatron_mariadb}
+  metatron-gremlin:
+    name: ${METATRON_GREMLIN_VOLUME:-metatron_gremlin}
+  metatron-chroma:
+    name: ${METATRON_CHROMA_VOLUME:-metatron_chroma}

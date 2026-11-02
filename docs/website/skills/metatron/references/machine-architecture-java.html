@@ -1,0 +1,1124 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>machine-architecture-java · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dev/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/dev/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">machine-architecture-java</h1>
+        <small>Java-side Machine architecture — Machine, its five components (Memory, Network, InstSet, Compiler, Processor), the frame/ComponentUnion nesting model (the frame *is* the machine), push/pop/move, the compile→run pipeline, threads/monads, and the load-bearing invariants of the read path: data memory, instruction memory, and the hop between them.</small><br/>
+        <a href="machine-architecture-java.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>machine-architecture-java.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>Machine Architecture (Java)</h2>
+<h3>What a Machine is</h3>
+<p>A <strong>Machine</strong> is a <em>space of spaces</em> — the container in which address resolution happens. The interface is
+<code>Machine extends Rec, AutoCloseable</code> and the concrete body is <code>AbstractMachine extends MRec</code>. Its five members
+(<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec entries shaped as <code>machine::T</code>. Its own address
+surface is its <strong>sphere</strong> — <code>MachineSpace</code>, a <code>memSpace</code> the machine holds and memory never indexes (2026-10-25):
+<code>Machine.read</code>/<code>write</code> ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
+its components, its <code>sys</code>), then the network, then memory, then instruction memory. <code>~/sys</code> lives in the sphere's own
+store; the sphere declines everything else under the vid, so the machine's data stays memory's. Of the five:</p>
+<ul>
+<li><strong>Memory</strong> is the facade over the world of spaces — the single read/write surface.</li>
+<li><strong>Compiler</strong> lowers code; <strong>Processor</strong> runs it; neither is an address space.</li>
+<li><strong>InstSet</strong> and <strong>Network</strong> are <em>accumulating</em> components (a frame wraps them); <strong>Compiler</strong> and <strong>Processor</strong> are
+<em>constructive</em> (whole-value, inherited or replaced).</li>
+</ul>
+<p>A machine replaced the old <code>Router</code> as the root of the address space. <code>Router.java</code> is gone, and <code>AbstractMachine</code> is
+the one concrete body — a <code>Rec</code> whose own addresses its <code>MachineSpace</code> answers, while <code>Machine</code> the interface stays a
+<code>Rec</code>.</p>
+<h3>Package overview</h3>
+<pre><code>isa/mach/type/Machine.java            ← Machine interface + Component + Machine0 (the contract)
+isa/mach/type/Memory.java             ← Memory interface (relative bindings + absolute space index)
+isa/mach/type/Network.java            ← Network interface (peers + roster + authority arithmetic) + Network.Link
+isa/mach/type/Compiler.java           ← Compiler interface (rewrite → resolve → type) + resolve memo
+isa/mach/type/Processor.java          ← Processor interface + Processor.Helper (the runtime core)
+isa/mach/type/ComponentUnion.java     ← frame wrapper: previous()/current(), read-through, close-current
+isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: frame memory (pattern-aware at())
+                                        (no InstSetUnion; NetworkUnion is a level of its own — see &quot;The five components&quot;)
+isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
+isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
+isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
+isa/mach/type/machine/MachineSpace.java     ← the machine's own sphere: the machine, its components and ~/sys — asked
+                                        first by Machine.read/write, held by the machine, never in memory
+isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
+                                        &lt;vid&gt;/network/# when the machine's sphere hands it an address there
+isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
+isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
+isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
+                                        enclosing machine's (via `previous`)
+isa/mach/type/compiler/…                     ← Compiler impls + parser/rewriter/resolver/typer stages
+isa/m/type/parser/Parser.java                ← the parse-stage contract (the language seam) + Parser.Helper.toCode
+isa/mach/type/processor/…                    ← Processor impls + Monad/MonadProcessor/SwarmProcessor + monads
+isa/mach/type/thread/…                       ← mThread / AbstractThread / VirtualThread / CoreThread / FutureObj
+isa/mach/machInstSet.java                    ← type registration (machine::T etc.) + bootstrap + sum_gather rewrite
+</code></pre>
+<h3>The five components</h3>
+<table>
+<thead>
+<tr><th>Component</th><th>Interface (extends)</th><th>One-line job</th><th>Frame behaviour</th></tr>
+</thead>
+<tbody>
+<tr><td>Memory</td><td><code>Space, Component.Prefix, Closeable</code></td><td>relative bindings (names) + absolute index of DATA spaces (no ISAs; its lookup weighs the instset's libraries)</td><td>accumulates (<code>MemoryUnion</code>)</td></tr>
+<tr><td>Network</td><td><code>Addressable, Component.Prefix, Closeable</code></td><td>this frame's peers <code>service → peer::T</code> + the root-shared roster and names (<code>~/network/prefix</code>), <code>own</code>/<code>isPeer</code>, supervision of links</td><td>a level of its own (<code>NetworkUnion</code>): knowledge (the roster at <code>/network/roster</code>) is shared, reach (<code>peer</code>) is never inherited, and a pop hangs up the frame's dials</td></tr>
+<tr><td>InstSet</td><td><code>Space, Component.Prefix</code> (via <code>AbstractInstSet</code>)</td><td>the vocabulary: types/insts/rewrites/sugars; <code>import</code> lands here</td><td>accumulates — <code>BasicInstSet</code> is own structure over its imports over the enclosing machine's ISA; membership in the rec under <code>reference</code></td></tr>
+<tr><td>Compiler</td><td><code>Component, Rec</code></td><td><code>code::T → code::T</code> in three stages</td><td>constructive (inherited/replaced)</td></tr>
+<tr><td>Processor</td><td><code>mThread, Component</code></td><td><code>code::T → obj</code>; the monadic execution engine</td><td>constructive</td></tr>
+</tbody>
+</table>
+<p><code>Component</code> is a <code>Rec</code> that answers <code>machine()</code> by walking its <code>parent()</code> chain up to the nearest <code>Machine</code>
+(falling back to <code>mach0()</code>). Components are <code>Rec</code>s <em>on purpose</em>: memory and network must be reachable from mtron
+(<code>&gt;&gt;space</code>, <code>&gt;&gt;previous</code>), not just from Java accessors.</p>
+<p><strong>The parental prefix contract.</strong> <code>Component.Prefix</code> is the one algorithm by which a component manages its names:
+<code>prefixes()</code> (this level's rows), <code>previousLevel()</code> / <code>on(Machine)</code> (the level chain), <code>registerPrefix</code> /
+<code>unregisterPrefix</code> (declare and withdraw <em>here</em>), and <code>alignPrefix</code> (resolve a spelling, nearest declaration winning).
+<code>Component.Prefix.Helper</code> builds the effective view over any implementation — <code>effectivePrefix</code>, <code>effectivePrefixes</code>,
+<code>inheritedPrefix</code> — so a memory's short names (<code>cos</code> → <code>/m/inst/cos</code>), a network's authorities (<code>//ginger</code> → an
+origin), and an ISA's scheme aliases (<code>math:cos</code>) are managed by the same walk. <code>AbstractMetatronTest. testParentalChildPrefix</code> runs that contract against every implementation, so a new prefixed component adds one line to
+<code>PrefixParentalTest</code>. <code>alignPrefix</code> is the resolution arm each component already owned (memory: a redirect; network: a
+name → origin; ISA: a scheme → vid) — the contract only gives it one spelling.</p>
+<h3>Reaching a component</h3>
+<p>One accessor per component, and it returns the component — this machine's own level:</p>
+<ul>
+<li><code>memory()</code>, <code>instset()</code>, <code>network()</code> — the accumulating components. The union with the enclosing machine lives
+<em>inside</em> the component (<code>previous</code>), not in a wrapper this call builds.</li>
+<li><code>compiler()</code>, <code>processor()</code> — the machine's own; <code>processor()</code> clones in its non-call arm, so a caller gets a fresh
+runtime.</li>
+<li>Each setter binds the slot, and for memory and instset that is <strong>field only</strong>, never <code>at()</code>: a rec write on a machine
+rec fails its own type check (<code>objCheckAndSave</code> → <code>Lst.test</code>). <code>push()</code> writes the child's memory and instset into
+the child's own rec directly (<code>jvm().put</code>), so an ADDRESS read of a slot answers with the same object the accessor
+returns.</li>
+</ul>
+<p><code>AbstractMachine</code> memoizes the three accumulating components in <code>resolvedMemory</code> / <code>resolvedNetwork</code> /
+<code>resolvedInstSet</code>, so the read path sees a field read — and that field is also what breaks the
+<code>atDirect(uri(MEMORY))</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code> cycle.</p>
+<p><strong>Why it is shaped this way: the read path must never allocate.</strong> Materializing a component constructs an <code>Obj</code>, whose
+type check reads through the machine, which lands back in <code>read()</code>. That one constraint is what the memo fields and
+the instance-seeded slots are for.</p>
+<h3>Frames and the component union (nesting)</h3>
+<p><strong>The frame is the machine.</strong> <code>push()</code> clones this machine into a <strong>child</strong> whose vid strictly extends the parent's
+(<code>descendsFrom</code>), makes it current (<code>CURRENT</code>, a thread-local) and gives it its own rec; <code>push(extension)</code> mints the
+child's vid from the extension. <code>pop()</code> restores the parent and releases what the frame opened; <code>move(extension)</code>
+unifies the two through the coefficient's sign (positive = descend, negative = ascend one step). A push carrying a
+<strong>host</strong> names a <strong>peer</strong> — a network member with its own identity and lifetime, reached by dialing rather than
+descending — so <code>Extension.hasHost()</code> refuses it: a machine is a frame, a peer is not.</p>
+<p>Nesting is <strong>read-through via <code>previous</code></strong>, built at push time, one level per component:</p>
+<table>
+<thead>
+<tr><th>component</th><th>the child's level</th></tr>
+</thead>
+<tbody>
+<tr><td>memory</td><td><code>MemoryUnion(this.memory())</code> — the child's own spaces over the enclosing memory's</td></tr>
+<tr><td>instset</td><td><code>BasicInstSet(this.instset())</code> — the child's own declarations over the enclosing vocabulary</td></tr>
+<tr><td>network</td><td><code>NetworkUnion()</code> — a fresh level, NOT a read-through: reach starts empty, knowledge is the one root roster, and the level's supervision is its own</td></tr>
+</tbody>
+</table>
+<p>Reads go <strong>through</strong> (own first, then <code>previous</code>), writes reach only the own level, and a popped frame takes its own
+spaces and imports with it: it can never close what it inherited. Release is structural, not bookkeeping.</p>
+<p><strong><code>BasicInstSet</code> is a union in two directions, not a binary chain.</strong> Own structure over an <em>ordered list of imports</em>,
+and that whole stack over the enclosing machine's ISA. Two things about how the imports are held:</p>
+<ul>
+<li>the rec records the <strong>vids</strong> (<code>reference</code>, in import order — so the membership is legible from mtron, and printing it
+never inlines a library), while the frame holds the sets <strong>by object</strong>; resolution reads the objects, so belonging
+to a machine does not depend on the address index;</li>
+<li>precedence is <strong>per identity</strong>, not per name: an inst or rewrite by its <code>tid</code>, a type or const by its <code>vid</code>. A nearer
+level wins that identity; a <em>different</em> identity under the same name is added alongside — which is why <code>plus</code> is a
+family rather than a slot. Import order breaks ties.</li>
+</ul>
+<p>Writes reach only the own structure, which is what makes a shared library safe to import from many machines. And a
+read of the vocabulary is a <strong>schema query</strong> — dom/rng admission down the refinement lattice, ranked
+closest-to-the-token — reached through <code>Machine.read</code>: a caller reaching for <code>instset()</code> directly is an optimization of
+that read, never the door.</p>
+<h3>Peer supervision — the network's index kept true</h3>
+<p><code>index</code> and <code>drop</code> are the network's adjoint pair; supervision keeps the map honest between them. The ruling
+(2026-10-21): <strong>only the owner's hang-up removes a peer</strong> — whatever the far side does is a failure, redialed in place.
+The close code cannot carry that distinction anyway: a metatron server shutting down closes its session cache before
+it stops, so its clients see <code>1000</code> whether it is restarting or gone.</p>
+<table>
+<thead>
+<tr><th>piece</th><th>what it does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Network.Link</code></td><td>the protocol-neutral contract a client holding a live connection implements: <code>connected()</code> (local, no trip), <code>hungUp()</code> (its owner closed it — final), <code>redial()</code> (in place, bounded)</td></tr>
+<tr><td><code>PeerSupervisor</code></td><td>one per network level, in a static identity registry. <code>watch</code> comes from <code>Network.index</code> of a link; <code>release</code> from <code>Network.close()</code>, BEFORE the members are retracted. Every 500 ms, AS the level's machine: hung up → drop; connected → clear the schedule; down → redial on a virtual thread, 0.5 s doubling to 10 s, one attempt in flight</td></tr>
+<tr><td><code>Network.Helper.retract</code></td><td>the dual of <code>Helper.index</code>: the owner's <code>close()</code> drops the member whose client IS that object (identity, under the level's lock) from every supervised level, at once</td></tr>
+<tr><td><code>WebSocketRecClient</code></td><td>the first <code>Link</code>: <code>reconnect()</code> + a bounded wait (<code>CONNECT_TIMEOUT_MS</code>, which also bounds the TCP connect). <code>reset()</code>'s own <code>closeBlocking()</code> lands in <code>close()</code> — recognized by the redialer thread, so it is not a hang-up. A redial that never opens does not replay <code>on_close</code>/<code>on_error</code></td></tr>
+<tr><td><code>WebSocketRec.onClose</code> / <code>WebSocketObj</code></td><td>a failed link <code>abandon</code>s its in-flight round trips (each answered with a fail at once) and keeps <code>ROUTED</code>, so the redialed connection does not wrap a second router; <code>awaitOpen</code> redials on demand</td></tr>
+</tbody>
+</table>
+<p><strong>Members are addresses (2026-10-21).</strong> A member's key is the dial's own address as a path, one per surface
+(<code>fURI.pathEncoding</code>: <code>ws://peer.local:8555/mtron?name=me</code> → <code>ws/peer/local/8555/mtron</code> — a legal path, every host
+label its own segment and no dot in any, no <code>?q</code>, loopback aliases spelled <code>localhost</code>; it is <code>fURI.toPath()</code> of the
+dial, the loopback alias spelled first), and the service it reaches is the <code>origin</code> field — wire dispatch
+(<code>Network.Helper.isPeer</code>, <code>peerOf</code>) and <code>law_shard</code>'s routes match on that, never on the key. The component answers its
+own branch:
+<code>BasicNetwork</code> extends <code>AbstractSpace</code>, <code>Machine.bootstrap()</code> stamps it as <code>&lt;vid&gt;/network/#</code>, and the machine's
+<code>MachineSpace</code> hands it every address there — it is not a space in memory. It stores nothing
+beside its rec and answers every read from it, so <code>*&lt;/network/peer/ws/localhost/8555/mtron/origin&gt;</code> walks a member
+by the space's base-poly read, and a noobj write there is <code>Network.drop</code> (at <code>listener/&lt;key&gt;</code>,
+<code>Network.unlisten</code>) — destruction on deletion from mtron. A value written at a member is refused (a peer is
+constructed, not written); every other field is written onto the live rec in place, so <code>/network/roster</code> is the root
+network's own field. An address off the branch is the authority dispatch (<code>Network.read</code>/<code>write</code>). <code>index</code> keeps <strong>no
+two equivalent connections</strong>: a fresh client at a held key closes the member there and takes its place, while indexing
+the same client again is idempotent; <code>connect</code> still skips the dial when the surface is held. <code>drop(address)</code>
+reads what the address names — a key that member, a wire uri with a route that surface, a bare authority every surface
+of the service.</p>
+<p>Three consumers read the link: <code>PlanInterpreter.shardTargets</code> plans only over <code>Network.Helper.online</code> peers (an outage
+shrinks the fan-out), <code>Network.status</code> reports each dialed peer by its client's own <code>status</code> (a roster address is
+<code>known</code>, never <code>down</code>), and <code>index</code>/<code>connect</code> treat a hung-up member as absent so a fresh dial is never handed a dead
+peer. <strong>Every client and server answers <code>status</code></strong> (2026-10-24): a bool, true while live, derived on read and never
+stored — <code>Network.Helper.statusOf(live)</code> installs it, <code>Network.Helper.status(obj)</code> reads it (a <code>Link</code> without the
+field answers <code>connected()</code>). ws: the socket is open; http: a bounded HEAD answers; loop: always; mcp_client: its
+health check; mcp_server: its own dispatch answers a ping; <code>Listener</code> (every server): not closed. A <code>peer::T</code>
+carries no transport: it is talked to with its client's <code>inst</code>, and a read never dials — construction connects.</p>
+<p>Two Java-side facts the design depends on. <code>index</code>, <code>accept</code> and <code>drop</code> serialize the peer map's
+read-modify-write on the level, and <code>drop</code> clears under the lock but closes outside it — closing a link is a
+hang-up, and a hang-up comes back through <code>retract</code>. And <code>AbstractMachine.close()</code> now closes the network level the
+machine OWNS (<code>network.machine() == this</code>): before, a pop discarded the child's listing and left its sockets open,
+because <code>AbstractMachine.close()</code> overrides the <code>Machine.close()</code> that closed it. And <code>BootLoader.close()</code> runs
+<code>PeerSupervisor.closeAll()</code> after the root's close, so a frame that dialed and was never popped cannot keep a supervisor
+ticking into whatever boots next in the JVM.</p>
+<h3>How one evaluation flows</h3>
+<pre><code>machine.apply(code, start)
+  → Machine.current(this)                 // move this thread's perspective
+  → push()                                 // a fresh frame
+  → processor().code(compiler().apply(code).asCode()).apply(start)
+  → pop()                                  // release the frame
+</code></pre>
+<p><code>BasicMachine.of(...)</code> binds each of the five slots <strong>as the component itself</strong> — an instance needs nothing resolved,
+which is what stopped the slots being deferred seeds; the accessors still tolerate a seed (<code>isInst()</code>/<code>isCall()</code> →
+<code>apply()</code>).</p>
+<p>Two different reads, and the distinction matters:</p>
+<pre><code>Machine.read(vid)         → network dispatch → data memory → instruction memory (only on a miss)
+BasicMemory.read(vid)     → ~ resolution → alignPrefix → stack check → readAbsolute → small→big fallback
+</code></pre>
+<p><code>Machine.read</code> is the language's one way in, and it asks <strong>instruction memory</strong> as its last source — guarded against
+re-entry by <code>Machine.Helper.READING_INSTRUCTION_MEMORY</code>, because answering a schema query resolves the pattern's
+dom/rng types and resolving a type is itself a read. It asks with the <strong>declared</strong> form (<code>readDeclared</code>): the tables,
+and nothing more, because a fallback must not cause work. A member's <code>read</code> may do more than answer — a schema instset
+populates a table's schema on demand, which is right for a <em>deliberate</em> read of that schema — and asking that from an
+unrelated lookup walked into a catalog during a <code>tbleSpace</code>'s own construction and hit a database connection that was
+not open yet. <code>AbstractInstSet</code> therefore keeps one private table read that both forms reach, so overriding either
+cannot make the other re-enter it. <code>BasicMemory.read</code> is the address-space read, and it is where a
+name becomes an address: <code>~</code> first, then the prefix alignment, the stack, and the space index — and a miss escalates
+small→big.</p>
+<p><code>BasicMemory.readAbsolute</code> asks <code>findSpace(vid)</code>: the most specific space across the chain. When no space covers the
+address the machine answers with <strong>its own rec keys</strong> (<code>at</code>, never <code>read</code> — a read would come straight back here and
+re-enter), which is what makes <code>/</code> the root with no space mounted inside itself.</p>
+<h3>The compiler (four stages)</h3>
+<p><code>Compiler.apply</code> is the default schedule <code>parse → rewrite → resolve → type</code> over four overridable stage components:</p>
+<ul>
+<li><strong>parse</strong> — <code>Parser</code> (default <code>mtronParser</code>, <code>mtron_parser::T</code>; the language seam — see below).</li>
+<li><strong>rewrite</strong> — <code>Rewriter</code> (default <code>FixPointRewriter</code>, fixpoint over the rewrite rules). The rules' applied order —
+analysis rules (<code>*_analysis</code>) last, registration order otherwise — is derived once per vocabulary and cached against
+the rules themselves (<code>RULE_ORDERS</code>, keyed by rule identity <em>in order</em>), so a pass looks the order up instead of
+re-sorting what only a changed ISA could change.</li>
+<li><strong>resolve</strong> — <code>Resolver</code> (default <code>ScoringResolver</code>; threads the type one inst at a time; generic binding runs inside
+per-candidate selection, so there is no separate binder).</li>
+<li><strong>type</strong> — <code>Typer</code> (default <code>BasicTyper</code>, runtime type assertions).</li>
+</ul>
+<p>Stages are rec entries, not Java fields: <code>BasicCompiler.defaultStages()</code> supplies all four and <code>BasicCompiler.stages</code>
+merges a caller's over them, so <code>compiler::[=&gt;]</code> mints the default compiler <em>with</em> its stages and
+<code>compiler::[rewriter=&gt;fixpoint_rewriter::[max=&gt;3]]</code> overrides one.</p>
+<p><code>Parser</code> is where a <strong>language is hosted</strong>. Its contract is <code>Code apply(Obj source)</code>: read source text, emit
+<code>code::T</code>. Because the three stages after it, the processor and the distributed runtime all take code, a parser that
+emits mtron code <em>is</em> another language on metatron — no new instruction set, no new evaluator, no new type system;
+wire it as <code>compiler::[parser=&gt;my_parser::T]</code>. mtron is a deliberate substrate for this (Turing complete, rich type
+system, object-oriented and functional), so a new surface syntax lowers into a language worth lowering into rather
+than into an IR. A language whose syntax is elaborate but whose semantics are mtron's is a parser and nothing else:
+the default rewriter already runs on the code it produced. The stage is total over objs — an obj that is not a <code>str</code>
+is not re-read, only lifted as it stands — so one compiler takes a program's text or its parsed obj; re-reading the
+latter would parse a <em>rendering</em> and lose the vid and non-default tid. A grammar's own result is not always a code
+(mtron reads <code>6.plus(1)</code> as code, <code>plus(1)</code> as a lone inst, and <code>5</code> as the int itself), so <code>Parser.Helper.toCode</code>
+lifts all three: a code passes through, an inst becomes a one-inst code, anything else becomes a code that starts
+with it. <code>Compiler.parse</code> is that delegation; the <code>code::T</code> assertion the schedule used to open with is now the
+parser's contract.</p>
+<p><code>Compiler.Helper.resolve</code> memoizes nested-code resolution keyed by <code>(code identity, runtime lhs type id)</code>
+(<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
+<h3>The processor (monadic execution)</h3>
+<p><code>Processor</code> is both an <code>mThread</code> and an <code>Obj</code>. <code>Processor.Helper</code> holds the runtime core that used to live on <code>Inst</code>:
+<code>apply</code> (ask the typer for the subjects → ask the selector for the instruction → <code>invoke</code>/<code>fanOut</code>), <code>invoke</code>
+(noobj/domain guards, coefficient compression, range check), <code>applyArgs</code> (computeArgs). The <em>resolution</em> is the
+selector's (<code>Selector.Helper.resolve</code>, which holds the <code>code_resolve</code>-gated dynamic escape), and the delegation
+<em>decisions</em> are type-system decisions, so they live on <code>Typer.Helper</code> in the compiler — <code>bundleAndFibers</code> derives what
+the fan-out is over and <code>applicable</code> answers whether the resolved instruction is about a subject.
+<code>Processor.Helper.fanOut</code> keeps only the loop.</p>
+<p><code>fanOut</code> is the <strong>bundle's fan-out</strong> — applying an instruction to a fibered value is applying it to the bundle and its
+fibers, <code>person[ninja]::[…].xyz()</code> = <code>{ person::[…], ninja::[…] }.xyz()</code>. A BUNDLE is a <code>rec</code> whose type INSTANTIATES
+a declaration that names the fibers it lifts (<code>rec[role]::T[?[…,role=&gt;rec::T]]@person</code> names <code>role</code>; the instance's
+poly is the fiber TYPES, <code>Type#recFibers</code>), so <code>Typer.Helper.bundleAndFibers</code> yields the bundle <em>plus</em> each fiber
+that is present — one level deep, since a fiber's own fibers never join.</p>
+<p>EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
+There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
+the field keyed by the poly name — and <code>Typer.Helper.applicable</code> asks the type system whether the resolved instruction
+is about the candidate at all: a generic/pattern domain is about every candidate, a base-typed domain is about the
+wrapper as that form, and any other domain reaches the candidate whose own type IDENTITY is that name (the field's
+value for <code>fight?dom=ninja</code>, the wrapper for <code>ponder?dom=person</code>). The wrapper is acceptable where a fiber's type is
+expected (the fiber check at the top of <code>Type.test</code> and <code>Obj.Helper.testObjs</code>), which is type acceptance and not
+identity, so that rule is not consulted
+for dispatch. A candidate the instruction is not applicable to contributes <code>noobj</code> — the multiplicity's identity
+(<code>{noobj,29} = 29</code>), not a failure; a <code>fail::</code> from a candidate it DID apply to propagates. <code>Inst.Form.typer</code> (<code>as</code>,
+<code>type</code>, <code>vid</code>, <code>tid</code>) is opaque and applies to the wrapper alone.</p>
+<p>The default processor is <strong><code>SwarmProcessor</code></strong> (extends <code>VirtualThread</code>, implements <code>MonadProcessor</code>), a monadic step
+loop over three queues stored in its rec:</p>
+<ul>
+<li><code>run</code> — the active monad queue (<code>ListMonad</code>).</li>
+<li><code>barrier</code> — monads parked at a gather/barrier.</li>
+<li><code>halted</code> — collected results (<code>RESULT</code> is an auto-pointer to <code>halted</code>).</li>
+</ul>
+<p>A <strong><code>StatefulMonad</code></strong> is a four-tuple <code>[obj, inst, state, code]</code> carried as an <code>Lst</code>; <code>apply()</code> feeds the inst's
+<code>monad_in</code> lens to <code>Processor.Helper.apply</code>, then <code>next()</code> walks to the successor inst. <code>Monad</code> itself is the minimal
+<code>obj</code>/<code>inst</code> interface with <code>halted</code>/<code>dead</code>/<code>zombie</code> states. <code>RunningMonads</code> is an inst-indexed running set (a
+coefficient-summing view), and <code>ListMonad</code> the list-backed queue.</p>
+<h3>Threads</h3>
+<p><code>mThread</code> is the unified lifecycle contract (<code>stop</code>/<code>pause</code>/<code>resume</code>/<code>state</code>/<code>apply</code>/<code>applyAsync</code>/<code>result</code>/<code>future</code>).
+<code>AbstractThread</code> implements it over an <code>MRec</code> + <code>FutureObj</code> and hands async work to <code>ThreadExecutor</code>; <code>VirtualThread</code>
+and <code>CoreThread</code> are the two concrete platform strategies. A worker publishes where it ended via <code>landedPerspective()</code>.</p>
+<h3>Bootstrap and the type hierarchy</h3>
+<p><code>machInstSet.setup()</code> registers the whole <code>machine::T</code> family under <code>/m/mach/component/…</code> — <code>processor::T</code>,
+<code>monad_processor::T</code>, <code>swarm_processor::T</code>, <code>compiler::T</code> (with its <code>BasicCompiler</code> constructor, so
+<code>compiler::[parser=&gt;…,rewriter=&gt;…,resolver=&gt;…,typer=&gt;…]</code> mints one), the parser family (<code>parser::T</code>,
+<code>mtron_parser::T</code>), the rewriter/resolver/typer families,
+<code>memory::T</code>, <code>network::T</code>, and <code>machine::T</code> (whose shape is <code>instset</code>/<code>compiler</code>/<code>memory</code>/<code>network</code>/<code>processor</code>). The
+default machine lives at <code>/sys/mach/default</code> (a <code>const</code> built by <code>BasicMachine.of</code>). <code>sum_gather</code> — the rewrite that
+turns a monoidic reducer into a distributed gather over <code>/usr/compute</code> peers — lives here too.</p>
+<h3>Load-bearing invariants (keep these if you simplify)</h3>
+<ul>
+<li><strong>The read path must never allocate.</strong> Constructing an <code>Obj</code> resolves a type through a read, which recurses into
+<code>read()</code>. That single constraint explains the instance-seeded slots, the eager seeding in constructors, and the
+<code>resolvedMemory</code> / <code>resolvedNetwork</code> / <code>resolvedInstSet</code> memo fields. Any simplification must preserve it.</li>
+<li><strong>A component slot holds the component itself</strong> — <code>BasicMachine.of</code> binds all five as instances. The accessors still
+apply a deferred seed if one is present (<code>isInst()</code>/<code>isCall()</code> → <code>apply()</code>), and <code>instset()</code> is strict: an <code>InstSet</code>
+in the slot, else a fresh <code>BasicInstSet</code> (an mtron type check rejects a seeded <code>BasicInstSet</code>).</li>
+<li><strong><code>Machine.read</code> is the one way in</strong>: network → data memory → instruction memory, the last only on a miss, and never
+re-entered from inside an ISA read.</li>
+<li><strong>An ISA is a member by object, not by address.</strong> <code>refer</code> holds the ISA itself beside the vid recorded in the rec,
+so membership and resolution need no address index. The index entry (an ISA also being a space) is the separate half
+that is slated to go: an instruction set is vocabulary, not a place.</li>
+<li><strong><code>ComponentUnion.previous()</code> is a rec entry (<code>&gt;&gt;previous</code>), never a Java field, and never <code>Obj.orElse</code>.</strong> The parent
+fallback must be lazy — <code>orElse</code> evaluates the parent unconditionally on every hit.</li>
+<li><strong>Never write a roster under <code>/sys/mach</code>.</strong> The machine claims that address and <code>AbstractSpace</code>'s default writer is a
+no-op, so writes there are silently dropped. The roster lives at <code>/network/roster</code>.</li>
+<li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
+2-arg clone would silently keep the parent's address.</li>
+<li><strong>A machine's own addresses are its sphere's</strong> (<code>MachineSpace</code>, asked before the network and memory, never in
+memory): the machine at its vid, a component below it, <code>~/sys</code>. A covered address the sphere has no answer for is
+declined, as is everything else under the vid. Address <em>resolution</em> of all the rest belongs to memory:
+<code>BasicMemory.read</code>/<code>write</code> route an address to the space that covers it (<code>readAbsolute</code>/<code>writeAbsolute</code>) — which is
+why a bulk wildcard write reaches the space it names rather than the argument stack.</li>
+<li><strong><code>~/sys</code> is the sphere's own store, not memory's</strong> (Marko, 2026-10-25: &quot;sys/# simply go into MachineSpace&quot;). It
+carries the q-procs <code>~/sys</code> speaks (docq, subq, incrq, mimeq, lockq), so a fail still mints at <code>~/sys/fail/_?incrq</code>.
+A closing machine DROPS its sphere after memory's spaces and never closes its values: the system thread's executor
+lives in <code>~/sys</code>, and closing it from one of its own threads waits on itself forever (memory's <code>removeSpace</code> only
+logs &quot;closed space&quot; — it never closed the old sys space either). Code that re-reads an obj at its own vid goes through
+<code>Machine.Helper.readLocal</code>/<code>writeLocal</code> (sphere, then memory), <strong>never <code>memory()</code> directly</strong>: memory holds no
+<code>~/sys</code>, and <code>Machine.read</code> would scan instruction memory on a miss. The sphere owns writes to the network branch
+and <code>~/sys</code>; the machine rec's and the other components' writes still go to memory. An address with a scheme or a
+host is no sphere's (<code>ws://peer/sys/…</code> is the peer's), and a query on the machine or a component (<code>~/processor?docq</code>)
+is declined to memory's q-procs. <code>~/sys</code> is a holding area: its parts are expected to move into the components.</li>
+</ul>
+<h3>Migration state (why it reads as two systems at once)</h3>
+<p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>
+<ul>
+<li><code>stackSpace</code> (<code>+/#</code>) still exists and is still seeded into the root memory; a board task is open to remove it.</li>
+<li><code>Memory.ARG_STACK</code> (<code>argFrames</code>) is marked <strong>temporary</strong> — the old per-instruction arg stack, moved into <code>Memory</code>
+so <code>Router</code> could be deleted; it is meant to fold into the frame chain.</li>
+<li><code>ExecutionStack</code> still wraps reads/writes and instruction apply.</li>
+</ul>
+<p>Any cleanup that lands these two (drop <code>stackSpace</code>, fold <code>argFrames</code> into the frame chain) removes the &quot;two scoping
+mechanisms at once&quot; ambiguity that is the main source of the current complexity.</p>
+<hr />
+<h3>Post-refactor note — <code>Frame</code> class gutted (2026-10-08)</h3>
+<p>The <code>Frame</code> class (and the <code>FRAMES</code> address index) was removed in favor of <code>ThreadLocal&lt;Machine&gt;</code> (<code>CURRENT</code>) as the
+frame. Verdict: a good simplification — the frame <em>is</em> the machine (the vid encodes nesting, <code>push()</code>/<code>pop()</code> move the
+cursor), and <code>CURRENT</code> is a faithful &quot;walk up&quot; pointer.</p>
+<p>But <code>Frame</code> was carrying three responsibilities that must be rehomed, not deleted:</p>
+<ol>
+<li>
+<p><strong>Per-frame, lazily-materialized union views — rehomed, and the premise behind it has since changed.</strong> The views
+live in per-instance Java state: <code>resolvedMemory</code> / <code>resolvedNetwork</code> / <code>resolvedInstSet</code> on <code>AbstractMachine</code> —
+<strong>not</strong> &quot;old artifacts&quot;. The reason is no longer a shared rec map (<code>push()</code> now clones with <code>null</code>, so the child
+owns its own map — see the 2026-10-12 note below); it is that a slot may hold a deferred seed and the read path
+must not allocate. (Removing <code>resolvedMemory</code> re-introduced a <code>StackOverflowError</code>: <code>memory()</code> →
+<code>atDirect(uri(MEMORY))</code> →
+<code>uri(MEMORY)</code> → <code>MObj.&lt;init&gt;</code> → <code>fURI.big()</code> → <code>memory()</code>. The field memoizes the slot and breaks that cycle.)</p>
+</li>
+<li>
+<p><strong>The upward link — done two ways, deliberately.</strong> <code>push()</code> wires it explicitly (<code>child.parent(this)</code>) for the
+components' <code>Component.machine()</code> walk, and a machine's address still carries its ancestry (<code>vid.retract(1)</code>-style
+arithmetic), so an enclosing frame is reachable without a map. <code>Obj.parent()</code> on a machine that was never pushed
+remains a <code>noobj</code>-returning stub.</p>
+</li>
+<li>
+<p><strong>The downward/address index (<code>FRAMES</code>) — rehomed into memory, and stronger than the map was.</strong> <code>push()</code> registers
+the child rec in the <strong>root's</strong> space (<code>Machine.root().memory().write(childVID, child)</code>), so <code>read(childVID)</code> from
+<em>any</em> machine reaches the child — a sibling at any depth, not just the parent — while the child's data stays in its
+own infra, so isolation holds.</p>
+</li>
+</ol>
+<p>The invariant to keep: <strong>the read path must never allocate, and component slots are templates.</strong> <code>memory()</code> (and
+<code>network()</code>, <code>instset()</code>) must stay a field read on the read path, never
+<code>atDirect(uri(MEMORY))</code>, which constructs a <code>Uri</code> and re-enters <code>read()</code> through <code>big()</code>.</p>
+<p>Net: keep the gutting of <code>Frame</code>, but rehome the three responsibilities explicitly — union views → per-instance
+<code>resolved*</code> fields, parent link → wired at <code>push()</code> with address arithmetic as the other path, cross-frame lookup →
+memory's space index. That makes the simplification <em>cleaner</em> than the original, not just smaller.</p>
+<hr />
+<h3>Instruction memory and the read path (2026-10-12)</h3>
+<p>The components became <strong>machine-scoped instances</strong> rather than per-frame views, and instruction memory took its place
+in the read path:</p>
+<ul>
+<li><strong><code>Machine.read</code> reads instruction memory.</strong> Its sources are <code>network</code> (authority dispatch) → <code>memory</code> (data memory:
+spaces, instances, and the routing tables) → <strong><code>instset</code></strong>, the last only on a miss. The hop is guarded by
+<code>Machine.Helper.READING_INSTRUCTION_MEMORY</code>, because answering a schema query resolves the pattern's dom/rng types
+and resolving a type is itself a read — without the guard the hop re-entered itself until the stack died (measured:
+seven <code>StackOverflowError</code>s in <code>MachPushTest</code>). A read made <em>from inside</em> an ISA read is a data read.</li>
+<li><strong>A short name is routed by data memory.</strong> An ISA's tables are keyed by the full address, so the instset read asks
+<code>Machine.current().memory().redirect(pattern, true)</code> to turn <code>plus</code> into <code>/m/inst/plus</code> first. Names are data
+memory's job; addresses are instruction memory's.</li>
+<li><strong><code>push()</code> gives the child its own rec and its own component levels.</strong> <code>clone(null, …)</code> keeps the child's own map —
+while the map was shared, an address read of a slot (<code>*&lt;/xyz/instset</code>) reported the <em>enclosing</em> machine's component
+while the accessor reported the child's: the same slot disagreeing with itself. The child's memory is
+<code>MemoryUnion(this.memory())</code> and its ISA is <code>BasicInstSet(this.instset())</code>, both written straight into the child's
+rec (<code>jvm().put</code>), because a rec write on a machine rec fails its own type check.</li>
+<li><strong><code>BasicInstSet.refer</code> holds the ISA by object</strong> beside the vid recorded in the rec, so a member resolves without
+the address index — and a machine can hold a member that is <strong>not</strong> one of its spaces (<code>InstSetUnionReadTest</code>).</li>
+</ul>
+<h3>Instruction sets live in the instset, not memory (2026-10-25)</h3>
+<p>Marko: &quot;Instsets shouldn't be in Memory as spaces (though they are spaces). They should be in InstSet only. This will
+really clean up Memory and put items where they should logically be -- Network related objs in Network, InstSets in
+InstSet, and data spaces in Memory.&quot;</p>
+<ul>
+<li><strong>Memory's index holds data spaces only.</strong>
+<ul>
+<li><code>InstSet.mount</code> refers the ISA into <code>Machine.current().instset()</code>, and adds its sugars.</li>
+<li><code>BasicMemory.addSpace</code> sends an <code>InstSet</code> there and never indexes it, which catches the hand-mounted schema
+instsets (tble, dcmnt, vec, grph).</li>
+<li>The import probe checks <code>instset().members()</code>.</li>
+<li><code>memory().spaces()</code> lists no instruction set.</li>
+</ul>
+</li>
+<li><strong>Memory's LOOKUP still routes an ISA's addresses.</strong> <code>BasicMemory.findSpace</code>/<code>hasSpaceFor</code>/<code>getSpace</code> weigh the
+libraries this level's machine mounted (<code>BasicInstSet.ownLibraries()</code>) against the level's data spaces, by
+<code>Memory.mostSpecific</code>.
+<ul>
+<li>&quot;The most specific gains the write&quot;: <code>/m/math/cat/…</code> → <code>/m/math/cat</code>, <code>/m/math/…</code> → <code>/m/math</code>, the rest of
+<code>/m/…</code> → <code>/m</code>.</li>
+<li>A data space more specific than an ISA keeps its addresses.</li>
+<li>Everything memory does around the contest applies unchanged: prefix and coefficient alignment, the stack first for
+a short name, the <code>big()</code> retry, type-graph invalidation, the ISA's own q-procs (<code>?docq</code>).</li>
+<li>An ISA is weighed at the memory level of the frame that mounted it, as it was once indexed there, so a child does
+not claim its parent's libraries ahead of the parent's own data spaces.</li>
+<li>A library is an ISA with a vid and a real path (<code>BasicInstSet.isLibrary</code>). A frame's own level (a
+<code>ComponentUnion</code>) and an ISA whose pattern is everything (<code>#</code>, <code>/#</code>) are pure vocabulary, read through the union
+fallback.</li>
+</ul>
+</li>
+<li><strong>Unmounting</strong> (<code>memory().removeSpace(vid)</code>) un-routes an ISA (<code>BasicInstSet.unroute</code>) but keeps it a member, which
+is what removing it from the index used to do. A re-mount routes it again.</li>
+<li><strong>The vocabulary's pattern is the members' &quot;lowest common denominator&quot;</strong> (Marko: &quot;thus /m/#&quot;).
+<ul>
+<li><code>BasicInstSet.refer</code> writes the deepest path every referred ISA's pattern lies beneath.</li>
+<li>A level that refers nothing reports its enclosing machine's.</li>
+<li>With a schema instset at <code>/sys/space/…</code> among the members, the pattern is <code>/#</code> until schema instsets leave
+<code>/sys/space</code>.</li>
+</ul>
+</li>
+<li><strong>Inherited references resolve through the enclosing levels</strong> (<code>BasicInstSet.resolve</code>), not memory's index.</li>
+<li><strong>Code enumerating instruction sets asks <code>instset().members()</code></strong>, never <code>memory().spaces()</code> (<code>catInstSetTest</code>).</li>
+<li><code>~/sys</code> yields to a deeper claimant named by memory's lookup (<code>MachineSpace.yields</code>), an ISA included, so a schema
+instset at <code>/sys/space/&lt;name&gt;/instset/#</code> keeps its table types.</li>
+<li><strong>The registration — an ISA also being a space — is the last artifact of that era.</strong> Removing it is blocked on three
+measured things: migration writes that find the owning ISA by address, spaces that must decline a vid they cannot
+interpret instead of throwing, and documentation ownership, which resolves the owning space through the address index
+(with the registration gone a setup goes from ~0.1s to ~4.2s; a 13-test class went from 4.0s to 200.5s). The
+mtron-side doc, <code>mach-instset-mtron.md</code>, carries the same list from the language's side.</li>
+</ul>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

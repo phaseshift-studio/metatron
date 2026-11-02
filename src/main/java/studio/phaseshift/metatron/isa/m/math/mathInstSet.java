@@ -1,0 +1,1211 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.math;
+
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+@JREService(vid = "/m/math")
+public class mathInstSet extends AbstractInstSet {
+
+    public static final fURI MATH_ISA_TID = M_ISA_TID.extend("math");
+    public static final fURI MATH_INST_TID = MATH_ISA_TID.extend("inst");
+    public static final fURI MATH_COS_INST_TID = MATH_INST_TID.extend("cos");
+    public static final fURI MATH_SIN_INST_TID = MATH_INST_TID.extend("sin");
+    public static final fURI MATH_TAN_INST_TID = MATH_INST_TID.extend("tan");
+    public static final fURI MATH_SQRT_INST_TID = MATH_INST_TID.extend("sqrt");
+    public static final fURI MATH_ATAN_INST_TID = MATH_INST_TID.extend("atan");
+    public static final fURI MATH_ATAN2_INST_TID = MATH_INST_TID.extend("atan2");
+    public static final fURI MATH_LOG_INST_TID = MATH_INST_TID.extend("log");
+    public static final fURI MATH_LOG10_INST_TID = MATH_INST_TID.extend("log10");
+    public static final fURI MATH_EXP_INST_TID = MATH_INST_TID.extend("exp");
+    public static final fURI MATH_ABS_INST_TID = MATH_INST_TID.extend("abs");
+    public static final fURI MATH_CEIL_INST_TID = MATH_INST_TID.extend("ceil");
+    public static final fURI MATH_FLOOR_INST_TID = MATH_INST_TID.extend("floor");
+    public static final fURI MATH_ROUND_INST_TID = MATH_INST_TID.extend("round");
+    public static final fURI CONJUGATE_INST_TID = MATH_INST_TID.extend("conjugate");
+    public static final fURI MATH_ARG_INST_TID = MATH_INST_TID.extend("arg");
+    public static final fURI NAT_TID = MATH_ISA_TID.extend("nat");
+    public static final fURI CMPLX_TID = MATH_ISA_TID.extend("cmplx");
+
+    public static final fURI MATH_PERCENT_TID = MATH_ISA_TID.extend("percent");
+    public static final fURI MATH_DATASIZE_TID = MATH_ISA_TID.extend("datasize");
+    public static final fURI MATH_BYTE_TID = MATH_DATASIZE_TID.extend("bB");
+    public static final fURI MATH_KBYTE_TID = MATH_DATASIZE_TID.extend("kB");
+    public static final fURI MATH_MBYTE_TID = MATH_DATASIZE_TID.extend("mB");
+    public static final fURI MATH_GBYTE_TID = MATH_DATASIZE_TID.extend("gB");
+    public static final fURI MATH_TBYTE_TID = MATH_DATASIZE_TID.extend("tB");
+    public static final fURI MATH_PBYTE_TID = MATH_DATASIZE_TID.extend("pB");
+    public static final String MATH_BYTE_STRING = "/m/math/datasize/bB";
+    public static final String MATH_KBYTE_STRING = "/m/math/datasize/kB";
+    public static final String MATH_MBYTE_STRING = "/m/math/datasize/mB";
+    public static final String MATH_GBYTE_STRING = "/m/math/datasize/gB";
+    public static final String MATH_TBYTE_STRING = "/m/math/datasize/tB";
+    public static final String MATH_PBYTE_STRING = "/m/math/datasize/pB";
+    /// ///////////////////////
+    public static final fURI MATH_TIME_TID = MATH_ISA_TID.extend("time");
+    public static final fURI MATH_NANOS_TID = MATH_TIME_TID.extend("nanos");
+    public static final fURI MATH_MICROS_TID = MATH_TIME_TID.extend("micros");
+    public static final fURI MATH_MILLIS_TID = MATH_TIME_TID.extend("millis");
+    public static final fURI MATH_SECOND_TID = MATH_TIME_TID.extend("second");
+    public static final fURI MATH_MINUTE_TID = MATH_TIME_TID.extend("minute");
+    public static final fURI MATH_HOUR_TID = MATH_TIME_TID.extend("hour");
+    public static final fURI MATH_DAY_TID = MATH_TIME_TID.extend("day");
+    public static final String MATH_NANOS_STRING = "/m/math/time/nanos";
+    public static final String MATH_MICROS_STRING = "/m/math/time/micros";
+    public static final String MATH_MILLIS_STRING = "/m/math/time/millis";
+    public static final String MATH_SECOND_STRING = "/m/math/time/second";
+    public static final String MATH_MINUTE_STRING = "/m/math/time/minute";
+    public static final String MATH_HOUR_STRING = "/m/math/time/hour";
+    public static final String MATH_DAY_STRING = "/m/math/time/day";
+    /// ///////////////////////
+    public static final fURI MATH_METRIC_TID = MATH_ISA_TID.extend("metric");
+    public static final fURI MATH_MM_TID = MATH_METRIC_TID.extend("mm");
+    public static final fURI MATH_CM_TID = MATH_METRIC_TID.extend("cm");
+    public static final fURI MATH_DM_TID = MATH_METRIC_TID.extend("dm");
+    public static final fURI MATH_METER_TID = MATH_METRIC_TID.extend("meter");
+    public static final fURI MATH_KM_TID = MATH_METRIC_TID.extend("km");
+    public static final String MATH_MM_STRING = "/m/math/metric/mm";
+    public static final String MATH_CM_STRING = "/m/math/metric/cm";
+    public static final String MATH_DM_STRING = "/m/math/metric/dm";
+    public static final String MATH_METER_STRING = "/m/math/metric/meter";
+    public static final String MATH_KM_STRING = "/m/math/metric/km";
+    public static final fURI MATH_IMPERIAL_TID = MATH_ISA_TID.extend("imperial");
+    public static final fURI MATH_INCH_TID = MATH_IMPERIAL_TID.extend("inch");
+    public static final fURI MATH_FOOT_TID = MATH_IMPERIAL_TID.extend("foot");
+    public static final fURI MATH_YARD_TID = MATH_IMPERIAL_TID.extend("yard");
+    public static final fURI MATH_MILE_TID = MATH_IMPERIAL_TID.extend("mile");
+    public static final String MATH_INCH_STRING = "/m/math/imperial/inch";
+    public static final String MATH_FOOT_STRING = "/m/math/imperial/foot";
+    public static final String MATH_YARD_STRING = "/m/math/imperial/yard";
+    public static final String MATH_MILE_STRING = "/m/math/imperial/mile";
+    /// ///////////////////////
+    public static final fURI MATH_DATETIME_TID = MATH_ISA_TID.extend("datetime");
+    public static final fURI MATH_DATETIME_NOW_TID = MATH_INST_TID.extend("datetime_now");
+    /// ///////////////////////
+    public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
+    public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
+    public static final fURI MATH_EURO_TID = MATH_CURRENCY_TID.extend("euro");
+    public static final Type MATH_CURRENCY_TYPE = TypeBuilder.build()
+            .tid(REAL_TID)
+            .vid(MATH_CURRENCY_TID)
+            .create();
+
+    static {
+        assert MATH_BYTE_STRING.equals(MATH_BYTE_TID.toString());
+        assert MATH_KBYTE_STRING.equals(MATH_KBYTE_TID.toString());
+        assert MATH_MBYTE_STRING.equals(MATH_MBYTE_TID.toString());
+        assert MATH_GBYTE_STRING.equals(MATH_GBYTE_TID.toString());
+        assert MATH_TBYTE_STRING.equals(MATH_TBYTE_TID.toString());
+        assert MATH_PBYTE_STRING.equals(MATH_PBYTE_TID.toString());
+        assert MATH_NANOS_STRING.equals(MATH_NANOS_TID.toString());
+        assert MATH_MICROS_STRING.equals(MATH_MICROS_TID.toString());
+        assert MATH_MILLIS_STRING.equals(MATH_MILLIS_TID.toString());
+        assert MATH_SECOND_STRING.equals(MATH_SECOND_TID.toString());
+        assert MATH_MINUTE_STRING.equals(MATH_MINUTE_TID.toString());
+        assert MATH_HOUR_STRING.equals(MATH_HOUR_TID.toString());
+        assert MATH_DAY_STRING.equals(MATH_DAY_TID.toString());
+        assert MATH_MM_STRING.equals(MATH_MM_TID.toString());
+        assert MATH_CM_STRING.equals(MATH_CM_TID.toString());
+        assert MATH_DM_STRING.equals(MATH_DM_TID.toString());
+        assert MATH_METER_STRING.equals(MATH_METER_TID.toString());
+        assert MATH_KM_STRING.equals(MATH_KM_TID.toString());
+        assert MATH_INCH_STRING.equals(MATH_INCH_TID.toString());
+        assert MATH_FOOT_STRING.equals(MATH_FOOT_TID.toString());
+        assert MATH_YARD_STRING.equals(MATH_YARD_TID.toString());
+        assert MATH_MILE_STRING.equals(MATH_MILE_TID.toString());
+    }
+
+
+    public mathInstSet() {
+        super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
+    }
+
+    public static final Type TIME_TYPE = TypeBuilder.build()
+            .tid(REAL_TID)
+            .vid(MATH_TIME_TID)
+            .create();
+
+    public static final Type NANOS_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_NANOS_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1_000_000_000.0d * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MICROS_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MICROS_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MILLIS_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MILLIS_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type SECOND_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_SECOND_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MINUTE_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_MINUTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 60.0d * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type HOUR_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_HOUR_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d);
+                    case MATH_DAY_STRING -> arg.jvm(arg.asReal().jvm() * 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type DAY_TYPE = TypeBuilder.build()
+            .tid(MATH_TIME_TID)
+            .vid(MATH_DAY_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_NANOS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1_000_000_000.0d);
+                    case MATH_MICROS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d / 1000.0d);
+                    case MATH_MILLIS_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d / 1000.0d);
+                    case MATH_SECOND_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 60.0d / 24.0d);
+                    case MATH_MINUTE_STRING -> arg.jvm(arg.asReal().jvm() / 60.0d / 24.0d);
+                    case MATH_HOUR_STRING -> arg.jvm(arg.asReal().jvm() / 24.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    /**
+     * DateTime is a uri::T with the structure:
+     * <pre>//yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm</pre>
+     * <ul>
+     *   <li>host = year.month</li>
+     *   <li>port = day (1–31)</li>
+     *   <li>path[0] = hour (0–23)</li>
+     *   <li>path[1] = minute (0–59)</li>
+     *   <li>path[2] = second (0–59)</li>
+     *   <li>path[3] = millisecond (0–999)</li>
+     *   <li>query tz = timezone offset (e.g., -0500)</li>
+     * </ul>
+     */
+    private static final Pattern DT_HOST_PATTERN = Pattern.compile("\\d{4}\\.\\d{2}");
+
+    public static Type DATETIME_TYPE;
+
+    /**
+     * Creates a {@link Uri} representing the current system datetime.
+     * Format: {@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm}
+     */
+    public static Uri nowDatetime() {
+        final ZonedDateTime now = ZonedDateTime.now();
+        final String year = String.format("%04d", now.getYear());
+        final String month = String.format("%02d", now.getMonthValue());
+        final String day = String.format("%02d", now.getDayOfMonth());
+        final String hour = String.format("%02d", now.getHour());
+        final String minute = String.format("%02d", now.getMinute());
+        final String second = String.format("%02d", now.getSecond());
+        final String millis = String.format("%03d", now.getNano() / 1_000_000);
+        final String tz = now.getOffset().getId(); // "+HH:MM" or "-HH:MM"
+        final String tzCompact = tz.replace(":", ""); // "+HHMM" or "-HHMM"
+        final String host = year + "." + month;
+        final fURI furi = fURI.of(
+                null,          // scheme
+                host,          // host = year.month
+                Integer.parseInt(day),  // port = day
+                List.of(hour, minute, second, millis),  // path
+                null, null,    // coefficient, poly
+                Map.of("tz", tzCompact),  // query
+                null           // fragment
+        );
+        return uri(furi, MATH_DATETIME_TID, null);
+    }
+
+    private static final java.util.regex.Pattern DT_PARSE =
+            java.util.regex.Pattern.compile(
+                    "(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2}):(\\d{2})" +  // date + time
+                            "(?:\\.(\\d{1,3}))?" +                                            // optional .SSS
+                            "\\s*(?:Z|([+-])(\\d{2}):?(\\d{2}))?");                         // Z or ±HH:MM or ±HHMM
+
+    /**
+     * Parse an ISO-8601 or Docker-format datetime string into a datetime URI.
+     * Supports {@code "2026-08-01T23:37:33-06:00"}, {@code "2026-08-01 23:37:33 -0600 MDT"}, etc.
+     */
+    public static Uri parseDatetime(final String input) {
+        try {
+            final ZonedDateTime zdt = ZonedDateTime.parse(input);
+            return buildDatetimeUri(zdt);
+        } catch (final Exception e) { /* try other formats */ }
+        try {
+            // Date-only: "2024-12-25" → midnight UTC
+            final java.time.LocalDate ld = java.time.LocalDate.parse(input);
+            return buildDatetimeUri(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth(),
+                    0, 0, 0, 0, "+0000");
+        } catch (final Exception e) { /* try custom parse */ }
+        final var m = DT_PARSE.matcher(input.trim());
+        if (!m.find()) throw studio.phaseshift.metatron.util.MTronException.of("unable to parse datetime: %s", input);
+        final int year = Integer.parseInt(m.group(1));
+        final int month = Integer.parseInt(m.group(2));
+        final int day = Integer.parseInt(m.group(3));
+        final int hour = Integer.parseInt(m.group(4));
+        final int minute = Integer.parseInt(m.group(5));
+        final int second = Integer.parseInt(m.group(6));
+        final int millis = m.group(7) != null ? Integer.parseInt(m.group(7)) : 0;
+        final String tzSign = m.group(8) != null ? m.group(8) : "+";
+        final String tzHour = m.group(9) != null ? m.group(9) : "00";
+        final String tzMin = m.group(10) != null ? m.group(10) : "00";
+        return buildDatetimeUri(year, month, day, hour, minute, second, millis,
+                tzSign + String.format("%02d", Integer.parseInt(tzHour)) + String.format("%02d", Integer.parseInt(tzMin)));
+    }
+
+    /**
+     * Build a datetime URI from components.
+     */
+    public static Uri buildDatetimeUri(final ZonedDateTime zdt) {
+        String tz = zdt.getOffset().getId().replace(":", "");
+        if ("Z".equals(tz)) tz = "+0000";
+        return buildDatetimeUri(zdt.getYear(), zdt.getMonthValue(), zdt.getDayOfMonth(),
+                zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano() / 1_000_000, tz);
+    }
+
+    private static Uri buildDatetimeUri(final int year, final int month, final int day,
+                                        final int hour, final int minute, final int second, final int millis, final String tz) {
+        // The path MUST be absolute (leading empty segment) because this uri HAS an authority: the authority and
+        // the path are separated by `/`, and a relative path renders with no separator, gluing the day (port) to
+        // the hour — `//2026.10:221/26/…` for day 22 hour 21. Rendering is not just display here: the console and
+        // serializers round trip a datetime through its string, and the glued form REPARSES as a different (wrong)
+        // instant, so a lock expiry written correctly becomes an expiry in the past. datetimeToMillis already
+        // accepts either form (`off = path.get(0).isEmpty() ? 1 : 0`); this side must agree.
+        return uri(fURI.of(null,
+                String.format("%04d.%02d", year, month), day,
+                List.of("", String.format("%02d", hour), String.format("%02d", minute),
+                        String.format("%02d", second), String.format("%03d", millis)),
+                null, null, Map.of("tz", tz), null), MATH_DATETIME_TID, null);
+    }
+
+    /**
+     * Date-time formatter: Monday, August 9, 2026 02:14:24 PM +00:00
+     */
+    private static final DateTimeFormatter HUMAN_DTF = new DateTimeFormatterBuilder()
+            .appendPattern("EEEE, MMMM d, yyyy hh:mm:ss a")
+            .appendLiteral(' ')
+            .appendOffset("+HH:MM", "+00:00")
+            .toFormatter();
+
+    /**
+     * Convert a datetime URI to a human-readable string like
+     * {@code Monday, August 9, 2026 10:14:24 AM UTC}.
+     */
+    public static String humanReadableDatetime(final studio.phaseshift.metatron.isa.m.type.Uri dt) {
+        final fURI furi = dt.uriValue();
+        final String[] hostParts = furi.host().split("\\.");
+        final int year = Integer.parseInt(hostParts[0]);
+        final int month = Integer.parseInt(hostParts[1]);
+        final int day = furi.port();
+        final var path = furi.path();
+        // Leading / produces an empty first segment: skip it
+        final int off = path.get(0).isEmpty() ? 1 : 0;
+        final int hour = Integer.parseInt(path.get(off));
+        final int minute = Integer.parseInt(path.get(off + 1));
+        final int second = Integer.parseInt(path.get(off + 2));
+        final int millis = Integer.parseInt(path.get(off + 3));
+        final String tzStr = dt.uriValue().hasQ() && dt.uriValue().qMap().containsKey("tz")
+                ? dt.uriValue().qMap().get("tz") : "+0000";
+        final ZoneOffset offset = ZoneOffset.of(tzStr);
+        final ZonedDateTime zdt = ZonedDateTime.of(year, month, day, hour, minute, second,
+                millis * 1_000_000, offset);
+        return zdt.format(HUMAN_DTF);
+    }
+
+    /**
+     * Convert a {@code datetime::T} URI to epoch millis.  Supports the structured form
+     * {@code //yyyy.MM:dd/HH/mm/ss/SSS?tz=±HHmm} and the millis shorthand
+     * {@code datetime://<epoch_millis>}.
+     */
+    public static long datetimeToMillis(final Uri dt) {
+        final fURI furi = dt.uriValue();
+        if (furi.host() != null && furi.host().matches("\\d+"))
+            return Long.parseLong(furi.host()); // millis shorthand
+        final String[] hostParts = furi.host().split("\\.");
+        final int year = Integer.parseInt(hostParts[0]);
+        final int month = Integer.parseInt(hostParts[1]);
+        final int day = furi.port();
+        final var path = furi.path();
+        final int off = path.get(0).isEmpty() ? 1 : 0;
+        final int hour = Integer.parseInt(path.get(off));
+        final int minute = Integer.parseInt(path.get(off + 1));
+        final int second = Integer.parseInt(path.get(off + 2));
+        final int millis = Integer.parseInt(path.get(off + 3));
+        final String tzStr = furi.hasQ() && furi.qMap().containsKey("tz") ? furi.qMap().get("tz") : "+0000";
+        return ZonedDateTime.of(year, month, day, hour, minute, second, millis * 1_000_000, ZoneOffset.of(tzStr))
+                .toInstant().toEpochMilli();
+    }
+
+    /**
+     * Convert a {@code time::T} (nanos/micros/millis/second/minute/hour/day) to milliseconds.
+     * Time units require real-backed values — an int-backed time is a type
+     * violation and {@code asReal()} rejects it.
+     */
+    public static double timeToMillis(final Obj time) {
+        return switch (time.tid().basePath().toString()) {
+            case MATH_NANOS_STRING -> time.asReal().jvm() / 1_000_000.0d;
+            case MATH_MICROS_STRING -> time.asReal().jvm() / 1000.0d;
+            case MATH_MILLIS_STRING -> time.asReal().jvm();
+            case MATH_SECOND_STRING -> time.asReal().jvm() * 1000.0d;
+            case MATH_MINUTE_STRING -> time.asReal().jvm() * 1000.0d * 60.0d;
+            case MATH_HOUR_STRING -> time.asReal().jvm() * 1000.0d * 60.0d * 60.0d;
+            case MATH_DAY_STRING -> time.asReal().jvm() * 1000.0d * 60.0d * 60.0d * 24.0d;
+            default -> throw MTronException.of("not a time unit: %s", time);
+        };
+    }
+
+    /**
+     * Normalizes a time {@link Real} to the most human-readable unit.
+     * Cascades upward through the time hierarchy when the value crosses
+     * a ~2× threshold of the next larger unit:
+     * <pre>
+     *   nanos   ≥ 2000 → micros
+     *   micros  ≥ 2000 → millis
+     *   millis  ≥ 2000 → seconds
+     *   seconds ≥ 120  → minutes
+     *   minutes ≥ 120  → hours
+     *   hours   ≥ 48   → days
+     * </pre>
+     * Recurses until the value stabilizes in the appropriate unit.
+     */
+    public static Real normalizeTime(final Real time) {
+        final double value = time.realValue();
+        if (time.tid().test(MATH_NANOS_TID) && value >= 2000.0d)
+            return normalizeTime(time.as(MICROS_TYPE).asReal());
+        if (time.tid().test(MATH_MICROS_TID) && value >= 2000.0d)
+            return normalizeTime(time.as(MILLIS_TYPE).asReal());
+        if (time.tid().test(MATH_MILLIS_TID) && value >= 2000.0d)
+            return normalizeTime(time.as(SECOND_TYPE).asReal());
+        if (time.tid().test(MATH_SECOND_TID) && value >= 120.0d)
+            return normalizeTime(time.as(MINUTE_TYPE).asReal());
+        if (time.tid().test(MATH_MINUTE_TID) && value >= 120.0d)
+            return normalizeTime(time.as(HOUR_TYPE).asReal());
+        if (time.tid().test(MATH_HOUR_TID) && value >= 48.0d)
+            return normalizeTime(time.as(DAY_TYPE).asReal());
+
+        return time;
+    }
+
+    /**
+     * Normalizes a data-size {@link Real} to the most human-readable unit.
+     * Cascades upward through the data hierarchy when the value crosses
+     * a ~2× threshold of the next larger unit:
+     * <pre>
+     *   bytes ≥ 2048  → kB
+     *   kB    ≥ 2048  → mB
+     *   mB    ≥ 2048  → gB
+     *   gB    ≥ 2048  → tB
+     *   tB    ≥ 2048  → pB
+     * </pre>
+     * Recurses until the value stabilizes in the appropriate unit.
+     */
+    public static Real normalizeData(final Real data) {
+        final String tid = data.tid().toString();
+        final double value = data.realValue();
+
+        if (tid.equals(MATH_BYTE_STRING) && value >= 2048.0d)
+            return normalizeData(data.as(KBYTE_TYPE).asReal());
+        if (tid.equals(MATH_KBYTE_STRING) && value >= 2048.0d)
+            return normalizeData(data.as(MBYTE_TYPE).asReal());
+        if (tid.equals(MATH_MBYTE_STRING) && value >= 2048.0d)
+            return normalizeData(data.as(GBYTE_TYPE).asReal());
+        if (tid.equals(MATH_GBYTE_STRING) && value >= 2048.0d)
+            return normalizeData(data.as(TBYTE_TYPE).asReal());
+        if (tid.equals(MATH_TBYTE_STRING) && value >= 2048.0d)
+            return normalizeData(data.as(PBYTE_TYPE).asReal());
+
+        return data;
+    }
+
+    /**
+     * One inch is exactly 25.4 millimeters — the bridge between the
+     * imperial and metric distance systems.
+     */
+    public static final double MM_PER_INCH = 25.4d;
+
+    public static boolean isMetricUnit(final String tid) {
+        return switch (tid) {
+            case MATH_MM_STRING, MATH_CM_STRING, MATH_DM_STRING, MATH_METER_STRING, MATH_KM_STRING -> true;
+            default -> false;
+        };
+    }
+
+    public static boolean isImperialUnit(final String tid) {
+        return switch (tid) {
+            case MATH_INCH_STRING, MATH_FOOT_STRING, MATH_YARD_STRING, MATH_MILE_STRING -> true;
+            default -> false;
+        };
+    }
+
+    private static final double MM_PER(final String tid) {
+        return switch (tid) {
+            case MATH_CM_STRING -> 10.0d;
+            case MATH_DM_STRING -> 100.0d;
+            case MATH_METER_STRING -> 1000.0d;
+            case MATH_KM_STRING -> 1000.0d * 1000.0d;
+            default -> 1.0d;
+        };
+    }
+
+    private static final double INCH_PER(final String tid) {
+        return switch (tid) {
+            case MATH_FOOT_STRING -> 12.0d;
+            case MATH_YARD_STRING -> 36.0d;
+            case MATH_MILE_STRING -> 63360.0d;
+            default -> 1.0d;
+        };
+    }
+
+    /**
+     * Converts a distance (metric or imperial, any unit) to the target unit.
+     * metric ↔ metric and imperial ↔ imperial conversions use exact integer
+     * ratios; a cross-system conversion is bridged through the exact
+     * {@value #MM_PER_INCH} millimeters per inch.  A bare real, or a target
+     * of a supertype ({@code metric::T}/{@code imperial::T}), is re-labeled
+     * only — its value is preserved.
+     */
+    public static Real convertTo(final Obj lhs, final fURI target) {
+        final String tid = lhs.tid().toString();
+        final String t = target.toString();
+        final double value = lhs.asReal().jvm();
+        if (t.equals(MATH_METRIC_TID) || t.equals(MATH_IMPERIAL_TID)
+                || (!isMetricUnit(tid) && !isImperialUnit(tid)))
+            return real(value, target, null);
+        if (isMetricUnit(tid)) {
+            final double mm = value * MM_PER(tid);
+            return real(isMetricUnit(t) ? mm / MM_PER(t) : mm / MM_PER_INCH / INCH_PER(t), target, null);
+        }
+        final double inches = value * INCH_PER(tid);
+        return real(isImperialUnit(t) ? inches / INCH_PER(t) : inches * MM_PER_INCH / MM_PER(t), target, null);
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////
+
+    public static final Type DATA_SIZE_TYPE = TypeBuilder.build()
+            .tid(REAL_TID)
+            .vid(MATH_DATASIZE_TID)
+            .create();
+
+    public static final Type NAT_TYPE = TypeBuilder.build()
+            .tid(INT_TID)
+            .vid(NAT_TID)
+            .predicate(is_(gt_(jnt(0))).tryToInst())
+            .create();
+
+    public static final Type CMPLX_TYPE = TypeBuilder.build()
+            .tid(LST_TID.poly(REAL_TID, REAL_TID))
+            .vid(CMPLX_TID)
+            .isaPredicate(lst(REAL_TYPE, REAL_TYPE))
+            .create();
+
+    public static final Type BYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_BYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING ->
+                            arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type KBYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_KBYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type MBYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_MBYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type GBYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_GBYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type TBYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_TBYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static final Type PBYTE_TYPE = TypeBuilder.build()
+            .tid(MATH_DATASIZE_TID)
+            .vid(MATH_PBYTE_TID)
+            .constructor(arg -> {
+                final String tid = arg.tid().basePath().toString();
+                return switch (tid) {
+                    case MATH_BYTE_STRING ->
+                            arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    default -> arg;
+                };
+            }).create();
+
+    public static Type METRIC_TYPE;
+
+    public static Type MM_TYPE;
+
+    public static Type CM_TYPE;
+
+    public static Type DM_TYPE;
+
+    public static Type METER_TYPE;
+
+    public static Type KM_TYPE;
+
+    public static Type IMPERIAL_TYPE;
+
+    public static Type INCH_TYPE;
+
+    public static Type FOOT_TYPE;
+
+    public static Type YARD_TYPE;
+
+    public static Type MILE_TYPE;
+
+    /**
+     * Normalizes a metric distance {@link Real} to the most human-readable unit.
+     * Cascades upward through the metric hierarchy when the value crosses
+     * a ~2× threshold of the next larger unit:
+     * <pre>
+     *   mm      ≥ 20     → cm
+     *   cm      ≥ 20     → dm
+     *   dm      ≥ 20     → meter
+     *   meter   ≥ 2000   → km
+     * </pre>
+     * Recurses until the value stabilizes in the appropriate unit.
+     */
+    public static Real normalizeMetric(final Real metric) {
+        final double value = metric.realValue();
+        if (metric.tid().test(MATH_MM_TID) && value >= 20.0d)
+            return normalizeMetric(metric.as(CM_TYPE).asReal());
+        if (metric.tid().test(MATH_CM_TID) && value >= 20.0d)
+            return normalizeMetric(metric.as(DM_TYPE).asReal());
+        if (metric.tid().test(MATH_DM_TID) && value >= 20.0d)
+            return normalizeMetric(metric.as(METER_TYPE).asReal());
+        if (metric.tid().test(MATH_METER_TID) && value >= 2000.0d)
+            return normalizeMetric(metric.as(KM_TYPE).asReal());
+
+        return metric;
+    }
+
+    /**
+     * Normalizes an imperial distance {@link Real} to the most human-readable unit.
+     * Cascades upward through the imperial hierarchy when the value crosses
+     * a ~2× threshold of the next larger unit:
+     * <pre>
+     *   inch  ≥ 24     → foot
+     *   foot  ≥ 6      → yard
+     *   yard  ≥ 3520   → mile
+     * </pre>
+     * Recurses until the value stabilizes in the appropriate unit.
+     */
+    public static Real normalizeImperial(final Real imperial) {
+        final double value = imperial.realValue();
+        if (imperial.tid().test(MATH_INCH_TID) && value >= 24.0d)
+            return normalizeImperial(imperial.as(FOOT_TYPE).asReal());
+        if (imperial.tid().test(MATH_FOOT_TID) && value >= 6.0d)
+            return normalizeImperial(imperial.as(YARD_TYPE).asReal());
+        if (imperial.tid().test(MATH_YARD_TID) && value >= 3520.0d)
+            return normalizeImperial(imperial.as(MILE_TYPE).asReal());
+
+        return imperial;
+    }
+
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        TypeBuilder.build()
+                                .tid(INT_TID)
+                                .vid(MATH_PERCENT_TID, "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100")
+                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
+                                .constructor(arg ->
+                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
+                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
+                                                arg.asInt())
+                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
+                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
+                                // reading that looks like a fact. The type declares its own real->percent edge,
+                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
+                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
+                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
+                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
+                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
+                                                lhs.asInt())
+                                .create(),
+                        docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
+                        docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),
+                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
+                        DATETIME_TYPE = TypeBuilder.build()
+                                .tid(URI_TID)
+                                .vid(MATH_DATETIME_TID, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")
+                                .predicate((lhs, inst) -> {
+                                    final fURI dt = inst.arg(0).asUri().uriValue();
+                                    if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
+                                        return noobj();
+                                    if (!dt.hasHost() || !DT_HOST_PATTERN.matcher(dt.host()).matches())
+                                        return noobj();
+                                    final int month = Integer.parseInt(dt.host().substring(5, 7));
+                                    if (month < 1 || month > 12) return noobj();
+                                    if (!dt.hasPort()) return noobj();
+                                    final int day = dt.port();
+                                    if (day < 1 || day > 31) return noobj();
+                                    final List<String> path = dt.path();
+                                    if (path.size() < 4) return noobj();
+                                    try {
+                                        final int hour = Integer.parseInt(path.get(path.size() - 4));
+                                        if (hour < 0 || hour > 23) return noobj();
+                                        final int minute = Integer.parseInt(path.get(path.size() - 3));
+                                        if (minute < 0 || minute > 59) return noobj();
+                                        final int second = Integer.parseInt(path.get(path.size() - 2));
+                                        if (second < 0 || second > 59) return noobj();
+                                        Integer.parseInt(path.getLast()); // millis: any int OK
+                                    } catch (NumberFormatException e) {
+                                        return noobj();
+                                    }
+                                    if (!dt.qMap().containsKey("tz")) return noobj();
+                                    return inst.arg(0);
+                                })
+                                .create(),
+                        docWrap(BYTE_TYPE, "a byte of data"),
+                        docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
+                        docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),
+                        docWrap(GBYTE_TYPE, "a gigabyte (1024 megabytes) of data"),
+                        docWrap(TBYTE_TYPE, "a terabyte (1024 gigabytes) of data"),
+                        docWrap(PBYTE_TYPE, "a petabyte (1024 terabytes) of data"),
+                        docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
+                        TypeBuilder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID, "united states currency").create(),
+                        TypeBuilder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID, "european union currency").create(),
+                        docWrap(TIME_TYPE, "the nominal base type of time"),
+                        docWrap(NANOS_TYPE, "a nanosecond of time"),
+                        docWrap(MICROS_TYPE, "a microsecond of time"),
+                        docWrap(MILLIS_TYPE, "a millisecond of time"),
+                        docWrap(SECOND_TYPE, "a second of time (1000 millis)"),
+                        docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
+                        docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
+                        docWrap(DAY_TYPE, "a day of time (24 hours)"),
+                        METRIC_TYPE = TypeBuilder.build()
+                                .tid(REAL_TID)
+                                .vid(MATH_METRIC_TID, "the nominal base type of metric distance")
+                                .create(),
+                        MM_TYPE = TypeBuilder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_MM_TID, "a millimeter of distance")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        CM_TYPE = TypeBuilder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_CM_TID, "a centimeter of distance (10 millimeters)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 10.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 10.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 10.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 10.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        DM_TYPE = TypeBuilder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_DM_TID, "a decimeter of distance (10 centimeters)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 100.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 100.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 100.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 100.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        METER_TYPE = TypeBuilder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_METER_TID, "a meter of distance (100 centimeters)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 100.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 10.0d);
+                                        case MATH_KM_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d);
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        KM_TYPE = TypeBuilder.build()
+                                .tid(MATH_METRIC_TID)
+                                .vid(MATH_KM_TID, "a kilometer of distance (1000 meters)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_MM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 1000.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 100.0d);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d / 10.0d);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() / 1000.0d);
+                                        case MATH_INCH_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_FOOT_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 12.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_YARD_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 36.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        case MATH_MILE_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d / 1000.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        IMPERIAL_TYPE = TypeBuilder.build()
+                                .tid(REAL_TID)
+                                .vid(MATH_IMPERIAL_TID, "the nominal base type of imperial distance")
+                                .create(),
+                        INCH_TYPE = TypeBuilder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_INCH_TID, "an inch of distance (25.4 millimeters)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() * 12.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 36.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d);
+                                        case MATH_CM_STRING -> arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH);
+                                        case MATH_DM_STRING -> arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH);
+                                        case MATH_METER_STRING -> arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        FOOT_TYPE = TypeBuilder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_FOOT_TID, "a foot of distance (12 inches)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 12.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() * 3.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 5280.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 12.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 12.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        YARD_TYPE = TypeBuilder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_YARD_TID, "a yard of distance (3 feet)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 36.0d);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 3.0d);
+                                        case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 1760.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 36.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 36.0d);
+                                        default -> arg;
+                                    };
+                                }).create(),
+                        MILE_TYPE = TypeBuilder.build()
+                                .tid(MATH_IMPERIAL_TID)
+                                .vid(MATH_MILE_TID, "a mile of distance (1760 yards)")
+                                .constructor(arg -> {
+                                    final String tid = arg.tid().basePath().toString();
+                                    return switch (tid) {
+                                        case MATH_INCH_STRING -> arg.jvm(arg.asReal().jvm() / 63360.0d);
+                                        case MATH_FOOT_STRING -> arg.jvm(arg.asReal().jvm() / 5280.0d);
+                                        case MATH_YARD_STRING -> arg.jvm(arg.asReal().jvm() / 1760.0d);
+                                        case MATH_CM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 10.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_DM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 100.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_METER_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d / MM_PER_INCH / 63360.0d);
+                                        case MATH_KM_STRING ->
+                                                arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 63360.0d);
+                                        default -> arg;
+                                    };
+                                }).create()),
+                uri(INST), lst(
+                        docWrap(instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()), "returns the current system datetime as a datetime uri", "datetime_now()   [-- <//2026.08.09/14/30/52/123?tz=+0000> (the moment you run it) --]"),
+                        // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,
+                        // datetime - datetime -> millis::T
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_MILLIS_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }), "add two durations of the same time unit", "millis::1500.0 + millis::500.0   [-- millis::2000.0 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_METER_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }), "add two distances of the same metric unit", "meter::1500.0 + meter::500.0   [-- meter::2000.0 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> {
+                            final fURI normalizedTID = inst.arg(0).tid().basePath().equals(REAL_TID) ? lhs.tid().basePath() : MATH_FOOT_TID;
+                            return real(lhs.tid(normalizedTID).realValue() +
+                                    inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
+                        }), "add two distances of the same imperial unit", "foot::12.0 + foot::36.0   [-- foot::48.0 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())), "convert a duration to another time unit — the total is preserved, only the unit label changes", "millis::1500.0.as(second::T)   [-- second::1.5 --]", "second::90.0.as(minute::T)   [-- minute::1.5 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                                        lhs.jvm(mutableList(
+                                                real(lhs.asLst().at(0).asReal().realValue() + inst.arg(0).asLst().at(0).asReal().realValue()),
+                                                real(lhs.asLst().at(1).asReal().realValue() + inst.arg(0).asLst().at(1).asReal().realValue())))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex sum \\(z + w\\)",
+                                Map.of(CMPLX_TYPE, "the complex addend \\(w = c + di\\)"),
+                                "complex addition: \\((a+bi)+(c+di)=(a+c)+(b+d)i\\)",
+                                "cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]"),
+                        docWrap(instC(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                                        lhs.jvm(mutableList(
+                                                real(lhs.asLst().at(0).asReal().realValue() * inst.arg(0).asLst().at(0).asReal().realValue()
+                                                        - lhs.asLst().at(1).asReal().realValue() * inst.arg(0).asLst().at(1).asReal().realValue()),
+                                                real(lhs.asLst().at(0).asReal().realValue() * inst.arg(0).asLst().at(1).asReal().realValue()
+                                                        + lhs.asLst().at(1).asReal().realValue() * inst.arg(0).asLst().at(0).asReal().realValue())))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex product \\(z \\cdot w\\)",
+                                Map.of(CMPLX_TYPE, "the complex multiplier \\(w = c + di\\)"),
+                                "complex multiplication: \\((a+bi)(c+di)=(ac-bd)+(ad+bc)i\\)",
+                                "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]   [-- cmplx::[-5.0,10.0] --]"),
+                        docWrap(instC(MINUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                                        lhs.jvm(mutableList(
+                                                real(lhs.asLst().at(0).asReal().realValue() - inst.arg(0).asLst().at(0).asReal().realValue()),
+                                                real(lhs.asLst().at(1).asReal().realValue() - inst.arg(0).asLst().at(1).asReal().realValue())))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex difference \\(z - w\\)",
+                                Map.of(CMPLX_TYPE, "the complex subtrahend \\(w = c + di\\)"),
+                                "complex subtraction: \\((a+bi)-(c+di)=(a-c)+(b-d)i\\)",
+                                "cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]"),
+                        docWrap(instC(CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                        lhs.jvm(mutableList(
+                                                real(lhs.asLst().at(0).asReal().realValue()),
+                                                real(-lhs.asLst().at(1).asReal().realValue())))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex conjugate \\(\\overline{z}\\)",
+                                Map.of(),
+                                "complex conjugation: \\(\\overline{a+bi}=a-bi\\) — negates the imaginary component",
+                                "cmplx::[1.0,2.0].conjugate()   [-- cmplx::[1.0,-2.0] --]"),
+                        docWrap(instC(DIV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) -> {
+                                    final double a = lhs.asLst().at(0).asReal().realValue();
+                                    final double b = lhs.asLst().at(1).asReal().realValue();
+                                    final double c = inst.arg(0).asLst().at(0).asReal().realValue();
+                                    final double d = inst.arg(0).asLst().at(1).asReal().realValue();
+                                    final double norm2 = c * c + d * d;
+                                    return lhs.jvm(mutableList(real((a * c + b * d) / norm2), real((b * c - a * d) / norm2)));
+                                }),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex quotient \\(z / w\\)",
+                                Map.of(CMPLX_TYPE, "the complex divisor \\(w = c + di\\)"),
+                                "complex division: \\((a+bi)/(c+di)=\\frac{ac+bd}{c^2+d^2}+\\frac{bc-ad}{c^2+d^2}i\\)",
+                                "cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]"),
+                        docWrap(instC(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                        lhs.jvm(mutableList(
+                                                real(-lhs.asLst().at(0).asReal().realValue()),
+                                                real(-lhs.asLst().at(1).asReal().realValue())))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the negation \\(-z\\)",
+                                Map.of(),
+                                "complex negation (additive inverse): \\(-(a+bi)=-a-bi\\)",
+                                "cmplx::[1.0,2.0].neg()   [-- cmplx::[-1.0,-2.0] --]"),
+                        docWrap(instC(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) -> {
+                                    final double a = lhs.asLst().at(0).asReal().realValue();
+                                    final double b = lhs.asLst().at(1).asReal().realValue();
+                                    final double norm2 = a * a + b * b;
+                                    return lhs.jvm(mutableList(real(a / norm2), real(-b / norm2)));
+                                }),
+                                "a complex number \\(z = a + bi\\)",
+                                "the multiplicative inverse \\(z^{-1}\\)",
+                                Map.of(),
+                                "complex reciprocal: \\(\\frac{1}{a+bi}=\\frac{a-bi}{a^2+b^2}\\)",
+                                "cmplx::[1.0,1.0].inv()   [-- cmplx::[0.5,-0.5] --]"),
+                        docWrap(instC(ZERO_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                        lhs.jvm(mutableList(real(0.0), real(0.0)))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex zero \\(0 + 0i\\)",
+                                Map.of(),
+                                "the additive identity: \\(0 = 0 + 0i\\)",
+                                "cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]"),
+                        docWrap(instC(ONE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                        lhs.jvm(mutableList(real(1.0), real(0.0)))),
+                                "a complex number \\(z = a + bi\\)",
+                                "the complex one \\(1 + 0i\\)",
+                                Map.of(),
+                                "the multiplicative identity: \\(1 = 1 + 0i\\)",
+                                "cmplx::[1.0,2.0].one()   [-- cmplx::[1.0,0.0] --]"),
+                        docWrap(instC(MATH_ABS_INST_TID.dom(CMPLX_TID).rng(REAL_TID), lst(), (lhs, inst) -> {
+                                    final double a = lhs.asLst().at(0).asReal().realValue();
+                                    final double b = lhs.asLst().at(1).asReal().realValue();
+                                    return real(Math.sqrt(a * a + b * b));
+                                }),
+                                "a complex number \\(z = a + bi\\)",
+                                "the modulus \\(|z|\\)",
+                                Map.of(),
+                                "complex modulus: \\(|a+bi|=\\sqrt{a^2+b^2}\\)",
+                                "cmplx::[3.0,4.0].abs()   [-- 5.0 --]"),
+                        docWrap(instC(MATH_ARG_INST_TID.dom(CMPLX_TID).rng(REAL_TID), lst(), (lhs, inst) -> {
+                                    final double a = lhs.asLst().at(0).asReal().realValue();
+                                    final double b = lhs.asLst().at(1).asReal().realValue();
+                                    return real(Math.atan2(b, a));
+                                }),
+                                "a complex number \\(z = a + bi\\)",
+                                "the argument \\(\\arg(z)\\)",
+                                Map.of(),
+                                "complex argument (phase): \\(\\arg(a+bi)=\\mathrm{atan2}(b,a)\\)",
+                                "cmplx::[1.0,1.0].arg()   [-- 0.7853981633974483 --]"),
+                        docWrap(instC(PLUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) + (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime forward by a duration", "<//2026.08:09/14/30/00/000?tz=+0000> + second::30.0   [-- <//2026.08:09/14/30/30/000?tz=+0000> --]"),
+                        docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_DATETIME_TID), lst(TIME_TYPE), (lhs, inst) ->
+                                buildDatetimeUri(ZonedDateTime.ofInstant(Instant.ofEpochMilli(datetimeToMillis(lhs.asUri()) - (long) timeToMillis(inst.arg(0))), ZoneOffset.UTC))), "shift a datetime backward by a duration", "<//2026.08:09/14/30/30/000?tz=+0000> - second::30.0   [-- <//2026.08:09/14/30/00/000?tz=+0000> --]"),
+                        docWrap(instC(MINUS_INST_TID.dom(MATH_DATETIME_TID).rng(MATH_TIME_TID), lst(DATETIME_TYPE), (lhs, inst) ->
+                                normalizeTime(real((double) (datetimeToMillis(lhs.asUri()) - datetimeToMillis(inst.arg(0).asUri())), MATH_MILLIS_TID, null))), "the elapsed duration between two datetimes (in millis — normalize it for a readable unit)", "<//2026.08:09/14/31/00/000?tz=+0000> - <//2026.08:09/14/30/00/000?tz=+0000>   [-- millis::60000.0 --]"),
+                        // uri -> datetime identity cast (predicate validates in Type.apply)
+                        docWrap(instC(AS_INST_TID.dom(URI_TID).rng(MATH_DATETIME_TID), lst(URI_TYPE), (lhs, inst) -> lhs.asUri().tid(MATH_DATETIME_TID)), "cast a uri to a datetime — the datetime predicate validates the uri structure first", "<//2026.08.09/14/30/52/123?tz=+0000>.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(datetimeToMillis(lhs.asUri()))), "a datetime to epoch millis", "<//2026.08.09/14/30/52/123?tz=+0000>.as(int::T)   [-- the epoch millis of that moment --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_DATETIME_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(humanReadableDatetime(lhs.asUri()))), "a datetime to a human readable str", "<//2026.08.07/19/48/02/251?tz=+0000>.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]"),
+                        // str -> datetime (parse ISO-8601 / Docker timestamps)
+                        docWrap(instC(AS_INST_TID.dom(STR_TID).rng(MATH_DATETIME_TID), lst(DATETIME_TYPE), (lhs, inst) -> parseDatetime(lhs.strValue())), "parse an ISO-8601 or docker-style timestamp str into a datetime", "'2026-08-07T19:48:02Z'.as(datetime::T)   [-- <//2026.08.07/19/48/02/000?tz=+0000> --]"),
+                        /*instC(MATH_NOW_INST_TID.dom(ALL.maybe()).rng(MATH_TIME_TID), lst(), (lhs, inst) -> real((double) System.currentTimeMillis(), MATH_TIME_TID, null)),
+                        instC(AS_INST_TID.dom(MATH_TIME_TID).rng(STR_TID), lst(TIME_TYPE), (lhs, inst) -> {
+                            Date date = new Date(lhs.realValue().intValue());
+                            DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
+                            formatter.setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
+                            return str(formatter.format(date));
+                            }),*/
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(), (lhs, inst) -> normalizeTime(lhs.asReal())), "auto-scale a duration to the most human readable time unit", "millis::2500.0.normalize()   [-- second::2.5 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_DATASIZE_TID).rng(MATH_DATASIZE_TID), lst(), (lhs, inst) -> normalizeData(lhs.asReal())), "auto-scale a data size to the most human readable data unit", "bB::2097152.0.normalize()   [-- mB::2.0 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(), (lhs, inst) -> normalizeMetric(lhs.asReal())), "auto-scale a metric distance to the most human readable metric unit", "mm::2500.0.normalize()   [-- meter::2.5 --]"),
+                        docWrap(instC(MATH_INST_TID.extend("normalize").dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(), (lhs, inst) -> normalizeImperial(lhs.asReal())), "auto-scale an imperial distance to the most human readable imperial unit", "inch::24.0.normalize()   [-- foot::2.0 --]"),
+                        // metric / imperial distance: within-system casts, and the two cross-system
+                        // mappings (metric <-> imperial) bridged through 25.4 mm per inch
+                        docWrap(instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert a metric distance to another metric unit", "meter::1500.0.as(km::T)   [-- km::1.5 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert an imperial distance to another imperial unit", "inch::144.0.as(yard::T)   [-- yard::4.0 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_METRIC_TID).rng(MATH_IMPERIAL_TID), lst(IMPERIAL_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert a metric distance to an imperial one — bridged through the exact 25.4 millimeters per inch", "meter::1.0.as(inch::T)   [-- inch::39.37007874015748 --]"),
+                        docWrap(instC(AS_INST_TID.dom(MATH_IMPERIAL_TID).rng(MATH_METRIC_TID), lst(METRIC_TYPE), (lhs, inst) -> convertTo(lhs, inst.arg(0).vid())), "convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch", "foot::1.0.as(cm::T)   [-- cm::30.48 --]"),
+                        docWrap(instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))), "the cosine (radians) of a real", "cos(1.0)   [-- 0.5403023058681398 --]"),
+                        docWrap(instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))), "the sine (radians) of a real", "sin(1.0)   [-- 0.8414709848078965 --]"),
+                        docWrap(instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))), "the tangent (radians) of a real", "tan(1.0)   [-- 1.557407724654902 --]"),
+                        docWrap(instC(MATH_SQRT_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sqrt(inst.arg(0).realValue()))), "the square root of a real", "sqrt(9)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_ATAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.atan(inst.arg(0).realValue()))), "the arctangent (radians) of a real", "atan(1)   [-- 0.7853981633974483 (pi/4) --]"),
+                        docWrap(instC(MATH_ATAN2_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE.c(cInt.of(2))), (lhs, inst) -> real(Math.atan2(inst.arg(0).take(cInt.ONE()).get0().realValue(), inst.arg(0).take(cInt.ONE()).get0().realValue()))), "the four quadrant arctangent of the two reals [x,y]", "atan2([3.0,4.0])   [-- 1.0303768265243125 --]"),
+                        docWrap(instC(MATH_LOG_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log(inst.arg(0).realValue()))), "the natural logarithm of a real", "log(2.718281828459045)   [-- 1.0 --]"),
+                        docWrap(instC(MATH_LOG10_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.log10(inst.arg(0).realValue()))), "the base-10 logarithm of a real", "log10(1000)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_EXP_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.exp(inst.arg(0).realValue()))), "e to the power of a real", "exp(1.0)   [-- 2.718281828459045 --]"),
+                        docWrap(instC(MATH_ABS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.abs(inst.arg(0).realValue()))), "the absolute value of a real", "abs(-3.14)   [-- 3.14 --]"),
+                        docWrap(instC(MATH_CEIL_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.ceil(inst.arg(0).realValue()))), "the smallest real greater than or equal to the arg — the ceiling", "ceil(2.1)   [-- 3.0 --]"),
+                        docWrap(instC(MATH_FLOOR_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.floor(inst.arg(0).realValue()))), "the largest real less than or equal to the arg — the floor", "floor(2.9)   [-- 2.0 --]"),
+                        docWrap(instC(MATH_ROUND_INST_TID.dom(ALL.maybe()).rng(INT_TID), lst(REAL_TYPE), (lhs, inst) -> jnt(Math.round(inst.arg(0).realValue()))), "the arg rounded to the nearest int", "round(2.5)   [-- 3 --]")),
+                uri(CONST), lst(real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()), real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant()))));
+        docWrap(this, "the collection of mathematical instructions, algebraic and numeric data types, and associated constants");
+        super.setup();
+    }
+
+}

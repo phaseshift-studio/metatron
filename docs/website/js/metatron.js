@@ -1,0 +1,415 @@
+(function ($) {
+    "use strict";
+    // LOADING WIDGET
+    var spinner = function () {
+        setTimeout(function () {
+            if ($('#spinner').length > 0) {
+                $('#spinner').removeClass('show');
+            }
+        }, 1);
+    };
+    spinner();
+    // STICK NAVBAR
+    $(window).scroll(function () {
+        if ($(this).scrollTop() > 300) {
+            $('.sticky-top').addClass('shadow-sm').css('top', '0px');
+        } else {
+            $('.sticky-top').removeClass('shadow-sm').css('top', '-100px');
+        }
+        if ($(this).scrollTop() > 300) {
+            $('.back-to-top').addClass('show');
+        } else {
+            $('.back-to-top').removeClass('show');
+        }
+    });
+    $('.back-to-top').click(function () {
+        $('html, body').animate({scrollTop: 0}, 1500);
+        return false;
+    });
+    // SYNTAX HIGHLIGHTING IN <code> SNIPPETS
+    hljs.highlightAll();
+    // TERMYNAL TABS
+    $(function () {
+        $(".tabrow li").click(function (e) {
+            e.preventDefault();
+            $(".tabrow li").removeClass("selected");
+            $(this).addClass("selected");
+        });
+    });
+
+    // CUSTOM DOCS SCROLL HANDLING
+    $(document).ready(function () {
+        // Toggle dark theme for the tutorial section based on system/user preference if needed
+        // but for now, we just ensure it's readable.
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+
+    // LECTURE SEARCH FILTERING
+    $(document).ready(function () {
+        $('#lecture-search').on('keyup', function () {
+            var rawValue = $(this).val().toLowerCase();
+
+            // Show/hide clear button
+            if (rawValue.length > 0) {
+                $('#clear-search').show();
+            } else {
+                $('#clear-search').hide();
+            }
+
+            // Tokenize search input (respecting quotes for multi-word tokens)
+            var tokens = [];
+            var regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+            var match;
+            while ((match = regex.exec(rawValue)) !== null) {
+                // Get the captured group if it was quoted, otherwise the full match
+                tokens.push(match[1] || match[2] || match[0]);
+            }
+
+            $('.tutorial-grid button').each(function () {
+                var btnText = $(this).text().toLowerCase();
+                var targetId = $(this).attr('data-bs-target');
+                var contentText = $(targetId).text().toLowerCase();
+                var fullSearchableText = btnText + " " + contentText;
+
+                var toggle = true;
+                if (tokens.length > 0) {
+                    for (var i = 0; i < tokens.length; i++) {
+                        if (fullSearchableText.indexOf(tokens[i]) === -1) {
+                            toggle = false;
+                            break;
+                        }
+                    }
+                }
+
+                $(this).toggle(toggle);
+            });
+        });
+
+        // Clear search button functionality
+        $('#clear-search').on('click', function() {
+            $(this).hide();
+            $('#lecture-search').val('').keyup().focus();
+        });
+
+
+        // REORDER PANELS BY CLICK ORDER
+        $('.tutorial-grid button').on('click', function () {
+            var targetId = $(this).attr('data-bs-target');
+            
+            // Move the element to the end of the container
+            // to ensure it appears in the order it was clicked.
+            $(targetId).appendTo('#custom-docs');
+
+            // Hide tooltip when button is clicked (to avoid it staying on screen)
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) tooltip.hide();
+
+            // Show PDF export button and the custom-docs panel when a tutorial is active
+            // We use setTimeout to allow Bootstrap to start the collapse animation/state change
+            var checkVisibility = function() {
+                var anyVisible = $('#custom-docs .collapse.show, #custom-docs .collapse.collapsing').length > 0;
+                if (anyVisible) {
+                    $('#pdf-export-container').show();
+                    $('#custom-docs').show();
+                } else {
+                    $('#pdf-export-container').hide();
+                    $('#custom-docs').hide();
+                }
+            };
+            
+            // Check multiple times to catch state transitions
+            setTimeout(checkVisibility, 50);
+            setTimeout(checkVisibility, 250);
+            setTimeout(checkVisibility, 500);
+        });
+
+        // HANDLE URL FRAGMENTS (HASH) FOR DIRECT TUTORIAL ACCESS
+        function handleHash() {
+            var hash = window.location.hash;
+            if (!hash || hash.length <= 1) return;
+
+            var fragment = decodeURIComponent(hash.substring(1));
+
+            // ── Case 1: Fragment matches an element ID on the page ──
+            var targetEl = document.getElementById(fragment);
+            if (targetEl) {
+                // Find the enclosing .collapse panel (if any)
+                var panel = targetEl.closest('.collapse');
+                if (panel) {
+                    var panelId = panel.id; // e.g. "card-0"
+                    // Open the panel by clicking its grid button
+                    var btn = document.querySelector('.tutorial-grid button[data-bs-target="#' + panelId + '"]');
+                    if (btn && btn.getAttribute('aria-expanded') === 'false') {
+                        $(btn).click();
+                    }
+                }
+                // Scroll to the target after the collapse animation completes
+                // (or immediately if no panel was opened)
+                var delay = panel ? 650 : 100;
+                setTimeout(function() {
+                    $('#custom-docs').show();
+                    $('#pdf-export-container').show();
+                    $('html, body').animate({
+                        scrollTop: $(targetEl).offset().top - 120
+                    }, 400);
+                }, delay);
+                return;
+            }
+
+            // ── Case 2: Fragment matches a card panel ID directly ──
+            if (/^card-\d+$/.test(fragment)) {
+                var cardBtn = document.querySelector('.tutorial-grid button[data-bs-target="#' + fragment + '"]');
+                if (cardBtn && cardBtn.getAttribute('aria-expanded') === 'false') {
+                    $(cardBtn).click();
+                    setTimeout(function() {
+                        $('#custom-docs').show();
+                        $('#pdf-export-container').show();
+                        $('html, body').animate({
+                            scrollTop: $('#custom-docs').offset().top - 100
+                        }, 400);
+                    }, 600);
+                }
+                return;
+            }
+
+            // ── Case 3: Fragment matches a tutorial name (legacy behavior) ──
+            var tutorialName = fragment.toLowerCase();
+            var found = false;
+
+            $('.tutorial-grid button').each(function() {
+                var btnText = $(this).text().trim().toLowerCase();
+                // Match by exact name or slugified name (replace spaces with dashes)
+                if (btnText === tutorialName || btnText.replace(/\s+/g, '-') === tutorialName || btnText.replace(/\s+/g, '') === tutorialName) {
+                    // Only click if it's not already open (aria-expanded="false")
+                    if ($(this).attr('aria-expanded') === 'false') {
+                        $(this).click();
+                    }
+
+                    found = true;
+                    return false; // Break loop
+                }
+            });
+
+            if (found) {
+                // Smooth scroll to the custom-docs area after a short delay
+                setTimeout(function() {
+                    var $docs = $('#custom-docs');
+                    if ($docs.length > 0 && $docs.is(':visible')) {
+                        $('html, body').animate({
+                            scrollTop: $docs.offset().top - 100
+                        }, 500);
+                    }
+                }, 600);
+            }
+        }
+
+        // Run on load
+        handleHash();
+        
+        // Also run when hash changes without page reload
+        $(window).on('hashchange', handleHash);
+
+        // Handle close button click to update container visibility
+        $('#custom-docs').on('click', '.btn-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Find the ID of the collapse panel this close button belongs to
+            var targetId = $(this).attr('data-bs-target');
+            
+            // Find the corresponding grid button that toggles this panel
+            // and trigger a click on it to ensure both the panel closes 
+            // and the button's 'active' state (if any) is updated.
+            // We search in .tutorial-grid to find the button with the same data-bs-target
+            $('.tutorial-grid button[data-bs-target="' + targetId + '"]').first().click();
+
+            // Hide tooltip when close button is clicked
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) tooltip.hide();
+        });
+
+        // Handle copy URL button click
+        $('#custom-docs').on('click', '.btn-copy-url', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $panel = $(this).closest('.collapse');
+            var panelId = $panel.attr('id');
+            var $gridBtn = $('.tutorial-grid button[data-bs-target="#' + panelId + '"]').first();
+            var tutorialName = $gridBtn.text().trim();
+            
+            // Construct the full URL with the fragment
+            var hash = tutorialName.replace(/\s+/g, '-').toLowerCase();
+            var url = window.location.origin + window.location.pathname + window.location.search + '#' + hash;
+
+            // Copy to clipboard
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(url).select();
+            document.execCommand("copy");
+            $temp.remove();
+
+            // Show feedback via tooltip
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) {
+                // In Bootstrap 5, we can use setContent to update title or manually trigger
+                // but simpler to hide, update attribute, show, then revert.
+                var originalTitle = $(this).attr('data-bs-original-title') || $(this).attr('title');
+                
+                $(this).attr('data-bs-original-title', 'copied').tooltip('show');
+                
+                var btn = this;
+                setTimeout(function() {
+                    $(btn).attr('data-bs-original-title', originalTitle).tooltip('hide');
+                }, 2000);
+            }
+        });
+    });
+})(jQuery);
+
+function slideShowPage(id) {
+    if (id === 0) {
+        triggerSweep("index.html");
+    } else {
+        triggerSweep("tractatus.html");
+    }
+}
+
+function triggerSweep(url) {
+    const sweep = $('<div class="page-sweep"></div>').appendTo('body');
+    setTimeout(() => sweep.addClass('active'), 5);
+    setTimeout(() => window.location.href = url, 400);
+}
+
+$(document).ready(function () {
+    // Initial sweep-out on page load
+    const sweep = $('<div class="page-sweep active"></div>').appendTo('body');
+    setTimeout(() => {
+        sweep.addClass('exit');
+        setTimeout(() => sweep.remove(), 400);
+    }, 100);
+
+    $('a').on('click', function(e) {
+        const href = $(this).attr('href');
+        const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+        if (href && (href === 'index.html' || href === 'tractatus.html') && href !== currentPath) {
+            e.preventDefault();
+            triggerSweep(href);
+        }
+    });
+
+    const hash = window.location.hash.substring(1);
+    if (hash === "1") {
+        window.location.href = "tractatus.html";
+    }
+});
+
+function modalPanel(title, icon, htmlBody) {
+    // Move modal to body to escape stacking context traps
+    // (e.g., #content { position: relative; z-index: 1 } would otherwise
+    // trap the modal's z-index below the backdrop's, rendering it unclickable)
+    const panel = document.getElementById('modalPanel');
+    if (panel && panel.parentElement !== document.body) {
+        document.body.appendChild(panel);
+    }
+
+    // Destroy any existing modal instance to avoid state issues
+    const existingModal = bootstrap.Modal.getInstance(panel);
+    if (existingModal) {
+        existingModal.dispose();
+    }
+    // Defense in depth: ensure no leftover backdrop or body state
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open');
+
+    $("#modalPanel").html(`
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-secondary text-light">
+            <div class="modal-header border-bottom border-primary">
+                <div class="bg-dark d-flex flex-shrink-0 align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                    <img src="${icon}" alt="${title}" width="32" height="32" class="icon-color">
+                </div>
+                <h4 class="modal-title text-uppercase">${title}</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ${htmlBody}
+            </div>
+        </div>
+    </div>
+`);
+    
+    // Create a new modal instance and show it
+    const modal = new bootstrap.Modal($('#modalPanel')[0], {
+        backdrop: true,
+        keyboard: true
+    });
+    modal.show();
+}
+
+function featurePanel(id) {
+    const $el = $('#' + id);
+    const title = $el.attr('data-title');
+    const icon = $el.attr('data-icon');
+    const backImage = $el.attr('data-back-image');
+    const frontHTML = $el.find('.feature-front').html();
+    const modalHTML = $el.find('.feature-modal').html();
+
+    $el.replaceWith(`
+<div id="${id}" class="col-lg-4 col-md-6 wow fadeInUp flip-box" data-wow-delay="0.1s">
+   <div class="flip-box-inner">
+      <div class="flip-box-front">
+         <div class="service-item position-relative overflow-hidden bg-secondary d-flex h-100 p-1 ps-1">
+            <div class="bg-dark d-flex flex-shrink-0 align-items-center justify-content-center"
+               style="width: 60px; height: 60px;">
+               <img src="${icon}" alt="${title}" width="32" height="32"
+                  class="icon-color">
+            </div>
+            <div class="ps-2 p-3">
+               <h3 class="text-uppercase mb-4">${title}</h3>
+               ${frontHTML}
+            </div>
+         </div>
+      </div>
+      <div class="flip-box-back">
+        <div class="d-flex justify-content-center align-items-center overflow-hidden bg-secondary h-100">
+            <div class="row">
+                <a class="feature-modal-trigger" href="javascript:void(0);">
+                    <img src="${backImage}" alt="${title}" class="icon-color" width="100%" height="100%"/>
+                </a>
+            </div>
+            <div class="row">
+                <div class="col position-absolute bottom-0 end-0 d-flex justify-content-center">
+                    <a class="feature-modal-trigger" href="javascript:void(0);">learn more</a>
+                </div>
+            </div>
+        </div>
+        <div class="feature-modal-content" style="display:none;">
+            ${modalHTML}
+        </div>
+        <div class="feature-icon-src" style="display:none;">${icon}</div>
+        <div class="feature-title-src" style="display:none;">${title}</div>
+      </div>
+   </div>
+</div>
+`);
+}
+
+$(document).on('click', '.zoomable', function() {
+    $(this).toggleClass('zoomed');
+});
+
+$(document).on('click', '.feature-modal-trigger', function() {
+    const $flipBox = $(this).closest('.flip-box');
+    const title = $flipBox.find('.feature-title-src').text();
+    const icon = $flipBox.find('.feature-icon-src').text();
+    const content = $flipBox.find('.feature-modal-content').html();
+    modalPanel(title, icon, content);
+});
+
+

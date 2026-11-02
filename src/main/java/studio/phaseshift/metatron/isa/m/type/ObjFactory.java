@@ -1,0 +1,249 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type;
+
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.function.Function;
+
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.isa.m.mInstSet.TYPE_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TID;
+
+public interface ObjFactory extends Rec {
+
+    GraphittyLogger LOG = Graphitty.log(ObjFactory.class);
+
+    <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid);
+
+    <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid, final Class<OBJ> objClass);
+
+    default Obj toObjFromString(final String value) {
+        return ObjmtronSerializer.parse(value);
+    }
+
+    default Obj toObj(final Object value) {
+        return value instanceof Obj ? (Obj) value : this.toObj(value, null, null);
+    }
+
+    default Obj createOrFail(final Object value) {
+        try {
+            return this.toObj(value);
+        } catch (final Exception e) {
+            return fail(e);
+        }
+    }
+
+    default <JVM, OBJ extends Obj> ObjFactory addExtension(final Class<JVM> objClass, final Function<JVM, OBJ> creator) {
+        LOG.warn("extensions not supported for %s", this.getClass().getSimpleName());
+        return this;
+    }
+    
+    /*Int jnt(final long jvm, final fURI tid, final fURI vid);
+    Real real(final double jvm, final fURI tid, final fURI vid);
+    Bool bool(final boolean jvm, final fURI tid, final fURI vid);
+    Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid);
+    Uri uri(final fURI jvm, final fURI tid, final fURI vid);
+    Fail fail(final Throwable jvm, final fURI tid, final fURI vid);
+    PCMonad monad(final List<Obj> jvm, final fURI tid, final fURI vid);
+    Objs objs(final List<Obj> jvm, final fURI tid, final fURI vid);
+    Type type(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid);
+    Space space(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    InstSet instSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    Inst inst(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    Code code(final List<Inst> jvm, final fURI tid, final fURI vid);*/
+
+    default <OBJ extends Obj> OBJ toObj(final Object value, final Class<OBJ> objClass) {
+        fURI tid;
+        if (null == value)
+            tid = Tokens.NOOBJ_TID;
+        else if (Bool.class.isAssignableFrom(objClass))
+            tid = Tokens.BOOL_TID;
+        else if (Int.class.isAssignableFrom(objClass))
+            tid = Tokens.INT_TID;
+        else if (Real.class.isAssignableFrom(objClass))
+            tid = Tokens.REAL_TID;
+        else if (Str.class.isAssignableFrom(objClass))
+            tid = Tokens.STR_TID;
+        else if (Uri.class.isAssignableFrom(objClass))
+            tid = Tokens.URI_TID;
+        else if (Lst.class.isAssignableFrom(objClass))
+            tid = Tokens.LST_TID;
+        else if (Rel.class.isAssignableFrom(objClass))
+            tid = Tokens.REL_TID;
+        else if (Rec.class.isAssignableFrom(objClass))
+            tid = Tokens.REC_TID;
+        else if (Inst.class.isAssignableFrom(objClass))
+            tid = M_ISA_INST_TID;
+        else if (Code.class.isAssignableFrom(objClass))
+            tid = Tokens.CODE_TID;
+        else if (Objs.class.isAssignableFrom(objClass))
+            tid = Tokens.OBJS_TID;
+        else if (Type.class.isAssignableFrom(objClass))
+            tid = TYPE_INST_TID;
+        else if (Fail.class.isAssignableFrom(objClass))
+            tid = Tokens.FAIL_TID;
+        else if (NoObj.class.isAssignableFrom(objClass))
+            tid = NOOBJ;
+        else if (StatefulMonad.class.isAssignableFrom(objClass))
+            tid = MACH_MONAD_TID;
+        else
+            throw MTronException.of("unable to convert to requested obj class: %s", objClass);
+        return this.toObj(value, tid, null, objClass);
+    }
+
+    /// //////////////////////////////////////////////////////////////////////////////////////////////////////
+    class Helper {
+        public static String externalNameToMtronName(final String externalName) {
+            String newName = externalName;
+            if (newName.toUpperCase().equals(newName))
+                newName = newName.toLowerCase();
+            if (newName.startsWith("get") || newName.startsWith("has") || newName.startsWith("can"))
+                newName = newName.substring(3);
+            if (newName.startsWith("is"))
+                newName = newName.substring(2);
+            return newName
+                    .replaceAll("([A-Z])(?=[A-Z])", "$1_")
+                    .replaceAll("([a-z])([A-Z])", "$1_$2")
+                    .toLowerCase();
+        }
+
+        public static boolean containsObjs(final Collection<Object> collection) {
+            return collection.stream().allMatch(Helper::containsObjs);
+        }
+
+        public static boolean containsObjs(final Map<Object, Object> map) {
+            return map.entrySet().stream().allMatch(e -> e.getKey() instanceof Obj && containsObjs(e.getValue()));
+        }
+
+        public static boolean containsObjs(final Object object) {
+            if (object instanceof Collection)
+                return containsObjs((Collection<Object>) object);
+            else if (object instanceof Map)
+                return containsObjs((Map<Object, Object>) object);
+            else
+                return object instanceof Obj;
+        }
+
+        public static fURI baseTID(final Obj obj) {
+            final Object value = obj.jvm();
+            if (null == value)
+                return Tokens.NOOBJ_TID;
+            final Class<?> objClass = value.getClass();
+            if (Boolean.class.isAssignableFrom(objClass))
+                return Tokens.BOOL_TID;
+            else if (Long.class.isAssignableFrom(objClass))
+                return Tokens.INT_TID;
+            else if (Double.class.isAssignableFrom(objClass))
+                return Tokens.REAL_TID;
+            else if (String.class.isAssignableFrom(objClass))
+                return Tokens.STR_TID;
+            else if (fURI.class.isAssignableFrom(objClass))
+                return Tokens.URI_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return Tokens.LST_TID;
+            else if (Tuple.Pair.class.isAssignableFrom(objClass))
+                return Tokens.REL_TID;
+            else if (Map.class.isAssignableFrom(objClass))
+                return Tokens.REC_TID;
+            else if (Tuple.Triplet.class.isAssignableFrom(objClass))
+                return M_ISA_INST_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return Tokens.CODE_TID;
+            else if (List.class.isAssignableFrom(objClass))
+                return Tokens.OBJS_TID;
+            else if (Tuple.Pair.class.isAssignableFrom(objClass))
+                return TYPE_INST_TID;
+            else if (Exception.class.isAssignableFrom(objClass) || Fail.class.isAssignableFrom(objClass))
+                return Tokens.FAIL_TID;
+            else if (Lst.class.isAssignableFrom(objClass))
+                return MACH_MONAD_TID;
+            else if (ByteBuffer.class.isAssignableFrom(objClass))
+                return Tokens.BYTES_TID;
+            return ALL;
+        }
+
+        public static boolean attemptReflection(final Class<?> clazz) {
+            return clazz.isPrimitive() ||
+                    String.class.isAssignableFrom(clazz) ||
+                    URI.class.isAssignableFrom(clazz) ||
+                    Character.class.isAssignableFrom(clazz) ||
+                    Long.class.isAssignableFrom(clazz) ||
+                    Integer.class.isAssignableFrom(clazz) ||
+                    Double.class.isAssignableFrom(clazz) ||
+                    Float.class.isAssignableFrom(clazz) ||
+                    Boolean.class.isAssignableFrom(clazz) ||
+                    Enum.class.isAssignableFrom(clazz) ||
+                    Collection.class.isAssignableFrom(clazz) ||
+                    Record.class.isAssignableFrom(clazz) ||
+                    Map.class.isAssignableFrom(clazz);
+
+        }
+
+
+        public static Map<Obj, Obj> reflectionBasedCreate(final ObjFactory factory, final Object value) {
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
+            Arrays.stream(value.getClass().getMethods())
+                    .filter(m -> (m.getModifiers() & Modifier.PUBLIC) != 0)
+                    .filter(m -> m.getParameterCount() == 0)
+                    .filter(m -> !m.getName().equals("hashCode")
+                            && (m.getName().startsWith("get") ||
+                            m.getName().startsWith("is") ||
+                            m.getName().startsWith("has") ||
+                            m.getName().startsWith("can")))
+                    .filter(m -> attemptReflection(m.getReturnType()))
+                    .forEach(m -> {
+                        try {
+                            final Object result = m.invoke(value);
+                            map.put(uri(Helper.externalNameToMtronName(m.getName())), factory.toObj(result));
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    });
+            Arrays.stream(value.getClass().getFields())
+                    .filter(f -> (f.getModifiers() & Modifier.PUBLIC) != 0)
+                    .filter(f -> attemptReflection(f.getType()))
+                    .forEach(f -> {
+                        try {
+                            final Object result = f.get(value);
+                            map.put(uri(Helper.externalNameToMtronName(f.getName())), factory.toObj(result));
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    });
+            return map;
+        }
+    }
+
+}

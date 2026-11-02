@@ -1,0 +1,19 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& & b \arrow{dr} & \\
+a \arrow{r} & c \arrow{ur} \arrow{dr} & & d \\
+& & 1 \arrow{ur} & \\ 
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& b \arrow{dr} & & \\
+a \arrow{ur} \arrow{dr} & & c \arrow{r} & d. \\
+& 1 \arrow{ur} & & \\ 
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

@@ -1,0 +1,415 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m.type;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.furi.fURI;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class UriTest extends AbstractAlgebraTest {
+
+    @Override
+    protected Type carrier() {
+        return URI_TYPE;
+    }
+
+    @Override
+    protected Obj sample() {
+        return uri(f("/a/b"));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "bool::abc/def                                                | <ERROR>",
+            "/m/bool::abc/def                                             | <ERROR>",
+            "bytes::<abc/def>                                             | <ERROR>",
+            "/m/bytes::<abc/def>                                          | <ERROR>",
+            "int::<abc/def>                                               | <ERROR>",
+            "/m/int::<abc/def>                                            | <ERROR>",
+            "real::<abc/def>                                              | <ERROR>",
+            "/m/real::<abc/def>                                           | <ERROR>",
+            "str::<abc/def>                                               | <ERROR>",
+            "/m/str::<abc/def>                                            | <ERROR>",
+            "lst::<abc/def>                                               | <ERROR>",
+            "/m/lst::<abc/def>                                            | <ERROR>",
+            "lst::<abc/def>                                               | <ERROR>",
+            "/m/lst::<abc/def>                                            | <ERROR>",
+            "inst::<abc/def>                                              | <ERROR>",
+            "/m/inst::<abc/def>                                           | <ERROR>",
+            //  "code::<abc/def>                                          | <ERROR>",
+            "uri::<http://webpage.com>                                    | <http://webpage.com>",
+            "uri::<http://webpage.com>.type()                             | start(uri::T[])",
+            "<http://webpage.com>.type()                                  | start(uri::T[])",
+            "\"http://webpage.com\".type()                                | start(str::T[])",
+            //"a/b.plus(c/d)                                              | {a/b,c/d}",
+            // "a/b.plus(noobj)                                              | a/b",
+            "a/b/c.plus(a/c/c)                                            | a/{b,c}/c",
+            "a/{b,d}/c.plus(a/c/c)                                        | a/{b,c,d}/{2}c",
+            "a/{b,d}/c.plus(a/e/c)                                        | a/{b,d,e}/{2}c",
+            "a/{b,d,e}/c.plus(a/f/c)                                      | a/{b,d,e,f}/{3}c",
+            "a/{x,y,z}/p/q.plus(a/w/p/q)                                  | a/{w,x,y,z}/{3}p/{3}q",
+            "a/{m,n}/c/d.plus(a/o/c/d)                                    | a/{m,n,o}/{2}c/{2}d",
+            "a/b/c/d.plus(a/e/c/d)                                        | a/{b,e}/c/d",
+            "a/c/c.plus(a/{b,d}/c)                                        | a/{b,c,d}/{2}c",
+            //   "a/b/c{2,3}.plus(a/d/c{-3,-2})                                | a/{{2,3}b,{-3,-2}d}/c",
+            //  "a/b/c{2}.plus(a/d/c{3})                                      | a/{{2}b,{3}d}/c",
+            //  "a/{b,d}/c{2}.plus(a/e/c{3})                                  | a/{{2}b,{2}d,{3}e}/{2}c",
+            //  "a/e/c{2}.plus(a/{b,d}/c{3})                                  | a/{{3}b,{3}d,{2}e}/{2}c",
+            "a/b/c/d.plus(a/e/f/g)                                        | a/{b/c/d,e/f/g}",
+            "<a/{b,d}/c>.mult(d/e).plus(a/c/c/d/e)                         | a/{b,c,d}/{2}c/{2}d/{2}e",
+            "a/b.mult(c/d)                                                | a/b/c/d",
+            "a/b.mult(noobj)                                              | noobj",
+            "a/b.one()                                                    | <>",
+            "a.mult(<../b>)                                               | b",
+            "a.mult(<../b/c>)                                             | b/c",
+            "a.mult(<../../b>)                                            | <../b>"
+    }, delimiter = '|')
+    public void testCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c.split(/)                          % [a,b,c]",
+            // the regex must reach split as a uri (mtron has no f() to build one)
+            "a/b/c.split('(a+)+$'.as(uri::T))        % <ERROR>",
+            "a/b/c.split('(x?)*y'.as(uri::T))        % <ERROR>",
+            "a/b/c.split('(.*)*'.as(uri::T))         % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSplitRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // has and the select projection's q rules take a regex too, so they refuse the same shape split does
+            "a/b/c.has('(a+)+$')                                        % <ERROR>",
+            "<http://webpage.com/a?debug=true>.select([q=>['(d+)+'=>_]]) % <ERROR>",
+            "a/b/c.has('b/c$')                                          % a/b/c",
+            "a/b/c.has('^b')                                            % noobj",
+            "<http://webpage.com/a?debug=true>.select([q=>['de.*'=>_]]) % <http://webpage.com/a?debug=true>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testRegexGuard(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a.pow(0)                         % <.>",
+            "/a.pow(1)                        % /a",
+            "/a/.pow(1)                       % /a/",
+            "/a/.pow(2)                       % /a/a/",
+            "a.pow(2)                         % a/a",
+            "a.pow(3)                         % a/a/a",
+            "a/b.pow(2)                       % a/b/a/b",
+            "a/b.pow(3)                       % a/b/a/b/a/b",
+            "a/b.pow(3)                       % a/b/a/b/a/b",
+            "a/b/c.pow(2)                     % a/b/c/a/b/c",
+            "a/b/c.pow(3)                     % a/b/c/a/b/c/a/b/c",
+            "a/b/c/.pow(3)                    % a/b/c/a/b/c/a/b/c/",
+            "/a/b/c/.pow(3)                   % /a/b/c/a/b/c/a/b/c/",
+            "a/b/c/d.pow(2)                   % a/b/c/d/a/b/c/d",
+            "a/b/c/d.pow(3)                   % a/b/c/d/a/b/c/d/a/b/c/d",
+            "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
+    }, delimiter = '%')
+    public void testMath(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c.-</                        % [a,b,c]",
+            "ab/c.-</                         % [ab,c]",
+            "abc.-</                          % [abc]",
+            // no lhs: -</abc is split(/abc) applied to nothing, and nothing splits to nothing
+            "-</abc                           % noobj",
+            "<http://www.com/a/b/c>.-</       % [http:,<>,<www.com>,a,b,c]",
+            "<////>.-</                       % [<>]",
+            "<////a>.-</                      % [<>,<>,<>,<>,a]",
+    }, delimiter = '%')
+    public void testSplit(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData({
+            "test -> <http://www.marko.com:90/a/b/c?w=abc&x=1&y=2&z=!*test>",
+            "b -> 42"})
+    @CsvSource(value = {
+            "*test.as(rec::T)>>scheme                   % http",
+            "*test.as(rec::T)>>authority                % <www.marko.com:90>",
+            "*test.as(rec::T)>>host                      % <www.marko.com>",
+            "*test.as(rec::T)>>sub                       % <www>",
+            "*test.as(rec::T)>>{sub,port}                % {<www>,90}",
+            "*test.as(rec::T)>>port                      % 90",
+            //"*test.as(rec::T).>>path>-.as(uri::T).prod()          % </a/b/c>",
+            "*test.as(rec::T)>>q                         % [w=><abc>,x=>1,y=>2,z=>!*test]",
+            "*test.as(rec::T).>>q>>w                     % <abc>",
+            "*test.as(rec::T).>>q>>x                     % 1",
+            "*test.as(rec::T)>>q>>y                      % 2",
+            "*test.as(rec::T).>>q>>z                     % *test",
+            "*test.as(rec::T).>>path>>2.*(_)             % 42",
+            "*test.as(rec::T)>>path>>1                   % a",
+            "*test.as(rec::T)>>path>>{2,3}               % {b,c}",
+            "*test.as(rec::T)>>path>>(-1)                % c",
+            "*test.as(rec::T)>>path>>{-1,-3}             % {c,a}",
+            "*test.as(rec::T)>>path>>{-2,-3}             % {b,a}",
+            "*test.as(rec::T)>>path>>{-2,-5}             % b",
+            "*test.as(rec::T)>>path>>{-100,100}          % noobj"
+    }, delimiter = '%')
+    public void testGet(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c.reverse()                 % c/b/a/",
+            "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
+            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a/>",
+            "a.reverse()                      % a",
+            "a/b.reverse()                    % b/a",
+            "/a.reverse()                     % a/",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ab/cd.has('ab.*')                                                             % ab/cd",
+            "ab/cd.has('bb')                                                               % noobj",
+            "{abc/d,aaa}.has('a\\.')                                                       %  noobj",
+            "{abc3d,aaa}.has('a.*')                                                        % {abc3d,aaa}",
+            "{abc3d,aaa}.has('a(b)?(a|c).?')                                               % {abc3d,aaa}",
+            "{abc3d,aaa}.has('b.*')                                                        % {abc3d}",
+            "{abc3d,aaa}.has('c.*')                                                        % {abc3d}",
+            "{abc3d,aaa}.has('d.*')                                                        % abc3d",
+            "{abc3d,aaa}.has('d.?')                                                        % abc3d",
+            "{abc3d,aaa}.has('e.*')                                                        % noobj"
+            // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
+            // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
+    }, delimiter = '%')
+    public void testHasInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<a://b.com:123/c/d?x=1&y=2>                               % <a://b.com:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>scheme            % a",
+            "<a://b.com:123/c/d?x=1&y=2>.scheme(abc)                   % <abc://b.com:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>port              % 123",
+            "<a://b.com:123/c/d?x=1&y=2>.port(666)                     % <a://b.com:666/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>host              % <b.com>",
+            "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)               % <a://abc.org:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q                 % [x=>1,y=>2]",
+            "{23,56}<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q          % {23,56}[x=>1,y=>2]",
+            // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
+    }, delimiter = '%')
+    public void testAsRec(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<1>                                                        % <1>",
+            "<1>.as(int::T)                                             % int::1",
+            "<3>.as(int::T).plus(<6>.as(int::T))                        % int::9",
+            "<3a>.as(int::T)                                            % <ERROR>",
+    }, delimiter = '%')
+    public void testAsInt(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c.count()                                              % 1",
+            "a.count()                                                  % 1",
+            "/a/b.count()                                               % 1",
+            //  "<http://example.com/a/b/c>.count()                         % 6",
+    }, delimiter = '%')
+    public void testCount(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b.eq(a/b)                                                % true",
+            "a/b.eq(b/a)                                                % false",
+            "/a/b.eq(a/b)                                               % false",
+            "<http://a.com>.eq(<http://a.com>)                          % true",
+    }, delimiter = '%')
+    public void testEquality(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    public void testHasTemplates() {
+        // Templates contain ${...} expressions
+        assertTrue(uri("http://example.com/${user}").uriValue().hasTemplates());
+        assertTrue(uri("/api/${version}/users").uriValue().hasTemplates());
+        assertTrue(uri("http://blah.com:${+10}").uriValue().hasTemplates());
+
+        // Non-templates
+        assertFalse(uri("http://example.com/static").uriValue().hasTemplates());
+        assertFalse(uri("/api/v1/users").uriValue().hasTemplates());
+
+        // fURI coefficients are NOT templates
+        assertFalse(uri("/path{?}").uriValue().hasTemplates());  // {?} = maybe coefficient
+        assertFalse(uri("/path{+}").uriValue().hasTemplates());  // {+} = some coefficient
+        assertFalse(uri("/path{*}").uriValue().hasTemplates());  // {*} = maybe some coefficient
+    }
+
+    @Test
+    public void testTemplateExtraction() {
+        // Extract template expressions with component locations
+        final var templates = uri("http://example.com:${+10}/${user}").uriValue().templates();
+        assertEquals(2, templates.size());
+
+        // First template is in PORT component
+        assertEquals(fURI.Component.PORT, templates.get(0).get0());
+        assertEquals("+10", templates.get(0).get1());
+
+        // Second template is in PATH component
+        assertEquals(fURI.Component.PATH, templates.get(1).get0());
+        assertEquals("user", templates.get(1).get1());
+    }
+
+    /**
+     * Test URI template expansion with ${expr} syntax.
+     * Format: lhs_value.template_uri % expected_result
+     * <p>
+     * Examples:
+     * - 70.<http://blah.com:${+10}> → evaluates ${+10} as 70.plus(10) = 80, coerced to int for PORT
+     * - rec(user:alice).<http://example.com/${user}> → evaluates ${user} as rec.apply(uri("user")) = "alice"
+     * - 5.<http://api.com/${*2}/data> → evaluates ${*2} as 5.mult(2) = 10
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // PORT component - must coerce to integer
+            "a.-<[<${_}://${_}:${10}/${_}/${_}>]                                         % [<a://a:10/a/a>]",
+            //  "a.-<[<${_}://${_}.${_}:${10}/${_}/${_}>]                                         % [<a://a.a:10/a/a>]",
+            "70-<[<http://blah.com:${plus(10)}>]                                         % [<http://blah.com:80>]",
+            "70.map(<http://blah.com:${plus(10)}>)                                       % <http://blah.com:80>",
+            "100.map(<http://api.com:${minus(20)}>)                                      % <http://api.com:80>",
+
+            // PATH component - toString coercion
+            "5.map(<http://example.com/${mult(2)}/data>)                                  % <http://example.com/10/data>",
+            "10.map(<http://api.com/v${plus(1)}/users>)                                   % <http://api.com/v11/users>",
+
+            // Variable reference in PATH
+            "[user=>alice].map(<http://example.com/${>>user}>)                             % <http://example.com/alice>",
+            "[user=>alice].map(<http://example.com/${user}>)                               % <http://example.com/user>",
+            "[id=>42].map(<http://api.com/users/${>>id}>)                                  % <http://api.com/users/42>",
+            "[id=>42].map(<http://api.com/users/${id}>)                                    % <http://api.com/users/id>",
+            // TODO: QUERY component templates need more parser work
+            // The mParser needs to be updated to handle ${...} in query strings
+            // "70.map(<http://api.com/search?${[q=>hello,lang=>en]}>                      % <http://api.com/search?q=hello&lang=en>",
+            // "[x=>10,y=>20].map(<http://map.com/point?${x}>                              % <http://map.com/point?x=10>",
+
+            // Multiple templates in same URI
+            "5.map(<http://example.com:${plus(75)}/${mult(10)}>)                           % <http://example.com:80/50>",
+
+            // Non-template URIs pass through unchanged
+            "anything.map(<http://example.com/static>)                                   % <http://example.com/static>",
+            "42.map(</api/v1/users>)                                                     % </api/v1/users>"
+    }, delimiter = '%')
+    public void testTemplateExpansion(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>as(rec::T)>>=[host=><prod.net>,port=>443,path=>[api,v2],q=>[debug=>false]].as(uri::T)    % <http://prod.net:443/api/v2?q=metatron&debug=false>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false]].as(uri::T)                 % <http://api.local/v1/profile/marko?debug=false&auth=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[auth=>xyz,debug=>false]].as(uri::T)       % <http://api.local/v1/profile/marko?debug=false&auth=xyz>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)>>=[path=>-<[>>0,>>1,profile,>>3],q=>[auth=>none,debug=>false]].as(uri::T)      % <http://api.local/v1/profile/marko?debug=false>"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testSelect(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    // a/b/c.~rec~>
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<http://dev.local:8080/v1/search?q=metatron&debug=true>.as(rec::T)?[host=>_,port=>_,path=>_,q=>_].as(uri::T)                                % <http://dev.local:8080/v1/search?q=metatron&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>is(not(_))]].as(uri::T)          % noobj",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,>>2,>>3],q=>[debug=>?_,_=>?_]].as(uri::T)                % <http://api.local/v1/user/marko?auth=true&debug=true>",
+            "<http://api.local/v1/user/marko?auth=true&debug=true>.as(rec::T)?[path=>-<[>>0,>>1,profile,>>3],q=>[debug=>false,_=>none]].as(uri::T)       % noobj"
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testIsA(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+   /* @ParameterizedTest
+    @CsvSource(value = {
+            "<{a}> + <>                     % <{a,}>", // {,a} == {a,}
+            "<{a}> + <{b}>                  % <{a,b}>",
+            "<{a,b}> * c                    % <{a,b}/c>",
+            "<{a,b}/c> * <>                 % <{a,b}/c>",
+            "<> * <{a,b}/c>                 % <{a,b}/c>",
+            "<a/b/{{2}c,d}> * {4}e          % {4}<a/b/{{2}c,d}/e>",
+            "<a/b/{{2}c,d}> * {?}e          % {?}<a/b/{{2}c,d}/e>",
+            "<a/b/{c,d}> * {10}<>           % {10}<a/b/{c,d}>",
+            "{2}a/b/c + <> + <>             % {2}<{{2}a/b/c,<>}>",
+            "<> + <> + <>                   % {3}<>",
+            "<> + <>                        % {2}<>",
+            "</a/{b,c}/d> + </a/{2}d/d>     % </a/{b,c,{2}d}/{2}d>",
+            "/a + /a + /a                   % {3}/a",
+            "/a + /a + a/                   % <{{2}/a,a/}>",
+            "</a/{b,c}/d> * </a/b/d>        % </a/{b,c}/d//a/b/d>",
+            "<{a,b}/c> + <e/c/f>            %  <{{a,b}/c,e/c/f}>"
+           /* "</a/{b,c,d,e,f}/{d,d}>         % |a|{b,c,d,e,f}|{d,d}",
+            "<{a,b}/c>                      % {a,b}|c",
+            "<{a,b,c}>                      % {a,b,c}",
+            "<a/{b,c}>                      % a|{b,c}",
+            "<a/{b,c{*}}>                   % a|{b,c{*}}",
+            // "<a/{b,c{0,1}}>                 % a|{b,c{?}}",
+            "<a/{b,c}/d>                    % a|{b,c}|d",
+            "<a/{b{?},c}/d>                 % a|{b{?},c}|d",
+            "<a/{b{?},c}/{1,5}d>            % a|{b{?},c}|{1,5}d",
+            "<a/{/b,/c}/d>                  % a|{/b,/c}|d",
+            "<{/a,/b}/c>                    % |{a,b}|c",
+            "<{/a,/b,/c}>                   % |{a,b,c}",
+            "</a/{b,c}>                     % |a|{b,c}",
+            "/a/{b,c}                       % |a|{b,c}",
+            "a/{{b,d},c}/c/d/e              % a|{{b,d},c}|c|d|e",
+            "<{0}a/{{0}b,{0}d,{0}c}/c/d/e>  % {0}a|{{0}b,{0}d,{0}c}|c|d|e",
+            "a/{b,c,d}/{2}c/{2}d/{2}e       % a|{b,c,d}|{2}c|{2}d|{2}e",
+            "a/{b/c,d/e}/f                  % a|{b/c,d/e}|f",*/
+  /*  }, delimiter = '%')
+    void testBasicAlgebra(final String code, final String expected) {
+        LOG.warn("parsing: %s %s\n1: %s\n2: %s", code, expected, ObjmtronSerializer.parse(code), ObjmtronSerializer.parse(expected));
+        checkCodeParseApply(LOG, code, expected);
+    }*/
+}

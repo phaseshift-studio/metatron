@@ -1,0 +1,172 @@
+[== dsh.boot.mtron — the DeepSeek Harness integration profile.
+     Ginger's docker.boot.mtron stands up servers and nothing else; this one adds
+     the "ether": a durable, addressable place where DSH events, peer messages,
+     agent claims and signs commingle, queried as URI space like anything else.
+
+     THREE CLAIMS on the URI graph (patterns may not overlap — a space claims a
+     subgraph and is responsible for it):
+
+       /usr/dsh/#   tblespace   every event and message; the durable record
+       fs:#         fsspace     files, routed into the Linux tree via `route`
+       /usr/mem/#   memspace    scratch — staging, probes, throwaway recs
+
+     PERSISTENCE: the table space is a single SQLite file on a BIND MOUNT, so the
+     data is a file you can ls, cp and rsync — no named Docker volume, nothing to
+     lose on a rebuild:
+
+       -v /mnt/beast1/metatron-dsh:/app/data          (ginger)
+       -v $HOME/software/metatron/data/dsh:/app/data  (booger)
+
+     SCHEMA: omitted on first boot, so the table space infers columns as DSH
+     writes. Once the full range of event shapes has been observed, freeze it:
+
+       */usr/dsh/schema.to(<fs:config/dsh_event_schema.mtron>)
+
+     and add `schema => !*<fs:config/dsh_event_schema.mtron>` below. Declared
+     types then win and unknown keys still auto-ADD, so a new event type never
+     breaks a write.
+
+     TWO MCP ENDPOINTS (both attach from DSH as `streamable-http`):
+
+       /dsh   write_event / write_events      the agent records into the ether
+       /mcp   mcp_mtron (eval, find, spaces)  the agent QUERIES the ether
+
+     VERIFIED: loaded on booger.local; MCP Inspector connects and both tools
+     answer. Routes below are the tested spelling.
+
+     Container run (see dist/docker/README.md):
+
+       docker run ... ghcr.io/phaseshift-studio/metatron \
+         "[boot=><boot/args/dsh.boot.mtron>,      \
+           user=><dsh>,                           \
+           data=></app/data>,                     \
+           web => [http => <http://0.0.0.0:8777>]]
+  ==]
+
+[== instruction sets ==]
+import(/m/web);
+import(/m/db/tble);
+import(/m/ai/llm);
+import(/m/sys/ui,ui);
+
+[===================================================================]
+[== 1. the durable record: events and messages live under /usr/dsh ==]
+[===================================================================]
+[== LOCAL SMOKE TEST: /tmp/dsh.sqlite — no mount, no chown, nothing to lose.     ==]
+[== PRODUCTION: point at the bind mount, e.g. <sqlite:/app/data/dsh.sqlite>,     ==]
+[== with -v /mnt/beast1/metatron-dsh:/app/data and chown 1000:1000 first.        ==]
+tblespace::[pattern => </usr/dsh/#>,
+            host    => <sqlite:/tmp/dsh.sqlite>,
+            driver  => <org.sqlite.JDBC>,
+            q       => [incrq::[=>], subq::[=>]]]@/sys/space/usr/dsh;
+
+[== 2. files: a short scheme, with a route table into the Linux tree ==]
+fsspace::[pattern => fs:#,
+          q       => [mimeq::[=>]],
+          route   => [fs: => <.>]]@/sys/space/fs;
+
+[== 3. scratch: staging and probes, dropped on restart by design ==]
+memspace::[pattern => </usr/mem/#>,
+           q       => [docq::[=>], subq::[=>], incrq::[=>]]]@/sys/space/usr/mem;
+
+[== the boot marker: a tblespace has NO schema until something is written, so ==]
+[== this first write materialises it. An unwritable or misconfigured medium   ==]
+[== now fails HERE, at boot, instead of silently at the first client call.    ==]
+[==[kind  => dsh_boot,
+ name  => dsh.boot.mtron].to(/usr/dsh/event/_?incrq); ==]
+
+[===================================================================]
+[== 4. the write endpoint: DSH (or any harness) attaches over MCP   ==]
+[===================================================================]
+[== One primitive and a batch form. `_?incrq` gives every write a fresh vid,  ==]
+[== so the ledger is append-only and vid order IS arrival order.             ==]
+mcp_server::[tool => [
+  write_event  => |inst?rec<=#{?}(event  => rec::T) { *event.to(</usr/dsh/event/_?incrq>) },
+  write_events => |inst?rec<=#{?}(events => lst::T) { *events.>-.to(</usr/dsh/event/_?incrq>) },
+  read_events  => |inst?#{?}<=#{?}({?}max => int{?}::T) { *</usr/dsh/event/+>.take(*max) }
+]]@mcp_dsh_mirror;
+
+"""
+  {{g}}dsh boot complete{{X}} — events land at {{y}}/usr/dsh/event/#{{X}}
+    write: {{y}}http://<host>:8777/dsh{{X}}   (write_event, write_events)
+    query: {{y}}http://<host>:8777/mcp{{X}}   (mcp_mtron: eval, find, spaces)
+    check: {{y}}*/usr/dsh/event/+{{X}}  ·  {{y}}*/sys/space/usr/dsh/schema{{X}}
+"""@help_message;
+
+css::"""
+body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: ui-monospace, "JetBrains Mono", monospace;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    text-align: center;
+}
+main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex: 1;
+}
+h1 {
+    color: #970207;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    margin: 0 0 .5em;
+}
+p {
+    color: #8b949e;
+    margin: .25em 0;
+}
+a {
+    color: #58a6ff;
+}
+footer {
+    flex-shrink: 0;
+}
+""".map(html::"""
+<html>
+  <head>
+   <title>dsh metatron</title>
+   <style>${_}</style>
+  </head>
+  <body>
+    {{{*help_message>>=['\{\{.}}' => '']}}}
+   </body>
+<html>
+"""@help_html);
+[===================================================================]
+[== 5. the server: write endpoint, query endpoint, space, files     ==]
+[===================================================================]
+http_server::[origin => <http://0.0.0.0:8777>,
+              route  => [/dsh  => mcp_dsh_mirror,
+                         /mcp  => mcp_mtron,
+                         /usr  => /usr,
+                         /fs   => fs:,
+                         /help => help_html,
+                         /     => /fs ]]@/sys/space/web/http;
+
+[===================================================================]
+[== 6. a console, so a bad boot is debuggable instead of silent      ==]
+[===================================================================]
+[== the interactive console on this process's stdin/stdout:           ==]
+[== pass console=>true to boot args to keep it, else boot prints and  ==]
+[== moves on. Mirrors docker.boot.mtron's console line exactly.       ==]
+*<boot/args/console>.?=true.
+  else(print('{{y}}console: off{{X}} — add {{b}}console=><true>{{X}} to boot args for a REPL\n')).
+       -<[[=>]@/sys/console.as(console::T)];
+
+[== the ws presence — the fastest way to poke the ether, no MCP       ==]
+[== handshake, no session id, one shot:                               ==]
+[==                                                                    ==]
+[==   bin/wsplus -e '*/usr/dsh/event/+' ws://booger.local:8555/mtron  ==]
+[==   bin/wsplus -e '*/sys/space/usr/dsh/schema' …                   ==]
+[==   bin/wsplus -e '[kind=>t].to(/usr/dsh/event/_?incrq)' …         ==]
+[==                                                                    ==]
+ws_server::[origin => <ws://0.0.0.0:8555>,
+            route  => [/mtron => mtron_ws,
+                       /dsh   => mcp_dsh_mirror]]@/sys/space/web/ws;
+
+print(*help_message)

@@ -1,0 +1,118 @@
+[discrete]
+== The File System
+
+[%collapsible]
+.documentation setup
+====
+[mtron]
+----
+import(/m/mach)
+----
+====
+
+The underlying operating system's resources are explicitly accessible to metatron: threads, files, network, etc. This section focuses on `fsspace::T` (file system space) and the types `file::T` and `dir::T`.
+
+[mtron]
+----
+fsspace::[pattern  => fs:#,                                /   
+          route    => [fs:m => <~/software/metatron>,      /
+                       fs:  => <~/> ],                     /
+          script   => !*boot/script]@/sys/space/localfs    [-- <1> --] 
+----
+<1> The `fs:m` prefix is mapped to the users local metatron repo.
+<1> The `fs:` prefix is mapped to the users home directory.
+
+
+[.card]
+--
+[discrete,.center]
+==== space mount vs. space pattern
+The type `space::T < rec::T`. Thus, each space is an obj that can be referenced. The space itself is a referencing structure responsible for objs with uris matching the spaces pattern. The space's pattern is what the space controls. The spaces mount is the address used to refer to the space (which is typically another space). In short, mounts are different than patterns.
+--
+
+
+[mtron]
+----
+*/sys/space/localfs              [-- <1> --] 
+*fs:software/metatron            [-- <2> --] 
+*fs:m                            [-- <3> --]
+----
+<1> `localfs` is mounted to `/sys` (other deployments may have another mount address).
+<2> `fs:` is an arbitrarily choosen moniker to denote the filesystem.
+<3> `fs:m` provides a short hand to accessing the user's local metatron repo.
+
+[mtron]
+----
+*/sys/space/localfs                                   [-- <1> --]
+*/sys/space/localfs/script                            [-- <2> --]
+*<fs:m/bin/metatron>                                  [-- <3> --]
+*<fs:m/bin/metatron>.as(bytes::T)                     [-- <4> --]
+*<fs:m/bin/metatron>.as(bytes::T).as(str::T)          [-- <5> --]
+----
+<1> `localfs` is mounted to `/sys` (other deployments may have another mount address).
+<2> set of scripting environments accessible to metatron.
+<3> files and directories are accessible through dereferencing.
+<4> the binary content of a file is accessed by transforming `file::T` to `bytes::T`.
+<5> accessing the text content of a file requires a `file \=> bytes \=> str` chain of transformations.
+
+[discrete]
+=== Bash Commands
+
+It's possible to evaluate `bash` commands within the current working directory by referencing the bash binary as an mtron `inst`. Before doing so, `bash` must be accessible via some `fspsace` pattern.
+
+[mtron]
+----
+fsspace::[                                            /
+  pattern => bin:#,                                   /
+    route => [bin: => /usr/bin]]@</sys/space/fs/bin> 
+----
+
+From there,the `bash` binary has `obj` args applied to it. These `obj` args are turned into strings. Thus, uris can be used to reduce quoting.
+
+[mtron]
+----
+bin:bash('-c',df)
+bin:bash('-c',ls)
+bin:bash('-c','ls -all').split(' ').count()
+----
+
+[discrete]
+=== Shell Scripts
+
+Shell scripts can also be transformed into instructions on the fly. The `#!` (shebang) of a text file is analyzed. A `script` relation in `fsspace` serves as a lookup table regarding
+the location of the respective script engine. If found, then what were originally file references, have now become inst references.
+
+[mtron]
+----
+fsspace::[                                          /
+  pattern => local:#,                               /
+        q => [mimeq::[=>]],                         /
+   script => [sh     => /bin/sh,                    /
+              bash   => /bin/bash,                  /
+              zsh    => /bin/zsh,                   /
+              python => /usr/bin/python3,           /
+              perl   => /usr/bin/perl,              /
+              mtron  => /bin/metatron],             /
+    route => [local: => <~>]]@</sys/space/fs/local>
+----
+
+[discrete]
+=== Directories as Navigable Polys
+
+Reading a directory returns a navigable `dir::T` poly — a rec of `child-name => !*<child uri>` refs, single depth and lazy. Each child dereferences through the router only on access, so `>>sub>>sub` descends one level at a time without materializing the tree or evaluating file contents.
+
+[mtron]
+----
+*<fs:m/src>                        [-- <1> --]
+*<fs:m/src> >> main >> java        [-- <2> --]
+fs:m/src >>                        [-- <3> --]
+fs:m/src >> 2                      [-- <4> --]
+*<fs:m/src/main/java>              [-- <5> --]
+----
+<1> the `dir::T` poly — `child-name => !*<child uri>` refs, single depth, lazy.
+<2> descend the obj tree one hop per `>>`.
+<3> the child uris, obj-less (the reference walk).
+<4> the descendants exactly 2 levels deep.
+<5> `/` path navigation to the referent.
+
+The `dir::T` poly is the **additive container** of the filesystem — a read projection, not a write target. The write/update path consults the space's `isWritableBase(Obj)` and never merges into a directory projection; writes land on the leaves. The same structure generalizes to every space via `Space.Helper.treeFromUri(root)`: a space's node reads as its emanating uris, regardless of storage (see `docs/design/ring-uri.md`).

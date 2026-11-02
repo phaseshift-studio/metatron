@@ -1,0 +1,214 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.furi.q;
+
+import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.util.TriFunction;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Rec.Helper.cleanMap;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class BaseQ extends MRec implements QProc {
+
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+    protected OnRead onRead;
+    protected OnWrite onWrite;
+    protected final fURI queryPattern;
+
+    public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
+        this(jvm, queryPattern, tid, false);
+    }
+
+    protected BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid, final boolean broadcasts) {
+        super(jvm, tid, null);
+        this.jvm().put(uri(PATTERN), uri(queryPattern));
+        this.queryPattern = queryPattern;
+        this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as());
+        this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as(), broadcasts);
+    }
+
+    @Override
+    public String toString() {
+        return QProc.Helper.qToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return QProc.Helper.qHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return QProc.Helper.qEquals(this, other);
+    }
+
+    @Override
+    public fURI pattern() {
+        return this.queryPattern;
+    }
+
+    @Override
+    public Optional<QProc.OnWrite> onWrite() {
+        return Optional.ofNullable(this.onWrite);
+    }
+
+    @Override
+    public Optional<QProc.OnRead> onRead() {
+        return Optional.ofNullable(this.onRead);
+    }
+
+    @Override
+    public BaseQ clone(final Object jvm, final fURI tid, final fURI vid) {
+        final BaseQ clone = (BaseQ) this.clone();
+        clone.jvm = jvm;
+        clone.tid = tid;
+        clone.vid = vid;
+        return clone;
+    }
+
+    @Override
+    public Rec clone() {
+        return super.clone();
+    }
+
+
+    public static class BaseOnRead extends MRec implements QProc.OnRead {
+        public BaseOnRead(final Inst preRead, final Inst postRead) {
+            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, null);
+        }
+
+        public Optional<Obj> preRead(final fURI vid) {
+            final Inst i = this.at(PRE_READ);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid)));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+        }
+
+        public Optional<Obj> postRead(final fURI vid, final Obj obj) {
+            final Inst i = this.at(POST_READ);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            // a handler that returns noobj says there is no such result -- that is a finding, not a no-op, so it
+            // is carried out as noobj rather than dropped (which would fall back to the un-augmented read).
+            return Optional.of(result);
+        }
+    }
+
+    public static class BaseOnWrite extends MRec implements QProc.OnWrite {
+
+        private final boolean broadcasts;
+
+        public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
+            this(preWrite, postWrite, qlessWrite, false);
+        }
+
+        public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite, final boolean broadcasts) {
+            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, null);
+            this.broadcasts = broadcasts;
+        }
+
+        public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
+            final Inst i = this.at(PRE_WRITE);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+        }
+
+        public Optional<Obj> postWrite(final fURI vid, final Obj oldObj, final Obj newObj) {
+            final Inst i = this.at(POST_WRITE);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid), oldObj, newObj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+        }
+
+        public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
+            final Inst i = this.at(QLESS_WRITE);
+            if (i.isNoObj()) return Optional.empty();
+            final Inst withArgs = i.args(lst(uri(vid), obj));
+            final Obj result = withArgs.f().apply(noobj(), withArgs);
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
+        }
+
+        @Override
+        public boolean hasQlessHandler() {
+            return !this.at(QLESS_WRITE).isNoObj();
+        }
+
+        @Override
+        public boolean broadcasts() {
+            return this.broadcasts;
+        }
+    }
+
+    public static QProc create(final fURI tid, final fURI pattern,
+                               final Function<fURI, Obj> preRead,
+                               final BiFunction<fURI, Obj, Obj> postRead,
+                               final BiFunction<fURI, Obj, Obj> preWrite,
+                               final TriFunction<fURI, Obj, Obj, Obj> postWrite,
+                               final BiFunction<fURI, Obj, Obj> qlessWrite) {
+        return create(tid, pattern, preRead, postRead, preWrite, postWrite, qlessWrite, false);
+    }
+
+    /**
+     * @param broadcasts true when {@code qlessWrite} is a broadcast rather than a guard (see
+     *                   {@link QProc.OnWrite#broadcasts()})
+     */
+    public static QProc create(final fURI tid, final fURI pattern,
+                               final Function<fURI, Obj> preRead,
+                               final BiFunction<fURI, Obj, Obj> postRead,
+                               final BiFunction<fURI, Obj, Obj> preWrite,
+                               final TriFunction<fURI, Obj, Obj, Obj> postWrite,
+                               final BiFunction<fURI, Obj, Obj> qlessWrite,
+                               final boolean broadcasts) {
+        return new BaseQ(cleanMap(mutableMap(
+                uri(PATTERN), uri(pattern),
+                null == preRead ? noobj() : uri(PRE_READ), null == preRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
+                null == postRead ? noobj() : uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                null == preWrite ? noobj() : uri(PRE_WRITE), null == preWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                null == postWrite ? noobj() : uri(POST_WRITE), null == postWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
+                null == qlessWrite ? noobj() : uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1))))), pattern, tid, broadcasts);
+    }
+}

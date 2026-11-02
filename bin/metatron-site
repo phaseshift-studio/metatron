@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# bin/metatron-site — build selected website stages via `./mvnw site`.
+#
+# Build only the stages you name; every other stage is skipped. The wsplus
+# bundling (skipSiteScripts) is a build-product sync, not a doc stage, so it is
+# always skipped. `mvn site` compiles first, so JDK 25 must be on PATH.
+#
+#   bin/metatron-site markdown instset asciidoc header   # everything
+#   bin/metatron-site markdown                           # only markdown
+#   bin/metatron-site markdown header                    # markdown + header
+#   bin/metatron-site all                                # == the four stages
+#   DRY_RUN=1 bin/metatron-site markdown                 # print, don't run
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$DIR"
+
+usage() {
+    cat <<'EOF'
+usage: bin/metatron-site <stage ...>
+
+stages (build only what you name; the rest is skipped):
+  markdown   the skill references + theory articles   (MarkdownRunner)
+  instset    the instruction-set API reference        (InstSetDocGenerator)
+  asciidoc   the adoc pages                           (AsciiDocRunner)
+  header     the navigation dropdowns                 (HeaderGenerator)
+  all        == markdown instset asciidoc header
+
+examples:
+  bin/metatron-site markdown instset asciidoc header
+  bin/metatron-site markdown
+  bin/metatron-site markdown header
+EOF
+}
+
+# parse stage names; pass anything starting with '-' through to mvn
+args=()      # stage names to build
+extra=()     # pass-through mvn flags
+for a in "$@"; do
+    case "$a" in
+        all) args+=(markdown instset asciidoc header) ;;
+        markdown|instset|asciidoc|header) args+=("$a") ;;
+        -*) extra+=("$a") ;;
+        *) echo "bin/metatron-site: unknown stage '$a'" >&2; usage >&2; exit 2 ;;
+    esac
+done
+[[ ${#args[@]} -gt 0 ]] || { usage; exit 1; }
+
+declare -A skip_flag=(
+    [markdown]=-DskipMarkdown
+    [instset]=-DskipInstSet
+    [asciidoc]=-DskipAsciidoc
+    [header]=-DskipHeaderMenu
+)
+
+# build only what was named; wsplus bundling is never a doc stage
+skip=(-DskipSiteScripts)
+skipped=()
+for stage in markdown instset asciidoc header; do
+    if [[ " ${args[*]} " == *" $stage "* ]]; then
+        :   # named -> build it
+    else
+        skip+=("${skip_flag[$stage]}")
+        skipped+=("$stage")
+    fi
+done
+
+echo "==> build: ${args[*]}"
+if [[ ${#skipped[@]} -gt 0 ]]; then
+    echo "==> skip:  ${skipped[*]} + scripts"
+else
+    echo "==> skip:  scripts"
+fi
+
+cmd=(./mvnw site "${skip[@]}" "${extra[@]}")
+echo "==> run:   ${cmd[*]}"
+[[ "${DRY_RUN:-0}" = "1" ]] && exit 0
+exec "${cmd[@]}"

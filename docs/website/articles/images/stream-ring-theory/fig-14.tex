@@ -1,0 +1,21 @@
+\begin{equation*}
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{dr} & & b \arrow{dr} & \\
+\! \arrow{ur} \arrow{dr} & & \! \arrow{ur} \arrow{dr} & & \! \\
+& b \arrow{ur} & & c \arrow{ur} & \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+=
+\begin{tikzcd}[row sep=tiny, column sep=small]
+& a \arrow{r} & b \arrow{ddr} \\
+& a \arrow{r} & c \arrow{dr} \\
+\! \arrow{ur} \arrow{uur} \arrow{dr} \arrow{ddr} & & & \!. \\
+& b \arrow{r} & b \arrow{ur} \\
+& b \arrow{r} & c \arrow{uur} \\
+%
+  \pgfmatrixendrow\egroup;%
+  \tikzcd@finalize%
+  \endtikzpicture
+\end{equation*}

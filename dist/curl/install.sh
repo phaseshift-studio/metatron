@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+set -e
+
+# Define colors
+BLACK='\e[0;30m'
+RED='\e[0;31m'
+GREEN='\e[0;32m'
+YELLOW='\e[0;33m'
+BLUE='\e[0;34m'
+PURPLE='\e[0;35m'
+CYAN='\e[0;36m'
+WHITE='\e[0;37m'
+NC='\e[0m'  # No Color / Reset
+CHECKMARK="${GREEN}\u2705"
+ERRORMARK="${RED}\u274C"
+
+# Configuration
+REPO_URL="https://github.com/phaseshift-studio/metatron.git"
+BUILD_DIR="${PWD}/metatron"
+
+HEADER="${RED}                _        _                   
+ _ __ ___   ___| |_ __ _| |_ _ __ ___  _ __  
+| '_  ${YELLOW} _ \ / _ \ __/ _  | __| '__/ _ \| '_ \ 
+| | | | | |  __/ || (_| | |_| | | (_) | | | |
+|_| |_| |_|\___|\__${GREEN}\__,_|\__|_|  \___/|_| |_|
+                            ${BLUE}PhaseShift Studio${NC}"
+
+echo -e "$HEADER"
+echo -e ""
+echo -e "repository:  ${REPO_URL}"
+echo -e "install dir: ${BUILD_DIR}"
+echo -e ""
+
+# loading icon
+spinner() {
+    local pid=$1
+    local message="${2:-Processing...}"
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local i=0
+
+    # Hide cursor
+    tput civis 2>/dev/null || true
+
+    while kill -0 "$pid" 2>/dev/null; do
+        i=$(( (i + 1) % 10 ))
+        printf "\r${spin:$i:1} $message"
+        sleep 0.1
+    done
+
+    # Show cursor and clear line
+    tput cnorm 2>/dev/null || true
+    printf "\r\033[K✓ $message\n"
+}
+
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# JDK 25 lives in a private dir so the install needs no sudo: openjdk-25-jdk is not in
+# the Ubuntu 24.04 / Debian 12 repos, and the pom targets release 25, so nothing older
+# can build this project.
+JDK_HOME="${HOME}/.metatron/jdk25"
+
+install_java_25() {
+    local arch jarch url
+    arch=$(uname -m)
+    case "$arch" in
+        x86_64|amd64)  jarch=x64 ;;
+        aarch64|arm64) jarch=aarch64 ;;
+        *) echo -e "${RED}unsupported architecture ${arch} — install JDK 25+ manually${NC}"; exit 1 ;;
+    esac
+    if [ -x "${JDK_HOME}/bin/java" ]; then
+        echo -e "${CHECKMARK} using the JDK 25 already in ${JDK_HOME}"
+    else
+        url="https://api.adoptium.net/v3/binary/latest/25/ga/linux/${jarch}/jdk/hotspot/normal/eclipse"
+        echo -e "installing Temurin JDK 25 (${jarch}) into ${JDK_HOME}..."
+        mkdir -p "${JDK_HOME}"
+        curl -fsSL "${url}" | tar -xz -C "${JDK_HOME}" --strip-components=1
+        echo -e "${CHECKMARK} JDK 25 installed in ${JDK_HOME}"
+    fi
+    export JAVA_HOME="${JDK_HOME}"
+    export PATH="${JAVA_HOME}/bin:${PATH}"
+}
+
+# Function to install a required package via the distro package manager
+install_dependencies() {
+    local package="$1"
+    echo -e "${package} ${RED}not installed${NC}"
+    echo -e "  it is recommended that the user install ${package} manually"
+    read -p "would you like to have ${package} installed automatically now? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      echo -e "installing ${package}..."
+      sudo apt-get update
+      sudo apt-get install -y ${package}
+      echo -e "${package} installed"
+    else
+      echo "installation cancelled by user"
+      exit 1
+    fi
+}
+
+# Check for docker — required for the docker boot profile (boot/spaces.boot.mtron),
+# which runs the space backends as containers.  The maven build itself does not
+# need docker, so a "no" here warns and continues rather than aborting the install.
+if ! command_exists docker; then
+    echo -e "docker ${RED}not installed${NC}"
+    echo -e "  useful for self-contained bootstrapping with dckerspace::T"
+    read -p "would you like to download and install docker now? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      echo -e "installing docker..."
+      if command_exists apt-get; then
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+      elif command_exists dnf; then
+        sudo dnf install -y docker
+      elif command_exists brew; then
+        brew install --cask docker
+      else
+        echo -e "${YELLOW}no known package manager found — see https://docs.docker.com/get-docker/${NC}"
+      fi
+      if command -v docker >/dev/null 2>&1; then
+        echo -e "${CHECKMARK} docker ${GREEN}installed${NC}"
+      else
+        echo -e "${YELLOW}docker still not found after install — check your docker daemon${NC}"
+      fi
+    else
+      echo -e "${YELLOW}continuing with remaining metatron install${NC}"
+    fi
+else
+    echo -e "${CHECKMARK} docker ${GREEN}already installed${NC}"
+fi
+
+# Check for Java 25 (the pom's source/target/release)
+if ! command_exists java; then
+    install_java_25
+else
+    # Extract major version (handles both 1.x and x formats)
+    JAVA_MAJOR_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {split($2, a, "."); gsub(/[^0-9]/, "", a[1]); print a[1]}')
+    # Check if version is 25 or higher — an older JDK cannot build release 25
+    if [ "${JAVA_MAJOR_VERSION}" -ge 25 ]; then
+        echo -e "${CHECKMARK} java ${JAVA_MAJOR_VERSION} ${GREEN}already installed${NC}"
+    else
+        echo -e "java version ${JAVA_MAJOR_VERSION} ${RED}is too low${NC}. java 25 or higher is required."
+        install_java_25
+    fi
+fi
+
+# Check for Maven
+if ! command_exists mvn; then
+    install_dependencies "maven"
+else
+    echo -e "${CHECKMARK} maven ${GREEN}already installed${NC}"
+fi
+
+# patchelf: the jar ships a musl-built tree-sitter native lib; on glibc Linux,
+# ObjJavaSerializer patches it with patchelf (missing → tree-sitter features fail).
+# Non-fatal: if patchelf can't be installed, metatron still runs — only Java
+# source parsing degrades.
+if ! command_exists patchelf; then
+    echo -e "${YELLOW}patchelf not installed — installing (tree-sitter native lib needs it on glibc)${NC}"
+    sudo apt-get install -y patchelf || echo -e "${YELLOW}warning: could not install patchelf; Java source parsing may fail${NC}"
+else
+    echo -e "${CHECKMARK} patchelf ${GREEN}already installed${NC}"
+fi
+
+# Clone the repository
+echo -e "cloning ${REPO_URL}..."
+if [ -d "${BUILD_DIR}" ]; then
+    echo -e "directory ${BUILD_DIR} ${YELLOW}already exists${NC}"
+    echo -e "updating..."
+    cd "${BUILD_DIR}"
+    git pull
+else
+    git clone "${REPO_URL}"
+    cd "${BUILD_DIR}"
+fi
+
+# Build the project with Maven
+export MAVEN_OPTS="--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow"
+mvn clean install -q -DskipTests=true &
+MVN_PID=$!
+spinner "$MVN_PID" "installing metatron"
+# `set -e` would abort on a failed wait; capture the real build status instead.
+set +e
+wait "$MVN_PID"
+MVN_EXIT=$?
+set -e
+
+# Check build status
+if [ "$MVN_EXIT" -eq 0 ]; then
+    # Bundle the uber-jar for runtime: bin/metatron launches lib/metatron.jar
+    # when present (no Maven needed at runtime).
+    mkdir -p lib
+    UBER_JAR=$(ls target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1)
+    if [ -n "$UBER_JAR" ]; then
+        cp "$UBER_JAR" lib/metatron.jar
+        echo -e "${CHECKMARK} bundled ${UBER_JAR##*/} -> lib/metatron.jar${NC}"
+    else
+        echo -e "${YELLOW}warning: uber-jar not found; bin/metatron will need maven at runtime${NC}"
+    fi
+    echo -e "${CHECKMARK} build successful${NC}"
+    echo -e "${GREEN}up next${NC}"
+    # If this script installed its own JDK, a NEW shell needs it on PATH — otherwise
+    # bin/metatron finds no java at all (the JDK lives in ~/.metatron/jdk25, not /usr).
+    if [ -x "${JDK_HOME}/bin/java" ] && ! command_exists java; then
+        echo "export JAVA_HOME=${JDK_HOME}"
+        echo 'export PATH=$JAVA_HOME/bin:$PATH'
+    fi
+    echo "cd ${BUILD_DIR}"
+    echo "bin/metatron --help"
+    echo "bin/metatron -b boot/boot.mtron"
+else
+    echo -e "${RED} build failed${NC}"
+    exit 1
+fi

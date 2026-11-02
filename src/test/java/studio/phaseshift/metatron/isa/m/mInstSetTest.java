@@ -1,0 +1,1443 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.m;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.TestReport;
+import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.q.DocQTest;
+import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+
+@TestReport
+public class mInstSetTest extends AbstractInstSetTest {
+
+    public mInstSetTest() {
+        super(() -> null);
+    }
+
+    @Override
+    @Test
+    public void testInstDomRngMatching() {
+        this.space = new mInstSet();
+        super.testInstDomRngMatching();
+        this.space = null;
+    }
+
+    @Test
+    @Disabled
+    public void testDocs() {
+        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<QProc>as().pattern().equals(f("docq"))));
+        DocQTest.testWritingDocs(new mInstSet());
+        DocQTest.analyzeDocs(new mInstSet());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a=>b=>c.rng()                                                                  % b=>c",
+            "a=>b=>c.dom()                                                                  % a",
+            "a=>b=>c>-                                                                      % {a,b=>c}",
+            "a=>b=>c>-.>-                                                                   % {a,b,c}",
+            "a=>b=>c.count()                                                                % 1",
+            "1=>2=>c.>>                                                                     % 2=>c",
+            /// ////////////////////////////////////////////////////////////////////////////////////////
+            "(a=>(b=>c)).rng()                                                                     % b=>c",
+            "(a=>(b=>c)).dom()                                                                     % a",
+            "(a=>(b=>c))>-                                                                      % {a,b=>c}",
+            "(a=>(b=>c))>-.>-                                                                   % {a,b,c}",
+            "(a=>(b=>c)).count()                                                                % 1",
+            "(1=>(2=>c)).>>                                                                     % 2=>c"
+    }, delimiter = '%')
+    public void testRelCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[[[a=>1],[a=>3]],[[a=>2],[a=>4]]].kmerge(>>a)             % [[a=>1],[a=>2],[a=>3],[a=>4]]",
+            "[[[a=>3]],[[a=>1],[a=>2]],[[a=>0],[a=>4]]].kmerge(>>a)    % [[a=>0],[a=>1],[a=>2],[a=>3],[a=>4]]",
+            "[[[a=>1],[a=>2],[a=>3]]].kmerge(>>a)                      % [[a=>1],[a=>2],[a=>3]]",
+            "[[1,3,332],[0,1,4,5,3333]].kmerge(_)                      % [0,{2}1,3,4,5,332,3333]",
+    }, delimiter = '%')
+    public void testKmerge(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @Test
+    public void testBareStartQProcParses() {
+        final var parsed = ObjmtronSerializer.parse("start?no_shard({'z','a','x','d','j'})");
+        assertFalse(parsed.isFail(), "expected bare start to parse, but got: " + parsed);
+    }
+
+    @Test
+    public void testFullSlaveSerializationParses() {
+        final String msg = "block(block(start?no_shard=true({'z','a','x','d','j'}).order?lst<=str{*}(id()).vid(f0279456)))";
+        final var parsed = ObjmtronSerializer.parse(msg);
+        assertFalse(parsed.isFail(), "expected full slave serialization to parse, but got: " + parsed);
+    }
+
+    @Test
+    public void testStartSeedObjsSurvivesSerialization() {
+        final var parsed = ObjmtronSerializer.parse("start?no_shard=true({'z','a','x','d','j'})");
+        final String serialized = ObjmtronSerializer.single().write(parsed);
+        assertTrue(serialized.contains("{'z','a','x','d','j'}"), "seed should survive serialization, got: " + serialized);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'123'.select('\\d')                                                             % ['1','2','3']",
+            "'abcd'.select('[a-z]{2}')                                                       % ['ab','cd']",
+            "'ab3cd'.select('([a-z]+)(\\d?)([a-z]?)')                                        % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.select('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % [['ab3c','ab','3','c'],['d','d','','']]",
+            "'ab3cd'.select('\\d*')                                                          % ['','','3','','','']",
+            "'ab3cd'.select('\\d+')                                                          % ['3']",
+            "'ab3cd'.select('\\d{2}')                                                        % [,]",
+            "'241G'.select('(\\d+)([KMGT])')                                                  % [['241G','241','G']]",
+            "'241G 502G'.select('(\\d+)([KMGT])')                                             % [['241G','241','G'],['502G','502','G']]",
+            "'foo:bar'.select('(\\w+):(\\w+)')                                                % [['foo:bar','foo','bar']]",
+            "'a1b2c3'.select('([a-z])(\\d)')                                                  % [['a1','a','1'],['b2','b','2'],['c3','c','3']]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testStrCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.take(0)                                                              % {,}",
+            "{1,2,3,4}.take(1)                                                              % {1}",
+            "{1,2,3,4}.take(2)                                                              % {1,2}",
+            "{1,2,3,4}.take(3)                                                              % {1,2,3}",
+            "{1,2,3,4}.take(4)                                                              % {1,2,3,4}",
+            "{1,2,3,4}.take(5)                                                              % {1,2,3,4}",
+            "{int{4}::1,2,3,4}.take(5)                                                      % {int{4}::1,2}",
+            /// /////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4}.skip(0)                                                              % {1,2,3,4}",
+            "{1,2,3,4}.skip(1)                                                              % {2,3,4}",
+            "{1,2,3,4}.skip(2)                                                              % {3,4}",
+            "{1,2,3,4}.skip(3)                                                              % {4}",
+            "{1,2,3,4}.skip(4)                                                              % {,}",
+            "{1,2,3,4}.skip(5)                                                              % {,}",
+            "{int{4}::1,2,3,4}.skip(5)                                                      % {3,4}",
+            "{int{4}::1,2,3,4,5}.skip(5)                                                    % {3,4,5}",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4,5}.skip(2).take(2)                                                    % {3,4}",
+            "{int{2}::1,2,3,4,5}.skip(2).take(2)                                            % {2,3}",
+            "{int{3}::1,2,3,4,5}.skip(2).take(2).count()                                    % 2",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4}.filter(gt(2)).count()                                                % 2",
+            "{1,2,3,4}.filter(gt(2)).take(1)                                                % {3}",
+            "{1,2,3,4}.filter(gt(2)).take(2)                                                % {3,4}",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,1}.inst?int<=int{2}(){ sum() }                                              % 2",
+            "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
+            "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
+            "{1,1,2,2,3,5}.inst?int<=int{2}(){ sum() }                                      % {2,4,8}",
+            "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{4}(){ sum() }.catch('X')                        % {10,26}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{1}(){ sum() }.catch('X')                        % {1,2,3,4,5,6,7,8}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{*}(){ sum() }.catch('X')                        % 36",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{+}(){ sum() }.catch('X')                        % 36",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{10}(){ sum() }.catch('X')                       % 36",
+            // "{1,2,3,4,5,6,7,8}.inst?int<=int{-10}(){ sum() }.catch('X')                       % \"X\",
+            //"{1,2,3,4,5,6,7,8}.inst?int{-*}<=int{3}(){ sum().take(-3) }.catch('X')                       % 36",
+            //"{1,2,3,4,5,6,7,8}.inst?int<=int{1000}(){ sum() }.catch('X')                      % \"X\"",  // TODO: this is a bug
+            "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
+    }, delimiter = '%')
+    public void testSkipLimitCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @TestData(value = {"1@take/a", "2@take/b", "3@take/c"})
+    @ParameterizedTest
+    @CsvSource(value = {
+            "from(take/+).count()                                                         % 3",
+            "from(take/+).filter(gt(1)).count()                                           % 2",
+            "from(take/+).filter(gt(1)).take(1).count()                                   % 1",
+    }, delimiter = '%')
+    public void testGatherAfterRead(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    // a generic one-obj inst (side, filter, vid: dom A{1}) right after a bulk seed (int{6}) binds A to the seed's
+    // element type. Left unbound, its rng fell back to # and the reducer after it could not resolve, so it ran per
+    // obj: {1,2,3,4,5,6}.side(plus(1)).sum() answered {1,2,3,4,5,6}.
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5,6}.side(plus(1)).sum()                                              % 21",
+            "{1,2,3,4,5,6}.plus(1).side(plus(1)).sum()                                      % 27",
+            "{1,2,3,4,5,6}.side(plus(1)).count()                                            % 6",
+            "{1,2,3,4,5,6}.side(plus(1)).side(plus(1)).sum()                                % 21",
+            "{1,2,3,4,5,6}.side(plus(1)).side(plus(1)).count()                              % 6",
+            "{1,2,3,4,5,6}.side(plus(1)).sum().plus(1)                                      % 22",
+            "{1,2,3,4,5,6}.side(plus(1)).plus(1)                                            % {2,3,4,5,6,7}",
+            "{1,2,3,4,5,6}.side(plus(10)).filter(gt(3)).sum()                               % 15",
+            "{1,2,3}.side(_).sum()                                                          % 6",
+            "{3}2.side(plus(1)).sum()                                                       % 6",
+            "{int{2}::1,2,3}.side(plus(1)).sum()                                            % 7",
+            "{1.0,2.0}.side(plus(1.0)).sum()                                                % 3.0",
+            "{\"a\",\"b\"}.side(plus(\"c\")).sum()                                          % \"ab\"",
+            "{1,2,3,4}.filter(gt(2)).sum()                                                  % 7",
+            "{1,2,3,4}.filter(gt(2)).side(plus(1)).sum()                                    % 7",
+            "{1,2,3}.vid(abc).sum()                                                         % 6",
+    }, delimiter = '%')
+    public void testGatherAfterSeed(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
+            // "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
+            // "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
+    }, delimiter = '%')
+    public void testUnsolvableMonads(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "map(_)                                                                       % noobj",
+            "1.map(_)                                                                     % 1",
+            "1.map(noobj)                                                                 % noobj",
+            "1.map?int{?}<=int(noobj)                                                     % noobj",
+            "1.map?{0}<=int(noobj)                                                        % noobj",
+            "1.map?{0}<=int(noobj)                                                        % noobj",
+            "1.map?{0}<=int(int{0}::100)                                                  % noobj",
+            "1.map?{0}<=int(int{0}::100)                                                  % noobj",
+            "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
+            "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
+            "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
+            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
+    }, delimiter = '%')
+    public void testMap(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "print(_)                                                                       % noobj",
+            "1.print(_)                                                                     % 1",
+            "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
+            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+            "1.plus(0).plus::(2)                                                            % 3",
+            // "1.plus::(2)                                                                    % 3"
+    }, delimiter = '%')
+    public void testPrint(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Test
+    @Disabled
+    public void testNestedEvaluationPerformance() {
+        long previousEvalTime = 0;
+        long previousParseTime = 0;
+        long parseThreshold = 400;
+        long evalThreshold = 50;
+        int maxSteps = 10;
+        for (int steps = 1; steps < maxSteps; steps++) {
+            StringBuilder sb = new StringBuilder("start(1).");
+            sb.append("map(".repeat(steps));
+            sb.append("+2");
+            sb.append(")".repeat(steps));
+            LOG.warn("testing level %s nest with %s", steps, Graphitty.string(sb.toString()));
+            final Tuple.Quartet<Obj, Long, Obj, Long> parseResult = AbstractMetatronTest.checkParsePerformance(LOG, () -> mParser.m_code().parse(sb.toString()).get(), NoObj::noobj);
+            LOG.warn("\tcompilation: %s", parseResult.get0());
+            final long evalAbsoluteValue = Math.abs(previousEvalTime - parseResult.get3());
+            final long parseAbsoluteValue = Math.abs(previousParseTime - parseResult.get1());
+            assertInstanceOf(Call.class, parseResult.get0());
+            LOG.warn("\t| prev pars: {{y}}%-15d{{X}} - current pars: {{y}}%-15d{{X}} | = %s %-10d",
+                    previousParseTime,
+                    parseResult.get1(),
+                    parseAbsoluteValue > parseThreshold ? "{{r}}" : "{{g}}",
+                    parseAbsoluteValue);
+            previousParseTime = parseResult.get1();
+            assertEquals(jnt(3), parseResult.get2());
+            //assertTrue(previousClock < result.get1());
+
+            LOG.warn("\t| prev eval: {{y}}%-15d{{X}} - current eval: {{y}}%-15d{{X}} | = %s %-10d",
+                    previousEvalTime,
+                    parseResult.get3(),
+                    evalAbsoluteValue > evalThreshold ? "{{r}}" : "{{g}}",
+                    evalAbsoluteValue);
+            previousEvalTime = parseResult.get3();
+            assertTrue(parseAbsoluteValue <= parseThreshold, "parse threshold exceeded");
+            //assertTrue(evalAbsoluteValue <= evalThreshold, "eval threshold exceeded");
+        }
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.-<[_,_]>-                                                            % {2}1",
+            "1.-<[_,_]>-                                                            % int{2}::1",
+            "1.-<[_,_]>-                                                            % int{2,2}::1",
+            "1.plus{-1}?int{??}<=int(1)                                             % int{-1}::2",
+            "1.plus(_)                                                              % 2",
+            "1.plus(2)                                                              % 3",
+            "1.plus(1.plus(1))                                                      % 3",
+            "{1,2,3}._                                                              % {1,2,3}",
+            "{1,2,3}.plus(2)                                                        % {3,4,5}",
+            "{int{10}::1}.plus(_)                                                   % int{10}::2",
+            "int{10}::2.plus(_)                                                     % int{10}::4",
+            "{1,2,3}>-._.plus(_)                                                    % {2,4,6}",
+            "{1,2,3}>-.plus(_)                                                      % {2,4,6}",
+            "{1,2,3}._.plus(_)                                                      % {2,4,6}",
+            "{1,2,3}.plus(2.plus(3))                                                % {6,7,8}",
+            "{1,2,3}.plus(1.plus(3.plus(1)))                                        % {6,7,8}",
+            "{1,2,3}.plus(_)                                                        % {2,4,6}",
+            "{1,2,3}.plus(id())                                                     % {2,4,6}",
+            "{1,2,3}.plus(mult(1))                                                  % {2,4,6}",
+            "{1,2,3}.plus(plus(1))                                                  % {3,5,7}",
+            "{1,2,3}.plus(plus(map(1)))                                             % {3,5,7}",
+            "{1,2,3}.plus(plus(_))                                                  % {3,6,9}",
+            "{1,2,3}.plus(plus(mult(1)))                                            % {3,6,9}",
+            // MERGE ///
+            "{1,2,3}>-                                                              % {1,2,3}",
+            "{1=>2,2=>3,3=>4}>-[,].as(rec::T)                                       % [0=>1=>2,1=>2=>3,2=>3=>4]",
+            "{1,1,2,2,2,3}>-                                                        % {1,1,2,2,2,3}",
+            "{1,2,3}>-[,]                                                           % [1,2,3]",
+            "[1=>2,2=>3,3=>4].plus([=>])                                            % [1=>2,2=>3,3=>4]",
+            "[1=>2,2=>3,3=>4]>-.>-[=>]                                              % [1=>2,2=>3,3=>4]",
+            "{1,2,3}>-noobj                                                         % {1,2,3}",
+            "{1,2,3}>-[noobj]                                                       % [1,2,3,noobj]",
+            "[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
+            "[1=>2,2=>3,3=>4].type()                                                % rec::T",
+            "[1=>2,2=>3,3=>4]>-.type?#<=#{*}()                                      % rel{3}::T",
+            "[(1=>2),(2=>3),(3=>4)].type()                                          % lst::T",
+            "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % {rel::T,rel::T,rel::T}",
+            "[1=>2,2=>3,3=>4]>-.>-[noobj=>noobj]                                    % [1=>2,2=>3,3=>4]",
+            "[z=>c,2=>3,a=>f]>-.>-[noobj=>noobj]                                    % [z=>c,2=>3,a=>f]",
+            "{1,2}>-[3,4]                                                           % [1,2,3,4]",
+            "{1,2,3,4}>-{,}                                                         % {1,2,3,4}",
+            "{1,2,2,2,3,3,4}>-{,}                                                   % {1,2,2,2,3,3,4}",
+            "{3,4}>-{1,2}                                                           % {1,2,3,4}",
+            "{2,3,4}>-{1,2,2}                                                       % {1,2,2,2,3,4}",
+            "{1,2,3}>-{1}                                                           % {1,1,2,3}",
+            "{1,2,3}>-1                                                             % {1,1,2,3}",
+            "[a=>1,b=>2]>-.>-[=>]                                                   % [a=>1,b=>2]",
+            "[a=>1]>-.>-[b=>2]                                                      % [a=>1,b=>2]",
+            "[b=>2]>-.>-[a=>1]                                                      % [b=>2,a=>1]",
+            // SPLIT //
+            "{1,2,4}-<|[?=1=>+10,?=2=>+20,?=3=>+30,?=4=>+40].>>                      % {11,22,44}",
+            "{1,2,3}.map(noobj)                                                     % noobj",
+            "{1,2,3}-<?lst<=int{*}([,])                                             % [,]",
+            "{1,2,3}-<?lst{*}<=int([_])                                             % {[1],[2],[3]}",
+            "{1,2,3}-<?lst<=int{*}([_])                                             % [{1,2,3}]",
+            "{1,2,3}-<?rec<=int{3}([=>])                                            % [=>]",
+            "{1,2,3}-<?rec<=int{*}([=>])                                            % [=>]",
+            "{1,2,3}.>-[,].map(noobj)                                               % noobj",
+            "{1,2,3}.>-[,]-<[>>0]                                                   % [1]",
+            "{1,2,3}.-<[noobj=>noobj]                                               % {3}[=>]",
+            "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
+            "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
+            "{1,2,3}.inst{3}?int<=int{3}(){1}                                       % int{3}::1",
+            "{int{2}::1,int{2}::2,int{2}::3}.inst{3}?int<=int{3}(){1}               % int{6}::1",
+            "{1,2,3}.map?int<=int(1)                                                % int{3}::1",
+            "{1,2,3}-<1                                                             % int{3}::1",
+            "{1,2,3}-<{1,2}                                                         % {int{3}::1,int{3}::2}",
+            "{1,2,3}-<{1,1,1,2}                                                     % {int{9}::1,int{3}::2}",
+            // "{1,2,3}-<?rec<=int{*}[>-.is(gt(1))=>_,>-.is(gt(2))=>_].sum?rec<=rec{*}()     % [is(gt(1))=>{2,3},is(gt(2))=>3]",
+            "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3,3}",
+            "{1,2,3}.split({is(gt(1)), is(gt(2))})                                  % {int{2}::3,2}",
+            "{1,2,3}.split({is(gt(1)), is(gt(2)), 3})                               % {2,int{5}::3}",
+            "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])                        % {[noobj,noobj],[2,noobj],[3,3]}",
+            "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])>-                      % {2,3,3}",
+            "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])>-.>-[,]                % [2,int{2}::3]",
+            "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
+            "{1,2,3}.>-{3,3,2}                                                      % {int{1}::1,int{2}::2,int{3}::3}",
+            "{1,2,3}>-.-<?lst<=int{*}[_]                                            % [{1,2,3}]",
+            "{1,2,3}>-.-<?lst<=int{*}[_]._/>-\\_                                    % [1,2,3]",
+            "{1,2,3}>-.-<?lst<=int{*}[_,_,_]                                        % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.-<?lst<=int{*}lst::[_,_,_]                                   % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.-<?lst<=int{*}[_,_,_]_/sum()\\_                              % [18]",
+            "{1,2,3}>-.-<?lst<=int{*}[_,_,_]_/sum()\\_>-                            % 18",
+            "{1,2,3}>-.-<?lst<=int{*}[_,_,_]_/sum()\\_>-{,}                         % 18",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]                                   % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.id().-<?lst<=int{*}lst::[_,_,_]                              % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_                         % [18]",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_>-                       % 18",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_>-{,}                    % 18",
+            //
+            "{1,2,3}>-[,]-<[>-,>-,>-]                                    % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-[,]-<lst::[>-,>-,>-]                               % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.>-[,].-<[>-,>-,>-]                                               % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.>-[,].-<[_,_,_]                                               % [[1,2,3],[1,2,3],[1,2,3]]",
+            "{1,2,3}>-.>-[,].-<lst::[>-,>-,>-]                                          % [{1,2,3},{1,2,3},{1,2,3}]",
+            "{1,2,3}>-.>-[,].-<[>-,>-,>-]_/>-.sum()\\_                                     % [18]",
+            "{1,2,3}>-.>-[,].-<[>-,>-,>-]_/>-.sum()\\_>-                                   % 18",
+            "{1,2,3}>-.>-[,].-<[>-,>-,>-]_/>-.sum()\\_>-{,}                                % 18",
+            "{1,2,3}>-.id?A<=A().-<[_,_,_]                                          % {[1,1,1],[2,2,2],[3,3,3]}",
+            "[a=>1,b=>2,c=>3]>-.-<|[dom()=>rng().is(gt(0))]                               % {a=>1,b=>2,c=>3}",
+            "[a=>1,b=>2,c=>3]>-.-<|[dom()=>rng().is(gt(2))]                               % c=>3",
+            "{1,2,3}.-<?lst<=int([_,_,_])                                           % {[1,1,1],[2,2,2],[3,3,3]}",
+            // MULT //
+            "{1,2,3}.mult(10)                                                       % {int{1}::10,int{1}::20,int{1}::30}",
+            "{int{2}::1,int{3}::2,int{4}::3}.mult(10)                               % {int{2}::10,int{3}::20,int{4}::30}",
+            "int{50}::10.mult(10)                                                   % int{50}::100",
+            // COUNT/SUM/PROD //
+            "{2}3.prod()                                                            % 9",
+            "{1,2,3}.sum().prod()                                                   % 6",
+            "{1,2,3}.prod().sum()                                                   % 6",
+            "{1,2,3}.sum?int<=int{3}().sum?int<=int()                               % 6",
+            "{1,2,3}._.sum()._.sum()._.sum()                                        % 6",
+            "{1,2,3,4}.id{5}().count()                                              % 20",
+            "{1,2,3,4}.id{3}().count()                                              % 12",
+            "{1,2,3,4}.is(gt(5)).count()                                            % 0",
+            "{1,2,3,4}.count()                                                      % 4",
+            "{1,2,3,4}.count{2}().sum()                                             % 8",
+            "{1,2,3,4}.sum{2}()                                                     % int{2}::10",
+            "{1,2,3,4}.sum{2}().count()                                             % 2",
+            "{1,2,3,4,5,6}.sum?int<=int{2}().count()                                % 3",
+            "{1,2,3,4}.sum?int<=int{+}()                                            % 10",
+            "{1,2,3,4}.count?int<=int()                                             % int{4}::1",
+            //  "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",
+            "{1,2,3,4}.count?int<=int{4}()                                          % int::4",
+            "{1,2,3,4}.count?int<=int{3,10}()                                       % int::4",
+            "{1,2,3,4}.sum?int<=int{1,7}()                                          % 10",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}()                                       % int{2}::10",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()                                 % int::20",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()      % int::40",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_].>-                       % int{2}::20",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_].select([_,_])>-          % int{2}::20",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum().id{2}()                         % int{2}::20",
+            "{1,2,3,4,5,6}.sum?int<=int()                                           % {1,2,3,4,5,6}",
+            "{1,2,3,4,5,6}-<[_]>-.sum()                                             % 21",
+            "{1,2,3,4,5,6}-<[_]>-.sum{2}()                                          % int{2}::21",
+            "{1,int{2}::2,3,4,5,6}-<[_]>-.sum{2}()                                  % int{2}::23",
+            "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{2}()                      % {2,4,6}",
+            "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{1,2}()                    % {2,4,6}",
+            "{1,2,3,4}.>-[,]-<[>-.count(),>-.count()]                        % [4,4]",
+            "{1,2,3,4}.>-[,]-<[>-.count(),>-.count()]>-                      % int{2}::4",
+            "{1,2,3,4}.is(gt(2)).count()                                            % 2",
+            "int{50}::10.mult(10).count()                                           % int{1}::50",
+            "int{50}::10.mult(10).sum()                                             % 5000",
+            "int{50}::10-<{mult(10),mult(1)}                                        % {int{50}::100,int{50}::10}",
+            "{50}10-<{mult(10),mult(1)}                                             % {{50}100,{50}10}",
+            "int{50}::10-<{mult(10),mult(1)}.count()                                % 100",
+            "int{50}::10-<{mult(10),mult(1)}.sum()                                  % 5500",
+            "{int{50}::10}-<{mult(10),mult(1)}                                      % {int{50}::100,int{50}::10}",
+            "{int{50}::10}-<{mult(10),mult(1)}.count()                              % 100",
+            "{int{50}::10}-<{mult(10),mult(1)}.sum()                                % 5500",
+            "{int{50}::10,int{10}::5}-<{mult(10),mult(1)}                           % {int{50}::100,int{10}::50,int{50}::10,int{10}::5}",
+            "{int{50}::10,int{10}::5}-<{mult(10),mult(1)}.count()                   % 120",
+            "{int{50}::10,int{10}::5}-<{mult(10),mult(1)}.sum()                     % 6050",
+            "{int{50}::10,int{10}::5}-<{mult(10),mult(1)}.sum{2}().sum()            % 12100",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]                                           % [[1,2],[3,4,5],[6,7,8]]",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]                               % [{1,2},{3,4,5},{6,7,8}]",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
+            "{1,2}-<|[?>1 => +100, _=> +2]>>                                        % {3,102}",
+            "{1,2}.-<|[?>1 => +100, _=> +2].rng()                                   % {3,102}",
+            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>               % true",
+    }, delimiter = '%')
+    public void testSplitMergeCode(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            //"{1,1.plus?int<=int(1),1.plus?int<=int(2),4}.prod()                   % 24",
+            "{1,{2}3}.prod()                                                        % 9",
+            "{2,{2}3}.prod()                                                        % 18",
+            "{{3}2,{2}3}.prod()                                                     % 72",
+            "{1,2,3,4}.prod()                                                       % 24",
+            "1.prod()                                                               % 1",
+            "int{5}::3.prod()                                                       % 243",
+            "{a,b,c}.prod()                                                         % a/b/c",
+            "{a/b,c/d,e/f}.prod()                                                   % a/b/c/d/e/f",
+            // "{a/b,c/d,e/f}.sum()                                                    % <+/+{3}>",
+            "{10,5}-<{mult{3}(10),mult(1)}.sum{2}().sum()                           % 930",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()                                          % [1,2,3,4,5,6,7,8]",
+            "{[1,2],[3,4,5],[6,7,8]}.sum().>-                                       % {1,2,3,4,5,6,7,8}",
+            "{[1,2],[3,4,5],[6,7,8]}.sum().>-.count()                               % 8",
+            "{[1],[2],[3]}.sum()                                                    % [1,2,3]",
+            "{[1],[2],[3]}.sum{10}()                                                % lst[int,int,int]{10}::[1,2,3]",
+            "{[1],[2],[3]}.sum()._/sum()\\_                             % [6]",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.>-                      % 10",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.merge{3,7}()            % int{3,7}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-                   % int{2}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-.sum()             % 20",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()       % int{2}::36",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum() % 72",
+            "{[1],[2],[3]}.sum()._/sum()\\_                                         % [6]",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.>-                                  % 10",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.merge{3,7}()                        % int{3,7}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-                               % int{2}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-.sum()                         % 20",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()                   % int{2}::36",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
+            ///
+            "{1=>2,2=>3,3=>4}.as(rec::T).reduce(|plus([=>]))                        % [1=>2,2=>3,3=>4]",
+            "{1,2,3,4,5}.reduce(|plus(0))                                           % 15",
+            "{1,2,3,4,5}.reduce?#<=#{*}(|plus(0))                                   % 15",
+            "{1,2,3,4,5}.as(int::T).reduce(|plus(0))                                % 15",
+            "{int::1,int::2,int::3,int::4,int::5}.reduce(|plus(0))                  % 15",
+            "{int::1,2,3,4,5}.reduce(|plus(0))                                      % 15",
+            // "{1,2,3,4,5}.reduce?<=int{*}(|plus(0))                                  % 15",
+            // "{1,2,3,4,5}.reduce?int<=(|plus(0))                                  % 15",
+            // TODO: why? "{1,2,3,4,5}.reduce?int<=int{*}(|plus(0))                 % 15",
+            "{,}.reduce(|plus(0))                                                   % 0",
+            "reduce(|mult(0))                                                       % 0",
+            "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
+            "{1,2,3,4,5}.reduce(|mult(1))                                           % 120",
+            "{1,2,3,4,5}.reduce(|inst(2){ mult(*<0>) })                             % 240",
+            "{1,2,3,4,5}.reduce(|inst(1){ mult(*<0>) })                             % 120",
+            "{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 15",
+            "{1,2,3,4,5}.reduce(|inst(2){ mult(*0) })                               % 240",
+            "{1,2,3,4,5}.reduce(|inst(1){ mult(*0) })                               % 120",
+            "{1,2,3,4,5}.reduce(|inst(0){ plus(*0) })                               % 15",
+            "{\"a\",\"b\",\"c\"}.>-' '                                                    % \"a b c\"",
+            "{\"a\",\"b\",\"c\"}>-' '                                                     % \"a b c\"",
+            "\"a b c\".-<' '                                                           % [\"a\", \"b\", \"c\"]",
+            "\"a b c\".-<' '>-' '                                                      % \"a b c\"",
+            "\"a b c\".split(' ').merge(' ')                                          % \"a b c\"",
+            "{a,b,c}.>-/                                                            % a/b/c",
+            "{a,b,c}>-/                                                             % a/b/c",
+            "a/b/c.-</                                                              % [a,b,c]",
+            "a/b/c.-</.>-/                                                          % a/b/c",
+            "a/b/c.-</>-/                                                           % a/b/c",
+            "a/b/c.split(/).merge(/)                                                % a/b/c",
+            "a/b/c.split(/).merge(/).mult(<.>)                                      % a/b/c",
+            "a/b/c.split(/).merge(/).mult(<..>)                                     % a/b",
+    }, delimiter = '%')
+    public void testReductions(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "2.plus?dom=int(1)                                                      % 3", // old classic bug
+            "math('1+2')                                                            % 3.0",
+            "10.to(a).math('a^2')                                                   % 100.0",
+            "10.to(a).plus(10).to(b).math('a+b')                                    % 30.0",
+            "10.to(a).plus(10).to(b).math('(a+b)^2')                                % 900.0",
+            "1-<[plus(1).to(a),plus(2).to(b)]>-.math('a*b')                         % real{2}::6.0",
+            "1-<[to(a).math('a+a'),to(c).math('c+5')]                               % [2.0,6.0]",
+            "1-<[to(a).math('a+a'),to(c).math('c+5')]>-.sum?real<=real{*}()         % 8.0",
+    }, delimiter = '%')
+    public void testMath(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {"[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]@xyz"})
+    @CsvSource(value = {
+            // TODO: Poly.updateLst();
+            "@xyz>>=[a=>+2,b=>none,c=>none]                                       % [a=>3]",
+            //"@xyz>>=[a=>+2,isa(=b | =c)=>none]                                % [a=>3]",
+            "@xyz>>=[a=>+2]                                                       % [a=>3,b=>2,c=>[d=>3,e=>[4,5,6,7]]]",
+            "@xyz>>=+[a=>+2]                                                      % [a=>{1,plus(2)},b=>2,c=>[d=>3,e=>[4,5,6,7]]]",
+            "@xyz>>=[c=>[e=>[0=>+1,_=>_]]]                                        % [a=>1,b=>2,c=>[d=>3,e=>[5,5,6,7]]]",
+            "@xyz>>=[c=>[e=>1]]                                                   % [a=>1,b=>2,c=>[d=>3,e=>1]]",
+            "@xyz>>=[a=>-<[_,+1,+2],c=>[e=>|1,d=>none]]                           % [a=>[1,2,3],b=>2,c=>[e=>1]]",
+            "@xyz>>=[a=>-<[_,+1,+2],c=>+[e=>|1]]                                  % [a=>[1,2,3],b=>2,c=>[d=>3,e=>{[4,5,6,7],block(1)}]]",
+            "@xyz>>=[a=>-<[_,+1,+2],c=>[e=>|1,d=>_]]                              % [a=>[1,2,3],b=>2,c=>[d=>3,e=>1]]",
+            "@xyz>>=[a=>-<[_,+1,+2]>-.sum(),c=>[e=>1]]                            % [a=>6,b=>2,c=>[d=>3,e=>1]]",
+            "@xyz>>=[a=>-<[_,+1,+2]>-.sum(),c=>[e=>1,d=>+1]]                      % [a=>6,b=>2,c=>[e=>1,d=>4]]",
+            "@xyz/c>>=[d=>+10]                                                    % [d=>13,e=>[4,5,6,7]]",
+            "@xyz/c/d>>=10.from(xyz)                                              % [a=>1,b=>2,c=>[d=>10,e=>[4,5,6,7]]]",
+            "@xyz/c/d>>=_.from(xyz)                                               % [a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]",
+            "@xyz/c/d>>= +10                                                      % 13",
+            "@xyz/c/d>>=(+10).from(xyz)                                           % [a=>1,b=>2,c=>[d=>13,e=>[4,5,6,7]]]",
+            "@xyz/c/d>>= -<[_]                                                    % [3]",
+            "@xyz/c/d>>= -<[_].from(xyz)                                          % [a=>1,b=>2,c=>[d=>[3],e=>[4,5,6,7]]]",
+            "@xyz/c/d>>= -<[+20]                                                  % [23]",
+            "@xyz/c/d>>= -<[+20].from(xyz)                                        % [a=>1,b=>2,c=>[d=>[23],e=>[4,5,6,7]]]",
+            "[1,2]@a >>= [_,+4]                                                   % [1,6]",
+            "[1,[2,[3]]]@a >>= [_,[+4,[+5]]]                                      % [1,[6,[8]]]",
+            "[1,[2,[3]]] >>= [_,[+4,[+5]]]                                        % [1,[6,[8]]]",
+            "[1,2] >>=(-<[>-]>-.>-[,])                                            % [1,2]",
+            "[1,2] >>= [a,_,c]                                                    % [a,2]",
+            "[1,2] >>= +[a,_,c]                                                   % [1,2,a,_,c]",
+            "[1,2] >>= +(-<[a,_,c])                                               % [1,2,a,[1,2],c]",
+            "[1,2] >>= +[a,c]                                                     % [1,2,a,c]",
+            "[a=>1,b=>2] >>= [_=>_]                                               % [a=>1,b=>2]",
+            "[a=>1,b=>2] >>= [=>]                                                 % [a=>1,b=>2]",
+            "[a=>1,b=>2] >>= [_=>none]                                            % [=>]",
+            "[a=>1,b=>2] >>= [b=>none]                                            % [a=>1]",
+            "[a=>1,b=>2] >>= (+ [c=>3])                                           % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>[c=>[d=>2,e=>3]]] >>= [b=>[c=>[e=>none]]]                   % [a=>1,b=>[c=>[d=>2]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>none]]                        % [a=>1,b=>[c=>[1,2,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>none]                             % [a=>1]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [a=>+2,b=>[c=>none]]                  % [a=>3,b=>[c=>[1,2,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,_,_]]]                     % [a=>1,b=>[c=>[1,2,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,none,_]]]                  % [a=>1,b=>[c=>[1,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,parent().(_,_){*0 + *1}]]] % [a=>1,b=>[c=>[1,[1,2,3,1,2,3]]]]",
+            "[1,[2,[!*xyz]]] >>= [_,[+4,[_]]]                                     % [1,[6,[[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]",
+            "[1,[2,[!*xyz]]] >>= [_,[+4,[-<[_,_]]]]                               % [1,[6,[[[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]],[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]]",
+            "[1,[2,[!*xyz]]] >>= [_,[+4,[-<[_,_]>-]]]                             % [1,[6,[{2}[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]]]]",
+            "[1,[2,[!*xyz]]] >>= [_,[+4,[-<[_,==[a=>+10]]]]]                      % [1,[6,[[[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]],[a=>11]]]]]"
+
+    }, delimiter = '%')
+    public void testUpdate(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @TestData(value = {
+            "x -> noobj",
+            "x -> {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}"
+    })
+    @CsvSource(value = {
+            "1-<[_,_]                                                                 % [1,1]",
+            "1-<|[is(gt(0))=>plus(6),_=>plus(100)].rng()                              % 7",
+            "1-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                              % 101",
+            "1-<[is(gt(0))=>plus(6),_=>plus(100)].rng()                               % {7,101}",
+            "{1,2,3}-<|[is(gt(1))=>1.plus(5),_=>9.plus(89.plus(3))].rng()             % {101,6,6}",
+            "{1,2,3}-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                        % {101,8,9}",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng()                         % {101,8,102,9,103}",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum()                   % {101,8,102,9,103}.sum()",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum().type()            % 1.type()",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]])                            % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]])                               % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}-<?<=int([_=>_,+2=>-<[_=>+10]])                                   % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.-<?<=int[_=>_,+2=>-<[_=>+10]]                                    % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]])                            % *x",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]])                               % *x",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]])                                  % *x",
+            "{1,2,3}.-<?<=int[_=>_,+2=>-<[_=>+10]]                                    % *x",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x))  % *x",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x))     % *x",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x))        % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(neq(*x))       % noobj",
+    }, delimiter = '%')
+    public void testBranches(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // AN ARGUMENT IS REACHED BY SIGIL, NOT BY NAME — positionally with *<0>, or by the argument's own
+            // sigil with *a. The argument here is an INST (plus(2)) applied to the lhs, so both give 1+2=3:
+            //     "1.inst(+2){ *<0> }"                % 3
+            //     "1.inst(a=>plus(2)){ *a }"          % 3
+            // A bare word is not an argument reference at all: an unbound word is a URI. So `plus(a)` is
+            // `plus(uri a)` — `a.plus(a)`, a multiplicity `{2}a` when the lhs is a uri, and "unable to
+            // determine inst function" when the lhs is an int, because it tries to apply the uri as an
+            // instruction. Neither outcome is about the stack, so neither belongs in a test here.
+            // The constraint for the arg-frame walk: a plain-name lookup must NEVER match an argument entry.
+            // The 8 mInstSet cases below enforce that from the other side — they broke exactly when a plain
+            // name began matching an entry in an argument frame.
+            "1.inst(+2){ *<0> }                                                       % 3",
+            "1.inst(a=>plus(2)){ *a }                                                 % 3",
+            "1.inst(a=>plus(2)){ plus(*a) }                                           % 4",
+            "10.(a=>plus(2)){ plus(*a) }                                              % 22",
+            "10.inst?int<=str(a=>plus(2)){ plus(*a) }                                 % <ERROR>",
+            "{1,3,8}.inst?int<=int(a=>plus(2)){ plus(*a) }                            % {4,8,18}",
+            "{1,3,8}.xyz?int<=int(a=>plus(2)){ plus(*a) }                             % {4,8,18}" // TODO: should inline named inst definitions be allowed?
+    }, delimiter = '%')
+    public void testLambda(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @TestData(value = {"int::T[is(gt(0))]@nat", "int::T[?>0]@nat2"})
+    @CsvSource(value = {
+            "nat::2                                           % nat::2",
+            "nat::-1                                          % <ERROR>",
+            "nat2::2                                          % nat2::2",
+            "nat2::-1                                         % <ERROR>",
+    }, delimiter = '%')
+    public void testTypeCreation(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.repeat(code=>plus(1),until=>loop().is(eq(10)))                                                                                   % 11",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(1)))                                                                                    % 2",
+            "1.repeat(code=>plus(1),until=>loop().is(gt(3)))                                                                                    % 5",
+            "1.repeat(code=>plus(1),until=>loop().is(lt(3)))                                                                                    % 1",
+            "10.repeat(code=>plus(1),until=>loop().is(eq(5)))                                                                                   % 15",
+            "0.repeat(code=>plus(1),until=>loop().is(eq(5)))                                                                                    % 5",
+            "1.repeat(code=>mult(2),until=>loop().is(eq(4)))                                                                                    % 16",
+            "1.repeat(code=>plus(1),until=>is(gt(10)))                                                                                          % 11",
+            "1.repeat(code=>plus(1),until=>is(gt(4)))                                                                                           % 5",
+            "1.repeat(code=>plus(1),until=>is(gte(4)))                                                                                          % 4",
+            "1.repeat(code=>plus(1),until=>is(eq(5)))                                                                                           % 5",
+            "1.repeat(code=>plus(1),until=>_.gt(4))                                                                                             % 5",
+            "5.repeat(code=>plus(1),until=>is(gt(4)))                                                                                           % 5",
+            "5.repeat(code=>minus(1),until=>is(eq(0)))                                                                                          % 0",
+            "1.plus(10).repeat(code=>minus(1),until=>is(lt(0)))                                                                                 % -1",
+            "1.repeat(code=>plus(2),until=>is(gt(10)))                                                                                          % 11",
+            "1.repeat(code=>plus(1).plus(1),until=>is(gt(10)))                                                                                  % 11",
+            "{10,20}.repeat(code=>plus(1),until=>is(gt(12)))                                                                                    % {20,13}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>true)                                                                         % {1,2,3,4,5,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>is(eq(3)))                                                                    % {3,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>loop().is(eq(3)))                                                             % {4,6}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(5)),emit=>false)                                                                        % 6",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(10)),emit=>is(eq(5)))                                                                   % {5,11}",
+            "1.repeat(code=>plus(1),until=>loop().is(eq(3))).repeat(code=>mult(2),until=>loop().is(eq(2)))                                      % 16",
+            "1.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(3))),until=>loop().is(eq(2)))                                            % 7",
+            "1.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(2))),until=>loop().is(eq(4)))                                            % 9",
+            "1.repeat(code=>_.repeat(code=>mult(2),until=>loop().is(eq(3))),until=>loop().is(eq(2)))                                            % 64",
+            "1.repeat(code=>_.repeat(code=>_.repeat(code=>plus(1),until=>loop().is(eq(2))),until=>loop().is(eq(2))),until=>loop().is(eq(2)))    % 9",
+            // a repeat past a barrier: the reducer's monad hands repeat a fresh state to count its loops in
+            "{1,2,3}.sum().repeat(code=>plus(1),until=>loop().is(eq(2)))                                                                        % 8",
+    }, delimiter = '%')
+    public void testRepeat(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @Disabled
+    @CsvSource(value = {
+            // the walked path is [inst, obj, inst, obj, ...] — one pair per instruction, seeded by start
+            "1.path()>>.count()                                                      % 2",
+            "1.plus(2).path()>>.count()                                              % 4",
+            "1.plus(2).plus(5).path()>>.count()                                      % 6",
+            "1.plus(2).plus(5).plus(1).path()>>.count()                              % 8",
+            //"1.repeat(code=>plus(1),until=>loop()?>10).path()>>.count()              % 22"
+    }, delimiter = '%')
+    public void testPath(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "fail::['bad']['really bad']['oh no'].catch('okay now')                   % \"okay now\"",
+            "fail::['bad']['really bad']['oh no'].plus('okay now').catch(_)           % fail::['bad']['really bad']['oh no'].catch(_)",
+            "1.plus(1).throw('bad').plus(2).plus(3).catch(_)                        % fail::['bad'].catch(_)",
+            "1.plus(1).throw('bad').plus(2).catch(34).plus(3)                       % 37",
+            "1.plus('a').catch(cause().cause().cause())                               % noobj",
+            "1.plus('a').catch(cause().cause().cause().cause())                       % noobj",
+            "1.plus('a').catch(throw('bad')).catch(_)                               % fail::['bad'].catch(_)",
+            "1.plus(mult(throw('bad'))).mult(23).catch(34).plus(2)                  % 36",
+            "1.plus(1).throw('bad').catch(_).path()                                 % 1.plus(1).throw('bad').catch(_).path()",
+
+    }, delimiter = '%')
+    public void testFailureCatch(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * An uncaught fail passes an inst it cannot resolve against as it passes one that it can: out comes the upstream
+     * fail, cause chain intact, not "unable to locate inst-f fail::T" in its place. The {@code ?dom=#{*}} hint, which a
+     * sharded plan puts on its recombining {@code sum}, makes the sum a gather, applied once to the stream it collected,
+     * and nothing resolves against a stream of fails. A bare {@code sum}, or a {@code plus}, finds an inst for each fail,
+     * and the fail propagates in {@code applyFunction}. Either way the inst's coefficient lands on the fail. A caught
+     * fail is a value, so a miss on it still fails.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "fail::['shard offline'].sum?dom=#{*}().catch(_)                        % fail::['shard offline'].catch(_)",
+            "fail::['shard offline']['no route'].sum?dom=#{*}().catch(cause())      % fail::['no route'].catch(_)",
+            "fail::['shard offline'].sum{2}?dom=#{*}().catch(34)                    % {2}34",
+            "fail::['shard offline'].sum().catch(_)                                 % fail::['shard offline'].catch(_)",
+            "fail::['shard offline'].plus{2}('x').catch(34)                         % {2}34",
+            "fail::['shard offline'].catch(_).sum?dom=#{*}()                        % <ERROR>",
+    }, delimiter = '%')
+    public void testFailurePassesAnUnresolvableInst(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a -> [b=>[c=>d]]              % a/b/c -> 34                     % a            % [b=>[c=>34]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a            % [b=>[c=>[f=>g]]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b          % [c=>[f=>g]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b/c        % [f=>g]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b/c/f      % g",
+            "a -> [b=>[c=>d]]              % <a/b/..> -> 22                  % a            % 22",
+            "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a/b/c        % {1,2,3,4,5,6}",
+            "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a            % [b=>[c=>{1,2,3,4,5,6}]]",
+            "a -> [b=>[c=>[1,2,3]]]        % @<a/b/c>>>=+[4,5,6]             % a            % [b=>[c=>[1,2,3,4,5,6]]]",
+            "a -> [b=>[c=>[1,2,3]]]        % *<a/b/c>>>=+[4,5,6]             % a            % [b=>[c=>[1,2,3]]]",
+            "a -> [b=>[c=>[1,2,3]]]        % @<a/b/c>>>=(>-{4,5,6})          % a            % [b=>[c=>{1,2,3,4,5,6}]]",
+            "a -> [b=>[c=>[1,2,3]]]        % @<a/b/c>>>=(+[4,5,6]>-)         % a            % [b=>[c=>{1,2,3,4,5,6}]]",
+            // "a -> [b=>[c=>[1,2,3]]]        % @<a/b/c>>>=+[4]>>=+[5]>>=+[6]   % a            % [b=>[c=>[1,2,3,4,5,6]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b>>>=+[c=>[2=>3]]           % a            % [b=>[c=>[1=>2,2=>3]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b>>>=[c=>+[2=>3]]           % a            % [b=>[c=>[1=>2,2=>3]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>>>=-<[1=>rng()+2]       % a            % [b=>[c=>[1=>4]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>>>=[1=>+2]              % a            % [b=>[c=>[1=>4]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>>>=[1=>+2,3=>4]         % a            % [b=>[c=>[1=>4]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>+[3=>4]>>=[1=>+2]       % a            % [b=>[c=>[1=>4,3=>4]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>>>=[1=>+2,_=>17]         % a           % [b=>[c=>[1=>{4,17}]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @<a/b/c>>>=[_=>+2]              % a            % [b=>[c=>[1=>4]]]",
+            "a -> [b=>[c=>[1=>2]]]         % @a >>= noobj                    % a            % noobj",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> {1,2,3,4}                % a -> {5,6,7}                    % a            % {5,6,7}",
+            "a -> [1,2,3,4]                % @a>>={5,6,7}                    % a            % {5,6,7}",
+            "a -> [1,2,3,4]                % @a>>=[5,6,7]                    % a            % [5,6,7]",
+            "a -> [1,2,3,4]                % @a>>=[5,6,7,_]                  % a            % [5,6,7,4]",
+            "a -> [1,2,3,4]                % @a>>=[?<2=>+2,_=>+10]           % a            % [3,4,13,14]",
+            "a -> [1,2,3,4]                % @a>>=[5,6,7,none]               % a            % [5,6,7]",
+            "a -> [1,2,3,4]                % *a>>=[5,6,7]                    % a            % [1,2,3,4]",
+            "a -> [1,2,3,4]                % *a>>=[5,6,7,none]               % a            % [1,2,3,4]",
+            "a -> [1,2,3,4]                % @a>>=+[5,6,7]                   % a            % [1,2,3,4,5,6,7]",
+            //"a -> [1,2,3,4]                % @a/1>>=7                        % a            % [1,3,4]@a",
+            "a -> [1,2,3,4]                % @a>>=[_,7,_,_]                  % a            % [1,7,3,4]",
+            "a -> [1,2,3,4]                % @a>>=[1=>7,_=>_]                % a            % [1,7,3,4]",
+            "a -> [1,2,3,4]                % @a>>=[_=>none]                  % a            % [,]",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> [1]                      % @a>>=+[2,3,4]                   % a            % [1,2,3,4]",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> [1,2,3]                  % a -> 4                          % a            % 4",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+    }, delimiter = '%')
+    public void testPolySpace(final String stateCode, final String mutationCode, final String vid, final String expected) {
+        super.checkSpaceMutation(LOG, stateCode, mutationCode, Map.of(f(vid), expected));
+
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].group([_=>_])                                               % [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]",
+            "{1,2,3}.group([_=>+10])                                                      % [1=>11,2=>12,3=>13]",
+            "{1,2,3}.group([_=>8])                                                        % [1=>8,2=>8,3=>8]",
+            "{1,2,3}.group([noobj=>_])                                                    % [=>]",
+            "{1,2,3}.group([_=>noobj])                                                    % [=>]",
+            //"{[a,b],[c,d],[a,b]}.group([>-.prod()=>>-.count()])                           % [a/b=>4,c/d=>2]",
+            "{[a,b],[c,d],[a,b]}.group([>-.prod?uri<=uri{*}()=>>-.count()])               % [a/b=>4,c/d=>2]", // should be uri{2}
+            // a key is an identity: a bulked member is counted by its group, never carried on the key
+            "{1,1,2}.group([_=>count()])                                                  % [1=>2,2=>1]",
+            "{ginger,ginger,fred}.group([_=>count()])                                     % [ginger=>2,fred=>1]",
+            "{[a,b],[c,d],[a,b]}.group([_=>count()])                                      % [[a,b]=>2,[c,d]=>1]",
+            "{4,4,7}.group([mod(3)=>sum()])                                               % [1=>15]",
+            "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testGroup(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].select([a=>_])                                                                                           % [a=>1]",
+            "{[a/b=>1],[b/c=>2],[c/d=>3]}.select([a/b=>_])                                                                             % [a/b=>1]",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>is(gte(2))])                                                                            % {[a=>2],[a=>3]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>plus(10)])                                                             % {[a/b=>11],[a/b=>12],[a/b=>13]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>?>=2])                                                                 % {[a/b=>2],[a/b=>3]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a=>[b=>is(gte(2))]])                                                        % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.isa([a=>[b=>is(gte(2))]])                                                           % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.isa([a/b=>?>=2])                                                                    % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.isa([a=>[b=>?>=2]])                                                                 % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{?}<=rec{1}([a=>+10])                                                                    % {[a=>11],[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{?}<=rec{1}([a=>?>=2.+10])                                                               % {[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>+10])                                                                                   % {[a=>11],[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>?>=2.+10])                                                                              % {[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>?>=2.+10])                                                                              % {[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>?>=2.+10]).isa(>-.count().?>0)                                                          % {[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{?}<=rec{1}([a=>?>=2.+10]).isa(>-.count().?>0)                                           % {[a=>12],[a=>13]}",
+            "{[a=>1],[b=>2],[c=>3]}.select?rec{?}<=rec{1}([_=>_])                                                                      % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>?>=2.+10]).isa(>-.count().?>0)                                                          % {[a=>12],[a=>13]}",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_])                                                                                     % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.isa([_=>_])                                                                                        % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).isa([_=>_])                                                                         % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.isa([_=>is(gt(1))])                                                                                % {[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).isa([_=>is(gt(1))])                                                                 % {[b=>2],[c=>3]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>+10]).isa([a=>?>11]).isa(>-.count().?>0)                                                % {[a=>12],[a=>13]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([isa(uri::T)=>_])                                                               % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.isa([isa(uri::T)=>_])                                                                              % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([?(uri::T)=>_])                                                                 % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([isa(uri::T[?c])=>_])                                                           % [c=>3]",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([?(uri::T[?c])=>_])                                                             % [c=>3]",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([isa(uri::T)=>is(gt(1))])                                                       % [c=>3]",
+            // isa() is a filter, not an assertion: nothing tests as noobj (nor as a missing arg), so the stream empties
+            "{[a=>1],[2=>2],[c=>3]}.isa(noobj)                                                                                         % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa(noobj)                                                                          % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa()                                                                               % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([noobj=>is(gt(1))])                                                             % {[a=>1],[2=>2],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).isa([=>])                                                                           % {[a=>1],[2=>2],[c=>3]}",
+            "[a=>1,b=>2,c=>3].select([z=>_])                                                                                           % noobj",
+            "[a=>1,b=>2,c=>3].select([?(uri::T)=>_])                                                                                   % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>_])                                                                                 % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2,c=>3].select([?(uri::T)=>-<[_,_]])                                                                             % [a=>[1,1],b=>[2,2],c=>[3,3]]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]])                                                                           % [a=>[1,1],b=>[2,2],c=>[3,3]]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-])                                                                         % [a=>{1,1},b=>{2,2},c=>{3,3}]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()])                                                                   % [a=>2,b=>4,c=>6]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).isa([a=>is(gt(2))])                                               % noobj",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).isa([a=>is(gt(1))])                                               % [a=>2,b=>4,c=>6]",
+            /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).isa::([a=>is(gt(2))])                                             % noobj",
+            //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).isa::([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
+            "[a=>1,b=>2,c=>3]==[?(uri::T)=>-<[_,_]>-.sum()]?[a=>?>1]                                                                  % [a=>2,b=>4,c=>6]",
+            /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "[1,2,3].select([_,noobj,_])                                                                                               % [1,noobj,3]",
+            "[1,2,3].select([_,plus(5),_])                                                                                             % [1,7,3]",
+            "[1,2,3].select([_,plus(5),_]).isa([_,is(gt(5)),_])                                                                        % [1,7,3]",
+            "[1,2,3].select([_,plus(5),_]).isa([_,is(gt(15)),_])                                                                       % noobj",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_])                                                                           % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,[_=>plus(2)],_])                                                                                   % [1,[2=>7],3]", // TODO: should select()/isa() be recurssive
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).isa([_,[_=>is(gt(6))],_])                                                 % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).isa([_,[_=>is(gt(6))],is(gt(1))])                                         % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).isa([_,[_=>is(gt(6))],is(gt(3))])                                         % noobj",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).isa([_,[_=>is(gt(10))],_])                                                % noobj",
+            "[1,[2=>5],3].select([-<[_,_],select([_=>plus(2)]),plus(7)]).isa([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])                 % [[1,1],[2=>7],10]",
+            "[1,[2=>5],3].select([-<[_,_]>-.sum(),select([_=>plus(2)]),plus(7)]).isa([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])         % noobj",
+            "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select([_=>plus(2)]),plus(7)]).isa([isa(lst::T),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
+            // "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_]>-,select[_=>plus(2)],plus(7)]).isa([isa(int::T[]),[_=>is(gt(6))],is(gt(3))]) % [2,[2=>7],10]",
+            "[a=>1,b=>2,c=>3].select([_=>is(gt(1))])                                                                                   % [b=>2,c=>3]",
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?uri::T]],+133]]])                                          % [a/b=>[c=>[2,[x=>[y=>z]],136]]]",
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?int::T]],+133]]])                                          % [a/b=>[c=>[2,noobj,136]]]",
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[?>0.map(100),[x=>[y=>?int::T]],+133]]])                                % [a/b=>[c=>[100,noobj,136]]]"
+
+    }, delimiter = '%')
+    public void testIsASelect(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    // known-fail: the row "*a.>>{a,b/c}.sum() % 3" below — under the test
+    // boot (code_resolve disabled, dynamic resolution) `.sum()` on a read
+    // result resolves to the rec sum (dom REC.maybeSome wins; a read can
+    // inherit its source's tid), so asRec() on an int element fails
+    // ("unable to convert int::T to rec::T"); the console (strict
+    // resolution) returns 3 correctly. a sibling row was worked around the
+    // same way (.as(int::T).sum?int<=int{*}()). this is a
+    // dynamic-resolution/read-tid dispatch issue, not a fail-text one.
+    @ParameterizedTest
+    @TestData(value = {
+            "a -> [a=>1,b=>[c=>2,d=>[e,f,[g,h]]]]",
+            "b -> [a=>1,b=>[c=>2,d=>!*a]]"
+    })
+    @CsvSource(value = {
+            "*b                                                  % [a=>1,b=>[c=>2,d=>!*a]]",
+            "*b/b                                                % [c=>2,d=>!*a]",
+            "*b>>b                                               % [c=>2,d=>!*a]",
+            "*b/b/d                                              % *a",
+            "*b>>b>>d                                            % *a",
+            "*b>>b>>d>>                                          % *a>>",
+            "*a>>b/d/0                                           % e",
+            "*a.>>.>>.>>.>>                                      % {g,h}",
+            //  "*a.>>.>>.>>.>>.<<.<<.<<.<<                      % *a.-<[_,_]>-",
+            "*a.>>{a,b/c}                                        % {1,2}",
+            "*a.>>{a,b/c}.sum()                                  % 3",
+            "*a.-<{>>a,>>b/c}                                    % {1,2}",
+            //  "*a.-<{>>a,>>b/c}.as(int::T).sum?int<=int{*}().sum()            % 3",
+            //  "*a.-<{>>a,>>b/c}.<<.<<                          % *a",
+            //  "*a.-<{>>a,>>b/c}.<<.<<                          % *a",
+            "*b.>>b>>d>>b/c                                      % 2",
+            "*b.>>b>>d>>b>>c                                     % 2",
+            "*b.>>b>>d>>b>>c.<<.<<                               % *a",
+            "*b.>>b>>d>>b>>c.<<.<<.<<.<<                         % *b",
+            "*b.>>b>>d                                           % *a",
+            // "*b.>>b>>d.>>.<<.dedup()                          % *a",
+            // "*b.>>b>>d.>>.<<.<<.dedup()                       % *b/b",
+            // "*b/b/d.>>.<<.<<.dedup()                          % *b/b",
+            // "*b.>>b>>d.>>.<<.<<.<<.dedup()                    % *b",
+            "*a.>>b>>d>>2                                        % [g,h]",
+            "*a.>>b>>d>>2>>1                                     % h",
+            "*a.>>b>>d>><2/1>                                    % h",
+            "*a.>><b/d/2/1>                                      % h",
+            // uri << is pure uri arithmetic now — h (a uri leaf) retracts to the empty root.
+            // obj walk-back still works on non-uri leaves (lst/rec << → their container).
+            "*a.>><b/d/2/1>.<<                                   % <>",
+            "*a.>>b>>d>>2.<<.<<.<<                               % *a",
+            "*a.>>b>>d>>2>>{0,1}                                 % {g,h}",
+            "*a.>>b>>d>>{1,2}                                    % {f,[g,h]}",
+            "*a.>>b>>d.-<[>>1,>>2]                               % [f,[g,h]]",
+            "*a.>>b>>d.-<{>>1,>>2}                               % {f,[g,h]}",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testLShiftRShift(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // mono — no children, no parent: << and >> are noobj
+            "12<<                                                                                                      % noobj",
+            "12>>                                                                                                      % noobj",
+            "'abc'<<                                                                                                   % noobj",
+            "'abc'>>                                                                                                   % noobj",
+            "true<<4                                                                                                   % noobj",
+            "false>>4                                                                                                  % noobj",
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // poly — >> is the values stream, << is the empty stream (noobj) today;
+            // lst << = indices / rec << = keys is a future enhancement.
+            "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>                                                                         % {1,2,[d=>3,e=>[f=>4]]}",
+            "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]<<                                                                         % noobj",
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // uri — pure uri arithmetic: << retracts (the parent); no obj parent links
+            "a/b/c <<                                                                                                  % a/b",
+            "a/b/c << 2                                                                                                % a",
+            "a/b/c << 3                                                                                                % <>",
+            "a/b/c/d << c/d                                                                                            % a/b",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testShift(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    // oneTime: the two seeds are only READ by the rows; re-declaring them before every row re-typed `reck` in
+    // place mid-method (a redefinition lands by re-typing the registered type object), which is what made the
+    // `[a,b].as(reck::T)` row resolve against a half-replaced type.
+    @TestData(value = {"rec::T[?[=>]]@reck", "lst::T[?[,]]@lyst"}, oneTime = true)
+    @CsvSource(value = {
+            "true.as(bool::T)                                                                                            % true",
+            "false.as(bool::T)                                                                                           % false",
+            "true.as(bytes::T)                                                                                           % 0x01",
+            "false.as(bytes::T)                                                                                          % 0x00",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T).as(bool::T)                                                      % true",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T).as(bool::T)                                                     % false",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
+            "true.as(int::T)                                                                                             % 1",
+            "false.as(int::T)                                                                                            % 0",
+            /// ////////////////////////////////////
+            "1.as(bytes::T)                                                                                              % 1.as(bytes::T) [-- 0x0000000000000001 --]",
+            "1.as(int::T)                                                                                                % 1",
+            "1.as(str::T)                                                                                                % \"1\"",
+            "1.as(real::T)                                                                                               % 1.0",
+            "2.as(real::T)                                                                                               % 2.0",
+            /// /////////////////////////////////////
+            "1.0.as(real::T)                                                                                            % 1.0",
+            "1.0.as(int::T)                                                                                             % 1",
+            "1.0.as(int::T).as(real::T)                                                                                 % 1.0",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
+            "1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T).as(real::T)                                   % 1.0",
+            //"1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(real::T).as(int::T).as(real::T)                       % 1.0",
+            //"1.0=int::T=>=real::T=>=str::T=>=real::T=>=real::T=>=int::T=>=real::T=>                                     % 1.0",
+            //"1.0=int::T=>_=real::T=>_=str::T=>_=real::T=>_=real::T=>_=int::T=>_=real::T=>                               % 1.0",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.23.as(int::T)                                                                                            % 1",
+            "2.23.as(int::T)                                                                                            % 2",
+            "2.23.as(str::T)                                                                                            % \"2.23\"",
+            "2.23.as(str::T).as(real::T)                                                                                % 2.23",
+            /// /////////////////////////////////////
+            "\"abc\".as(str::T)                                                                                          % str::\"abc\"",
+            "\"abc\".as(bytes::T)                                                                                        % 0x616263",
+            "\"/a/b/c\".as(uri::T)                                                                                       % /a/b/c",
+            "\"1\".as(int::T)                                                                                            % 1",
+            /// /////////////////////////////////////
+            "/a/b/c.as(uri::T)                                                                                           % /a/b/c",
+            "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\"",
+            "/a/b/c.as(str::T).as(uri::T)                                                                                % /a/b/c",
+            "/a/b/c.as(str::T).as(uri::T).as(str::T)                                                                     % \"/a/b/c\"",
+            /// /////////////////////////////////////
+            "a=>1.as(rel::T)                                                                                            % a=>1",
+            "a=>1.as(rec::T)                                                                                            % [a=>1]",
+            "a=>1.as(lst::T)                                                                                            % [a,1]",
+            //"[a=>1].as(rel::T)                                                                                          % a=>1",
+            /// /////////////////////////////////////
+            "[a=>1,b=>2].as(rec::T)                                                                                      % [a=>1,b=>2]",
+            "[a=>1,b=>2].as(reck::T)                                                                                     % reck::[a=>1,b=>2]",
+            "[a=>1,b=>2].as(lst::T)                                                                                      % [(0=>(a=>1)),(1=>(b=>2))]",
+            ///  /////////////////////////////////////
+            "[a,b].as(lst::T)                                                                                            % [a,b]",
+            // [,] is the empty lst, so lyst admits every lst (as [=>] lets reck admit every rec): only a non-lst is refused
+            "[a,b].as(lyst::T)                                                                                           % lyst::[a,b]",
+            "5.as(lyst::T)                                                                                               % <ERROR>",
+            "[a,b].as(rec::T)                                                                                            % [0=>a,1=>b]",
+            "[a,b].as(reck::T)                                                                                           % reck::[0=>a,1=>b]",
+            "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",
+    }, delimiter = '%')
+    public void testAs(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "a -> [x=>!*b]",
+            "b -> [x=>!*c]",
+            "c -> 6"
+    })
+    @CsvSource(value = {
+            "*a                                           % [x=>!*b]",
+            "*a.>>x                                       % [x=>!*c]",
+            "*a.>>x/x                                     % 6",
+            "*a.>>x>>x.plus(4)                            % 10",
+    }, delimiter = '%')
+    public void testAuto(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,1,1,1,1}.dedup()                       % 1",
+            "int{3}::1.dedup()                         % 1",
+            "{a,b,c}.dedup()                           % {a,b,c}",
+            "{a,a,a,b,c,c}.dedup()                     % {a,b,c}",
+            "{1,<1>,'1'}.dedup()                       % {1,<1>,'1'}",
+            // an objs whose members share no path at all: the fold of its members' tids factors into a branch, so
+            // the count has to ride on that union (MObjs.tid) or the objs can not satisfy the type it derives from
+            "{[a,b],1,<c>}.dedup()                     % {[a,b],1,<c>}",
+            //"{1,2,3}.dedup(map?int<=int(0))            % 0",
+            "{[a=>1,b=>2],[a=>1,b=>3]}.dedup()         % {[a=>1,b=>2],[a=>1,b=>3]}",
+            //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(>>a)      % {[a=>1,b=>2]}",
+    }, delimiter = '%')
+    public void testDedup(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @TestData(value = {
+            "a -> [x=>!*b]",
+            "b -> [x=>!*c]",
+            "c -> 6"
+    })
+    @CsvSource(value = {
+            "*a                                           % [x=>!*b]",
+            "*a.>>x                                       % [x=>!*c]",
+            "*a>>x                                        % [x=>!*c]",
+            "*a.>>x/x                                     % 6",
+            "*a>>x/x                                      % 6",
+            "*a>>x>>x                                     % 6",
+            "*a.>>x.>>x                                   % 6",
+            "*a>>x>>x.plus(4)                             % 10",
+    }, delimiter = '%')
+    public void testAutoFrom(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "20.map(30)                                   % 30",
+            "20.swap(30)                                  % 20",
+            "|(plus(30)).map(20)                          % 20",
+            "|(plus(30)).swap(20)                         % 50",
+            "a.swap(|mult(x))                             % x/a",
+            "{a,b,c}.swap(|mult(x))                       % {x/a,x/b,x/c}",
+            "{a,b,c}.swap(|swap(mult(x)))                 % {a/x,b/x,c/x}",
+            //"{a,b,c}.swap(|swap(swap(mult(x))))         % {x/a,x/b,x/c}",
+            "[plus(2)]>-.swap(8)                                                       % 10",
+            "[plus(2).plus(2)]==[as(inst::T)]>-.swap(8)                                % 12",
+            "[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]==[as(inst::T)]>-.swap(1)   % 5",
+    }, delimiter = '%')
+    public void testSwap(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[plus(2).plus(2)]==[tid()]                                       % [/m/code]",
+            "[|(plus(2).plus(2))]==[tid()]                                    % [/m/inst/block?args=[/m/code]]",
+            "[plus(2)]==[tid()]                                               % [/m/inst/plus?args=[/m/int]]",
+            "[plus(2).plus(2)]==[as(lst::T)]                                  % [[plus(2),plus(2)]]",
+            "[plus(2).plus(2)]==[as(lst::T)]==[as(code::T)]                   % [plus(2).plus(2)]",
+            "[plus(2).plus(2)]==[as(inst::T)]                                 % [/m/inst?rng=#&dom=#(){/m/inst/plus(2)./m/inst/plus(2)}]",
+            "[plus(2).plus(2)]==[as(inst::T)]==[swap(4)]                      % [8]",
+            "[*</usr/data/${*workload/xyz}/+>.count()]==[as(lst::T)]          % [[*</usr/data/${*workload/xyz}/+>,count()]]",
+            "[db=>4,code=>|(*workload/db.plus(2))](workload=>_){ !*workload/code.apply() }         % 6",
+    }, delimiter = '%')
+    public void testCodeAsData(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            ">|[1,+2,+3]                                  % 6",
+            "[1,+2,+3].>|                                 % 6",
+            "1.>|[+2,+3]                                  % 6",
+            "10.>|[+3,+2,+3]                              % 18",
+            "1.>|[+2,10,+3]                               % 13",
+            "1.>|[plus(2).plus(2)]                        % 5",
+            "1>-[+2,+3]                                   % [1,plus(2),plus(3)]",
+            "1>-[+2,+3]>|                                 % 6",
+            "1>-[plus(2),plus(2)]>|                       % 5",
+    }, delimiter = '%')
+    public void testCascade(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.and(gt(2),lt(5))                           % false",
+            //"1.gt(2) & lt(5)                            % false",
+            "1.gt(2) | lt(5)                              % true",
+            "{1,2,3,4,5}.and(gt(2))                       % {false,true,true,true,false}",
+            "{1,2,3,4,5}.and(gt(2),lt(5))                 % {false,false,true,true,false}",
+            "{1,2,3,4,5}.and(gt(2),eq(3),lt(5))           % {false,false,true,false,false}",
+            "1.is(and(gt(2),lt(5)))                       % noobj",
+            "3.is(true)                                   % 3",
+            "3.is(gt(2))                                  % 3",
+            "{1,2,3,4,5,5}.is(gt(2))                      % {3,4,5,5}",
+            "3.is(and(gt(2),lt(5)))                       % 3",
+            "{1,2,3,4,5}.is(and(gt(2),lt(5)))             % {3,4}",
+            "{1,2,3,4,5}.is(and(gt(2),eq(3),lt(5)))       % 3",
+    }, delimiter = '%')
+    public void testAndOr(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
+    @Training(
+            instruction = "what does the expression {{{code}}} rewrite to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
+    @Training(
+            instruction = "what does the expression {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expectedResult}}}")
+    @Training(
+            instruction = "what does the rewritten expression {{{expected}}} evaluate to?",
+            input = "{{{expected}}}",
+            output = "{{{expectedResult}}}")
+    @ParameterizedTest
+    @Disabled("temporary as rewrite rules are being rewritten.")
+    @CsvSource(value = {
+            // map_nest_rewrite tests
+            "1.map(+2)                              % 1+2   % 3",
+            "1.map(map(map(+2)))                    % 1+2   % 3",
+            "1.map(map(map(map(+2))))               % 1+2   % 3",
+            "1.map(map(map(map(map(+2)))))          % 1+2   % 3",
+            "1.map(map(map(map(map(map(+2))))))     % 1+2   % 3",
+            "1.map(map(+2))._                       % 1+2   % 3",
+            "1._.map(map(+2))._                     % 1+2   % 3",
+            "1.+2.map(map(_))._                    % 1.plus(2)   % 3",
+
+            // id_removal_rewrite tests
+            "1._._._                    % start(1)            % 1",
+            "1._._._._                  % start(1)            % 1",
+            "1._._._._._                % start(1)            % 1",
+            "1._._._._._._              % start(1)            % 1",
+            "1._._._._._._._            % start(1)            % 1",
+            "1._._._._._._._._          % start(1)            % 1",
+            "1._._._._._._._.+2         % start(1).plus(2)    % 3",
+            "1._._._._._._._.+2._       % start(1).plus(2)    % 3",
+            "1._._._._._._._.+(_)._     % start(1).plus(_)    % 2",
+
+            // else_after_count_rewrite tests
+            "{1,2,3}.count().else(0)                % {1,2,3}.count()              % 3",
+            "{1,2,3}.count().else(999)              % {1,2,3}.count()              % 3",
+
+            // plus_zero_rewrite tests - Int
+            "5.plus(0)                              % start(5)                     % 5",
+            "10.plus(0)                             % start(10)                    % 10",
+            "0.plus(0)                              % start(0)                     % 0",
+            "-5.plus(0)                             % start(-5)                    % -5",
+            "5.plus(0).plus(3)                      % start(5).plus(3)             % 8",
+
+            // plus_zero_rewrite tests - Real
+            "5.0.plus(0.0)                          % start(5.0)                   % 5.0",
+            "10.5.plus(0.0)                         % start(10.5)                  % 10.5",
+            "0.0.plus(0.0)                          % start(0.0)                   % 0.0",
+            "-5.5.plus(0.0)                         % start(-5.5)                  % -5.5",
+            "5.0.plus(0.0).plus(3.0)                % start(5.0).plus(3.0)         % 8.0",
+
+            // plus_zero_rewrite tests - Str (string concatenation with empty string)
+            "\"hello\".plus(\"\")                   % start(\"hello\")             % \"hello\"",
+            "\"ab\".plus(\"\")                      % start(\"ab\")                % \"ab\"",
+            "\"\".plus(\"\")                        % start(\"\")                  % \"\"",
+            "\"test\".plus(\"\").plus(\"123\")      % start(\"test\").plus(\"123\") % \"test123\"",
+
+            // plus_zero_rewrite tests - Lst (list concatenation with empty list)
+            "[1,2,3].plus([,])                      % start([1,2,3])               % [1,2,3]",
+            "[a,b].plus([,])                        % start([a,b])                 % [a,b]",
+            "[,].plus([,])                          % start([,])                   % [,]",
+            "[1,2].plus([,]).plus([3,4])            % start([1,2]).plus([3,4])     % [1,2,3,4]",
+
+            // plus_zero_rewrite tests - Rec (record merging with empty record)
+            "[a=>1,b=>2].plus([=>])                 % start([a=>1,b=>2])           % [a=>1,b=>2]",
+            "[x=>y].plus([=>])                      % start([x=>y])                % [x=>y]",
+            "[=>].plus([=>])                        % start([=>])                  % [=>]",
+            "[a=>1].plus([=>]).plus([b=>2])         % start([a=>1]).plus([b=>2])   % [a=>1,b=>2]",
+
+            // plus_zero_rewrite tests - Bytes (byte concatenation with empty bytes)
+            // Note: Bytes zero is represented as bytes(ByteBuffer.wrap(new byte[0]))
+            // Skipping bytes tests as empty bytes literal syntax needs investigation
+
+            // mult_one_rewrite tests - Int
+            "5.mult(1)                              % start(5)                     % 5",
+            "10.mult(1)                             % start(10)                    % 10",
+            "0.mult(1)                              % start(0)                     % 0",
+            "-5.mult(1)                             % start(-5)                    % -5",
+            "5.mult(1).mult(3)                      % start(5).mult(3)             % 15",
+
+            // mult_one_rewrite tests - Real
+            "5.0.mult(1.0)                          % start(5.0)                   % 5.0",
+            "10.5.mult(1.0)                         % start(10.5)                  % 10.5",
+            "0.0.mult(1.0)                          % start(0.0)                   % 0.0",
+            "-5.5.mult(1.0)                         % start(-5.5)                  % -5.5",
+            "5.0.mult(1.0).mult(3.0)                % start(5.0).mult(3.0)         % 15.0",
+
+            // mult_one_rewrite tests - Lst (Cartesian product with smart identity)
+            // Lst.mult() performs Cartesian product: [a,b] × [c,d] = [[a,c], [a,d], [b,c], [b,d]]
+            // The identity is [id()] - a list containing the id() instruction
+            // Note: The mult_one_rewrite doesn't currently work for Lst because the matcher
+            // checks equality at match-time, and [id(noobj)] != [id()] due to domain differences
+            // The mult() method itself handles the identity case correctly at runtime
+            // Skipping these tests for now - they would require enhancing the rewrite matcher
+
+            // Combined rewrites (plus_zero + mult_one)
+            "5.plus(0).mult(1)                      % start(5)                     % 5",
+            "{1,2,3}.count().plus(0)                % {1,2,3}.count()              % 3",
+            "{1,2,3}.count().else(0).plus(0)        % {1,2,3}.count()              % 3",
+            "5.0.plus(0.0).mult(1.0)                % start(5.0)                   % 5.0",
+            "\"hello\".plus(\"\").plus(\"world\")   % start(\"hello\").plus(\"world\") % \"helloworld\"",
+            "[1,2].plus([,]).plus([3])              % start([1,2]).plus([3])       % [1,2,3]",
+            "[a=>1].plus([=>]).plus([b=>2])         % start([a=>1]).plus([b=>2])   % [a=>1,b=>2]",
+
+            // split_collapse_rewrite tests (ring-theoretic branch collapsing)
+            "{1}-<[plus(3),plus(3)]>-               % {1}.plus{2}(3)                % int{2}::4",
+            "{1}-<[plus(2),plus(2),plus(2)]>-       % {1}.plus{3}(2)                % int{3}::3",
+            "{5}-<[mult(2),mult(2)]>-               % {5}.mult{2}(2)                % int{2}::10",
+
+            // split_merge_left_factor_rewrite tests (distributive property - left factoring)
+            // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
+            "1-<[plus(2).mult(3), plus(2).mult(4)]>-                    % 1.plus(2).-<[mult(3),mult(4)]>-              % {9,12}",
+            "5-<[plus(1).plus(1), plus(1).plus(2)]>-                    % 5.plus(1)-<[plus(1),plus(2)]>-               % {7,8}",
+            "10-<[mult(2).plus(5), mult(2).plus(10)]>-                  % 10.mult(2).-<[plus(5),plus(10)]>-            % {25,30}",
+            "{1,2}-<[plus(10).mult(2), plus(10).mult(3)]>-              % {1,2}.plus(10)-<[mult(2),mult(3)]>-          % {22,33,24,36}",
+            "3-<[plus(1).plus(1).mult(2), plus(1).plus(1).mult(3)]>-    % 3.plus(1).plus(1)-<[mult(2),mult(3)]>-       % {10,15}",
+
+            // split_merge_right_factor_rewrite tests (distributive property - right factoring)
+            // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
+            // Note: The following test expects split_merge_collapse to work, which is currently not applying
+            //"1-<[_.plus(2),plus(2)._,_.plus(2)._]>-._.sum()                       % 1.plus{3}(2).sum()                 % 9",
+            "1-<[plus(2).mult(5), plus(3).mult(5)]>-                    % 1.-<[plus(2),plus(3)]>-.mult(5)              % {15,20}",
+            "10-<[mult(2).plus(100), mult(3).plus(100)]>-               % 10.-<[mult(2),mult(3)]>-.plus(100)           % {120,130}",
+            "5-<[plus(1).mult(2), plus(2).mult(2)]>-                    % 5.-<[plus(1),plus(2)]>-.mult(2)              % {12,14}",
+            "{1,2}-<[plus(5).mult(10), plus(6).mult(10)]>-              % {1,2}-<[plus(5),plus(6)]>-.mult(10)          % {60,{2}70,80}",
+            "2-<[mult(3).mult(2).plus(1), mult(4).mult(2).plus(1)]>-    % 2.-<[mult(3),mult(4)]>-.mult(2).plus(1)      % {13,17}",
+
+            // Combined left and right factoring (both common prefix and suffix)
+            // Note: With .repeat(), both rewrites apply iteratively - left factor extracts plus(1), then right factor extracts plus(10)
+            "1-<[plus(1).mult(2).plus(10), plus(1).mult(3).plus(10)]>-  % start(1).plus(1).-<[mult(2),mult(3)]>-.plus(10)    % {14,16}",
+    }, delimiter = '%')
+    public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
+        AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
+    }
+
+    @Training(
+            instruction = "what does the mtron expression {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
+    @ParameterizedTest
+    @CsvSource(value = {
+            "map(1.plus(2).explain()).type().tid()               % /m/rec       % explanation is a rec (refinement rides the value: @explanation)",
+            "map(1.plus(2).explain()).type().vid()               % /m/inst/explain/explanation % the refinement is the explanation vid",
+            "1.plus(2).explain()>>desc>>rng                      % int          % expression-level head (whole rng)",
+            "1.plus(2).explain()>>desc>>dom                      % noobj{0}     % expression-level start (whole dom)",
+            "1.plus(2).explain()>>desc>>insts                    % 2            % inst count in desc metadata",
+            "1.plus(2).explain()>>per_inst>>1>>op                % plus         % per-inst stage recs",
+            "1.plus(2).explain()>>per_inst>>1>>form              % mapper       % per-inst form classification",
+            "1.plus(2).explain()>>per_inst>>1>>args              % [2]          % the arg as its own obj, not a string",
+            "1.plus(2).explain()>>per_inst>>0>>args              % [1]          % start's literal, its own obj",
+            "1.plus(2).explain()>>per_inst>>1>>c_rng             % 1            % per-inst range coefficient",
+            "1.plus(2).explain()>>format.count()                 % 1            % one report table (a bulk analysis dom applied it twice)",
+            "1.plus(2).explain()>>format.type()                  % str::T       % the table is a plain str, not a str{2} multiplicity",
+            // THE REWRITE CHAIN IS WIRED — desc.rewrite used to be hardcoded noobj, so there was no way to reach the
+            // pre-analysis stage at all. Each row here fails on that older code. The COMPILED-vs-SUBMITTED staging
+            // itself cannot be exhibited in this suite: the only rules mounted here are /m's, and explain_analysis is
+            // registered AFTER them (id_removal runs first, so the snapshot it takes has already lost id()) — the
+            // chain only survives a stage boundary when a LATER-mounted ISA's rule does the collapsing, which is
+            // catInstSetTest.testExplainReportsTheCompiledChain's job.
+            "6.id().explain()>>desc>>rewrite>>desc>>insts        % 1            % desc.rewrite leads to the pre-analysis stage's explanation rec",
+            "6.id().explain()>>desc>>rewrite>>desc>>rewrite      % noobj        % ... and that rec terminates the chain",
+    }, delimiter = '%')
+    public void testExplain(final String code, final String expected, final String desc) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainRecStructure() {
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        assertTrue(r.toString().contains("desc"), "explain rec should carry desc metadata: " + r);
+        assertTrue(r.toString().contains("per_inst"), "explain rec should carry per-inst stages: " + r);
+        assertTrue(r.toString().contains("plus"), "per-inst stages should list plus: " + r);
+        assertTrue(r.toString().contains("mapper"), "per-inst stages should carry the form classification: " + r);
+        assertTrue(r.toString().contains("format"), "explain rec should carry the lazy format: " + r);
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainIsOneReport() {
+        // explain_analysis' dom is maybe (not maybeSome): a bulk/gather dom made the monad loop
+        // apply the report closure a second time on the barrier flush, so explain() came back as
+        // two identical recs and >>format as a {2} str (the table rendered twice)
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        assertTrue(r.tid().c().isOne(), "explain() should be one report rec, not a multiplicity: " + r.tid());
+        final Obj fmt = ObjmtronSerializer.eval("1.plus(2).explain()>>format");
+        assertTrue(fmt.tid().c().isOne(), ">>format should be one text table, not a multiplicity: " + fmt.tid());
+    }
+
+    @Training.SkipTraining(reason = "multi-line structural assertion")
+    @Test
+    public void testExplainFormatRendersTextTable() {
+        // the lazy `>>format` is materialized with a NOOBJ lhs in the interactive console; the
+        // harness chain applies it with the rec as lhs, which the noobj dom rejects — so pull
+        // the lazy inst out of the rec and apply it the console way
+        final Obj r = ObjmtronSerializer.eval("1.plus(2).explain()");
+        assertFalse(r.isFail(), "explain() should not fail: " + r);
+        final Obj fmt = r.asRec().atDirect("format");
+        final Obj t = fmt.isCall() ? fmt.asCall().apply(NoObj.noobj()) : fmt;
+        assertTrue(t.toString().contains("plus"), "the format should render the insts of the text table: " + t);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.plus(2).explain()       % /m/inst/explain/explanation",
+            "1.plus(2).explain()>>format % /m/str",
+            "1.plus(2).profile()       % /m/inst/profile/profiling",
+            "map(1.plus(2).explain())  % /m/inst/explain/explanation",
+    }, delimiter = '%')
+    public void testAnalysisSurvivesTheProcessorWalk(final String code, final String expectedVID) {
+        // the console's path: resolve, compile, then run the compiled chain on the processor
+        final Obj resolved = Call.Helper.resolveInspection(noobj(), ObjmtronSerializer.parse(code), ignored -> {
+        });
+        final Code compiled = Machine.current().compiler().apply(resolved).asCode();
+        // the processor walks a chain by position vid, so an un-numbered inst is a walk it cannot make
+        for (final Inst inst : compiled.insts())
+            assertNotNull(inst.vid(), "a compiled inst must carry its position vid: " + inst.tid() + " in " + code);
+        final Obj result = Machine.current().processor().code(compiled).apply(noobj());
+        assertFalse(result.isFail(), code + " must not fail: " + result);
+        assertEquals(expectedVID, result.type().vid().toString(), code + " => " + result);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "parse(application/json::'{\"a\":12}')          % [a=>12]",
+            "application/json::'{\"b\":[1,2,3]}'.parse(_)   % [b=>[1,2,3]]",
+            "application/mtron::'[c=>[4,5]]'.parse(_)       % [c=>[4,5]]",
+            "text/plain::'[d=>1]'.parse(_)                  % \"[d=>1]\"",
+    }, delimiter = '%')
+    public void testParse(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+}
+    

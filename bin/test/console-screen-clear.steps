@@ -1,0 +1,34 @@
+# Console clear test — {XX} (what :clear emits) clears the console's rows, not just the
+# terminal's: after it, nothing brings the cleared text back.
+#
+#   bin/metatron-console --steps bin/test/console-screen-clear.steps
+#
+# The bug this covers: the clear went to the terminal only, so the console's own buffer still
+# held every row — and the next frame, or a widget dragged over those rows, painted them
+# straight back.  The check is a widget moved after the clear: if the rows were really
+# dropped, no "keep-NN" row can appear again.
+
+WAIT_CONSOLE
+
+MARK fill
+SEND print("keep-00\nkeep-01\nkeep-02\nkeep-03\nkeep-04\nkeep-05\nkeep-06\nkeep-07\nkeep-08\nkeep-09\nkeep-10\nkeep-11\nkeep-12\nkeep-13\nkeep-14\nkeep-15\nkeep-16\nkeep-17\nkeep-18\nkeep-19\nkeep-20\nkeep-21\nkeep-22\nkeep-23\nkeep-24\nkeep-25\nkeep-26\nkeep-27\nkeep-28\nkeep-29\nkeep-30\nkeep-31\nkeep-32\nkeep-33\nkeep-34\nkeep-35\nkeep-36\nkeep-37\nkeep-38\nkeep-39\nkeep-40\nkeep-41\nkeep-42\nkeep-43\nkeep-44")
+SLEEP 2
+WAIT_SINCE fill keep-44 10
+
+MARK clear
+SEND :clear
+SLEEP 2
+
+# a widget over the (now empty) screen, moved around: nothing may repaint the cleared rows
+MARK widget
+SEND accordion_widget::[title=>'cover',body=>"w1\nw2\nw3\nw4",style=>[anchor=>top_left,width=>30,height=>6,top=>0,left=>0]]@/usr/screen/clear.display()
+SLEEP 3
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 1
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<32\x3b1\x3b20M\x1b[<0\x3b1\x3b20m"
+SLEEP 1
+RAW b"\x1b[<0\x3b1\x3b20M\x1b[<32\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 3
+SILENT clear keep-44 5
+SILENT clear keep-30 5
+SILENT clear keep-00 5

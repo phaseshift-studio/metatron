@@ -1,0 +1,68 @@
+# Console drag test — moving an anchored widget by its chevron, and reshaping it by the
+# corner marker.
+#
+#   bin/metatron-console --from classes --steps bin/test/console-drag.steps
+#
+# The chevron is painted in the widget's own top-left cell, so the cell you take hold
+# of IS the widget's origin: the widget lands where the pointer does, and the style's
+# top/left are measured from the anchor.  A widget floated TOP_LEFT with no offsets
+# sits at terminal (2,1), so a drag to (5,9) must write top=>3, left=>8 — and a second
+# drag to (7,12) must write top=>5, left=>11 (measured from the anchor again, not
+# accumulated on the pointer).
+#
+# The assertions read the widget back out of the store rather than looking at the
+# screen: persisting the position through the .display() re-hydration is the whole
+# point of the feature, and rendered text cannot say where a box sits.  ";" separates
+# steps, so the mouse bytes spell it \x3b.  SGR mouse: press = \x1b[<0;C;RM, motion
+# with the button held = \x1b[<32;C;RM, release = \x1b[<0;C;Rm (1-based, as sent).
+
+WAIT_CONSOLE
+
+# --- float it: TOP_LEFT with no offsets = terminal (2,1) ---
+MARK float
+SEND accordion_widget::[title=>'board',body=>'drag me by the chevron',style=>[anchor=>top_left,width=>30,top=>0,left=>0]]@/usr/drag/board.display()
+SLEEP 3
+
+# --- click to focus (the chevron marks the focused widget), then grab and drag ---
+MARK grab
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<0\x3b1\x3b2m"
+SLEEP 1
+RAW b"\x1b[<0\x3b1\x3b2M\x1b[<32\x3b9\x3b5M\x1b[<0\x3b9\x3b5m"
+SLEEP 2
+MARK parked
+SEND */usr/drag/board/style
+WAIT top=>3 10
+WAIT left=>8 10
+
+# --- drag it again from its new corner ---
+MARK grab2
+RAW b"\x1b[<0\x3b9\x3b5M\x1b[<32\x3b12\x3b7M\x1b[<0\x3b12\x3b7m"
+SLEEP 2
+MARK parked2
+SEND */usr/drag/board/style
+WAIT top=>5 10
+WAIT left=>11 10
+SILENT parked2 unwritable 3
+
+# --- reshape it from the bottom-right corner marker ---
+#
+# A second widget, floated 30 wide with a 4-row cap.  Its body lines are exactly 26
+# characters, the width a 30-column accordion draws text in (2 of border, 2 of padding),
+# and there are more of them than the cap — so the drawn box is exactly 30x4 at (2,1)
+# and its bottom-right corner is terminal (5,30).  A drag from there to (7,33) is
+# +3 columns and +2 rows: width 30 -> 33, height 4 -> 6.
+MARK float2
+SEND accordion_widget::[title=>'panel',body=>"corner-resize-handle-00001\ncorner-resize-handle-00002\ncorner-resize-handle-00003\ncorner-resize-handle-00004\ncorner-resize-handle-00005\ncorner-resize-handle-00006",style=>[anchor=>top_left,width=>30,height=>4,top=>0,left=>0]]@/usr/drag/panel.display()
+SLEEP 3
+
+# --- focus it (the handles are the focused widget's), then grab the corner and drag ---
+MARK focus2
+RAW b"\x1b[<0\x3b3\x3b3M\x1b[<0\x3b3\x3b3m"
+SLEEP 1
+MARK reshape
+RAW b"\x1b[<0\x3b30\x3b5M\x1b[<32\x3b33\x3b7M\x1b[<0\x3b33\x3b7m"
+SLEEP 2
+MARK reshaped
+SEND */usr/drag/panel/style
+WAIT width=>33 10
+WAIT height=>6 10

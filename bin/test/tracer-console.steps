@@ -1,0 +1,17 @@
+# confirm tracer state first, then the three scenarios from the report
+WAIT_CONSOLE
+NOTE probe: */sys/tracer
+MARK t0
+SEND */sys/tracer
+WAIT "mtron_stack" 25
+SLEEP 1
+NOTE scenario 1: 3.as(lst::T)
+MARK s1
+SEND 3.as(lst::T)
+WAIT "inst apply failure" 25
+SLEEP 1
+NOTE scenario 2: 1+ab
+MARK s2
+SEND 1+ab
+WAIT "unable to convert" 25
+SLEEP 1

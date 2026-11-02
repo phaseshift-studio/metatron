@@ -1,0 +1,2063 @@
+:root {
+    --maincolor: #000000;
+    --primarycolor: #970207; /* unified accent red */
+    --secondarycolor: #191C24;
+    --tertiarycolor: #6565f3;
+    --sidebarbackground: #191C24;
+    --linkcolor: #58a6ff; /* hyperlink blue */
+    --linkcoloralternate: #2652e5;
+    --white: #e8e8e8; /* body text (off-white) */
+    --primary: #970207; /* accent red (interactive / hover / brand) */
+    --secondary: #191C24;
+    --light: #6C7293;
+    --dark: #000000;
+    /*------------------------*/
+    --mblue: #4669dd;
+    --mmagenta: #9f4040; /*#825181;*/
+    --mred: #7a2518;
+    --mgreen: #457b02;
+    --mdarkgray: #494554;
+    --mlightgray: #797585;
+    --myellow: #edbf73;
+    --maqua: #0082ae;
+    --mbrown: #ffffff80;
+    --mheading: #f5f5f5; /* headings */
+}
+
+.stemblock,
+mjx-container {
+    color: #cdcdcd;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--mred);
+    font-family: 'Oswald', 'IBM Plex Sans', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* unify bootstrap's flattened bright red into the signature crimson */
+.text-primary {
+    color: #970207 !important;
+}
+
+/* bare links: cool blue for clear affordance against the red theme */
+a {
+    color: var(--linkcolor);
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2.0rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.35rem;
+}
+
+h2[id], h3[id], h4[id], h5[id], h6[id] {
+    scroll-margin-top: 65px;
+}
+
+.float-left-code {
+    float: left;
+    background-color: transparent;
+}
+
+.float-right-code {
+    float: right;
+    background-color: transparent;
+}
+
+.center-code {
+    justify-self: center;
+    background-color: transparent;
+}
+
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.bg-warning {
+    background-color: #b98b00 !important
+}
+
+.btn:disabled {
+    border-color: var(--bs-gray-dark);
+    color: var(--bs-gray);
+}
+
+.pill-label {
+    font-size: 0.72rem;
+    vertical-align: middle;
+    padding: 0.2em 0.5em;
+}
+
+.mini-label {
+    color: #6C7293 !important;
+}
+
+.micro-label {
+    color: #6C7293 !important;
+    font-size: 0.85rem;
+}
+
+main {
+    max-width: 1600px;
+}
+
+table .paragraph {
+    margin-left: 0.5rem;
+}
+
+.colist table {
+    margin-left: 0.5rem;
+}
+
+table .ulist {
+    line-height: 0.9rem;
+}
+
+.card {
+    padding: 0.5rem;
+    margin: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--secondarycolor);
+    background-clip: border-box;
+    border: 2px solid;
+    border-color: var(--mred);
+    border-radius: 2px;
+}
+
+.service-item,
+.flip-box-back {
+    border: 1px solid rgba(122, 37, 24, 0.35);
+    transition: border-color 0.3s ease;
+}
+
+.service-item:hover,
+.flip-box-back:hover {
+    border-color: rgba(151, 2, 7, 0.5);
+}
+
+.card-tight {
+    padding: 0;
+    margin: 0.25rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--secondarycolor);
+    background-clip: border-box;
+    border: 2px solid;
+    border-color: var(--primary);
+    border-radius: 1px;
+}
+
+.terminal-box {
+    border: 1px solid #444;
+    background-color: #000;
+    color: #0F0;
+    font-family: 'Courier New', monospace;
+    padding: 1px;
+    margin: 1px 0;
+    border-radius: 4px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-box code {
+    font-size: 12px;
+    /*white-space: pre;*/
+}
+
+
+.icon-color {
+    /* #EB1616 */
+    filter: invert(17%) sepia(67%) saturate(5238%) hue-rotate(356deg) brightness(97%) contrast(91%);
+}
+
+.logo-text {
+    opacity: 0.45;
+    -webkit-text-stroke: 0.5px gray;
+}
+
+.logo-text a {
+    text-decoration: none;
+}
+
+.logo-text a:hover {
+    color: var(--primary);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nav-brand a,
+.nav-brand a:hover {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.nav-brand img {
+    height: 24px;
+    width: 24px;
+}
+
+.navbar-nav .nav-link {
+    font-size: 0.85rem;
+}
+
+.footer .small {
+    font-size: 0.95rem;
+}
+
+.page-header {
+    font-size: 1.35rem;
+}
+
+table {
+    vertical-align: middle;
+    caption-side: top;
+    padding: 0 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.table {
+    vertical-align: middle;
+    caption-side: top;
+    padding: 0 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.table-borderless {
+    block-size: 0 !important;
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 2%;
+}
+
+.glow-text {
+    opacity: 0.45;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
+    margin-bottom: 0 !important;
+    padding-bottom: 0.5rem !important;
+}
+
+/* unified red-leather glow bridging title through grid */
+.container-fluid.wow.fadeIn {
+    background: radial-gradient(ellipse at 50% 38%, transparent 23%, rgba(160, 60, 30, 0.038) 43%, rgba(180, 75, 45, 0.075) 63%, transparent 88%);
+}
+
+/* bridge the title glow and parchment */
+.glow-text + hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(180, 75, 45, 0.10) 20%, rgba(180, 75, 45, 0.10) 80%, transparent);
+    margin: 0 0 3rem 0;
+}
+
+.title {
+    color: var(--mheading);
+}
+
+.tutorial-grid .btn {
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 0, 0, 0.4);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.tutorial-grid .btn:hover {
+    color: #000 !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(200, 0, 0, 0.6);
+}
+
+.tutorial-grid .btn[aria-expanded="true"] {
+    color: #000 !important;
+}
+
+#custom-docs-button {
+    color: #6C7293;
+}
+
+/* Bootstrap 5 only ships row-cols-1..6; extend to 8 */
+.row-cols-8 > .col {
+    flex: 0 0 auto;
+    width: 12.5%;
+}
+
+/*** ROTATING FEATURE BOXES ***/
+.flip-box {
+    background-color: transparent;
+    perspective: 1000px; /* Remove this if you don't want the 3D effect */
+    height: 250px;
+}
+
+/* This container is needed to position the front and back side */
+.flip-box-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+
+/* Do an horizontal flip when you move the mouse over the flip box container */
+.flip-box:hover .flip-box-inner {
+    transform: rotateY(180deg);
+}
+
+/* Position the front and back side */
+.flip-box-front, .flip-box-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+}
+
+/* Style the front side */
+.flip-box-front {
+    font-size: 1.1rem;
+    line-height: 1.45;
+}
+
+.flip-box-front h3 {
+    margin-bottom: 0.75rem !important;
+}
+
+/* Style the back side */
+.flip-box-back {
+    transform: rotateY(180deg);
+}
+
+#mtron_feature .flip-box-front img {
+    width: 54px;
+    height: 54px;
+    margin-left: -8px;
+}
+
+#ring_feature .flip-box-front img {
+    width: 40px;
+    height: 40px;
+}
+
+#ring_feature .flip-box-back img {
+    margin-top: -30px;
+    margin-left: -10px;
+    transform: scale(1.5);
+}
+
+#console_feature .flip-box-back img {
+    margin-top: -20px;
+    margin-left: -10px;
+    transform: scale(1.75);
+}
+
+#oltp_feature .flip-box-back img {
+    transform: scale(1.25);
+    margin-top: -20px;
+    margin-left: -30px;
+}
+
+#olrp_feature .flip-box-back img {
+    transform: scale(1.15);
+    margin-top: -20px;
+    margin-left: -15px;
+}
+
+#iot_feature .flip-box-back img {
+    transform: scale(1.50);
+    margin-top: -20px;
+    margin-left: -15px;
+}
+
+#mtron_feature .flip-box-back img,
+#uri_feature .flip-box-back img {
+    transform: scale(2);
+    margin-top: -20px;
+    margin-left: -10px;
+}
+
+#llm_feature .flip-box-back img {
+    transform: scale(1.6);
+    margin-top: -20px;
+    margin-left: -15px;
+}
+
+#web_feature .flip-box-back img {
+    transform: scale(1.85);
+    margin-top: -10px;
+    margin-left: -20px;
+}
+
+#instset_feature .flip-box-back img {
+    transform: scale(1.55);
+    margin-top: -10px;
+    margin-left: -20px;
+}
+
+.zoomable {
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+}
+
+.zoomable.zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(2.6);
+    z-index: 10000;
+    max-width: 90vw;
+    max-height: 90vh;
+    cursor: zoom-out;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    background-color: var(--maincolor);
+}
+
+code.hljs {
+    font-size: 1.0rem;
+    line-height: 1.3rem;
+    display: inline;
+    /*width: 90%;*/
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+.code {
+    font-family: 'Courier', Courier, monospace;
+    font-size: 1.5rem;
+}
+
+code {
+    color: var(--mblue);
+}
+
+em {
+    color: inherit;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/*** Spinner ***/
+
+#spinner {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1.0s ease-out, visibility 0s linear .5s;
+    z-index: 99999;
+}
+
+#spinner.show {
+    transition: opacity 1.0s ease-out, visibility 0s linear 0s;
+    visibility: visible;
+    opacity: 1;
+}
+
+/*** Image Growth Effect ***/
+
+.overlap-layers {
+    position: relative;
+    display: inline-block; /* Make the width of box same as image */
+}
+
+.overlap-layers .top-layer {
+    position: absolute;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    top: -3%; /* Adjust this value to move the positioned div up and down */
+    text-align: center;
+    width: 100%; /* Set the width of the positioned div */
+}
+
+.c0 {
+    opacity: 1;
+    transition: opacity 4s;
+}
+
+.c0:hover {
+    opacity: 0;
+}
+
+
+.grow {
+    transition: all 4s ease-in-out;
+    z-index: 999;
+}
+
+.grow:hover {
+    z-index: 999;
+    transform: scale(2.0);
+}
+
+
+/*** Button ***/
+
+.btn {
+    font-weight: 500;
+    transition: .5s;
+}
+
+.btn-square {
+    padding: 5px;
+    width: 38px;
+    height: 38px;
+}
+
+.btn-sm-square {
+    padding: 5px;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-lg-square {
+    padding-top: 10px;
+    width: 48px;
+    height: 48px;
+}
+
+.btn-square,
+.btn-sm-square,
+.btn-lg-square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+}
+
+.neon-text {
+    color: #fff !important;
+    text-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
+    /* #0fa neat green color */
+}
+
+.neon-box {
+    box-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
+    /* #0fa neat green color */
+}
+
+.btn-dark:has(.bi-terminal) {
+    opacity: 0.45;
+    font-size: 1.75rem;
+    background-color: transparent;
+    border: none;
+    position: relative;
+    top: -3px;
+}
+
+
+/*** Navbar ***/
+
+.navbar {
+    min-height: 50px;
+    max-height: 50px;
+    padding: 2rem 2rem;
+    padding-bottom: 1rem;
+    background: linear-gradient(to bottom, #040404, #000000 85%);
+    border-bottom: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 1px 18px rgba(151, 2, 7, 0.06);
+}
+
+.dropdown {
+    position: unset;
+}
+
+.navbar .dropdown-toggle::after {
+    border: none;
+    content: "\f107";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+.navbar .navbar-nav .nav-link {
+    margin-right: 30px;
+    padding: 40px 0;
+    color: var(--light);
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    text-transform: uppercase;
+    outline: none;
+}
+
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link.active {
+    color: var(--primary);
+}
+
+.navbar .navbar-nav .quickstart-link {
+    color: var(--mheading);
+}
+
+.navbar .navbar-nav .quickstart-link:hover {
+    color: var(--primary);
+}
+
+.metatron-name {
+    color: var(--primary);
+    font-weight: bolder;
+}
+
+.navbar.sticky-top {
+    top: -100px;
+    transition: .5s;
+}
+
+@media (max-width: 991.98px) {
+    .navbar .navbar-nav .nav-link,
+    .navbar.shadow-sm .navbar-nav .nav-link {
+        margin-right: 0;
+    }
+
+    .navbar .navbar-nav {
+        margin-top: 8px;
+        border-top: 1px solid var(--light);
+    }
+}
+
+@media (min-width: 992px) {
+    .navbar.shadow-sm .navbar-nav .nav-link {
+    }
+
+    .navbar .nav-item .dropdown-menu {
+        display: block;
+        border: 1px solid rgba(122, 37, 24, 0.3);
+        margin-top: 0;
+        top: 150%;
+        opacity: 0;
+        visibility: hidden;
+        transition: .5s;
+        background: linear-gradient(180deg, rgba(15, 12, 12, 0.98), rgba(0, 0, 0, 0.98));
+        box-shadow: 0 4px 24px rgba(151, 2, 7, 0.12), 0 0 8px rgba(180, 75, 45, 0.08);
+    }
+
+    .navbar .nav-item:hover .dropdown-menu {
+        top: 100%;
+        visibility: visible;
+        transition: .5s;
+        opacity: 1;
+    }
+}
+
+/* A dropdown taller than the viewport scrolls inside the panel instead of clipping
+   past the bottom edge (the instruction-sets tree and agent-skills accordion are the
+   tall ones).  120px leaves the fixed navbar and a breathing margin above. */
+.navbar .dropdown-menu {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: thin;               /* Firefox */
+    scrollbar-color: var(--primary) transparent;  /* Firefox: thumb track */
+}
+
+/* A slim, dark scrollbar for the dropdown — a dark-red thumb on a near-invisible
+   track, so it reads as part of the dark menu rather than a chrome gutter. */
+.navbar .dropdown-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.navbar .dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--mred);
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: var(--white);
+    font-size: 1rem;
+    padding: 0.5rem 1.4rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+    background: rgba(122, 37, 24, 0.2);
+    color: var(--primary);
+}
+
+/* Instruction-set tree: each level indents one step under its parent. The depth
+   classes are emitted by HeaderGenerator (depth 0 = /m, depth 1 = its children,
+   depth 2 = grandchildren, …). */
+.dropdown-menu-dark .dropdown-item.isa-depth-1 {
+    padding-left: 2.8rem;
+}
+
+.dropdown-menu-dark .dropdown-item.isa-depth-2 {
+    padding-left: 4.2rem;
+}
+
+.dropdown-menu-dark .dropdown-item.isa-depth-3 {
+    padding-left: 5.6rem;
+}
+
+/* A folder is an intermediate namespace (/m/db, /m/dev, …) that names no instruction
+   set of its own: a muted, non-linking header, indented like its children would be. */
+.dropdown-menu-dark .isa-folder {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.4rem 0.15rem;
+    cursor: default;
+    user-select: none;
+}
+
+.dropdown-menu-dark .isa-folder.isa-depth-1 {
+    padding-left: 2.8rem;
+}
+
+.dropdown-menu-dark .isa-folder.isa-depth-2 {
+    padding-left: 4.2rem;
+}
+
+.dropdown-menu-dark .isa-folder .bi {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* Right-align a dropdown before Bootstrap positions it. These menus open on :hover
+   (see the media query above), which happens before Bootstrap's Popper runs and
+   stamps [data-bs-popper] — the attribute that carries `.dropdown-menu-end`'s
+   right:0/left:auto. Until then the menu keeps its default left offset, so the
+   right-most nav item (articles, whose rows are a title plus format pills) hung off
+   the right edge of the viewport until a click let Popper pull it back. Same
+   declarations Popper uses, so hover and click land in the same place. */
+.navbar .dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
+
+/* Articles dropdown: one row per article — the title links to the readable
+   edition (html, else pdf) and a mini pill per available file format follows it. */
+.dropdown-menu .article-row {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-menu .article-row .article-link {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+}
+
+.article-formats {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.9rem 0 0.5rem;
+}
+
+.article-format {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.62rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 0.28em 0.5em;
+    border: 1px solid rgba(232, 232, 232, 0.25);
+    color: var(--light);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.article-format:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--light);
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    font-size: 1.2rem;
+}
+
+/* ── atmospheric backdrop: radial glows + dot-grid ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: /* red glow bleeding down from top-center */ radial-gradient(ellipse 90% 48% at 50% 0%, rgba(151, 2, 7, 0.31) 0%, transparent 62%),
+        /* warm accent from right */ radial-gradient(ellipse 33% 38% at 85% 55%, rgba(151, 2, 7, 0.08) 0%, transparent 70%),
+        /* teal whisper bottom-left */ radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.7;
+    background-image: radial-gradient(circle, rgba(108, 114, 147, 0.2) 0.65px, transparent 0.65px);
+    background-size: 22px 22px;
+}
+
+/* ensure content sits above the backdrop pseudo-elements */
+#content,
+main,
+footer {
+    position: relative;
+    z-index: 1;
+}
+
+/*** Footer ***/
+
+.footer .btn.btn-link {
+    display: block;
+    margin-bottom: 5px;
+    padding: 0;
+    text-align: left;
+    color: var(--light);
+    font-size: 15px;
+    font-weight: normal;
+    text-transform: capitalize;
+    transition: .3s;
+}
+
+.footer .btn.btn-link::before {
+    position: relative;
+    content: "\f105";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 10px;
+}
+
+.footer .btn.btn-link:hover {
+    color: var(--primary);
+    letter-spacing: 1px;
+    box-shadow: none;
+}
+
+.footer {
+    background: linear-gradient(to top, #040404, #000000 85%) #000 !important;
+    border-top: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 -1px 18px rgba(151, 2, 7, 0.06);
+}
+
+.footer .btn-dark {
+    opacity: 0.45;
+    position: relative;
+    top: -3px;
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.footer .small {
+    font-size: 0.85rem;
+}
+
+.footer .d-flex {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+.footer .small {
+    opacity: 0.45;
+}
+
+.footer .copyright {
+    padding: 1.5rem;
+    font-size: 15px;
+    background: transparent;
+}
+
+.footer .copyright a {
+    color: var(--light);
+}
+
+.footer .copyright a:hover {
+    color: var(--primary);
+}
+
+.modal-content {
+    width: unset;
+}
+
+.modal-text {
+    font-size: 1.3rem;
+}
+
+.isa-row {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/******************************************************************/
+/******************************************************************/
+/************************* HIGHLIGHT-JS ***************************/
+/******************************************************************/
+/******************************************************************/
+
+.custom-docs {
+    padding: 20px;
+    background: var(--secondarycolor);
+    border: 1px solid var(--primary);
+}
+
+.discrete {
+    color: var(--mheading);
+    border-bottom: 1px solid var(--mred);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.custom-docs .collapse {
+    border-bottom: 1px solid var(--mred);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+.custom-docs .collapse:last-child {
+    border-bottom: none;
+}
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+.btn-copy-url {
+    filter: invert(0) grayscale(100%) brightness(35%);
+    opacity: 0.8;
+    /*  width: 0.15em;
+      height: 0.15em; */
+    position: relative !important;
+    top: -16px !important;
+    left: -35px !important;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(35%);
+    opacity: 0.8;
+    width: 0.15em;
+    height: 0.15em;
+    position: relative !important;
+    top: -20px !important;
+    left: -20px !important;
+}
+
+.btn-close-white:hover {
+    opacity: 1;
+}
+
+/* ACADEMIC PDF EXPORT MODE (B&W) */
+.pdf-export-mode {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    padding: 20px !important;
+}
+
+.pdf-export-mode .btn-close {
+    display: none !important;
+}
+
+.pdf-export-mode h1,
+.pdf-export-mode h2,
+.pdf-export-mode h3,
+.pdf-export-mode h4,
+.pdf-export-mode h5,
+.pdf-export-mode h6 {
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    border-bottom: 1px solid #000 !important;
+    padding-bottom: 5px !important;
+    text-shadow: none !important;
+    -webkit-text-stroke: 0 !important;
+}
+
+.pdf-export-mode p,
+.pdf-export-mode li,
+.pdf-export-mode div {
+    color: #000000 !important;
+    background: transparent !important;
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
+    text-shadow: none !important;
+}
+
+.pdf-export-mode pre,
+.pdf-export-mode code {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+    border: 1px solid #ccc !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    font-size: 9pt !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.pdf-export-mode .hljs {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+}
+
+/* Reset syntax highlighting for B&W export */
+.pdf-export-mode .hljs-comment,
+.pdf-export-mode .hljs-quote,
+.pdf-export-mode .hljs-mtron-comment {
+    color: #555 !important;
+    font-style: italic !important;
+}
+
+.pdf-export-mode .hljs-keyword,
+.pdf-export-mode .hljs-selector-tag,
+.pdf-export-mode .hljs-subst,
+.pdf-export-mode .hljs-mtron-keyword,
+.pdf-export-mode .hljs-mtron-inst {
+    color: #000 !important;
+    font-weight: bold !important;
+}
+
+.pdf-export-mode .hljs-number,
+.pdf-export-mode .hljs-literal,
+.pdf-export-mode .hljs-variable,
+.pdf-export-mode .hljs-template-variable,
+.pdf-export-mode .hljs-tag .hljs-attr,
+.pdf-export-mode .hljs-mtron-real,
+.pdf-export-mode .hljs-mtron-int,
+.pdf-export-mode .hljs-mtron-bool {
+    color: #000 !important;
+}
+
+.pdf-export-mode .hljs-string,
+.pdf-export-mode .hljs-doctag,
+.pdf-export-mode .hljs-mtron-str {
+    color: #000 !important;
+}
+
+.pdf-export-mode .hljs-title,
+.pdf-export-mode .hljs-section,
+.pdf-export-mode .hljs-selector-id,
+.pdf-export-mode .hljs-mtron-uri,
+.pdf-export-mode .hljs-mtron-type {
+    color: #000 !important;
+    font-weight: bold !important;
+}
+
+.pdf-export-mode .conum + b {
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid #000 !important;
+}
+
+.pdf-export-mode .admonitionblock {
+    border-left: 3px solid #000 !important;
+    background: #f5f5f5 !important;
+    padding: 0.75rem 1rem !important;
+    margin: 1rem 0 !important;
+    border-radius: 0 !important;
+}
+
+.pdf-export-mode .admonitionblock .icon i {
+    color: #000 !important;
+}
+
+.pdf-export-mode .admonitionblock .icon .title {
+    color: #000 !important;
+}
+
+.pdf-export-mode .admonitionblock .content {
+    color: #000 !important;
+}
+
+/* ── Callout badge in colist / annotation tables ──────────────────── */
+
+.conum + b {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+    background: var(--mred) !important;
+    color: var(--myellow);
+    font-weight: bold;
+    border-radius: 100px;
+    margin-right: 6px;
+}
+
+/* ── Word-wrap source/literal blocks ─────────────────────────────────
+   Bootstrap sets `pre { overflow: auto }` but never touches white-space,
+   so `pre` keeps the UA default `white-space: pre` and any line wider than
+   the column becomes a horizontal scrollbar instead of wrapping. Wrap
+   instead — the same policy @media print and .pdf-export-mode already
+   apply. `overflow-wrap: break-word` keeps an unbroken token (a long uri
+   or quoted string) from re-introducing the scrollbar. */
+pre,
+pre > code {
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word; /* legacy alias */
+}
+
+/* Opt-out for ASCII diagrams (arrow/box art relies on column alignment):
+   mark the block `role=nowrap` in the .adoc to restore scrolling. */
+.nowrap pre,
+.nowrap pre > code,
+pre.nowrap,
+pre.nowrap > code {
+    white-space: pre !important;
+    overflow-wrap: normal;
+    word-wrap: normal;
+}
+
+pre.highlight {
+    position: relative !important;
+}
+
+pre.highlight > code[data-lang] {
+    display: block !important;
+    padding-right: 44px;
+}
+
+/* ── Result-line dimming / input brightness ──────────────────── */
+
+.hljs-mtron-result-line {
+    color: var(--mred);
+    opacity: 0.62;
+}
+
+.hljs-mtron-prompt-begin,
+.hljs-mtron-prompt-end {
+    filter: brightness(1.4);
+}
+
+/* Linearize Tabs for PDF Export */
+.pdf-export-mode .primary {
+    display: block !important;
+    margin-bottom: 2em !important;
+}
+
+.pdf-export-mode .switch {
+    display: none !important;
+}
+
+.pdf-export-mode .content.hidden {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+}
+
+.pdf-export-mode .content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    margin-bottom: 1.5em !important;
+    padding: 10px !important;
+    border: 1px solid #eee !important;
+}
+
+.pdf-export-mode hr {
+    border-top: 1px solid #000 !important;
+    opacity: 1 !important;
+}
+
+@media print {
+    .custom-docs {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        padding: 0 !important;
+    }
+
+    .custom-docs h1, .custom-docs h2, .custom-docs h3, .custom-docs h4, .custom-docs h5, .custom-docs h6 {
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .custom-docs p, .custom-docs li {
+        font-size: 11pt !important;
+        line-height: 1.25 !important;
+    }
+
+    .collapse {
+        display: block !important;
+        height: auto !important;
+        visibility: visible !important;
+        page-break-after: always;
+        break-after: page;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .collapse:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+
+    pre, code {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+        border: 1px solid #ddd !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        font-size: 1rem !important;
+    }
+
+    .hljs {
+        background: #f8f9fa !important;
+        color: #FFF !important;
+    }
+
+    /* Reset syntax highlighting for a more academic look */
+    .hljs-comment, .hljs-quote {
+        color: #666 !important;
+        font-style: italic !important;
+    }
+
+    .hljs-keyword, .hljs-selector-tag, .hljs-subst {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr {
+        color: #000 !important;
+    }
+
+    .hljs-string, .hljs-doctag {
+        color: #000 !important;
+    }
+
+    .hljs-title, .hljs-section, .hljs-selector-id {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-subst {
+        font-weight: normal !important;
+    }
+
+    .hljs-type, .hljs-class .hljs-title {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-tag, .hljs-name, .hljs-attribute {
+        color: #000 !important;
+    }
+
+    .hljs-regexp, .hljs-link {
+        color: #000 !important;
+    }
+
+    .hljs-symbol, .hljs-bullet {
+        color: #000 !important;
+    }
+
+    .hljs-built_in, .hljs-builtin-name {
+        color: #000 !important;
+    }
+
+    .hljs-meta {
+        color: #666 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-deletion {
+        background: #fdd !important;
+    }
+
+    .hljs-addition {
+        background: #dfd !important;
+    }
+
+    .hljs-emphasis {
+        font-style: italic !important;
+    }
+
+    .hljs-mtron-template {
+        color: var(--tertiarycolor);
+    }
+
+    .hljs-mtron-comment {
+        color: #666 !important;
+        font-style: italic !important;
+    }
+
+    .hljs-mtron-at-vid,
+    .hljs-mtron-real,
+    .hljs-mtron-bytes,
+    .hljs-mtron-int,
+    .hljs-mtron-str,
+    .hljs-mtron-bool,
+    .hljs-mtron-sugar-inst,
+    .hljs-mtron-dom-rng-query,
+    .hljs-mtron-sys-furi,
+    .hljs-mtron-coefficient,
+    .hljs-mtron-log-warn,
+    .hljs-mtron-auto-from,
+    .hljs-mtron-query-key,
+    .hljs-mtron-keyword,
+    .hljs-mtron-query-value,
+    .hljs-mtron-inst,
+    .hljs-mtron-uri,
+    .hljs-mtron-type,
+    .hljs-mtron-type-prefix,
+    .hljs-mtron-punctuation,
+    .hljs-mtron-result-prefix,
+    .hljs-mtron-prompt-end,
+    .hljs-mtron-log-info,
+    .hljs-mtron-prompt-begin,
+    .hljs-mtron-pipe,
+    .hljs-mtron-log-error,
+    .hljs-mtron-match-fail,
+    .hljs-mtron-fail,
+    .hljs-mtron-fail-bar,
+    .hljs-mtron-thrown {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .conum + b {
+        background: #000 !important;
+        color: #fff !important;
+    }
+
+    .admonitionblock {
+        border-left: 3px solid #000 !important;
+        background: #f8f9fa !important;
+        padding: 0.75rem 1rem !important;
+        margin: 1rem 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .admonitionblock .icon i,
+    .admonitionblock .icon .title,
+    .admonitionblock .content {
+        color: #000 !important;
+    }
+}
+
+pre {
+    margin-bottom: 1rem;
+    color: #fff !important;
+}
+
+
+.switch {
+    border: none;
+}
+
+.content {
+    margin: 0.15rem;
+}
+
+/* ── Instset accordion (instset obj toggle) ── */
+.instset-accordion-wrapper {
+    max-width: 900px;
+    margin: 1.5rem auto 0 auto;
+}
+
+.instset-accordion-wrapper .accordion-item {
+    background-color: var(--secondary);
+    border: 2px solid rgba(122, 37, 24, 0.35);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.instset-accordion-wrapper .accordion-button {
+    background-color: rgba(25, 28, 36, 0.8);
+    color: var(--light);
+    font-size: 0.85rem;
+    padding: 0.2rem 1rem;
+    box-shadow: none;
+    border: none;
+}
+
+.instset-accordion-wrapper .accordion-button:not(.collapsed) {
+    background-color: var(--secondary);
+    color: var(--primary);
+    box-shadow: none;
+}
+
+.instset-accordion-wrapper .accordion-button::after {
+    filter: invert(0.5);
+}
+
+.instset-accordion-wrapper .accordion-body {
+    padding: 0;
+}
+
+.instset-accordion-wrapper .accordion-body pre {
+    margin: 0;
+    padding: 1rem;
+    background: transparent;
+}
+
+/* ── Consistent URI size across all instset card headers ── */
+.card-header small.text-muted.code {
+    font-size: 0.85rem;
+}
+
+details {
+    float: right;
+    display: inline-block;
+    max-width: max-content;
+    border: 1px solid var(--primary);
+    margin: 0 0 0.75em 1em;
+    padding: 0.5em 0.85em;
+    background: rgba(122, 37, 24, 0.06);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+details:hover {
+    background: rgba(122, 37, 24, 0.12);
+    box-shadow: 0 0 8px rgba(180, 75, 45, 0.15);
+}
+
+details summary {
+    color: var(--mheading);
+    list-style: none;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary::before {
+    content: '\25B8';
+    color: var(--mred);
+    font-size: 0.75rem;
+    margin-right: 8px;
+    transition: transform 0.2s;
+}
+
+details[open] summary::before {
+    content: '\25BE ';
+}
+
+/* ── Admonition blocks ──────────────────────────────────────────── */
+.admonitionblock {
+    margin: 1.5rem 0;
+    border-left: 4px solid var(--primary);
+    padding: 0.85rem 1.2rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.admonitionblock table {
+    margin: 0 !important;
+    border: none;
+    background: transparent;
+}
+
+.admonitionblock td {
+    padding: 0;
+    vertical-align: top;
+}
+
+.admonitionblock .icon {
+    padding-right: 0.85rem;
+    font-size: 1.3rem;
+    line-height: 1.45;
+}
+
+.admonitionblock .icon .fa.icon-note::before {
+    content: "\f05a";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: var(--mred);
+}
+
+.admonitionblock .icon .title {
+    color: var(--mred);
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.admonitionblock .content {
+    line-height: 1.5;
+    font-size: 1.05rem;
+}
+
+.switch ~ div:nth-of-type(2),
+.switch ~ div:nth-of-type(3),
+.switch ~ div:nth-of-type(4),
+.switch ~ div:nth-of-type(5),
+.switch ~ div:nth-of-type(6),
+.switch ~ div:nth-of-type(7),
+.switch ~ div:nth-of-type(8),
+.switch ~ div:nth-of-type(9) {
+    border-style: solid;
+    border-color: var(--light);
+    border-width: 1px;
+    margin-bottom: 1em;
+    padding: 1em;
+}
+
+.switch--item.selected {
+    background-color: var(--mred) !important;
+}
+
+.switch--item {
+    padding: 0.25em 1em;
+    border-radius: 0.35em;
+    position: relative;
+    border-color: var(--mred) !important;
+    border-width: 1px;
+    background-color: var(--secondarycolor) !important;
+    border-style: solid;
+}
+
+
+th {
+    font-size: 1.2rem;
+    color: var(--mheading);
+}
+
+.halign-center {
+    display: table-cell;
+    text-align: center; /* centers horizontally */
+    padding: 0.25rem;
+}
+
+.valign-middle {
+    display: table-cell;
+    align-items: center; /* centers vertically */
+    padding: 0.25rem;
+}
+
+.hljs {
+    background: var(--secondarycolor);
+    font-size: 100%;
+    display: block;
+    padding: 0;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.hljs::-webkit-scrollbar {
+    display: none;
+}
+
+
+.hljs-phaseshift-studio-header {
+    color: var(--secondarycolor) !important;
+    font-weight: bolder;
+}
+
+.hljs-mtron-uri,
+.hljs-mtron-at-vid,
+.hljs-mtron-real,
+.hljs-mtron-bytes,
+.hljs-mtron-int,
+.hljs-mtron-str,
+.hljs-mtron-bool,
+.hljs-mtron-sys-furi,
+.hljs-mtron-coefficient,
+.hljs-mtron-log-warn {
+    color: var(--myellow);
+}
+
+.hljs-mtron-auto-from,
+.h {
+    color: #d4de68;
+    font-weight: bold !important;
+}
+
+.hljs-mtron-form,
+.hljs-mtron-rec-key,
+.hljs-mtron-query-key {
+    color: var(--maqua);
+}
+
+#header,
+.hljs-punctuation,
+.hljs-mtron-result-prefix,
+.hljs-mtron-type-prefix,
+.hljs-mtron-prompt-end {
+    color: var(--white);
+}
+
+.hljs-mtron-noobj,
+.hljs-mtron-T {
+    color: var(--mmagenta);
+}
+
+.hljs-mtron-rec,
+.hljs-mtron-dom-rng-query,
+.hljs-mtron-sugar-inst,
+.hljs-mtron-prompt-begin,
+.hljs-mtron-pipe,
+.hljs-mtron-log-error,
+.hljs-mtron-match-fail,
+.hljs-mtron-fail,
+.hljs-mtron-fail-bar,
+.hljs-mtron-thrown {
+    color: var(--mred);
+}
+
+.hljs-mtron-log-info {
+    color: var(--mgreen);
+}
+
+.hljs-mtron-log-debug {
+    color: var(--tertiarycolor);
+}
+
+.hljs-mtron-log-trace {
+    color: var(--maqua);
+}
+
+.hljs-mtron-inst-f-jvm,
+.hljs-comment {
+    color: var(--mlightgray);
+}
+
+.hljs-mtron-keyword,
+.hljs-mtron-query-value,
+.hljs-mtron-inst {
+    color: var(--tertiarycolor);
+}
+
+.hljs-mtron-uri,
+.hljs-mtron-type,
+.hljs-mtron-type-prefix {
+    color: var(--mblue);
+}
+
+.colist {
+    margin-bottom: 2em;
+}
+
+/* ── Callout badge in code blocks (via highlight.js mtron-doc-callout) ── */
+
+.hljs-mtron-doc-callout {
+    float: right !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+    background: var(--mred) !important;
+    color: var(--myellow);
+    font-weight: bold;
+    border-radius: 100px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-right: -2px;
+}
+
+strong {
+    color: var(--white);
+}
+
+.hljs-fos-docs-if-else-then-case-do,
+.hljs-mtron-comment {
+    color: #797979;
+}
+
+/* ── Legend index (inset table-of-contents box) ───────────────────── */
+.legend-index {
+    float: left;
+    position: relative;
+    max-width: 220px;
+    width: 100%;
+    margin: 0.6em 1.8em 1.2em 0.2em;
+    padding: 0.35em 0 0.35em 0;
+    border: 1px solid var(--primarycolor);
+    background: var(--sidebarbackground);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.legend-index::before {
+    content: "toc";
+    position: absolute;
+    top: -0.55em;
+    left: 0.75em;
+    background: var(--sidebarbackground);
+    padding: 0 0.4em;
+    color: var(--primarycolor);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+}
+
+.legend-index ul {
+    list-style: none;
+    padding: 0.35em 0.65em 0.1em 0.65em;
+    margin: 0;
+}
+
+.legend-index li {
+    padding: 0 0;
+}
+
+.legend-index .legend-lvl-3 {
+    padding-left: 0.75rem;
+}
+
+.legend-index .legend-lvl-4 {
+    padding-left: 1.5rem;
+}
+
+.legend-index .legend-lvl-5 {
+    padding-left: 2.25rem;
+}
+
+.legend-index a {
+    color: var(--white);
+    text-decoration: none;
+}
+
+.legend-index a:hover {
+    color: var(--primarycolor);
+}
+
+/* ── Legend flush for narrow screens ── */
+@media (max-width: 768px) {
+    .legend-index {
+        float: none;
+        max-width: 100%;
+        margin: 0.6em 0 1em 0;
+    }
+}
+
+.MathJax_Display {
+    color: var(--mred);
+}
+
+/* ── highlight.js copy button ── */
+.hljs-copy-button {
+    color: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 24px;
+}
+
+.hljs-copy-button::before {
+    content: '🦇';
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    color: var(--mlightgray);
+    font-size: 12px;
+}
+
+.hljs-copy-button[data-copied="true"]::before {
+    content: 'copied';
+    font-family: var(--font-mono);
+    color: var(--light);
+    font-size: 8px;
+}
+
+.hljs-copy-button:hover::before {
+    color: var(--mred);
+}
+
+/* PAGE SWEEP EFFECT */
+.page-sweep {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s;
+}
+
+.page-sweep.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.page-sweep.exit {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/*** Back to Top ***/
+.back-to-top {
+    position: fixed;
+    display: block;
+    left: 0;
+    bottom: 55px;
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.back-to-top.show {
+    opacity: 0.45;
+    visibility: visible;
+}
+
+/* ── Section heading anchor links ── */
+.heading-anchor {
+    opacity: 0;
+    font-size: 0.7em;
+    margin-left: 0.35em;
+    color: var(--mlightgray);
+    text-decoration: none;
+    transition: opacity 0.2s, color 0.2s;
+    vertical-align: middle;
+    cursor: pointer;
+    display: inline-block;
+}
+
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+h4:hover .heading-anchor,
+h5:hover .heading-anchor,
+h6:hover .heading-anchor {
+    opacity: 1;
+}
+
+.heading-anchor:hover {
+    color: var(--mred);
+}
+
+.heading-anchor.copied {
+    color: var(--mgreen);
+    opacity: 1;
+}
+
+/* Toast feedback for copy action */
+.heading-toast {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--secondarycolor);
+    color: var(--mgreen);
+    border: 1px solid var(--mgreen);
+    padding: 6px 18px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+}
+
+.heading-toast.show {
+    opacity: 1;
+}
+
+@media (max-width: 991.98px) {
+    .back-to-top {
+        left: 0;
+        bottom: 20px;
+    }
+}
+
+/******************************************************************/
+/******************************************************************/
+/*************************** SKILL MARKDOWN ***********************/
+/******************************************************************/
+/******************************************************************/
+
+.markdown-body {
+    color: var(--white);
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.markdown-body a {
+    color: var(--linkcolor);
+    text-decoration: none;
+}
+
+.markdown-body a:hover {
+    color: #7ab8ff;
+    text-decoration: underline;
+}
+
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+    color: var(--mred);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-body code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    /* never ligate multi-character operators (=> -< >= <= >>= etc.) into single
+       look-alike glyphs — mtron source must read back as the exact characters */
+    font-variant-ligatures: none;
+    color: var(--mblue);
+    background: rgba(70, 105, 221, 0.10);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid rgba(122, 37, 24, 0.45);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.markdown-body th {
+    background: rgba(122, 37, 24, 0.16);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.markdown-body blockquote {
+    border-left: 4px solid var(--primary);
+    margin: 1rem 0;
+    padding: 0.25rem 1rem;
+    color: var(--light);
+    background: rgba(122, 37, 24, 0.08);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+    padding-left: 1.5rem;
+}
+
+.markdown-body hr {
+    border-color: rgba(122, 37, 24, 0.4);
+}
+
+.markdown-body img {
+    max-width: 80%;
+}
+
+/* skill page title chrome — a red rule under the title */
+.skill-doc {
+    border-bottom: 1px solid var(--primary);
+    padding-bottom: 0.9rem;
+    margin-bottom: 1.75rem;
+}
+
+.skill-title {
+    font-weight: 600;
+}
+
+/* ── AGENT SKILLS accordion dropdown ────────────────────────────────── */
+.skill-chevron {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    padding: 0.5rem 0.85rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.skill-chevron:hover {
+    color: var(--primary);
+}
+
+.dropdown-menu-dark .skill-link:hover {
+    background: transparent;
+}
+
+.skill-chevron .bi-chevron-down {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.skill-chevron[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.skill-resources {
+    padding: 0.25rem 0 0.5rem;
+    background: rgba(122, 37, 24, 0.08);
+}
+
+.skill-resource-group {
+    color: var(--light);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.4rem 1.4rem 0.1rem;
+}
+
+.dropdown-menu-dark .skill-resource {
+    padding-left: 2.4rem;
+    font-size: 0.95rem;
+}

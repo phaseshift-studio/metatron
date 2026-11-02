@@ -1,0 +1,204 @@
+[discrete]
+== The Boot Loader 
+
+The boot process for metatron loads a few core components and then hands control over to a user-provided boot script. What the user's boot script does determines the state and use of a particular metatron instance.
+
+[discrete]
+=== Core Structures
+
+There are four core structures that are required for metatron to function properly.
+
+[cols="6,4a",separator="🧱"]
+|===
+a🧱
+. *`/m` instset*: the core instruction set defining the core types -- `bool`, `int`, `rec`, etc. It also includes approximately 200 instructions specifically oriented at the core types.
+. *`/m/mach` instset*: the virtual machine that evaluates mtron code, handles thread management, exposes physical machine resources such as the file system and network, and manages each thread's `/m/space/stack` (local variable frames).
+. *`/sys/router` space*: a fundamental component that marshalls read/write requests across spaces both inter- and intra- machine. The router indexes spaces and provides namespace services such as routes and redirects.
+. *`/sys` space*: a `/m/space/mem` in-memory space necessary for hosting the aforementioned components.
+
+[mtron]
+----
+*/sys/+
+----
+
+a🧱
+[.boot sequence]
+[source,mtron]
+----
+   ┌───────────────────────┐                  
+   │ write boot/+ with argv│                  
+   └───────────┬───────────┘                                            
+               │1                              
+   ┌───────────▼────────────┐             
+┌──►   init /sys memspace   │◄──┐             
+│  └────────────┬───────────◄─┐ │             
+│write         2│        write│ │                        
+│  ┌────────────▼──────────┐  │ │             
+│  │   import /m instset   ├──┘ │             
+│  └───────────┬───────────┘    │             
+│              │3          write│                       
+│   ┌──────────▼────────────┐   │             
+└───┼ import /m/mach instset│   │             
+    └────────────┬──────────┘   │             
+                4│              │             
+    ┌────────────▼──────────┐   │             
+    │      init router      ├───┘             
+    └─────────┬─────────────┘                                             
+              │5                               
+    ┌─────────▼─────────────┐                 
+    │  eval user boot.mtron │                 
+    └┬─┬─┬──────────────────┘                
+     │ │ └─► import instsets              
+     │ └────► mount spaces                  
+     └───────► init console             
+----
+|===
+
+[discrete]
+=== Boot Structures
+
+The boot process maintains provides access to some information that can be useful during the boot process. Note that `boot/` exists under the purview of `/m/space/stack` (patterned `<+/#>`). 
+
+1. The system arguments (`argv`) are stored in `boot/args`.
+2. The boot loader file reference is stored at `boot/file`.
+3. Other "workspace" related data may also find its way into `boot/+`.
+
+[mtron]
+----
+*boot/
+----
+
+The environmental variables of the underlying operating system are available at `/sys/env/+/`.
+
+[mtron]
+----
+*/sys/env/+/.take(10)
+----
+
+[discrete]
+=== Boot Loader
+
+An mtron file can be provided at startup which is used to configure the user's metatron environment. This typically includes mounting spaces (data access points), importing requisite instruction sets (domains of discourse), configuring q processors (documentation endpoints, etc.), defining custom instructions, and putting the system into a console REPL mode or as a headless server only. An example `boot.mtron` is provided below.
+
+[source,mtron]
+----
+[== metatron example boot ==];
+print("""
+ ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
+|    \  /   \  /   \ |      |  |   T   T|      ||    \  /   \ |    \ 
+|  o  )(     YY     )|      |  | _   _ ||      ||  D  )(     )|  _  )
+|     T|  O  ||  O  |l_j  l_j  |  \_/  |l_j  l_j|    / |  O  ||  |  |
+|  O  ||     ||     |  |  | __ |   |   |  |  |  |    \ |     ||  |  |
+|     |l     !l     !  |  ||  T|   |   |  |  |  |  .  \l     !|  |  |
+l_____j \___/  \___/   l__jl__jl___j___j  l__j  l__j\_j \___/ l__j__j                                                                     
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/web);
+import(/m/math,math:);
+import(/m/web,web:);
+import(/m/iot);
+import(/m/iot/haos);
+import(/m/iot/miot);
+import(/m/db/grph);
+import(/m/ai/llm);
+import(/m/db/tble);
+import(/m/db/dcmnt);
+[== store global settings in boot ==]
+*<boot/script>.else(boot/script -> 
+ [sh     => /bin/sh,
+  bash   => /bin/bash, 
+  zsh    => /bin/zsh, 
+  python => /usr/bin/python3,
+  perl   => /usr/bin/perl,
+  mtron  => /bin/mtron]),"\n");
+[== mount computing spaces ==];
+mem::[pattern   => /usr/#,                                 
+      q         => [subq::[=>]]]@/sys/space/usr;
+mem::[pattern   => /shared/#,
+      persist   => </tmp/shared.mtron>]@/sys/space/shared;
+http::[host     => <http://localhost:8777>,
+       pattern  => http://#,
+       route    => [/     => examples/www,
+                    /docs => target/docs ]]@/sys/space/www;
+graphdb::[pattern  => /h/#,
+      route        => [</h/+/>=><>],
+      native       => [factory  => mfactory::[=>],
+                       load     => grateful]]@/sys/space/grateful;                    
+graphdb::[pattern => g:#,
+          route   => [<g:V>=><V>,
+                      <g:E>=><E>,
+                      <g:S>=>/m/db/grph/schema/modern],
+        native  => [factory  => mfactory::[=>],
+                     load     => modern]]@/sys/space/modern;
+mqtt::[pattern => <mqtt:#>,
+       host    => !*boot/args/mqtt/broker,
+       route   => [mqtt:=><>]]@/sys/space/mqtt;
+miot::[pattern    => <mtron:#>,
+       host       => !*boot/args/mqtt/broker,
+       serializer => !*</m/web/serializer/json/simple>,
+       route      => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
+mqtt::[pattern    => <z2m:#>,
+       host       => !*boot/args/mqtt/broker,
+       serializer => !*</m/web/serializer/json/simple>,
+       route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
+haos::[pattern       => <ha:#>,
+       host          => !*boot/args/mqtt/broker,
+       serializer    => !*</m/web/serializer/json/simple>,
+       command_topic => inst?uri<=rec(){ 
+                          to(a).map(z2m:).mult(*a>>friendly_name).mult(set/state) 
+                        },
+       route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
+fs::[pattern  => local:#,
+      route   => [local:=><~/>],
+      script  => !*boot/script]@/sys/space/fs;
+serial::[pattern => <serial:#>,
+         route   => [serial:=><>]]@/sys/space/serial;
+catalog::[host    => <http://localhost:11434>,
+          pattern => <ollama:#>,
+          name    => <ollama>,
+          route   => [ollama:=><>]]@/sys/space/ollama;
+catalog::[host    => <https://api.openai.com/v1>,
+           organization => !*</sys/env/OPENAI_ORG_ID>,
+           api_key      => !*</sys/env/OPENAI_API_KEY>,
+           pattern      => <openai:#>,
+           name         => <openai>,
+           route        => [<openai:>=><>]]@/sys/space/openai;
+ *<local:software/metatron/.agent/skills/mtron-assistance>
+     .as(skill::T)
+     .to(/usr/ai/skills/mtron-assistance);
+ tabledb::[pattern    => netflix:#,
+        host       => 
+         <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
+        route      => [<netflix:>=><>],
+        serializer => !*</m/web/serializer/json/simple>,
+        table      => [,],
+        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
+ tabledb::[pattern    => acme:#,
+        host       => 
+          <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
+        route      => [<acme:>=><>],
+        serializer => !*</m/web/serializer/string/clean>,
+        table      => [,],
+        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
+ tabledb::[pattern    => db:#,
+        host       => 
+          <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
+        route      => [db:=><>],
+        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
+ docdb::[pattern     => mongo:#,
+       host        => <mongodb://localhost:27017/mflix>,
+       serializer  => !*</m/web/serializer/bson>,
+       collection  => [,],
+       route       => [mongo:=><>]]@/sys/space/mongo;
+ mcp::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;
+ mcp::[host      => 
+        <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
+[== load user console ==]
+console::[        => ]@/sys/console;
+*boot/args.print(_)
+----
+

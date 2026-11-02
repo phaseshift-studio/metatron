@@ -1,0 +1,52 @@
+[== boot args ==]
+[web    => [
+   http/origin  => <http://0.0.0.0:8777>,
+   ws/origin    => <ws://0.0.0.0:8555>],
+ typer/check  => [inst_dom     => false, 
+                  inst_rng     => false,
+                  type_pred    => false,
+                  obj_write    => true,
+                  code_resolve => false] 
+]
+[===============]
+[== inst_rng,type_pred,obj_write] ==]
+[== metatron example boot ==]
+print("""
+{{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
+|    \  /   \  /   \ |      |  |   T   T|      ||    \  /   \ |    \ 
+|  o  )(     YY     )|      |  | _   _ ||      ||  D  )(     )|  _  )
+|     T|  O  ||  O  |l_j  l_j {{g}} |  \_/  |l_j  l_j|    / |  O  ||  |  |
+|  O  ||     ||     |  |  | __ |   |   |  |  |  |    \ |     ||  |  |
+|     |l     !l     !  |  ||  T|   |   |  |  |  |  .  \l    {{b}} !|  |  |
+l_____j \___/  \___/   l__jl__jl___j___j  l__j  l__j\_j \___/ l__j__j                                                                     
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/web);
+import(/m/mach);
+import(/m/sys/ui);
+import(/m/math,math);
+import(/m/web,web);
+import(/m/ai/llm);
+import(/m/db/tble);
+[== mount computing spaces ==]
+ memspace::[pattern   => /usr/#,                                 
+                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
+ fsspace::[pattern    => local:#,
+            route     => [local:=><~/>]]@/sys/space/fs/home;
+ http_server::[origin => !*boot/args/web/http/origin,
+               route  => [/ => <metatronfs:docs/website>]];
+ http_client::[host   => <http://#>];
+ http_client::[host   => <https://#>];
+ ws_server::[origin   => !*boot/args/web/ws/origin,
+             route    => [/mtron    => mtron_ws,
+                          /mcp      => mcp_mtron]];
+mdns_discovery::[=>];
+console::[=>]@/usr/ui/console;
+*boot/args.print(_,'\n');
+print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
+ 
+

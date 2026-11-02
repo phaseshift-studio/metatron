@@ -1,0 +1,238 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa;
+
+import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.MStats;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Stats;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.util.IteratorUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+public abstract class AbstractSpace<SJVM> extends MRec implements Space {
+
+    protected final fURI pattern;
+    protected SJVM sjvm;
+    protected Stats ioStats;
+    protected GraphittyLogger LOG;
+
+    public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+        this(sjvm, config, tid, vid, true);
+    }
+
+    protected AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid, final boolean autoRegister) {
+        super(config, tid, vid);
+        InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
+        this.sjvm = sjvm;
+        this.at(PATTERN, uri(this.pattern = this.at(PATTERN).apply().uriValue()), MUTABLE);
+        this.ioStats = new MStats();
+        LOG = Graphitty.log(this);
+        // Don't auto-register InstSets - they're registered via import AFTER full construction.
+        // A space self-registers into the memory of the machine being constructed IN (current), not the root.
+        // autoRegister=false is for spaces that are NOT frame-scoped (the thread-local arg stack, the root type
+        // cache): registering one of those into the current frame's own level would shadow the parent's /sys and
+        // /m spaces behind an empty catch-all.
+        if (autoRegister && Machine.loaded() && !(this instanceof Machine) && !(this instanceof InstSet))
+            Machine.current().memory().addSpace(this);
+    }
+
+    @Override
+    public Obj read(final fURI vid) {
+        // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        /*final fURI routedVID = Space.Helper.routeFromSpace(vid, this.routes());
+        if (!routedVID.test(this.pattern()))
+            return Machine.read(routedVID);*/
+        // A SPACE REFUSES A QUERY IT DOES NOT SPEAK. This is the source's own verdict, and it belongs here rather
+        // than in the layer: the network is offered every host-bearing address and declines most of them, so a
+        // check there would reject a ?incrq that belongs to the space the write is headed for.
+        QProc.Helper.checkQProcs(this, vid);
+        // the q-proc pipeline (pre_read, this space's read, post_read) has one home (QProc.Layer), so a source
+        // declares its q-procs and never re-derives the order
+        return QProc.Layer.read(this, vid, () -> Space.Helper.resolveRead(this, vid, this.directReader()));
+    }
+
+    @Override
+    public Stream<IdObj> readStream(final fURI pattern) {
+        QProc.Helper.checkQProcs(this, pattern);
+        final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(this.qs(), pattern);
+        if (preRead.isPresent())
+            return Stream.of(IdObj.of(pattern, preRead.get()));
+        final Obj result = Space.Helper.resolveRead(this, pattern, directReader());
+        final Obj postResult = QProc.Helper.processPostRead(this.qs(), pattern, result);
+        if (postResult.isNoObj())
+            return Stream.empty();
+        if (postResult.isObjs())
+            return IteratorUtil.stream(postResult.objsValue().iterator())
+                    .map(o -> o.isRel()
+                            ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
+                            : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
+        return Stream.of(IdObj.of(pattern, postResult));
+    }
+
+    @Override
+    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+        if (pattern.hasPattern()) {
+            final List<IdObj> results = new ArrayList<>();
+            this.readStream(pattern).forEach(kv -> {
+                final Obj result = this.directWriter().apply(kv.furi(), obj);
+                results.add(IdObj.of(kv.furi(), result));
+            });
+            return results.stream();
+        }
+        final Obj result = this.write(pattern, obj);
+        if (result.isNoObj())
+            return Stream.empty();
+        return Stream.of(IdObj.of(pattern, result));
+    }
+
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        // LOG.warn("writing %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        // Root type enforcement: if this space declares a root type constraint and the write
+        // targets a document root (1 or 2 non-branch path segments), reject non-conforming values.
+        //   1-segment: e.g. mongo:ddd -> [...] (auto-generated document ID)
+        //   2-segment: e.g. mongo:col/docId -> [...] (explicit document write)
+        // Deletes (noobj) are always permitted. Sub-field writes (3+ segments) bypass this check.
+        if (!obj.isNoObj() && Typer.Helper.objWrite() && this.enforceRootConstraint(vid, obj)) {
+            final Obj rootConstraint = this.at(uri(ROOT)).orElse(null);
+            if (rootConstraint != null && !rootConstraint.isNoObj()
+                    && !vid.isBranch()
+                    && vid.segments().size() >= 1 && vid.segments().size() <= 2
+                    && !obj.test(rootConstraint.as())) {
+                return fail("space %s requires %s at root; got %s", this.vid(), rootConstraint, obj.type());
+            }
+        }
+        // a space refuses a query it does not speak (see read: the check is the source's, not the layer's)
+        QProc.Helper.checkQProcs(this, vid);
+        // the write pipeline (pre_write, qless_write, this space's write, post_write) lives in QProc.Layer --
+        // the space's own answer is the obj the caller handed in: resolveWrite's return is bookkeeping, and
+        // handing it back would change what `x -> y` evaluates to
+        return QProc.Layer.write(this, vid, obj, () -> {
+            Space.Helper.resolveWrite(this.LOG, this, vid, obj, this.directWriter(), this.directReader());
+            return obj;
+        });
+    }
+
+    /**
+     * Whether the root type constraint (if any) should be enforced for this
+     * write.  Defaults to {@code true}; subclasses with a reserved flat
+     * namespace (e.g. dcmntSpace's {@code kv_store}) may override to relax it
+     * for that namespace so non-Rec roots are accepted rather than rejected.
+     *
+     * @param vid the write target address
+     * @param obj the value being written
+     * @return {@code true} to enforce the root constraint, {@code false} to bypass it
+     */
+    protected boolean enforceRootConstraint(final fURI vid, final Obj obj) {
+        return true;
+    }
+
+    @Override
+    public Map<Uri, Obj> routes() {
+        return this.at(ROUTE).orElse(rec0()).jvmAs();
+    }
+
+    @Override
+    public Stats stats() {
+        return this.ioStats;
+    }
+
+    @Override
+    public fURI redirect(final fURI furi, final boolean external) {
+        return external ? Space.Helper.routeFromSpace(furi, this.routes()) : Space.Helper.routeToSpace(furi, this.routes());
+    }
+
+    @Override
+    public Obj parent() {
+        return null == this.parent ? this.at(uri(SUPER)).orElse(Machine.current()) : this.parent;
+    }
+
+    @Override
+    public fURI pattern() {
+        return this.pattern;
+    }
+
+    @Override
+    public SJVM sjvm() {
+        return this.sjvm;
+    }
+
+    @Override
+    public Space tid(final fURI tid) {
+        //Space.Helper.noCloneWarning(this);
+        return this;
+    }
+
+    @Override
+    public Space clone() {
+        // Rely on MRec's clone (AbstractSpace extends MRec): a shallow copy whose jvm map is a FRESH LinkedHashMap,
+        // which is the half that matters for a child frame — a naive shallow copy would share the parent's map, so a
+        // write in the child would appear in the parent. Stubbing this to `return this` made every clone-based
+        // derivation silently return the original (and `Obj.vid(fURI)`, which IS clone(jvm, tid, vid), a no-op on a
+        // machine — so `clone().selfVID(v)` retargeted the PARENT instead of minting a child).
+        return (Space) super.clone();
+    }
+
+
+    @Override
+    public Space clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Space) super.clone(jvm, tid, vid);
+    }
+
+    @Override
+    public Space self(final Object jvm, final fURI tid, final fURI vid) {
+        // Fall back to the current id only when the argument is ABSENT. The previous form was
+        // `null == this.tid() ? tid : this.tid()` — it kept the existing value whenever there was one, so an
+        // EXPLICIT vid was silently ignored. That is why every clone-based derivation on a space returned the
+        // original address: vid(), selfVID() and the 3-arg clone all funnel through here, so `clone().selfVID(v)`
+        // could not retarget a clone that already carried its parent's vid. A null argument still means "leave it".
+        return (Space) super.self(jvm, null == tid ? this.tid() : tid, null == vid ? this.vid() : vid);
+    }
+
+    @Override
+    public String toString() {
+        return Space.Helper.spaceToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Space.Helper.spaceHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Space.Helper.spaceEquals(this, other);
+    }
+}

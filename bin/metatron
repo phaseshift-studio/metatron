@@ -1,0 +1,195 @@
+#!/bin/bash
+# bin/metatron — dev entry point for the metatron runtime.
+#
+# Dev mode (no lib/metatron.jar): compiles (if needed), resolves dependencies,
+# and launches BootLoader from target/classes/ + cached dependency JARs.
+# Installed mode (lib/metatron.jar from install.sh): launches the uber-jar.
+#
+# Usage:
+#   bin/metatron                                    # boots from boot/boot.mtron
+#   bin/metatron -b .metatron/skills/drstynx/assets/drstynx.boot.mtron "[log=>info]"
+#   bin/metatron --headless "[boot=><boot/boot.mtron>,log=>info]"
+#
+# For thin app wrappers (bin/myapp), just set your boot file:
+#   exec "$(dirname "$0")/metatron" -b <boot-file> "[log=>info]"
+# -------------------------------------------------------------------
+set -euo pipefail
+
+# ── resolve project root ───────────────────────────────────────────
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+# ── stdio mcp mode: fd 1 is the protocol wire, so this script's own output
+#    (spinner, maven log, the restart banner) must go to stderr.  The JVM takes
+#    stdout for the protocol; anything the shell prints there first would be
+#    read by the client as a corrupt JSON-RPC frame.
+MCP_MODE=0
+for arg in "$@"; do
+    [ "$arg" = "--mcp" ] && MCP_MODE=1
+done
+# NB: in mcp mode this script's OWN output goes to stderr (below, per line) — never `exec 1>&2`,
+# which would hand the JVM stderr as its stdout and leave the protocol stream with nothing to claim
+
+# ── container toolchain: root FS is read-only, so use the in-repo JDK
+#    when present (Maven caches live under .build/) ──
+# An explicit JAVA_HOME wins: someone who set it meant it.  Otherwise prefer
+# the in-repo JDK, then whatever java is on PATH.
+JDK_SOURCE="PATH"
+if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVA_BIN="$JAVA_HOME/bin/java"; JDK_SOURCE="JAVA_HOME"
+elif [ -x "./.build/jdk/bin/java" ]; then
+    JAVA_BIN="./.build/jdk/bin/java"; JDK_SOURCE=".build/jdk"
+else
+    JAVA_BIN="java"
+fi
+JAVA_MAJOR=$("$JAVA_BIN" -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p')
+
+# Source utility functions (spinner, etc.)
+. "$(dirname "$(readlink -f "$0")")/lib/utility.sh"
+
+# ── run mode ────────────────────────────────────────────────────────
+# Installed deployments (install.sh) ship lib/metatron.jar and launch it
+# directly — no Maven, no source tree needed.  Dev checkouts have no lib/,
+# so they keep the classpath + recompile loop below.
+JVM_FLAGS=()
+LAUNCH=()
+if [ -f "lib/metatron.jar" ]; then
+    JVM_FLAGS=( --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector
+                --add-opens=java.base/java.lang=ALL-UNNAMED
+                --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+                --add-opens=java.base/java.util=ALL-UNNAMED
+                --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                --add-opens=java.base/java.io=ALL-UNNAMED
+                --add-opens=java.base/java.nio=ALL-UNNAMED
+                --add-opens=java.base/java.net=ALL-UNNAMED
+                --add-opens=java.base/sun.nio.cs=ALL-UNNAMED )
+    # --sun-misc-unsafe-memory-access exists only on JDK 23+; gate it so the
+    # install still works on the JDK 21/22 the install script permits.
+    JAVA_MAJOR=$("$JAVA_BIN" -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p')
+    if [ "${JAVA_MAJOR:-0}" -ge 23 ]; then
+        JVM_FLAGS+=( --sun-misc-unsafe-memory-access=allow )
+    fi
+    LAUNCH=( -jar lib/metatron.jar )
+else
+    # ── dev toolchain: use the patched ./mvnw (JAVA_HOME/caches under .build/) ──
+    MVNW="./mvnw"
+    # mvnw needs .mvn/wrapper/maven-wrapper.properties, which is git-ignored and
+    # absent in a fresh clone. Fall back to system maven (install.sh guarantees `mvn`).
+    if [ ! -f ".mvn/wrapper/maven-wrapper.properties" ]; then
+        MVNW="mvn"
+    fi
+
+    # ── dependency classpath cache ──────────────────────────────────────
+    # Rebuild when the pom's content changes, when the cache is absent, or
+    # when the cache no longer describes this machine.
+    #
+    # Content, not mtime: the cache routinely ends up NEWER than pom.xml
+    # (mtime comparison made a genuine dependency change look valid), and a
+    # timestamp can be reverted out from under us by a copy, a checkout, or
+    # a clock difference.  A sidecar records the honored pom hash instead.
+    #
+    # The path check covers a separate failure: the cache holds ABSOLUTE jar
+    # paths, so a cache generated under another $HOME — or in the read-only
+    # container this repo is also built in — survives the hash check while
+    # pointing at trees that are gone.  The classpath then resolves to
+    # nothing and the VM dies with a bare NoClassDefFoundError on the first
+    # dependency class it touches, which reads as a missing dependency
+    # rather than a stale cache.  Every entry shares one local repository
+    # root, so probing the first one proves the tree is present; accept a
+    # directory too, since a dev checkout's first entry is target/classes.
+    #
+    # After that, mvn compile is all we need for source changes — the
+    # uber-jar is for distribution, not dev.
+    CP_FILE=".mtron-classpath"
+    CP_HASH_FILE=".mtron-classpath.sha256"
+    STEP_RAN=0
+    CP_STALE=0
+    if command -v sha256sum > /dev/null 2>&1; then
+        POM_HASH=$(sha256sum pom.xml | awk '{ print $1 }')
+    else
+        POM_HASH=""
+    fi
+    if [ -z "$POM_HASH" ] || [ ! -f "$CP_FILE" ] || [ "$POM_HASH" != "$(cat "$CP_HASH_FILE" 2>/dev/null || true)" ]; then
+        CP_STALE=1
+    else
+        # awk exits at the first non-empty line, so a large cache is not walked
+        CP_FIRST=$(tr ':' '\n' < "$CP_FILE" | awk 'NF { print; exit }')
+        if [ -z "$CP_FIRST" ] || ! { [ -e "$CP_FIRST" ] && { [ -d "$CP_FIRST" ] || [ -f "$CP_FIRST" ]; }; }; then
+            CP_STALE=1
+        fi
+    fi
+    if [ "$CP_STALE" -eq 1 ]; then
+        MVN_LOG=$(mktemp)
+        set +e
+        "$MVNW" dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile="$CP_FILE" -q > "$MVN_LOG" 2>&1 &
+        if [ "$MCP_MODE" -eq 1 ]; then spinner $! "resolving dependencies" >&2; else spinner $! "resolving dependencies"; fi
+        wait $!
+        MVN_EXIT=$?
+        set -e
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
+        rm -f "$MVN_LOG"
+        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        # Record the pom this cache was resolved from.  Best effort: an
+        # unwritable checkout must not fail the boot — it only costs a
+        # re-resolve next time.
+        if [ -n "$POM_HASH" ]; then printf '%s' "$POM_HASH" > "$CP_HASH_FILE" 2>/dev/null || true; fi
+        STEP_RAN=1
+    fi
+    CLASSPATH="target/classes:src/main/resources:$(tr -d '\n' < "$CP_FILE")"
+
+    # ── compile (only if needed) ────────────────────────────────────────
+    if [ ! -d target/classes ] || \
+       [ -n "$(find src -name '*.java' -newer target/classes -print -quit 2>/dev/null)" ]; then
+        MVN_LOG=$(mktemp)
+        set +e
+        "$MVNW" compile -q > "$MVN_LOG" 2>&1 &
+        # spinner $! "compiling"
+        wait $!
+        MVN_EXIT=$?
+        set -e
+        grep -v "^WARNING:" "$MVN_LOG" 2>/dev/null >&2 || true
+        rm -f "$MVN_LOG"
+        if [ "$MVN_EXIT" -ne 0 ]; then exit "$MVN_EXIT"; fi
+        STEP_RAN=1
+    fi
+    # Spinner already emits \n when done.  Only need this when nothing ran.
+    if [ "$STEP_RAN" -eq 0 ]; then if [ "$MCP_MODE" -eq 1 ]; then echo >&2; else echo; fi; fi
+
+    JVM_FLAGS=( -Dlogback.configurationFile=conf/logback.xml
+                -Djava.util.logging.config.file=conf/logging.properties
+                --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                --enable-native-access=ALL-UNNAMED )
+    # As in the installed branch above: this flag exists only on JDK 23+.  Gate
+    # it rather than hardcoding it, since JAVA_HOME may now select a JDK 21.
+    if [ "${JAVA_MAJOR:-0}" -ge 23 ]; then
+        JVM_FLAGS+=( --sun-misc-unsafe-memory-access=allow )
+    fi
+    LAUNCH=( -cp "$CLASSPATH" studio.phaseshift.metatron.BootLoader )
+fi
+
+# ── launch ──────────────────────────────────────────────────────────
+# Extra JVM switches from the environment: METATRON_JAVA_OPTS="-Dfoo=bar -Dbaz=1"
+# Without this a system property is unreachable from the command line — "$@"
+# below belongs to the boot file, not to the JVM.
+if [ -n "${METATRON_JAVA_OPTS:-}" ]; then
+    # shellcheck disable=SC2206  # splitting is intended: the value is a list of switches
+    JVM_FLAGS+=( ${METATRON_JAVA_OPTS} )
+fi
+
+# Loop on EXIT_RESET (100) so the JVM can request a clean restart.
+# BootLoader.EXIT_RESET must match this number.
+EXIT_RESET=100
+while true; do
+    set +e
+    "$JAVA_BIN" "${JVM_FLAGS[@]}" "${LAUNCH[@]}" "$@"
+    exit_code=$?
+    set -e
+    if [ "$exit_code" -ne "$EXIT_RESET" ]; then
+        exit "$exit_code"
+    fi
+    if [ "$MCP_MODE" -eq 1 ]; then
+        printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}" >&2
+    else
+        printf '\n%b\n\n' "${RED}⟳ ${YELLOW}restarting ${BLUE}m${CYAN}E${RED}t${YELLOW}A${GREEN}T${MAGENTA}r${RED}o${GREEN}N${NC}...${NC}"
+    fi
+done

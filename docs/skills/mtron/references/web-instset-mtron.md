@@ -1,0 +1,332 @@
+---
+name: web instruction set
+description: |
+  The `/m/web` vocabulary for exposing mtron objs over http, ws and mcp: protocol surfaces, MIME document
+  types, route tables, the `mtron::T` evaluation surface, and the conventions a mount follows.
+  TRIGGER: When mounting an obj to a route, serving mtron objs over http or websockets, making an obj an MCP
+  server, shipping an obj for remote evaluation (`mtron::T`), choosing a `?mimeq=` rendering, or wondering why
+  a route, an image, or a css file does not serve.
+---
+
+# web instruction set (`/m/web`)
+
+`/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
+types, and *endpoint* types that provide the server logic. The two servers of `/m/web` are
+`http_server` and `ws_server` — each a listener: constructed, it is the machine's presence at
+`~/network/listener/<key>` — each carrying a `route` rec for routing connections to mounted services.
+Reading the web is a client's: `http_client::[host => <http://#>]` (and `<https://#>`) is the gateway, a peer every
+http(s) read goes through. A read never dials, so a machine with no gateway reads no web.
+
+```mtron_pre
+[HIDDEN] </network/listener/http/localhost/8777> -> noobj
+[HIDDEN] </network/listener/ws/localhost/8555> -> noobj
+dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
+[-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
+http_server::[origin => http://localhost:8777,     /
+              route => [/mcp    => mcp_mtron,      /
+                        /docker => docker:,        /
+                        /usr    => /usr]]
+[-- the web gateway: the http(s) reads below go through these two clients --]
+http_client::[host => <http://#>]
+http_client::[host => <https://#>]
+[-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
+[-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
+ws_server::[origin  => ws://localhost:8555,        /
+            route  => [/basic   => !*</sys/space/mcp/web_basic>]]
+```
+
+The organizing idea is that **a protocol is a projection of an obj, not a copy of it**. An `mcp_server` rides http,
+websockets and stdio alike; a `str` that is css is `css::T` whoever asks for it. A mount then only has to say which
+obj and which encoding. Below is metatron accessing this document.
+
+```mtron_pre
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T)
+[MAXOUTPUT 10] *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
+```
+
+## the space these examples use
+
+A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
+`/usr/person/1` and `/usr/person/2`, and every block after this one runs against these objs. (`mtron_pre`
+blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
+
+```mtron_pre
+[-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
+memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
+person::[name=>'marko',age=>29]@/usr/person/1
+person::[name=>'grant',age=>25]@/usr/person/2
+```
+
+## types
+
+| type                      | vid                                            | refines       | meaning                                                                               |
+|---------------------------|------------------------------------------------|---------------|---------------------------------------------------------------------------------------|
+| `protocol::T`             | `/m/web/protocol`                              |               | the umbrella: **a union** of the surfaces below, so it classifies *values*            |
+| `http::T`                 | `/m/web/http`                                  | `protocol::T` | the http vocabulary                                                                   |
+| `rest::T`                 | `/m/web/http/rest`                             | `http::T`     | a REST surface — get reads, put replaces, patch updates, delete unlinks, post creates |
+| `ws::T`                   | `/m/web/ws`                                    | `protocol::T` | the websocket vocabulary                                                              |
+| `mcp::T`                  | `/m/web/mcp`                                   | `protocol::T` | an MCP surface                                                                        |
+| `mtron::T`                | `/m/web/mtron`                                 | `protocol::T` | one message is one expression, evaluated — its answer returns                         |
+| `stream::T`               | `/m/web/stream`                                | `protocol::T` | the raw byte / server-sent-event stream surface                                       |
+| `sse::T`                  | `/m/web/sse`                                   | `stream::T`   | a server-sent-events response — a chunked `text/event-stream` over http               |
+| `mcp_server::T`           | `/m/web/mcp/mcp_server`                        | `mcp::T`      | an MCP server obj — **transport-agnostic**                                            |
+| `web_http`                | `/m/web/http/web_http`                         | `rest::T`     | the handler that serves a web root                                                    |
+| `mcp_http` / `mcp_ws`     | `/m/web/mcp/mcp_http`, `/m/web/mcp/mcp_ws`     | `mcp::T`      | an `mcp_server` bound to a carrier                                                    |
+| `mtron_http` / `mtron_ws` | `/m/web/http/mtron_http`, `/m/web/ws/mtron_ws` | `mtron::T`    | the mtron-eval surface on each carrier                                                |
+| `route::T`                | `/m/web/route`                                 | `rec::T`      | a mount table: `uri => target`                                                        |
+
+Two ways to ask "is this a protocol surface?", and they are not interchangeable:
+
+* **a value** — `value?protocol::T` works, because `protocol::T` is a union whose predicate is applied to the
+  objs on its lhs (an `mcp_server` value classifies as a protocol surface).
+* **a type** — ask the *declared* parent chain: `rest::T → http::T → protocol::T` is
+  true, while `rest::T?protocol::T` is **noobj**, because a type is not a protocol value.
+
+## MIME document types
+
+A document is typed by its MIME. Every document type under `/m/web/mime/+` refines `str::T` — `html`, `markdown`,
+`java`, `yaml`, `xsv`, `csv`, `json`, `xml`, `css`. This is
+a contract, not a coincidence — `fsspace::T` reads a file by typing its
+bytes with the MIME, so a document type that did not accept a `str::T` would throw
+on read. A MIME type is a **predicate on text**, not a structural transformation: `html::"<html>…"` is a `str::T` that
+verifies as HTML -- aka "typed strings".
+
+## binary documents are bytes
+
+A file that is not text is read as `bytes::T`. Decoding binary through UTF-8 and re-encoding it
+on the way out does not fail, it *grows*: a 1337-byte favicon was served as 2231 bytes, one replacement character per
+non-ASCII byte, and a browser draws a broken image — which reads as "the image is missing" rather than as a bug. The
+rule has two halves, because either alone leaves a hole:
+
+* the read (`fsspace::T`): not text, or not valid UTF-8 at all (an unlisted extension falls back to `text/plain`), is
+  `bytes`;
+* the write (`MIME.MIMEType.toBytes`): bytes are written verbatim, whatever serializer the MIME would otherwise use.
+
+## `?mimeq=` — choosing the rendering
+
+The rendering is chosen per request with `?mimeq=<media type>`. Against a live carrier with a daemon behind the
+`/docker` mount the same request reads:
+
+```mtron
+[-- shown, not run: the docs environment has no docker daemon behind this mount --]
+http://localhost:8777/docker/image?mimeq=application/json      [-- the docker images as JSON --]
+http://localhost:8777/docker/image?mimeq=text/plain            [-- the same objs, mtron-typed, as plain text --]
+http://localhost:8777/docker/image                             [-- the native mtron rendering --]
+```
+
+`application/x-mtron` is the **structural parse gate**: it asks for the content parsed into mtron objs rather than
+handed back as text. Read any mount's own documentation with `?docq`.
+
+The mechanism is the server's: a web mount reads the address without its q-procs and serializes the result as the
+`?mimeq` media type asks — `?mimeq=` is a server-side as-transform, and a client's read sends it along in the url.
+A space declares the same rendering for its own reads with a q-proc,
+`q => [mimeq::[pattern=>mimeq, post_read=>inst?#{*}<=#{?}(uri::T,#::T)]]` — a `post_read` inst that runs *after*
+the read and *before* serialization.
+
+A JSON reader decides how much a JSON string is trusted. `ObjJSONSerializer.literal()` keeps every string as
+written, which is what a document whose fields are all strings needs: docker reports `"Tag":"11.2"`, and reading
+that as a *real* left the image addressable only as `<mariadb:11.2000>` — invisibly, because from the JSON face a
+number and a string render alike. `simple()` and `web()` keep the content-sniffing behaviour their callers depend on.
+
+## route tables
+
+A `route` rec maps a request path to a target. Four rules:
+
+* **a key is the path it serves.** A server routes each request to the most specific key that describes the
+  request's path: a literal key mounts its whole subtree — the idiom every live mount uses (`/mcp`, `/docker`, `/`)
+  — and a pattern key the paths it describes (`/people/#` serves `/people/34`).
+* **a prefix value is a root**, extended by the request's remaining path: `/docs => mfs:docs/website/` serves
+  `/docs/x/y` from `mfs:docs/website/x/y`.
+* **a templated value is the address.** It is evaluated with the request uri as its lhs, so the mount has already
+  consumed the path and nothing is appended:
+
+```mtron_pre
+/person/1.map(</usr/person/${name()}>)                  [-- the tail segment --]
+```
+
+```mtron_pre
+/person/1.map(</usr/person/${as(rec::T).>>path/2}>)     [-- the same, positionally --]
+```
+
+Both are `/usr/person/1`: segment *n* is `path/(n+1)`, the path being 0-indexed with an empty leading element.
+The expressions see the whole request uri, so the pattern never has to carry the capture — there is no capture
+binding step, and a route is debuggable by looking at the request uri.
+
+* **an address resolved for a request travels in the request rec** as `web_root`, and the handler is cached per (mount,
+  client, resolved *target*) — never per address, since a templated mount resolves a different address per
+  request while the same protocol engine serves them all.
+
+```mtron_pre
+*/usr/person/1                                              [-- straight from the space --]
+*http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
+*http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
+*http://localhost:8777/usr/person/1?mimeq=text/plain       [-- as plain text --]
+```
+
+`/person/1` serves that obj and `/person/2` serves the other, through the *same* handler — and `/person/3` is a 404,
+because the space is live rather than a lookup table of two.
+
+Only a templated value is resolved per request. Anything else — a plain uri, a code — is resolved once, on the first
+request its route serves, so a route value that *builds* its target (a `code` such as
+`*dr.as(skill::T).as(mcp_server::T)`) is not rebuilt on every request — and may name a target built after the server.
+
+### route values: five flavors
+
+Whatever a key mounts, the value is an *obj applied to the request uri* — and per the rule above, only templated
+values re-resolve per request; the rest resolve once, on first use. The live carriers use five shapes:
+
+| value                | example                                          | what it mounts                                                             |
+|----------------------|--------------------------------------------------|----------------------------------------------------------------------------|
+| identity path        | `/usr => /usr`                                   | this machine's own space, under its own address                            |
+| scheme namespace     | `/mfs => mfs:`, `/docker => docker:`             | another space, addressed by scheme                                         |
+| short name           | `/mcp => mcp_mtron`                              | the router's redirect table — a *type with a constructor*, built on demand |
+| evaluated expression | `/drstynx => *dr.as(skill::T).as(mcp_server::T)` | the result, mounted as an obj                                              |
+| fallback             | `/ => mfs:docs/website/`                         | every request no more-specific key caught                                  |
+
+Reading the web is no route's: an outbound `*<http://…>` goes through a constructed `http_client` — the gateway,
+`host => <http://#>` — and a client built for one site answers for that site before the gateway does.
+
+The mount table is also the **exposure boundary**. What is not mounted is not reachable: the live carrier mounts
+`/usr`, `/mfs`, `/mcp`, `/message`, `/docker` and `/`, while `/sys`, `/m` and everything else are simply absent
+from the table — and absent from the web. Security by omission; fail-closed by construction.
+
+## mounting an obj
+
+```mtron
+[-- an mcp_server over http: the protocol follows from the obj --]
+/mcp       => mcp_mtron
+[-- the same agent object over websockets --]
+/drstynx   => *dr.as(skill::T).as(mcp_server::T)
+[-- a web root --]
+/          => mfs:docs/website/
+```
+
+A websocket has no per-request uri, only a handshake, so a templated ws mount addresses per *connection*.
+
+`mcp_mtron` in the first mount is a short-name redirect to a `mcp_server::T` **type with a constructor** — the
+mount is a factory: dereferencing the name returns the type, and the carrier constructs the handler from it.
+
+## a URL is a deref chain
+
+Past the mount, the remaining path is a traversal with the space's own read semantics, unchanged:
+
+* **wildcards are honored.** `GET /docker/image/+` is a pattern read — every image, as a lst. A key decides which
+  mount takes a request; past the mount, the request path is read as it stands.
+* **the path may continue through a result.** `/docker/image/+/container/0` matches the images, descends
+  `container`, and indexes `0` — one traversal, expressed as path segments.
+* **results may hold `!*` auto-refs.** A listing returns pointers, not copies —
+  `container => [!*docker:container/vtest_a-a-1]`. Continuing the path *into* a ref forces its resolution;
+  stopping before it leaves the subtree untouched. The ref is the fourth redirect, at the data level:
+
+  router prefixes → the router's redirect table → mount tables → `!*` data edges
+
+## `mtron::T` — one message, one expression, evaluated
+
+`mtron::T` (`/m/web/mtron`) is the surface for running mtron on another machine: a client sends an expression, the
+endpoint's machine evaluates it, and the answer comes back. Nothing wraps the expression — the message *is* the
+program — and it runs against the endpoint's own machine, so a read inside it reads that machine's spaces. (A
+console's `*<ws://host:port/x>` reaches a peer this way: the network ships the read to the peer's `/mtron` endpoint.)
+
+**`mtron_ws`** (the `/mtron` route in `boot.mtron`) is the realization that does this:
+
+* **one frame, one evaluation.** The session reads each text frame with its machine's own parser and evaluates it
+  exactly once, as the console does. The answer is not applied again, so an answer that is itself code comes back as
+  itself: `[plus(2).plus(2)]==[as(inst::T)]>-` answers the lambda, and `|start(7)` answers `start(7)`.
+* **the answer is the whole value.** A coefficient is part of it: `{3}34` answers `{3}34`.
+* **failures are answers.** A program that fails, or throws, answers its `fail`; the client never waits out its
+  deadline for a reply that is not coming.
+* **the connection picks the serialization.** `?in=` and `?out=` on the connection uri choose the serializers —
+  `application/x-mtron` both ways by default, `?out=application/x-mtron-ui` for the console's rendering, and
+  `?out=application/json` for a json client (lossy by design: coefficients, vids and tids do not survive json).
+
+```
+bin/wsplus -e '[plus(2).plus(2)]==[as(inst::T)]>-' 'ws://localhost:8555/mtron?out=application/x-mtron-ui'
+==>inst(#{*}::T){plus(2).plus(2)}
+```
+
+**`mtron_http`** is declared an `mtron::T` but does not evaluate yet: every request, GET or POST, is answered with
+the request rec it arrived as — `method`, `uri`, `headers`, and `body` (parsed, not run) — in json, an http mount's
+default serialization. Ship code over `mtron_ws` until it does.
+
+## streaming a response (`sse::T`)
+
+A mount is normally request/response — one body, then the handler closes. `sse::T` is the streaming exception: an
+http handler opens a chunked `text/event-stream` response and pushes any number of events before it closes. The
+primitive is `SseStream` (`isa/web/space/http/SseStream.java`), opened from an `HttpRec` subclass with `openSse()`:
+
+```java
+final SseStream sse = this.openSse();     // 200, text/event-stream, chunked (length 0)
+sse.
+
+send("message","{\"ping\":true}"); // event: message + data: {...}
+sse.
+
+comment("ping");                      // : ping   (heartbeat, ignored by clients)
+sse.
+
+close();                              // flush + end the stream
+```
+
+Each event is `event:`/`data:`/`:` lines terminated by a blank line; a multi-line payload becomes repeated `data:`
+fields. Writes are synchronized and flushed immediately, so a producing thread (`?subq`, a future LLM token stream)
+can push events across the handler thread.
+
+The first consumer is `mcp_httpHandler.doGet` — the Streamable-HTTP GET. It opens an `sse::T` stream (only for
+`Accept: text/event-stream`), drains the server's subscription outbox, and streams each
+`notifications/resources/updated` as an `event: message`, then holds the stream open with heartbeats until the
+client disconnects.
+
+## MCP server -> client notifications
+
+MCP is client-initiated, but a metatron `mcp_server` can still **push** to its client — and it stays declarative
+mtron, zero Java. The ws carrier registers a `?subq` subscription whose `on_recv` builds a JSON-RPC 2.0 envelope
+and `send()`s it down the connection. The one non-obvious piece on the wire is the envelope shape:
+
+```mtron
+[-- a server->client push is just a JSON-RPC 2.0 envelope, typed as json --]
+json::[jsonrpc => '2.0',
+       method  => 'notifications/resources/updated',
+       params  => [uri  => <ws://localhost:8555/resources/1>,
+                   change => [kind => 'updated', uris => [<ws://localhost:8555/resources/1>]]]]
+```
+
+Three mtron mechanics the pattern leans on (each has bitten before):
+
+* **`json::` over `rec::`.** The `json::` type prefix forces JSON serialization (`"method":"..."`), not mtron
+  record syntax — the client is speaking JSON-RPC, so the envelope must come out as JSON.
+* **`-<` forces evaluation.** A nested template interpolation (`${...}`, a deref, `>>N`) inside a constructed rec is
+  captured as *literal source* unless you wrap the rec in `-<`; the split `... .inst(payload=>_){ *payload>>>send(...)}
+  ` then hands the evaluated rec to the sender, working around the evaluator's nested-call depth limit.
+* **subscriptions are in-memory.** A `?subq` registration lives only for the life of the VM — re-enable it at boot and
+  re-inject it into the space that holds it after a crash (`<space vid> >>= [q=>+[subq::[=>]]]`, then re-register the
+  `sub::`), no restart.
+
+The `?subq` framework is declared on a space the same way as any other q-proc — `memspace::[pattern => /usr/#, q => [subq::[=>]]]`
+adds pub/sub semantics to that space. A server may push any of the standard notification methods; every one of them
+says "re-read what you already know":
+
+| method                              | meaning                                          |
+|-------------------------------------|--------------------------------------------------|
+| `notifications/resources/updated`   | a subscribed resource's content changed          |
+| `notifications/resources/list_changed` | the available resource set changed            |
+| `notifications/tools/list_changed`  | the available tool set changed                   |
+| `notifications/prompts/list_changed`| the available prompt set changed                 |
+| `notifications/logging/message`     | a log line for the client                        |
+| `notifications/roots/list_changed`  | the server's accessible filesystem roots changed |
+
+## not available yet
+
+* the **surface vocabulary** — `*dr.as(mcp::T)`, `person::T.as(rest::T)` — needs `as` rows projecting an obj to a
+  protocol surface; today `*dr.as(mcp::T)` fails with *"agent … is not a protocol::T@/m/web/mcp"*, which is why the
+  projection chain above is spelled `.as(skill::T).as(mcp_server::T)`.
+* **one route table for both servers** — waits on a resolver that checks a surface against the server it is
+  mounted on, so http cannot mount a ws handler.
+
+## see also
+
+* the webSpace design record at `docs/design/webspace.md` — the lattice, the route contract, and the migration
+  stages in full.
+* [server -> client notifications](#mcp-server---client-notifications) — the `?subq` envelope push (this document).
+* [type system](type-system-mtron.md) — nominal vs structural typing, and why a union classifies values.

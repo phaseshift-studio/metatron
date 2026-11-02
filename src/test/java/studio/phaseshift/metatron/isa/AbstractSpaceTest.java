@@ -1,0 +1,1650 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestCategory;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.QProc;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.CommonUtil;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public abstract class AbstractSpaceTest extends AbstractMetatronTest {
+
+    protected int sleepBetweenReads = 0;
+    protected Space space;
+    protected final Supplier<Space> spaceSupplier;
+    protected static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
+    /**
+     * Set to true when a seed write is skipped (rejected by root enforcement); cleared on next non-"." row.
+     */
+    protected static boolean seedWriteSkipped = false;
+    protected final fURI baseURI;
+
+    public AbstractSpaceTest(final Supplier<Space> spaceSupplier) {
+        this(f("/t"), spaceSupplier);
+    }
+
+    public AbstractSpaceTest(final fURI baseURI, final Supplier<Space> spaceSupplier) {
+        super();
+        this.baseURI = baseURI;
+        this.spaceSupplier = spaceSupplier;
+    }
+
+    public Space getSpace() {
+        return this.space;
+    }
+
+    /**
+     * Called when a write expression evaluates to a fail object during testMonoReadWrite.
+     * Override to return true in spaces that enforce root type constraints (e.g. dcmntSpace)
+     * so that tests writing non-conforming values at the document root are skipped gracefully
+     * rather than failed.
+     *
+     * @param writeFailObj the fail obj returned by the write expression
+     * @return true if this failure is expected and the test case should be skipped
+     */
+    protected boolean expectWriteRejection(final Obj writeFailObj) {
+        return false;
+    }
+
+    @BeforeEach
+    protected void setup() {
+        this.space = this.spaceSupplier.get();
+        if (null == this.space)
+            Assertions.fail("space supplier yielded a null space");
+        if (this.space.vid() == null)
+            LOG.debug("provided space has no vid and thus can not be shutdown automatically");
+
+    }
+
+    @AfterEach
+    protected void stop() {
+        if (null == this.space) {
+            Assertions.fail("space nullified over course of testing");
+            return;
+        }
+        assertDoesNotThrow(this.space::close);
+        this.space = null;
+    }
+
+    public static Map<fURI, Obj> generateRandomData(final fURI furiPrefix, int size) {
+        final Map<fURI, Obj> data = new HashMap<>();
+        for (int i = 0; i < size; i++) {
+            data.put(furiPrefix.extend("x" + i), str("value" + i));
+        }
+        return data;
+    }
+
+    @TestCategory.Read
+    @ParameterizedTest
+    @TestData(value = {
+            """
+                    routes -> [db:abc                   => c,
+                               db:ddd                   => v:embed,
+                               db:llm_message_embedding => v:llm_embeddings,
+                               db:                      => <>,
+                               /x/y                     => v:]
+                    """
+    })
+    @CsvSource(value = {
+            "db:abc/c                                        % c/c",
+            "db:x                                            % x",
+            "xyz:abc                                         % xyz:abc",
+            "db:a                                            % a",
+            "db:abc/def/                                     % c/def/",
+            "db:ddd/1                                        % v:embed/1",
+            "db:llm_message_embedding/10                     % v:llm_embeddings/10",
+            "db:llm_message_embedding/15?embedq              % v:llm_embeddings/15?embedq",
+            "db:llm_message_embedding/20?embedq=gemma4       % v:llm_embeddings/20?embedq=gemma4",
+            "/x/y/z                                          % v:z"
+    }, delimiter = '%')
+    public void testSpaceRouter(final String lhs, final String expected) {
+        final Map<Uri, Obj> routes = (Map) Machine.read(f("routes")).asRec().jvm();
+        final fURI actual = Space.Helper.routeFromSpace(f(lhs), routes);
+        LOG.debug("testing route from space: %s => %s [expected: %s]", lhs, actual, expected);
+        assertEquals(f(expected), actual);
+    }
+
+    @TestCategory.Write
+    @TestCategory.Read
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.to(a)                                               % *a                                % 1",
+            "$$ -> [a,b,c]                                         % *<$$>                              % [a,b,c]",
+            ".                                                     % *<$$/#>                            % {[a,b,c],a,b,c}",
+            ".                                                     % *<$$/0>                            % a",
+            ".                                                     % *<$$/1>                            % b",
+            ".                                                     % *<$$/2>                            % c",
+            ".                                                     % *<$$/+>                            % {a,b,c}",
+            ".                                                     % *<$$/+/>                           % [<$$/0>=>a,<$$/1>=>b,<$$/2>=>c]>-",
+            ".                                                     % *<$$/>                             % [<$$/0>=>a,<$$/1>=>b,<$$/2>=>c]>-",
+            ".                                                     % *<$$/+>                            % [a,b,c]>-",
+            ".                                                     % *<$$/0>                            % a",
+            ".                                                     % *<$$/1>                            % b",
+            ".                                                     % *<$$/2>                            % c",
+            "$$ -> [a,[b,[c,d],e],f]                               % *<$$/0>                            % a",
+            ".                                                     % *<$$>                              % [a,[b,[c,d],e],f]",
+            ".                                                     % *<$$/+>                            % {a,[b,[c,d],e],f}",
+            ".                                                     % *<$$/+/>                           % {$$/0=>a,$$/1=>[b,[c,d],e],$$/2=>f}",
+            ".                                                     % *<$$/+/+>                          % {b,[c,d],e}",
+            ".                                                     % *<$$/+/+/>                         % {$$/1/0=>b,$$/1/1=>[c,d],$$/1/2=>e}",
+            ".                                                     % *<$$/+/+/+/>                       % {$$/1/1/0=>c,$$/1/1/1=>d}",
+            ".                                                     % *<$$/+/+/+>                        % {c,d}",
+            // ".                                                     % *<$$/+/+/#>                        % {c,d}",
+            ".                                                     % *<$$/+>                            % {a,[b,[c,d],e],f}",
+            ".                                                     % *<$$/+/>                           % [$$/0=>a,$$/1=>[b,[c,d],e],$$/2=>f]>-",
+            ".                                                     % *<$$/+/+>                          % {b,[c,d],e}",
+            ".                                                     % *<$$/+/+/>                         % [<$$/1/0>=>b,<$$/1/1>=>[c,d],<$$/1/2>=>e]>-",
+            ".                                                     % *<$$/RaNDoM>                       % noobj",
+            ".                                                     % *<$$/0/0>                          % noobj",
+            ".                                                     % *$$/1/0                            % b",
+            ".                                                     % *$$/1/1                            % [c,d]",
+            ".                                                     % *$$/0/1/1                          % noobj",
+            ".                                                     % *$$/1/1/1                          % d",
+            ".                                                     % *$$/1/1/+                          % {c,d}",
+            ".                                                     % *$$/+                              % {a,[b,[c,d],e],f}",
+            ".                                                     % *$$/+/+                            % {b,[c,d],e}",
+            ".                                                     % *$$/+/+/+                          % {c,d}",
+            ".                                                     % *$$/+/+/+/+                        % noobj",
+            ".                                                     % *$$/+/+/+/+/+                      % noobj",
+            ".                                                     % *$$/+/+/+/                         % [$$/1/1/0=>c,$$/1/1/1=>d]>-",
+            //   ".                                                     % *$$/#                              % {[a,[b,[c,d],e],f],a,[b,[c,d],e],b,[c,d],c,d,e,f}",
+            "$$ -> [a=>1,b=>2,c=>3]                                % *<$$>                              % [a=>1,b=>2,c=>3]",
+            ".                                                     % *<$$/a>                            % 1",
+            ".                                                     % *$$/b                              % 2",
+            ".                                                     % *$$/c                              % 3",
+            ".                                                     % *$$/c                              % 3",
+            ".                                                     % *$$/+                              % {1,2,3}",
+            // ".                                                     % *$$/#                              % {1,2,3,[a=>1,b=>2,c=>3]}",
+            // ".                                                     % *$$/#/                             % {$$/a=>1,$$/b=>2,$$/c=>3,$$=>[a=>1,b=>2,c=>3]}",
+            ".                                                     % *<$$/+>.sum()                      % 6",
+            // ".                                                     % *<$$/#>.>>.sum()                   % .",
+            ".                                                     % *<$$/+>.sum?int<=int{*}()          % .",
+            // ".                                                     % *<$$/#>.>>.sum?int<=int{*}()       % .",
+            //  ".                                                     % *</+/+>.sum?int<=int{*}()          % .",
+            //         "$$/ -> [a=>1,b=>2,c=>3]                               % *<$$/>                               % [$$/a=>1,$$/b=>2,$$/c=>3]>-",
+            ".                                                     % *<$$/x>                            % noobj",
+            ".                                                     % *$$/a                              % 1",
+            "$$ -> [a=>[1,2,3]]                                    % *$$/a/0                            % 1",
+            ".                                                     % *$$/a/1                            % 2",
+            "$$ -> [a=>[!*$$,2,3]]                                 % *$$/a/0                            % [a=>[!*$$,2,3]]",
+            ".                                                     % *$$/a/1                            % 2",
+            "$$ -> [a=>[b=>2,c=>3],d=>4]                           % *$$/a/b                            % 2",
+            //".                                                     % *$$/#                              % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-", TODO: make poly.at() consistent with space.read()
+            ".                                                     % *<$$/x>                            % noobj",
+            //      ".                                                     % *$$/                               % [$$/a=>[b=>2,c=>3],$$/d=>4]>-",
+            ".                                                     % *$$/+/                             % [$$/a=>[b=>2,c=>3],$$/d=>4]>-",
+            ".                                                     % *$$/a/c                            % 3",
+            ".                                                     % *$$/a                              % [b=>2,c=>3]",
+            ".                                                     % *$$/d                              % 4",
+            ".                                                     % *$$/+                              % [[b=>2,c=>3],4]>-",
+            //   ".                                                     % *$$/+/#                            % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-",
+            //     ".                                                     % *$$/+/+/#                          % [[b=>2,c=>3],2,3,4]>-",
+            //         ".                                                     % *$$/a/                             % [$$/a/b=>2,$$/a/c=>3]>-",
+            ".                                                     % *$$/a/+                            % {2,3}",
+            //          ".                                                     % *$$/a/+/                           % [$$/a/b=>2,$$/a/c=>3]>-",
+            //  "[$$/a/b -> 2, $$/a/c -> 3, $$/d -> 4]                 % *$$/+/                             % [$$/a/b=>2,$$/a/c=>3]>-",
+            // Additional wildcard pattern tests
+            "$$ -> [x=>1,y=>2,z=>3]                                % *<$$/+>                            % {1,2,3}",
+            ".                                                     % *<$$/+/>                           % [$$/x=>1,$$/y=>2,$$/z=>3]>-",
+            "$$ -> [a=>[b=>1,c=>2],d=>[e=>3,f=>4]]                 % *<$$/+/+>                          % {1,2,3,4}",
+            ".                                                     % *<$$/a/+>                          % {1,2}",
+            ".                                                     % *<$$/d/+>                          % {3,4}",
+            ".                                                     % *<$$/+/b>                          % 1",
+            ".                                                     % *<$$/+/e>                          % 3",
+            "$$ -> [a=>[b=>[c=>10,d=>20],e=>[f=>30,g=>40]],h=>[i=>[j=>50,k=>60]]]  % *<$$/a/+/+>        % {10,20,30,40}",
+            ".                                                     % *<$$/a/b/+>                        % {10,20}",
+            ".                                                     % *<$$/+/+/+>                        % {10,20,30,40,50,60}",
+            "$$ -> [a=>1,b=>2,c=>3,d=>4,e=>5]                      % *<$$/+>                            % {1,2,3,4,5}",
+            ".                                                     % *<$$/b>                            % 2",
+            ".                                                     % *<$$/+/>                           % [$$/a=>1,$$/b=>2,$$/c=>3,$$/d=>4,$$/e=>5]>-",
+            "$$ -> {[a=>[b=>[d=>1]]],[a=>[c=>[d=>2]]]}             % *<$$/a/b/d>                        % 1",
+            ".                                                     % *<$$/a/b/+>                        % 1",
+            ".                                                     % *<$$/a/+/+>                        % {1,2}",
+            ".                                                     % *<$$/+/+/+>                        % {1,2}",
+            ".                                                     % *<$$/a>                            % {[b=>[d=>1]],[c=>[d=>2]]}",
+            "1.vid(abc)                                            % *abc                               % 1",
+            "1.vid(abc)                                            % *abc.vid(<.>)                      % 1",
+            // "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                               % 12@d",
+            // "[1@a,2@b,3@c]@d                                       % *d._/_.vid(<.>)\\_.vid(<.>)      % [1,2,3]",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._/_.vid(<.>)\\_               % [1,2,3]@d",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._.vid(<.>)                    % 12",
+            // ========================================
+            // ADDITIONAL TEST CASES - Added for enhanced coverage
+            // ========================================
+            // EDGE CASES - Empty and Null-like Values
+            "$$ -> []                                              % *<$$>                              % []",
+            "$$ -> [a=>[]]                                         % *$$/a                              % []",
+            "$$ -> [a=>[b=>[]]]                                    % *$$/a/b                            % []",
+            "$$ -> [a=>[],b=>[]]                                   % *<$$/+>                            % {[],[]}",
+            // DEEP NESTING - Test limits of nested structures
+            "$$ -> [a=>[b=>[c=>[d=>[e=>5]]]]]                      % *$$/a/b/c/d/e                      % 5",
+            // ".                                                     % *<$$/+/+/+/+/+>                    % {5}",
+            ".                                                     % *$$/a/b/c/d                        % [e=>5]",
+            "$$ -> [a=>[b=>[c=>[d=>[e=>[f=>[g=>[h=>8]]]]]]]]       % *$$/a/b/c/d/e/f/g/h                % 8",
+            //  ".                                                     % *<$$/+/+/+/+/+/+/+/+>              % {8}",
+            // MIXED TYPES IN RECORDS - Different value types at same level
+            "$$ -> [int=>42,str=><hello>,bool=>true,real=>3.14]   % *$$/int                            % 42",
+            ".                                                     % *$$/str                            % <hello>",
+            ".                                                     % *$$/bool                           % true",
+            ".                                                     % *$$/real                           % 3.14",
+            ".                                                     % *<$$/+>                            % {42,<hello>,true,3.14}",
+            // MIXED TYPES IN LISTS
+            "$$ -> [42,<hello>,true,3.14,[nested=>1]]             % *$$/0                              % 42",
+            ".                                                     % *$$/1                              % <hello>",
+            ".                                                     % *$$/2                              % true",
+            ".                                                     % *$$/3                              % 3.14",
+            ".                                                     % *$$/4                              % [nested=>1]",
+            ".                                                     % *$$/4/nested                       % 1",
+            ".                                                     % *<$$/+>                            % {42,<hello>,true,3.14,[nested=>1]}",
+            // LARGE RECORDS - Many fields at same level
+            "$$ -> [a=>1,b=>2,c=>3,d=>4,e=>5,f=>6,g=>7,h=>8,i=>9,j=>10] % *<$$/+>                       % {1,2,3,4,5,6,7,8,9,10}",
+            ".                                                     % *$$/e                              % 5",
+            ".                                                     % *$$/j                              % 10",
+            ".                                                     % *<$$/+>.sum()                      % 55",
+            // LARGE LISTS
+            "$$ -> [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]        % *$$/0                              % 0",
+            ".                                                     % *$$/15                             % 15",
+            ".                                                     % *<$$/+>                            % {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}",
+            // WILDCARD PATTERNS - More complex combinations
+            "$$ -> [a=>[x=>1,y=>2],b=>[x=>3,y=>4],c=>[x=>5,y=>6]] % *<$$/+/x>                          % {1,3,5}",
+            ".                                                     % *<$$/+/y>                          % {2,4,6}",
+            ".                                                     % *<$$/a/+>                          % {1,2}",
+            ".                                                     % *<$$/b/+>                          % {3,4}",
+            ".                                                     % *<$$/c/+>                          % {5,6}",
+            // SYMMETRIC STRUCTURES - Same structure repeated
+            "$$ -> [left=>[a=>1,b=>2],right=>[a=>3,b=>4]]         % *<$$/+/a>                          % {1,3}",
+            ".                                                     % *<$$/+/b>                          % {2,4}",
+            ".                                                     % *$$/left                           % [a=>1,b=>2]",
+            ".                                                     % *$$/right                          % [a=>3,b=>4]",
+            // OVERWRITE TESTS - Writing to same path multiple times
+            "$$ -> [a=>1]                                          % *$$/a                              % 1",
+            "$$ -> [a=>2]                                          % *$$/a                              % 2",
+            "$$ -> [a=>3]                                          % *$$/a                              % 3",
+            "$$ -> [a=>[b=>1]]                                     % *$$/a/b                            % 1",
+            "$$ -> [a=>[b=>2]]                                     % *$$/a/b                            % 2",
+
+            // SPECIAL KEY NAMES - Keys that might cause issues
+            "$$ -> [0=>1,1=>2,2=>3]                                % *$$/0                              % 1",
+            ".                                                     % *$$/1                              % 2",
+            ".                                                     % *$$/2                              % 3",
+            // "$$ -> [+=>1,-=>2,*=>3]                                % *$$/+                              % 1",
+            // ".                                                     % *$$/-                              % 2",
+            // ".                                                     % *$$/*                              % 3",
+            // NUMERIC KEYS IN RECORDS (not list indices)
+            "$$ -> [100=>a,200=>b,300=>c]                          % *$$/100                            % a",
+            ".                                                     % *$$/200                            % b",
+            ".                                                     % *$$/300                            % c",
+            ".                                                     % *<$$/+>                            % {a,b,c}",
+            // BOUNDARY - Very long key names
+            "$$ -> [veryLongKeyNameThatGoesOnAndOnAndOn=>42]       % *$$/veryLongKeyNameThatGoesOnAndOnAndOn % 42",
+            "$$ -> [a123456789012345678901234567890=>99]           % *$$/a123456789012345678901234567890     % 99",
+            // UNICODE IN KEYS
+            "$$ -> [你好=>1,世界=>2]                                % *$$/你好                            % 1",
+            ".                                                     % *$$/世界                            % 2",
+            ".                                                     % *<$$/+>                            % {1,2}",
+            // NESTED LISTS
+            "$$ -> [[1,2],[3,4],[5,6]]                             % *$$/0                              % [1,2]",
+            ".                                                     % *$$/0/0                            % 1",
+            ".                                                     % *$$/0/1                            % 2",
+            ".                                                     % *$$/1/0                            % 3",
+            ".                                                     % *$$/2/1                            % 6",
+            ".                                                     % *<$$/+/+>                          % {1,2,3,4,5,6}",
+            // RECORDS IN LISTS
+            "$$ -> [[a=>1],[b=>2],[c=>3]]                          % *$$/0/a                            % 1",
+            ".                                                     % *$$/1/b                            % 2",
+            ".                                                     % *$$/2/c                            % 3",
+            ".                                                     % *<$$/+/+>                          % {1,2,3}",
+            // LISTS IN RECORDS
+            "$$ -> [a=>[1,2,3],b=>[4,5,6]]                         % *$$/a/0                            % 1",
+            ".                                                     % *$$/a/2                            % 3",
+            ".                                                     % *$$/b/0                            % 4",
+            ".                                                     % *<$$/+/+>                          % {1,2,3,4,5,6}",
+            ".                                                     % *<$$/a/+>                          % {1,2,3}",
+            // HETEROGENEOUS NESTING - Mix of lists and records
+            "$$ -> [a=>[1,[x=>2],3],b=>[[y=>4],5,6]]               % *$$/a/0                            % 1",
+            ".                                                     % *$$/a/1/x                          % 2",
+            ".                                                     % *$$/a/2                            % 3",
+            ".                                                     % *$$/b/0/y                          % 4",
+            ".                                                     % *$$/b/1                            % 5",
+            // SINGLE ELEMENT STRUCTURES
+            "$$ -> [a=>1]                                          % *<$$>                              % [a=>1]",
+            ".                                                     % *$$/a                              % 1",
+            ".                                                     % *<$$/+>                            % {1}",
+            "$$ -> [1]                                             % *<$$>                              % [1]",
+            ".                                                     % *$$/0                              % 1",
+            ".                                                     % *<$$/+>                            % {1}",
+            // NEGATIVE NUMBERS
+            "$$ -> [a=>-1,b=>-42,c=>-999]                          % *$$/a                              % -1",
+            ".                                                     % *$$/b                              % -42",
+            ".                                                     % *$$/c                              % -999",
+            ".                                                     % *<$$/+>                            % {-1,-42,-999}",
+            // FLOATING POINT EDGE CASES
+            "$$ -> [a=>0.0,b=>-0.0,c=>1.5,d=>-1.5]                 % *$$/a                              % 0.0",
+            ".                                                     % *$$/c                              % 1.5",
+            ".                                                     % *$$/d                              % -1.5",
+            // BOOLEAN COMBINATIONS
+            "$$ -> [t=>true,f=>false]                              % *$$/t                              % true",
+            ".                                                     % *$$/f                              % false",
+            ".                                                     % *<$$/+>                            % {true,false}",
+            // WILDCARD WITH TRAILING SLASH - Return as records
+            "$$ -> [a=>1,b=>2,c=>3]                                % *<$$/+/>                           % [$$/a=>1,$$/b=>2,$$/c=>3]>-",
+            "$$ -> [x=>[y=>1,z=>2]]                                % *<$$/+/+/>                         % [$$/x/y=>1,$$/x/z=>2]>-",
+            // CROSS-LEVEL WILDCARDS
+            "$$ -> [a=>[b=>[c=>1]],d=>[e=>[f=>2]]]                 % *<$$/+/+/+>                        % {1,2}",
+            "$$ -> [a=>[x=>1,y=>2],b=>[x=>3,y=>4]]                 % *<$$/+/x>                          % {1,3}",
+            // ========================================
+            // REGRESSION TESTS - Bugs found in real usage
+            // ========================================
+            // Bug: Strings were being converted to URIs (biasTowardsURI issue)
+            "$$ -> <hello>                                         % *<$$>                              % <hello>",
+            ".                                                     % *$$                                % <hello>",
+            "$$ -> <world>                                         % *$$                                % <world>",
+            "$$ -> <test123>                                       % *$$                                % <test123>",
+            "$$ -> <a/b/c>                                         % *$$                                % <a/b/c>",
+            // Bug: Nested records with lists were failing JSON parse
+            "$$ -> [a=>[b=>[c=>d,e=>[1,2,3]]]]                     % *<$$>                              % [a=>[b=>[c=>d,e=>[1,2,3]]]]",
+            ".                                                     % *$$                                % [a=>[b=>[c=>d,e=>[1,2,3]]]]",
+            ".                                                     % *$$/a                              % [b=>[c=>d,e=>[1,2,3]]]",
+            ".                                                     % *$$/a/b                            % [c=>d,e=>[1,2,3]]",
+            ".                                                     % *$$/a/b/c                          % d",
+            ".                                                     % *$$/a/b/e                          % [1,2,3]",
+            ".                                                     % *$$/a/b/e/0                        % 1",
+            ".                                                     % *$$/a/b/e/1                        % 2",
+            ".                                                     % *$$/a/b/e/2                        % 3",
+            // Deep nested structure with multiple lists
+            "$$ -> [a=>[b=>[c=>[1,2,3,3],d=>2]]]                   % *<$$>                              % [a=>[b=>[c=>[1,2,3,3],d=>2]]]",
+            ".                                                     % *$$                                % [a=>[b=>[c=>[1,2,3,3],d=>2]]]",
+            ".                                                     % *$$/a                              % [b=>[c=>[1,2,3,3],d=>2]]",
+            ".                                                     % *$$/a/b                            % [c=>[1,2,3,3],d=>2]",
+            ".                                                     % *$$/a/b/c                          % [1,2,3,3]",
+            ".                                                     % *$$/a/b/c/0                        % 1",
+            ".                                                     % *$$/a/b/c/1                        % 2",
+            ".                                                     % *$$/a/b/c/2                        % 3",
+            ".                                                     % *$$/a/b/c/3                        % 3",
+            ".                                                     % *$$/a/b/d                          % 2",
+            // Strings that look like URIs but should stay strings
+            "$$ -> <http://example.com>                            % *$$                                % <http://example.com>",
+            "$$ -> <file:///path/to/file>                          % *$$                                % <file:///path/to/file>",
+            "$$ -> <user@domain.com>                               % *$$                                % <user@domain.com>",
+            "$$ -> <192.168.1.1>                                   % *$$                                % <192.168.1.1>",
+            // Strings with special characters that were problematic
+            // <hello world> not allowed by MQTT ... force fURI to have no spaces?
+            "$$ -> <hello_world>                                   % *$$                                % <hello_world>",
+            "$$ -> <a+b>                                           % *$$                                % <a+b>",
+            "$$ -> <a-b>                                           % *$$                                % <a-b>",
+            "$$ -> <a*b>                                           % *$$                                % <a*b>",
+            // Complex nested structures with mixed types
+            "$$ -> [users=>[alice=>[age=>30,tags=>[admin,user]],bob=>[age=>25,tags=>[user]]]] % *<$$> % [users=>[alice=>[age=>30,tags=>[admin,user]],bob=>[age=>25,tags=>[user]]]]",
+            ".                                                     % *$$/users/alice/age                % 30",
+            ".                                                     % *$$/users/alice/tags               % [admin,user]",
+            ".                                                     % *$$/users/alice/tags/0             % admin",
+            ".                                                     % *$$/users/bob/age                  % 25",
+            ".                                                     % *$$/users/bob/tags/0               % user",
+            ".                                                     % *<$$/users/+/age>                  % {30,25}",
+            ".                                                     % *<$$/users/+/tags/+>               % {admin,user,user}",
+            // Records with numeric string keys (not list indices)
+            "$$ -> [0=><zero>,1=><one>,2=><two>]                   % *$$/0                              % <zero>",
+            ".                                                     % *$$/1                              % <one>",
+            ".                                                     % *$$/2                              % <two>",
+            ".                                                     % *<$$/+>                            % {<zero>,<one>,<two>}",
+            // Empty strings
+            "$$ -> <>                                              % *$$                                % <>",
+            "$$ -> [a=><>,b=><test>]                               % *$$/a                              % <>",
+            ".                                                     % *$$/b                              % <test>",
+            // Strings with only special characters
+            "$$ -> </>                                             % *$$                                % </>",
+            "$$ -> <///>                                           % *$$                                % <///>",
+            "$$ -> <...>                                           % *$$                                % <...>",
+            // "$$ -> <_>                                              % *$$                                % <_>",
+            // Very deeply nested lists and records (10 levels!)
+            "$$ -> [a=>[b=>[c=>[d=>[e=>[f=>[g=>[h=>[i=>[j=>[1,2,3]]]]]]]]]]] % *$$/a/b/c/d/e/f/g/h/i/j % [1,2,3]",
+            ".                                                     % *$$/a/b/c/d/e/f/g/h/i/j/0          % 1",
+            ".                                                     % *$$/a/b/c/d/e/f/g/h/i/j/2          % 3",
+            // Lists containing records containing lists
+            "$$ -> [[a=>[1,2]],[b=>[3,4]],[c=>[5,6]]]              % *$$/0/a                            % [1,2]",
+            ".                                                     % *$$/0/a/0                          % 1",
+            ".                                                     % *$$/1/b/1                          % 4",
+            ".                                                     % *$$/2/c                            % [5,6]",
+            ".                                                     % *<$$/+/+/+>                        % {1,2,3,4,5,6}",
+            // Records with list values containing records
+            "$$ -> [x=>[[a=>1],[b=>2]],y=>[[c=>3],[d=>4]]]         % *$$/x/0/a                          % 1",
+            ".                                                     % *$$/x/1/b                          % 2",
+            ".                                                     % *$$/y/0/c                          % 3",
+            ".                                                     % *$$/y/1/d                          % 4",
+            ".                                                     % *<$$/+/+/+>                        % {1,2,3,4}",
+            // Alternating nesting patterns
+            "$$ -> [a=>[[b=>[c=>[[d=>1]]]]]]                        % *$$/a/0/b/c/0/d                    % 1",
+            "$$ -> [[[[a=>1]]]]                                     % *$$/0/0/0/a                        % 1",
+            // Overwriting entire structures
+            "$$ -> [data=>[v1=>1]]                                 % *$$/data/v1                        % 1",
+            "$$ -> [data=>[v1=>1,v2=>2]]                           % *$$/data/v1                        % 1",
+            ".                                                     % *$$/data/v2                        % 2",
+            ".                                                     % *<$$/data/+>                       % {1,2}",
+            "$$ -> [data=>[v1=>1,v2=>2,nested=>[a=>3,b=>4]]]       % *$$/data/nested/a                  % 3",
+            ".                                                     % *$$/data/nested/b                  % 4",
+            ".                                                     % *<$$/data/+>                       % {1,2,[a=>3,b=>4]}"
+    }, delimiter = '%')
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+        if (!writeExpression.equals(".")) {
+            Machine.current().memory().write(this.testUri("#"), noobj());
+            seedWriteSkipped = false; // reset on every new seed write
+        }
+        // If the current seed write was rejected, skip all dependent "." rows too
+        if (seedWriteSkipped) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false,
+                    "skipping: depends on a seed write that was rejected by this space's root constraint");
+            return;
+        }
+        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.getFirst() : writeExpression)).apply();
+        // If the write was explicitly rejected by the space (e.g. root type enforcement),
+        // allow subclasses to declare this failure expected and skip the test gracefully.
+        if (writeObj.isFail() && expectWriteRejection(writeObj)) {
+            seedWriteSkipped = true;
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "space rejected write (root type constraint): " + writeObj);
+            return;
+        }
+        if (this.sleepBetweenReads > 0)
+            CommonUtil.sleepThread(this.sleepBetweenReads);
+        final Obj readObj = ObjmtronSerializer.single().read(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
+        final Obj resultObj = ObjmtronSerializer.single().read(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
+        if (!writeExpression.equals("."))
+            PREVIOUS_LINE.set(0, make(writeExpression));
+        if (!readExpression.equals("."))
+            PREVIOUS_LINE.set(1, make(readExpression));
+        if (!expectedExpression.equals("."))
+            PREVIOUS_LINE.set(2, make(expectedExpression));
+        Graphitty.log(this.space).debug("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+                make(writeExpression), writeObj,
+                make(readExpression), readObj,
+                make(expectedExpression), resultObj);
+        try {
+            assertEquals(resultObj, readObj.selfVID(null));
+        } catch (final Exception e) {
+            LOG.error(e);
+        }
+    }
+
+    /**
+     * Tests that dereferencing a URI prefix (container) returns an aggregated Rec
+     * of all children stored beneath it, rather than {@code noobj}.
+     * <p>
+     * Uses the {@code testMonoUpdate} pattern: {@link TestData} writes seed data,
+     * then a sequential {@code for} loop evaluates each row without clearing between steps.
+     * <p>
+     * Row format: {@code writeExpression % readExpression % expectedExpression}
+     */
+    @TestCategory.Rootless
+    @Test
+    @TestData(value = {
+            // seed: two siblings under one container
+            "$$/rootless/a -> 1",
+            "$$/rootless/b -> 2",
+    })
+    public void testMonoRootlessReadWrites() {
+        final String[] value = {
+                // Single-level container aggregates siblings
+                "$$/rootless/c -> 3                                               % *$$/rootless                      % [a=>1,b=>2,c=>3]",
+                ".                                                                 % *$$/rootless/a                    % 1",
+                ".                                                                 % *$$/rootless/c                    % 3",
+                // Immediate child — depth-1 fallback finds p under x
+                "$$/rootless/nested/x/p -> 10                                      % *$$/rootless/nested/x             % [p=>10]",
+                ".                                                                 % *$$/rootless/nested/x/p           % 10",
+        };
+        int counter = 0;
+        try {
+            for (final String expression : value) {
+                counter++;
+                final String[] parts = expression.split("%");
+                final String writeExpression = parts[0].trim();
+                final String readExpression = parts[1].trim();
+                final String expectedExpression = parts[2].trim();
+
+                if (!writeExpression.equals("."))
+                    ObjmtronSerializer.parse(make(writeExpression)).apply();
+
+                if (this.sleepBetweenReads > 0)
+                    CommonUtil.sleepThread(this.sleepBetweenReads);
+
+                final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+                final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+
+                LOG.none("{{G}}TEST[%d]{{X}}\n\twrite [%s]\n\tread [%s]\n\texpected [%s]\n",
+                        counter, make(writeExpression), make(readExpression), make(expectedExpression));
+                assertEquals(expectedObj, readObj,
+                        Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: write: " + make(writeExpression) + " | read: " + make(readExpression)));
+            }
+        } finally {
+            // clean up rootless data so it doesn't pollute other tests (shared DB backends)
+            Machine.current().memory().write(make("$$/rootless/#"), noobj());
+        }
+    }
+
+    @TestCategory.Update
+    @Test
+    @TestData(value = {
+            // --- people (4 rows) ---
+            "$$/people/1 -> [name=>'Alice', age=>30, title=>'Engineer', salary=>75000.0, company=>!*$$/companies/101, active=>true]",
+            "$$/people/2 -> [name=>'Bob', age=>25, title=>'Designer', salary=>60000.0, company=>!*$$/companies/101, active=>true]",
+            "$$/people/3 -> [name=>'Charlie', age=>35, title=>'Manager', salary=>85000.0, company=>!*$$/companies/101, active=>false]",
+            "$$/people/4 -> [name=>'Diana', age=>28, title=>'Engineer', salary=>70000.0, company=>!*$$/companies/102, active=>true]",
+            // --- companies (2 rows) — referenced via !*$$/people/X/company ---
+            "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false]",
+            "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true]",
+    })
+    public void testMonoUpdate() {
+        final String[] value = {
+                "*$$/people/1                                                         %  *$$/people/1/name.map(*$$/people/1/name)                        % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1>>name                                              % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1/name                                               % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
+                "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+                "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+                "@$$/people/+.?[salary=>?>72000.0]>>=[salary=>+100000.0]             %  *$$/people/+/salary.sum?real<=real{*}()                         % 490000.0",
+                "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+                "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+                "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",
+                "@$$/people/1/age >>= 140                 %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
+                //  "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+                "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                           % {4}\"Micky Mouse\"",
+                "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                             % {4}\"Optimus Prime\"",
+                // "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
+                "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
+                "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                     % [active=>true]",
+                "@<$$/people/+>.>>=[active=>not(_)]                                   %  *<$$/people/2>==[active=>_]                                     % [active=>false]",
+                "@<$$/companies/102>.>>=[name=> _ + ' ' + (<<.>>city)]                %  *<$$/companies/102/name>                                        % \"Globex Inc LA\"",
+                "noobj                                                                %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc LA\"=>1]",
+                // TODO: write >>= update test cases
+                // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
+                // Foreign-key dereference: !*$$/people/1/company reads the linked company record
+        };
+        int counter = 0;
+        try {
+            for (final String expression : value) {
+                counter++;
+                final String[] parts = expression.split("%");
+                final String updateExpression = parts[0].trim();
+                final String readExpression = parts[1].trim();
+                final String expectedExpression = parts[2].trim();
+
+                ObjmtronSerializer.parse(make(updateExpression)).apply();
+
+                if (this.sleepBetweenReads > 0)
+                    CommonUtil.sleepThread(this.sleepBetweenReads);
+
+                final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+                final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+
+                if (!updateExpression.equals("."))
+                    PREVIOUS_LINE.set(0, make(updateExpression));
+                if (!readExpression.equals("."))
+                    PREVIOUS_LINE.set(1, make(readExpression));
+                if (!expectedExpression.equals("."))
+                    PREVIOUS_LINE.set(2, make(expectedExpression));
+
+                LOG.none("{{G}}TEST[%d]{{X}}\n\tupdate [%s]\n\tread [%s]\n\texpected [%s]\n",
+                        counter, make(updateExpression), make(readExpression), make(expectedExpression));
+                assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
+            }
+        } finally {
+            Machine.current().memory().write(make("$$/#"), noobj());
+        }
+    }
+
+    @TestCategory.Read
+    @ParameterizedTest
+    @TestData(value = {
+            // --- nested org structure with cross-references ---
+            "$$/org/acme -> [name=>'Acme Corp', hq=>[city=>'NYC',zip=>10001]]",
+            "$$/org/glb -> [name=>'Globex Inc', hq=>[city=>'LA',zip=>90001]]",
+            // --- people with nested address and cross-reference ---
+            "$$/ppl/1 -> [name=>'Alice', age=>30, address=>[street=>'123 Main',city=>'NYC',zip=>10001], worksFor=>!*$$/org/acme]",
+            "$$/ppl/2 -> [name=>'Bob', age=>25, address=>[street=>'456 Oak',city=>'LA',zip=>90001], worksFor=>!*$$/org/acme]",
+            "$$/ppl/3 -> [name=>'Charlie', age=>35, address=>[street=>'789 Pine',city=>'NYC',zip=>10001], worksFor=>!*$$/org/glb]",
+    })
+
+    @CsvSource(value = {
+            // ── direct field reads ──
+            "*$$/ppl/1/name                      % \"Alice\"",
+            "*$$/ppl/1>>name                     % \"Alice\"",
+            "*$$/ppl/1/age                       % 30",
+            // ── multi-field wildcard ──
+            "*$$/ppl/1>>{name,age}               % {30,\"Alice\"}",
+            "*$$/ppl/1/+                         % {30,\"Alice\",[name=>'Acme Corp', hq=>[city=>'NYC',zip=>10001]],[street=>'123 Main',city=>'NYC',zip=>10001]}",
+            // ── nested sub-document walk ──
+            "*$$/ppl/1/address/city              % \"NYC\"",
+            "*$$/ppl/1/address/+                 % {'123 Main','NYC',10001}",
+            // ── cross-reference dereference ──
+            "*$$/ppl/1/worksFor/name             % \"Acme Corp\"",
+            "*$$/ppl/1/worksFor/hq/city          % \"NYC\"",
+            "*$$/ppl/1/worksFor/hq               % [city=>\"NYC\",zip=>10001]",
+            "*$$/ppl/1/worksFor/hq.>>{city,zip}  % {\"NYC\",10001}",
+            // ── deeper walk through cross-ref ──
+            "*$$/ppl/3/worksFor/name             % \"Globex Inc\"",
+            "*$$/ppl/3/address/city              % \"NYC\"",
+    }, delimiter = '%')
+    public void testMonoDepth(final String lookupExpression, final String expectedResult) {
+        final Obj lookup = ObjmtronSerializer.parse(make(lookupExpression)).apply();
+        final Obj result = ObjmtronSerializer.parse(make(expectedResult)).apply();
+        assertEquals(result, lookup, "lookup: " + make(lookupExpression) + " | expected: " + make(expectedResult));
+    }
+
+    /**
+     * Tests that {@code >>} walks the URI reference graph synthesizing the implicit
+     * "directory spine": a flat space storing only {@code /a/b/c/d -> 42} still lets
+     * {@code /a.>>} yield {@code /a/b}, {@code /a.>>.>>} yield {@code /a/b/c}, and so on.
+     * Deeper leaves that diverge fan out at the level where they branch.
+     */
+    @TestCategory.Read
+    @ParameterizedTest
+    @TestData(value = {
+            "$$/a/b/c/d -> 42",
+            "$$/a/b/c/e -> 54",
+            "$$/x/y     -> [z=>1,zz=>[2,3]]"
+    })
+    @CsvSource(value = {
+            "$$/a.>>                        % {$$/a/b}",
+            "$$/a.>>.>>                     % {$$/a/b/c}",
+            "$$/a.>>.>>.>>                  % {$$/a/b/c/d,$$/a/b/c/e}",
+            "$$/a.>>.>>.>>.*_               % {42,54}",
+            "$$/a/.>>                       % {$$/a/b/}",
+            "$$/a/.>>.>>                    % {$$/a/b/c/}",
+            "$$/a/.>>.>>.>>                 % {$$/a/b/c/d/,$$/a/b/c/e/}",
+            "$$/a/.>>.>>.*_                 % ($$/a/b/c/=>[d=>42,e=>54])",
+            "$$/x.>>                        %  $$/x/y",
+            "$$/x/y.>>                      % {$$/x/y/z,$$/x/y/zz}",
+            "$$/x/y.>>.*_                   % {1,[2,3]}",
+            "$$/x/y.>>.>>                   % {$$/x/y/zz/0,$$/x/y/zz/1}",
+            "$$/x/y.>>.>>.*_                % {2,3}"
+    }, delimiter = '%')
+    public void testRshiftUriGraphSpine(final String lookupExpression, final String expectedExpression) {
+        final String lookupExpr = make(lookupExpression);
+        final Obj lookup = ObjmtronSerializer.parse(lookupExpr).apply();
+        final Obj expected = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+        assertEquals(expected, lookup, "lookup: " + lookupExpr + " | expected: " + make(expectedExpression));
+    }
+
+    @ParameterizedTest
+    @TestData(oneTime = false, value = {""})
+    @CsvSource(value = {
+            "[a=>[b=>[c=>d]]]@$$                            % >>=[bb=>cc]               % *$$          % [a=>[b=>[c=>d]],bb=>cc]@$$",
+            "[a=>[b=>[c=>d]@$$/a]]@$$/b                     % >>=[bb=>cc]@$$/c          % *$$/b        % [a=>[b=>[c=>d]@$$/a],bb=>cc]@$$/b",
+            "[a=>[b=>[c=>d]@$$/a]]@$$/b                     % >>=[bb=>cc]@$$/c          % *$$/c        % [bb=>cc]@$$/c",
+            "[a=>[b=>[c=>d]@$$/a]]@$$/b                     % >>=[a=>[bb=>cc]]          % *$$/b        % [a=>[b=>[c=>d]@$$/a,bb=>cc]]@$$/b",
+            "[a=>[b=>[c=>d]@$$/a]]@$$/b                     % >>=[a=>[_=> * cc]]        % *$$/b        % <ERROR>",
+            "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[_=> * cc]]        % *$$/a        % [a=>[b=>c/cc,d=>e/cc]]@$$/a",
+            "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[_=> * cc]]        % *$$/a/a/b    % c/cc",
+            // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a/a/b  % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
+            // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a      % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
+            "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a/a/d    % e",
+    }, delimiter = '%')
+    public void testPolyReadWrite(final String writeExpression, final String mutationExpression, final String readExpression, final String expectedExpression) {
+        /*final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression)).apply();
+        final Obj mutationObj = ObjmtronSerializer.parse(make(mutationExpression)).apply(writeObj);
+        final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply(mutationObj);
+        final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+        this.space.logger().error("\n\twrite [%s => %s]\n\tmutation [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+                make(writeExpression), writeObj,
+                make(mutationExpression), mutationObj,
+                make(readExpression), readObj,
+                make(expectedExpression), expectedObj);
+        try {
+            if (readObj.toString().contains("fail::"))
+                assertEquals("<ERROR>", expectedExpression);
+            else
+                assertEquals(expectedObj, readObj);
+        } catch (final Exception e) {
+            LOG.error(e);
+        }*/
+    }
+
+    protected boolean skipBasicOperations() {
+        return true; // default: skip. memSpace and fsSpace override to run.
+    }
+
+    public String make(final String expression) {
+        if (!expression.contains("$$")) return expression;
+        final Method testMethod = resolveTestMethod();
+        return make(expression, testMethod);
+    }
+
+    /**
+     * Walk the stack to find the @Test/@ParameterizedTest method that invoked make().
+     */
+    private Method resolveTestMethod() {
+        for (final StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+            if (frame.getMethodName().startsWith("test")) {
+                try {
+                    final Method[] methods = this.getClass().getMethods();
+                    for (final Method m : methods) {
+                        if (m.getName().equals(frame.getMethodName())) {
+                            return m;
+                        }
+                    }
+                } catch (final Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Replace {@code $$} placeholder with the appropriate base URI for the given test method.
+     * Subclasses override to customize per-test: e.g. tbleSpace maps {@code $$} to {@code db:}
+     * for table-mapped tests while keeping {@code db:kv/test} for key-value tests.
+     */
+    public String make(final String expression, final Method testMethod) {
+        return expression.contains("$$") ? expression.replace("$$", this.baseURI.toString()) : expression;
+    }
+
+    // ========================================
+    // Reusable Parameterized Tests for All Space Implementations
+    // ========================================
+
+    /**
+     * Provides a base URI pattern for test data.
+     * Subclasses can override to customize the URI pattern for their space.
+     * Default: baseURI + "/test/"
+     */
+    public fURI getTestDataUriPrefix() {
+        return f(this.baseURI.toString() + "/test/");
+    }
+
+    /**
+     * Helper method to create test URIs.
+     */
+    protected fURI testUri(String suffix) {
+        return f(getTestDataUriPrefix() + suffix);
+    }
+
+    // ========================================
+    // String Corner Cases Tests
+    // ========================================
+
+    /**
+     * Test string corner cases: empty, special chars, unicode, SQL injection attempts, etc.
+     * Subclasses can add more test cases by providing additional data via @MethodSource.
+     */
+    @TestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] String: {0}")
+    @CsvSource(value = {
+            "empty string              | ''",
+            "single space              | ' '",
+            "multiple spaces           | '   '",
+            "special chars             | 'test!@#$%^&*()'",
+            "unicode                   | '你好世界'",
+            //   "SQL injection attempt     | 'DROP TABLE users; --'",
+            //   "single quote              | 'it''s'",
+            "double quotes             | '\"quoted\"'",
+            //   "backslashes               | 'path\\to\\file'",
+            "very long string          | 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'",
+            "mixed case                | 'MiXeD CaSe StRiNg'",
+            "punctuation               | 'Hello, World! How are you?'",
+            "ampersand                 | 'Tom & Jerry'",
+            "percent sign              | '100% complete'",
+            "underscore                | 'test_value_123'"
+    }, delimiter = '|')
+    public void testStringCornerCases(String description, String value) {
+        final fURI uri = testUri("string/" + description.replaceAll("\\s+", "_"));
+
+        // Write string value
+        this.space.write(uri, str(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri).selfVID(null);
+        assertEquals(str(value), result, description);
+    }
+
+    // ========================================
+    // Integer Boundary Tests
+    // ========================================
+
+    /**
+     * Test integer boundary values: zero, min/max, negative, various magnitudes.
+     */
+    @TestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Integer: {0} = {1}")
+    @CsvSource(value = {
+            "zero                      | 0",
+            "one                       | 1",
+            "negative one              | -1",
+            "small positive            | 42",
+            "small negative            | -42",
+            "hundred                   | 100",
+            "thousand                  | 1000",
+            "million                   | 1000000",
+            "max int32                 | 2147483647",
+            "min int32                 | -2147483648",
+            "max int64                 | 9223372036854775807",
+            "min int64                 | -9223372036854775808"
+    }, delimiter = '|')
+    public void testIntegerBoundaries(String description, long value) {
+        final fURI uri = testUri("integer/" + description.replaceAll("\\s+", "_"));
+
+        // Write integer value
+        this.space.write(uri, jnt(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri).selfVID(null);
+        assertEquals(jnt(value), result, description);
+    }
+
+    // ========================================
+    // Real/Double Boundary Tests
+    // ========================================
+
+    /**
+     * Test real/double boundary values with tolerance for floating point precision.
+     */
+    @TestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Real: {0} = {1}")
+    @CsvSource(value = {
+            "zero                      | 0.0",
+            "one                       | 1.0",
+            "negative one              | -1.0",
+            "small decimal             | 0.5",
+            "negative decimal          | -0.5",
+            "large decimal             | 12345.67",
+            "very small positive       | 0.0001",
+            "very small negative       | -0.0001",
+            "pi approximation          | 3.14159",
+            "e approximation           | 2.71828",
+            "large positive            | 999999.99",
+            "large negative            | -999999.99"
+    }, delimiter = '|')
+    public void testRealBoundaries(String description, double value) {
+        final fURI uri = testUri("real/" + description.replaceAll("\\s+", "_"));
+
+        // Write real value
+        this.space.write(uri, real(value));
+
+        // Read back and verify with tolerance
+        final Obj result = this.space.read(uri);
+        assertTrue(result.isReal(), "Result should be a real number");
+        assertEquals(value, result.asReal().jvm(), 0.01, description);
+    }
+
+    // ========================================
+    // Boolean Tests
+    // ========================================
+
+    /**
+     * Test boolean values.
+     */
+    @TestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Boolean: {0} = {1}")
+    @CsvSource(value = {
+            "true value                | true",
+            "false value               | false",
+            "true again                | true",
+            "false again               | false"
+    }, delimiter = '|')
+    public void testBooleanValues(String description, boolean value) {
+        final fURI uri = testUri("boolean/" + description.replaceAll("\\s+", "_"));
+
+        // Write boolean value
+        this.space.write(uri, bool(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri).selfVID(null);
+        assertEquals(bool(value), result, description);
+    }
+
+    // ========================================
+    // Non-Existent Access Tests
+    // ========================================
+
+    /**
+     * Test reading non-existent keys returns noobj.
+     */
+    @TestCategory.Read
+    @ParameterizedTest(name = "[{index}] Non-existent: {0}")
+    @CsvSource(value = {
+            "simple missing key",
+            "missing/nested/key",
+            "missing_with_underscores",
+            "missing-with-dashes",
+            "missing.with.dots"
+    })
+    public void testNonExistentAccess(String key) {
+        final fURI uri = testUri("nonexistent/" + key);
+
+        // Read non-existent key
+        final Obj result = this.space.read(uri);
+        assertTrue(result.isNoObj(), "Non-existent key should return noobj: " + key);
+    }
+
+    // ========================================
+    // Sequential Update Tests
+    // ========================================
+
+    /**
+     * Test sequential updates to the same key.
+     */
+    @TestCategory.Write
+    @TestCategory.Read
+    @ParameterizedTest(name = "[{index}] Sequential updates: {0} iterations")
+    @CsvSource(value = {
+            "3",
+            "5",
+            "10"
+    })
+    public void testSequentialUpdates(int iterations) {
+        final fURI uri = testUri("sequential/updates");
+
+        // Perform sequential updates
+        for (int i = 0; i < iterations; i++) {
+            this.space.write(uri, jnt(i));
+
+            // Verify each update
+            final Obj result = this.space.read(uri).selfVID(null);
+            assertEquals(jnt(i), result, "Iteration " + i + " should match");
+        }
+
+        // Final verification
+        final Obj finalResult = this.space.read(uri).selfVID(null);
+        assertEquals(jnt(iterations - 1), finalResult, "Final value should be last iteration");
+    }
+
+    // ========================================
+    // CRUD Operations Tests
+    // ========================================
+
+    /**
+     * Test basic CRUD operations: Create, Read, Update, Delete.
+     */
+    @TestCategory.Write
+    @TestCategory.Read
+    @TestCategory.Drop
+    @ParameterizedTest(name = "[{index}] CRUD: {0}")
+    @CsvSource(value = {
+            "string value  | test_string  | 'Hello World'",
+            "integer value | test_int     | 42",
+            "boolean value | test_bool    | true"
+    }, delimiter = '|')
+    public void testBasicCRUD(String description, String key, String valueStr) {
+        final fURI uri = testUri("crud").extend(key);
+        final Obj value = parseTestValue(valueStr);
+
+        // CREATE: Write initial value
+        this.space.write(uri, value);
+
+        // READ: Verify it exists
+        Obj result = this.space.read(uri).selfVID(null);
+        assertFalse(result.isNoObj(), "Value should exist after create");
+        assertEquals(value, result, "Read value should match written value");
+
+        // UPDATE: Write new value
+        final Obj updatedValue = str("updated_" + valueStr);
+        this.space.write(uri, updatedValue);
+
+        result = this.space.read(uri).selfVID(null);
+        assertEquals(updatedValue, result, "Updated value should match");
+
+        // DELETE: Write noobj
+        this.space.write(uri, noobj());
+
+        result = this.space.read(uri).selfVID(null);
+        assertEquals(noobj(), result, "Value should not exist after delete");
+    }
+
+    /**
+     * Helper to parse test values from CSV strings.
+     */
+    private Obj parseTestValue(String valueStr) {
+        if (valueStr.equals("true") || valueStr.equals("false")) {
+            return bool(Boolean.parseBoolean(valueStr));
+        } else if (valueStr.startsWith("'") && valueStr.endsWith("'")) {
+            return str(valueStr.substring(1, valueStr.length() - 1));
+        } else {
+            try {
+                return jnt(Long.parseLong(valueStr));
+            } catch (NumberFormatException e) {
+                try {
+                    return real(Double.parseDouble(valueStr));
+                } catch (NumberFormatException e2) {
+                    return str(valueStr);
+                }
+            }
+        }
+    }
+
+    // ========================================
+    // Type Preservation Tests
+    // ========================================
+
+    /**
+     * Test that types are preserved through write/read cycles.
+     */
+    @TestCategory.Type
+    @ParameterizedTest(name = "[{index}] Type preservation: {0}")
+    @MethodSource("provideTypePreservationTestCases")
+    public void testTypePreservation(String description, Obj value) {
+        final fURI uri = testUri("type_preservation/" + description.replaceAll("\\s+", "_"));
+
+        // Write value
+        this.space.write(uri, value);
+
+        // Read back
+        final Obj result = this.space.read(uri).selfVID(null);
+
+        // Verify value and type
+        if (value.isReal())
+            assertEquals(value.asReal().jvm(), result.asReal().jvm(), 0.0001, description);
+        else
+            assertEquals(value, result, description);
+        assertEquals(value.getClass(), result.getClass(), "type class should be preserved: " + description);
+    }
+
+    protected static Stream<Arguments> provideTypePreservationTestCases() {
+        return Stream.of(
+                Arguments.of("boolean true", bool(true)),
+                Arguments.of("boolean false", bool(false)),
+                Arguments.of("integer zero", jnt(0)),
+                Arguments.of("integer positive", jnt(42)),
+                Arguments.of("integer negative", jnt(-999)),
+                Arguments.of("integer max", jnt(Long.MAX_VALUE)),
+                Arguments.of("integer min", jnt(Long.MIN_VALUE)),
+                Arguments.of("real zero", real(0.0)),
+                Arguments.of("real positive", real(3.14159)),
+                Arguments.of("real negative", real(-273.15)),
+                Arguments.of("string empty", str("")),
+                Arguments.of("string simple", str("hello")),
+                Arguments.of("string with spaces", str("hello world")),
+                Arguments.of("string unicode", str("你好世界")),
+                Arguments.of("record simple", rec(uri("name"), str("Alice"), uri("age"), jnt(30))),
+                Arguments.of("list simple", lst(jnt(1), jnt(2), jnt(3))),
+                Arguments.of("list mixed", lst(str("a"), jnt(1), bool(true)))
+        );
+    }
+
+    // ========================================
+    // Nested Structure Tests
+    // ========================================
+
+    /**
+     * Test nested records (documents).
+     */
+    @TestCategory.Nested
+    @ParameterizedTest(name = "[{index}] Nested record: depth {0}")
+    @CsvSource(value = {
+            "1",
+            "2",
+            "3",
+            "5"
+    })
+    public void testNestedRecords(int depth) {
+        final fURI uri = testUri("nested/depth_" + depth);
+
+        // Build nested structure
+        Obj nested = str("deepest value");
+        for (int i = 0; i < depth; i++) {
+            nested = rec(uri("level" + i), nested);
+        }
+
+        // Write nested structure
+        this.space.write(uri, nested);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+        assertFalse(result.isNoObj(), "Nested structure should exist");
+
+        // Navigate down the nesting
+        Obj current = result;
+        for (int i = depth - 1; i >= 0; i--) {
+            assertTrue(current.isRec(), "Level " + i + " should be a record");
+            current = current.asRec().at(uri("level" + i));
+        }
+
+        assertEquals(str("deepest value"), current, "Should reach deepest value");
+    }
+
+    // ========================================
+    // List/Array Handling Tests
+    // ========================================
+
+    /**
+     * Test list handling: empty lists, single element, multiple elements.
+     */
+    @TestCategory.List
+    @ParameterizedTest(name = "[{index}] List: {0}")
+    @MethodSource("provideListTestCases")
+    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
+        final fURI uri = testUri("list/" + description.replaceAll("\\s+", "_"));
+
+        // Write list
+        this.space.write(uri, listValue);
+
+        // Read back
+        final Obj result = this.space.read(uri).selfVID(null);
+        assertTrue(result.isLst(), "Result should be a list");
+        assertEquals(expectedCount, result.asLst().count(), "List should have correct count");
+        assertEquals(listValue, result, description);
+    }
+
+    protected static Stream<Arguments> provideListTestCases() {
+        return Stream.of(
+                Arguments.of("empty list", lst(), 0),
+                Arguments.of("single element", lst(jnt(1)), 1),
+                Arguments.of("multiple integers", lst(jnt(1), jnt(2), jnt(3)), 3),
+                Arguments.of("multiple strings", lst(str("a"), str("b"), str("c")), 3),
+                Arguments.of("mixed types", lst(jnt(1), str("two"), bool(true)), 3),
+                Arguments.of("large list", lst(jnt(1), jnt(2), jnt(3), jnt(4), jnt(5), jnt(6), jnt(7), jnt(8), jnt(9), jnt(10)), 10)
+        );
+    }
+
+    // ========================================
+    // Update Operations Tests
+    // ========================================
+
+    /**
+     * Test updating from one type to another.
+     */
+    @TestCategory.Type
+    @ParameterizedTest(name = "[{index}] Type change: {0} -> {1}")
+    @MethodSource("provideTypeChangeTestCases")
+    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
+        final fURI uri = testUri("type_change/" + description.replaceAll("\\s+", "_"));
+
+        // Write initial value
+        this.space.write(uri, initialValue);
+        Obj result = this.space.read(uri).selfVID(null);
+        assertEquals(initialValue, result, "Initial value should match");
+
+        // Update to different type
+        this.space.write(uri, updatedValue);
+        result = this.space.read(uri).selfVID(null);
+        assertEquals(updatedValue, result, "Updated value should match");
+    }
+
+    protected static Stream<Arguments> provideTypeChangeTestCases() {
+        return Stream.of(
+                Arguments.of("int to string", jnt(42), str("forty-two")),
+                Arguments.of("string to int", str("123"), jnt(456)),
+                Arguments.of("bool to string", bool(true), str("yes")),
+                Arguments.of("int to bool", jnt(1), bool(false)),
+                Arguments.of("simple to record", str("simple"), rec(uri("key"), str("value"))),
+                Arguments.of("record to simple", rec(uri("key"), str("value")), str("simple"))
+        );
+    }
+
+    // ========================================
+    // Concurrent Field Updates Tests
+    // ========================================
+
+    /**
+     * Test updating multiple fields in a record independently.
+     */
+    @TestCategory.Update
+    @ParameterizedTest(name = "[{index}] Multi-field update: {0} fields")
+    @CsvSource(value = {
+            "2",
+            "3",
+            "5"
+    })
+    public void testMultiFieldUpdates(int fieldCount) {
+        final fURI baseUri = testUri("multifield/record");
+
+        // Write initial record with multiple fields
+        final Map<Obj, Obj> fields = new HashMap<>();
+        for (int i = 0; i < fieldCount; i++) {
+            fields.put(uri("field" + i), str("initial" + i));
+        }
+        this.space.write(baseUri, rec(fields));
+
+        // Update each field independently
+        for (int i = 0; i < fieldCount; i++) {
+            final fURI fieldUri = f(baseUri.toString() + "/field" + i);
+            this.space.write(fieldUri, str("updated" + i));
+        }
+
+        // Read back entire record and verify all fields updated
+        final Obj result = this.space.read(baseUri).selfVID(null);
+        if (result.isRec()) {
+            final Rec resultRec = result.asRec();
+            for (int i = 0; i < fieldCount; i++) {
+                final Obj fieldValue = resultRec.at(uri("field" + i));
+                assertEquals(str("updated" + i), fieldValue, "Field " + i + " should be updated");
+            }
+        }
+        // Note: Some spaces may not support field-level updates, so we don't fail if not a record
+    }
+
+    // ========================================
+    // Special Value Tests
+    // ========================================
+
+    /**
+     * Test special string values that might cause issues.
+     */
+    @TestCategory.Special
+    @ParameterizedTest(name = "[{index}] Special string: {0}")
+    @CsvSource(value = {
+            "newline              | 'line1\\nline2'",
+            "tab                  | 'col1\\tcol2'",
+            "carriage return      | 'line1\\rline2'",
+            "null character       | 'before\\0after'",
+            // "emoji                | '😀🎉🚀'",
+            "rtl text             | 'مرحبا'",
+            "mixed scripts        | 'Hello世界مرحبا'"
+    }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
+    public void testSpecialStringValues(String description, String value) {
+        final fURI uri = testUri("special_string/" + description.replaceAll("\\s+", "_"));
+
+        // Unescape special characters
+        String unescaped = value
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\0", "\0");
+
+        // Remove surrounding quotes if present
+        if (unescaped.startsWith("'") && unescaped.endsWith("'")) {
+            unescaped = unescaped.substring(1, unescaped.length() - 1);
+        }
+
+        // Write and read back
+        this.space.write(uri, str(unescaped));
+        final Obj result = this.space.read(uri);
+        assertEquals(str(unescaped), result, description);
+    }
+
+    // ========================================
+    // Empty/Null Handling Tests
+    // ========================================
+
+    /**
+     * Test empty record handling.
+     */
+    @TestCategory.Type
+    @ParameterizedTest(name = "[{index}] Empty record test {0}")
+    @CsvSource(value = {
+            "1",
+            "2",
+            "3"
+    })
+    public void testEmptyRecords(int testNumber) {
+        final fURI uri = testUri("empty_record/test_" + testNumber);
+
+        // Write empty record
+        final Rec emptyRec = rec();
+        this.space.write(uri, emptyRec);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+
+        // Should either be empty record or noobj depending on space implementation
+        assertTrue(result.isRec() || result.isNoObj(),
+                "Empty record should return record or noobj");
+
+        if (result.isRec()) {
+            assertTrue(result.asRec().jvm().isEmpty() || result.asRec().jvm().size() == 1,
+                    "Empty record should have 0 or 1 fields (may include auto-generated ID)");
+        }
+    }
+
+    // =========================================================================
+    // Combinatorial read/write contract tests
+    // Each space must pass these — they exercise the core Space.Helper contracts.
+    // =========================================================================
+
+    @TestCategory.Write
+    @TestCategory.Read
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ── WRITE concrete node mono, READ exact ──
+            "$$/_ops_/x -> 42                                        % *$$/_ops_/x                        % 42",
+            ".                                                       % *$$/_ops_/x                        % 42",
+            // ── WRITE concrete node rec, READ exact, READ sub-key, READ wildcard ──
+            "$$/_ops_/rec -> [a=>1,b=>2,c=>3]                       % *$$/_ops_/rec                      % [a=>1,b=>2,c=>3]",
+            ".                                                       % *$$/_ops_/rec/a                    % 1",
+            ".                                                       % *$$/_ops_/rec/b                    % 2",
+            ".                                                       % *$$/_ops_/rec/+                    % {1,2,3}",
+            // ── WRITE concrete node lst, READ exact, READ index, READ wildcard ──
+            "$$/_ops_/lst -> [10,20,30]                             % *$$/_ops_/lst                      % [10,20,30]",
+            ".                                                       % *$$/_ops_/lst/0                    % 10",
+            ".                                                       % *$$/_ops_/lst/1                    % 20",
+            ".                                                       % *$$/_ops_/lst/+                    % {10,20,30}",
+            // ── BRANCH read returns keyed pairs ──
+            "$$/_ops_/nested -> [x=>100,y=>200]                     % *<$$/_ops_/nested/+>              % {100,200}",
+            // ── NESTED wildcard walks into sub-polys ──
+            "$$/_ops_/nested2 -> [a=>[x=>1,y=>2],b=>[x=>3,y=>4]]    % *<$$/_ops_/nested2/a/+>           % {1,2}",
+            ".                                                       % *<$$/_ops_/nested2/+/x>           % {1,3}",
+            // ── MID-PATH wildcard: +/field ──
+            "$$/_ops_/people -> [p1=>[name=>alice,age=>30],p2=>[name=>bob,age=>25]] % *$$/_ops_/people/+/name        % {alice,bob}",
+            // ── ANCHORED write-back (@ then >>=) ──  TODO: pattern write-back issue
+    }, delimiter = '%')
+    public void testBasicOperations(final String writeExpression, final String readExpression, final String expectedExpression) {
+        if (skipBasicOperations()) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "space does not support basic CRUD operations");
+            return;
+        }
+        if (!writeExpression.equals(".")) {
+            Machine.current().memory().write(this.testUri("#"), noobj());
+        }
+        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
+        if (writeObj.isFail() && expectWriteRejection(writeObj))
+            return;
+        final Obj readObj = ObjmtronSerializer.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
+        final Obj resultObj = ObjmtronSerializer.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
+        if (!writeExpression.equals(".")) PREVIOUS_LINE.set(0, make(writeExpression));
+        if (!readExpression.equals(".")) PREVIOUS_LINE.set(1, make(readExpression));
+        if (!expectedExpression.equals(".")) PREVIOUS_LINE.set(2, make(expectedExpression));
+        assertEquals(resultObj, readObj.selfVID(null));
+        // Clean up _ops_ subtree so wildcard reads in other tests don't pick this up.
+        Machine.current().memory().write(this.testUri("_ops_/#"), noobj());
+    }
+
+    // =========================================================================
+    //  QProc registration
+    // =========================================================================
+
+    @Test
+    public void testAddQProcStoredAndRetrievable() {
+        final QProc q = QCollection.incrQ();
+        this.space.addQ(q);
+        final List<QProc> qprocs = this.space.qs().lstValue().stream()
+                .map(o -> (QProc) o).toList();
+        assertFalse(qprocs.isEmpty(), "qs() should not be empty after addQ");
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.INCRQ_PATTERN)),
+                "qs() should contain the added incrQ");
+    }
+
+    @Test
+    public void testMultipleQProcs() {
+        this.space.addQ(QCollection.incrQ());
+        this.space.addQ(QCollection.subQ());
+        final List<QProc> qprocs = this.space.qs().lstValue().stream()
+                .map(o -> (QProc) o).toList();
+        assertTrue(qprocs.size() >= 2, "should have >= 2 qprocs, got " + qprocs.size());
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.INCRQ_PATTERN)),
+                "should contain incrQ");
+        assertTrue(qprocs.stream().anyMatch(qp -> qp.pattern().equals(QCollection.SUBQ_PATTERN)),
+                "should contain subq");
+    }
+
+    // =========================================================================
+    //  Update Write Matrix (>>=) — Comprehensive Cross-Space Contract Tests
+    //
+    //  URI scheme:  $$/a<testId>[/b<entryId>[/c<fieldName>[/...]]]
+    //  C/R/A tags:  C=change existing, R=remove, A=add new, _=no change
+    //    tbleSpace: supports __A (ALTER column), _R_, C__ without type change
+    //    memSpace:  supports all combinations
+    // =========================================================================
+
+    public record UpdateTestCase(
+            String id, String description, String[] seed,
+            String update, String read, String expected, String[] tags) {
+        @Override
+        public String toString() {
+            return id + ": " + description;
+        }
+    }
+
+    protected String cleanupExpr() {
+        return "$$/+/#";
+    }
+
+    static Stream<UpdateTestCase> provideAllUpdateWriteCases() {
+        return Stream.concat(Stream.concat(Stream.concat(Stream.concat(Stream.concat(Stream.concat(
+                                provideMonoWriteCases(), provideRecWriteCases()),
+                        provideNestedFieldCases()), provideWildcardCases()),
+                provideCrossRefCases()), provideDeleteCases()), provideEdgeCases());
+    }
+
+    static String[] seed(final String... e) {
+        return e;
+    }
+
+    static String[] tags(final String... t) {
+        return t;
+    }
+
+    // ── Mono (M01–M05) ──
+
+    static Stream<UpdateTestCase> provideMonoWriteCases() {
+        return Stream.of(
+                tc("M01", "Overwrite existing mono", s("$$/a01->0"), "@$$/a01>>=1", "*$$/a01", "1", t("mono", "C__")),
+                tc("M02", "Write mono over existing mono", s("$$/a02->42"), "@$$/a02>>=1", "*$$/a02", "1", t("mono", "C__")),
+                tc("M03", "Compute mono from existing (+1)", s("$$/a03->41"), "@$$/a03>>=+1", "*$$/a03", "42", t("mono", "C__")),
+                tc("M04", "Compute mono with complex expr", s("$$/a04->10"), "@$$/a04 >>= (+ 12 * 2)", "*$$/a04", "44", t("mono", "C__")),
+                tc("M05", "Overwrite string mono", s("$$/a05->'old'"), "@$$/a05>>='hello'", "*$$/a05", "'hello'", t("mono", "C__"))
+        );
+    }
+
+    // ── Rec (M06–M19) ──
+
+    static Stream<UpdateTestCase> provideRecWriteCases() {
+        return Stream.of(
+                tc("M06", "SELECT: no match in empty LHS", s("$$/a06/b0->[=>]"), "@$$/a06/b0>>=[ca=>1]", "*$$/a06/b0", "[=>]", t("rec", "___")),
+                tc("M07", "Merge rec: field replace", s("$$/a07/b0->[ca=>0,cb=>2]"), "@$$/a07/b0>>=[ca=>1]", "*$$/a07/b0==[ca=>_,cb=>_]", "[ca=>1,cb=>2]", t("rec", "C__")),
+                tc("M08", "Replace single field", s("$$/a08/b0->[ca=>0]"), "@$$/a08/b0>>=[ca=>1]", "*$$/a08/b0", "[ca=>1]", t("rec", "C__")),
+                tc("M09", "Compute field from existing", s("$$/a09/b0->[ca=>0]"), "@$$/a09/b0>>=[ca=>+1]", "*$$/a09/b0", "[ca=>1]", t("rec", "C__")),
+                tc("M10", "Field delete via none", s("$$/a10/b0->[ca=>0,cb=>2]"), "@$$/a10/b0>>=[ca=>none]", "*$$/a10/b0", "[cb=>2]", t("rec", "_R_")),
+                tc("M11", "Delete last field → empty rec", s("$$/a11/b0->[ca=>0]"), "@$$/a11/b0>>=[ca=>none]", "*$$/a11/b0", "[=>]", t("rec", "_R_")),
+                tc("M12a", "SELECT: RHS-only field dropped", s("$$/a120/b0->[ca=>0,cc=>3]"), "@$$/a120/b0>>=[ca=>1,cb=>2]", "*$$/a120/b0", "[ca=>1,cc=>3]", t("rec", "C__")),
+                tc("M12b", "MERGE: + adds fields, overlap → Objs", s("$$/a121/b0->[ca=>0,cc=>3]"), "@$$/a121/b0>>=+[ca=>1,cb=>2]", "*$$/a121/b0==[ca=>_,cb=>_,cc=>_]", "[ca=>{0,1},cb=>2,cc=>3]", t("rec", "C_A")),
+                tc("M13", "String concat on field", s("$$/a13/b0->[cname=>'Alice']"), "@$$/a13/b0>>=[cname=>+' Specialist']", "*$$/a13/b0", "[cname=>'Alice Specialist']", t("rec", "C__")),
+                tc("M14", "SELECT: no match in empty LHS nested", s("$$/a14/b0->[=>]"), "@$$/a14/b0>>=[ca=>[cb=>1]]", "*$$/a14/b0", "[=>]", t("rec", "___")),
+                tc("M15a", "SELECT on sub-rec: no-op", s("$$/a150/b0->[ca=>[cc=>2]]"), "@$$/a150/b0>>=[ca=>[cb=>1]]", "*$$/a150/b0/ca", "[cc=>2]", t("rec", "___")),
+                tc("M15b", "Merge sub-rec (+ prefix)", s("$$/a151/b0->[ca=>[cc=>2]]"), "@$$/a151/b0>>=[ca=>+[cb=>1]]", "*$$/a151/b0/ca==[cb=>_,cc=>_]", "[cb=>1,cc=>2]", t("rec", "__A")),
+                tc("M16", "Deep compute on nested leaf", s("$$/a16/b0->[ca=>[cb=>0]]"), "@$$/a16/b0>>=[ca=>[cb=>+1]]", "*$$/a16/b0/ca", "[cb=>1]", t("rec", "C__")),
+                tc("M17", "+ on sub-rec: overlap → Objs", s("$$/a17/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a17/b0>>=[ca=>+[cb=>+1]]", "*$$/a17/b0/ca==[cb=>_,cc=>_]", "[cb=>{0,plus(1)},cc=>2]", t("rec", "C_A")),
+                tc("M18", "Deep field delete", s("$$/a18/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a18/b0>>=[ca=>[cb=>none]]", "*$$/a18/b0/ca", "[cc=>2]", t("rec", "_R_")),
+                tc("M19", "Self-ref compute on rec field", s("$$/a19/b0->[cname=>'Bob',ctitle=>'Designer']"), "@$$/a19/b0 >>= [cname=><<.-<[>>cname,' the ',>>ctitle]._/sum()\\_>-]", "*$$/a19/b0==[cname=>_]", "[cname=>'Bob the Designer']", t("rec", "C__"))
+        );
+    }
+
+    // ── Nested Field (M20–M27) ──
+
+    static Stream<UpdateTestCase> provideNestedFieldCases() {
+        return Stream.of(
+                tc("M20", "Overwrite nested field mono", s("$$/a20/b0->[ca=>1]"), "@$$/a20/b0/ca>>=2", "*$$/a20/b0/ca", "2", t("nested", "C__")),
+                tc("M21", "Compute nested field mono", s("$$/a21/b0->[ca=>41]"), "@$$/a21/b0/ca>>=+1", "*$$/a21/b0/ca", "42", t("nested", "C__")),
+                tc("M22", "Complex expr on nested field", s("$$/a22/b0->[ca=>10]"), "@$$/a22/b0/ca >>= (+ 12 * 2)", "*$$/a22/b0/ca", "44", t("nested", "C__")),
+                tc("M23", "Delete nested field via noobj", s("$$/a23/b0->[ca=>1,cb=>2]"), "@$$/a23/b0/ca>>=noobj", "*$$/a23/b0==[cb=>_]", "[cb=>2]", t("nested", "_R_")),
+                tc("M24", "SELECT on sub-rec via path: no-op", s("$$/a24/b0->[ca=>[cb=>0]]"), "@$$/a24/b0/ca>>=[cc=>1]", "*$$/a24/b0/ca", "[cb=>0]", t("nested", "___")),
+                tc("M25", "Merge sub-rec via path (+ prefix)", s("$$/a25/b0->[ca=>[cb=>0]]"), "@$$/a25/b0/ca>>=+[cc=>1]", "*$$/a25/b0/ca==[cb=>_,cc=>_]", "[cb=>0,cc=>1]", t("nested", "__A")),
+                tc("M26", "SELECT deep sub-rec: no-op", s("$$/a26/b0->[ca=>[cb=>[cc=>0]]]"), "@$$/a26/b0/ca/cb>>=[cd=>1]", "*$$/a26/b0/ca/cb", "[cc=>0]", t("nested", "___")),
+                tc("M27", "Deep field compute (3 levels)", s("$$/a27/b0->[ca=>[cb=>41]]"), "@$$/a27/b0/ca/cb>>=+1", "*$$/a27/b0/ca/cb", "42", t("nested", "C__"))
+        );
+    }
+
+    // ── Wildcard (M28–M31) ──
+
+    static Stream<UpdateTestCase> provideWildcardCases() {
+        return Stream.of(
+                tc("M28", "Bulk rec write to wildcard", s("$$/a28/b1->[cname=>'Alice',ccount=>0]", "$$/a28/b2->[cname=>'Bob',ccount=>0]"), "@<$$/a28/+> >>= [cname=>'Mickey']", "*<$$/a28/+/cname>", "{2}'Mickey'", t("wildcard", "C__")),
+                tc("M29", "Bulk toggle boolean", s("$$/a29/b1->[cactive=>true]", "$$/a29/b2->[cactive=>false]"), "@<$$/a29/+> >>= [cactive=>not(_)]", "*<$$/a29/+/cactive>", "{false,true}", t("wildcard", "C__")),
+                tc("M30", "Bulk compute on counter", s("$$/a30/b1->[ccnt=>0]", "$$/a30/b2->[ccnt=>5]"), "@<$$/a30/+> >>= [ccnt=>+1]", "*<$$/a30/+/ccnt>", "{1,6}", t("wildcard", "C__")),
+                tc("M31", "Bulk self-ref string compute", s("$$/a31/b1->[cname=>'Acme Corp',ccity=>'NYC']", "$$/a31/b2->[cname=>'Globex Inc',ccity=>'LA']"), "@<$$/a31/+> >>= [cname=>_+' '+(<<.>>ccity)]", "*<$$/a31/+/cname>", "{'Acme Corp NYC','Globex Inc LA'}", t("wildcard", "C__"))
+        );
+    }
+
+    // ── CrossRef (M32–M34) ──
+
+    static Stream<UpdateTestCase> provideCrossRefCases() {
+        return Stream.of(
+                tc("M32", ">>= through cross-ref overwrites ref field", s("$$/a32/b0->[cref=>!*$$/a32y/b0]", "$$/a32y/b0->[cname=>'Old']"), "@$$/a32/b0/cref>>=[cname=>'New']", "*$$/a32/b0/cref/cname", "'New'", t("crossref", "C__")),
+                tc("M33", "Write !* cross-ref as field value", s("$$/a33x/b0->[ca=>0]", "$$/a33y/b0->[cz=>1]"), "@$$/a33x/b0>>=[ca=>!*$$/a33y/b0]", "*$$/a33x/b0/ca", "[cz=>1]", t("crossref", "C_A")),
+                tc("M34", "Cross-ref field replace + deref", s("$$/a34x/b0->[ca=>1]", "$$/a34y/b0->[cb=>2]"), "@$$/a34x/b0>>=[ca=>!*$$/a34y/b0]", "*$$/a34x/b0/ca/cb", "2", t("crossref", "C_A"))
+        );
+    }
+
+    // ── Delete (M35–M39) ──
+
+    static Stream<UpdateTestCase> provideDeleteCases() {
+        return Stream.of(
+                tc("M35", "Delete mono via noobj", s("$$/a35->42"), "@$$/a35>>=noobj", "*$$/a35", "noobj", t("delete", "_R_")),
+                tc("M36", "Delete empty location (no-op)", null, "@$$/a36>>=noobj", "*$$/a36", "noobj", t("delete", "_R_")),
+                tc("M37", "Delete entire rec via noobj", s("$$/a37/b0->[ca=>1,cb=>2]"), "@$$/a37/b0>>=noobj", "*$$/a37/b0", "noobj", t("delete", "_R_")),
+                tc("M38", "Bulk delete via wildcard noobj", s("$$/a38/b1->1", "$$/a38/b2->2", "$$/a38/b3->3"), "@<$$/a38/+> >>= noobj", "*<$$/a38/+>", "noobj", t("delete", "_R_")),
+                tc("M39", "Delete nested field (parent persists)", s("$$/a39/b0->[ca=>1,cb=>2]"), "@$$/a39/b0/ca>>=noobj", "*$$/a39/b0", "[cb=>2]", t("delete", "_R_"))
+        );
+    }
+
+    // ── Edge Cases (M40–M49) ──
+
+    static Stream<UpdateTestCase> provideEdgeCases() {
+        return Stream.of(
+                tc("M40", "SELECT: overlapping sub-rec fields merge", s("$$/a40/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a40/b0>>=[ca=>[cb=>1]]", "*$$/a40/b0/ca==[cb=>_,cc=>_]", "[cb=>1,cc=>2]", t("edge", "C__")),
+                tc("M41", "SELECT: empty sub-rec RHS → no-op", s("$$/a41/b0->[ca=>[cb=>1]]"), "@$$/a41/b0>>=[ca=>[=>]]", "*$$/a41/b0/ca", "[cb=>1]", t("edge", "___")),
+                tc("M42", "Mono replaces sub-rec via field path", s("$$/a42/b0->[ca=>[cb=>0]]"), "@$$/a42/b0/ca>>=42", "*$$/a42/b0/ca", "42", t("edge", "C__")),
+                tc("M43", "+ merge same-key: should be Objs NOT compute", s("$$/a43/b0->[ca=>0]"), "@$$/a43/b0>>=+[ca=>1]", "*$$/a43/b0", "[ca=>{0,1}]", t("edge", "C__")),
+                tc("M44", "+ merge same-key diff-type → Objs", s("$$/a44/b0->[ca=>0]"), "@$$/a44/b0>>=+[ca=>+1]", "*$$/a44/b0", "[ca=>{0,plus(1)}]", t("edge", "C__")),
+                tc("M44b", "+ merge: 1+2→3 is BUG, should be {1,2}", s("$$/a441/b0->[ca=>1]"), "@$$/a441/b0>>=+[ca=>2]", "*$$/a441/b0", "[ca=>{1,2}]", t("edge", "C__")),
+                tc("M44c", "+ merge no overlap (pure field-add)", s("$$/a442/b0->[cb=>2]"), "@$$/a442/b0>>=+[ca=>1]", "*$$/a442/b0==[ca=>_,cb=>_]", "[ca=>1,cb=>2]", t("edge", "__A")),
+                tc("M45", ">>= rec overwrites mono", s("$$/a45->42"), "@$$/a45>>=[ca=>1]", "*$$/a45", "[ca=>1]", t("edge", "C__")),
+                tc("M46", ">>= mono overwrites rec", s("$$/a46/b0->[ca=>0]"), "@$$/a46/b0>>=1", "*$$/a46/b0", "1", t("edge", "C__")),
+                tc("M47", "Deep compute via field path (like M16)", s("$$/a47/b0->[ca=>[cb=>0]]"), "@$$/a47/b0/ca>>=[cb=>+1]", "*$$/a47/b0/ca", "[cb=>1]", t("edge", "C__")),
+                tc("M48", "Double-nested +: outer + creates Objs", s("$$/a48/b0->[ca=>[cb=>0,cc=>2]]"), "@$$/a48/b0>>=+[ca=>+[cb=>+1]]", "*$$/a48/b0/ca", "{[cb=>0,cc=>2],plus([cb=>plus(1)])}", t("edge", "C_A")),
+                tc("M49", "Muted write (*x, no @) no persist", s("$$/a49->42"), "*$$/a49>>=1", "*$$/a49", "42", t("edge", "___"))
+        );
+    }
+
+    // ── harness helpers ──
+
+    static UpdateTestCase tc(String id, String desc, String[] seed, String upd, String read, String exp, String[] tags) {
+        return new UpdateTestCase(id, desc, seed, upd, read, exp, tags);
+    }
+
+    static String[] s(String... e) {
+        return e;
+    }
+
+    static String[] t(String... t) {
+        return t;
+    }
+
+    // ========================================
+
+    @TestCategory.Update
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideAllUpdateWriteCases")
+    public void testUpdateWrite(final UpdateTestCase tc) {
+        try {
+            if (tc.seed() != null)
+                for (final String expr : tc.seed()) {
+                    final Obj r = ObjmtronSerializer.parse(make(expr)).apply();
+                    if (r.isFail() && expectWriteRejection(r)) return;
+                }
+            final Obj up = ObjmtronSerializer.parse(make(tc.update())).apply();
+            if (up.isFail() && expectWriteRejection(up)) return;
+            if (this.sleepBetweenReads > 0) CommonUtil.sleepThread(this.sleepBetweenReads);
+            final Obj rd = ObjmtronSerializer.parse(make(tc.read())).apply();
+            final Obj ex = ObjmtronSerializer.parse(make(tc.expected())).apply();
+            assertEquals(ex, rd.selfVID(null),
+                    tc.id() + ": " + tc.description() +
+                            "\n\tupdate: " + make(tc.update()) +
+                            "\n\tread:   " + make(tc.read()));
+        } finally {
+            Machine.current().memory().write(make(cleanupExpr()), noobj());
+        }
+    }
+
+
+    /**
+     * A SPACE ROUTES A VID THROUGH ITS {@code route} TABLE — a server's {@code [/ => <fs:/home/user>, /mcp =>
+     * mcp_mtron]}, a space's scheme mapping. The table is read in rec order, and several keys can match one vid:
+     * {@code /} matches everything, {@code /mcp} matches {@code /mcp/…}.
+     * <p>
+     * THE MOST SPECIFIC MATCH MUST WIN: routing is a longest-key match, not "whichever the rec happened to iterate
+     * first", or a catch-all registered before a specific route silently swallows it.
+     */
+    @Test
+    void testTheMostSpecificRouteWinsRegardlessOfInsertionOrder() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/"), uri("/srv/root"));     // the catch-all, registered FIRST -- the usual layout
+        routes.put(uri("/mcp"), uri("/srv/mcp"));
+
+        assertEquals(uri("/srv/mcp/q").uriValue(), Space.Helper.routeFromSpace(f("/mcp/q"), routes),
+                "/mcp is more specific than / and must win over insertion order");
+        assertEquals(uri("/srv/root/x/y").uriValue(), Space.Helper.routeFromSpace(f("/x/y"), routes),
+                "the catch-all still serves what only it matches");
+    }
+
+    /**
+     * THE WAY BACK: {@code routeToSpace} maps a vid that already lives under a route's TARGET back to the space-relative
+     * address, so a write through a routed space lands where the route says it should. Two things must hold.
+     */
+    @Test
+    void testTheMostSpecificTargetWinsForWrites() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/a"), uri("/srv"));       // the general target, registered FIRST
+        routes.put(uri("/b"), uri("/srv/mcp"));   // the specific one, which owns /srv/mcp/...
+        assertEquals(uri("/b/q").uriValue(), Space.Helper.routeToSpace(f("/srv/mcp/q"), routes),
+                "/srv/mcp is the longer target and must own /srv/mcp/q, whatever the rec order");
+    }
+
+    @Test
+    void testATargetMatchesBySegmentNotByText() {
+        final Map<Uri, Obj> routes = new LinkedHashMap<>();
+        routes.put(uri("/mcp"), uri("/srv/mcp"));     // the text-prefix match, registered FIRST
+        routes.put(uri("/files"), uri("/srv"));
+        // /srv/mcp-api STARTS WITH /srv/mcp as text but is not UNDER it as an address
+        assertEquals(uri("/files/mcp-api/x").uriValue(), Space.Helper.routeToSpace(f("/srv/mcp-api/x"), routes),
+                "a target is an address, not a text prefix");
+    }
+}

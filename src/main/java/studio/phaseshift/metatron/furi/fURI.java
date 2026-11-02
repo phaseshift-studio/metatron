@@ -1,0 +1,1780 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.furi;
+
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.form.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.Tokens.ARGS;
+import static studio.phaseshift.metatron.Tokens.COEFFICIENT;
+import static studio.phaseshift.metatron.Tokens.CONSTQ;
+import static studio.phaseshift.metatron.Tokens.DOM;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.PATH;
+import static studio.phaseshift.metatron.Tokens.POLY;
+import static studio.phaseshift.metatron.Tokens.PORT;
+import static studio.phaseshift.metatron.Tokens.QUERY;
+import static studio.phaseshift.metatron.Tokens.RNG;
+import static studio.phaseshift.metatron.Tokens.SCHEME;
+import static studio.phaseshift.metatron.Tokens.T;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
+
+    /**
+     * URI components that can contain template expressions.
+     * Used to identify which part of the URI a template belongs to for proper coercion during expansion.
+     */
+    enum Component {
+        SCHEME,      // URI scheme (e.g., http, https, file)
+        SUB,         // Host subdomain
+        HOST,        // Host name or IP address
+        PORT,        // Port number (must coerce to integer)
+        AUTHORITY,   // Combined user-info, host, and port
+        PATH,        // Path segments (can have multiple templates)
+        QUERY,       // Query parameters (coerce to k=v pairs)
+        COEFFICIENT, // fURI coefficient {min,max}
+        POLY;         // Polynomial type annotation [type=>type]
+    }
+
+    default boolean classAgnosticEquals(final Object other) {
+        if (other instanceof fURI)
+            return this.equals(other);
+        if (other instanceof Uri)
+            return this.equals(((Uri) other).uriValue());
+        if (other instanceof String)
+            return this.toString().equals(other);
+        throw MTronException.of("unable to compare %s to %s", this, other);
+    }
+
+    static boolean isPattern(final String piece) {
+        return piece.equals("#") || piece.equals("+");
+    }
+
+    static boolean isOnePattern(final String piece) {
+        return piece.equals("+");
+    }
+
+    static boolean isAllPattern(final String piece) {
+        return piece.equals("#");
+    }
+
+    static boolean manyMatches(final List<fURI> firstList, final List<fURI> secondList) {
+        if (firstList.size() != secondList.size())
+            return false;
+        for (int i = 0; i < firstList.size(); i++) {
+            if (!firstList.get(i).basePath().test(secondList.get(i).basePath()))
+                return false;
+        }
+        return true;
+    }
+
+    ////////////////////////////////////////
+    // URI TEMPLATE SUPPORT (${expr} syntax)
+    ////////////////////////////////////////
+
+    /**
+     * Check if this URI contains template expressions (e.g., ${var}, ${+10}, ${[a=>b]})
+     * Uses ${...} syntax to signal arbitrary Metatron code evaluation.
+     * Distinguished from fURI coefficients: {?}, {*}, {+}, {0}, {1,3}, etc.
+     *
+     * @return true if this fURI contains at least one ${...} template expression
+     */
+    default boolean hasTemplates() {
+        return null != templates() && !templates().isEmpty();
+    }
+
+    /**
+     * Extract all template expressions from this URI with their component locations.
+     * Each template is a pair of (Component, expression_string) where the expression
+     * is the raw Metatron code inside ${...} (without the delimiters).
+     * <p>
+     * Templates are parsed at the fURI level (structural) but evaluated at the Uri level (monadic).
+     * The Component enum indicates which part of the URI the template belongs to, enabling
+     * context-aware coercion during expansion (e.g., PORT→int, QUERY→k=v pairs).
+     *
+     * @return List of template pairs, empty if no templates present
+     */
+    default List<Tuple.Pair<Component, String>> templates() {
+        return List.of();
+    }
+
+    default fURI segments(final List<String> segments) {
+        final List<String> newPath = new ArrayList<>(segments);
+        if (!this.path().isEmpty()) {
+            if (this.path().getFirst().isEmpty()) {
+                if (!newPath.getFirst().isEmpty())
+                    newPath.addFirst("");
+            } else if (newPath.getFirst().isEmpty())
+                newPath.removeFirst();
+            if (this.path().getLast().isEmpty()) {
+                if (!newPath.getLast().isEmpty())
+                    newPath.addLast("");
+            } else if (newPath.getLast().isEmpty())
+                newPath.removeLast();
+        }
+        return this.path(newPath);
+    }
+
+    default fURI toPath() {
+        fURI temp = f("");
+        temp = temp.extend(this.hasScheme() ? this.scheme().replace("[", "/").replace("]", "/") : null).asNode();
+        temp = temp.extend(this.hasHost() ? this.host().replace(".", "/").replace(":", "/") : null);
+        if (-1 != this.port())
+            temp = temp.extend(this.port());
+        temp = temp.extend(this.pathString().replace(".", "/").replace(":", "/").replace("[", "/").replace("]", "/").replace("//", "/"));
+        return temp;
+    }
+
+    /**
+     * WHETHER THE HOST NAMES THIS MACHINE'S LOOPBACK — one socket under several spellings ({@code 0.0.0.0},
+     * {@code 127.0.0.1}, {@code localhost}, {@code ::1}, …), so two spellings of the same service must agree.
+     */
+    default boolean isLoopbackHost() {
+        return Singleton.isLoopbackHost(this.host());
+    }
+
+    /**
+     * THE KEY A DIAL IS HELD UNDER: the address as a LEGAL local path, one per surface — {@link #toPath()}, with a
+     * loopback host spelled {@code localhost} FIRST so {@code 127.0.0.1} and {@code [::1]} encode to the connection
+     * {@code localhost} already holds. {@code ws://peer.local:8555/mtron?clientq=me} encodes to
+     * {@code ws/peer/local/8555/mtron}.
+     * <p>
+     * LEGAL MEANS NO DOTS AND NO COLONS IN A SEGMENT: {@link #toPath()} splits the host into its labels in order
+     * ({@code 10.0.0.7} is {@code 10/0/0/7}) — never kept whole, and never merged, since a dropped boundary lets two
+     * machines share a key and the redial of one would hang up the other. A q is dropped: the identity a dial spends
+     * and the serializers that ride the session name no connection (a {@code ?clientq} once leaked into the key this
+     * way — measured).
+     */
+    default fURI pathEncoding() {
+        return (this.isLoopbackHost() ? this.host("localhost") : this).toPath();
+    }
+
+
+    default fURI removeSubpath(final fURI subpath) {
+        String newPath = this.toString();
+        return Singleton.of(newPath.replace(subpath.asBranch().toString(), Tokens.EMPTY));
+    }
+
+    default Uri toUri(final boolean schemeType) {
+        final String scheme = this.scheme();
+        return schemeType && null != scheme ?
+                uri(this.scheme(null), Singleton.of(scheme)) :
+                uri(this);
+    }
+
+    default fURI noQ() {
+        return this.q(Map.of());
+    }
+
+    default boolean hasAuthority() {
+        return null != this.host() && -1 != this.port();
+    }
+
+    /**
+     * A local furi carries no authority — neither a scheme nor a host — so its address is elided to the machine it is
+     * evaluated in ({@code /a/b}, {@code a/b}, {@code ~/x}). This is the predicate a distribution scan reads to reject
+     * an <em>implicit</em> local reference: one whose denotation silently changes when the code ships to another
+     * machine. The authority-qualified spellings of the same place ({@code loop:/…}, {@code ws://host:port/…}) are not
+     * local.
+     *
+     * @return whether the furi has neither a scheme nor a host
+     */
+    default boolean isLocal() {
+        return !this.hasScheme() && !this.hasHost();
+    }
+
+    /**
+     * An addressed furi names a machine by its host (scheme and port optional) — the authority-qualified form a
+     * shipped tail may use, since the host's denotation is independent of where the code runs.
+     *
+     * @return whether the furi carries a host
+     */
+    default boolean isAddressed() {
+        return this.hasHost();
+    }
+
+    /**
+     * A HOSTED furi names a service rather than being one: <b>no scheme, a host, no port</b> — the path is free, since
+     * the name is the host and everything after it is the address the far side serves ({@code //ginger/mtron}).
+     * <p>
+     * It is {@link #isAddressed()} NARROWED, and the difference is the whole point: {@code ws://host:8555/a} is
+     * addressed (it says which transport and which port, so it IS the service), while {@code //ginger/a} is only a
+     * name — the port, and therefore the service, is supplied by a table that may answer nothing at all. A scheme is
+     * likewise already a transport, so a spelled scheme can never be a name.
+     *
+     * @return whether this is a host with no scheme and no port
+     */
+    default boolean isHosted() {
+        return !this.hasScheme() && this.hasHost() && !this.hasPort();
+    }
+
+    /**
+     * A prefixed furi has a scheme but no host: an alias or prefix spelling ({@code ide:command}, {@code loop:/x})
+     * rather than a machine address. It is neither local (it names a scheme) nor addressed (it names no host).
+     *
+     * @return whether the furi has a scheme but no host
+     */
+    default boolean isPrefixed() {
+        return this.hasScheme() && !this.hasHost();
+    }
+
+    default boolean isGeneric() {
+        if (this.hasScheme() || this.hasAuthority() || this.path().isEmpty())
+            return false;
+        if (this.segmentLength() == 1 && (this.path().getFirst().equals("#") || this.path().getFirst().equals("+")))
+            return false;
+        boolean hasCapitalGeneric = false;
+        for (final String seg : this.path()) {
+            // plain char loop (the chars() stream allocates a pipeline per segment)
+            if (seg.isEmpty())
+                continue;
+            boolean allUpper = true;
+            for (int i = 0; i < seg.length(); i++) {
+                final char c = seg.charAt(i);
+                if (c != '#' && c != '+' && !Character.isAlphabetic(c) || Character.isLowerCase(c))
+                    return false;
+                if (!Character.isUpperCase(c))
+                    allUpper = false;
+            }
+            if (allUpper)
+                hasCapitalGeneric = true;
+        }
+        return hasCapitalGeneric;
+    }
+
+    default fURI origin() {
+        return fURI.of(this.scheme(), this.host(), this.port(), List.of(), null, null, Map.of(), null);
+    }
+
+    default fURI origin(final fURI origin) {
+        return fURI.of(origin.scheme(), origin.host(), origin.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    }
+
+
+    default boolean hasAnchor() {
+        if (this.hasScheme())
+            return this.scheme().startsWith("@");
+        else if (this.hasHost())
+            return this.host().startsWith("@");
+        else if (!this.segments().isEmpty())
+            return this.segments().getFirst().startsWith("@");
+        return false;
+    }
+
+    default fURI stripAnchor() {
+        return this.hasAnchor() ? f(this.toString().substring(1)) : this;
+    }
+
+    default fURI addAnchor() {
+        return this.hasAnchor() ? this : f("@" + this.toString());
+    }
+
+    default boolean bimatches(final fURI other) {
+        return this.test(other) || other.test(this);
+    }
+
+    /**
+     * True when this uri is the uri ring's IDENTITY — `<.>`, i.e. "here".
+     * <p>
+     * Note the NAME, because the obvious one is taken: `one()` and `isOne()` are the COEFFICIENT ring's unit
+     * (`one()` is `this.c(cInt.ONE())`, with `isNeg()`/`isMaybe()` beside it), so naming this `isOne()` makes one
+     * interface speak for two rings — and it collides at compile time, which is the lucky version of that mistake.
+     * The identity here is the uri ring's, and uri::T's law rec already declares it as `id`. `.` and the empty path denote the SAME
+     * displacement (a path is a displacement, and `.` displaces nothing), so both answer true, while the root's
+     * vid `[""]` does not: that is the absolute marker, a KIND marker, not a place. Resolving first is what makes
+     * `a/./b` and `./` answer correctly too; resolve() is memoized, so this is a field read after the first call.
+     */
+    default boolean isId() {
+        return this.resolve().path().isEmpty();
+    }
+
+    default fURI id() {
+        return f(".");
+    }
+
+    default boolean hasDotSegments() {
+        for (final String segment : this.path()) {
+            if (segment.equals(".") || segment.equals(".."))
+                return true;
+        }
+        return false;
+    }
+
+    fURI resolve();
+
+    default fURI resolve(final Map<fURI, fURI> generics) {
+        final fURI cless = this.one();
+        //Graphitty.log(this).trace("resolving generics: %s", generics);
+        if (cless.isGeneric()) {
+            fURI lhs = cless.basePath().isGeneric() ?
+                    cless.basePath().path(cless.basePath().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1)) :
+                    cless.basePath();
+            if (cless.hasDom())
+                lhs = cless.dom().isGeneric() ?
+                        lhs.dom(cless.dom().path(cless.dom().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
+                        lhs.dom(cless.dom());
+            if (cless.hasRng())
+                lhs = cless.rng().isGeneric() ?
+                        lhs.rng(cless.rng().path(cless.rng().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
+                        lhs.rng(cless.rng());
+            //Graphitty.log(this).trace("generics after resolution: %s", generics);
+            return lhs.qString(this.hasQ() ? this.qString() : null).c(this.c());
+        } else {
+            return this;
+        }
+    }
+
+    String scheme();
+
+    fURI scheme(final String scheme);
+
+    default boolean hasScheme() {
+        return null != this.scheme();
+    }
+
+    /**
+     * Whether the scheme is the given wildcard — a scheme-pattern ({@code +} or {@code #}) rather than a concrete
+     * transport.
+     *
+     * @param wildcard the scheme character to test for
+     * @return whether the scheme is present and equals the wildcard character
+     */
+    default boolean hasScheme(final char wildcard) {
+        return null != this.scheme() && this.scheme().equals(String.valueOf(wildcard));
+    }
+
+    default fURI big() {
+        if (!Machine.loaded())
+            return this;
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.current().memory().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
+        return Machine.current().memory().redirect(temp, true);
+    }
+
+    default fURI small() {
+        if (!Machine.loaded())
+            return this;
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Machine.current().memory().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
+        return Machine.current().memory().redirect(temp, false);
+    }
+
+    default boolean isEmpty() {
+        return !this.hasScheme() && !this.hasHost() && !this.hasPort() && this.path().isEmpty() && !this.hasQ();
+    }
+
+    /**
+     * The authority this uri reaches, as a string: {@code host:port} when a port is specified, {@code host} alone when
+     * it is not, or {@code null} when there is no host. This is the string form of the complete authority
+     * ({@link #hasAuthority()}), which additionally demands a port.
+     *
+     * @return the host and (when specified) port, or null when there is no host
+     */
+    default String authority() {
+        if (this.hasHost())
+            return this.hasPort() ? this.host() + ":" + this.port() : this.host();
+        return null;
+    }
+
+    default fURI authority(final String authority) {
+        if (null == authority && null != this.authority())
+            return fURI.of(this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        // the port's colon is the first one AFTER the host: past the closing bracket of an IP-literal ([::1]:8555),
+        // whose own colons are the address, not a separator
+        final int colon = authority.indexOf(':', authority.startsWith("[") ? Math.max(0, authority.indexOf(']')) : 0);
+        return -1 == colon ? this.host(authority) : this.host(authority.substring(0, colon)).port(Integer.parseInt(authority.substring(colon + 1)));
+    }
+
+    /**
+     * The host a socket address reports, spelled as a fURI host. An IPv6 address is bracketed (the RFC 3986
+     * IP-literal) because its colons would otherwise read as the port separator; any other host is as reported. A
+     * socket address is never parsed through its {@code toString()}: that is {@code hostname/ip:port}, which a fURI
+     * reads as a path, and for an IPv6 peer ({@code /[0:0:0:0:0:0:0:1]:45960}) is no uri at all.
+     */
+    static String hostOf(final InetSocketAddress address) {
+        final String host = address.getHostString();
+        return host.indexOf(':') >= 0 && !host.startsWith("[") ? "[" + host + "]" : host;
+    }
+
+    /**
+     * Strip the scheme and authority, yielding the address as the <em>owner</em> of that authority would spell
+     * it: {@code ws://hostB:8555/usr/x} becomes {@code /usr/x}. This is the transport boundary operation — what
+     * crosses the wire is the destination-relative address, and the receiver resolves that against its own
+     * spaces. A URI with neither scheme nor host is already local and is returned unchanged (identity, so
+     * {@code localize()} is safe to apply unconditionally). Mirrors {@link #basePath()} but keeps the
+     * query/coefficient/poly, which are address semantics rather than pattern semantics.
+     */
+    default fURI localize() {
+        if (null == this.scheme() && null == this.host())
+            return this;
+        return fURI.of(null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+    }
+
+    String host();
+
+    fURI host(final String host);
+
+    default boolean hasHost() {
+        return this.host() != null;
+    }
+
+    /**
+     * Whether the host is the given wildcard — a host-pattern ({@code +} or {@code #}) that broadcasts over machines
+     * rather than naming one.
+     *
+     * @param wildcard the host character to test for
+     * @return whether the host is present and equals the wildcard character
+     */
+    default boolean hasHost(final char wildcard) {
+        return null != this.host() && this.host().equals(String.valueOf(wildcard));
+    }
+
+    default boolean hasSubdomain() {
+        return this.subdomain() != null;
+    }
+
+    default String subdomain() {
+        final String hostString = this.host();
+        // an IP-literal ([::ffff:192.0.2.128]) is an address, not a name: its dots are not domain labels
+        if (null == hostString || hostString.startsWith("["))
+            return null;
+        Matcher m = fURI.Singleton.HOST_PATTERN.matcher(hostString);
+        if (m.matches() && m.group(1) != null) {
+            return m.group(1).replace(".", "");  // "a.b." → "a.b"
+        }
+        return null;
+    }
+
+    default String domain() {
+        if (this.hasHost() && this.host().contains(".")) {
+            final String[] split = this.host().split("\\.");
+            if (split.length > 2)
+                return split[1];
+            return split[0];
+        } else if (this.hasHost())
+            return this.host();
+        return null;
+    }
+
+    default String tldomain() {
+        if (this.hasHost() && this.host().contains("."))
+            return this.host().substring(this.host().lastIndexOf(".") + 1);
+        return null;
+    }
+
+
+    int port();
+
+    default boolean hasPort() {
+        return this.port() != -1;
+    }
+
+    fURI port(final int port);
+
+    default int portOrDefault(final int defaultPort) {
+        return this.hasPort() ? this.port() : defaultPort;
+    }
+
+    List<String> path();
+
+    fURI path(final List<String> path);
+
+    fURI path(final String path);
+
+    String pathString();
+
+    default String name() {
+        return this.path().isEmpty() ? Tokens.EMPTY : this.path().getLast();
+    }
+
+    /**
+     * Expands any branch segments ({@code {c,d}}, {@code {{2}c,d}}) in this path into the full set of paths they
+     * denote — the cartesian product over the branches. A path with no branches has exactly one entry: itself.
+     * {@code a/b/{c,d}} yields {@code [["a","b","c"],["a","b","d"]]}; {@code a/b/{{2}c,d}} yields three.
+     * Branch elements are canonicalized (sorted by atom), so {@code {c,d}} and {@code {d,c}} expand identically.
+     */
+    default List<List<String>> branchedPaths() {
+        return Helper.branchedPaths(this.path());
+    }
+
+    /**
+     * Flattens this uri into the stream of paths its branch structure denotes. A non-branching uri is its own single
+     * element; a branching uri yields one fURI per path — {@code a/{b,c}/d/{e,f}} → {@code a/b/d/e, a/b/d/f, a/c/d/e,
+     * a/c/d/f} — each carrying this uri's scheme, host, port, coefficient, poly, query and templates.
+     */
+    default Stream<fURI> flatten() {
+        final List<List<String>> paths = this.branchedPaths();
+        if (paths.size() <= 1)
+            return Stream.of(this);
+        return paths.stream().map(path -> fURI.of(this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates()));
+    }
+
+    boolean test(final fURI lhs);
+
+    fURI extend(final String segment);
+
+    default fURI extend(final int indexSegment) {
+        return this.extend("" + indexSegment);
+    }
+
+    default fURI extend(final fURI segments) {
+        // return this.extend(null == segments ? null : segments.toString());
+        return this.extend(segments.pathString()).addQ(segments.qMap());
+    }
+
+    fURI head(final int steps);
+
+    fURI tail(final int steps);
+
+    fURI retract(final int steps);
+
+    fURI retractPattern();
+
+    fURI retract(final String segment);
+
+    fURI prepend(final String segment);
+
+    fURI pretract(final String segment);
+
+    fURI pretract(final int steps);
+
+    default fURI qprocLess() {
+        final SortedMap<String, String> qs = this.qMap();
+        if (qs.isEmpty())
+            return this;
+        return this.q(qs.entrySet().stream().filter(kv -> !kv.getKey().endsWith("q")).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, _) -> a, AbstractfURI::sortedQ)));
+    }
+
+    /*default fURI removePrefix(final fURI prefix) {
+        if (null == prefix)
+            return this;
+        final String newPath = this.toString();
+        final String pre = prefix.toString();
+        //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
+        if (!newPath.startsWith(pre))
+            return this;
+        final fURI newURI = Singleton.of(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
+        return newURI;
+    }*/
+
+    default fURI removePrefix(final fURI prefix) {
+        if (null == prefix)
+            return this;
+        if (prefix.hasPattern()) {
+            fURI running = this;
+            while (!running.isEmpty() && running.segmentLength() > 0) {
+                if (running.bimatches(prefix))
+                    return this.removePrefix(running);
+                running = running.isBranch() ? running.asNode() : running.retract(1).asBranch();
+            }
+            return this;
+        } else {
+            final String newPath = this.toString();
+            final String pre = prefix.toString();
+            //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
+            if (!newPath.startsWith(pre))
+                return this;
+            if (f(pre).equals(this))
+                return f("");
+            final fURI newURI = Singleton.of(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
+            // final fURI newURI = f(newPath.substring(pre.length()));
+            return newURI;
+        }
+    }
+
+    default boolean hasPoly() {
+        return null != this.poly() && !this.poly().isEmpty();
+    }
+
+    default boolean hasPrefix(final String prefix) {
+        return this.hasPrefix(f(prefix));
+    }
+
+    boolean hasPrefix(final fURI prefix);
+
+    boolean hasPostfix(final String postfix);
+
+    default boolean hasPostfix(final fURI postfix) {
+        return this.hasPostfix(postfix.toString());
+    }
+
+    boolean hasPattern();
+
+    boolean hasPattern(final String pattern);
+
+    fURI basePath();
+
+    List<String> poly();
+
+    default Optional<Poly<?, ?>> polyParsed() {
+        // if (null != this.parsedPoly)
+        //    return this.parsedPoly;
+        if (!this.hasPoly()) return Optional.empty();
+        final List<String> poly = this.poly();
+        if (poly.size() == 1) {
+            if (poly.getFirst().trim().equals(","))
+                return Optional.of(lst0());
+            else if (poly.getFirst().trim().equals("=>"))
+                return Optional.of(rec0());
+        }
+        if (poly.getFirst().contains("=>")) {
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
+            for (final String s : poly) {
+                final String[] kv = s.split("=>");
+                if (kv.length != 2)
+                    throw MTronException.of("invalid rec type poly %s", s);
+                map.put(uri(f(kv[0].trim()).big()), T(f(kv[1].trim()).big()));
+            }
+            return Optional.of(rec(map));
+        } else {
+            final List<Obj> list = new ArrayList<>();
+            for (final String s : poly) {
+                list.add(T(f(s.trim()).big()));
+            }
+            return Optional.of(lst(list));
+        }
+    }
+
+    int pathLength();
+
+
+    List<String> segments();
+
+    default String segments(final int index, final String defaultSegment) {
+        return this.segmentLength() > index ? this.segments().get(index) : defaultSegment;
+    }
+
+    int segmentLength();
+
+    default fURI asRelativeNode() {
+        return this.asRelative().asNode();
+    }
+
+    fURI poly(final List<String> poly);
+
+    default fURI poly(final fURI polynomial, final fURI... polynomials) {
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
+    }
+
+    fURI neg();
+
+    fURI mult(final fURI other);
+
+    fURI plus(final fURI other);
+
+    cInt c();
+
+    fURI c(final cInt coefficient);
+
+    default fURI cLess() {
+        return this.c((cInt) null);
+    }
+
+    /**
+     * This uri with its TYPE ARGUMENT list (bracket) stripped, keeping the coefficient, path, query and templates —
+     * the third of the three lessers {@link #basePath()} is built from, beside {@link #cLess()} (coefficient) and
+     * {@link #qLess()} (query). {@code person[ninja]?rng=person} erases to {@code person?rng=person}.
+     * <p>
+     * This is the ERASURE the bracket rule in {@code test} needs: a bracket is a declaration's parameter list
+     * ({@code person[role]::T}) or an instantiation's type arguments ({@code person[ninja]}), so erasing it is
+     * exactly what "person[ninja] is a person::T" means at the type level.
+     *
+     * @return this uri without its bracket, or this uri when it has none
+     */
+    default fURI polyLess() {
+        return this.poly(List.of());
+    }
+
+    default fURI c(final Function<cInt, cInt> func) {
+        return this.c(func.apply(this.c()));
+    }
+
+    fURI dom();
+
+    fURI dom(final fURI dom);
+
+    default boolean hasDom() {
+        return this.hasQ(DOM);
+    }
+
+    default boolean hasRng() {
+        return this.hasQ(RNG);
+    }
+
+    fURI rng();
+
+    fURI rng(final fURI rng);
+
+    /**
+     * The argument TYPES an instruction signature declares, in order — the {@code args} query component read as
+     * types, the peer of {@link #dom()} / {@link #rng()} ({@code inst?rng=int&dom=int&args=[int,rec]}).
+     * <p>
+     * An ABSENT component reads as an empty list, and so does the BARE key ({@code args}) and an empty body
+     * ({@code args=[]}): the list reader cannot tell them apart — ask {@link #hasArgs()} for the claim. The
+     * distinction matters: a bare key declares ZERO arguments (a claim the contract makes), while an absent key is
+     * no argument claim at all. The canonical spelling omits the key entirely when there is nothing to declare (see
+     * {@link #args(List)}), which is what keeps every uri that carries no arguments rendering byte-identically.
+     * <p>
+     * The component is a SINGLE lst-valued query key: one uri text per element, comma separated inside {@code [ ]}
+     * ({@code [int,rec]}, {@code [/m/int,A]}). It is parsed here, in this lower layer, straight from the query
+     * string — no {@code isa.m} type is built — and the rendering is stable: {@code parse(toString()).toString()}
+     * equals {@code toString()}.
+     *
+     * @return the argument types in declaration order, empty when the component is absent
+     */
+    default List<fURI> args() {
+        return Helper.args(this.q(ARGS));
+    }
+
+    /**
+     * Whether this uri DECLARES its argument types — the key is present, however many types it lists.
+     * <p>
+     * THE KEY, NOT THE LIST, because {@code zero} and {@code unknown} are different claims: a BARE {@code args} key
+     * ({@code inst?rng=A&dom=A&args}) declares that the operation takes NO arguments, while an ABSENT key is no
+     * argument claim at all. Both read as an empty {@link #args()} list, so this is the only way to tell them apart;
+     * {@link #args(List)} cannot write the bare key (an empty list removes it) — a caller that means ZERO uses
+     * {@link #addQ(String) addQ("args")}.
+     *
+     * @return whether the {@code args} key is present
+     */
+    default boolean hasArgs() {
+        return this.hasQ(ARGS);
+    }
+
+    /**
+     * This uri with its argument TYPES set — the peer of {@link #dom(fURI)} / {@link #rng(fURI)}. The arguments
+     * render as one lst-valued {@code args} query component ({@code inst?rng=int&dom=int&args=[int,rec]}), one uri
+     * text per element and in order.
+     * <p>
+     * An empty (or null) list REMOVES the component: the canonical form carries no {@code args} key at all, which
+     * is a hard requirement — every pre-existing tid must render byte-identically, so an empty argument list can
+     * never add a {@code ?args=[]} to the query. A caller that means to DECLARE ZERO arguments (a claim, distinct
+     * from no claim) therefore writes the bare key with {@link #addQ(String) addQ("args")}, not this method.
+     *
+     * @param args the argument types in order; empty (or null) omits the component
+     * @return a new fURI carrying the component, or this uri when there is nothing to remove
+     */
+    default fURI args(final List<fURI> args) {
+        if (null == args || args.isEmpty())
+            return this.hasQ(ARGS) ? this.removeQ(ARGS) : this;
+        // the canonical map puts args in normal-form position (after rng/dom) whatever the insertion order
+        final SortedMap<String, String> query = AbstractfURI.mutableQ(this.qMap());
+        query.put(ARGS, Helper.argsString(args));
+        return this.q(query);
+    }
+
+    /**
+     * {@link #args(List)} for a fixed, hand-written signature: {@code inst.args(int, rec)}. Call {@link #args()}
+     * with no arguments for the READER — the no-arg call is the getter, not an empty varargs array.
+     *
+     * @param arg0 the first argument type
+     * @param more the remaining argument types in order
+     * @return a new fURI carrying the component
+     */
+    default fURI args(final fURI arg0, final fURI... more) {
+        return this.args(Stream.concat(Stream.of(arg0), Stream.of(more)).toList());
+    }
+
+    String qString();
+
+    /**
+     * The query components in NORMAL FORM — a {@link SortedMap} ordered by the canonical query comparator
+     * ({@code rng}, {@code dom}, {@code args}, then the remaining keys in reverse alphabetical order). The order is
+     * established when the uri is constructed ({@code AbstractfURI.canonicalQ}), never when it is read, so
+     * {@link #qString()} is a plain join.
+     */
+    SortedMap<String, String> qMap();
+
+    fURI q(final Map<String, String> query);
+
+    default fURI addQ(final Map<String, String> query) {
+        if (query.isEmpty())
+            return this;
+        final SortedMap<String, String> map = AbstractfURI.mutableQ(this.qMap());
+        map.putAll(query);
+        return this.q(map);
+    }
+
+    default fURI qLess() {
+        return this.q(Map.of());
+    }
+
+    default fURI qLessExceptDomRng() {
+        return this.qLess(DOM, RNG);
+    }
+
+    default fURI qLess(final String... except) {
+        if (!this.hasQ())
+            return this;
+        return this.q(this.qMap()
+                .entrySet()
+                .stream()
+                .filter(kv -> Stream.of(except).anyMatch(e -> e.equals(kv.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, AbstractfURI::sortedQ)));
+    }
+
+    fURI removeQ(final String key);
+
+    default fURI removeQ(final fURI key) {
+        return this.removeQ(key.toString());
+    }
+
+    default fURI qString(final String query) {
+        if (null == query || query.isEmpty())
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
+        else {
+            // Extract and merge any templates from the query string
+            List<Tuple.Pair<Component, String>> mergedTemplates = null;
+            if (query.contains("${")) {
+                mergedTemplates = new ArrayList<>(this.templates());
+                final Matcher m = Singleton.MERGE_PATTERN.matcher(query);
+                while (m.find()) {
+                    mergedTemplates.add(Tuple.Pair.with(Component.QUERY, m.group(1)));
+                }
+            }
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query),
+                    mergedTemplates != null && !mergedTemplates.isEmpty() ? mergedTemplates : this.templates());
+        }
+    }
+
+    <T> T qValue(final String key, final Class<T> valueClass);
+
+    default <T> T qValue(final fURI key, final Class<T> valueClass) {
+        return this.qValue(key.toString(), valueClass);
+    }
+
+    String q(final String key);
+
+    default String q(final fURI key) {
+        return this.q(key.toString());
+    }
+
+    fURI q(final String key, final Object value);
+
+    default fURI addQ(final String key) {
+        return this.q(key, null);
+    }
+
+    default fURI addQ(final String key, final Object value) {
+        return this.q(key, value);
+    }
+
+    boolean hasQ(final String key);
+
+    default boolean hasQ(final fURI key) {
+        return this.hasQ(key.toString());
+    }
+
+    default boolean hasQ() {
+        return !this.qMap().isEmpty();
+    }
+
+    default boolean hasNonDomRngQ() {
+        int counter = 0;
+        if (this.hasRng())
+            counter++;
+        if (this.hasDom())
+            counter++;
+        return this.qMap().size() > counter;
+    }
+
+    default fURI copyQ(final fURI furi) {
+        if (!furi.hasQ())
+            return this;
+        // a TreeMap accumulator: the lhs keys win (put second) and the order is canonical regardless of that order
+        final SortedMap<String, String> newQ = AbstractfURI.sortedQ();
+        newQ.putAll(furi.qMap());
+        newQ.putAll(this.qMap());
+        return this.q(newQ);
+
+    }
+
+    /**
+     * A relative furi has no leading /
+     *
+     * @return whether the furi path has a leading /
+     */
+    boolean isRelative();
+
+    /**
+     * An absolute furi has a leading /
+     *
+     * @return whether the furi path has a leading /
+     */
+    default boolean isAbsolute() {
+        return !this.isRelative();
+    }
+
+    /**
+     * A branch furi has a trailing /
+     *
+     * @return whether the furi path has a trailing /
+     */
+    boolean isBranch();
+
+    /**
+     * A node furi has no trailing /
+     *
+     * @return whether the furi path has no trailing /
+     */
+    default boolean isNode() {
+        return !this.isBranch();
+    }
+
+    /**
+     * A furi has branches when some path segment is a {@code {…}} branch (or a coefficient-marked atom). Such a uri
+     * must be {@code < >}-quoted to be re-readable, since a bare token leading with {@code {…}} is a stream, not a uri.
+     *
+     * @return whether the path carries a branch segment
+     */
+    default boolean hasBranches() {
+        return this.path().stream().anyMatch(segment -> segment.startsWith("{"));
+    }
+
+    fURI asAbsolute();
+
+    fURI asRelative();
+
+    fURI asNode();
+
+    fURI asBranch();
+
+    /// /////////////////////////////////////////////
+
+    default fURI any() {
+        return this.c(cInt.ANY());
+    }
+
+    default fURI zero() {
+        return this.c(cInt.ZERO());
+    }
+
+    default fURI one() {
+        return this.c(cInt.ONE());
+    }
+
+    default fURI maybe() {
+        return this.c(cInt.MAYBE());
+    }
+
+    default fURI maybeMaybe() {
+        return this.c(cInt.of(-1, 1));
+    }
+
+    default fURI some() {
+        return this.c(cInt.SOME());
+    }
+
+    default fURI maybeSome() {
+        return this.c(cInt.MAYBESOME());
+    }
+
+    default Uri toUri() {
+        return uri(this);
+    }
+
+    /// ///////////////////////////////////
+
+    default boolean isZero() {
+        return this.c().isZero();
+    }
+
+    default boolean isOne() {
+        return this.c().isOne();
+    }
+
+    default boolean isAny() {
+        return this.c().isAny();
+    }
+
+    default boolean isZeroable() {
+        return this.c().isZeroable();
+    }
+
+    default boolean isSome() {
+        return this.c().isSome();
+    }
+
+    default boolean isMaybe() {
+        return this.c().isMaybe();
+    }
+
+    default boolean isMaybeSome() {
+        return this.c().isMaybeSome();
+    }
+
+    /// ///////////////////////////////////////////////////
+
+    default fURI constant() {
+        return this.q(CONSTQ, null);
+    }
+
+    default fURI type(final fURI type) {
+        return this.q(T, type);
+    }
+
+
+    /// ////////////////////////////////////////////////
+
+    /**
+     * Branch-expansion helpers backing {@link #branchedPaths()}. A branch segment is the string {@code {…}} already
+     * carried in {@link #path()}; these methods re-read it as a stream of path segments.
+     */
+    final class Helper {
+        private Helper() {
+        }
+
+        /**
+         * THE POLY RULE — the poly component of a fURI types PARAMETER POSITIONS, never a keyed map. The legal
+         * readings, and why each is what it is:
+         * <ul>
+         *   <li>{@code lst[x,y,z]} — the types at the list's INDICES, index by index, so {@code lst[A,A]} is a pair
+         *       of equal types (not a map from A to A);</li>
+         *   <li>{@code rec[x,y,z]} — the rec's FIELDS; a fibered declaration's fields are its fibers
+         *       ({@code rec[role]::T[…]@person}), and an instance's entries are the types at those fibers
+         *       ({@code person[ninja]});</li>
+         *   <li>{@code rel[x,y,z]} — the VERTICES of a right-nested path, {@code x => (y => z)};</li>
+         *   <li>{@code object[int]} — the instantiation parameter ({@code int::T.as(object::T)} yields
+         *       {@code object[int]::[obj=>int::T, law=>…]}), the argument the object is built from.</li>
+         * </ul>
+         * A {@code key=>value} pair inside {@code [ ]} therefore mangles every one: it reads a position as a key and
+         * a type as a value. The per-key VALUE types of a rec belong in the rec's own structure (or in the
+         * instruction's {@code args}), and a {@code [ } inside a poly is a second list, not a poly element. Both are
+         * category errors, rejected here so every construction path — string parse, {@link #poly(List)}, a form's
+         * derived uri — gets the same diagnostic instead of silently round-tripping a shape that means nothing.
+         * <p>
+         * The check is on the element's OWN text — its path and poly, the part before a {@code ?}. An element that is
+         * itself a full type uri may carry a QUERY ({@code /m/inst/order?rng=/m/lst[/m/int{*}]&dom=/m/int{*}}): those
+         * brackets are a query VALUE (a type uri's poly, spelled inside a query string), not a second poly on this
+         * one, and a {@code =>} there is data. Only the pre-query text can nest a list or spell a keyed map.
+         */
+        static void validatePoly(final List<String> poly, final String scheme, final String host, final int port,
+                                 final List<String> path, final C<?, ?> coefficient, final Map<String, String> query) {
+            if (null == poly || poly.isEmpty())
+                return;
+            for (final String element : poly) {
+                if (null == element)
+                    continue;
+                final String polyElement = element.trim();
+                final int queryStart = polyElement.indexOf('?');
+                final String head = queryStart < 0 ? polyElement : polyElement.substring(0, queryStart);
+                if (head.contains("=>") || head.indexOf('[') >= 0 || head.indexOf(']') >= 0)
+                    throw polyTypeError(polyElement, polyFuri(scheme, host, port, path, poly, coefficient, query));
+            }
+        }
+
+        /**
+         * The diagnostic for a poly element that is not a type: names the rule, the offending element and the fURI it
+         * was found in. {@code element} is {@code "nested '['"} when the string grammar itself could not separate the
+         * element — a closed nested list never reaches {@link #validatePoly} (the pattern stops at the inner
+         * {@code ]}) — so the parse-failure path reports the same rule rather than a generic "unable to parse".
+         */
+        static MTronException polyTypeError(final String element, final String furi) {
+            return MTronException.of(
+                    "poly types parameter positions (lst indices, rec fields, rel vertices, object instantiation), never a keyed map: \"%s\" is a category error in %s — a poly element is a TYPE, not a key=>value pair and not a nested [ ... ]",
+                    element, furi);
+        }
+
+        /**
+         * Renders the fURI whose poly was rejected, so the diagnostic can name it even from the component-level
+         * construction funnel ({@link fURI#of(String, String, int, List, C, List, Map, List)}), which no longer holds
+         * the original text. Only called on the failure path.
+         */
+        private static String polyFuri(final String scheme, final String host, final int port, final List<String> path,
+                                       final List<String> poly, final C<?, ?> coefficient, final Map<String, String> query) {
+            final StringBuilder sb = new StringBuilder();
+            if (null != scheme)
+                sb.append(scheme).append(':');
+            if (null != host) {
+                sb.append("//").append(host);
+                if (port >= 0)
+                    sb.append(':').append(port);
+            }
+            final String pathText = null == path ? "" : String.join("/", path);
+            if (!pathText.isEmpty()) {
+                if ((null != host || null != scheme) && !pathText.startsWith("/"))
+                    sb.append('/');
+                sb.append(pathText);
+            }
+            if (null != poly && !poly.isEmpty())
+                sb.append('[').append(String.join(",", poly)).append(']');
+            if (null != coefficient && !coefficient.isOne())
+                sb.append('{').append(coefficient).append('}');
+            if (null != query && !query.isEmpty()) {
+                sb.append('?');
+                boolean first = true;
+                for (final Map.Entry<String, String> kv : query.entrySet()) {
+                    if (!first)
+                        sb.append('&');
+                    first = false;
+                    sb.append(kv.getKey()).append('=').append(kv.getValue());
+                }
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Whether the poly region of an otherwise-unparseable fURI text nests a second {@code [ }. The strict grammar
+         * ({@code [^]]+} for the poly) cannot capture a closed nested list, so the only route to the same diagnostic
+         * is to look at the raw text when {@code FURI_PATTERN} has already failed. Query values ({@code ?args=[…]}),
+         * template bodies ({@code $&#123;…&#125;}) and an RFC 3986 IP-literal host ({@code //[::1]}) are not poly
+         * regions and are skipped; this runs only after the pattern failed, so it can never change a successful parse.
+         */
+        static boolean nestedPolyBracket(final String furi) {
+            final int query = topLevel(furi, '?');
+            final int limit = query < 0 ? furi.length() : query;
+            final int open = polyOpen(furi, limit);
+            if (open < 0)
+                return false;
+            int depth = 0;
+            for (int i = open; i < limit; i++) {
+                final char ch = furi.charAt(i);
+                if ('[' == ch) {
+                    if (++depth > 1)
+                        return true;
+                } else if (']' == ch && 0 == --depth)
+                    return false;
+            }
+            return false;
+        }
+
+        private static int topLevel(final String text, final char target) {
+            int template = 0;
+            for (int i = 0; i < text.length(); i++) {
+                final char ch = text.charAt(i);
+                if ('$' == ch && i + 1 < text.length() && '{' == text.charAt(i + 1)) {
+                    template++;
+                    i++;
+                } else if ('}' == ch && template > 0)
+                    template--;
+                else if (target == ch && 0 == template)
+                    return i;
+            }
+            return -1;
+        }
+
+        private static int polyOpen(final String text, final int limit) {
+            int template = 0;
+            for (int i = 0; i < limit; i++) {
+                final char ch = text.charAt(i);
+                if ('$' == ch && i + 1 < limit && '{' == text.charAt(i + 1)) {
+                    template++;
+                    i++;
+                } else if ('}' == ch && template > 0)
+                    template--;
+                else if ('[' == ch && 0 == template) {
+                    // an IP-literal host is `//[...]`, where no poly can stand
+                    if (i >= 2 && '/' == text.charAt(i - 1) && '/' == text.charAt(i - 2))
+                        continue;
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * Renders argument types as the lst-valued query text the {@code args} component stores: one uri text per
+         * element, comma separated inside the brackets lst notation uses ({@code [int,rec]}). Never called with an
+         * empty list — the component is omitted rather than written empty — but an empty list would render
+         * {@code []}, which {@link #args(String)} reads back as no arguments either.
+         */
+        static String argsString(final List<fURI> args) {
+            return args.stream().map(fURI::toString).collect(Collectors.joining(",", "[", "]"));
+        }
+
+        /**
+         * Reads the {@code args} query value back into argument types. Absent (null), empty and {@code []} all
+         * answer an empty list, so they are indistinguishable to a caller. The body splits on TOP-LEVEL commas
+         * only: a coefficient ({@code A{2,3}}) or a nested branch keeps its own commas, which is why this does not
+         * wait on a {@code isa.m} lst parse. An element is read by {@link Singleton#f(String)}, the same string
+         * route every other query component takes.
+         */
+        static List<fURI> args(final String value) {
+            if (null == value)
+                return List.of();
+            String body = value.trim();
+            if (body.startsWith("[") && body.endsWith("]"))
+                body = body.substring(1, body.length() - 1);
+            if (body.isBlank())
+                return List.of();
+            final List<fURI> args = new ArrayList<>();
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < body.length(); i++) {
+                final char ch = body.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                else if (',' == ch && 0 == depth) {
+                    args.add(Singleton.f(body.substring(start, i).trim()));
+                    start = i + 1;
+                }
+            }
+            args.add(Singleton.f(body.substring(start).trim()));
+            return List.copyOf(args);
+        }
+
+        static List<List<String>> branchedPaths(final List<String> path) {
+            final List<List<String>> paths = new ArrayList<>();
+            paths.add(new ArrayList<>());
+            for (final String segment : path) {
+                final List<String> branches = branch(segment);
+                final List<List<String>> next = new ArrayList<>(paths.size() * branches.size());
+                for (final List<String> prefix : paths)
+                    for (final String branch : branches) {
+                        final List<String> extended = new ArrayList<>(prefix);
+                        extended.addAll(splitSubPath(branch));
+                        next.add(extended);
+                    }
+                paths.clear();
+                paths.addAll(next);
+            }
+            return paths;
+        }
+
+        private static List<String> branch(final String segment) {
+            if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
+                return List.of(absorb(segment));
+            final List<String> elements = new ArrayList<>(splitBranch(segment.substring(1, segment.length() - 1)));
+            elements.sort(Comparator.comparing(Helper::atom));
+            final List<String> expanded = new ArrayList<>();
+            for (final String element : elements)
+                expanded.addAll(expandElement(element));
+            return expanded;
+        }
+
+        private static List<String> splitBranch(final String inner) {
+            final List<String> elements = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < inner.length(); i++) {
+                final char ch = inner.charAt(i);
+                if (ch == '{')
+                    depth++;
+                else if (ch == '}')
+                    depth--;
+                if (ch == ',' && 0 == depth) {
+                    elements.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            elements.add(sb.toString());
+            return elements;
+        }
+
+        private static String atom(final String element) {
+            if (element.length() > 1 && element.charAt(0) == '{') {
+                final int close = element.indexOf('}');
+                return close > 0 ? element.substring(close + 1) : element;
+            }
+            return element;
+        }
+
+        /**
+         * A coefficient-marked segment ({@code {2}c}) records the 2-fold branch that carried a shared suffix; the
+         * branch structure already accounts for that multiplicity, so the coefficient is absorbed on expansion — the
+         * segment reads as its bare atom {@code c}. In-branch elements ({@code {{2}c,d}}) are the other direction and
+         * DO expand to {@code n} copies (see {@link #expandElement(String)}).
+         */
+        private static String absorb(final String segment) {
+            if (segment.length() > 1 && segment.charAt(0) == '{') {
+                final int close = segment.indexOf('}');
+                if (close > 0)
+                    return segment.substring(close + 1);
+            }
+            return segment;
+        }
+
+        private static List<String> expandElement(final String element) {
+            if (element.length() > 1 && element.charAt(0) == '{') {
+                final int close = element.indexOf('}');
+                if (close > 0) {
+                    final String atom = element.substring(close + 1);
+                    final cInt c = cInt.of(element.substring(1, close));
+                    final Long min = c.min();
+                    final Long max = c.max();
+                    if (null != min && min.equals(max) && min >= 0) {
+                        final int n = min.intValue();
+                        final List<String> copies = new ArrayList<>(n);
+                        for (int i = 0; i < n; i++)
+                            copies.add(atom);
+                        return copies;
+                    }
+                    return List.of(atom);
+                }
+            }
+            return List.of(element);
+        }
+
+        /**
+         * A branch element may be a sub-path ({@code b/c}); it splits into its own segments when the path is built —
+         * the {@code /} is a separator there, not part of the atom.
+         */
+        private static List<String> splitSubPath(final String subPath) {
+            return new ArrayList<>(Arrays.asList(subPath.split("/")));
+        }
+    }
+
+    class Singleton {
+        public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+        /**
+         * THE LOOPBACK SPELLINGS: one socket, many names. A socket reports IPv6 loopback uncompressed (and
+         * {@code fURI.hostOf} brackets it), so both spellings are here.
+         */
+        private static final Set<String> LOOPBACK_HOSTS = Set.of("0.0.0.0", "127.0.0.1", "localhost", "::1", "[::1]",
+                "0:0:0:0:0:0:0:1", "[0:0:0:0:0:0:0:1]");
+
+        /**
+         * Whether a bare host string names loopback — the check {@link fURI#isLoopbackHost()} delegates to.
+         */
+        public static boolean isLoopbackHost(final String host) {
+            return null != host && LOOPBACK_HOSTS.contains(host);
+        }
+
+        // One poly element: the leading run stops at `,` so the separator is never swallowed, and the trailing run is
+        // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is an entry like any other. The element keeps
+        // any whitespace around it, so a reader trims it.
+        public static final Pattern POLY_PATTERN = Pattern.compile(
+                "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,]*)");
+        // OLD FURI_PATTERN (pre-branch): the path excluded `{`, so a trailing `{...}` was always the coefficient.
+        // Kept for reference; replaced below by the branch-aware pattern that admits `{c,d}` segments in the path.
+        /*public static final Pattern FURI_PATTERN = Pattern.compile(
+                "((?<scheme>[^:/.]+):)?" +
+                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(?<path>[^?\\[{&]+)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "(\\{(?<coefficient>[^}\\]]+)})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^\\]]*\\]|[^&=]+))?)*)?)?");*/
+
+        // A coefficient body is exactly one cInt (see m_furi_coefficient / cInt.of): a signed exact or range, or a
+        // shorthand. The path now allows `{...}` branch segments (with one level of nesting for `{{2}c,d}`), but a
+        // `{...}` whose body IS a cInt is the trailing coefficient, not a branch — the negative lookahead makes the
+        // coefficient win at the end, so `a/b/{c,d}` is path `a/b/{c,d}` while `a/b/c{2}` is path `a/b/c` + coeff `{2}`.
+        private static final String COEFFICIENT_BODY = "-?\\d+,-?\\d+|,-?\\d+|-?\\d+,|,|-?\\d+|\\*\\*|-\\*|-\\?|\\?\\?|\\*|\\+|\\?|-";
+        // An RFC 3986 IP-literal host: `[` an IPv6 address `]`, with an optional zone (`%eth0`, or `%25eth0` as RFC
+        // 6874 encodes it). Everywhere else in a fURI brackets open the poly annotation, but directly after `//` a
+        // poly cannot stand, and an IPv6 address needs them: its colons would otherwise read as the port separator.
+        // Only hex digits, colons and dots, and at least one colon, so nothing that spells a poly can match.
+        private static final String IP_LITERAL = "\\[(?=[^\\]]*:)[0-9A-Fa-f:.]+(?:%[0-9A-Za-z._~%-]+)?\\]";
+        public static final Pattern FURI_PATTERN = Pattern.compile(
+                "((?<scheme>[^:/.]+):)?" +
+                        "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(?<path>(?:[^?\\[{&]|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "(\\{(?<coefficient>" + COEFFICIENT_BODY + ")})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>[^&=]+(?:=(?:\\[[^]]*]|[^&=]+))?(&[^&=]+(?:=(?:\\[[^]]*]|[^&=]+))?)*)?)?");
+        // Template-aware pattern: allows ${...} in scheme, host, port, path, query components
+        // Key differences from FURI_PATTERN:
+        // - scheme: allows ${...} via alternation
+        // - host: allows ${...} via alternation
+        // - port: stops at / to not consume path, allows ${...}
+        // - path: allows ${...} and captures them fully (including at end of path)
+        // - coefficient: only matches {..} NOT preceded by $ (negative lookbehind)
+        public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
+                "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
+                        "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
+                        "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "((?<!\\$)\\{(?<coefficient>[^}\\]]+)})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>.+)?)?");
+        // The String -> fURI cache is not a grammar rule, so it is not here: see fURICache, whose only caller is
+        // Singleton.of(String) below.
+        public static final fURI ALL = new XXPXXXfURI(List.of("#"));
+        public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
+        public static final fURI NOOBJ = fURI.of(null, null, -1, List.of("noobj"), cInt.ZERO(), List.of(), Map.of(), null);
+
+        public final static fURI empty() {
+            return XXXXXXfURI.INSTANCE;
+        }
+
+
+        public final static fURI f(final String furi) {
+            return null == furi || furi.isEmpty() ? Singleton.empty() : of(furi);
+        }
+
+        public final static fURI f() {
+            return f(null);
+        }
+
+
+        /**
+         * The cache entry point: the interned fURI for a string. Identity is stable across calls —
+         * {@code of(s) == of(s)} — which is what lets the cached instance's lazy derivations be shared and gives
+         * {@link #equals} a reference-equality fast path. The caching policy itself (bounds, generations) lives in
+         * {@link fURICache}; all this has to do is hand it the key and the parser.
+         */
+        public static fURI of(final String furi) {
+            if (null == furi || furi.isEmpty())
+                return Singleton.empty();
+            final String furiParse = furi.startsWith("<") && furi.endsWith(">") ? furi.substring(1, furi.length() - 1) : furi;
+            if (furiParse.isEmpty())
+                return Singleton.empty();
+            return fURICache.cached(furiParse, Singleton::parse);
+        }
+
+        /**
+         * Parse a uri string with no recourse to the intern pool — the pre-cache path. Called by {@link #of(String)}
+         * on a miss; retained as package-private so fURIPerformanceTest can measure the cached and uncached paths
+         * against each other in one JVM.
+         */
+        static fURI parse(final String furiParse) {
+            if ("{0}".equals(furiParse))
+                return Singleton.NOOBJ;
+
+            if ("/".equals(furiParse))
+                return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of(), null);
+
+            // Quick check: does this fURI contain templates?
+            final boolean hasTemplates = furiParse.contains("${");
+            final Matcher matcher = hasTemplates ? Singleton.FURI_TEMPLATE_PATTERN.matcher(furiParse) : Singleton.FURI_PATTERN.matcher(furiParse);
+
+            if (!matcher.matches()) {
+                // a closed nested list cannot be captured by the strict poly group, so report the poly rule rather
+                // than a generic parse failure when that is what the text is trying to spell
+                if (Helper.nestedPolyBracket(furiParse))
+                    throw Helper.polyTypeError("nested '['", furiParse);
+                throw MTronException.of("unable to parse %s to a furi: %s", furiParse, furiParse);
+            }
+            final String scheme = matcher.group(SCHEME);
+            final String host = matcher.group(HOST);
+            final String portStr = matcher.group(PORT);
+            final int port = portStr == null ? -1 : (hasTemplates && portStr.contains("${") ? -1 : Integer.parseInt(portStr));
+            final String pathStr = matcher.group(PATH);
+            final List<String> path = null == pathStr ? List.of() : (hasTemplates && pathStr.contains("${")) ? List.of(pathStr) : splitPath(pathStr);
+            if (null != pathStr) {
+                if (pathStr.endsWith("/"))
+                    path.add("");
+                if (path.stream().allMatch(String::isEmpty)) {
+                    path.clear();
+                }
+            }
+            final String polyStr = matcher.group(POLY);
+            List<String> poly = null;
+            if (null != polyStr) {
+                final Matcher polyMatcher = Singleton.POLY_PATTERN.matcher(polyStr);
+                while (polyMatcher.find()) {
+                    if (null == poly) poly = new ArrayList<>();
+                    if (null != polyMatcher.group(POLY)) {
+                        poly.add(polyMatcher.group(POLY));
+                    }
+                }
+            }
+            final cInt coefficient = matcher.group(COEFFICIENT) == null ? cInt.ONE() : cInt.of(matcher.group(COEFFICIENT));
+            final String queryStr = matcher.group(QUERY);
+            final String dom = matcher.group(DOM);
+            final String rng = matcher.group(RNG);
+            final Map<String, String> query;
+            if (dom != null || rng != null || queryStr != null) {
+                // the parser builds the canonical map directly: the shorthand's dom/rng land in normal-form position
+                // whatever order the grammar captured them in, and the explicit `&` tail is already sorted
+                final SortedMap<String, String> parsedQuery = AbstractfURI.sortedQ();
+                if (dom != null)
+                    parsedQuery.put(DOM, dom);
+                if (rng != null)
+                    parsedQuery.put(RNG, rng);
+                if (queryStr != null)
+                    parsedQuery.putAll(parseQuery(queryStr));
+                query = parsedQuery;
+            } else {
+                query = Map.of();
+            }
+
+            // Extract templates if present
+            final List<Tuple.Pair<Component, String>> templates = hasTemplates ?
+                    extractTemplates(scheme, host, portStr, pathStr, queryStr) :
+                    null;
+
+            return fURI.of(scheme, host, port, path, coefficient, poly, query, templates);
+        }
+
+        /**
+         * Splits a path string on {@code /} at depth zero only — a {@code /} inside a {@code {…}} branch (a sub-path
+         * element, e.g. {@code {b/c,d/e}}) or inside {@code ${…}} stays part of its segment. The naive
+         * {@code String.split("/")} would slice a branch like {@code {b/c,d/e}} into {@code ["{b", "c,d", "e}"]}.
+         * Each branch segment is then normalized as a set: a singleton collapses to its atom, and a leading {@code /}
+         * on an element is a separator (hoisting into a leading empty segment when it leads the branch).
+         */
+        private static List<String> splitPath(final String pathStr) {
+            final List<String> raw = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < pathStr.length(); i++) {
+                final char ch = pathStr.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                if ('/' == ch && 0 == depth) {
+                    raw.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            // mimic String.split("/"): a trailing empty segment (a final `/`) is dropped — f(String) re-adds it when
+            // the path string actually ends with `/`.
+            if (sb.length() > 0 || raw.isEmpty())
+                raw.add(sb.toString());
+
+            final List<String> segments = new ArrayList<>();
+            for (int i = 0; i < raw.size(); i++)
+                segments.addAll(normalizeBranch(raw.get(i), 0 == i));
+            return segments;
+        }
+
+        /**
+         * Normalizes one segment as a set of paths: a non-branch segment is itself. A branch segment ({@code {…}})
+         * collapses a singleton ({@code {a}} → {@code a}). Only the leading branch ({@code leading}) strips a leading
+         * {@code /} from its elements — there it is the absolute marker, hoisted into a leading empty segment
+         * ({@code <{/a,/b}/c>} → {@code ["", {a,b}, c]}); a non-leading branch keeps its atoms verbatim
+         * ({@code a/{/b,/c}/d} → {@code [a, {/b,/c}, d]}).
+         */
+        private static List<String> normalizeBranch(final String segment, final boolean leading) {
+            if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
+                return List.of(segment);
+            final List<String> elements = splitBranchElements(segment.substring(1, segment.length() - 1));
+            boolean absolute = false;
+            final List<String> atoms = new ArrayList<>(elements.size());
+            for (int i = 0; i < elements.size(); i++) {
+                final String element = elements.get(i);
+                if (leading && element.startsWith("/")) {
+                    if (0 == i)
+                        absolute = true;
+                    atoms.add(element.substring(1));
+                } else
+                    atoms.add(element);
+            }
+            if (1 == atoms.size())
+                return absolute ? List.of("", atoms.get(0)) : List.of(atoms.get(0));
+            final List<String> normalized = new ArrayList<>();
+            if (absolute)
+                normalized.add("");
+            normalized.add("{" + String.join(",", atoms) + "}");
+            return normalized;
+        }
+
+        /**
+         * Splits a branch body on top-level {@code ,} (respecting nested {@code {…}}), mirroring
+         * {@link Helper#splitBranch(String)}.
+         */
+        private static List<String> splitBranchElements(final String inner) {
+            final List<String> elements = new ArrayList<>();
+            int depth = 0;
+            final StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < inner.length(); i++) {
+                final char ch = inner.charAt(i);
+                if ('{' == ch)
+                    depth++;
+                else if ('}' == ch)
+                    depth = Math.max(0, depth - 1);
+                if (',' == ch && 0 == depth) {
+                    elements.add(sb.toString());
+                    sb.setLength(0);
+                } else
+                    sb.append(ch);
+            }
+            elements.add(sb.toString());
+            return elements;
+        }
+
+        static SortedMap<String, String> parseQuery(final String query) {
+            if (null == query)
+                return AbstractfURI.canonicalQ(null);
+            // the canonical map IS the accumulator: a `k=v` pair lands in normal-form position, and a repeated key
+            // still merges in arrival order ("v1;v2") because the merge function, not the map, owns that rule
+            final SortedMap<String, String> parsed = AbstractfURI.sortedQ();
+            for (final String pair : query.split("&")) {
+                final String[] kv = pair.split("=", 2);
+                parsed.merge(kv[0], kv.length > 1 ? kv[1] : "", (v1, v2) -> v1 + ";" + v2);
+            }
+            return parsed;
+        }
+
+        /**
+         * Pattern to match template expressions: ${...}
+         * Captures the content inside the braces (without the ${ and } delimiters)
+         */
+        private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+        /**
+         * Pattern to match components of host
+         **/
+        private static final Pattern HOST_PATTERN = Pattern.compile(
+                "((?:[^.]+\\.)+)" +              // group 2: subdomain (one or more labels ending with dot)
+                        "([^.]+\\.[^.]+)" +      // group 3: registered domain (e.g. example.com)
+                        "(?::(\\d+))?");         // group 4: optional port
+
+        /**
+         * Extract all template expressions from URI components.
+         * Returns a list of pairs containing the component type and the expression string.
+         * Templates are extracted in order: SCHEME, HOST, PORT, PATH, QUERY
+         *
+         * @param schemeStr The scheme string (may contain ${...})
+         * @param hostStr   The host string (may contain ${...})
+         * @param portStr   The port string (may contain ${...})
+         * @param pathStr   The path string (may contain ${...})
+         * @param queryStr  The query string (may contain ${...})
+         * @return List of (Component, expression) pairs, or null if no templates found
+         */
+        static List<Tuple.Pair<Component, String>> extractTemplates(final String schemeStr,
+                                                                    final String hostStr,
+                                                                    final String portStr,
+                                                                    final String pathStr,
+                                                                    final String queryStr) {
+            final List<Tuple.Pair<Component, String>> templates = new ArrayList<>();
+
+            // Extract templates from SCHEME
+            if (schemeStr != null) {
+                final Matcher schemeMatcher = TEMPLATE_PATTERN.matcher(schemeStr);
+                while (schemeMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.SCHEME, schemeMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from HOST
+            if (hostStr != null) {
+                final Matcher hostMatcher = TEMPLATE_PATTERN.matcher(hostStr);
+                while (hostMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.HOST, hostMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from PORT
+            if (portStr != null) {
+                final Matcher portMatcher = TEMPLATE_PATTERN.matcher(portStr);
+                while (portMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.PORT, portMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from PATH
+            if (pathStr != null) {
+                final Matcher pathMatcher = TEMPLATE_PATTERN.matcher(pathStr);
+                while (pathMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.PATH, pathMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from QUERY
+            if (queryStr != null) {
+                final Matcher queryMatcher = TEMPLATE_PATTERN.matcher(queryStr);
+                while (queryMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.QUERY, queryMatcher.group(1)));
+                }
+            }
+
+            return templates.isEmpty() ? null : templates;
+        }
+    }
+
+    static boolean validatefURI(final fURI furi) {
+        final String furiString = furi.toString();
+        char last = '/';
+        for (int i = 0; i < furiString.length(); i++) {
+            char current = furiString.charAt(i);
+            if ((current == '#' || current == '+') && last != '/')
+                return false;
+            if ((last == '#' || last == '+') && current != '/')
+                return false;
+            last = furiString.charAt(i);
+        }
+        return true;
+    }
+
+
+    static fURI of(final String scheme,
+                   final String host,
+                   final int port,
+                   final List<String> path,
+                   final C<?, ?> coefficient,
+                   final List<String> poly,
+                   final Map<String, String> query,
+                   final List<Tuple.Pair<Component, String>> templates) {
+        // THE ONE POLY GATE: every poly-bearing fURI is built here — string parse, poly(List), and every form's
+        // derived uri — so the parameter-position rule is enforced once, on the way in.
+        Helper.validatePoly(poly, scheme, host, port, path, coefficient, query);
+        if (null != templates && !templates.isEmpty())
+            return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
+        if (null != poly && !poly.isEmpty())
+            return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+        if (null != coefficient && !coefficient.isOne()) {
+            if (!query.isEmpty()) {
+                if (null != poly && !poly.isEmpty())
+                    return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+                else
+                    return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
+            } else {
+                if (null == scheme && null == host)
+                    return new XXPXCXfURI(path, coefficient);
+                else if (null == host)
+                    return new SXPXCXfURI(scheme, path, coefficient);
+                else
+                    return new SAPXCXfURI(scheme, host, port, path, coefficient);
+            }
+        } else {
+            if (query.isEmpty()) {
+                if (null != scheme) {
+                    if (null == host)
+                        return new SXPXXXfURI(scheme, path);
+                    else
+                        return new SAPXXXfURI(scheme, host, port, path);
+                } else {
+                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, path);
+                }
+            } else {
+                return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
+            }
+        }
+    }
+}
