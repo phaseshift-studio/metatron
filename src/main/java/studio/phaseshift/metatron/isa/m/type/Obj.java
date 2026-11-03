@@ -48,7 +48,8 @@ import static java.lang.System.lineSeparator;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_PATTERN;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_SUB_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
@@ -1921,8 +1922,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .tid(BRANCH_INST_TID)
                             .dom(A, "any obj")
                             .rng(B.maybeSome(), "the branch results as objs")
-                            .argLst(T(B.maybeSome()), "the branches to apply to the lhs")
-                            .argLst(T(B.maybeSome()), T(B.maybeSome()), T(B.maybeSome()))
+                            .argLst(T(B.some()), T(B.some()), T(B.maybeSome()), T(B.maybeSome()))
                             .desc("a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients")
                             .body((lhs, inst) -> objs(inst.args().elements().map(o -> o.apply(lhs).c(lhs.c().mult(o.c())))))
                             .create(),

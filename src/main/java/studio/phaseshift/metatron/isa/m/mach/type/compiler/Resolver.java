@@ -18,14 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,8 +34,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.Tokens.BINDER;
 import static studio.phaseshift.metatron.Tokens.SELECTOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -85,7 +85,7 @@ public interface Resolver extends Component {
             final Code cached = Resolver.Helper.RESOLVE_CACHE.get(key);
             if (cached != null)
                 return cached;
-            final Code resolved = Resolver.Helper.resolveCode(lhs, code, this.selector(), this.binder());
+            final Code resolved = Resolver.Helper.resolveCode(lhs, code, this);
             if (resolved.isResolved(true)) {
                 if (Resolver.Helper.RESOLVE_CACHE.size() >= Resolver.Helper.RESOLVE_CACHE_MAX)
                     Resolver.Helper.RESOLVE_CACHE.clear();
@@ -93,7 +93,7 @@ public interface Resolver extends Component {
             }
             return resolved;
         }
-        return Resolver.Helper.resolveCode(lhs, code, this.selector(), this.binder());
+        return Resolver.Helper.resolveCode(lhs, code, this);
     }
 
     default Selector selector() {
@@ -169,13 +169,14 @@ public interface Resolver extends Component {
          * dom stays unresolved (resolved again at runtime); a filter's {0,1} wing is dropped for
          * compile-time typing only.
          *
-         * @param lhs    the compile-time lhs ({@code noobj()} at the machine level)
-         * @param code   the code to resolve
-         * @param sel    the per-instruction selection strategy for this stage
-         * @param binder the binder {@code sel} makes each candidate concrete with
+         * @param lhs      the compile-time lhs ({@code noobj()} at the machine level)
+         * @param code     the code to resolve
+         * @param resolver the resolver for this stage
          * @return the resolved (or semi-resolved) code
          */
-        public static Code resolveCode(final Obj lhs, final Code code, final Selector sel, final Binder binder) {
+        public static Code resolveCode(final Obj lhs, final Code code, final Resolver resolver) {
+            final Selector sel = resolver.selector();
+            final Binder binder = resolver.binder();
             final GraphittyLogger LOG = Graphitty.log(Resolver.class);
             Obj token = lhs.isType() ? lhs : lhs.type();
             final List<Inst> resolvedCode = new ArrayList<>();
@@ -183,12 +184,22 @@ public interface Resolver extends Component {
             int i = 0;
             for (final Inst inst : code.insts()) {
                 try {
-                    final Inst resolvedInst = inst.resolve(token, sel, binder);
-                    if (!resolvedInst.hasDom()) {
-                        resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
+                    final boolean isBranchInst = inst.tid().basePath().equals(BRANCH_INST_TID);
+                    final Inst resolvedInst = isBranchInst ? inst : inst.resolve(token, sel, binder);
+                    if (isBranchInst) {
+                        final Obj token2 = token;
+                        List<Obj> branches = resolvedInst.args().values().filter(b -> !b.isNoObj()).map(branch -> branch.isCode() ? resolver.apply(token2, branch.asCode()) : branch.isInst() ? branch.resolve(token2) : branch).toList();
+                        final Type domToken = token2.asType();
+                        final cInt rngC = branches.stream().map(o -> o.isCall() ? o.rng().c() : o.c()).reduce(cInt.ZERO(), cInt::plus);
+                        final Type rngToken = Type.Helper.findLCD(branches.stream().map(Obj::rng).toList()).c(rngC).asType();
+                        final Inst branchInst2 = resolvedInst.args(lst(branches)).dom(domToken).rng(rngToken.c(rngC).asType());
+                        resolvedCode.add(branchInst2);
+                        token = rngToken;
+                    } else if (!resolvedInst.hasDom()) {
+                        resolvedCode.add(inst.clone().selfVID(f(i)).as());
                         token = inst.hasRng() ? inst.rng() : token;
                     } else {
-                        resolvedCode.add(resolvedInst.clone().selfVID(f("" + i)).as());
+                        resolvedCode.add(resolvedInst.clone().selfVID(f(i)).as());
                         // A filter's rng is X{0,1} ("one-or-none": emit the object or ∅). Threading that
                         // {0,1} into the next inst makes a map's dom X{1,1} fail to match, but the ∅ branch
                         // can never reach the map — a filter that emits ∅ short-circuits the chain. So drop
@@ -202,7 +213,7 @@ public interface Resolver extends Component {
                     }
                     token = token.c(c -> c.mult(resolvedInst.c()));
                 } catch (final Exception e) {
-                    resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
+                    resolvedCode.add(inst.clone().selfVID(f(i)).as());
                     LOG.debug("runtime resolution of %s required", inst);
                     fullResolution = false;
                 }

@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -68,5 +70,34 @@ public class ExplainToolTest extends AbstractMetatronTest {
         assertEquals(ExplainTool.DrillKind.SCALAR, ExplainTool.drillKind(str("hello")));
         assertEquals(ExplainTool.DrillKind.SCALAR, ExplainTool.drillKind(bool(true)));
         assertEquals(ExplainTool.DrillKind.SCALAR, ExplainTool.drillKind(noobj()));
+    }
+
+    @Test
+    public void testArgsCellKeepsTokensFixedAndSlides() {
+        final List<String> tokens = List.of("a", "b", "c", "d", "e");
+
+        // Full list fits: the selector replaces the slot (sel 0) or a comma-space (sel 1),
+        // so every token stays in the same column — no wobble.
+        assertEquals(">a, b, c, d, e" + " ".repeat(10), ExplainTool.argsCell(tokens, 0, 24, "", ">"));
+        assertEquals(" a,>b, c, d, e" + " ".repeat(10), ExplainTool.argsCell(tokens, 1, 24, "", ">"));
+
+        // A narrow cell clips both sides and keeps the selector on the selected token.
+        assertEquals(">…c, d… ", ExplainTool.argsCell(tokens, 2, 8, "", ">"));
+        assertEquals(" …d,>e  ", ExplainTool.argsCell(tokens, 4, 8, "", ">"));
+    }
+
+    @Test
+    public void testArgsCellSpawnUnderlinesSelectedArg() {
+        final List<String> tokens = List.of("a", "b", "c");
+        // the drilled arg is wrapped in underline markup; the others stay plain
+        assertEquals(" {{_}}a{{/_}}, b, c" + " ".repeat(16), ExplainTool.argsCellSpawn(tokens, 0, 24));
+        assertEquals(" a, {{_}}b{{/_}}, c" + " ".repeat(16), ExplainTool.argsCellSpawn(tokens, 1, 24));
+    }
+
+    @Test
+    public void testArgsSummaryIsFixedWidth() {
+        final String summary = ProfileTool.argsSummary(lst(jnt(1), jnt(2)));
+        assertEquals(ProfileTool.ARGS_WIDTH, summary.length());
+        assertEquals(" 1, 2", summary.substring(0, 5));   // leading pointer slot + "1, 2"
     }
 }

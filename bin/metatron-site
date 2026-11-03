@@ -1,25 +1,57 @@
 #!/bin/bash
 #
-# bin/metatron-site — build selected website stages via `./mvnw site`.
+# bin/metatron-site — build selected website stages via `./mvnw site`, or a
+# single document via its runner.
 #
-# Build only the stages you name; every other stage is skipped. The wsplus
-# bundling (skipSiteScripts) is a build-product sync, not a doc stage, so it is
-# always skipped. `mvn site` compiles first, so JDK 25 must be on PATH.
+# Two modes:
 #
-#   bin/metatron-site markdown instset asciidoc header   # everything
-#   bin/metatron-site markdown                           # only markdown
-#   bin/metatron-site markdown header                    # markdown + header
-#   bin/metatron-site all                                # == the four stages
-#   DRY_RUN=1 bin/metatron-site markdown                 # print, don't run
+#   1. STAGE mode — name stages; every other stage is skipped. The wsplus
+#      bundling (skipSiteScripts) is a build-product sync, not a doc stage, so
+#      it is always skipped. `mvn site` compiles first, so JDK 25 must be on PATH.
+#
+#        bin/metatron-site markdown instset asciidoc header   # everything
+#        bin/metatron-site markdown                           # only markdown
+#        bin/metatron-site all                                # == the four stages
+#
+#   2. FILE mode — give a document path and the runner is chosen by extension,
+#      and only that file is built (the jar is rebuilt first when stale):
+#
+#        bin/metatron-site docs/website/adoc/space.adoc        # AsciiDocRunner
+#        bin/metatron-site docs/skills/mtron/SKILL.md          # MarkdownRunner
+#        bin/metatron-site docs/website/articles/*.md          # -> .metatron/articles
+#
+#      .java names the instset reference, which has no single-file mode: it runs
+#      the whole `instset` stage instead.
+#
+#   DRY_RUN=1 bin/metatron-site docs/website/adoc/space.adoc   # print, don't run
 
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$DIR"
 
+MARKDOWN_RUNNER="studio.phaseshift.metatron.docs.MarkdownRunner"
+ASCIIDOC_RUNNER="studio.phaseshift.metatron.docs.AsciiDocRunner"
+
+# the JVM flags the site runners need — the same set the pom's exec executions
+# pass, kept here so a single-document build matches a full `mvn site` run.
+JVM_FLAGS=(
+    --enable-native-access=ALL-UNNAMED
+    --add-modules jdk.incubator.vector
+    --add-opens java.base/java.lang=ALL-UNNAMED
+    --add-opens java.base/java.lang.invoke=ALL-UNNAMED
+    --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+    --add-opens java.base/java.util=ALL-UNNAMED
+    --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
+    --add-opens java.base/java.io=ALL-UNNAMED
+    --add-opens java.base/java.nio=ALL-UNNAMED
+    --add-opens java.base/java.net=ALL-UNNAMED
+    --add-opens java.base/sun.nio.cs=ALL-UNNAMED
+)
+
 usage() {
     cat <<'EOF'
-usage: bin/metatron-site <stage ...>
+usage: bin/metatron-site <stage ... | file ...>
 
 stages (build only what you name; the rest is skipped):
   markdown   the skill references + theory articles   (MarkdownRunner)
@@ -28,25 +60,119 @@ stages (build only what you name; the rest is skipped):
   header     the navigation dropdowns                 (HeaderGenerator)
   all        == markdown instset asciidoc header
 
+files (the runner is chosen by extension; only that file is built):
+  *.md       MarkdownRunner
+  *.adoc     AsciiDocRunner
+  *.java     the whole `instset` stage (no single-file mode)
+
 examples:
   bin/metatron-site markdown instset asciidoc header
   bin/metatron-site markdown
-  bin/metatron-site markdown header
+  bin/metatron-site docs/website/adoc/space.adoc
+  bin/metatron-site docs/skills/mtron/SKILL.md
 EOF
 }
 
-# parse stage names; pass anything starting with '-' through to mvn
+# the jar is the runner's classpath; rebuild it when missing or older than a
+# source file, so a single-document build never evaluates against old code.
+ensure_jar() {
+    local jar
+    # a dry run must not build anything
+    if [[ "${DRY_RUN:-0}" = "1" ]]; then
+        echo "target/metatron-<version>-jar-with-dependencies.jar"
+        return 0
+    fi
+    jar="$(ls -1 target/metatron-*-jar-with-dependencies.jar 2>/dev/null | head -1 || true)"
+    if [[ -z "$jar" ]] || [[ -n "$(find src pom.xml -type f -newer "$jar" 2>/dev/null | head -n 1)" ]]; then
+        echo "==> jar stale or missing — mvn package (skip tests)" >&2
+        ./mvnw -q -DskipTests package >&2
+        jar="$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)"
+    fi
+    echo "$jar"
+}
+
+# where a single markdown file's output belongs — mirrors bin/metatron-docker
+# build docs, so `--html` finds the right container from the output path.
+markdown_out_dir() {
+    case "$1" in
+        docs/skills/*.md)
+            local rel="${1#docs/skills/}" sub
+            case "$rel" in
+                */*) sub="${rel%/*}" ;;
+                *)   sub="" ;;
+            esac
+            echo ".metatron/skills${sub:+/$sub}"
+            ;;
+        docs/articles/*.md|docs/website/articles/*.md) echo ".metatron/articles" ;;
+        *) echo "_probe" ;;
+    esac
+}
+
+run_file() {
+    local f="$1" out jar
+    case "$f" in
+        *.md)
+            out="$(markdown_out_dir "$f")"
+            jar="$(ensure_jar)"
+            echo "==> markdown: $f -> $out"
+            local cmd=(java "${JVM_FLAGS[@]}" -cp "$jar" "$MARKDOWN_RUNNER" "$f" -o "$out")
+            ;;
+        *.adoc)
+            jar="$(ensure_jar)"
+            echo "==> asciidoc: $f -> docs/website"
+            # the adoc pass takes the shared prefix and renders html into the site
+            local cmd=(java "${JVM_FLAGS[@]}" -cp "$jar" "$ASCIIDOC_RUNNER" "$f"
+                       -p docs/python/prefix.adoc -o target/temp --html docs/website)
+            ;;
+        *)
+            echo "bin/metatron-site: unsupported file type '$f'" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+    if [[ "${DRY_RUN:-0}" = "1" ]]; then
+        echo "==> run:   ${cmd[*]}"
+        return 0
+    fi
+    "${cmd[@]}"
+}
+
+# parse args: stage words, document paths, or mvn pass-through flags
 args=()      # stage names to build
+files=()     # single documents to build
 extra=()     # pass-through mvn flags
 for a in "$@"; do
     case "$a" in
         all) args+=(markdown instset asciidoc header) ;;
         markdown|instset|asciidoc|header) args+=("$a") ;;
         -*) extra+=("$a") ;;
-        *) echo "bin/metatron-site: unknown stage '$a'" >&2; usage >&2; exit 2 ;;
+        *.java) args+=(instset) ;;                       # no single-file mode
+        *.md|*.adoc) files+=("$a") ;;
+        *)
+            if [[ -f "$a" ]]; then
+                echo "bin/metatron-site: unsupported file type '$a'" >&2
+                usage >&2
+                exit 2
+            fi
+            echo "bin/metatron-site: unknown stage '$a'" >&2
+            usage >&2
+            exit 2
+            ;;
     esac
 done
-[[ ${#args[@]} -gt 0 ]] || { usage; exit 1; }
+
+[[ ${#args[@]} -gt 0 || ${#files[@]} -gt 0 ]] || { usage; exit 1; }
+
+# file mode first: one file, one runner, no site lifecycle
+if [[ ${#files[@]} -gt 0 ]]; then
+    for f in "${files[@]}"; do
+        [[ -f "$f" ]] || { echo "bin/metatron-site: no such file '$f'" >&2; exit 2; }
+        run_file "$f"
+    done
+fi
+
+# stage mode: only when stages were actually named
+[[ ${#args[@]} -gt 0 ]] || exit 0
 
 declare -A skip_flag=(
     [markdown]=-DskipMarkdown

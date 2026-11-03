@@ -143,27 +143,43 @@ public class BootLoader implements Rec, Feature.SelfClone {
     }
 
     /**
-     * RESET EVERY LAW/INST/ALGEBRA CACHE AND THE STAGED-WRITE LOG — one door for the whole publication pipeline.
-     * A boot calls this before anything mounts (so a fresh VM never inherits another boot's queue or memo), and a
-     * test calls it to go back to a blank slate:
+     * RESET THE CACHES A BOOT MAY SAFELY RESET — the ones that hold DERIVED answers, never the source data.
+     * Called before anything mounts so a fresh VM never answers from the previous boot's memo:
      *
-     * <pre>{@code BootLoader.resetCaches();}</pre>
+     * <pre>{@code BootLoader.resetMemos();}</pre>
      *
-     * <p>What it clears, and why each piece exists:
+     * <p>What it clears, and why each is a memo:
      * <ul>
-     *   <li>{@link PendingWrites#reset()} — the retained log, its address index, arrival order, snapshot, revision;</li>
-     *   <li>{@link LawTable#reset()} — the per-table algebra memo and every derivation snapshot (store and log);</li>
-     *   <li>{@link InstBuilder#reset()} — the declared-form index;</li>
-     *   <li>{@link TypeBuilder#reset()} — the per-address INSTS attribution;</li>
+     *   <li>{@link LawTable#reset()} — the per-table algebra memo and the derivation snapshots (store and log);</li>
      *   <li>{@code QCollection.LAZY_PUBLISH} — the reader hook, reinstalled by {@link PendingWrites#install()}.</li>
      * </ul>
+     *
+     * <p><b>It does NOT touch the staged-write log or the build-time indices.</b> Those are written once, at CLASS
+     * INITIALIZATION ({@code InstBuilder.create()}/{@code TypeBuilder.create()} compose them into
+     * {@link PendingWrites}, {@code InstBuilder.DECLARED_FORMS}, {@code TypeBuilder.INSTS}), and a later boot never
+     * runs that initialization again. Clearing them here made a declaration exist only in the boot that staged it:
+     * the first VM (reset before its own imports stage) worked, every later VM lost its inst declarations, and a
+     * law-derived rewrite (the distributed combiner) silently stopped firing. That is the bug this method exists to
+     * prevent.
+     */
+    public static void resetMemos() {
+        LawTable.reset();
+        QCollection.LAZY_PUBLISH = address -> false;
+    }
+
+    /**
+     * RESET EVERYTHING, INCLUDING THE SOURCE DATA — the staged-write log and the build-time indices.
+     *
+     * <p>Use this only when the JVM's class initialization WILL RUN AGAIN afterwards (a fresh process, or a test that
+     * reloads the instsets), because after this call nothing can replay what was already composed: the declarations
+     * were staged once, at class-init. For a boot, call {@link #resetMemos()} instead — a boot must never delete its
+     * own source of truth.
      */
     public static void resetCaches() {
+        resetMemos();
         PendingWrites.reset();
-        LawTable.reset();
         InstBuilder.reset();
         TypeBuilder.reset();
-        QCollection.LAZY_PUBLISH = address -> false;
     }
 
     public static void main(final String[] args) throws IOException {
@@ -604,7 +620,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // THE READER HOOK AND THE CACHES COME FIRST: an algebra read happens during a set's own setup, so the
             // lazy `?decq` publication must be installed before the first mount, and the law tables' memo must not
             // carry a previous boot's algebra views.
-            resetCaches();
+            resetMemos();
             PendingWrites.install();
             // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own
             // instset. Hand-registering these three with addSpace alone is why `instset()` could not answer for

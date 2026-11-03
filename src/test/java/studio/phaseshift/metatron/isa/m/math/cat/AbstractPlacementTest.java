@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.mach.network.TransportRewriteHarness;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
@@ -38,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -54,15 +51,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class AbstractionGeometryTest extends AbstractInstSetTest {
+public class AbstractPlacementTest extends AbstractInstSetTest {
 
-    public AbstractionGeometryTest() {
+    public AbstractPlacementTest() {
         super(catInstSet::new);
-    }
-
-    @BeforeAll
-    public static void importAllInstSets() {
-        InstSet.importInstSet(MATH_ISA_TID);
     }
 
     @BeforeEach

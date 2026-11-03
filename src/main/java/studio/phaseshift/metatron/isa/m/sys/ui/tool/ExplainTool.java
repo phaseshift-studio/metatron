@@ -56,6 +56,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE, STEP
     }
 
+    /** Column index of the {@code args} cell — the one with the inline selector. */
+    private static final int ARGS_COL = 3;
+
     /**
      * One frame in a poly drill-down: a selection table over a rec/lst's
      * elements, each of which may itself be code (→ nested ExplainLevel), a
@@ -84,6 +87,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final int offsetY;
         int selectedRow;
         int selectedCol;
+        int selectedArg;         // -1 = column mode; >= 0 = the arg under the inline selector
+        int windowedRow;         // the row whose args cell currently holds the inline selector (-1 = none)
         final List<String> savedScreen; // What was underneath this level
         final String pointer;      // The pointer character with color (e.g., "{{r}}>")
         final String divider;      // The divider string with color (e.g., "{{r}}|")
@@ -91,12 +96,13 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         // Track which cell in the PARENT spawned this level (for visual connector)
         final int spawnRow;        // Row in parent that spawned this (-1 if root)
         final int spawnCol;        // Column in parent that spawned this (-1 if root)
+        final int spawnArg;        // Arg index in the parent's args cell that spawned this (-1 if not an arg)
 
         // ── Popup overlay state ──────────────────────────────────────
         PanelWidget panelPopup;                              // Info panel popup (docs, type, form desc, coeff)
         final Deque<ArgFrame> argFrames = new ArrayDeque<>(); // Poly drill-down stack (args / collection navigation)
 
-        ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
+        ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol, final int spawnArg) {
             this.code = code;//.resolve(noobj());
             this.rewritten = code.isResolved(false);// false;//code.insts().stream().map(Inst::tid).toList().equals(code.clone().asCode().rewrite().insts().stream().map(Inst::tid).toList());
             this.profile = new ProfileTool(this.code);
@@ -112,6 +118,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             this.offsetY = offsetY;
             this.selectedRow = 0;  // Start at first data row (after header)
             this.selectedCol = 0;
+            this.selectedArg = -1; // column mode until the args column is entered
+            this.windowedRow = -1; // no inline selector rendered yet
             this.savedScreen = new ArrayList<>();
             // Get divider and pointer from table style
             this.divider = this.table.getStyle().divider();
@@ -119,6 +127,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             this.pointer = this.table.getStyle().pointer().isEmpty() ? "{{r}}>" : this.table.getStyle().pointer();
             this.spawnRow = spawnRow;
             this.spawnCol = spawnCol;
+            this.spawnArg = spawnArg;
         }
 
         int dataRowCount() {
@@ -152,7 +161,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     @Override
     protected void onEnter() {
         this.terminal.writer().print("\n");
-        this.pushLevel(this.rootCode, 0, 0, -1, -1);   // the root has no parent spawn position
+        this.pushLevel(this.rootCode, 0, 0, -1, -1, -1);   // the root has no parent spawn position
     }
 
     @Override
@@ -195,9 +204,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
         // ── Popup-mode dispatch ──────────────────────────────────────
         if (current.panelPopup != null) {
-            // SELECT or QUIT dismisses a panel popup, returning to whatever
+            // SELECT, QUIT, or UP_ROW dismisses a panel popup, returning to whatever
             // was underneath (the arg-frame stack, if any)
-            if (action == Action.SELECT || action == Action.QUIT) {
+            if (action == Action.SELECT || action == Action.QUIT || action == Action.UP_ROW) {
                 current.panelPopup = null;
             }
             return;
@@ -215,18 +224,24 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         switch (action) {
             case DOWN_ROW:
                 current.selectedRow = Math.min(current.selectedRow + 1, current.dataRowCount() - 1);
+                current.selectedArg = -1;   // a row change exits the inline arg selector
                 break;
 
             case UP_ROW:
-                current.selectedRow = Math.max(current.selectedRow - 1, 0);
+                if (current.selectedRow == 0 && stack.size() > 1) {
+                    popLevel();   // top row of a nested window: back out like ctrl-d
+                } else {
+                    current.selectedRow = Math.max(current.selectedRow - 1, 0);
+                    current.selectedArg = -1;
+                }
                 break;
 
             case RIGHT_COL:
-                current.selectedCol = Math.min(current.selectedCol + 1, current.table.rows().get(0).size() - 1);
+                moveColumn(current, +1);
                 break;
 
             case LEFT_COL:
-                current.selectedCol = Math.max(current.selectedCol - 1, 0);
+                moveColumn(current, -1);
                 break;
 
             case SELECT:
@@ -248,6 +263,61 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 }
                 break;
         }
+    }
+
+    /**
+     * Move one column left ({@code dir = -1}) or right ({@code dir = +1}). The args
+     * column is a linear sub-cursor: {@code rng → divider → arg0 → … → arg n-1 → f}.
+     * The divider ({@code selectedArg == -1}) is the args-Poly-as-a-whole; entering the
+     * column from the left lands on it, entering from the right lands on the last arg.
+     */
+    private void moveColumn(final ExplainLevel current, final int dir) {
+        final int lastCol = current.table.rows().get(0).size() - 1;
+        if (current.selectedCol == ARGS_COL) {
+            final int n = argCount(current, current.selectedRow);
+            if (dir > 0) {
+                if (n == 0) {
+                    current.selectedCol = Math.min(current.selectedCol + 1, lastCol);
+                } else if (current.selectedArg < n - 1) {
+                    current.selectedArg++;   // divider(-1)→0, 0→1, …
+                } else {
+                    current.selectedArg = -1;
+                    current.selectedCol = Math.min(current.selectedCol + 1, lastCol);   // arg n-1 → f
+                }
+            } else {
+                if (n == 0) {
+                    current.selectedCol = Math.max(current.selectedCol - 1, 0);
+                } else if (current.selectedArg > 0) {
+                    current.selectedArg--;   // i → i-1
+                } else if (current.selectedArg == 0) {
+                    current.selectedArg = -1;                                             // arg 0 → divider
+                } else {
+                    current.selectedCol = Math.max(current.selectedCol - 1, 0);           // divider → rng
+                }
+            }
+            return;
+        }
+        current.selectedCol = dir > 0
+                ? Math.min(current.selectedCol + 1, lastCol)
+                : Math.max(current.selectedCol - 1, 0);
+        if (current.selectedCol == ARGS_COL) {
+            final int n = argCount(current, current.selectedRow);
+            current.selectedArg = dir > 0 ? -1 : (n >= 1 ? n - 1 : -1);   // left entry → divider, right entry → last arg
+        }
+    }
+
+    private int argCount(final ExplainLevel level, final int row) {
+        final Poly<?, ?> args = getMetadataArgs(level, row);
+        return args == null ? 0 : (int) args.count();
+    }
+
+    private static Obj argAt(final Poly<?, ?> args, final int idx) {
+        if (args.isLst()) {
+            final List<Obj> list = args.lstValue();
+            return idx >= 0 && idx < list.size() ? list.get(idx) : noobj();
+        }
+        final List<Obj> values = new ArrayList<>(args.recValue().values());
+        return idx >= 0 && idx < values.size() ? values.get(idx) : noobj();
     }
 
     /**
@@ -317,7 +387,8 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             case CODE -> {
                 final int newOffsetX = current.offsetX + 4;
                 final int newOffsetY = current.offsetY + current.selectedRow + 3;
-                pushLevel(obj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol);
+                final int spawnArg = current.selectedCol == ARGS_COL ? current.selectedArg : -1;
+                pushLevel(obj.asCode(), newOffsetX, newOffsetY, current.selectedRow, current.selectedCol, spawnArg);
             }
             case POLY -> showArgTablePopup(current, obj.as());
             case EMPTY_POLY ->
@@ -331,7 +402,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         this.stepNote = "";
         this.stepIndex = 0;
         this.popLevel();
-        this.pushLevel(current.code.resolve(noobj()).rewrite(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+        this.pushLevel(current.code.resolve(noobj()).rewrite(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol, current.spawnArg);
     }
 
     /**
@@ -399,7 +470,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final Obj out = rewrite.apply(current.code.resolve(noobj()));
         if (out.isCode()) {
             this.popLevel();
-            this.pushLevel(out.asCode(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+            this.pushLevel(out.asCode(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol, current.spawnArg);
         }
         this.stepIndex++;
         this.stepNote = "  {{y}}[" + this.stepIndex + "/" + rewrites.size() + "] " + name + "{{X}}";
@@ -412,7 +483,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final List<Inst> rewrites = this.rewritesByCategory.get(this.categoryNames.get(this.categoryIndex));
         final Code rewritten = applyFixpoint(current.code.resolve(noobj()), rewrites);
         this.popLevel();
-        this.pushLevel(rewritten, current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+        this.pushLevel(rewritten, current.offsetX, current.offsetY, current.spawnRow, current.spawnCol, current.spawnArg);
         this.categoryMode = false;
         this.stepNote = "";
     }
@@ -492,16 +563,11 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             current.panelPopup = CardUtil.popup(kind + " arguments", "{{y}}no arguments{{X}}");
             return;
         }
-
-        if (args.count() == 1) {
-            // Single arg — drill straight into it (code → level, poly → frame, scalar → popup)
-            Obj singleArg = args.isLst()
-                    ? args.lstValue().getFirst()
-                    : args.recValue().values().iterator().next();
-            drillIntoObj(current, singleArg);
+        if (current.selectedArg < 0) {
+            // on the divider: the args Poly as a whole
+            current.panelPopup = CardUtil.popup(args);
         } else {
-            // Multiple args — show selection table
-            showArgTablePopup(current, args);
+            drillIntoObj(current, argAt(args, current.selectedArg));
         }
     }
 
@@ -637,8 +703,146 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         return meta instanceof Poly<?, ?> p ? p : null;
     }
 
-    private void pushLevel(Code code, int offsetX, int offsetY, int spawnRow, int spawnCol) {
-        ExplainLevel level = new ExplainLevel(code, offsetX, offsetY, spawnRow, spawnCol);
+    /**
+     * Before rendering the top level, overwrite the selected row's args cell: the
+     * windowed inline selector when the args column is armed, otherwise the plain
+     * fixed-width summary. Any previously windowed row is restored first, so a
+     * selector is never left behind when the selection moves to another row.
+     */
+    private void applyArgsCell(final ExplainLevel level) {
+        final int row = level.selectedRow;
+        if (level.windowedRow >= 0 && level.windowedRow != row) {
+            restoreArgsCell(level, level.windowedRow);
+            level.windowedRow = -1;
+        }
+        final Poly<?, ?> args = getMetadataArgs(level, row);
+        if (args == null) return;
+        final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
+        final boolean window = level.selectedCol == ARGS_COL && level.selectedArg >= 0;
+        final String body = window
+                ? argsCell(ProfileTool.argTokens(args), level.selectedArg, ProfileTool.ARGS_WIDTH, base, level.pointer)
+                : ProfileTool.argsSummary(args);
+        level.table.setCell(row, ARGS_COL, base + body);
+        level.windowedRow = window ? row : -1;
+    }
+
+    private void restoreArgsCell(final ExplainLevel level, final int row) {
+        final Poly<?, ?> args = getMetadataArgs(level, row);
+        if (args == null) return;
+        final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
+        level.table.setCell(row, ARGS_COL, base + ProfileTool.argsSummary(args));
+    }
+
+    /** Underline the arg that spawned a child window, marking the parent's spawn point. */
+    private void applySpawnUnderline(final ExplainLevel level, final int row, final int arg) {
+        final Poly<?, ?> args = getMetadataArgs(level, row);
+        if (args == null) return;
+        final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
+        level.table.setCell(row, ARGS_COL, base + argsCellSpawn(ProfileTool.argTokens(args), arg, ProfileTool.ARGS_WIDTH));
+    }
+
+    /**
+     * The args cell as a fixed-width window. The selector (color + character from the
+     * style's pointer) replaces the leading slot ({@code sel == 0}) or the space after
+     * the comma before token {@code sel} ({@code sel > 0}), so no token ever shifts
+     * column. An ellipsis marks arguments clipped off each side, and the window slides
+     * so the selected argument (plus as much of the right side as fits) stays visible.
+     * Returns the cell body WITHOUT the base-color prefix (the caller prepends it);
+     * width is measured with {@link Highlighter#visualLength}, so markup adds no columns.
+     */
+    static String argsCell(final List<String> tokens, final int sel, final int width,
+                           final String base, final String selector) {
+        final int n = tokens.size();
+        if (n == 0) return " ".repeat(width);
+        final String ptr = selector + base;   // the selector, then back to the base color
+        int left = sel, right = sel;
+        while (right + 1 < n && windowCost(tokens, left, right + 1) <= width) right++;
+        while (left - 1 >= 0 && windowCost(tokens, left - 1, right) <= width) left--;
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(sel == left ? ptr : " ");   // slot: the selector points at the first shown token
+        if (left > 0) sb.append('…');          // leading ellipsis (1 column, like the divider's clip)
+        for (int i = left; i <= right; i++) {
+            if (i > left) {
+                sb.append(',');
+                sb.append(sel == i ? ptr : " ");   // ", " or ",selector"
+            }
+            sb.append(tokens.get(i));
+        }
+        if (right < n - 1) sb.append('…');     // trailing ellipsis (1 column)
+        final String result = sb.toString();
+        final int len = Highlighter.visualLength(result);
+        if (len > width) return clipVisual(result, width);   // a single over-long token: never reflow
+        if (len < width) return result + " ".repeat(width - len);
+        return result;
+    }
+
+    /** Clip to {@code width} visual columns, carrying {@code {{…}}} markup spans through verbatim. */
+    private static String clipVisual(final String s, final int width) {
+        final StringBuilder sb = new StringBuilder();
+        int visible = 0;
+        int i = 0;
+        while (i < s.length() && visible < width) {
+            if (i + 1 < s.length() && s.charAt(i) == '{' && s.charAt(i + 1) == '{') {
+                final int end = s.indexOf("}}", i);
+                if (end >= 0) {
+                    sb.append(s, i, end + 2);
+                    i = end + 2;
+                    continue;
+                }
+            }
+            sb.append(s.charAt(i));
+            visible++;
+            i++;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * The args cell for a parent window whose arg was drilled into: the selected arg is
+     * wrapped in {@code {{_}}…{{/_}}} (underline) instead of a selector, so the spawn
+     * point is marked without a red background. No selector; the leading slot is a space.
+     * Width is measured with {@link Highlighter#visualLength}, so the markup adds no columns.
+     */
+    static String argsCellSpawn(final List<String> tokens, final int spawnArg, final int width) {
+        final int n = tokens.size();
+        if (n == 0) return " ".repeat(width);
+        int left = spawnArg, right = spawnArg;
+        while (right + 1 < n && windowCost(tokens, left, right + 1) <= width) right++;
+        while (left - 1 >= 0 && windowCost(tokens, left - 1, right) <= width) left--;
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(' ');   // leading slot (no selector in the spawn state)
+        if (left > 0) sb.append('…');
+        for (int i = left; i <= right; i++) {
+            if (i > left) sb.append(", ");
+            if (i == spawnArg) {
+                sb.append("{{_}}").append(tokens.get(i)).append("{{/_}}");
+            } else {
+                sb.append(tokens.get(i));
+            }
+        }
+        if (right < n - 1) sb.append('…');
+        final String result = sb.toString();
+        final int len = Highlighter.visualLength(result);
+        if (len > width) return clipVisual(result, width);
+        if (len < width) return result + " ".repeat(width - len);
+        return result;
+    }
+
+    private static int windowCost(final List<String> tokens, final int left, final int right) {
+        int cost = 1;   // the leading pointer slot
+        for (int i = left; i <= right; i++) {
+            cost += Highlighter.visualLength(tokens.get(i));
+            if (i < right) cost += 2;    // ", "
+        }
+        if (left > 0) cost += 1;                 // "…"
+        if (right < tokens.size() - 1) cost += 1; // "…"
+        return cost;
+    }
+
+    private void pushLevel(Code code, int offsetX, int offsetY, int spawnRow, int spawnCol, int spawnArg) {
+        ExplainLevel level = new ExplainLevel(code, offsetX, offsetY, spawnRow, spawnCol, spawnArg);
         stack.push(level);
     }
 
@@ -666,6 +870,11 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             final boolean isTop = (levelIdx == levels.size() - 1);
             final ExplainLevel child = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
             final boolean hasChild = child != null && child.spawnRow >= 0;
+            if (isTop) {
+                applyArgsCell(level);
+            } else if (hasChild && child.spawnCol == ARGS_COL && child.spawnArg >= 0) {
+                applySpawnUnderline(level, child.spawnRow, child.spawnArg);
+            }
             final List<String> lines = level.profile.rowStrings();
             final String dimColor = isTop ? "" : "{{w}}";
             final String indent = " ".repeat(level.offsetX);
@@ -681,7 +890,11 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 if (isSelected) {
                     content = indent + highlightSelectedColumn(line, level.selectedCol, level);
                 } else if (isSpawn) {
-                    content = Graphitty.string(dimColor) + indent + highlightSpawnCell(line, child.spawnCol, level);
+                    if (child.spawnCol == ARGS_COL && child.spawnArg >= 0) {
+                        content = Graphitty.string(dimColor) + indent + line;   // the underline is already in the args cell
+                    } else {
+                        content = Graphitty.string(dimColor) + indent + highlightSpawnCell(line, child.spawnCol, level);
+                    }
                 } else if (isTop && isDataRow) {
                     content = indent + line;
                 } else {
@@ -732,6 +945,11 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
      * Uses the divider and pointer from the level's style configuration.
      */
     private String highlightSelectedColumn(String line, int selectedCol, ExplainLevel level) {
+        // The args column's pointer lives inside the cell (the inline arg selector),
+        // not at the divider — so an armed selector keeps the cell boundary intact.
+        if (selectedCol == ARGS_COL && level.selectedArg >= 0) {
+            return line;
+        }
         // The table row format is: |col0|col1|col2|... (where | is the divider)
         // Replace the divider before the selected column with pointer
 

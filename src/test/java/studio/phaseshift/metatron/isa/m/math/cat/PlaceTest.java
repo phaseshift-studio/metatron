@@ -18,11 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
@@ -52,12 +50,6 @@ public class PlaceTest extends AbstractInstSetTest {
 
     public PlaceTest() {
         super(catInstSet::new);
-    }
-
-    @BeforeAll
-    public static void importAllInstSets() {
-        InstSet.importInstSet(f("#"));
-        InstSet.importInstSet(f("/m/math"));
     }
 
     @BeforeEach

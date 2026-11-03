@@ -131,11 +131,7 @@ public abstract class LawTable {
      */
     public static void reset() {
         STORE_DERIVATIONS = Map.of();
-        STORE_DERIVATIONS_AT = -1;
-        STORE_DERIVATIONS_WAS_LOADED = false;
-        LOG_SNAPSHOT = null;
         LOG_DERIVATIONS = Map.of();
-        LOG_DECLARATIONS = 0;
         TABLES.values().forEach(table -> table.typeLawsCache.clear());
     }
 

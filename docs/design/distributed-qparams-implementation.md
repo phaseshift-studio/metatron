@@ -41,17 +41,43 @@ Java surface, after C3 (additive; the old accessors still answer, derived):
 
 ```java
 // the decision
-Placement.of(PlaceSet.peer(), Hop.of(1, cInt.ANY()), Partition.stream())   // cInt.ANY() = {*}
-Placement.none(...)          // stays: the unit transform, not a place set
-placement.place()            // PlaceSet: designators + demands
-placement.hop()              // Hop: height() int, arity() cInt
-placement.split()            // Partition: kind + part count (cInt.ANY() = the lane count)
-placement.obligations()      // derived from the three axes, not declared
+Placement.of(PlaceSet.peer(),Hop.
+
+of(1,cInt.ANY()),Partition.
+
+stream())   // cInt.ANY() = {*}
+        Placement.
+
+none(...)          // stays: the unit transform, not a place set
+placement.
+
+place()            // PlaceSet: designators + demands
+placement.
+
+hop()              // Hop: height() int, arity() cInt
+placement.
+
+split()            // Partition: kind + part count (cInt.ANY() = the lane count)
+placement.
+
+obligations()      // derived from the three axes, not declared
 
 // the builder
-PlanBuilder.plan("law_shard").cut(Cut.reducer(Law.monoidic, Law.commutative))
-        .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
-        .where(...)          // spans stay as they are
+PlanBuilder.
+
+plan("law_shard").
+
+cut(Cut.reducer(Law.monoidic, Law.commutative))
+        .
+
+place(PlaceSet.peer()).
+
+hop(1,cInt.ANY()).
+
+split(Partition.stream())
+        .
+
+where(...)          // spans stay as they are
 ```
 
 ---
@@ -73,14 +99,21 @@ authorities)`) — chunk C4.
 **The harness** (`src/test/java/.../network/DistributedSweep.java`):
 
 ```java
-record Lane(boolean local, fURI authority, List<Obj> part, int height, cInt arity) {}
-record Layout(List<Lane> lanes, List<fURI> routes, Obj combiner, List<Obj> tail, Code emitted) {}
+record Lane(boolean local, fURI authority, List<Obj> part, int height, cInt arity) {
+}
 
-static Code   lower(String expr, Env env);            // PlanInterpreter.apply(SHARD_PLAN, parse(expr), env)
+record Layout(List<Lane> lanes, List<fURI> routes, Obj combiner, List<Obj> tail, Code emitted) {
+}
+
+static Code lower(String expr, Env env);            // PlanInterpreter.apply(SHARD_PLAN, parse(expr), env)
+
 static Layout layout(Code emitted);                   // lanes, parts, routes, combiner, tail
-static Obj    run(String expr);                       // evaluate as-is (the local fold) — the oracle
-static Env    env(fURI... authorities);               // synthetic peers: host, inst overrides, status
-static Eval   eval(String expr, Env env);             // lower + layout + value: one row's worth
+
+static Obj run(String expr);                       // evaluate as-is (the local fold) — the oracle
+
+static Env env(fURI... authorities);               // synthetic peers: host, inst overrides, status
+
+static Eval eval(String expr, Env env);             // lower + layout + value: one row's worth
 ```
 
 **Five blocks, each its own class, `@CsvSource(delimiter = '%')`, one row per scenario:**
@@ -244,7 +277,7 @@ decline-on-unsound + `SplitLegalityTest` (S3). **C7b** `block` (+ the `order` re
 
 **Files:** `catInstSet.realizedWhere` (the designators with their REALIZED lane counts; `local` recorded as the
 `local` designator), `catTypes.placeWord` (the span-keyed, demand-weighted rec lifts to the flat place word);
-`AbstractionGeometryTest` rows. **Acceptance (met):** `path.where` shows `[[span=>at]=>[//ginger=>2,//booger=>1]]` — the
+`AbstractPlacementTest` rows. **Acceptance (met):** `path.where` shows `[[span=>at]=>[//ginger=>2,//booger=>1]]` — the
 rec is the weighted
 `?place` spelling, so a realized `where` reads back as a place set — and the count is the realized lane count after
 the emitter's clamps, never the declared band. **Commit:** `feat(cat): record the realized place set on path::T`

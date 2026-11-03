@@ -25,10 +25,11 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.fURI;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -182,7 +183,10 @@ public class UriTest extends AbstractAlgebraTest {
             "*test.as(rec::T)>>path>>{-1,-3}             % {c,a}",
             "*test.as(rec::T)>>path>>{-2,-3}             % {b,a}",
             "*test.as(rec::T)>>path>>{-2,-5}             % b",
-            "*test.as(rec::T)>>path>>{-100,100}          % noobj"
+            "*test.as(rec::T)>>path>>{-100,100}          % noobj",
+            //    "*test.as(rec::T)>>=[q=>none].as?uri<=rec(uri::T)                               % <http://www.marko.com:90/a/b/c>",
+            //    "*test.as(rec::T)==[q=>none,_=>_].as?uri<=rec(uri::T)                           % <http://www.marko.com:90/a/b/c>",
+            //"*test.as(rec::T)>>=[scheme=>none,q=>none,authority=>none].as?uri<=rec(uri::T)  % a/b/c"
     }, delimiter = '%')
     public void testGet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

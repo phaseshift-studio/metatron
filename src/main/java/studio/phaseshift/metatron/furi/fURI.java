@@ -21,10 +21,10 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -1435,16 +1435,20 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
         public static final fURI NOOBJ = fURI.of(null, null, -1, List.of("noobj"), cInt.ZERO(), List.of(), Map.of(), null);
 
-        public final static fURI empty() {
+        public static fURI empty() {
             return XXXXXXfURI.INSTANCE;
         }
 
 
-        public final static fURI f(final String furi) {
+        public static fURI f(final String furi) {
             return null == furi || furi.isEmpty() ? Singleton.empty() : of(furi);
         }
 
-        public final static fURI f() {
+        public static fURI f(final int index) {
+            return f("" + index);
+        }
+
+        public static fURI f() {
             return f(null);
         }
 
