@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -120,9 +121,9 @@ public class uiInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(TYPE), lst(
-                        docWrap(UI_CONSOLE_TYPE = Type.Builder.build()
+                        UI_CONSOLE_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
-                                .vid(UI_CONSOLE_TID)
+                                .vid(UI_CONSOLE_TID, "a terminal user interface")
                                 .constructor(arg -> {
                                     final Console console = new Console(arg.as(), arg.vid());
                                     final CommandPalette palette = new CommandPalette(console);
@@ -135,15 +136,15 @@ public class uiInstSet extends AbstractInstSet {
                                     Console.CONSOLE_THREAD_VID = repl.vid();
                                     docWrap(repl, "console repl").applyAsync();
                                     return docWrap(console, "a user terminal repl", ":help");
-                                }).create(), "a terminal user interface"),
-                        docWrap(UI_ANCHOR_TYPE = Type.Builder.build()
+                                }).create(),
+                        UI_ANCHOR_TYPE = TypeBuilder.build()
                                 .tid(URI_TID)
-                                .vid(UI_ANCHOR_TID)
+                                .vid(UI_ANCHOR_TID, "a float anchor position")
                                 .isaPredicate(union_(Arrays.stream(FloatingSurface.Anchor.values())
                                         .map(a -> uri(a.name().toLowerCase()))
                                         .toArray(Obj[]::new)))
-                                .create(), "a float anchor position"),
-                        docWrap(UI_STYLE_TYPE = Type.Builder.build()
+                                .create(),
+                        UI_STYLE_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(UI_STYLE_TID)
                                         .isaPredicate(rec(
@@ -167,7 +168,7 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("scrollX").maybe(), INT_TYPE,
                                                 uri("scrollY").maybe(), INT_TYPE))
                                         .constructor(arg -> Stylable.Style.from(arg.asRec()))
-                                        .create(), "maybe an obj", "a style obj", mutableMap(
+                                        .refinement("maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
                                         uri("background").maybe(), "the background color of the widget",
                                         uri("foreground").maybe(), "the foreground color of the widget",
@@ -186,37 +187,36 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("zIndex").maybe(), "render order among floating widgets: higher = drawn later (on top); default 0",
                                         uri("scroll").maybe(), "scroll axes: scroll=>union(x,y) (both, the default), union(y) (vertical only), none (off)",
                                         uri("scrollX").maybe(), "initial horizontal scroll offset (column shown at the left edge)",
-                                        uri("scrollY").maybe(), "initial vertical scroll offset (body row shown at the top); 0 = newest content"),
-                                "a widget style specification"),
-                        docWrap(UI_WIDGET_TYPE = Type.Builder.build()
+                                        uri("scrollY").maybe(), "initial vertical scroll offset (body row shown at the top); 0 = newest content"))
+                                        .desc("a widget style specification")
+                                        .create(),
+                        UI_WIDGET_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
-                                        .vid(UI_WIDGET_TID)
-                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)))
-                                        .create(), null, null,
-                                Map.of(uri(STYLE).maybe(), "the style specification for the widget"),
-                                "the base widget type"),
-                        docWrap(UI_ACCORDION_TYPE = Type.Builder.build()
+                                        .vid(UI_WIDGET_TID, "the base widget type")
+                                        .isaPredicate(rec(uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)), Map.of(uri(STYLE).maybe(), "the style specification for the widget"))
+                                        .create(),
+                        UI_ACCORDION_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_ACCORDION_TID)
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
                                         .constructor(arg -> new AccordionWidget(arg.jvm(), UI_ACCORDION_TID, arg.vid()))
-                                        .create(), "maybe an obj", "an accordion obj", Map.of(
+                                        .refinement("maybe an obj", "an accordion obj", Map.of(
                                         uri(TITLE).maybe().asUri(), "the title of the accordion",
-                                        uri(BODY).maybe(), "the body content of the accordion"),
-                                "an expandable/collapsible accordion widget"),
-                        docWrap(UI_PROGRESS_TABLE_TYPE = Type.Builder.build()
+                                        uri(BODY).maybe(), "the body content of the accordion"))
+                                        .desc("an expandable/collapsible accordion widget")
+                                        .create(),
+                        UI_PROGRESS_TABLE_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
-                                        .vid(UI_PROGRESS_TABLE_TID)
+                                        .vid(UI_PROGRESS_TABLE_TID, "a table of progress bars")
                                         .isaPredicate(rec(
                                                 uri(HEADER).maybe().asUri(), LST_TYPE,
                                                 uri(ROW).maybe(), LST_TYPE))
                                         .constructor(arg -> new ProgressTableWidget(arg.recValue(), UI_PROGRESS_TABLE_TID, arg.vid()))
+                                        .example("progress_table::[row=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()")
                                         .create(),
-                                "a table of progress bars",
-                                "progress_table::[row=>[[text=>'layer1',percent=>58.0],[text=>'layer2',percent=>23.0]]].run()"),
-                        docWrap(UI_TABLE_TYPE = Type.Builder.build()
+                        UI_TABLE_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TABLE_TID)
                                         .isaPredicate(rec(
@@ -224,13 +224,13 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(ROW).maybe(), T(LST_TID.maybeSome()),
                                                 // the data behind each displayed row, never drawn
                                                 uri(METADATA).maybe(), T(LST_TID.maybeSome())))
-                                        .constructor(arg -> new TableWidget(arg.asRec().jvm(), UI_TABLE_TID, arg.vid())).create(),
-                                "maybe an obj", "a table widget",
-                                Map.of(uri(HEADER).maybe().asUri(), "a lst of obj table headers",
+                                        .constructor(arg -> new TableWidget(arg.asRec().jvm(), UI_TABLE_TID, arg.vid()))
+                                        .refinement("maybe an obj", "a table widget", Map.of(uri(HEADER).maybe().asUri(), "a lst of obj table headers",
                                         uri(ROW).maybe(), "a lst of poly table rows",
-                                        uri(METADATA).maybe(), "a lst of rows of data behind the display"),
-                                "a tabular data widget"),
-                        docWrap(UI_TREE_TYPE = Type.Builder.build()
+                                        uri(METADATA).maybe(), "a lst of rows of data behind the display"))
+                                        .desc("a tabular data widget")
+                                        .create(),
+                        UI_TREE_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TREE_TID)
                                         .isaPredicate(rec(
@@ -243,54 +243,57 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(XREF).maybe(), REC_TYPE,
                                                 uri(EXPAND).maybe(), T(URI_TID.maybeSome())))
                                         .constructor(arg -> new TreeWidget(arg.as().jvm(), UI_TREE_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a tree widget",
-                                Map.of(uri(ROOT), "the root uri to traverse from",
+                                        .refinement("maybe an obj", "a tree widget", Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
                                         uri(CODE).maybe(), "transform obj prior to insertion into tree (default _)",
                                         uri(FLATTEN).maybe(), "fold single-folder chains into one path row (default false)",
                                         uri(XREF).maybe(), "xref=>[max=>N, code=><call>] cross-reference decoration",
-                                        uri(EXPAND).maybe(), "branch uris whose children are read regardless of max"),
-                                "the root uri space is traversed to specified depth generating a tree data structure"),
-                        docWrap(UI_SELECTOR_TYPE = Type.Builder.build()
+                                        uri(EXPAND).maybe(), "branch uris whose children are read regardless of max"))
+                                        .desc("the root uri space is traversed to specified depth generating a tree data structure")
+                                        .create(),
+                        UI_SELECTOR_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SELECTOR_TID)
                                         .isaPredicate(rec())
                                         .constructor(arg -> new Selector(arg.asRec().jvm(), UI_SELECTOR_TID, arg.vid()))
-                                        .create(), "maybe an obj",
-                                "a selector widget", Map.of(),
-                                "an interactive item selector widget"),
-                        docWrap(UI_PANEL_TYPE = Type.Builder.build()
+                                        .refinement("maybe an obj", "a selector widget", Map.of())
+                                        .desc("an interactive item selector widget")
+                                        .create(),
+                        UI_PANEL_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_PANEL_TID)
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
                                         .constructor(arg -> new PanelWidget(arg.asRec().jvm(), UI_PANEL_TID, arg.vid()))
-                                        .create(), "rec", "panel", Map.of(
+                                        .refinement("rec", "panel", Map.of(
                                         uri(TITLE), "the title of the panel",
-                                        uri(BODY), "the body content of the panel"),
-                                "a simple bordered UI panel widget"),
-                        docWrap(UI_GRID_TYPE = Type.Builder.build()
+                                        uri(BODY), "the body content of the panel"))
+                                        .desc("a simple bordered UI panel widget")
+                                        .create(),
+                        UI_GRID_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_GRID_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri("grid").maybe(), LST_TYPE))
                                         .constructor(arg -> new GridWidget(arg.asRec().jvm(), UI_GRID_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a grid of widgets", Map.of(
-                                        uri("grid"), "a lst of rows, each row a lst of cell widgets"),
-                                "a grid of rows x cols of embedded, runnable widgets"),
-                        docWrap(UI_MATRIX_TYPE = Type.Builder.build()
+                                        .refinement("maybe an obj", "a grid of widgets", Map.of(
+                                        uri("grid"), "a lst of rows, each row a lst of cell widgets"))
+                                        .desc("a grid of rows x cols of embedded, runnable widgets")
+                                        .create(),
+                        UI_MATRIX_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_MATRIX_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri("grid").maybe(), LST_TYPE,
                                                 uri(TITLE).maybe().asUri(), STR_TYPE))
                                         .constructor(arg -> new MatrixWidget(arg.asRec().jvm(), UI_MATRIX_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a matrix of glyphs", Map.of(
+                                        .refinement("maybe an obj", "a matrix of glyphs", Map.of(
                                         uri("grid"), "a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line",
-                                        uri(TITLE).maybe(), "the title drawn in the top border"),
-                                "a matrix of glyphs: a lst of lsts of characters drawn as a rectangular face (cell (row,col) is one-to-one with the drawn grid), styled like every other widget, plus a latched update(row,col,glyph) member that repaints one cell without a whole pass"),
-                        docWrap(UI_LABEL_LINE_TYPE = Type.Builder.build()
+                                        uri(TITLE).maybe(), "the title drawn in the top border"))
+                                        .desc("a matrix of glyphs: a lst of lsts of characters drawn as a rectangular face (cell (row,col) is one-to-one with the drawn grid), styled like every other widget, plus a latched update(row,col,glyph) member that repaints one cell without a whole pass")
+                                        .create(),
+                        UI_LABEL_LINE_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_LABEL_LINE_TID)
                                         .isaPredicate(rec(
@@ -298,21 +301,23 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(KEY).maybe(), URI_TYPE,
                                                 uri(ON_KEY).maybe(), ALL_TYPE))
                                         .constructor(arg -> new LabelLineWidget(arg.asRec().jvm(), UI_LABEL_LINE_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a label line widget", Map.of(
-                                        uri(BODY), "the text body displayed on the label"),
-                                "a single-line text label widget"),
-                        docWrap(UI_MENU_BAR_TYPE = Type.Builder.build()
+                                        .refinement("maybe an obj", "a label line widget", Map.of(
+                                        uri(BODY), "the text body displayed on the label"))
+                                        .desc("a single-line text label widget")
+                                        .create(),
+                        UI_MENU_BAR_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_MENU_BAR_TID)
                                         .isaPredicate(rec(
                                                 (Obj) uri("height").maybe(), INT_TYPE,
                                                 uri("lines").maybe(), LST_TYPE))
                                         .constructor(arg -> new MenuBarWidget(arg.asRec().jvm(), UI_MENU_BAR_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a menu bar widget", Map.of(
+                                        .refinement("maybe an obj", "a menu bar widget", Map.of(
                                         uri("height"), "the interior height of the menu bar in rows",
-                                        uri("lines"), "a lst of line widgets laid out across the bar"),
-                                "a menu bar pinned to the top of the terminal"),
-                        docWrap(UI_TREE_SELECT_TOOL_TYPE = Type.Builder.build()
+                                        uri("lines"), "a lst of line widgets laid out across the bar"))
+                                        .desc("a menu bar pinned to the top of the terminal")
+                                        .create(),
+                        UI_TREE_SELECT_TOOL_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_TREE_SELECT_TOOL_TID)
                                         .isaPredicate(rec(
@@ -321,34 +326,33 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(ON_SELECT).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
                                                 uri(LABEL).maybe(), ALL_TYPE.orElse(id_().tryToInst())))
                                         .constructor(arg -> new TreeSelectTool(arg.jvm(), UI_TREE_SELECT_TOOL_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a tree select tool",
-                                Map.of(uri(ROOT), "the root uri to traverse from",
+                                        .refinement("maybe an obj", "a tree select tool", Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
                                         uri(ON_SELECT).maybe(), "instruction called on Enter with the selected node's rel::T (default: identity)",
-                                        uri(LABEL).maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"),
-                                "an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node"),
-                        docWrap(UI_SWIPE_PANEL_TYPE = Type.Builder.build()
+                                        uri(LABEL).maybe(), "instruction called on each tree node's obj to produce a suffix label (default: identity)"))
+                                        .desc("an interactive tree browser: arrow keys navigate, Enter fires on_select on selected node, right/left expand/contract, label suffixes each node")
+                                        .create(),
+                        UI_SWIPE_PANEL_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_SWIPE_PANEL_TID)
                                         .isaPredicate(rec(uri(OBJ).maybe().asUri(), LST_TYPE))
                                         .constructor(arg -> new SwipePanelWidgetTool(arg.jvm(), UI_SWIPE_PANEL_TID, arg.vid()))
+                                        .refinement("lst of objs", "a swipe panel widget tool", Map.of(uri(OBJ), "the list of objs to swipe through"))
+                                        .desc("a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting")
                                         .create(),
-                                "lst of objs",
-                                "a swipe panel widget tool",
-                                Map.of(uri(OBJ), "the list of objs to swipe through"),
-                                "a left-right swipe panel: arrow keys navigate, pgup/pgdn jump ±5, ctrl-d quits; displays each obj in a PanelWidget with docq+Highlighter formatting"),
-                        docWrap(UI_MODAL_TYPE = Type.Builder.build()
+                        UI_MODAL_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_MODAL_TID)
                                         .isaPredicate(rec(
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(BODY).maybe(), T(STR_TID.maybeSome())))
                                         .constructor(arg -> new ModalTool(arg.jvm(), UI_MODAL_TID, arg.vid()))
-                                        .create(), "rec", "modal", Map.of(
+                                        .refinement("rec", "modal", Map.of(
                                         uri(TITLE), "the title of the modal",
-                                        uri(BODY), "the body content of the modal"),
-                                "a modal popup panel: space/enter/ctrl-d dismisses"),
-                        docWrap(UI_NETWORK_PANEL_TYPE = Type.Builder.build()
+                                        uri(BODY), "the body content of the modal"))
+                                        .desc("a modal popup panel: space/enter/ctrl-d dismisses")
+                                        .create(),
+                        UI_NETWORK_PANEL_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_NETWORK_PANEL_TID)
                                         .isaPredicate(rec(
@@ -358,14 +362,15 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(TITLE).maybe().asUri(), STR_TYPE,
                                                 uri(STYLE).maybe().asUri(), T(UI_STYLE_TID)))
                                         .constructor(arg -> new NetworkPanelTool(arg.jvm(), UI_NETWORK_PANEL_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a network panel tool", Map.of(
+                                        .refinement("maybe an obj", "a network panel tool", Map.of(
                                         uri(MAX), "body rows drawn (default 12)",
                                         uri(PAUSE), "freeze what the panel draws, without stopping the capture",
                                         uri(PEER), "draw only the lanes whose name contains this",
                                         uri(TITLE).maybe(), "the accordion header's title (default \"net\")",
-                                        uri(STYLE).maybe(), "the panel's style: anchor places it, width/height size it"),
-                                "a live, foldable accordion view of the exchanges between this machine and its peers; `.display()` it to watch, `@<panel> >>= [paused=>true]` to hold it still, `@<panel> >>= [expanded=>false]` to fold it"),
-                        docWrap(UI_STACK_BAR_TYPE = Type.Builder.build()
+                                        uri(STYLE).maybe(), "the panel's style: anchor places it, width/height size it"))
+                                        .desc("a live, foldable accordion view of the exchanges between this machine and its peers; `.display()` it to watch, `@<panel> >>= [paused=>true]` to hold it still, `@<panel> >>= [expanded=>false]` to fold it")
+                                        .create(),
+                        UI_STACK_BAR_TYPE = TypeBuilder.build()
                                         .tid(UI_WIDGET_TID)
                                         .vid(UI_STACK_BAR_TID)
                                         .isaPredicate(rec(
@@ -373,12 +378,12 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(CONTEXT).maybe(), INT_TYPE,
                                                 uri(TOTAL).maybe(), INT_TYPE))
                                         .constructor(arg -> new StackBarWidget(arg.asRec().jvm(), UI_STACK_BAR_TID, arg.vid()))
-                                        .create(), "maybe an obj", "a stack bar widget", Map.of(
+                                        .refinement("maybe an obj", "a stack bar widget", Map.of(
                                         uri(DATA).maybe(), "the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)",
                                         uri(CONTEXT).maybe(), "the denominator: the bar spans it, the rest is the unused tail, and total/context is the percent; absent = a composition (the data fills the bar, no percent, no tail)",
-                                        uri(TOTAL).maybe(), "the numerator of the percent (default: the sum of the data)"),
-                                "a general single-line stacked bar; only the data is specified — the rec is open world: pre=/post= framing content (a str, or a dereference such as post=>!*/usr/dr/context_window), style.width the width of the bar, and style.section the per-section styles: [name => style::T] (body => the label painted, else the key name; foreground/background the fragments around it; width its own width) — the reserved key unused styles the unused / what-is-left section"
-                        )),
+                                        uri(TOTAL).maybe(), "the numerator of the percent (default: the sum of the data)"))
+                                        .desc("a general single-line stacked bar; only the data is specified — the rec is open world: pre=/post= framing content (a str, or a dereference such as post=>!*/usr/dr/context_window), style.width the width of the bar, and style.section the per-section styles: [name => style::T] (body => the label painted, else the key name; foreground/background the fragments around it; width its own width) — the reserved key unused styles the unused / what-is-left section")
+                                        .create()),
 
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(UI_WIDGET_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> {

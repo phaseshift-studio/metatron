@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
-import studio.phaseshift.metatron.algebra.rewrite.Plan;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -64,8 +64,10 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
     public static final fURI PLAN_TID = CATEGORY_TID.extend("plan");
     public static final fURI PLACE_TID = CATEGORY_TID.extend("place");
-    // the algebra vocabulary lives with the instruction set (mInstSet.THEORY_TID ...): the category RENDERS it
-    public static final fURI LAW_TID = CAT_ISA_TID.extend("law");
+    // the algebra vocabulary lives with the instruction set (mInstSet.THEORY_TID ...): the category RENDERS it.
+    // law::T relocates with its data: the vocabulary is stored under /m/law, so the type is the base set's
+    // (mTypes.LAW_TYPE) and this is the same address — one constant, never a second /m/law spelling.
+    public static final fURI LAW_TID = Law.LAW_TID;
     public static final fURI CLASS_TID = CAT_ISA_TID.extend("class");
 
     public catInstSet() {

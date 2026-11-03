@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.typer;
 
+import studio.phaseshift.metatron.algebra.AlgebraTool;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -77,8 +77,8 @@ public class BasicTyper extends MRec implements Typer {
         this.jvm().put(uri(Typer.CHECK), rec(new LinkedHashMap<>(Typer.defaults().jvm())));
         this.jvm().put(uri("verify"), instLambda(lst(ALL_TYPE, T(LST_TID.poly(LAW_TID.maybeSome()))), (_, inst) -> {
             if (inst.arg(0).isObjInst())
-                return mInstSet.AlgebraTool.analyzeTypeInst(inst.arg(0).dom(), inst.arg(0).asInst(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();
-            return mInstSet.AlgebraTool.analyzeType(inst.arg(0).asType(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();
+                return AlgebraTool.analyzeTypeInst(inst.arg(0).dom(), inst.arg(0).asInst(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();
+            return AlgebraTool.analyzeType(inst.arg(0).asType(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();
         }));
     }
 

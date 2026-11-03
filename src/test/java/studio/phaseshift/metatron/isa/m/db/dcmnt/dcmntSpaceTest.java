@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.TestReport;
-import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
+import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;

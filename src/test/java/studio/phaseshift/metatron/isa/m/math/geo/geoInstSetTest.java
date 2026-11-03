@@ -23,6 +23,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -127,6 +129,32 @@ public class geoInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testEncodings(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A DOCUMENT IS READ AS ITS GEOMETRY. A GeoJSON Feature is a wrapper: the geo value is the `geometry` inside it,
+     * so `as(<kind>::T)` unwraps and reads it, and `as(geometry::T)` reads whatever kind the document declares.
+     */
+    @Test
+    public void testADocumentReadsAsItsGeometry() {
+        final String polygon = "polygon::[[[-10.0,-10.0],[10.0,-10.0],[10.0,10.0],[-10.0,10.0],[-10.0,-10.0]]]";
+        final String feature = "json::\"\"\"{\"type\":\"Feature\","
+                + "\"geometry\":{\"type\":\"Polygon\",\"coordinates\":"
+                + "[[[-10.0,-10.0],[10.0,-10.0],[10.0,10.0],[-10.0,10.0],[-10.0,-10.0]]]}}\"\"\"";
+        final String bareDocument = "json::\"\"\"{\"type\":\"Polygon\",\"coordinates\":"
+                + "[[[-10.0,-10.0],[10.0,-10.0],[10.0,10.0],[-10.0,10.0],[-10.0,-10.0]]]}\"\"\"";
+        // a bare document, a Feature document, and the generic rec round trip all land on the same POLYGON: the
+        // parsed value carries stamped points (the serializer canonicalizes), so compare by kind and positions
+        for (final String code : new String[]{
+                bareDocument + ".as(polygon::T)",
+                feature + ".as(polygon::T)",
+                feature + ".as(geometry::T)",
+                bareDocument + ".as(geometry::T)",
+                feature + ".as(rec::T)>>geometry.as(polygon::T)"}) {
+            final Obj actual = eval(code);
+            assertEquals(eval(polygon).tid(), actual.tid(), Graphitty.string("%s did not read as a polygon: %s", code, actual));
+            assertEquals(GeoUtil.positions(eval(polygon)), GeoUtil.positions(actual), Graphitty.string("%s changed the shape", code));
+        }
     }
 
     /**

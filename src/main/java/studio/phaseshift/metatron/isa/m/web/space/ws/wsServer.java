@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.isa.m.web.webHelper;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -90,7 +91,7 @@ public final class wsServer extends Listener {
 
     private static final GraphittyLogger LOG = Graphitty.log(wsServer.class);
 
-    public static final Type WS_WEBSOCKET_TYPE = Type.Builder.build()
+    public static final Type WS_WEBSOCKET_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(WS_WEBSOCKET_TID)
             .isaPredicate(rec(
@@ -109,14 +110,14 @@ public final class wsServer extends Listener {
                     uri(ON_CLOSE).maybe(), T(ALL))).create();
 
 
-    public static final Type WS_HANDLER_TYPE = Type.Builder.build()
+    public static final Type WS_HANDLER_TYPE = TypeBuilder.build()
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_HANDLER_TID)
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (_, inst) ->
                             new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
-    public static final Type WS_CLIENT_TYPE = Type.Builder.build()
+    public static final Type WS_CLIENT_TYPE = TypeBuilder.build()
             .tid(WS_WEBSOCKET_TID)
             .vid(WS_CLIENT_TID)
             .constructor(instC(INST_CTOR_TID.dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
@@ -162,7 +163,7 @@ public final class wsServer extends Listener {
         return resolved.isType() && mtron_wsHandler.WS_MTRON_HANDLER_TID.equals(resolved.asType().vid());
     }
 
-    public static final Type WS_SERVER_TYPE = Type.Builder.build()
+    public static final Type WS_SERVER_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(WS_SERVER_TID)
             .isaPredicate(rec(

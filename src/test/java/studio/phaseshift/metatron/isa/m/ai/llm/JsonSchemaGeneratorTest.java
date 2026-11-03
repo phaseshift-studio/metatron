@@ -13,6 +13,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.List;
 
@@ -136,7 +137,7 @@ public class JsonSchemaGeneratorTest extends AbstractMetatronTest {
     public void testUnknownTypeFallsBackToString() {
         // a type that doesn't match any known branch
         JsonSchemaElement schema = JsonSchemaGenerator.objToSchema(
-                Type.Builder.build().tid(f("/sys/temp")).create(),
+                TypeBuilder.build().tid(f("/sys/temp")).create(),
                 noobjRec(), "test");
         assertInstanceOf(JsonStringSchema.class, schema);
     }

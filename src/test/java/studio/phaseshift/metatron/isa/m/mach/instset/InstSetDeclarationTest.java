@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.instset;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -27,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.List;
 
@@ -118,10 +120,12 @@ public class InstSetDeclarationTest extends AbstractMetatronTest {
         try {
             final InstSet owner = library(OWNER_ISA);
             mount(owner);
-            // a contract declared through a TYPE's builder: create() writes it (so it lands at the owner's
-            // address) but no instset is in scope yet — the DRAIN is what records the author
+            // a contract declared through a TYPE's builder: create() STAGES the write (PendingWrites) and stages
+            // the declaration against the type's address; the set that registers the type drains the declaration
+            // into its own `inst` list, and the queue publishes the write at the owner's address on the next
+            // drain — the same order a boot follows, which is why the test drains explicitly here.
             final Inst cast = instC(OWNER_ISA.extend("inst/cast").dom(INT_TID).rng(STR_TID), lst(), (lhs, inst) -> lhs);
-            final Type widget = Type.Builder.build()
+            final Type widget = TypeBuilder.build()
                     .tid(REC_TID)
                     .vid(AUTHOR_ISA.extend("widget"))
                     .inst(cast)
@@ -130,11 +134,13 @@ public class InstSetDeclarationTest extends AbstractMetatronTest {
                     uri(PATTERN), uri(AUTHOR_ISA.extend(ALL)),
                     uri(TYPE), lst(widget)));
             mount(author);
+            PendingWrites.drainRest();
 
             assertTrue(holds(owner.insts(), cast), "the address owner holds the builder-declared contract");
             assertFalse(holds(author.insts(), cast), "the author's table does not");
             assertTrue(holds(declared(author), cast), "the set that REGISTERED THE TYPE records the type's contract");
         } finally {
+            PendingWrites.clear();
             child.pop();
         }
     }

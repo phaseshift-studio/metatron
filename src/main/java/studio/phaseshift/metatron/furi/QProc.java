@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.TriFunction;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -59,7 +60,7 @@ public interface QProc extends Rec {
     fURI ON_READ = f("on_read");
     fURI PRE_READ = f("pre_read");
     fURI POST_READ = f("post_read");
-    Type QPROC_TYPE = Type.Builder.build()
+    Type QPROC_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(QPROC_TID)
             .isaPredicate(rec(uri(PATTERN), URI_TYPE,

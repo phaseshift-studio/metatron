@@ -24,13 +24,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.rewrite.Env;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
@@ -67,7 +67,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p><b>Why a fold is built here.</b> The shipped law table declares no idempotent REDUCER: {@code or}/{@code and}
  * on a {@code bool} declare {@code idempotent} but are mappers ({@code bool⇒bool}), so they never reach the cut, and
  * every shardable fold ({@code sum}, {@code count}, the keyed folds) is non-idempotent. The legal-copy row therefore
- * declares one beside its body ({@link InstBuilder#drain}), which is the table's own {@code ?lawq} route — the
+ * declares one beside its body ({@link InstBuilder#drain}), which is the table's own {@code ?decq} route — the
  * production gate is exercised for real, with the one fold the tree does not ship.
  *
  * <p><b>Hermetic.</b> {@code loop://} peers only (the {@link PlacementEquivalenceTest} pattern): no forked process and

@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class mtron_wsHandler extends WebSocketRec {
     public static final fURI WS_MTRON_HANDLER_TID = WEB_ISA_TID.extend("ws").extend("mtron_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    public static final Type WS_MTRON_HANDLER_TYPE = Type.Builder.build()
+    public static final Type WS_MTRON_HANDLER_TYPE = TypeBuilder.build()
             .tid(webInstSet.MTRON_TID)
             .vid(WS_MTRON_HANDLER_TID)
             .isaPredicate(rec(

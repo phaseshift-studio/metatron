@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +85,7 @@ public class mcp_stdioHandler extends MRec {
 
     public static final fURI STDIO_MCP_HANDLER_TID = WEB_ISA_TID.extend(MCP).extend("mcp_stdio");
 
-    public static final Type STDIO_MCP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type STDIO_MCP_HANDLER_TYPE = TypeBuilder.build()
             .tid(MCP_TID)
             .vid(STDIO_MCP_HANDLER_TID)
             .isaPredicate(rec(

@@ -47,6 +47,7 @@
  import studio.phaseshift.metatron.util.CommonUtil;
  import studio.phaseshift.metatron.util.IteratorUtil;
  import studio.phaseshift.metatron.util.MTronException;
+ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
  import java.util.*;
  import java.util.function.BiFunction;
@@ -118,7 +119,7 @@
      }
 
      public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
-     public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
+     public static final Type GRPH_SPACE_TYPE = TypeBuilder.build()
              .tid(SPACE_TID)
              .vid(GRPH_SPACE_TID)
              .isaPredicate(rec(

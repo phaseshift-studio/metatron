@@ -21,10 +21,11 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.form.AbstractfURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.*;
 
 import java.util.*;
@@ -35,7 +36,6 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -356,7 +356,7 @@ public interface Uri extends Mono, Comparable<Uri> {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
                     instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    instC(AS_INST_TID.dom(URI_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
+                    instC(AS_INST_TID.dom(URI_TID).rng(REC_TID), lst(REC_TYPE), (lhs, _) -> {
                         final fURI lhsUri = lhs.asUri().uriValue();
                         return rec(
                                 SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
@@ -368,10 +368,20 @@ public interface Uri extends Mono, Comparable<Uri> {
                                 COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
                                 QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue())))).c(c -> c.mult(lhs.c())));
                     }),
-                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.uriValue().toString()) ? lhs : noobj()),
-                            "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
-                    docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> (lhs.uriValue().test(inst.arg(0).uriValue()) || CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())) ? lhs : noobj()),
-                            "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
+                    InstBuilder.build().tid(HAS_INST_TID)
+                            .dom(URI_TID, "a uri to check")
+                            .rng(URI_TID.maybe(), "whether the domain matches arg regex")
+                            .argLst(T(STR_TID), "the regex for matching")
+                            .desc("check whether the lhs str matches the regex arg")
+                            .body((lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.uriValue().toString()) ? lhs : noobj())
+                            .create(),
+                    InstBuilder.build().tid(HAS_INST_TID)
+                            .dom(URI_TID, "a uri to check")
+                            .rng(URI_TID.maybe(), "whether the domain matches arg regex")
+                            .argLst(T(URI_TID), "the regex for matching")
+                            .desc("check whether the lhs str matches the regex arg")
+                            .body((lhs, inst) -> (lhs.uriValue().test(inst.arg(0).uriValue()) || CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())) ? lhs : noobj())
+                            .create(),
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(CommonUtil.splitSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).uriValue().toString(), CommonUtil::guardPattern), lhs.uriValue().toString())).map(MUri::uri)))
             ));
         }

@@ -59,7 +59,7 @@ public class MObjFactory extends MRec implements ObjFactory {
         return SINGLETON;
     }
 
-    public static final Type M_FACTORY_TYPE = Type.Builder.build()
+    public static final Type M_FACTORY_TYPE = TypeBuilder.build()
             .tid(FACTORY_TID)
             .vid(OBJ_FACTORY_TID)
             .constructor(MObjFactory::of)

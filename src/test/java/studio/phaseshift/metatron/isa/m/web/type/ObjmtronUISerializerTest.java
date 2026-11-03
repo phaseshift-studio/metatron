@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Obj.Helper;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Type.Builder;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 
 import java.util.Arrays;
@@ -306,7 +305,7 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
 
     @Test
     public void testNestedTypePredicateMaintainsDepth() {
-        Type inner = Builder.build().tid(Tokens.REC_TID).isaPredicate(MRec.rec("p0", MUri.uri(Singleton.f("/predicate/0")).type(), new Object[]{"p1", MUri.uri(Singleton.f("/predicate/1")).type(), "p2", MUri.uri(Singleton.f("/predicate/2")).type(), "p3", MUri.uri(Singleton.f("/predicate/3")).type(), "p4", MUri.uri(Singleton.f("/predicate/4")).type()})).create();
+        Type inner = TypeBuilder.build().tid(Tokens.REC_TID).isaPredicate(MRec.rec("p0", MUri.uri(Singleton.f("/predicate/0")).type(), new Object[]{"p1", MUri.uri(Singleton.f("/predicate/1")).type(), "p2", MUri.uri(Singleton.f("/predicate/2")).type(), "p3", MUri.uri(Singleton.f("/predicate/3")).type(), "p4", MUri.uri(Singleton.f("/predicate/4")).type()})).create();
         Obj outer = MRec.rec("child", inner, new Object[]{"other", MStr.str("leaf")});
         String written = ObjmtronUISerializer.prettyPrint().write(outer);
         this.LOG.debug("nested type rec => %s", new Object[]{written});
@@ -318,7 +317,7 @@ public class ObjmtronUISerializerTest extends AbstractMetatronTest {
 
     @Test
     public void testDiagnosticInstanceNestsWithoutMarkup() {
-        Type inner = Builder.build().tid(Tokens.REC_TID).isaPredicate(MRec.rec("p0", MUri.uri(Singleton.f("/predicate/0")).type(), new Object[]{"p1", MUri.uri(Singleton.f("/predicate/1")).type(), "p2", MUri.uri(Singleton.f("/predicate/2")).type(), "p3", MUri.uri(Singleton.f("/predicate/3")).type(), "p4", MUri.uri(Singleton.f("/predicate/4")).type()})).create();
+        Type inner = TypeBuilder.build().tid(Tokens.REC_TID).isaPredicate(MRec.rec("p0", MUri.uri(Singleton.f("/predicate/0")).type(), new Object[]{"p1", MUri.uri(Singleton.f("/predicate/1")).type(), "p2", MUri.uri(Singleton.f("/predicate/2")).type(), "p3", MUri.uri(Singleton.f("/predicate/3")).type(), "p4", MUri.uri(Singleton.f("/predicate/4")).type()})).create();
         Obj outer = MRec.rec("child", inner, new Object[]{"other", MStr.str("leaf")});
         String written = ObjmtronUISerializer.diagnostic().write(outer);
         this.LOG.debug("diagnostic nested type rec => %s", new Object[]{written});

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.db.tble.space.ExistingTableSchema;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 
@@ -324,7 +325,7 @@ public class ExistingCollectionSchema {
 
         final fURI typeVID = this.schemaInstset.pattern()
                 .retractPattern().extend(collectionName);
-        final Type type = Type.Builder.build()
+        final Type type = TypeBuilder.build()
                 .tid(REC_TID)
                 .vid(typeVID)
                 .isaPredicate(rec(fields))
@@ -460,7 +461,7 @@ public class ExistingCollectionSchema {
             fields.put(fieldKey, BsonTypeMapper.toMtronType(field.bsonType()));
         }
 
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(REC_TID)
                 .vid(typeVid)
                 .isaPredicate(rec(fields))

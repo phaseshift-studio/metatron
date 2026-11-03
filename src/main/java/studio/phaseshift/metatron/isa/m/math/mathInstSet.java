@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -137,7 +138,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
     public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
     public static final fURI MATH_EURO_TID = MATH_CURRENCY_TID.extend("euro");
-    public static final Type MATH_CURRENCY_TYPE = Type.Builder.build()
+    public static final Type MATH_CURRENCY_TYPE = TypeBuilder.build()
             .tid(REAL_TID)
             .vid(MATH_CURRENCY_TID)
             .create();
@@ -172,12 +173,12 @@ public class mathInstSet extends AbstractInstSet {
         super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
     }
 
-    public static final Type TIME_TYPE = Type.Builder.build()
+    public static final Type TIME_TYPE = TypeBuilder.build()
             .tid(REAL_TID)
             .vid(MATH_TIME_TID)
             .create();
 
-    public static final Type NANOS_TYPE = Type.Builder.build()
+    public static final Type NANOS_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_NANOS_TID)
             .constructor(arg -> {
@@ -193,7 +194,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type MICROS_TYPE = Type.Builder.build()
+    public static final Type MICROS_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MICROS_TID)
             .constructor(arg -> {
@@ -209,7 +210,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type MILLIS_TYPE = Type.Builder.build()
+    public static final Type MILLIS_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MILLIS_TID)
             .constructor(arg -> {
@@ -225,7 +226,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type SECOND_TYPE = Type.Builder.build()
+    public static final Type SECOND_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_SECOND_TID)
             .constructor(arg -> {
@@ -241,7 +242,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type MINUTE_TYPE = Type.Builder.build()
+    public static final Type MINUTE_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_MINUTE_TID)
             .constructor(arg -> {
@@ -257,7 +258,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type HOUR_TYPE = Type.Builder.build()
+    public static final Type HOUR_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_HOUR_TID)
             .constructor(arg -> {
@@ -273,7 +274,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type DAY_TYPE = Type.Builder.build()
+    public static final Type DAY_TYPE = TypeBuilder.build()
             .tid(MATH_TIME_TID)
             .vid(MATH_DAY_TID)
             .constructor(arg -> {
@@ -599,24 +600,24 @@ public class mathInstSet extends AbstractInstSet {
 
     /// ////////////////////////////////////////////////////////////////////////
 
-    public static final Type DATA_SIZE_TYPE = Type.Builder.build()
+    public static final Type DATA_SIZE_TYPE = TypeBuilder.build()
             .tid(REAL_TID)
             .vid(MATH_DATASIZE_TID)
             .create();
 
-    public static final Type NAT_TYPE = Type.Builder.build()
+    public static final Type NAT_TYPE = TypeBuilder.build()
             .tid(INT_TID)
             .vid(NAT_TID)
             .predicate(is_(gt_(jnt(0))).tryToInst())
             .create();
 
-    public static final Type CMPLX_TYPE = Type.Builder.build()
+    public static final Type CMPLX_TYPE = TypeBuilder.build()
             .tid(LST_TID.poly(REAL_TID, REAL_TID))
             .vid(CMPLX_TID)
             .isaPredicate(lst(REAL_TYPE, REAL_TYPE))
             .create();
 
-    public static final Type BYTE_TYPE = Type.Builder.build()
+    public static final Type BYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_BYTE_TID)
             .constructor(arg -> {
@@ -632,7 +633,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type KBYTE_TYPE = Type.Builder.build()
+    public static final Type KBYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_KBYTE_TID)
             .constructor(arg -> {
@@ -647,7 +648,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type MBYTE_TYPE = Type.Builder.build()
+    public static final Type MBYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_MBYTE_TID)
             .constructor(arg -> {
@@ -662,7 +663,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type GBYTE_TYPE = Type.Builder.build()
+    public static final Type GBYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_GBYTE_TID)
             .constructor(arg -> {
@@ -677,7 +678,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type TBYTE_TYPE = Type.Builder.build()
+    public static final Type TBYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_TBYTE_TID)
             .constructor(arg -> {
@@ -692,7 +693,7 @@ public class mathInstSet extends AbstractInstSet {
                 };
             }).create();
 
-    public static final Type PBYTE_TYPE = Type.Builder.build()
+    public static final Type PBYTE_TYPE = TypeBuilder.build()
             .tid(MATH_DATASIZE_TID)
             .vid(MATH_PBYTE_TID)
             .constructor(arg -> {
@@ -780,33 +781,13 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     public void setup() {
-        this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
-                uri(TYPE), lst(
-                        docWrap(Type.Builder.build()
-                                .tid(INT_TID)
-                                .vid(MATH_PERCENT_TID)
-                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
-                                .constructor(arg ->
-                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
-                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
-                                                arg.asInt())
-                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
-                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
-                                // reading that looks like a fact. The type declares its own real->percent edge,
-                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
-                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
-                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
-                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
-                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
-                                                lhs.asInt())
-                                .create(), "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100"),
-                        docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
-                        docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),
-                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
-                        docWrap(DATETIME_TYPE = Type.Builder.build()
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        if (null == DATETIME_TYPE)
+            DATETIME_TYPE = TypeBuilder.build()
                                 .tid(URI_TID)
-                                .vid(MATH_DATETIME_TID)
+                                .vid(MATH_DATETIME_TID, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")
                                 .predicate((lhs, inst) -> {
                                     final fURI dt = inst.arg(0).asUri().uriValue();
                                     if (dt.hasScheme() && dt.scheme() != null && !dt.scheme().isEmpty())
@@ -834,7 +815,32 @@ public class mathInstSet extends AbstractInstSet {
                                     if (!dt.qMap().containsKey("tz")) return noobj();
                                     return inst.arg(0);
                                 })
-                                .create(), "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>"),
+                                .create();
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        TypeBuilder.build()
+                                .tid(INT_TID)
+                                .vid(MATH_PERCENT_TID, "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100")
+                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
+                                .constructor(arg ->
+                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
+                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
+                                                arg.asInt())
+                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
+                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
+                                // reading that looks like a fact. The type declares its own real->percent edge,
+                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
+                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
+                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
+                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
+                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
+                                                lhs.asInt())
+                                .create(),
+                        docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
+                        docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),
+                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
+                        DATETIME_TYPE,
                         docWrap(BYTE_TYPE, "a byte of data"),
                         docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
                         docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),
@@ -842,8 +848,8 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(TBYTE_TYPE, "a terabyte (1024 gigabytes) of data"),
                         docWrap(PBYTE_TYPE, "a petabyte (1024 terabytes) of data"),
                         docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
-                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
-                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency"),
+                        TypeBuilder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID, "united states currency").create(),
+                        TypeBuilder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID, "european union currency").create(),
                         docWrap(TIME_TYPE, "the nominal base type of time"),
                         docWrap(NANOS_TYPE, "a nanosecond of time"),
                         docWrap(MICROS_TYPE, "a microsecond of time"),
@@ -852,13 +858,13 @@ public class mathInstSet extends AbstractInstSet {
                         docWrap(MINUTE_TYPE, "a minute of time (60 seconds)"),
                         docWrap(HOUR_TYPE, "an hour of time (60 minutes)"),
                         docWrap(DAY_TYPE, "a day of time (24 hours)"),
-                        docWrap(METRIC_TYPE = Type.Builder.build()
+                        METRIC_TYPE = TypeBuilder.build()
                                 .tid(REAL_TID)
-                                .vid(MATH_METRIC_TID)
-                                .create(), "the nominal base type of metric distance"),
-                        docWrap(MM_TYPE = Type.Builder.build()
+                                .vid(MATH_METRIC_TID, "the nominal base type of metric distance")
+                                .create(),
+                        MM_TYPE = TypeBuilder.build()
                                 .tid(MATH_METRIC_TID)
-                                .vid(MATH_MM_TID)
+                                .vid(MATH_MM_TID, "a millimeter of distance")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -872,10 +878,10 @@ public class mathInstSet extends AbstractInstSet {
                                         case MATH_MILE_STRING -> arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH);
                                         default -> arg;
                                     };
-                                }).create(), "a millimeter of distance"),
-                        docWrap(CM_TYPE = Type.Builder.build()
+                                }).create(),
+                        CM_TYPE = TypeBuilder.build()
                                 .tid(MATH_METRIC_TID)
-                                .vid(MATH_CM_TID)
+                                .vid(MATH_CM_TID, "a centimeter of distance (10 millimeters)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -892,10 +898,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 10.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a centimeter of distance (10 millimeters)"),
-                        docWrap(DM_TYPE = Type.Builder.build()
+                                }).create(),
+                        DM_TYPE = TypeBuilder.build()
                                 .tid(MATH_METRIC_TID)
-                                .vid(MATH_DM_TID)
+                                .vid(MATH_DM_TID, "a decimeter of distance (10 centimeters)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -912,10 +918,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 100.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a decimeter of distance (10 centimeters)"),
-                        docWrap(METER_TYPE = Type.Builder.build()
+                                }).create(),
+                        METER_TYPE = TypeBuilder.build()
                                 .tid(MATH_METRIC_TID)
-                                .vid(MATH_METER_TID)
+                                .vid(MATH_METER_TID, "a meter of distance (100 centimeters)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -932,10 +938,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a meter of distance (100 centimeters)"),
-                        docWrap(KM_TYPE = Type.Builder.build()
+                                }).create(),
+                        KM_TYPE = TypeBuilder.build()
                                 .tid(MATH_METRIC_TID)
-                                .vid(MATH_KM_TID)
+                                .vid(MATH_KM_TID, "a kilometer of distance (1000 meters)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -953,14 +959,14 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 63360.0d * MM_PER_INCH / 1000.0d / 1000.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a kilometer of distance (1000 meters)"),
-                        docWrap(IMPERIAL_TYPE = Type.Builder.build()
+                                }).create(),
+                        IMPERIAL_TYPE = TypeBuilder.build()
                                 .tid(REAL_TID)
-                                .vid(MATH_IMPERIAL_TID)
-                                .create(), "the nominal base type of imperial distance"),
-                        docWrap(INCH_TYPE = Type.Builder.build()
+                                .vid(MATH_IMPERIAL_TID, "the nominal base type of imperial distance")
+                                .create(),
+                        INCH_TYPE = TypeBuilder.build()
                                 .tid(MATH_IMPERIAL_TID)
-                                .vid(MATH_INCH_TID)
+                                .vid(MATH_INCH_TID, "an inch of distance (25.4 millimeters)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -974,10 +980,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH);
                                         default -> arg;
                                     };
-                                }).create(), "an inch of distance (25.4 millimeters)"),
-                        docWrap(FOOT_TYPE = Type.Builder.build()
+                                }).create(),
+                        FOOT_TYPE = TypeBuilder.build()
                                 .tid(MATH_IMPERIAL_TID)
-                                .vid(MATH_FOOT_TID)
+                                .vid(MATH_FOOT_TID, "a foot of distance (12 inches)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -994,10 +1000,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 12.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a foot of distance (12 inches)"),
-                        docWrap(YARD_TYPE = Type.Builder.build()
+                                }).create(),
+                        YARD_TYPE = TypeBuilder.build()
                                 .tid(MATH_IMPERIAL_TID)
-                                .vid(MATH_YARD_TID)
+                                .vid(MATH_YARD_TID, "a yard of distance (3 feet)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -1014,10 +1020,10 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 36.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a yard of distance (3 feet)"),
-                        docWrap(MILE_TYPE = Type.Builder.build()
+                                }).create(),
+                        MILE_TYPE = TypeBuilder.build()
                                 .tid(MATH_IMPERIAL_TID)
-                                .vid(MATH_MILE_TID)
+                                .vid(MATH_MILE_TID, "a mile of distance (1760 yards)")
                                 .constructor(arg -> {
                                     final String tid = arg.tid().basePath().toString();
                                     return switch (tid) {
@@ -1034,7 +1040,7 @@ public class mathInstSet extends AbstractInstSet {
                                                 arg.jvm(arg.asReal().jvm() * 1000.0d * 1000.0d / MM_PER_INCH / 63360.0d);
                                         default -> arg;
                                     };
-                                }).create(), "a mile of distance (1760 yards)")),
+                                }).create()),
                 uri(INST), lst(
                         docWrap(instC(MATH_DATETIME_NOW_TID.dom(ALL.maybe()).rng(MATH_DATETIME_TID), lst(), (lhs, inst) -> nowDatetime()), "returns the current system datetime as a datetime uri", "datetime_now()   [-- <//2026.08.09/14/30/52/123?tz=+0000> (the moment you run it) --]"),
                         // datetime arithmetic: datetime + time -> datetime, datetime - time -> datetime,

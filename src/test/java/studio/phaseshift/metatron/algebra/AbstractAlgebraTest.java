@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
+import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 
@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
  *
  * <p>A subclass names the TYPE under test ({@link #carrier()}) and the ELEMENT its equations are written over
  * ({@link #sample()}). The inherited test derives the CLAIMS from the type itself; no Java marker interface is
- * consulted. A type models a set of theory instances ({@code object::T ?lawq}: {@code ring => {add, mul, zero, one},
+ * consulted. A type models a set of theory instances ({@code object::T ?decq}: {@code ring => {add, mul, zero, one},
  * …}); each instance names its theory (the instance rec's tid), each theory declares its LAW BATTERY
  * ({@code mTypes.declareAxioms()}), and their union is what the carrier must satisfy. The union goes to
  * {@link AlgebraTool#analyzeType(Type, List)}, which tests every claim against every operation the type binds and
@@ -88,7 +88,7 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
         final Type carrier = this.carrier();
         final Rec instances = instances(carrier);
         assumeTrue(!instances.jvm().isEmpty(),
-                () -> "carrier " + carrier.namedType() + " declares no theory instance in ?lawq — nothing to validate");
+                () -> "carrier " + carrier.namedType() + " declares no theory instance in ?decq — nothing to validate");
 
         final List<Law> claims = new ArrayList<>();
         final List<fURI> unbattered = new ArrayList<>();
@@ -118,14 +118,14 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
 
     /**
      * THE CARRIER'S DECLARED ALGEBRA — instance name => theory instance rec. {@code LawTable.typeLawsOf} is the
-     * serving read (what the category renders); the {@code ?lawq} declaration it serves is the fallback when no law
+     * serving read (what the category renders); the {@code ?decq} declaration it serves is the fallback when no law
      * table is mounted — the same read {@code AlgebraTool} makes.
      */
     protected static Rec instances(final Type type) {
         final Rec declared = LawTable.typeLawsOf(type);
         if (!declared.jvm().isEmpty())
             return declared;
-        final Obj declaration = lawOf(type);
+        final Obj declaration = decOf(type);
         return declaration.isRec() ? declaration.asRec() : rec0();
     }
 

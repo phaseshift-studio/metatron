@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ public final class mcpMetatronBuilder {
     public static final Type MCP_MTRON_SERVER_TYPE = mcpMetatronBuilder.server();
 
     public static Type server() {
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(MCP_SERVER_TID)
                 .vid(MCP_MTRON_SERVER_TID)
                 .isaPredicate(rec(

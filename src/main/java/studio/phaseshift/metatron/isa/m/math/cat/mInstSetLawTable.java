@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * instances a carrier models, served to {@code object::T>>law} — are not here: a carrier declares its algebra at
  * the type itself ({@code mTypes.declareAlgebras()}), which is what makes a type definition an algebraic
  * specification. {@link #typeLawsUncached(Type)} therefore used to hold one branch per carrier and now returns the
- * empty rec: {@code LawTable.typeLaws(Type)} serves the {@code ?lawq} declaration, and this table is no longer its
+ * empty rec: {@code LawTable.typeLaws(Type)} serves the {@code ?decq} declaration, and this table is no longer its
  * fallback.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -69,7 +69,7 @@ public final class mInstSetLawTable extends LawTable {
 
     /**
      * NO CARRIER LAW IS RESTATED HERE. Every base carrier declares its algebra at its own type
-     * ({@code mTypes.declareAlgebras()} {@code -> Type.Builder.declare -> ?lawq}), and
+     * ({@code mTypes.declareAlgebras()} {@code -> TypeBuilder.declare -> ?decq}), and
      * {@link LawTable#typeLaws(Type)} serves that declaration first. The empty rec is the correct answer for a type
      * that declares nothing: a type models exactly what is written on it, and the algebra of the /m carriers is
      * written on them. The hook stays so the contract — and any family that still writes its carriers' laws in a
@@ -87,7 +87,7 @@ public final class mInstSetLawTable extends LawTable {
         // the plus/minus pair is DERIVED: int models an add_group (op=plus, inv=neg) and minus is DEFINED as
         // plus applied to its inverted argument, so neither side's inverse is declared
         // plus, mult and minus DECLARE their laws (and, for mult, its inverse; for minus, its defining equation)
-        // at their registration (mInsts.ints(), InstBuilder) -> ?lawq; no row here
+        // at their registration (mInsts.ints(), InstBuilder) -> ?decq; no row here
         // the ONE inverse no algebra states: int models a mult_monoid, not a group (5.div(2).mult(2) is 4), so
         // mult's retraction to div is declared beside mult itself
         // no inverse: int div truncates, so x.div(a).mult(a) is not x (5.div(2).mult(2) is 4); mult's inverse is div
@@ -104,7 +104,7 @@ public final class mInstSetLawTable extends LawTable {
         // states its inverse at its registration (mInsts.reals()); str->real is LOSSY and states none. No row here.
         // real is a field, so both its group sides DERIVE their inverse pairs: plus/minus from add_group, and
         // mult/div from mult_group (op=mult, inv=inv) together with div's definition div ≡ mult ∘ inv.
-        // minus and div DECLARE their defining equations at their registration (mInsts.reals(), InstBuilder) -> ?lawq
+        // minus and div DECLARE their defining equations at their registration (mInsts.reals(), InstBuilder) -> ?decq
     }
 
     private void loadStr() {

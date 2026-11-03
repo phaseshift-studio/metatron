@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
 
 import java.util.Map;
 
@@ -35,7 +33,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class IdentityRewriter extends MRec implements Rewriter {
+public class IdentityRewriter extends AbstractRewriter {
 
     private static final IdentityRewriter INSTANCE = new IdentityRewriter(mutableMap(), MACH_REWRITER_TID, null);
 

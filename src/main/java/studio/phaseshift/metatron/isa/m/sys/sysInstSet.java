@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -102,12 +103,12 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI DIR_TID = SYS_ISA_TID.extend("dir");
     public static final fURI LOG_ENTRY_TID = SYS_ISA_TID.extend("log_entry");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
-    public static final Type FILE_TYPE = Type.Builder.build()
+    public static final Type FILE_TYPE = TypeBuilder.build()
             .tid(URI_TID)
             .vid(FILE_TID)
             .constructor(lhs -> makeFile(Path.of(lhs.uriValue().basePath().toString())))
             .create();
-    public static final Type LOG_ENTRY_TYPE = Type.Builder.build()
+    public static final Type LOG_ENTRY_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(LOG_ENTRY_TID)
             .isaPredicate(rec(
@@ -115,22 +116,22 @@ public class sysInstSet extends AbstractInstSet {
                     uri(TIME), DATETIME_TYPE,
                     uri(SOURCE), ALL_TYPE,
                     uri(MESSAGE), STR_TYPE)).create();
-    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
+    public static final Type IMAGE_FILE_TYPE = TypeBuilder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
-    public static final Type DIR_TYPE = Type.Builder.build()
+    public static final Type DIR_TYPE = TypeBuilder.build()
             .tid(URI_TID)
             .vid(DIR_TID)
             //.predicate((uri, x) -> fsSpace.resolveFile(uri.as()).isDirectory() ? uri : noobj())
             .constructor(obj -> obj.uriValue().isBranch() ? makeFile(Path.of(obj.uriValue().basePath().toString())) : noobj())
             .create();
-    public static final Type FS_SPACE_TYPE = Type.Builder.build()
+    public static final Type FS_SPACE_TYPE = TypeBuilder.build()
             .tid(SPACE_TID)
             .vid(FS_SPACE_TID)
             .isaPredicate(rec(uri(SCRIPT).maybe().asUri(), rec(URI_TYPE, URI_TYPE)))
             .constructor(obj -> fsSpace.of(FileSystems.getDefault(), obj.asRec(), obj.vid()))
             .create();
-    public static final Type SERIAL_SPACE_TYPE = Type.Builder.build()
+    public static final Type SERIAL_SPACE_TYPE = TypeBuilder.build()
             .tid(SPACE_TID)
             .vid(SERIAL_SPACE_TID)
             .constructor(obj -> serialSpace.of(obj.asRec(), obj.vid()))

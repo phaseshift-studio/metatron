@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.ai.llm.parser;
 import dev.langchain4j.model.chat.request.json.*;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -108,7 +109,7 @@ public final class JsonSchemaGenerator {
         else if (element instanceof JsonEnumSchema || element instanceof JsonReferenceSchema)
             return URI_TYPE;
         else if (element instanceof JsonArraySchema)
-            return Type.Builder.build().tid(Tokens.LST_TID).vid(Tokens.LST_TID)
+            return TypeBuilder.build().tid(Tokens.LST_TID).vid(Tokens.LST_TID)
                     .isaPredicate(lst(schemaToType(((JsonArraySchema) element).items())))
                     .create();
         else if (element instanceof JsonObjectSchema)
@@ -126,6 +127,6 @@ public final class JsonSchemaGenerator {
             final Obj key = required.contains(name) ? uri(name) : uri(name).maybe();
             fields.put(key, schemaToType(sub));
         });
-        return Type.Builder.build().tid(Tokens.REC_TID).vid(Tokens.REC_TID).isaPredicate(rec(fields)).create();
+        return TypeBuilder.build().tid(Tokens.REC_TID).vid(Tokens.REC_TID).isaPredicate(rec(fields)).create();
     }
 }

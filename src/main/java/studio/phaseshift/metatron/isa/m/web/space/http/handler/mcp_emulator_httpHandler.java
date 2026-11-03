@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.mcpEmulatorBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class mcp_emulator_httpHandler extends mcp_httpHandler {
 
     public static final fURI HTTP_MCP_EMULATOR_TID = WEB_ISA_TID.extend("mcp").extend("mcp_emulator_http");
 
-    public static final Type HTTP_MCP_EMULTATOR_TYPE = Type.Builder.build()
+    public static final Type HTTP_MCP_EMULTATOR_TYPE = TypeBuilder.build()
             .tid(HTTP_MCP_HANDLER_TID)
             .vid(HTTP_MCP_EMULATOR_TID)
             .isaPredicate(rec(

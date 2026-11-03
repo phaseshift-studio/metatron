@@ -1,0 +1,97 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{tikz-cd}
+\usepackage[margin=1in]{geometry}
+
+\title{The Geometry of Data Is the Program}
+\author{PhaseShift Studio}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A function's type is usually read as a constraint on its values. In a
+data-oriented machine it is something stronger: a description of the
+\emph{geometry} of the data being walked---and therefore of the control flow
+itself. Where the data branches, the code parallelizes; where it merges, the
+code synchronizes. The signature carries both.
+\end{abstract}
+
+\section{The coefficient is the geometry}
+
+Multiplicity lives in the type as a \emph{coefficient}: a $(min, max)$ pair on
+every type. Four shapes do the work:
+
+\begin{center}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+coefficient & meaning & form \\
+\midrule
+$\{0\}$ & nothing      & seed \\
+$\{?\}$ & zero or one  & maybe / filter \\
+$\{1\}$ & exactly one  & map \\
+$\{*\}$ & any number   & gather / scatter \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+An instruction is a morphism $f : A^{c_{\mathrm{dom}}} \to B^{c_{\mathrm{rng}}}$,
+and its \emph{form} is read off the coefficient pair:
+
+\begin{center}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+form    & signature        & what it is \\
+\midrule
+map     & $\{1\} \to \{1\}$ & one in, one out --- pointwise, freely parallel \\
+scatter & $\{1\} \to \{*\}$ & one in, many out --- a \emph{branch} \\
+reduce  & $\{*\} \to \{1\}$ & many in, one out --- a \emph{merge} \\
+seed    & $\{0\} \to A$     & from nothing \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{The tree walk is the schedule}
+
+Data lives at addresses, and addresses are paths in a tree. Descending a node
+with $N$ children \emph{splits} the traversal---the multiplicity grows to $N$.
+Ascending \emph{merges} it, and the coefficient is the bulk that carries the
+count back up. The two directions are the two fundamental operations:
+
+\begin{center}
+\begin{tikzcd}
+	& x \arrow[dl] \arrow[d] \arrow[dr] & \\
+	a & b & c
+\end{tikzcd}
+\qquad
+\begin{tikzcd}
+	a \arrow[dr] & b \arrow[d] & c \arrow[dl] \\
+	& y &
+\end{tikzcd}
+
+\small scatter $\{1\} \to \{*\}$ (left) and gather $\{*\} \to \{1\}$ (right)
+\end{center}
+
+Descending \emph{is} the fan-out; ascending \emph{is} the fan-in. The data
+structure hands the compiler its own shape: the branching factor becomes the
+coefficient, and the coefficient is the schedule.
+
+\section{Category theory, in one line}
+
+Scatter is a \emph{cocartesian fan-out} (one wire, many); gather is the
+\emph{limit} that reunifies them. The coefficient is a \emph{measure on the
+tree}---the multiplicity of the fiber over a point---and an instruction's form
+is how that measure changes across the morphism.
+
+\begin{quote}
+The compiler doesn't infer parallelism from control flow; it reads it off the
+data's geometry.
+\end{quote}
+
+Branch $\Rightarrow$ parallelize. Merge $\Rightarrow$ barrier. Coefficient
+$\Rightarrow$ signature. No annotations, no static control-flow analysis---the
+data carries the plan.
+
+\end{document}

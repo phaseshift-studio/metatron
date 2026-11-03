@@ -23,10 +23,8 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
-import studio.phaseshift.metatron.isa.m.web.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.m.web.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -65,7 +63,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
     public static final fURI OBJ_DOCKER_SERIALIZER_TID = DCKR_ISA_TID.extend("serializer/obj_docker");
 
     private static final ObjDockerSerializer INSTANCE = new ObjDockerSerializer();
-    private static final ObjJSONSerializer JSON = ObjJSONSerializer.literal();
+    private static final ObjJSONSerializer OBJ_JSON_SERIALIZER = ObjJSONSerializer.literal();
 
     private static final Pattern SIZE_PATTERN =
             Pattern.compile("^([\\d.]+)\\s*([KMGT]?B)$", Pattern.CASE_INSENSITIVE);
@@ -85,7 +83,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
     @Override
     public Obj read(final String jsonLine) {
         try {
-            return clean(JSON.inputBytes(jsonLine));
+            return clean(OBJ_JSON_SERIALIZER.inputBytes(jsonLine));
         } catch (final Exception e) {
             throw MTronException.of(e, "unable to parse docker json: %s", jsonLine);
         }
@@ -143,6 +141,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
             java.util.Set.of("tag", "repository", "id", "image", "names", "name", "status", "state", "command",
                     "mounts", "mount", "ports", "networks", "network", "created_since", "digest");
 
+    // TODO: this should go to ObjDockerSerializer
     private static Obj cleanString(final String s, final String field) {
         if (s.isEmpty() || "none".equalsIgnoreCase(s) || "N/A".equalsIgnoreCase(s))
             return noobj();
@@ -164,6 +163,8 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
         try {
             return mathInstSet.parseDatetime(s);
         } catch (final Exception e1) { /* continue */ }
+        if (s.contains(" ") || s.contains("\n"))
+            return str(s);
         // URI
         try {
             return uri(s);
@@ -218,6 +219,6 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) {
-        return new String(JSON.outputBytes(obj).array());
+        return new String(OBJ_JSON_SERIALIZER.outputBytes(obj).array());
     }
 }

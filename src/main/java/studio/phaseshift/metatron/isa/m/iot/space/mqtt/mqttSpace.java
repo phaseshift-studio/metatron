@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -82,7 +83,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     private static final long REDIAL_MIN_MS = 1_000;
     private static final long REDIAL_MAX_MS = 10_000;
     public static final Type MQTT_SPACE_TYPE =
-            Type.Builder.build()
+            TypeBuilder.build()
                     .tid(SPACE_TID)
                     .vid(MQTT_SPACE_TID)
                     .isaPredicate(rec(uri(HOST), URI_TYPE))

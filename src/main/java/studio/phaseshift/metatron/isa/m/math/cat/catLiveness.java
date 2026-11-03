@@ -160,7 +160,7 @@ public class catLiveness {
             final Resolver resolver = Machine.current().compiler().resolver();
             final Code resolved = lhs.isNoObj()
                     ? resolver.apply(lhs, code)
-                    : Resolver.Helper.resolveCode(lhs, code, resolver.selector(), resolver.binder());
+                    : Resolver.Helper.resolveCode(lhs, code, resolver);
             return resolved.insts().size() == code.insts().size() ? resolved.insts() : null;
         } catch (final Exception e) {
             return null;

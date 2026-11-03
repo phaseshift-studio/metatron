@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.db.tble;
 
-import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
-import studio.phaseshift.metatron.algebra.rewrite.DBRewriteBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.db.DBRewriteBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
@@ -64,7 +65,7 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI TBLE_ISA_REWRITE_TID = TBLE_ISA_INST_TID.extend("rewrite");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
 
-    public static final Type TABLE_TYPE = Type.Builder.build()
+    public static final Type TABLE_TYPE = TypeBuilder.build()
             .tid(URI_TID)
             .vid(TABLE_TID)
             .isaPredicate(T(REC_TID.maybeSome()))

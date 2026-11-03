@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AlgebraTool;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.isa.m.mInstSet.AlgebraTool;
 
 import java.util.List;
 

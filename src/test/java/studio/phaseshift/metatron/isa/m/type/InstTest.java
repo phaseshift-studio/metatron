@@ -578,7 +578,7 @@ public class InstTest extends AbstractObjTest {
 
     /**
      * THE FACET IS STAGED AND DRAINED — a builder declaration is answerable the moment the instruction is created
-     * (before any store write), and {@link InstBuilder#drain} persists it to {@code ?lawq} beside the other
+     * (before any store write), and {@link InstBuilder#drain} persists it to {@code ?decq} beside the other
      * declaration facets, so the durable record carries the form as well as the laws and relations. An instruction
      * that declares no form still derives its shape.
      */
@@ -595,8 +595,8 @@ public class InstTest extends AbstractObjTest {
         assertFalse(built.form().isFloatable());
         assertFalse(built.form().isBlocked());
         InstBuilder.drain(built);
-        final Obj declaration = QCollection.lawOf(built);
-        assertTrue(declaration.isRec(), "the drained declaration is a ?lawq rec, got " + declaration);
+        final Obj declaration = QCollection.decOf(built);
+        assertTrue(declaration.isRec(), "the drained declaration is a ?decq rec, got " + declaration);
         assertEquals("typer", declaration.asRec().atDirect(uri(Tokens.FORM)).uriValue().name(),
                 "the form is persisted beside the laws, got " + declaration);
         final Inst plain = InstBuilder.build()

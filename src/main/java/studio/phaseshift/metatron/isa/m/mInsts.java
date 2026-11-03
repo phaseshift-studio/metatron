@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -63,7 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Every entry states all four facets in ONE chain, documentation colocated with what it documents: the CONTRACT
  * ({@code tid(tid, desc)}, {@code dom(dom, desc)}, {@code rng(rng, desc)}, {@code argLst(type, desc)}, {@code seed}),
  * the IMPLEMENTATION ({@code body}), the DOCS ({@code ?docq}, written by the builder) and the process LAWS
- * ({@code ?lawq}, staged and persisted by the set's drain). A type's algebra is declared at the type
+ * ({@code ?decq}, staged and persisted by the set's drain). A type's algebra is declared at the type
  * ({@link mTypes}); this class declares what its OPERATIONS do.
  *
  * <p>THE MIGRATION RULE: an instruction moves here when its law-table row carried LAWS only — or, now that the
@@ -103,11 +104,20 @@ public final class mInsts {
                         .body((lhs, inst) -> lhs.asInt().neg())
                         .law(Law.involution, Law.pure)
                         .create(),
+                // NOT mult's inverse. Truncating division is not injective (7.div(2).mult(2) is 6, not 7), so no
+                // left inverse exists; the declared relation is PARTIAL (undefined at 0) and the honest law is
+                // `partial`, not `action` -- int models a mult_monoid, never a group.
                 InstBuilder.build().tid(DIV_INST_TID, "divide the lhs int by the argument int")
                         .dom(INT_TID, "the dividend int").rng(INT_TID, "the truncated quotient")
                         .argLst(INT_TYPE, "the divisor int")
-                        .body((lhs, inst) -> jnt(Double.valueOf(lhs.intValue().doubleValue() / inst.arg(0).intValue().doubleValue()).longValue(), lhs.tid(), lhs.vid()))
-                        .law(Law.action, Law.pure)
+                        .body((lhs, inst) -> {
+                            final long divisor = inst.arg(0).intValue();
+                            if (0L == divisor)
+                                return noobj();   // division by zero has no int answer: the claim is partial
+                            return jnt(lhs.intValue() / divisor, lhs.tid(), lhs.vid());
+                        })
+                        // DERIVATION SUSPENDED (bisect: catInstSetTest)
+                        .law(Law.partial, Law.pure)
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "raise the lhs int to the argument power")
                         .dom(INT_TID, "the base int").rng(INT_TID, "the power")
@@ -125,7 +135,7 @@ public final class mInsts {
                         .dom(INT_TID.maybeSome(), "a stream of int")
                         .rng(REAL_TID, "the mean of the lhs int stream").argLst()
                         .body((lhs, inst) -> real(lhs.stream().mapToLong(Obj::intValue).average().orElse(0L)))
-                        .examples("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
+                        .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(GT_INST_TID, "check whether the lhs int is greater than the argument int")
@@ -156,7 +166,7 @@ public final class mInsts {
                         .dom(INT_TID.maybeSome(), "zero or more ints").rng(INT_TID, "a single product reduced int")
                         .argLst().seed(jnt(1))
                         .body((lhs, inst) -> inst.seed().jvm(lhs.stream().map(l -> l.c().isOne() ? l.intValue() : Math.powExact(l.intValue(), l.c().max().intValue())).reduce(inst.seed().intValue(), (a, b) -> a * b)))
-                        .examples("{1,2,3,4}.prod() [-- 24 --]")
+                        .example("{1,2,3,4}.prod() [-- 24 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ORDER_INST_TID, "order the lhs int stream in ascending order")
@@ -168,18 +178,17 @@ public final class mInsts {
                         .dom(INT_TID.maybeSome(), "zero or more ints").rng(INT_TID, "a single plus reduced int")
                         .argLst().seed(jnt(0))
                         .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((studio.phaseshift.metatron.isa.m.type.Int) a).plus((studio.phaseshift.metatron.isa.m.type.Int) b)).intValue()))
-                        .examples("{1,2,3,4}.sum() [-- 10 --]")
+                        .example("{1,2,3,4}.sum() [-- 10 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
-                // MULT AND MINUS DECLARE THE TWO RELATIONS A ROW STILL CARRIED: mult's one-way retraction to div
-                // (int models a mult_monoid, not a group — 5.div(2).mult(2) is 4) and minus's defining equation
-                // (minus ≡ plus ∘ neg), which is what lets int's add_group derive the pair instead of declaring it
+                // MULT DECLARES NO INVERSE. int is a mult_monoid, not a group: 5.div(2).mult(2) is 4, so div is a
+                // one-way retraction at best and never the two-sided inverse `?decq inverse` would claim. MINUS
+                // keeps its defining equation (minus ≡ plus ∘ neg), which is what lets int's add_group derive it
                 InstBuilder.build().tid(MULT_INST_TID, "multiply the lhs int by the argument int")
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the multiplication")
                         .argLst(INT_TYPE, "the int to multiply the lhs by")
                         .body((lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue()))
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
-                        .inverse(DIV_INST_TID.dom(INT_TID).rng(INT_TID))
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "subtract the argument int from the lhs int")
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the subtraction")
@@ -199,6 +208,19 @@ public final class mInsts {
                         .body((lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
                         .law(Law.pure)
                         .inverse(AS_INST_TID.dom(STR_TID).rng(INT_TID))
+                        .create(),
+                InstBuilder.build().tid(PLUS_INST_TID, "add the argument int to the lhs int")
+                        .dom(INT_TID, "the lhs int")
+                        .rng(INT_TID, "the result of the addition")
+                        .argLst(INT_TYPE, "the int to add to the lhs")
+                        .body((lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue()))
+                        .example("1.plus(2)          [-- 3                    --]",
+                                "1+2                [-- 3 sugar'd form       --]",
+                                "1.plus(plus(1))    [-- 3 nested application --]",
+                                "1+(+1)             [-- 3 sugar nested form  --]")
+                        .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                        .form(Inst.Form.mapper)
+                        //.inverse(MINUS_INST_TID.dom(INT_TID).rng(INT_TID))
                         .create()
         ));
     }
@@ -284,7 +306,7 @@ public final class mInsts {
                         .dom(REAL_TID.maybeSome(), "a stream of reals").rng(REAL_TID, "the mean of the lhs real stream")
                         .argLst()
                         .body((lhs, inst) -> real(lhs.stream().mapToDouble(Obj::realValue).average().orElse(0.0)))
-                        .examples("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
+                        .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "a power function \\(f(x, n) \\nearrow x^n\\): the lhs real raised to the arg real")
@@ -439,9 +461,9 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "concatenate two str::T values together")
                         .dom(STR_TID, "a prefix str").rng(STR_TID, "the concatenated str")
-                        .argLst(T(STR_TID)).argDocs(Map.of(jnt(0), "a postfix str"))
+                        .argLst(T(STR_TID), "a postfix str")
                         .body((lhs, inst) -> lhs.jvm(lhs.strValue() + inst.arg(0).strValue()))
-                        .examples("\"a\" + \"b\" [-- \"ab\" --]")
+                        .example("\"a\" + \"b\" [-- \"ab\" --]")
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(SUM_INST_TID, "concatenate a str stream into a single str")
@@ -554,21 +576,21 @@ public final class mInsts {
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the branch union")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri()))
-                        .docDesc("a branch function \\(f(x, y) \\nearrow x \\sqcup y\\): the union of the lhs and rhs uri paths")
+                        .desc("a branch function \\(f(x, y) \\nearrow x \\sqcup y\\): the union of the lhs and rhs uri paths")
                         .law(Law.commutative, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "concatenate the path of the argument uri onto the path of the lhs uri")
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the path extension")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().mult(inst.arg(0).asUri()))
-                        .docDesc("a product function \\(f(x, y) \\nearrow xy\\): concatenates the rhs uri path onto the lhs uri path")
+                        .desc("a product function \\(f(x, y) \\nearrow xy\\): concatenates the rhs uri path onto the lhs uri path")
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ONE_INST_TID, "the one of the uri monoid")
                         .dom(URI_TID, "a uri").rng(URI_TID, "the uri one")
                         .argLst()
                         .body((lhs, inst) -> lhs.asUri().one())
-                        .docDesc("a one function: the uri one (<>)")
+                        .desc("a one function: the uri one (<>)")
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(SUM_INST_TID, "add a uri stream into a single uri")
@@ -695,16 +717,24 @@ public final class mInsts {
                         .body((lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed()))
                         .law(Law.involution, Law.pure)
                         .create(),
+               /* InstBuilder.build().tid(MAP_INST_TID, "apply arg to every element of lhs lst")
+                        .dom(LST_TID, "the lhs lst containing elements to map")
+                        .rng(LST_TID, "the lhs lst with mapped elements")
+                        .argLst(ALL_TYPE, "a lst element mapping to obj")
+                        .body((lhs, inst) -> lhs.jvm(lhs.lstValue().stream().map(e -> inst.arg(0).apply(e)).collect(CommonUtil.ListCollector.single())))
+                        .law(Law.pure)
+                        .form(Inst.Form.mapper)
+                        .create(), */
                 InstBuilder.build().tid(ZERO_INST_TID, "the zero of the lst monoid")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the empty lst")
                         .argLst()
-                        .body((lhs, inst) -> lhs.asLst().zero())
+                        .body((lhs, _) -> lhs.asLst().zero())
                         .law(Law.unit, Law.idempotent, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "append the slots of the argument lst onto the slots of the lhs lst")
                         .dom(LST_TID, "the lhs lst").rng(LST_TID, "the concatenated lst")
                         .argLst(LST_TYPE, "the lst to append")
-                        .body((lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).map(o -> ((Obj) o).clone().as()).toList()))
+                        .body((lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Obj>elements(), inst.arg(0).<Obj>elements()).map(o -> ((Obj) o).clone().<Obj>as()).collect(CommonUtil.ListCollector.single())))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "remove the slots of the argument lst from the lhs lst")
@@ -749,8 +779,9 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build().tid(HAS_INST_TID, "check whether any slot of the lhs lst tests true against an argument")
                         .dom(LST_TID, "the lst to check").rng(LST_TID.maybe(), "the lhs lst when a slot test holds")
-                        // no per-argument docs: the builder keys argDocs by the arg TYPE, and the second and
-                        // third args are both ALL.maybe() — a duplicate key, which Map.of rejects at build time
+                        // no per-argument docs: the docs are POSITIONAL, so documenting the second of two
+                        // ALL.maybe() slots would leave the first and third positions blank prose — the
+                        // three slots are named by the description instead
                         .argLst(T(ALL), T(ALL).maybe(), T(ALL).maybe())
                         .body((lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0)) || r.test(inst.arg(1)) || r.test(inst.arg(2))) ? lhs : noobj())
                         .law(Law.pure)
@@ -853,6 +884,14 @@ public final class mInsts {
                         .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
                         .law(Law.pure)
                         .create(),
+              /*  InstBuilder.build().tid(MAP_INST_TID, "apply arg to every rel of lhs lst. \\(\\mathsf{map} : \\big((k \\mapsto v) \\to (k' \\mapsto v')\\big) \\to \\mathrm{rec}(K,V) \\to \\mathrm{rec}(K',V')\\)")
+                        .dom(REC_TID, "the lhs rec containing rel fields to map")
+                        .rng(REC_TID, "the lhs rec with mapped rel fields")
+                        .argLst(ALL_TYPE, "a rel field mapping to rel")
+                        .body((lhs, inst) -> lhs.jvm(lhs.asRec().elements().map(e -> inst.arg(0).apply(e).asRel()).collect(CommonUtil.MapCollector.single())))
+                        .law(Law.pure)
+                        .form(Inst.Form.mapper)
+                        .create(),*/
                 InstBuilder.build().tid(AS_INST_TID, "convert an int into the rec the argument rec type constructs")
                         .dom(INT_TID, "the int to convert").rng(REC_TID, "the lhs int as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
@@ -890,7 +929,7 @@ public final class mInsts {
                             if (lhsRec.has(PORT))
                                 furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
                             if (lhsRec.has(PATH))
-                                furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
+                                furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).collect(Collectors.joining("/")));
                             if (lhsRec.has(COEFF))
                                 furi = furi.c(cInt.of(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString()));
                             if (lhsRec.has(QPROC))
@@ -1088,12 +1127,44 @@ public final class mInsts {
      */
     public static Set<Inst> objs_insts() {
         return new LinkedHashSet<>(List.of(
+                InstBuilder.build()
+                        .tid(ID_INST_TID)
+                        .dom(A, "the lhs obj to pass to the rhs")
+                        .rng(A, "an rhs obj is the lhs obj")
+                        .argLst()
+                        .desc("the obj identity function \\(f(x)\\to x\\)")
+                        .body((lhs, _) -> lhs)
+                        .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
+                        .create(),
+                InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
+                        .tid(SWAP_INST_TID)
+                        .dom(A, "the lhs to swap for the swap arg")
+                        .rng(A, "the result of applying the swap arg to the lhs")
+                        .argLst(T(B), "a obj to make the lhs")
+                        .desc("""
+                                takes the swap argument and makes it the lhs obj.
+                                if the argument is an inst, then the original lhs becomes the inst arg and the inst arg becomes the lhs.
+                                if an inst arg is wanted for the swap application, then it must be blocked (|) so as to delay its evaluation.""")
+                        // if an inst arg is double blocked, then the inst arg is treated as a value and applied to the original lhs obj.
+                        .example("abc.mult(xyz)             [-- abc/xyz --]")
+                        .example("abc.swap(|mult(xyz))      [-- xyz/abc --]")
+                        .example("|-<[_,_].swap(6)          [-- [6,6]   --]")
+                        // AN INVOLUTION ON CODE: swap(swap(c)) = c, so the operation is its own inverse (its `inverse`
+                        // is itself) and it is pure — a code value in, a code value out, nothing written.
+                        .law(Law.involution, Law.pure)
+                        .inverse(SWAP_INST_TID)
+                        .body((lhs, inst) -> {
+                            final boolean swapInstArg = inst.arg(0).isCall() && !inst.arg(0).asCall().insts().getFirst().tid().basePath().equals(BLOCK_INST_TID);
+                            final Obj newLHS = swapInstArg ? inst.arg(0).asCall().insts().getFirst().arg(0) : inst.arg(0);
+                            return swapInstArg ? inst.arg(0).asCall().insts().getFirst().args(lst(lhs)).apply(newLHS) : lhs.apply(newLHS);
+                        })
+                        .create(),
                 docWrap(InstBuilder.build()
                                 .tid(FROM_INST_TID)
                                 .dom(ALL.maybe())
                                 .rng(B.maybeSome())
                                 .args(lst(URI_TYPE)).body((lhs, inst) -> {
-                                    final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
+                                    final Obj readObj = Machine.read(inst.arg(0).isInt() ? f(inst.arg(0).intValue().intValue()) : inst.arg(0).uriValue());
                                     // A COMPONENT IS ITS LOCUS, so a dereference hands it back AS ITSELF. Types, machines
                                     // and SPACES are exempt from the detaching copy: everything else may be copied and
                                     // have its address stripped (a dereferenced value is a value, not a place), but a
@@ -1129,10 +1200,10 @@ public final class mInsts {
                         .law(Law.monoidic, Law.commutative, Law.pure)
                         // the profile_analysis rewrite does the work; bare profile() is a no-op
                         .body((lhs, inst) -> lhs)
-                        .docDesc("""
+                        .desc("""
                                 a profiling::T analysis of prior instruction in the code — 
                                 every monad the run produced up to the marker is aggregated into one compressed report (stages, per-instruction times, rewrite rules, flow, cache)""")
-                        .examples("*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
+                        .example("*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()",
                                 "*<http://markorodriguez.com>.as(rec::T)>>html/head/title.profile()>>format")
                         .create()));
     }

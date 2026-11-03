@@ -116,7 +116,7 @@ public final class PeerSpawn {
             }
             final fURI address = address(authority);
             declare(key, address);
-            LOG.warn("{{g}}spawned{{/g}} node {{b}}%s{{/b}} [pid=%d][log=%s]\n", key, pid, log.toAbsolutePath());
+            LOG.warn("{{g}}spawned{{/g}} node {{b}}%s{{/b}} [pid=%d][log=%s]", key, pid, log.toAbsolutePath());
             return address;
         } catch (final IOException | RuntimeException e) {
             // a half-spawned peer must leave nothing behind: no orphan process, and no roster entry claiming an
@@ -231,7 +231,7 @@ public final class PeerSpawn {
         command.add(String.valueOf(authority.port()));
         // the node's namespace is the LOCALIZED path — what the parent sends over the wire, not the parent's spelling
         command.add(authority.localize().toString());
-        LOG.warn("{{y}}forking{{/y}} node {{b}}%s{{/b}}\n", authority.origin());
+        LOG.warn("{{y}}forking{{/y}} node {{b}}%s{{/b}}", authority.origin());
         return new ProcessBuilder(command)
                 .directory(new File(System.getProperty("user.dir")))
                 .redirectErrorStream(true)
@@ -269,7 +269,7 @@ public final class PeerSpawn {
             Thread.currentThread().interrupt();
             process.destroyForcibly();
         }
-        LOG.warn("{{y}}reaped{{/y}} node %s [pid=%d]\n", key, process.pid());
+        LOG.warn("{{y}}reaped{{/y}} node %s [pid=%d]", key, process.pid());
     }
 
     private static String trace(final Path log) {

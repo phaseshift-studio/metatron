@@ -89,8 +89,13 @@ fsspace::[
         [=====================]
         [======== WEB ========]
         [=====================]
+mcp_server::[tool => [
+  write_event  => inst(event  => ?rec::T) { *event.to(/usr/dsh/event/_?incrq) },
+  write_events => inst(events => ?lst::T) { *events.>-.to(/usr/dsh/event/_?incrq) }
+]]@mcp_dsh_mirror;
 http_server::[origin   => !*<boot/args/external/web/http>,
-              route    => [/mcp       => mcp_mtron,
+              route    => [/dsh       => mcp_dsh_mirror,
+                           /mcp       => mcp_mtron,
                            /docker    => docker:,
                            /usr       => /usr,
                            /mfs       => mfs:,
@@ -104,12 +109,9 @@ mqtt_server::[origin => <mqtt://0.0.0.0:1883>];
   spawn a series of sibling jvms on current physical machine.
   make spawns ws_client::T peers.
 ==]
-harvest?ws_client{*}<=int{*}(){
-  id?int<=int().to(i).
+harvest?rec<=int{*}(){
   spawn?uri<=int(<//localhost:${_ + 1111}/${_}>,<//${_}>).
-    -<[host=>_].
-  as(ws_client::T).
-    -<[*i => >>host].sum() }@harvest;
+    -<[host=>_].as(ws_client::T).barrier()>>host.>-[,].as(rec::T)}@harvest;
         [=====================]
         [======= DOCKER ======]
         [=====================]

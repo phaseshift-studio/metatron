@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.db.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.*;
@@ -118,8 +119,8 @@ public class ExistingGraphSchema {
         // Build types from all discovered labels
         final List<Type> types = new ArrayList<>();
         // Default V and E meta-collections — always present (TinkerPop convention)
-        types.add(Type.Builder.build().tid(REC_TID).vid(f("V")).create());
-        types.add(Type.Builder.build().tid(REC_TID).vid(f("E")).create());
+        types.add(TypeBuilder.build().tid(REC_TID).vid(f("V")).create());
+        types.add(TypeBuilder.build().tid(REC_TID).vid(f("E")).create());
         for (final LabelMetadata meta : this.labelSchemas.values()) {
             final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
             for (final PropertyMetadata prop : meta.properties()) {
@@ -130,7 +131,7 @@ public class ExistingGraphSchema {
             if (fields.isEmpty()) continue;
             final fURI baseTid = meta.elementType() == ElementType.EDGE
                     ? REC_TID : REC_TID;
-            types.add(Type.Builder.build()
+            types.add(TypeBuilder.build()
                     .tid(baseTid)
                     .vid(this.space.schemaVID(meta.label()))
                     .isaPredicate(rec(fields))
@@ -291,7 +292,7 @@ public class ExistingGraphSchema {
                 : REC_TID;
 
         // vid = type name so resolveCollectionSchema(label) matches on t.vid().name()
-        final Type type = Type.Builder.build()
+        final Type type = TypeBuilder.build()
                 .tid(baseTid)           // super-type: rec::T
                 .vid(f(label))          // type name: "person", "knows", etc.
                 .isaPredicate(rec(fields))
@@ -308,8 +309,8 @@ public class ExistingGraphSchema {
             // type plus the default V and E meta-collections
             final fURI instSetVid = this.space.vid().extend(INSTSET);
             final fURI instSetPattern = instSetVid.extend(ALL);
-            final Type vType = Type.Builder.build().tid(REC_TID).vid(f("V")).create();
-            final Type eType = Type.Builder.build().tid(REC_TID).vid(f("E")).create();
+            final Type vType = TypeBuilder.build().tid(REC_TID).vid(f("V")).create();
+            final Type eType = TypeBuilder.build().tid(REC_TID).vid(f("E")).create();
             final InstSet instSet = new AbstractInstSet(
                     mutableMap(
                             uri(PATTERN), uri(instSetPattern),

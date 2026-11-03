@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.List;
 
@@ -165,7 +166,7 @@ public class LatticeReadTest extends AbstractInstSetTest {
     @Test
     public void resolutionMatchesAdmission() {
         // what nat::5.plus(1) resolves to must be among what *plus?<=nat admits
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(INT_TID)
                 .vid(NAT_TID)
                 .predicate(is_(gt_(jnt(0))).tryToInst())
