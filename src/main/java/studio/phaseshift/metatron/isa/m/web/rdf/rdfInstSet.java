@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -44,12 +45,12 @@ public class rdfInstSet extends AbstractInstSet {
     public static final fURI RDF_QUAD_TID = RDF_ISA_SPACE_TID.extend("quad");
     public static Type RDF_SPACE_TYPE;
 
-    public static final Type RDF_TRIPLE_TYPE = Type.Builder.build()
+    public static final Type RDF_TRIPLE_TYPE = TypeBuilder.build()
             .tid(Tokens.LST_TID)
             .vid(RDF_TRIPLE_TID)
             .isaPredicate(lst(URI_TYPE, URI_TYPE, URI_TYPE)).create();
 
-    public static final Type RDF_QUAD_TYPE = Type.Builder.build()
+    public static final Type RDF_QUAD_TYPE = TypeBuilder.build()
             .tid(RDF_TRIPLE_TID)
             .vid(RDF_QUAD_TID)
             .isaPredicate(lst(URI_TYPE, URI_TYPE, URI_TYPE, URI_TYPE)).create();
@@ -69,7 +70,7 @@ public class rdfInstSet extends AbstractInstSet {
                         docWrap(RDF_TRIPLE_TYPE, "an rdf triple as a subject, predicate, object"),
                         docWrap(RDF_QUAD_TYPE, "an rdf quad as a subject, predicate, object, graph"),
                         docWrap(RDF_SPACE_TYPE =
-                                Type.Builder.build()
+                                TypeBuilder.build()
                                         .tid(SPACE_TID)
                                         .vid(RDF_SPACE_TID)
                                         .isaPredicate(rec(

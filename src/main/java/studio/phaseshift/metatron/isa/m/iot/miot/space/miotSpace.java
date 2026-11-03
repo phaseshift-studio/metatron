@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class miotSpace extends mqttSpace {
 
     public static final fURI MIOT_SPACE_TID = MIOT_ISA_TID.extend("space").extend("miot");
-    public static final Type MIOT_SPACE_TYPE = Type.Builder.build()
+    public static final Type MIOT_SPACE_TYPE = TypeBuilder.build()
             .tid(MQTT_SPACE_TID)
             .vid(MIOT_SPACE_TID)
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MIOT_SPACE_TID),

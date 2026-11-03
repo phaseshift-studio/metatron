@@ -1,0 +1,922 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="index.html" title="metatron"><img src="images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m.html"><img
+                            src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dckr.html"><img
+                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dcmnt.html"><img
+                            src="images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_grph.html"><img
+                            src="images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_ide.html"><img
+                            src="images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_iot.html"><img
+                            src="images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_llm.html"><img
+                            src="images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach.html"><img
+                            src="images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach_ui.html"><img
+                            src="images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math.html"><img
+                            src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math_cat.html"><img
+                            src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_sys.html"><img
+                            src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_tble.html"><img
+                            src="images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_vec.html"><img
+                            src="images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_web.html"><img
+                            src="images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><h2 id="sec-rewrite-architecture" class="discrete">Rewrite Architecture</h2>
+<div class="legend-index">
+<ul>
+<li class="legend-lvl-3"><a href="#sec-core-classes" onclick="var t=document.getElementById('sec-core-classes');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Core Classes</a></li>
+<li class="legend-lvl-3"><a href="#sec-rewrite-lifecycle" onclick="var t=document.getElementById('sec-rewrite-lifecycle');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Rewrite Lifecycle</a></li>
+<li class="legend-lvl-3"><a href="#sec-language-specific-utilities" onclick="var t=document.getElementById('sec-language-specific-utilities');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Language-Specific Utilities</a></li>
+<li class="legend-lvl-3"><a href="#sec-where-rewrite-in-detail" onclick="var t=document.getElementById('sec-where-rewrite-in-detail');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Where Rewrite in Detail</a></li>
+<li class="legend-lvl-3"><a href="#sec-composition-rewrites" onclick="var t=document.getElementById('sec-composition-rewrites');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Composition Rewrites</a></li>
+<li class="legend-lvl-3"><a href="#sec-the-comparisonop-enum" onclick="var t=document.getElementById('sec-the-comparisonop-enum');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">The `ComparisonOp` Enum</a></li>
+<li class="legend-lvl-3"><a href="#sec-extending-with-a-new-backend" onclick="var t=document.getElementById('sec-extending-with-a-new-backend');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Extending with a New Backend</a></li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <strong>metatron</strong> rewrite system optimizes instruction chains before evaluation by replacing recognized patterns with native database operations.
+A query like <code>*table/+.where([age=&gt;?&gt;30]).count()</code> would naively load all rows, filter in memory, and count the survivors.
+The rewrite layer intercepts the instruction chain <code>from =&gt; where =&gt; count</code> and compiles it down to a single native operation that delegates the work to the underlying database.</p>
+</div>
+<h3 id="sec-core-classes" class="discrete">Core Classes</h3>
+<div class="paragraph">
+<p>The rewrite infrastructure lives in <code>studio.phaseshift.metatron.algebra.rewrite</code> and has five key pieces:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 71.4286%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>CommonRewrites</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Factory class providing <code>countRewrite()</code>, <code>sumRewrite()</code>, <code>whereRewrite()</code>, and <code>whereCountRewrite()</code> — each returns a compiled <code>Inst</code> that the instruction engine invokes at evaluation time.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>RewriteBuilder</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Fluent builder for assembling a rewrite: match pattern, result type, optimization function, and optional space-guard predicate. The base <code>forDatabase(Class)</code> constructor scopes the rewrite to a particular space type.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>RewriterBuilder</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Low-level search-and-replace engine. Given a match pattern (list of instruction TIDs), it walks the instruction list, identifies contiguous matches, and replaces them with the optimized output via a caller-supplied rewrite function.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>ConditionFormatter</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Interface each query language implements to format individual predicate conditions (equality, comparison, existence) into its native expression syntax.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>PredicateJoiner</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Functional interface for combining multiple conditions into a single filter expression (e.g., SQL&#8217;s <code>AND</code>, MongoDB&#8217;s <code>$and</code>).</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The flow is:
+<code>RewriteBuilder</code> assembles a match pattern (e.g. <code>FROM_INST_TID, WHERE_INST_TID</code>) and an optimization function.
+The result is an <code>Inst</code> whose <code>f()</code> rewrites the instruction chain at evaluation time via <code>Rewriter.search(code.insts()).match(&#8230;&#8203;).rewrite(&#8230;&#8203;)</code>.
+The rewrite function extracts the predicate from the where-instruction, translates it through <code>ConditionFormatter</code> and <code>PredicateJoiner</code>, and produces a single native instruction that replaces both matched instructions.</p>
+</div>
+<h3 id="sec-rewrite-lifecycle" class="discrete">Rewrite Lifecycle</h3>
+<div class="paragraph">
+<p>Before execution, <code>Code.resolve(lhs)</code> calls <code>Code.rewrite()</code> which runs all registered rewrites in a convergence loop — each rewrite&#8217;s <code>Inst.f()</code> is applied to the current instruction list, and the loop repeats until the hash stabilizes (no more rewrites fire).
+The rewritten code then goes through <code>InstResolver.resolveCode()</code> for type resolution, and finally the <code>Machine</code> monadic loop executes the resolved instructions.</p>
+</div>
+<h3 id="sec-language-specific-utilities" class="discrete">Language-Specific Utilities</h3>
+<div class="paragraph">
+<p>Each query language owns its condition formatting and predicate joining:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small">
+<colgroup>
+<col style="width: 27.2727%;">
+<col style="width: 36.3636%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>SQLRewriteUtils</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>ConditionFormatter</code>: <code>field = value</code>, <code>field op value</code>, <code>field IS NOT NULL</code>. Literal escaping: <code>'</code> → <code>''</code>.
+<code>PredicateJoiner</code>: <code>String.join(" AND ", conds)</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Used by <code>tbleInstSet</code> for SQL-based backends (SQLite, MariaDB, PostgreSQL).</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>GremlinRewriteUtils</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>ConditionFormatter</code>: same string format as SQL — the formatted string is re-parsed by <code>parseGremlinPredicate()</code> into field/op/value triples. <code>PredicateJoiner</code>: <code>conds =&gt; conds.get(0)</code> (single-condition only).</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Used by <code>grphInstSet</code> for TinkerGraph and JanusGraph spaces.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>MQLRewriteUtils</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>ConditionFormatter</code>: same string format as SQL — the formatted string is re-parsed by <code>parseMongoFilter()</code> into a BSON filter. <code>PredicateJoiner</code>: <code>String.join(" AND ", conds)</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Used by <code>dcmntInstSet</code> for MongoDB-backed document spaces.</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec-where-rewrite-in-detail" class="discrete">Where Rewrite in Detail</h3>
+<div class="paragraph">
+<p>The <code>whereRewrite()</code> path is the most involved.
+It replaces <code>from(furi).where(predicate)</code> with a single native filter instruction:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>WhereRewriteBuilder.match(FROM_INST_TID, WHERE_INST_TID)</code> — the <code>RewriterBuilder</code> scans for contiguous <code>from :: where</code> pairs.</p>
+</li>
+<li>
+<p>On match, the rewrite function extracts the predicate from the where-instruction&#8217;s argument.</p>
+</li>
+<li>
+<p><code>tryTranslatePredicate()</code> decomposes the predicate <code>Rec</code> into a list of individual conditions.
+Each condition is classified — equality for literal values, comparison for <code>gt/lt/gte/lte/neq/eq</code> instructions, existence for wildcard <code>_</code> — and formatted through the backend&#8217;s <code>ConditionFormatter</code>.</p>
+</li>
+<li>
+<p>The <code>PredicateJoiner</code> combines multiple conditions into the backend&#8217;s conjunction.</p>
+</li>
+<li>
+<p>An <code>instC</code> is returned with a function closure that calls the <code>WhereOperation</code> — the caller-supplied lambda that executes the native query.
+The closure includes a barrier-reapplication guard (<code>if (lhs.isObjs()) return lhs</code>) to prevent the SwarmMachine from re-executing the native query when processing the gather barrier.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// grphInstSet registers the rewrite:
+docWrap(CommonRewrites.whereRewrite(
+    grphSpace.class,
+    GRPH_REWRITE_TID.extend("gremlin_where"),
+    (space, dp, filterClause) -&gt; {
+        final P&lt;?&gt; pred = parseGremlinPredicate(filterClause);
+        final String field = extractPredicateField(filterClause);
+        return objs(stream(space.sjvm().V().has(field, pred))
+            .map(v -&gt; new VertexRec(v, space)));
+    },
+    GremlinRewriteUtils.PREDICATE_JOINER,
+    GremlinRewriteUtils.CONDITION_FORMATTER
+), ...);</code></pre>
+</div>
+</div>
+<h3 id="sec-composition-rewrites" class="discrete">Composition Rewrites</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Where-based rewrites compose. After <code>whereRewrite</code> replaces `from </dt>
+<dd>
+<p>where` with e.g. <code>gremlin_where</code>, subsequent rewrites can match on the output:</p>
+</dd>
+</dl>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 71.4286%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>whereCountRewrite()</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="dlist">
+<dl>
+<dt class="hdlist1">Matches `native_where </dt>
+<dd>
+<p>count`. Extracts the filter clause from the preceding native-where instruction and emits a new instruction that executes <code>SELECT COUNT(*) WHERE …</code> (SQL) or <code>countDocuments(filter)</code> (MQL).</p>
+</dd>
+</dl>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><code>whereLimitRewrite()</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="dlist">
+<dl>
+<dt class="hdlist1">Matches `native_where </dt>
+<dd>
+<p>take`. Extracts the filter clause and limit value, emits a native <code>LIMIT</code>-enhanced query.</p>
+</dd>
+</dl>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The composition pattern is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>from(V/+).where([age=&gt;?&gt;30]).count()
+  → gremlin_where(V/+, "age &gt; 30").count()       (whereRewrite)
+  → gremlin_where_count(V/+, "age &gt; 30")           (whereCountRewrite)</code></pre>
+</div>
+</div>
+<h3 id="sec-the-comparisonop-enum" class="discrete">The <code>ComparisonOp</code> Enum</h3>
+<div class="paragraph">
+<p>Predicate operators are represented by the <code>ComparisonOp</code> enum rather than raw strings:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public enum ComparisonOp {
+    EQ("="), GT("&gt;"), LT("&lt;"),
+    GTE("&gt;="), LTE("&lt;="), NEQ("&lt;&gt;"),
+    EXISTS(null);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>tryTranslatePredicate()</code> method inside <code>WhereRewriteBuilder</code> converts metatron instruction names (<code>gt</code>, <code>lt</code>, <code>gte</code>, <code>lte</code>, <code>neq</code>, <code>eq</code>) to <code>ComparisonOp</code> values.
+Each backend&#8217;s <code>ConditionFormatter.comparison()</code> receives the enum and can map it to native syntax — <code>&gt;</code> for SQL, <code>$gt</code> for MQL, etc.</p>
+</div>
+<h3 id="sec-extending-with-a-new-backend" class="discrete">Extending with a New Backend</h3>
+<div class="paragraph">
+<p>To add rewrite support for a new query language:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a <code>XXXRewriteUtils</code> class in the backend&#8217;s ISA package with <code>CONDITION_FORMATTER</code> and <code>PREDICATE_JOINER</code> instances.</p>
+</li>
+<li>
+<p>In the backend&#8217;s <code>InstSet.setup()</code>, register rewrites via <code>CommonRewrites.countRewrite()</code>, <code>.whereRewrite()</code>, <code>.whereCountRewrite()</code>, etc., passing the utils as arguments.</p>
+</li>
+<li>
+<p>Implement the <code>WhereOperation</code> (and optionally <code>WhereCountOperation</code>, <code>WhereLimitOperation</code>) lambdas that execute the native query.</p>
+</li>
+<li>
+<p>The infrastructure handles pattern matching, instruction replacement, predicate translation, and composition — the backend only provides formatting and execution.</p>
+</li>
+</ol>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

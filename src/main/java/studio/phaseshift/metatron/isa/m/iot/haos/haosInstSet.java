@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -102,7 +103,7 @@ public class haosInstSet extends AbstractInstSet {
             }});
 
 
-    public static final Type HAOS_ENTITY_TYPE = Type.Builder.build()
+    public static final Type HAOS_ENTITY_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(HAOS_ENTITY_TID)
             .isaPredicate(rec(
@@ -120,14 +121,14 @@ public class haosInstSet extends AbstractInstSet {
                     uri("last_changed").maybe(), STR_TYPE,
                     uri("device").maybe(), HAOS_DEVICE_CONFIG))
             .create();
-    public static final Type HAOS_SENSOR_TYPE = Type.Builder.build()
+    public static final Type HAOS_SENSOR_TYPE = TypeBuilder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SENSOR_TID)
             .isaPredicate(rec(
                     uri("device_class"), is_(or_(URI_TYPE, STR_TYPE)).tryToInst(),
                     uri("unit_of_measurement"), T(ALL),
                     uri("command_topic").maybe(), URI_TYPE)).create();
-    public static final Type HAOS_NUMBER_TYPE = Type.Builder.build()
+    public static final Type HAOS_NUMBER_TYPE = TypeBuilder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_NUMBER_TID)
             .isaPredicate(rec(
@@ -136,10 +137,10 @@ public class haosInstSet extends AbstractInstSet {
                     uri("enabled").maybe(), BOOL_TYPE,
                     uri("optimistic").maybe(), BOOL_TYPE,
                     uri("command_topic").maybe(), URI_TYPE)).create();
-    public static final Type HAOS_BUTTON_TYPE = Type.Builder.build()
+    public static final Type HAOS_BUTTON_TYPE = TypeBuilder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_BUTTON_TID).create();
-    public static final Type HAOS_SWITCH_TYPE = Type.Builder.build()
+    public static final Type HAOS_SWITCH_TYPE = TypeBuilder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SWITCH_TID)
             .isaPredicate(rec(
@@ -148,7 +149,7 @@ public class haosInstSet extends AbstractInstSet {
                     uri("enabled").maybe(), BOOL_TYPE,
                     uri("optimistic").maybe(), BOOL_TYPE,
                     uri("command_topic").maybe(), URI_TYPE)).create();
-    public static final Type HAOS_LIGHT_TYPE = Type.Builder.build()
+    public static final Type HAOS_LIGHT_TYPE = TypeBuilder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_LIGHT_TID)
             .isaPredicate(rec(

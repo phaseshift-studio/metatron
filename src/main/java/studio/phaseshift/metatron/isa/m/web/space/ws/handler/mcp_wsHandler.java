@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class mcp_wsHandler extends WebSocketRec {
     public static final fURI WS_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    public static final Type WS_MCP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type WS_MCP_HANDLER_TYPE = TypeBuilder.build()
             .tid(webInstSet.MCP_TID)
             .vid(WS_MCP_HANDLER_TID)
             .isaPredicate(rec(

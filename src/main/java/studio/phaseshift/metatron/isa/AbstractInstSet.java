@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
@@ -229,15 +231,15 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         if (jvm.containsKey(uri(QPROC))) {
             Obj qprocs = jvm.get(uri(QPROC));
             if (qprocs.isFail() || qprocs.isNoObj())
-                jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.lawQ()));
+                jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.decQ()));
             else {
                 if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.DOCQ_TID)))
                     qprocs.lstValue().add(QCollection.docQ());
-                if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.LAWQ_TID)))
-                    qprocs.lstValue().add(QCollection.lawQ());
+                if (qprocs.lstValue().stream().noneMatch(q -> q.tid().equals(QCollection.DECQ_TID)))
+                    qprocs.lstValue().add(QCollection.decQ());
             }
         } else {
-            jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.lawQ()));
+            jvm.put(uri(QPROC), lst(QCollection.docQ(), QCollection.decQ()));
         }
         return jvm;
     }
@@ -299,12 +301,20 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             }
         });
         Machine.current().memory().write(this.vid(), this);
-        // the space is mounted: persist any algebra its types declared in their builder (?lawq) AND record the
-        // instructions those types declared in THIS level's own `inst` list — the declaration list is what
-        // attributes a contract to the set that provided it, which its ADDRESS cannot (memory routes a
-        // cross-set declaration into another set's table).
-        this.types().forEach(type -> Type.Builder.drain(type, this));
-        this.insts().forEach(InstBuilder::drain);
+        // the space is mounted: publish the writes its types queued in their builder (the type itself, its algebra at
+        // ?decq, its documentation at ?docq) — a builder runs before any space exists, so the write is staged and
+        // replayed here — AND record the instructions those types declared in THIS level's own `inst` list: the
+        // declaration list is what attributes a contract to the set that provided it, which its ADDRESS cannot
+        // (memory routes a cross-set declaration into another set's table).
+        this.types().forEach(type -> TypeBuilder.drain(type, this));
+        // NO PER-INSTRUCTION DRAIN HERE. `drain(inst)` re-queues the claim its `create()` already staged AND
+        // publishes it immediately through QCollection -- a space write, per instruction, per mount. The queue
+        // below publishes the same claim once, from the prefix index; `drain(inst)` remains for a caller that
+        // must read `?decq` without a mount (the tests).
+        // THE SET'S OWN JURISDICTION IS ITS ADDRESS: publish every write still queued under it — a type, an
+        // instruction or a declaration staged at (or below) this level, including the ones no `types()`/`insts()`
+        // list names yet, since the queued write is what puts them in those lists.
+        PendingWrites.drainUnder(this.vid());
         // THE MOUNT-TIME POPULATION IS THE VERSION'S POINT. Setup fills the tables directly (so no write door above
         // sees it), migrates a pattern-less rule into the level that owns it, and drains the builders' algebra — all
         // of it landing in this level AFTER the level became a union member. The bump is last so one number covers

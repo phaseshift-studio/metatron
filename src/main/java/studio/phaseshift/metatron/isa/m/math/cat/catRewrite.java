@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.rewrite.*;
+import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;

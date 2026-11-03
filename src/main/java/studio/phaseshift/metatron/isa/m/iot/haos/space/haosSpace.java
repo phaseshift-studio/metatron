@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.Map;
 
@@ -80,7 +81,7 @@ public class haosSpace extends mqttSpace {
     }
 
     public static final fURI HAOS_SPACE_TID = HAOS_ISA_TID.extend("space").extend("haos");
-    public static final Type HAOS_SPACE_TYPE = Type.Builder.build()
+    public static final Type HAOS_SPACE_TYPE = TypeBuilder.build()
             .tid(MQTT_SPACE_TID)
             .vid(HAOS_SPACE_TID)
             .constructor(instC(M_ISA_INST_TID.dom(ALL).rng(HAOS_SPACE_TID),

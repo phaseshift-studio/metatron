@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 
@@ -118,7 +119,7 @@ public class mcpMessageServer {
      * mcp_wsHandler}).
      */
     public static Type server() {
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(MCP_SERVER_TID)
                 .vid(MCP_MESSAGE_SERVER_TID)
                 .isaPredicate(rec(

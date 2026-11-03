@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
 import studio.phaseshift.metatron.isa.m.web.webHelper;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -103,13 +104,13 @@ public final class httpServer extends Listener {
 
     private static final GraphittyLogger LOG = Graphitty.log(httpServer.class);
 
-    public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type HTTP_HANDLER_TYPE = TypeBuilder.build()
             .tid(HTTP_SOCKET_TID)
             .vid(HTTP_HANDLER_TID)
             .constructor(handler -> new HttpRec(handler.asRec().jvm(), handler.tid(), handler.vid()))
             .create();
 
-    public static final Type HTTP_SOCKET_TYPE = Type.Builder.build()
+    public static final Type HTTP_SOCKET_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(HTTP_SOCKET_TID)
             .isaPredicate(rec(
@@ -127,7 +128,7 @@ public final class httpServer extends Listener {
                     uri(ON_CLOSE).maybe(), T(ALL)))
             .create();
 
-    public static final Type HTTP_SERVER_TYPE = Type.Builder.build()
+    public static final Type HTTP_SERVER_TYPE = TypeBuilder.build()
             .tid(LISTENER_TID)
             .vid(HTTP_SERVER_TID)
             .isaPredicate(rec(

@@ -43,6 +43,7 @@ import studio.phaseshift.metatron.isa.m.db.tble.space.SQLSchemaInstSet;
 import studio.phaseshift.metatron.isa.m.db.tble.space.tbleIncrQ;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.sql.*;
 import java.util.*;
@@ -118,7 +119,7 @@ public class tbleSpace extends AbstractDataPathSpace<Connection> implements Sche
     public static fURI SQL_INST_TID = TBLE_ISA_INST_TID.extend(SQL);
     public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tblespace");
     public static final Type TBLE_SPACE_TYPE =
-            Type.Builder.build()
+            TypeBuilder.build()
                     .tid(SPACE_TID)
                     .vid(TBLE_SPACE_TID)
                     .isaPredicate(rec(

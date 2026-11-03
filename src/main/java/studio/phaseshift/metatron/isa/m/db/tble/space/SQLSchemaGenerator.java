@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.sql.Types;
 import java.util.*;
@@ -213,7 +214,7 @@ public class SQLSchemaGenerator {
         // Add wildcard entry so on-the-fly columns are accepted.
         final Map<Obj, Obj> fields = new LinkedHashMap<>(t.isPredicateObj().recValue());
         fields.put(T(Tokens.URI_TID.maybe()), ALL_TYPE);
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(t.tid())
                 .vid(t.vid())
                 .isaPredicate(rec(fields))
@@ -356,7 +357,7 @@ public class SQLSchemaGenerator {
 
         //fields.put(URI_TYPE.maybe(), ALL_TYPE);
 
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(resolveTableTid(tbl))
                 .vid(typeVid)
                 .isaPredicate(rec(fields))

@@ -56,12 +56,17 @@ public class AlgebraTest extends AbstractMetatronTest {
      * A type's law block: two theory instances, ring before group — the order the declaration was written in.
      */
     private static Rec laws() {
+        // A THEORY INSTANCE IS A WITNESS, NOT A VIEW: a ring states its operations (add/mul are inst::T) and a
+        // group states its inverse -- a rec that omits them is a fragment, and the theory type is right to refuse it.
         final Map<Obj, Obj> ring = new LinkedHashMap<>();
+        ring.put(uri(ADD), uri("plus"));
+        ring.put(uri(MUL), uri("mult"));
         ring.put(uri(ZERO), jnt(0));
         ring.put(uri(ONE), jnt(1));
         final Map<Obj, Obj> group = new LinkedHashMap<>();
         group.put(uri(OP), uri("plus"));
         group.put(uri(ID), jnt(0));
+        group.put(uri(INV), uri("neg"));
         final Map<Obj, Obj> block = new LinkedHashMap<>();
         block.put(uri("ring"), rec(ring, RING_THEORY_TID, null));
         block.put(uri("group"), rec(group, GROUP_THEORY_TID, null));
@@ -73,9 +78,11 @@ public class AlgebraTest extends AbstractMetatronTest {
      */
     private static Rec richerRing() {
         final Map<Obj, Obj> ring = new LinkedHashMap<>();
+        ring.put(uri(ADD), uri("plus"));
+        ring.put(uri(MUL), uri("mult"));
         ring.put(uri(ZERO), jnt(0));
         ring.put(uri(ONE), jnt(1));
-        ring.put(uri(MUL), uri("mult"));
+        ring.put(uri("neg"), uri("neg"));   // the extra role this extension adds
         return rec(ring, RING_THEORY_TID, null);
     }
 
@@ -131,9 +138,10 @@ public class AlgebraTest extends AbstractMetatronTest {
         final Rec richerRing = richerRing();
         final Algebra amended = original.with(f("ring"), richerRing);
         assertEquals(richerRing, amended.theory("ring"));
-        assertEquals(uri("mult"), amended.theory("ring").at(uri(MUL)));
+        // the extension adds a FIFTH role (neg); mul is part of every legitimate ring, so it cannot be the added one
+        assertEquals(uri("neg"), amended.theory("ring").at(uri("neg")));
         assertEquals(declaredRing, original.theory("ring"));
-        assertTrue(original.theory("ring").at(uri(MUL)).isNoObj());
+        assertTrue(original.theory("ring").at(uri("neg")).isNoObj());
 
         final Algebra extended = original.with(f("field"), rec(new LinkedHashMap<>()));
         assertTrue(extended.models(f("field")));

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Int;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.iot.iotInstSet.IOT_ISA_TID;
@@ -37,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface GPIO {
 
     fURI GPIO_TID = IOT_ISA_TID.extend("gpio");
-    Type GPIO_TYPE = Type.Builder.build()
+    Type GPIO_TYPE = TypeBuilder.build()
             .tid(Tokens.REC_TID)
             .vid(GPIO_TID)
             .isaPredicate(rec(URI_TYPE, INT_TYPE, INT_TYPE, INT_TYPE))

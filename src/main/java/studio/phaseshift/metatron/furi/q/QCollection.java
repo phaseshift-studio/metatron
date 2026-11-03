@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -73,7 +74,7 @@ public final class QCollection {
     //
     public static final fURI REFQ_PATTERN = f("refq");
     public static final fURI REFQ_TID = QPROC_TID.extend(REFQ_PATTERN);
-    public static final Type REFQ_TYPE = Type.Builder.build()
+    public static final Type REFQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(REFQ_TID)
             .constructor(QCollection::refQ)
@@ -81,7 +82,7 @@ public final class QCollection {
     //
     public static final fURI LINEQ_PATTERN = f("lineq");
     public static final fURI LINEQ_TID = QPROC_TID.extend(LINEQ_PATTERN);
-    public static final Type LINEQ_TYPE = Type.Builder.build()
+    public static final Type LINEQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(LINEQ_TID)
             .constructor(QCollection::lineQ)
@@ -89,7 +90,7 @@ public final class QCollection {
     //
     public static final fURI MIMEQ_PATTERN = f("mimeq");
     public static final fURI MIMEQ_TID = QPROC_TID.extend(MIMEQ_PATTERN);
-    public static final Type MIMEQ_TYPE = Type.Builder.build()
+    public static final Type MIMEQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(MIMEQ_TID)
             .constructor(QCollection::mimeQ)
@@ -97,7 +98,7 @@ public final class QCollection {
     //
     public static final fURI MINTQ_PATTERN = f("mintq");
     public static final fURI MINTQ_TID = QPROC_TID.extend(MINTQ_PATTERN);
-    public static final Type MINTQ_TYPE = Type.Builder.build()
+    public static final Type MINTQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(MINTQ_TID)
             .constructor(QCollection::mintQ)
@@ -105,7 +106,7 @@ public final class QCollection {
     //
     public static final fURI CONSTQ_PATTERN = f("constq");
     public static final fURI CONSTQ_TID = QPROC_TID.extend(CONSTQ_PATTERN);
-    public static final Type CONSTQ_TYPE = Type.Builder.build()
+    public static final Type CONSTQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(CONSTQ_TID)
             .constructor(QCollection::constQ)
@@ -113,7 +114,7 @@ public final class QCollection {
     //
     public static final fURI SHORTQ_PATTERN = f("shortq");
     public static final fURI SHORTQ_TID = QPROC_TID.extend(SHORTQ_PATTERN);
-    public static final Type SHORTQ_TYPE = Type.Builder.build()
+    public static final Type SHORTQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(SHORTQ_TID)
             .constructor(QCollection::shortQ)
@@ -121,7 +122,7 @@ public final class QCollection {
     //
     public static final fURI SAFEQ_PATTERN = f("safeq");
     public static final fURI SAFEQ_TID = QPROC_TID.extend(SAFEQ_PATTERN);
-    public static final Type SAFEQ_TYPE = Type.Builder.build()
+    public static final Type SAFEQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(SAFEQ_TID)
             .constructor(QCollection::safeQ)
@@ -130,7 +131,7 @@ public final class QCollection {
     public static final String INCRQ = "incrq";
     public static final fURI INCRQ_PATTERN = f(INCRQ);
     public static final fURI INCRQ_TID = QPROC_TID.extend(INCRQ_PATTERN);
-    public static final Type INCRQ_TYPE = Type.Builder.build()
+    public static final Type INCRQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(INCRQ_TID)
             .constructor(QCollection::incrQ)
@@ -139,7 +140,7 @@ public final class QCollection {
     public static final String EMBEDQ = "embedq";
     public static final fURI EMBEDQ_PATTERN = f(EMBEDQ);
     public static final fURI EMBEDQ_TID = QPROC_TID.extend(EMBEDQ_PATTERN);
-    public static final Type EMBEDQ_TYPE = Type.Builder.build()
+    public static final Type EMBEDQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(EMBEDQ_TID)
             .constructor(QCollection::embedQ)
@@ -152,14 +153,14 @@ public final class QCollection {
     // alongside 'desc' (how to use it) is an interface doc.  docQ().preRead branches on the
     // implementation status of the docq'd inst — unimplemented → build docs, implemented → use docs.
     public static final fURI DOC_BUILD = f("build");
-    public static final Type DOCQ_TYPE = Type.Builder.build()
+    public static final Type DOCQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(DOCQ_TID)
             .constructor(rec -> rec.isNoObj() || rec.asRec().isEmpty() ? QCollection.docQ() : QCollection.docQ(rec))
             .create();
     public static final fURI DOCS_TID = DOCQ_TID.extend("docs");
     public static final Type DOCS_TYPE =
-            Type.Builder.build()
+            TypeBuilder.build()
                     .tid(REC_TID)
                     .vid(DOCS_TID)
                     .isaPredicate(rec(
@@ -177,7 +178,7 @@ public final class QCollection {
     //
     public static final fURI TYPEQ_PATTERN = f("T");
     public static final fURI TYPEQ_TID = QPROC_TID.extend("typeq");
-    public static final Type TYPEQ_TYPE = Type.Builder.build()
+    public static final Type TYPEQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(TYPEQ_TID)
             .constructor(QCollection::typeQ)
@@ -192,51 +193,42 @@ public final class QCollection {
     public static final fURI LOCKQ_PATTERN = f("lockq");
     public static final fURI LOCKQ_TID = QPROC_TID.extend(LOCKQ_PATTERN);
     public static final fURI LOCKQ_LOCK_TID = LOCKQ_TID.extend("lock");
-    public static final Type LOCKQ_TYPE = Type.Builder.build()
+    public static final Type LOCKQ_TYPE = TypeBuilder.build()
             .tid(QPROC_TID)
             .vid(LOCKQ_TID)
             .constructor(QCollection::lockQ)
             .create();
     public static final Type LOCK_TYPE =
-            docWrap(Type.Builder.build()
+            TypeBuilder.build()
                             .tid(REC_TID)
-                            .vid(LOCKQ_LOCK_TID)
+                            .vid(LOCKQ_LOCK_TID, "an advisory lock over a region of space")
                             .isaPredicate(rec(
                                     uri(USR), URI_TYPE,
-                                    uri(EXPIRE).maybe(), DATETIME_TYPE))
-                            .create(), null, null, mutableMap(
+                                    uri(EXPIRE).maybe(), DATETIME_TYPE), mutableMap(
                             uri(USR), "the owner of the lock",
-                            uri(EXPIRE), "when the lock expires (a datetime::T) — no value means never"),
-                    "an advisory lock over a region of space",
-                    "cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]",
-                    "cs:src/.../Foo.java -> ...  [-- throws while a matching lock is held --]",
-                    "cs:src/#?lockq -> noobj    [-- releases the lock --]");
+                            uri(EXPIRE), "when the lock expires (a datetime::T) — no value means never"))
+                            .example("cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]", "cs:src/.../Foo.java -> ...  [-- throws while a matching lock is held --]", "cs:src/#?lockq -> noobj    [-- releases the lock --]")
+                            .create();
     public static final Type SUB_TYPE =
-            docWrap(Type.Builder.build()
+            TypeBuilder.build()
                             .tid(REC_TID)
-                            .vid(SUBQ_SUB_TID)
+                            .vid(SUBQ_SUB_TID, "subscribe to mutations over regions of space")
                             .isaPredicate(rec(
                                     uri(TARGET).maybe().asUri(), URI_TYPE,
-                                    uri(CODE), T(ALL.dom(LST_TID))))
-                            .create(), null, null, mutableMap(
+                                    uri(CODE), T(ALL.dom(LST_TID))), mutableMap(
                             uri(TARGET), "the pattern that will trigger the code callback (automatically added when new sub created)",
-                            uri(CODE), "the code to execute when target state changes"),
-                    "subscribe to mutations over regions of space",
-                    "abc?subq -> sub::[code=>print(>>1+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]",
-                    "abc -> 5                                [-- prints 6 to stdout                                             --]",
-                    "see pub::T");
+                            uri(CODE), "the code to execute when target state changes"))
+                            .example("abc?subq -> sub::[code=>print(>>1+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]", "abc -> 5                                [-- prints 6 to stdout                                             --]", "see pub::T")
+                            .create();
     public static final Type PUB_TYPE =
-            docWrap(Type.Builder.build()
+            TypeBuilder.build()
                             .tid(LST_TID)
-                            .vid(SUBQ_PUB_TID)
-                            .isaPredicate(lst(URI_TYPE, T(ALL_STAR)))
-                            .create(), null, null, mutableMap(
+                            .vid(SUBQ_PUB_TID, "publications are generated when there is a source<=>target match with subscriptions")
+                            .isaPredicate(lst(URI_TYPE, T(ALL_STAR)), mutableMap(
                             jnt(0), "the uri that triggered this publication",
-                            jnt(1), "the obj that triggered this publication"),
-                    "publications are generated when there is a source<=>target match with subscriptions",
-                    "abc?subq -> sub::[code=>>>1+1.println(_).to(abc)] [-- mutations to abc generate pub::T objs passed through sub::T code --]",
-                    "abc      -> 5                                       [-- triggers creation of pub::[abc,5]                      --]",
-                    "see sub::T");
+                            jnt(1), "the obj that triggered this publication"))
+                            .example("abc?subq -> sub::[code=>>>1+1.println(_).to(abc)] [-- mutations to abc generate pub::T objs passed through sub::T code --]", "abc      -> 5                                       [-- triggers creation of pub::[abc,5]                      --]", "see sub::T")
+                            .create();
 
     private QCollection() {
         // do nothing 
@@ -493,6 +485,13 @@ public final class QCollection {
         }
     }
 
+    /**
+     * THE READER HOOK FOR LAZY FACETS: a {@code ?docq}/{@code ?decq} is staged by its writer and published the
+     * first time a reader asks for it. It is installed by {@code PendingWrites} itself (the class that owns the
+     * log), so this package does not import that one and no class-initialisation cycle is created.
+     */
+    public static volatile java.util.function.Predicate<fURI> LAZY_PUBLISH = address -> false;
+
     public static QProc docQ() {
         return docQ(noobj());
     }
@@ -520,6 +519,19 @@ public final class QCollection {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
                         return Machine.read(vidBig);
+                    if (INST_DOCS.read(vidBig.removeQ(DOCQ)).isNoObj()
+                            && OBJ_DOCS.read(vidBig.removeQ(DOCQ)).isNoObj()) {
+                        LAZY_PUBLISH.test(vid);
+                        // A DOC IS ABOUT THE OPERATION: a builder queues it at the full tid (args in tid), while a
+                        // reader asks at the operation address -- ask for the operation's own doc as well.
+                        final fURI opAddr = Inst.Helper.operationTid(vidBig.removeQ(DOCQ)).addQ(DOCQ);
+                        if (INST_DOCS.read(opAddr.removeQ(DOCQ)).isNoObj()
+                                && OBJ_DOCS.read(opAddr.removeQ(DOCQ)).isNoObj())
+                            LAZY_PUBLISH.test(opAddr);
+                    }
+                    // PURE READS ONLY inside a q-proc: a value read of an inst/type address RESOLVES it, and doing
+                    // that on every doc miss perturbed type resolution for the rest of the VM. The builder writes
+                    // the doc at the bare address as well, so the lookup below finds it without a side effect.
                     final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
                             OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.Helper.readLocal(Machine.current(), vidBig.removeQ(DOCQ))))) :
@@ -547,66 +559,63 @@ public final class QCollection {
         return docq;
     }
 
-    // ===================== ?lawq — the algebra a type/inst DECLARES =====================
-    // The docq pattern, applied to algebra: the declaration is DATA, written beside the thing it describes
-    // (in the OWNING space's ?lawq region) and read back through that space's own q-proc. That is what makes
+    // ===================== ?decq — the DECLARATION a type/inst makes =====================
+    // The docq pattern, applied to a declaration: the declaration is DATA, written beside the thing it describes
+    // (in the OWNING space's ?decq region) and read back through that space's own q-proc. That is what makes
     // an algebra user-declarable and inspectable: nothing is held in a side table, and the declaring instset
     // need not be the one that analyzes it (the category lift merely READS).
 
-    /** the q name a law declaration is written under ({@code int::T?lawq}). */
-    public static final String LAWQ = "lawq";
-    public static final fURI LAWQ_PATTERN = f(LAWQ);
-    public static final fURI LAWQ_TID = QPROC_TID.extend(LAWQ_PATTERN);
+    /** the q name a declaration is written under ({@code int::T?decq}). */
+    public static final String DECQ = "decq";
+    public static final fURI DECQ_PATTERN = f(DECQ);
+    public static final fURI DECQ_TID = QPROC_TID.extend(DECQ_PATTERN);
     /** the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}). */
     public static final fURI LAWS = f("laws");
 
-    public static QProc lawQ() {
-        return lawQ(noobj());
+    public static QProc decQ() {
+        return decQ(noobj());
     }
 
     /**
-     * The {@code ?lawq} query processor — one unregistered sub-space holding {@code address => algebra rec},
-     * routed by {@label LAWQ} on write and read. Mirror of {@link #docQ()}: {@code preWrite} strips the q and
+     * The {@code ?decq} query processor — one unregistered sub-space holding {@code address => declaration rec},
+     * routed by {@label DECQ} on write and read. Mirror of {@link #docQ()}: {@code preWrite} strips the q and
      * stores the block under the plain address; {@code preRead} strips it again and answers the block.
      */
-    public static QProc lawQ(final Obj initialLaws) {
-        final memSpace laws = memSpace.unregistered(ALL, null);
-        final QProc lawq = QProc.Helper.build(LAWQ_TID, LAWQ_PATTERN)
-                .obj(f(OBJ), laws)
+    public static QProc decQ(final Obj initialDeclarations) {
+        final memSpace declarations = memSpace.unregistered(ALL, null);
+        final QProc decq = QProc.Helper.build(DECQ_TID, DECQ_PATTERN)
+                .obj(f(OBJ), declarations)
                 .preWrite((vid, obj) -> {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
                         return Machine.write(vidBig, obj);
-                    laws.write(vidBig.removeQ(LAWQ), obj);
+                    declarations.write(vidBig.removeQ(DECQ), obj);
                     return obj;
                 })
                 .preRead((vid) -> {
                     final fURI vidBig = vid.big();
-                    return vidBig.equals(vid) ? laws.read(vidBig.removeQ(LAWQ)) : Machine.read(vidBig);
+                    if (!vidBig.equals(vid))
+                        return Machine.read(vidBig);
+                    final Obj staged = declarations.read(vidBig.removeQ(DECQ));
+                    // LAZY PUBLICATION: the writer staged the declaration; this read is the first to ask for it
+                    if (staged.isNoObj() && LAZY_PUBLISH.test(vid))
+                        return declarations.read(vidBig.removeQ(DECQ));
+                    return staged;
                 })
                 .create();
-        if (!initialLaws.isNoObj())
-            initialLaws.asRec().elements().forEach(kv ->
-                    lawq.onWrite().get().preWrite(kv.first().uriValue().big().addQ(LAWQ), kv.second()));
-        return lawq;
+        if (!initialDeclarations.isNoObj())
+            initialDeclarations.asRec().elements().forEach(kv ->
+                    decq.onWrite().get().preWrite(kv.first().uriValue().big().addQ(DECQ), kv.second()));
+        return decq;
     }
 
     /**
-     * DECLARE the algebra of a type or inst, in the owning space's {@code ?lawq} region — the docq pattern:
-     * {@code lawWrap(INT_TYPE, rec(uri("ring"), rec(...)))} stores the block beside {@code int::T} and
-     * {@code *int::T?lawq} reads it back, whether or not the category is mounted.
-     * <p>
-     * Soft-fails, like {@link #docWrap}: an id with no owning space (a type built during an ISA's own setup,
-     * before its instset is mounted) stores nothing and returns the obj — so the declaration must be written
-     * again once the set is mounted, which is what the builder's setup does.
-     */
-    /**
-     * READ the algebra declared beside a type or inst — the reader half of {@link #lawWrap}: the owning space's
-     * {@code ?lawq} region, looked up by the obj's own id. {@code noobj} when nothing was declared, which is what
+     * READ the declaration written beside a type or inst — the reader half of {@link #decWrap}: the owning space's
+     * {@code ?decq} region, looked up by the obj's own id. {@code noobj} when nothing was declared, which is what
      * lets a caller fall back to its in-code declaration.
      */
-    public static Obj lawOf(final Obj obj) {
-        return lawOf(lawId(obj));
+    public static Obj decOf(final Obj obj) {
+        return decOf(decId(obj));
     }
 
     /**
@@ -615,46 +624,65 @@ public final class QCollection {
      * instruction happened to be minted with, so a reader and a writer cannot disagree merely because one was minted
      * with {@code MInst.ARGS_IN_TID} on.
      */
-    private static fURI lawId(final Obj obj) {
-        return obj.isInst() ? lawId(obj.tid()) : obj.vid();
+    private static fURI decId(final Obj obj) {
+        return obj.isInst() ? decId(obj.tid()) : obj.vid();
     }
 
-    private static fURI lawId(final fURI id) {
+    private static fURI decId(final fURI id) {
         return null == id || !id.hasQ(ARGS) ? id : id.removeQ(ARGS);
     }
 
     /**
-     * {@link #lawOf(Obj)} by address — what a law lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
+     * {@link #decOf(Obj)} by address — what a declaration lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
      */
-    public static Obj lawOf(final fURI objIDUnstripped) {
-        final fURI objID = lawId(objIDUnstripped);
+    public static Obj decOf(final fURI objIDUnstripped) {
+        final fURI objID = decId(objIDUnstripped);
         if (null == objID)
             return noobj();
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
                 Machine.current().memory().getSpaceFor(objID) : null;
         if (null == objSpace)
             return noobj();
-        return objSpace.qs().jvm().stream()
-                .filter(q -> q.tid().basePath().equals(LAWQ_TID))
+        final Obj read = objSpace.qs().jvm().stream()
+                .filter(q -> q.tid().basePath().equals(DECQ_TID))
                 .map(Obj::<QProc>as)
                 .findAny()
-                .map(lawq -> lawq.at(f(OBJ)).<Space>as().read(objID))
+                .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
                 .orElse(noobj());
+        // LAZY: the declaration is staged by its writer and published by the first reader that asks. This door
+        // reads the q-proc's own space directly, so it must make the same ask the q-proc's preRead does.
+        if (read.isNoObj() && LAZY_PUBLISH.test(objID.addQ(DECQ)))
+            return objSpace.qs().jvm().stream()
+                    .filter(q -> q.tid().basePath().equals(DECQ_TID))
+                    .map(Obj::<QProc>as)
+                    .findAny()
+                    .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
+                    .orElse(noobj());
+        return read;
     }
 
-    public static <OBJ extends Obj> OBJ lawWrap(final OBJ obj, final Rec law) {
-        final fURI objID = lawId(obj);
-        if (null == objID || null == law)
+    /**
+     * DECLARE a type's algebra, or an instruction's claim, in the owning space's {@code ?decq} region — the docq
+     * pattern: {@code decWrap(INT_TYPE, rec(uri("ring"), rec(...)))} stores the block beside {@code int::T} and
+     * {@code *int::T?decq} reads it back, whether or not the category is mounted.
+     * <p>
+     * Soft-fails, like {@link #docWrap}: an id with no owning space (a type built during an ISA's own setup,
+     * before its instset is mounted) stores nothing and returns the obj — so the declaration must be written
+     * again once the set is mounted, which is what the builder's setup does.
+     */
+    public static <OBJ extends Obj> OBJ decWrap(final OBJ obj, final Rec declaration) {
+        final fURI objID = decId(obj);
+        if (null == objID || null == declaration)
             return obj;
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
                 Machine.current().memory().getSpaceFor(objID) : null;
         if (null == objSpace)
             return obj;
         objSpace.qs().jvm().stream()
-                .filter(q -> q.tid().basePath().equals(LAWQ_TID))
+                .filter(q -> q.tid().basePath().equals(DECQ_TID))
                 .map(Obj::<QProc>as)
                 .findAny()
-                .ifPresent(lawq -> lawq.at(f(OBJ)).<Space>as().write(objID, law));
+                .ifPresent(decq -> decq.at(f(OBJ)).<Space>as().write(objID, declaration));
         return obj;
     }
 

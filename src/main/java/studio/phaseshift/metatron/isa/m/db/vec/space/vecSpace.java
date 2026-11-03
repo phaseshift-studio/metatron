@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -83,7 +84,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
 
     public static final fURI VEC_SPACE_TID = VEC_ISA_TID.extend(SPACE).extend("vecspace");
 
-    public static final Type VCTR_SPACE_TYPE = Type.Builder.build()
+    public static final Type VCTR_SPACE_TYPE = TypeBuilder.build()
             .tid(SPACE_TID)
             .vid(VEC_SPACE_TID)
             .isaPredicate(rec(
@@ -154,7 +155,7 @@ public class vecSpace extends AbstractSpace<VectorDBClient> implements SchemaSpa
     }
 
     private static Type collectionType(final String name, final fURI schemaVid) {
-        return Type.Builder.build()
+        return TypeBuilder.build()
                 .tid(REC_TID)
                 .vid(schemaVid.extend(name))
                 .isaPredicate(rec(

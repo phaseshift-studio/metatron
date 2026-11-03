@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.Set;
 
@@ -48,7 +49,7 @@ public final class Device {
     }
 
     public static void installTypes(final Set<Type> types, final Set<Inst> insts) {
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(REC_TID)
                 .vid(MIOT_DEVICE_TID)
                 .isaPredicate(rec(uri("status"), is_(or_(eq_(uri(ONLINE)), eq_(uri(OFFLINE)))).tryToInst()))

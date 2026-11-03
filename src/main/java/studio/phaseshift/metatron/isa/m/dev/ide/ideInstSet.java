@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.dev.ide.parser.ObjJavaIDESerializer;
 import studio.phaseshift.metatron.isa.m.dev.ide.type.Project;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.Map;
 
@@ -86,7 +87,7 @@ public class ideInstSet extends AbstractInstSet {
 
     // ── Types ────────────────────────────────────────────────────────
 
-    public static final Type IDE_RESULT_TYPE = Type.Builder.build()
+    public static final Type IDE_RESULT_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(IDE_RESULT_TID)
             .isaPredicate(rec(
@@ -98,7 +99,7 @@ public class ideInstSet extends AbstractInstSet {
                     uri(ERROR).maybe(), lst(T(FAIL_TID.maybe())).maybe()))
             .create();
 
-    public static final Type IDE_PROJECT_TYPE = Type.Builder.build()
+    public static final Type IDE_PROJECT_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(IDE_PROJECT_TID)
             .isaPredicate(rec(
@@ -109,7 +110,7 @@ public class ideInstSet extends AbstractInstSet {
                     uri(CODE).maybe().asUri(), T(ALL)))// a !* ref to the source tree
             .create();
 
-    public static final Type IDE_JAVA_TYPE = Type.Builder.build()
+    public static final Type IDE_JAVA_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(IDE_JAVA_TID)
             // top-level coarse-schema verification — classes is a rec of named slots,
@@ -132,7 +133,7 @@ public class ideInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(TYPE), lst(
-                        OBJ_IDE_JAVA_SERIALIZER_TYPE = Type.Builder.build()
+                        OBJ_IDE_JAVA_SERIALIZER_TYPE = TypeBuilder.build()
                                 .tid(OBJ_SERIALIZER_TID)
                                 .vid(OBJ_IDE_JAVA_SERIALIZER_TID)
                                 .constructor(arg -> ObjJavaIDESerializer.single())

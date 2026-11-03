@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -259,13 +260,34 @@ public class geoInstSet extends AbstractInstSet {
         coordinates.put(BBOX2D_TID, BBOX2D_TYPE);
         coordinates.put(BBOX3D_TID, BBOX3D_TYPE);
         /////////////////////////////////////////////////////////////////
+        // the BASE door: a document read as "whatever geometry it is" — the one spelling that does not name a kind
+        for (final fURI dom : java.util.List.of(STR_TID, WEB_JSON_TID, REC_TID))
+            insts.add(docWrap(instC(AS_INST_TID.dom(dom).rng(GEOMETRY_TID), lst(T(GEOMETRY_TID)),
+                            (lhs, inst) -> castAsKind(lhs)),
+                    dom.equals(STR_TID) ? "the GeoJSON or Well-Known Text document" : "the document value",
+                    "the geometry it declares, stamped with that kind's type",
+                    Map.of(GEOMETRY_TYPE, "the family, read as whichever kind the document declares"),
+                    "read a document as the geometry it says it is — the door for a caller who does not know the kind",
+                    "json::\"\"\"{\"type\":\"Polygon\",\"coordinates\":[…]}\"\"\".as(geometry::T)"));
         coordinates.forEach((tid, type) -> insts.add(docWrap(
                 instC(AS_INST_TID.dom(LST_TID).rng(tid), lst(ALL_TYPE),
                         (lhs, inst) -> cast(lhs, inst.arg(0).vidOrTid())),
-                "a list of numbers", "the coordinate value retyped onto " + tid.name(), Map.of(type, "the target type"),
-                "normalize an integer-valued coordinate list onto " + tid.name(),
-                "[-123,44].as(%s::T)".formatted(tid.name()))));
+                "a list of numbers", "the coordinate value read as " + tid.name(), Map.of(type, "the target type"),
+                "read a coordinate list as " + tid.name() + " — integer coordinates become reals, so the value is normalized onto the type rather than merely retyped",
+                lstExample(tid))));
         return insts;
+    }
+
+    /** a coordinate list of THIS kind's shape — a two-real list is a point, not a box */
+    private static String lstExample(final fURI tid) {
+        return switch (tid.name()) {
+            case "point" -> "[-123,44].as(point::T)";
+            case "line" -> "[[-123,44],[-122,45]].as(line::T)";
+            case "polygon" -> "[[[-123,44],[-122,45],[-123,45],[-123,44]]].as(polygon::T)";
+            case "bbox2d" -> "[-123,44,-122,45].as(bbox2d::T)";
+            case "bbox3d" -> "[-123,44,0,-122,45,1300].as(bbox3d::T)";
+            default -> "[-123,44].as(" + tid.name() + "::T)";
+        };
     }
 
     /**
@@ -304,8 +326,67 @@ public class geoInstSet extends AbstractInstSet {
         // business, so the cast is inapplicable rather than failed.
         if (lhs.isType() || lhs.isCode() || lhs.isInst() || lhs.isRel())
             return noobj();
+        // A FEATURE DOCUMENT IS READ AS ITS GEOMETRY: parse a text door once and unwrap, and do the same for a rec
+        // that holds one (a parsed Feature keeps the geometry at a `geo:` fiber; a document read the generic way
+        // keeps it at a plain `geometry` key). The properties around it are not this row's concern.
+        if (lhs.isStr()) {
+            final Obj geometry = unwrapDocument(ObjGeoJSONSerializer.single().parse(lhs.strValue()));
+            if (!geometry.isNoObj() && !geometry.isStr())
+                return cast(geometry, tid);
+        }
+        final Obj unwrapped = unwrapDocument(lhs);
+        if (!unwrapped.equals(lhs))
+            return cast(unwrapped, tid);
+        // A SHAPE REDUCTION NEXT: the target type's own constructor knows the constructive casts — a line to its
+        // bbox, a plane to its centroid, a 3d box to the 2d one — and answering them here keeps them off the wire
+        // (a bbox has no document form, so the wire path cannot serve it).
+        final Obj reduced = T(tid).constructor().apply(lhs);
+        if (!reduced.isNoObj() && !reduced.isFail())
+            return reduced;
+        // else the wire path: it normalizes an integer coordinate list and reads text and documents
         final Obj value = ObjGeoJSONSerializer.single().readAs(lhs, tid);
         return value.isNoObj() ? fail(MTronException.of("%s is not a %s", lhs, tid.name())) : value;
+    }
+
+    /**
+     * THE BASE DOOR: read a document as whatever geometry it says it is. A GeoJSON document carries its kind in a
+     * {@code type} key; a Feature carries a whole geometry, which is unwrapped first. The answer is a value stamped
+     * with the kind's type — the same value {@code as(<kind>::T)} would have built — so a caller who does not know the
+     * kind in advance can still read the document into the family.
+     */
+    static Obj castAsKind(final Obj lhs) {
+        if (lhs.isType() || lhs.isCode() || lhs.isInst() || lhs.isRel())
+            return noobj();
+        final Obj document = lhs.isStr() ? ObjGeoJSONSerializer.single().parse(lhs.strValue()) : lhs;
+        final Obj geometry = unwrapDocument(document);
+        // already a stamped kind (the document was read, or the lhs is a geo value): it is the answer
+        if (null != GeoUtil.tagOf(geometry))
+            return geometry;
+        // an unstamped document: its `type` key says which kind it is. The web reader BIASES toward uri (a JSON
+        // string with no spaces becomes a uri), so the tag arrives as either a str or a uri — both name the kind
+        final Obj type = geometry.isRec() ? geometry.asRec().at(uri(TYPE)) : noobj();
+        final String tag = type.isStr() ? type.strValue() : type.isUri() ? type.uriValue().name() : null;
+        final fURI tid = null == tag ? null : switch (tag) {
+            case "Point" -> POINT_TID;
+            case "LineString" -> LINE_TID;
+            case "Polygon" -> POLYGON_TID;
+            default -> null;
+        };
+        return null == tid ? fail(MTronException.of("%s does not say which geometry kind it is", lhs))
+                : cast(geometry, tid);
+    }
+
+    /** the geometry a document-shaped value holds: a {@code geo:} fiber, or a plain {@code geometry} field */
+    private static Obj unwrapDocument(final Obj obj) {
+        if (!obj.isRec())
+            return obj;
+        // a geometry is a LIST in this model, so the unwrap must not insist on a rec: any value at the fiber or the
+        // `geometry` key is the document's geometry
+        final Obj fiber = GeoUtil.payload(obj);
+        if (!fiber.isNoObj() && !fiber.equals(obj))
+            return fiber;
+        final Obj geometry = obj.asRec().at(uri(GEOMETRY));
+        return geometry.isNoObj() ? obj : geometry;
     }
 
     /**

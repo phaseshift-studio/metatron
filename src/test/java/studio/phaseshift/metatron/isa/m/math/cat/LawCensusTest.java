@@ -23,9 +23,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AlgebraTool;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet.AlgebraTool;
 import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -36,7 +36,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
+import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.mTypes.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
@@ -67,7 +67,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       path, or one the lift admits. This is the assertion that catches code's {@code neg}/{@code end}/{@code id},
  *       bool's {@code zero}/{@code one} and an {@code order?int} that lost its registration;</li>
  *   <li><b>every declared law matches its instruction's contract</b> — an instruction that declares a process law
- *       in {@code ?lawq} (or through its served law-table row) must be the KIND of thing the law is about:
+ *       in {@code ?decq} (or through its served law-table row) must be the KIND of thing the law is about:
  *       {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's own dom/rng and,
  *       only when the signature carries {@code args}, its arity. A law about a binary relation declared on an endo
  *       op is a category error, and the census names it as one — it never silently stops applying.</li>
@@ -269,7 +269,7 @@ public class LawCensusTest extends AbstractMetatronTest {
 
     /**
      * ASSERTION 4 — EVERY DECLARED LAW IS ABOUT ITS INSTRUCTION'S CONTRACT. An instruction's declared process laws
-     * ({@code ?lawq}, plus the served law-table row) are claims about the KIND of operation it is, so every one of
+     * ({@code ?decq}, plus the served law-table row) are claims about the KIND of operation it is, so every one of
      * them must pass the same signature match the analyzer applies before it renders an equation:
      * {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's {@code dom}/{@code rng}
      * — one poly variable {@code A}, so every occurrence must land on the same carrier — and its arity, but ONLY
@@ -305,7 +305,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         LOG.warn("law census: %d declared law(s) checked, %d exempted by the ALLOWLIST", checked, exempt.size());
         LOG.warn("law census: declared laws exempted (issue named in the ALLOWLIST): %s", exempt);
         assertTrue(0 < checked,
-                "the census found no declared law at all: ?lawq and the law tables answered nothing, "
+                "the census found no declared law at all: ?decq and the law tables answered nothing, "
                         + "so the assertion would be vacuous");
         assertTrue(mismatched.isEmpty(), () -> """
                 instructions whose declared law is about a different shape than their contract:
@@ -316,7 +316,7 @@ public class LawCensusTest extends AbstractMetatronTest {
      * THE MEMO DECISION IS MADE FROM WHAT THE READ OBSERVED. {@link LawTable#memoizable(Rec, boolean)} is a pure
      * function of the block a law read produced and whether the type's own space answered it, so the rule is pinned
      * here rather than through a boot/close integration test (which would have to tear the shared VM down inside a
-     * test method). A non-empty block is always safe to memoize. An empty one is safe only when a {@code ?lawq} rec
+     * test method). A non-empty block is always safe to memoize. An empty one is safe only when a {@code ?decq} rec
      * actually came back; a BLIND read — the owning space was not reachable, or held no declaration yet — must
      * answer its caller and never enter the table, because the tables are static singletons that outlive every
      * boot, and memoizing it would answer "this type declares no algebra" for the rest of the JVM's life. Each row:
@@ -349,13 +349,13 @@ public class LawCensusTest extends AbstractMetatronTest {
 
     /**
      * The type's declared algebra — the same read {@link AlgebraTool} makes: the law table's served
-     * {@code ?lawq} declaration first, the direct declaration when no table answers for the type.
+     * {@code ?decq} declaration first, the direct declaration when no table answers for the type.
      */
     private static Rec algebra(final Type type) {
         final Rec declared = LawTable.typeLawsOf(type);
         if (!declared.jvm().isEmpty())
             return declared;
-        final Obj declaration = lawOf(type);
+        final Obj declaration = decOf(type);
         return declaration.isRec() ? declaration.asRec() : rec0();
     }
 
@@ -417,16 +417,16 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE LAWS AN INSTRUCTION DECLARES — its {@code ?lawq} rec (where {@code InstBuilder.drain} persists the claims
+     * THE LAWS AN INSTRUCTION DECLARES — its {@code ?decq} rec (where {@code InstBuilder.drain} persists the claims
      * an instruction makes about itself) and the law-table row the table serves for it, unioned in declaration order
-     * and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: a row and a {@code ?lawq} rec may
+     * and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: a row and a {@code ?decq} rec may
      * state the same law, and the census must report each claim once.
      */
     private static List<Law> declaredLaws(final Inst inst) {
         final List<Law> laws = new ArrayList<>();
-        final Obj fromLawq = lawOf(inst.tid());
-        if (fromLawq.isRec())
-            addLaws(laws, fromLawq.asRec().atDirect(uri(LAW)));
+        final Obj fromDecq = decOf(inst.tid());
+        if (fromDecq.isRec())
+            addLaws(laws, fromDecq.asRec().atDirect(uri(LAW)));
         final LawTable.Entry served = LawTable.lawsOf(inst.tid());
         if (null != served)
             addLaws(laws, served.laws());
@@ -434,10 +434,20 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * Add the law names a declared {@code law => [..]} lst holds, ignoring names outside the vocabulary.
+     * Add the law names a declared {@code law => [..]} lst holds, ignoring names outside the vocabulary. A slot that
+     * names the LAW TYPE's address ({@code uri(LAW_TID)}, the {@code law::T} form) means "any law" and expands to the
+     * whole vocabulary, so a type-valued slot can never silently disable the census.
      */
     private static void addLaws(final List<Law> laws, final Obj declared) {
-        if (null == declared || !declared.isLst())
+        if (null == declared || declared.isNoObj())
+            return;
+        if (declared.isUri() && Law.LAW_TID.equals(declared.uriValue())) {
+            for (final Law law : Law.values())
+                if (!laws.contains(law))
+                    laws.add(law);
+            return;
+        }
+        if (!declared.isLst())
             return;
         for (final Obj obj : declared.lstValue()) {
             if (!obj.isUri())

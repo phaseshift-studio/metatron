@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -103,9 +104,9 @@ public class dckrInstSet extends AbstractInstSet {
                                 "docker:compose/my-stack -> [services=>[web=>[image=>\"nginx\"]]]",
                                 "*docker:container/+",
                                 "*docker:image/nginx/<nginx:latest>"),
-                        docWrap(DOCKER_RESOURCE_TYPE = Type.Builder.build()
+                        DOCKER_RESOURCE_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
-                                        .vid(DOCKER_RESOURCE_TID)
+                                        .vid(DOCKER_RESOURCE_TID, "base type for docker resources — id + created + labels (label name => str)")
                                         .isaPredicate(rec(
                                                 uri(ID), URI_TYPE,
                                                 uri("created").maybe(), URI_TYPE,
@@ -116,69 +117,57 @@ public class dckrInstSet extends AbstractInstSet {
                                                 // and lost the text of anything that merely looked typed.
                                                 uri("labels").maybe().asUri(), rec(URI_TYPE, STR_TYPE)))
                                         .create(),
-                                "base type for docker resources — id + created + labels (label name => str)"),
-                        docWrap(DOCKER_IMAGE_TYPE = Type.Builder.build()
+                        DOCKER_IMAGE_TYPE = TypeBuilder.build()
                                         .tid(DOCKER_RESOURCE_TID)
-                                        .vid(DOCKER_IMAGE_TID)
+                                        .vid(DOCKER_IMAGE_TID, "a docker image — refines docker_resource::T")
                                         .isaPredicate(rec(
                                                 uri("repo_tags").maybe().asUri(), lst(URI_TYPE),
                                                 uri(SIZE).maybe(), T(MATH_DATASIZE_TID),
                                                 uri("container").maybe(), ALL_TYPE))
+                                        .example("[id => <sha256:abc123>, repo_tags => [<nginx:latest>], size => mB::142.0]", "matches docker_image::T")
                                         .create(),
-                                "a docker image — refines docker_resource::T",
-                                "[id => <sha256:abc123>, repo_tags => [<nginx:latest>], size => mB::142.0]",
-                                "matches docker_image::T"),
-                        docWrap(DOCKER_CONTAINER_STATE_TYPE = Type.Builder.build()
+                        DOCKER_CONTAINER_STATE_TYPE = TypeBuilder.build()
                                         .tid(URI_TID)
-                                        .vid(DOCKER_CONTAINER_STATE_TID)
+                                        .vid(DOCKER_CONTAINER_STATE_TID, "docker container state — union of created|running|paused|restarting|exited|dead")
                                         .isaPredicate(union_(
                                                 uri("created"), uri("running"), uri("paused"),
                                                 uri("restarting"), uri("exited"), uri("dead")))
+                                        .example("running.matches(docker_container_state::T)     [-- true --]", "stopped.matches(docker_container_state::T)     [-- false --]")
                                         .create(),
-                                "docker container state — union of created|running|paused|restarting|exited|dead",
-                                "running.matches(docker_container_state::T)     [-- true --]",
-                                "stopped.matches(docker_container_state::T)     [-- false --]"),
-                        docWrap(DOCKER_CONTAINER_TYPE = Type.Builder.build()
+                        DOCKER_CONTAINER_TYPE = TypeBuilder.build()
                                         .tid(DOCKER_RESOURCE_TID)
-                                        .vid(DOCKER_CONTAINER_TID)
+                                        .vid(DOCKER_CONTAINER_TID, "a docker container — refines docker_resource::T")
                                         .isaPredicate(rec(
                                                 uri("image"), T(ALL),
                                                 uri(STATE).maybe(), T(DOCKER_CONTAINER_STATE_TID),
                                                 uri("ports").maybe(), lst(URI_TYPE),
                                                 uri("network").maybe(), ALL_TYPE,
                                                 uri("mount").maybe(), ALL_TYPE))
+                                        .example("[id => <a1b2c3>, image => <nginx:latest>, state => running, ports => [<8080:80>]]", "matches docker_container::T")
                                         .create(),
-                                "a docker container — refines docker_resource::T",
-                                "[id => <a1b2c3>, image => <nginx:latest>, state => running, ports => [<8080:80>]]",
-                                "matches docker_container::T"),
-                        docWrap(DOCKER_VOLUME_TYPE = Type.Builder.build()
+                        DOCKER_VOLUME_TYPE = TypeBuilder.build()
                                         .tid(DOCKER_RESOURCE_TID)
-                                        .vid(DOCKER_VOLUME_TID)
+                                        .vid(DOCKER_VOLUME_TID, "a docker volume — refines docker_resource::T")
                                         .isaPredicate(rec(
                                                 (Obj) uri(DRIVER).maybe(), URI_TYPE,
                                                 uri("mountpoint").maybe(), URI_TYPE,
                                                 uri("container").maybe(), ALL_TYPE))
                                         .create(),
-                                "a docker volume — refines docker_resource::T"),
-                        docWrap(
-                                DOCKER_NETWORK_TYPE = Type.Builder.build()
+                        DOCKER_NETWORK_TYPE = TypeBuilder.build()
                                         .tid(DOCKER_RESOURCE_TID)
-                                        .vid(DOCKER_NETWORK_TID)
+                                        .vid(DOCKER_NETWORK_TID, "a docker network — refines docker_resource::T")
                                         .isaPredicate(rec(
                                                 (Obj) uri(DRIVER).maybe(), URI_TYPE,
                                                 uri("scope").maybe(), URI_TYPE,
                                                 uri("container").maybe(), ALL_TYPE))
                                         .create(),
-                                "a docker network — refines docker_resource::T"),
-                        docWrap(DOCKER_COMPOSE_TYPE = Type.Builder.build()
+                        DOCKER_COMPOSE_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
-                                        .vid(DOCKER_COMPOSE_TID)
+                                        .vid(DOCKER_COMPOSE_TID, "a docker compose stack — refines rec::T")
                                         .isaPredicate(rec(
                                                 uri("services"), rec()))
-                                        .create(),
-                                "a docker compose stack — refines rec::T",
-                                "[services => [web => [image => \"nginx\"]]]",
-                                "matches docker_compose::T"))));
+                                        .example("[services => [web => [image => \"nginx\"]]]", "matches docker_compose::T")
+                                        .create())));
         docWrap(this, "an instruction set to manipulate docker and docker compose");
         super.setup();
     }

@@ -58,7 +58,6 @@ import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.Tokens.ARGS;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -250,8 +249,8 @@ public class mParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                inst_parser,
                 m_code(),
+                inst_parser,
                 m_lst(),
                 m_uri(),
                 m_objs()));
@@ -1514,6 +1513,7 @@ public class mParser {
                         of('}').trim())
                         .map(t -> instB(BRANCH_INST_TID, lst(((List<Object>) pick(t, 2)).stream()
                                 .filter(part -> part instanceof Obj)
+                                .filter(part -> !((Obj) part).isNoObj())
                                 .map(part -> (Obj) part)
                                 .toList()))),
                 seq(of('.').trim(), m_obj(false)).map(t -> {
@@ -1533,7 +1533,7 @@ public class mParser {
                         new MCode((List) ((List<Object>) pick(t, 2))
                                 .stream()
                                 .filter(x -> x instanceof Inst)
-                                .toList(), pick(t, 0), pick(t, 4)));
+                                .toList(), pick(t, 0), pick(t, 4)).tryToInst());
     }
 
     public static Parser m_inst() {

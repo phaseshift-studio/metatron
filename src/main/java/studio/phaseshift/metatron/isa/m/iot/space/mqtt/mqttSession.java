@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.Closeable;
 import java.io.EOFException;
@@ -61,7 +62,7 @@ public class mqttSession extends MRec implements Closeable {
 
     public static final fURI MQTT_SESSION_TID = IOT_ISA_TID.extend("mqtt").extend("mqtt_session");
 
-    public static final Type MQTT_SESSION_TYPE = Type.Builder.build()
+    public static final Type MQTT_SESSION_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(MQTT_SESSION_TID)
             .isaPredicate(rec(uri(CLIENT), STR_TYPE, uri(KEEP_ALIVE), INT_TYPE))

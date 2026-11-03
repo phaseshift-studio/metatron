@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjYAMLSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -77,7 +78,7 @@ import static studio.phaseshift.metatron.util.IteratorUtil.map;
 public class dckrSpace extends AbstractMemorySpace {
 
     public static final fURI DCKR_SPACE_TID = DCKR_ISA_TID.extend("space/dckrspace");
-    public static final Type DCKR_SPACE_TYPE = Type.Builder.build()
+    public static final Type DCKR_SPACE_TYPE = TypeBuilder.build()
             .tid(SPACE_TID)
             .vid(DCKR_SPACE_TID)
             .isaPredicate(rec(

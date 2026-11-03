@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -72,7 +73,7 @@ public final class httpClient {
      */
     private static final Duration STATUS_TIMEOUT = Duration.ofSeconds(2);
 
-    public static final Type HTTP_CLIENT_TYPE = Type.Builder.build()
+    public static final Type HTTP_CLIENT_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(HTTP_CLIENT_TID)
             .constructor(socket -> {

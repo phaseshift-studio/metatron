@@ -19,16 +19,20 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.AbstractWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.sys.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.m.sys.ui.widget.TableWidget;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ROW;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -56,7 +60,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
                     (found ? "{{b}}" : "{{r}}") + i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
-                    (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + generateArgsString(i.args()),
+                    (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + argsSummary(i.args()),
                     i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
@@ -71,19 +75,53 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
     }
 
 
-    private static String generateArgsString(final Poly<?, ?> args) {
-        final String argsString;
+    /**
+     * Fixed display width of the {@code args} column. Every args cell is clipped or
+     * padded to exactly this many columns, so the column never reflows while the
+     * inline selector windows across a long argument list.
+     */
+    public static final int ARGS_WIDTH = 24;
+
+    /**
+     * One display token per argument, in the order the args cell renders them: a call
+     * flattens to its dotted instruction names, a keyed rec argument is {@code k=>v}.
+     */
+    public static List<String> argTokens(final Poly<?, ?> args) {
+        final List<String> tokens = new ArrayList<>();
         if (args.isLst()) {
-            argsString = args.lstValue().stream().map(o -> o.isCall() ?
-                    o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                    o.toShortString()).collect(java.util.stream.Collectors.joining(",")).replaceAll("\n", "").trim();
+            for (final Obj arg : args.lstValue()) tokens.add(summarizeArg(arg));
         } else {
-            argsString = args.recValue().entrySet().stream().map(kv ->
-                    kv.getKey().uriValue().toString() + "=>" + (kv.getValue().isCall() ?
-                            kv.getValue().asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                            kv.getValue().toShortString())).collect(java.util.stream.Collectors.joining(",")).replaceAll("\n", "").trim();
+            for (final Map.Entry<Obj, Obj> kv : args.recValue().entrySet())
+                tokens.add(kv.getKey().uriValue().toString() + "=>" + summarizeArg(kv.getValue()));
         }
-        return argsString.length() > 20 ? (argsString.substring(0, 19) + "...") : argsString;
+        return tokens;
+    }
+
+    /**
+     * The args cell as plain text, clipped or padded to exactly {@link #ARGS_WIDTH}
+     * columns. The leading space is the pointer slot: the inline selector replaces it
+     * (or a comma-space) with {@code >}, so the arg text never shifts column.
+     */
+    public static String argsSummary(final Poly<?, ?> args) {
+        return padToWidth(" " + String.join(", ", argTokens(args)));
+    }
+
+    private static String summarizeArg(final Obj o) {
+        return o.isCall()
+                ? o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("")
+                : o.toShortString();
+    }
+
+    private static String padToWidth(final String s) {
+        final int len = Highlighter.visualLength(s);
+        if (len == ARGS_WIDTH) return s;
+        if (len > ARGS_WIDTH) return clipToWidth(s);
+        return s + " ".repeat(ARGS_WIDTH - len);
+    }
+
+    private static String clipToWidth(final String s) {
+        final int keep = Math.max(0, ARGS_WIDTH - 1);
+        return s.substring(0, Math.min(s.length(), keep)) + "…";
     }
 
     public String toString() {

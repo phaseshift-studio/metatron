@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -33,8 +33,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 
 
 public class MType extends MObj implements Type {
@@ -80,7 +80,7 @@ public class MType extends MObj implements Type {
         // NOTHING REFINES TO NOTHING. a {0} tid or vid is the noobj type whatever it is named: there is nothing in
         // nothing to refine, so the set cannot get any smaller. a constant, answered before the memo -- it needs no
         // cache entry, no watch and no invalidation. NOOBJ_TYPE is null only while it is itself being built
-        // (Type.Builder.create() resolves through here), and that one construction takes the ordinary path.
+        // (TypeBuilder.create() resolves through here), and that one construction takes the ordinary path.
         if (null != NOOBJ_TYPE && ((null != tid && tid.isZero()) || (null != vid && vid.isZero())))
             return NOOBJ_TYPE;
         final TypeGraph.Key key = new TypeGraph.Key(tid, vid, predicate, constructor);
@@ -194,9 +194,7 @@ public class MType extends MObj implements Type {
                             final boolean sameDeclaration = String.valueOf(obj.asType().predicate()).equals(String.valueOf(predicate))
                                     && String.valueOf(obj.asType().constructor()).equals(String.valueOf(constructor));
                             if (!sameDeclaration) {
-                                studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty
-                                        .log(MType.class)
-                                        .warn("unable to redefine %s — noobj() its vid first, then redefine", obj.asType().vid());
+                                LOG.warn("unable to redefine %s without first performing %s -> noobj", obj.asType().vid(), obj.asType().vid());
                                 if (REFUSE_REDEFINITION)
                                     return checkPolyPoly(obj.asType());
                             }

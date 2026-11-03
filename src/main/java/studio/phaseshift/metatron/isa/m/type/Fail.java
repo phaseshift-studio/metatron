@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 
@@ -41,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface Fail extends Obj {
 
-    Type FAIL_TYPE = Type.Builder.build().tid(Tokens.FAIL_TID).vid(Tokens.FAIL_TID).create();
+    Type FAIL_TYPE = TypeBuilder.build().tid(Tokens.FAIL_TID).vid(Tokens.FAIL_TID).create();
 
     @Override
     Fail clone(final Object jvm, final fURI tid, final fURI vid);

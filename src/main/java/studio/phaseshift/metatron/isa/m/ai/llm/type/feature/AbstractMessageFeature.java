@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 
@@ -506,7 +507,7 @@ public abstract class AbstractMessageFeature extends AbstractFeature implements 
      * Resolve a {@code session_or_agent} into its {@link SessionAddress}.  The union is a mtron
      * {@code choose()} block — each arm is an {@code isa_(member)} condition plus an
      * {@code instLambda} accessor that reads that member's session vid and agent home — so the
-     * accessor table is data (in the spirit of {@code Type.Builder}), not a Java if/else.
+     * accessor table is data (in the spirit of {@code TypeBuilder}), not a Java if/else.
      */
     public static SessionAddress addressOf(final Obj sessionOrAgent) {
         if (sessionOrAgent.isUri())

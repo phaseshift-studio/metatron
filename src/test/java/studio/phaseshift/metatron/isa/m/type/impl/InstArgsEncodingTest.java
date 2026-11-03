@@ -19,33 +19,22 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AlgebraTool;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.Tokens.INT_TID;
-import static studio.phaseshift.metatron.Tokens.URI_TID;
-import static studio.phaseshift.metatron.Tokens.REC_TID;
-import static studio.phaseshift.metatron.Tokens.STR_TID;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -192,7 +181,7 @@ public class InstArgsEncodingTest extends AbstractMetatronTest {
         // the SQL schema generator reads a type's isa predicate object; a predicate inst whose tid declares its
         // argument types must still be recognized as an isa (the tid equality that answered "no predicate" was the NPE)
         MInst.ARGS_IN_TID = true;
-        final Type type = Type.Builder.build()
+        final Type type = TypeBuilder.build()
                 .tid(REC_TID)
                 .vid(f("/m/type_test/an_isa_with_args"))
                 .isaPredicate(rec(T(URI_TID.maybe()), ALL_TYPE))
@@ -255,16 +244,16 @@ public class InstArgsEncodingTest extends AbstractMetatronTest {
         // magmadic is the binary carrier law: inst?dom=A&rng=A&args=[A]
         final Inst intArgument = this.probe(lst(INT_TYPE));
         assertTrue(intArgument.tid().hasArgs());
-        assertTrue(mInstSet.AlgebraTool.matches(Law.magmadic, intArgument));
+        assertTrue(AlgebraTool.matches(Law.magmadic, intArgument));
         // the same dom/rng, a declared argument of another base form: the contract does not have the law's shape
         final Inst uriArgument = this.probe(lst(URI_TYPE));
         assertTrue(uriArgument.tid().hasArgs());
-        assertFalse(mInstSet.AlgebraTool.matches(Law.magmadic, uriArgument));
+        assertFalse(AlgebraTool.matches(Law.magmadic, uriArgument));
         // with no declaration the argument VALUE is the only contract, and an int value still matches
         MInst.ARGS_IN_TID = false;
         final Inst valueArgument = this.probe(lst(jnt(5)));
         assertFalse(valueArgument.tid().hasArgs());
-        assertTrue(mInstSet.AlgebraTool.matches(Law.magmadic, valueArgument));
+        assertTrue(AlgebraTool.matches(Law.magmadic, valueArgument));
     }
 
     @Test
@@ -276,7 +265,7 @@ public class InstArgsEncodingTest extends AbstractMetatronTest {
         assertEquals(List.of(INT_TYPE.vid()), inst.tid().args());
         assertEquals(2, inst.args().count());
         // one declared int argument is the contract, so the binary carrier law matches despite two uri values
-        assertTrue(mInstSet.AlgebraTool.matches(Law.magmadic, inst));
+        assertTrue(AlgebraTool.matches(Law.magmadic, inst));
     }
 
     @Test

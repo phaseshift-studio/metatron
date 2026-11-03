@@ -1,0 +1,1967 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .terminal-box.click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .terminal-box.click-to-copy:active {
+            background-color: var(--mred);
+        }
+
+        /* suppress the highlightjs-copy [🦇] rollover button on these blocks */
+        .terminal-box.click-to-copy .hljs-copy-button {
+            display: none;
+        }
+    </style>
+    <script src="js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="index.html" title="metatron"><img src="images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m.html"><img
+                            src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dckr.html"><img
+                            src="images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                            alt="dckr"/>/m/dckr</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_dcmnt.html"><img
+                            src="images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_grph.html"><img
+                            src="images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_ide.html"><img
+                            src="images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                            alt="ide"/>/m/ide</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_iot.html"><img
+                            src="images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_llm.html"><img
+                            src="images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach.html"><img
+                            src="images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                            alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_mach_ui.html"><img
+                            src="images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                            alt="ui"/>/m/mach/ui</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math.html"><img
+                            src="images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_math_cat.html"><img
+                            src="images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                            alt="cat"/>/m/math/cat</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_sys.html"><img
+                            src="images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_tble.html"><img
+                            src="images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                            alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_vec.html"><img
+                            src="images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="instset/m_web.html"><img
+                            src="images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target (no rollover copy button). The :active CSS turns the block
+    // red while pressed; this copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.terminal-box.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1"><h2 id="sec-graph-computing" class="discrete">Graph Computing</h2>
+<div class="legend-index">
+<ul>
+<li class="legend-lvl-3"><a href="#sec-connecting-a-graph-space" onclick="var t=document.getElementById('sec-connecting-a-graph-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Connecting a Graph Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-traversing-graph-space" onclick="var t=document.getElementById('sec-traversing-graph-space');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Traversing Graph Space</a></li>
+<li class="legend-lvl-3"><a href="#sec-a-graph-instruction-set" onclick="var t=document.getElementById('sec-a-graph-instruction-set');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">A Graph Instruction Set</a></li>
+<li class="legend-lvl-3"><a href="#sec-property-graph-extensions" onclick="var t=document.getElementById('sec-property-graph-extensions');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Property Graph Extensions</a></li>
+<li class="legend-lvl-3"><a href="#sec-metatron-encoded-graphs" onclick="var t=document.getElementById('sec-metatron-encoded-graphs');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">metatron Encoded Graphs</a></li>
+<li class="legend-lvl-4"><a href="#sec-performance-tiering" onclick="var t=document.getElementById('sec-performance-tiering');if(t){var c=t.closest('.collapse');if(c&&!c.classList.contains('show')){var bs=bootstrap.Collapse.getInstance(c)||new bootstrap.Collapse(c,{toggle:false});bs.show();c.addEventListener('shown.bs.collapse',function f(){c.removeEventListener('shown.bs.collapse',f);t.scrollIntoView({behavior:'smooth',block:'start'});});}else{t.scrollIntoView({behavior:'smooth',block:'start'});}}return false;">Performance Tiering</a></li>
+</ul>
+</div>
+<details>
+<summary class="title">/m/grph instset import</summary>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/grph)</code></pre>
+</div>
+</div>
+</div>
+</details>
+<div class="paragraph">
+<p>A graph is a data structure composed of a set of vertices \(V\) connected by a set of edges \(E\), denoted \[
+G = (V,E), \]
+where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_function">partial function</a> \(E \subseteq (V \times V)\).</p>
+</div>
+<div style="justify-self:center; width:80%;">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">┌────────┐                     ┌────────┐
+│        │        edge         │        │
+│ vertex ├────────────────────►│ vertex │
+│        │                     │        │
+└────────┘                     └────────┘</code></pre>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This classic structure has been extended in various ways since its inception in 1736 (by <a href="https://en.wikipedia.org/wiki/Leonhard_Euler">Leonard Euler</a>).
+Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more.
+Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc.
+They quickly converged on a particular graph data model colloquially known as a <strong>property graph</strong>.
+This structure is known more formally as a <em>directed, labeled, attributed, multi-relational binary graph</em>.
+The property graph extends \(G = (V,E)\) with properties (key/value pairs) associated with vertices and edges.
+This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database.
+As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The <code>graphspace</code> of <code>/m/grph</code> uses <a href="http://tinkerpop.apache.org">Apache TinkerPop</a> as it&#8217;s underlying storage framework.
+While useful for the time being, once metatron&#8217;s approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient.
+When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron.
+This fluidity, a naturalness of form, permeates throughout.
+It is here where the lines previously drawn between data structures/databases begin to blur, and what emerges renders concepts such as <em>multi-modal</em>, prosaic – a relic of the past.
+</td>
+</tr>
+</table>
+</div>
+<h3 id="sec-connecting-a-graph-space" class="discrete">Connecting a Graph Space</h3>
+<div class="paragraph">
+<p>The following mtron snippet constructs a <code>grphspace</code>.
+A few routes are provided separating the elements of the graph into their common categories of vertices and edges.
+Moreover, with metatron&#8217;s type system, schemas and type checking are available, with element labels serving as
+the demarcation of metatron path collections.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; grphspace::[
+         pattern  =&gt; g:#,
+         schema   =&gt; noobj,
+         route    =&gt; [g: =&gt; &lt;&gt;],
+         config   =&gt; [
+           dataset         =&gt; &lt;org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN&gt;,
+           &lt;gremlin.graph&gt; =&gt; &lt;org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph&gt;]
+         ]@&lt;/sys/space/grph/modern&gt;;     ​1​
+mtron&gt; *g:+     ​2​
+==&gt;V::T
+==&gt;E::T
+mtron&gt; *g:V/+     ​3​
+==&gt;software::[lang=&gt;'java',
+              name=&gt;'ripple']@g:V/5
+==&gt;software::[name=&gt;'lop',
+              lang=&gt;'java']@g:V/3
+==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
+==&gt;person::[name=&gt;'peter',age=&gt;35]@g:V/6
+==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
+==&gt;person::[age=&gt;29,name=&gt;'marko']@g:V/1
+mtron&gt; *g:person/+     ​4​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>spawning a <code>grphspace</code> backed by a locally embedded TinkerGraph.</p>
+</li>
+<li>
+<p>the complete schema (<code>instset</code>) that refines the <code>grphspace</code> (as a ring module).</p>
+</li>
+<li>
+<p>the refinement poset is <code>rec::T &gt; elmnt::T &gt; vrtx::T &gt; person::T</code>.</p>
+</li>
+<li>
+<p>graph element labels form the metatron data path collections.</p>
+</li>
+</ol>
+</div>
+<div class="openblock card">
+<div class="title">integrating a remote graph</div>
+<div class="content">
+<div class="paragraph">
+<p>In order to leverage a graph database on another machine or distributed across a cluster of machines, a
+<code>DriverRemoteConnection</code> provides the requisite infrastructrue for spawning a <code>GraphTraversalSource</code>
+that works over a network (typically via websockets). The example below demonstrate how to connect
+to JanusGraph. The pattern can be generalized to other remote providers. See specific remote provider
+documentation for configuration details.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">grphspace::[
+  pattern  =&gt; g:#,
+  host     =&gt; &lt;http://example.com:8123/gremlin&gt;
+  q        =&gt; [incrq::[=&gt;],subq::[=&gt;]],
+  route    =&gt; [g: =&gt; &lt;&gt;],
+  config   =&gt; [
+    &lt;serializer.className&gt;                     =&gt; &lt;org.apache.tinkerpop.gremlin.util.ser.GraphBinaryMessageSerializerV1&gt;,
+    &lt;serializer.config.ioRegistries&gt;           =&gt; [&lt;org.janusgraph.graphdb.tinkerpop.JanusGraphIoRegistry&gt;],
+    &lt;gremlin.remote.remoteConnectionClass&gt;     =&gt; &lt;org.apache.tinkerpop.gremlin.driver.remote.DriverRemoteConnection&gt;,
+    &lt;gremlin.remote.remoteTraversalSourceName&gt; =&gt; g]
+  ]@&lt;/sys/space/grph/kg&gt;;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<h3 id="sec-traversing-graph-space" class="discrete">Traversing Graph Space</h3>
+<div class="paragraph">
+<p>Graph traversals in mtron are expressed using either <em>instruction-call</em> syntax or <em>uri-path</em> syntax.
+The uri-path form treats <code>OUT</code> and <code>IN</code> as path segments that route through the graph engine directly, without requiring <code>out()</code>, <code>in()</code>, etc. instruction calls.
+The same traversals expressed using both forms:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">id-resolution traversals (path syntax)</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[age=&gt;29,name=&gt;'marko']
+mtron&gt; *g:V/1/OUT     ​2​
+==&gt;created::[weight=&gt;0.4]@g:E/9
+==&gt;knows::[weight=&gt;0.5]@g:E/7
+==&gt;knows::[weight=&gt;1.0]@g:E/8
+mtron&gt; *g:V/1/OUT/created     ​3​
+==&gt;created::[weight=&gt;0.4]
+mtron&gt; *g:V/1/OUT/created/IN     ​4​
+==&gt;software::[name=&gt;'lop',lang=&gt;'java']
+mtron&gt; *g:V/1/OUT/knows/IN/name     ​5​
+==&gt;'josh'
+==&gt;'vadas'
+mtron&gt; *g:V/1/OUT/knows/IN/+.count()     ​6​
+==&gt;2
+mtron&gt; *g:E/7/IN/name     ​7​
+==&gt;'vadas'</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="title">instruction-call traversals (inst syntax)</div>
+shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1                          [-- &lt;1&gt; --]
+*g:V/1.outE()                   [-- &lt;2&gt; --]
+*g:V/1.outE(created)            [-- &lt;3&gt; --]
+*g:V/1.out(created)             [-- &lt;4&gt; --]
+*g:V/1.out(knows)&gt;&gt;name         [-- &lt;5&gt; --]
+*g:V/1.out(knows).count()       [-- &lt;6&gt; --]
+*g:E/7.inV()&gt;&gt;name              [-- &lt;7&gt; --]</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Vertex <code>1</code> with associated properties.</p>
+</li>
+<li>
+<p>The incident outgoing edges of vertex <code>1</code>.</p>
+</li>
+<li>
+<p>Filter to only edges with label <code>created</code>.</p>
+</li>
+<li>
+<p>Traverse to the incoming vertex of the <code>created</code> edge.</p>
+</li>
+<li>
+<p>The name of the people that vertex <code>1</code> knows.</p>
+</li>
+<li>
+<p>Count of the people that vertex <code>1</code> knows.</p>
+</li>
+<li>
+<p>Edge 7&#8217;s incoming vertex name.</p>
+</li>
+</ol>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_graph_traversal_is_uri_resolution_at_its_core_metatron_is_a_system_designed_to_map_a_reference_to_its_referenti_e_to_resolve_identifiers" class="discrete">graph traversal is uri resolution At its core, metatron is a system designed <em>to map a reference to its referent</em>&#8201;&#8212;&#8201;i.e., to resolve identifiers.</h4>
+<div class="paragraph">
+<p>In metatron, every piece of data has a unique id&#8201;&#8212;&#8201;and in fact, many unique ids: as an id is a uri which denotes a particular path through space from point <strong>A</strong> to point <strong>B</strong> (and many such paths may exist).
+However, not all potential paths can be solved with a URI.
+As such, when a URI segment requires more expressivity than what an explicit selection or wildcard pattern can offer, mtron instructions are attached.
+Thus, one way to think about mtron is that it&#8217;s resolving an identifier, where if a certain fragment requires a more in-depth computation, then that fragment defers to executable function&#8201;&#8212;&#8201;an <code>inst</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  from()                     where()                             count()
+  ┌───┐                   ┌────────────────┐                      ┌────────┐
+A │ * │g:V/1/OUT/knows/IN │=?=[age=&gt;?&gt;29]&gt;&gt;│ /OUT/created/IN/name │.count()│ B
+  └───┘     │            │└────────────────┘│                    │└────────┘
+            └─out(knows)─┘                  └─out(created)&gt;&gt;name─┘</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With respects to the traversal instructions of <code>/m/grph</code>, the instructions <code>outE()</code>, <code>inV()</code>, <code>out()</code>, etc. — inherited from Gremlin — are <a href="https://en.wikipedia.org/wiki/Syntactic_sugar">syntactic sugar</a> that map to standard metatron URI fragments.</p>
+</div>
+</div>
+</div>
+<h3 id="sec-a-graph-instruction-set" class="discrete">A Graph Instruction Set</h3>
+<div class="paragraph">
+<p>The <code>/m/grph</code> instruction set extends the core <code>/m</code> instruction set with the following graph-oriented instructions.
+These navigation primitives hide the graph encoding specifics, enabling the same instructions to be used across different graph encodings (discussed later when presenting hypergraphs).</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 36.3636%;">
+<col style="width: 27.2727%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-middle">inst</th>
+<th class="tableblock halign-center valign-middle">description</th>
+<th class="tableblock halign-center valign-middle">diagram</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>out?vrtx{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing adjacent vertices of the lhs vertex</p></td>
+<td class="tableblock halign-left valign-middle" rowspan="8"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  vertex          edge           vertex
+┌────────┐     ┌─────────┐     ┌────────┐
+│k1 =&gt; v1│     │k1 =&gt; v1 │     │k1 =&gt; v1│
+│k2 =&gt; v2│     │k2 =&gt; v2 │     │k2 =&gt; v2│
+│  ...   ├─────└─────────┘────►│  ...   │
+│k3 =&gt; v3│outE             inE │k3 =&gt; v3│
+└────────┘                     └────────┘
+   outV                            inV</code></pre>
+</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>in?vrtx{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the incoming adjacent vertices of the lhs vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>both?vrtx{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to both the incoming and outgoing adjacent vertex of the lhs vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>outE?edge{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing incident edges of the lhs vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>inE?edge{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the incoming incident edges of the lhs vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>bothE?edge{*}&lt;=vrtx(uri{*}::T})</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to both the incoming and outgoing incident edges of the lhs vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>inV?vrtx&lt;=edge()</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the incoming incident vertex of the lhs edge</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>outV?vrtx&lt;=edge()</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing incident vertex of the lhs edge</p></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sec-property-graph-extensions" class="discrete">Property Graph Extensions</h3>
+<div class="paragraph">
+<p>mtron&#8217;s design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
+The following itemization summarizes some of the more consequential realizations.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>hierarchical properties</strong>: the folder-like structure of uris combined with mtron pattern matching enables hierarchical organization within the property graph model&#8217;s flat namespace.</p>
+</li>
+<li>
+<p><strong>nested properties</strong>: mtron supports <code>poly</code> values meaning element property values can be nested (via <code>rec</code>, <code>rel</code>, or <code>lst</code>).</p>
+</li>
+<li>
+<p><strong>interspace traversals</strong>: <code>!*</code> instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space traversals.</p>
+</li>
+<li>
+<p><strong>process encodings</strong>: graph databases have historically been used for structuring data, where processes are exogenous to the graph (and execute only at query time). mtron&#8217;s <code>inst</code> objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.</p>
+</li>
+<li>
+<p><strong>sympathetic partitions</strong>: an mtron <code>poly</code> is not constrained to a single space nor within a single space.
+Neither does an operation on the <code>poly</code> imply a particular physical layout of underlying data.
+In this way, mtron conveniently supports space agnostic retrieval of data across different physical layouts.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tblespace::[pattern =&gt; acme:#,                                                     /
+            host    =&gt; &lt;mariadb://localhost:3306/acme?user=mtron&amp;password=mtron&gt;,  /
+            route   =&gt; [&lt;acme:&gt;=&gt;&lt;&gt;],                                              /
+            table   =&gt; [,],                                                        /
+            driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/acme;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+shown for reference — requires a running MariaDB at <code>localhost:3306</code> (the <code>acme</code> database with a <code>customers</code> table); the docs environment has none.
+</td>
+</tr>
+</table>
+</div>
+<div class="exampleblock primary">
+<div class="title">Example 1. hierarchical properties</div>
+<div class="content">
+<div class="paragraph">
+<p>A consequence of mtron&#8217;s uri-oriented id scheme is property keys no longer sit in a flat address space.
+The following examples demonstrate selection and filtering using multi-segment uri pattern matching with wildcards.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
+                  address/work/city =&gt; 'nomansland']     ​1​
+==&gt;person::[age=&gt;29,
+            name=&gt;'marko',
+            address/home/city=&gt;'santa fe',
+            address/work/city=&gt;'nomansland']
+mtron&gt; *g:V/1/address/home/city     ​2​
+mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     ​4​
+==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
+mtron&gt; *g:V/+.&gt;&gt;address/+/city
+       *g:V/+.&gt;&gt;address/+/city     ​6​
+==&gt;{8}'nomansland'
+==&gt;{8}'santa fe'
+mtron&gt; *g:V/+.&gt;&gt;address/#     ​7​
+==&gt;'nomansland'
+==&gt;'santa fe'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/+.=?=[address/+/city =&gt; 'santa fe']                        [-- &lt;3&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+shown for reference — the where-clause filter over multi-segment wildcard keys is not yet supported by the current where-rewrite (single flat field only); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>add two properties keyed with 3 segment uris to vertex <code>1</code> .</p>
+</li>
+<li>
+<p>uri properties uniquely identify values in the vertex.</p>
+</li>
+<li>
+<p>for all vertices, return those that have an address in Santa Fe.</p>
+</li>
+<li>
+<p>for all vertices, select the cities of any of their addresses.</p>
+</li>
+<li>
+<p>for all vertices, traverse to their city address properties.</p>
+</li>
+<li>
+<p>for all vertices, traverse to their city address values.</p>
+</li>
+<li>
+<p>for all vertices, traverse to the values of any addresses.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 2. nested properties</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1==[_=&gt;_]     ​1​
+==&gt;[age=&gt;29,name=&gt;'marko']
+mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
+                    home =&gt; [city =&gt;'santa fe',
+                             state=&gt;NM],
+                    work =&gt; !*&lt;../home&gt;]]     ​2​
+==&gt;person::[age=&gt;29,
+            name=&gt;'marko',
+            address=&gt;[home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+                      work=&gt;!*&lt;../home&gt;]]
+mtron&gt; *g:V/1/address/home/city     ​3​</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]]                         [-- &lt;4&gt; --]
+*g:V/+.=?=[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        [-- &lt;5&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+shown for reference — nested where-clauses (a predicate under a list of addresses) are not yet supported by the current where-rewrite (single flat field only); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>select the properties of vertex 1.</p>
+</li>
+<li>
+<p>update the properties of vertex 1 with a nested address <code>rec</code>.</p>
+</li>
+<li>
+<p>the new address <code>rec</code> components have a unique URI.</p>
+</li>
+<li>
+<p>for all vertices, return those that have an address in New Mexico.</p>
+</li>
+<li>
+<p>for the NM vertices, return the cities of their addresses.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 3. interspace traversals</div>
+<div class="content">
+<div class="paragraph">
+<p>The bootloader used for this documentation exposes a number of data sources.
+For the following example, a tp3 (graph database) and mariadb (relational database) storing social data and movie data, respectively.</p>
+</div>
+<div class="paragraph">
+<p>The schemas for the respective data stores are provided in the expandable accordions below.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">graph</th>
+<th class="tableblock halign-center valign-top">relational</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">grphspace::
+ [pattern =&gt; g:#,
+  route   =&gt; [g:V =&gt; V,
+              g:E =&gt; E,
+              g:S =&gt; /m/grph/inst/schema/modern],
+  native  =&gt; [factory =&gt; mfactory::[=&gt;],
+              gremlin =&gt;
+                graph =&gt; &lt;org.apache..TinkerGraph&gt;
+              load    =&gt; modern]]@/sys/space/modern</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tblespace::
+ [pattern =&gt; acme:#,
+  host    =&gt; &lt;mariadb://localhost:3306/acme&gt;,
+  route   =&gt; [acme: =&gt; &lt;&gt;],
+  table   =&gt; [,],
+  driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The two data sources have a very particular understanding of how data should be structured and how it should be queried.
+The graph database&#8217;s take on modeling is to see the world as a collection of discrete objects related to one another, where traversals and structural pattern matching are the primary means of understanding the data at large.
+The relational database takes the perspective of spreadsheets and set operations.
+To unify these two contrasting perspectives, metatron capitalizes on each&#8217;s most important, distinguishing features.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>graph features</strong>: explicit references between atomic datum yield an implicit query plan that is the graph itself (it&#8217;s a pre-joined structure), where traversals serve as result set iterators.</p>
+</li>
+<li>
+<p><strong>relational features</strong>: highly structured, schematically rigorous, where query agnostic endomorphic joins make explicit, references implicit in the data.</p>
+</li>
+</ol>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 53.8461%;">
+<col style="width: 46.1539%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     ​1​
+==&gt;person::[age=&gt;29,name=&gt;'marko']
+mtron&gt; *acme:customers/357     ​2​
+mtron&gt; @g:V/1.addE(consulted,|*acme:customers/357)     ​3​
+==&gt;consulted::[=&gt;]@g:E/29
+mtron&gt; *g:V/1/OUT/consulted/IN     ​4​
+mtron&gt; *g:V/1/OUT/consulted/IN.matches(vrtx::T)     ​5​
+==&gt;false</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>vertex <code>v[1]</code> in a graph database.</p>
+</li>
+<li>
+<p>row <code>357</code> in a relational database.</p>
+</li>
+<li>
+<p>an edge is created in the graph linking vertex <code>v[1]</code> to a reference vertex pointing to row <code>357</code>.</p>
+</li>
+<li>
+<p>traverses the edge to the reference vertex carrying the relational pointer.</p>
+</li>
+<li>
+<p>a <code>rrow::T</code> <em>is a</em> <code>vrtx::T</code> according to metatron&#8217;s structural type system.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The <code>addE</code> instruction creates a native TinkerPop edge in the graph that links
+vertex <code>v[1]</code> to a newly created reference vertex. The reference vertex carries
+a <code>:redirect</code> property pointing into the relational database via an <code>!*</code> auto-from
+instruction. The <code>out(consulted)</code> instruction traverses the edge to the reference
+vertex — the structural type system recognizes the reference vertex as a <code>vrtx::T</code>.
+The <code>:redirect</code> pointer is resolved transparently when the vertex is accessed,
+bridging the two data sources.</p>
+</div>
+<div class="paragraph">
+<p>Some more expressions are provided below that extend what has been constructed thus far.
+These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1.out(consulted)-&lt;[                                        /
+  name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",       /
+  address =&gt;==[city=&gt;_,country=&gt;_]]
+*g:V/1.out(consulted)                                           /
+  &gt;&gt;salesRepEmployeeNumber                                      /
+  &gt;&gt;reportsTo.-&lt;[                                               /
+    name  =&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",                       /
+    job   =&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+shown for reference — this copy-apply demo reads <code>acme</code> rows via the <code>consulted</code> pointer (requires the MariaDB space above), and its inst-call head is not currently dispatchable on graph vertices; see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The examples highlight important concepts necessary to understand
+in order to be effective at traversing and manipulating complex,
+nested structures existing across heterogeneous data sources.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>-&lt;</code> (<strong>copy apply</strong>): copy the input <code>obj</code> across all slots of the arg <code>poly</code>.</p>
+</li>
+<li>
+<p><code>==</code> (<strong>match apply</strong>): split the input <code>poly</code> to match the slots of the arg <code>poly</code>.</p>
+</li>
+<li>
+<p><code>&gt;&gt;</code> (<strong>project select</strong>): select a particular component of the input <code>poly</code>.</p>
+</li>
+<li>
+<p><code>${}</code> (<strong>template select</strong>): process the input <code>obj</code> and output a <code>str</code> representation of the output <code>obj</code>.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">      grph          tble
+┌──────────┐    ┌───────────┐
+│┌──┐      │    │┌─────────┐│
+││  ├──────┼────►├─────────┤│
+│└─┬┘      │    │├─────────┤│
+│  │       │    │├─────────┤│
+│  │  ┌──┐ │    │├─────────┤│
+│  └─►│  │◄┼────┤├─────────┤│
+│     └──┘ │    │└─────────┘│
+└──────────┘    └───────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              foreign key
+                        tableA ┌───────┐ tableB
+  v[A]   v[B]  redirect ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
+ ┌───┐   ┌───┐┌────────►├─┼─├─┼┼┼─┤   ├▼┼─┼─┼─┤
+ │   │──►│   ├┘         ├─┼─┼─┼─┼─┤   ├─┼─┼─┼─┤
+ └───┘   └───┘          └─┴─┴─┴─┴─┘   └─┴─┴─┴─┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 4. process encoding</div>
+<div class="content">
+<div class="paragraph">
+<p>A vertex can subscribe to events, maintain a thread of execution, and pass <code>obj</code> messages to other vertices in the graph.</p>
+</div>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 5. sympathetic partitions</div>
+<div class="content">
+<div class="paragraph">
+<p>A vertex&#8217;s edges can span multiple storage backends.
+Hot edges (frequently traversed) live in an in-memory space; cold edges (archival) live in a disk-backed space.
+The vertex does not know the difference — <code>*/g/V/1/OUT/+</code> returns all edges regardless of where they reside.</p>
+</div>
+<div class="paragraph">
+<p>The following example configures the modern TinkerGraph dataset with two additional edge stores: <code>hot:</code> for in-memory edges and <code>cold:</code> for disk-backed edges.</p>
+</div>
+<div class="listingblock">
+<div class="title">hot and cold edge storage spaces</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern  =&gt; &lt;/te/hot/#&gt;,
+                  route    =&gt; [/te/hot/  =&gt; &lt;&gt;]]@/sys/space/hot
+mtron&gt; tblespace::[pattern =&gt; &lt;/te/cold/#&gt;,
+                   route   =&gt; [/te/cold/ =&gt; &lt;&gt;],
+                   table   =&gt; [,],
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;,
+                   host    =&gt; &lt;sqlite:/tmp/cold.db&gt;]@/sys/space/cold</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Edge data is written into each space keyed by the vertex identifier.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /te/hot/1/a  -&gt; [item   =&gt; 'laptop',
+                       total=&gt;1200.0,
+                       owner  =&gt; !*g:V/2]
+==&gt;[item=&gt;'laptop',
+    total=&gt;1200.0,
+    owner=&gt;!*g:V/2]
+mtron&gt; /te/hot/1/b  -&gt; [item   =&gt; 'mouse',total=&gt;25.0]
+==&gt;[item=&gt;'mouse',total=&gt;25.0]
+mtron&gt; /te/cold/1/x -&gt; [item   =&gt; 'book',total=&gt;15.0,
+                       seller =&gt; !*g:V/4]
+==&gt;[item=&gt;'book',
+    total=&gt;15.0,
+    seller=&gt;!*g:V/4]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once seeded, the edges are accessible through the same <code>OUT</code> traversal used for native graph edges.
+The scheme prefix in the label (<code>te:hot</code>, <code>te:cold</code>) instructs the engine to route the read to the respective space.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="title">traversing a distributed edge set (path syntax)</div>
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1/OUT/te:hot/+.count()     ​1​
+==&gt;2
+mtron&gt; *g:V/1/OUT/te:hot/a/item     ​2​
+==&gt;'laptop'
+mtron&gt; *g:V/1/OUT/te:cold/x/total     ​4​
+==&gt;15.0
+mtron&gt; *g:V/1/OUT/knows.count()     ​5​
+==&gt;2</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1/OUT/te:hot/a/owner/name         [-- &lt;3&gt; --]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+shown for reference — the <code>!*g:V/2</code> auto-from pointer round-trip through an external edge fails in the current VM (<code>predicate apply failed &#8230;&#8203; at /m/inst/auto_from</code>); see <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="title">traversing a distributed edge set (instruction-call syntax)</div>
+shown for reference, not evaluated — the current VM surfaces the uri-path form above as the working equivalent; inst-call dispatch on space-read vertices is documented in <code>TRACTATUS-LOSS-NOTES.md</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*g:V/1.outE(te:hot).count()            [-- &lt;1&gt; --]
+*g:V/1.outE(te:hot/a)&gt;&gt;item            [-- &lt;2&gt; --]
+*g:V/1.outE(te:hot/a)&gt;&gt;owner&gt;&gt;name     [-- &lt;3&gt; --]
+*g:V/1.outE(te:cold/x)&gt;&gt;total          [-- &lt;4&gt; --]
+*g:V/1.outE(knows).count()             [-- &lt;5&gt; --]</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Count of hot edges for vertex <code>1</code> — returns <code>2</code>.</p>
+</li>
+<li>
+<p>Specific hot edge property value — <code>"laptop"</code>.</p>
+</li>
+<li>
+<p>Passthrough: traverse hot edge → back to graph via <code>!*</code> reference → vertex name — <code>"vadas"</code>.</p>
+</li>
+<li>
+<p>Cold edge property value — <code>15.0</code>.</p>
+</li>
+<li>
+<p>Native graph edges coexist with external edges — returns <code>2</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The reference <code>!*g:V/2</code> in the hot edge&#8217;s <code>owner</code> field creates an <code>auto_from</code> pointer back to the graph.
+When accessed via <code>/owner/name</code>, the pointer resolves to vertex <code>2</code> in the graph, and its <code>name</code> property returns <code>"vadas"</code>.
+The traversal path <code>graph → external edge → graph</code> is transparent to the user.</p>
+</div>
+<div class="paragraph">
+<p>The two syntactic forms — <code>*/g/V/1/OUT/te:hot/a/item</code> and <code>*g:V/1.outE(te:hot/a)&gt;&gt;item</code> — are dual representations of the same underlying identifier resolution.
+The <em>path form</em> decomposes into <code>g:V</code> (collection), <code>1</code> (entry), <code>OUT</code> (direction), <code>te:hot</code> (external-space label), <code>a</code> (edge key), and <code>item</code> (field).
+The <em>instruction form</em> wraps the same decomposition: <code>outE(te:hot/a)</code> encodes direction + label + key, and <code>&gt;&gt;item</code> projects the field.
+Both route through the graph engine&#8217;s <code>readVertexTraversal</code>, where the scheme prefix <code>te:</code> triggers a read from the external <code>memspace</code>.
+Whether expressed as uri-path segments or instruction calls, the traversal graph <code>⎡vertex⎦ &#8594; ⎡external edge⎦ &#8594; ⎡property⎦</code> is identical — the instructions are simply an alternate notation for the same underlying path resolution.</p>
+</div>
+</div>
+</div>
+<h3 id="sec-metatron-encoded-graphs" class="discrete">metatron Encoded Graphs</h3>
+<div class="paragraph">
+<p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space.
+There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the reference&#8217;s referent.
+To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, within the same space, within the same computer, or across the web as a whole.</p>
+</li>
+<li>
+<p><code>&gt;&gt;</code> (<strong>forward</strong>): ensures monads move along the underlying data structure in a manner respective of the provided argument.</p>
+</li>
+<li>
+<p><code>-&lt;</code> (<strong>split</strong>): ensures that executing monads will split themselves across branching graph paths and branching code paths.</p>
+</li>
+<li>
+<p><code>&gt;-</code> (<strong>merge</strong>): ensures that branching graph and code paths will linearize themselves within the execution path of the machine.</p>
+</li>
+</ul>
+</div>
+<div class="exampleblock primary">
+<div class="title">Example 6. directed single-relational binary graph</div>
+<div class="content">
+<div class="paragraph">
+<p>A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational).
+An example of such a graph is presented in the code and diagram below.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 57.1428%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [!*v2, !*v3, !*v4]
+==&gt;[!*v2,!*v3,!*v4]
+mtron&gt; v2 -&gt; [,]
+==&gt;[,]
+mtron&gt; v3 -&gt; [!*v4, !*v5]
+==&gt;[!*v4,!*v5]
+mtron&gt; v4 -&gt; [,]
+==&gt;[,]
+mtron&gt; v5 -&gt; [,]
+==&gt;[,]
+mtron&gt; v6 -&gt; [!*v4]
+==&gt;[!*v4]
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[!*v2,!*v3,!*v4]
+mtron&gt; *v1.&gt;&gt;
+==&gt;{2}[,]
+==&gt;[!*v4,!*v5]
+mtron&gt; *v1.&gt;&gt;.&gt;&gt;
+==&gt;{2}[,]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p><code>v1</code> denotes the source vertex (0-step traversal).</p>
+</li>
+<li>
+<p><code>*v1</code> references the adjacent vertices to v1 (1-step traversal).</p>
+</li>
+<li>
+<p><code>*v1&gt;&gt;</code> traversers the v1 incident edges to the v1 adjanct vertices.</p>
+</li>
+<li>
+<p><code>*v1&gt;&gt;.&gt;&gt;</code> traveres the those edges emanating from the 3 adjacent vertices to v1.</p>
+</li>
+</ol>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">              ┌────┐
+          ┌───► v3 ◄───┐
+          │   └───▲┘   │     ┌────┐
+ ┌────┐   │       │    └─────│ v5 │
+ │ v1 │───┘       │          └────┘
+ └────┘           │
+  │  │            │
+  │  │           ┌┴───┐
+  │  └───────────│ v4 │
+  │              └─┬──┘
+  │                │
+  │ ┌────┐         │          ┌────┐
+  └─► v2 │         └──────────► v6 │
+    └────┘                    └────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 7. directed multi-relational binary graph</div>
+<div class="content">
+<div class="paragraph">
+<p>The previous graph structure can be further enhanced with multiple types of edges (multi-relational).
+Again, the code and diagram below exemplify this form.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 57.1428%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [knows=&gt;{!*v2, !*v3},created=&gt;!*v4]
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
+mtron&gt; v2 -&gt; [,]
+==&gt;[,]
+mtron&gt; v3 -&gt; [created=&gt;{!*v4, !*v5}]
+==&gt;[created=&gt;{!*v4,!*v5}]
+mtron&gt; v4 -&gt; [,]
+==&gt;[,]
+mtron&gt; v5 -&gt; [,]
+==&gt;[,]
+mtron&gt; v6 -&gt; [created=&gt;{!*v4}]
+==&gt;[created=&gt;!*v4]
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]
+mtron&gt; *v1.&gt;&gt;knows     ​3​
+==&gt;[,]
+==&gt;[created=&gt;{!*v4,!*v5}]
+mtron&gt; *v1.&gt;&gt;knows.&gt;&gt;created     ​4​
+==&gt;{2}[,]</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">              ┌────┐
+          ┌───► v3 ◄───┐
+          │   └───▲┘ created ┌────┐
+ ┌────┐ created   │    └─────│ v5 │
+ │ v1 │───┘       │          └────┘
+ └────┘        created
+  │  │            │
+  │  │           ┌┴───┐
+  │  └───knows───► v4 │
+  │              └─┬──┘
+knows              │
+  │ ┌────┐      created       ┌────┐
+  └─► v2 │         └──────────► v6 │
+    └────┘                    └────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 8. directed vertex-attributed multi-relational binary graph</div>
+<div class="content">
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 57.1428%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [name=&gt;'marko',age=&gt;29,
+              out_=&gt;[knows=&gt;{!*v2, !*v3},created=&gt;!*v4]]
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+mtron&gt; v2 -&gt; [name=&gt;'vadas',age=&gt;27]
+==&gt;[name=&gt;'vadas',age=&gt;27]
+mtron&gt; v3 -&gt; [name=&gt;'josh',age=&gt;32,
+              out_=&gt;[created=&gt;{!*v4, !*v5}]]
+==&gt;[name=&gt;'josh',
+    age=&gt;32,
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+mtron&gt; v4 -&gt; [name=&gt;'lop',lang=&gt;java]
+==&gt;[name=&gt;'lop',lang=&gt;java]
+mtron&gt; v5 -&gt; [name=&gt;'ripple',lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
+mtron&gt; v6 -&gt; [name=&gt;'peter',age=&gt;35,
+              out_=&gt;[created=&gt;{!*v4}]]
+==&gt;[name=&gt;'peter',
+    age=&gt;35,
+    out_=&gt;[created=&gt;!*v4]]
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows     ​3​
+==&gt;[name=&gt;'vadas',age=&gt;27]
+==&gt;[name=&gt;'josh',
+    age=&gt;32,
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created     ​4​
+==&gt;[name=&gt;'lop',lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
+mtron&gt; *v1.&gt;&gt;out_.&gt;&gt;knows.&gt;&gt;out_.&gt;&gt;created.&gt;&gt;name     ​5​
+==&gt;'lop'
+==&gt;'ripple'
+mtron&gt; *v1.&gt;&gt;out_/knows     ​3​
+==&gt;[name=&gt;'vadas',age=&gt;27]
+==&gt;[name=&gt;'josh',
+    age=&gt;32,
+    out_=&gt;[created=&gt;{!*v4,!*v5}]]
+mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created     ​4​
+==&gt;[name=&gt;'lop',lang=&gt;java]
+==&gt;[name=&gt;'ripple',lang=&gt;java]
+mtron&gt; *v1.&gt;&gt;out_/knows.&gt;&gt;out_/created.&gt;&gt;name     ​5​
+==&gt;'lop'
+==&gt;'ripple'</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">               lop
+              ┌────┐
+          ┌───► v3 ◄───┐      peter
+ marko    │   └───▲┘ created ┌────┐
+ ┌────┐ created   │    └─────│ v5 │
+ │ v1 │───┘       │          └────┘
+ └────┘        created
+  │  │            │
+  │  │           ┌┴───┐
+  │  └───knows───► v4 │ josh
+  │              └─┬──┘
+knows  vadas       │          ripple
+  │ ┌────┐      created       ┌────┐
+  └─► v2 │         └──────────► v6 │
+    └────┘                    └────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>To achieve a similar look and feel to Gremlin syntax, an <code>out</code> instruction can be defined to perform the respective <code>&gt;&gt;.&gt;&gt;</code> concatenation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |outE?rec{*}&lt;=rec(label=&gt;uri{*}::T){ &gt;&gt;(out_).&gt;&gt;(*label) }
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    out_=&gt;[knows=&gt;{!*v2,!*v3},created=&gt;!*v4]]
+mtron&gt; *v1.outE(knows)     ​3​
+mtron&gt; *v1.outE(knows).outE(created)     ​4​
+mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     ​5​</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">Example 9. directed attributed multi-relational binary graph</div>
+<div class="content">
+<div class="paragraph">
+<p>A graph can have both its vertices and edges annotated with attributes.
+This form is the classic <strong>property graph</strong> data model.
+For the sake of brevity, only vertex 1 and its incident edges will be developed and diagrammed.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 57.1428%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [
+         name=&gt;'marko',age=&gt;29,
+         outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
+                         [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
+                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+mtron&gt; v2 -&gt; [name=&gt;'vadas']
+==&gt;[name=&gt;'vadas']
+mtron&gt; v3 -&gt; [name=&gt;'josh']
+==&gt;[name=&gt;'josh']
+mtron&gt; v4 -&gt; [name=&gt;'lop']
+==&gt;[name=&gt;'lop']
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     ​3​
+==&gt;[name=&gt;'vadas']
+==&gt;[name=&gt;'lop']
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     ​4​</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">              ┌────┐
+          ┌───► v3 │ lop
+ marko    │   └────┘
+ ┌────┐ created
+ │ v1 │───┘0.2
+ └────┘
+  │  │
+  │  │           ┌────┐
+  │  └───knows───► v4 │ josh
+knows     0.5    └────┘
+ 0.5
+  │ ┌────┐
+  └─► v2 │ vadas
+    └────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>To achieve a similar look and feel to Gremlin syntax, an <code>out</code> instruction can be defined to perform the respective <code>&gt;&gt;.&gt;&gt;</code> concatenation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
+                 &gt;&gt;(outE_).&gt;&gt;(*label).&gt;&gt;(inV_) }
+mtron&gt; v1     ​1​
+==&gt;v1
+mtron&gt; *v1     ​2​
+==&gt;[name=&gt;'marko',
+    age=&gt;29,
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
+mtron&gt; *v1.out(knows)     ​3​
+mtron&gt; *v1.out(knows).out(created)     ​4​
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
+</div>
+</div>
+</div>
+</div>
+<h4 id="sec-performance-tiering" class="discrete">Performance Tiering</h4>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top"><strong>file system</strong></th>
+<th class="tableblock halign-center valign-top"><strong>in-memory</strong></th>
+<th class="tableblock halign-center valign-top"><strong>database</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">fsspace::[pattern=&gt;fs:#]</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">memspace::[pattern=&gt;mem:#]</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">dcmtspace::[pattern=&gt;dcmt:#]</code></pre>
+</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
+<ul>
+<li>
+<p>slow</p>
+</li>
+<li>
+<p>static</p>
+</li>
+<li>
+<p>stable.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
+<ul>
+<li>
+<p>fast</p>
+</li>
+<li>
+<p>dynamic</p>
+</li>
+<li>
+<p>transient.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
+<ul>
+<li>
+<p>fast</p>
+</li>
+<li>
+<p>complex</p>
+</li>
+<li>
+<p>stable</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>A typical configuration partitions subgraphs by access frequency.
+Frequently traversed <code>knows</code>-edges reside in <code>memspace</code> (sub-millisecond reads).
+Rarely queried <code>purchases</code>-edges reside in <code>tblespace</code> (disk-backed).
+The vertex&#8217;s <code>OUT</code> traversal remains a single expression regardless of how many spaces contribute edges.</p>
+</div></main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

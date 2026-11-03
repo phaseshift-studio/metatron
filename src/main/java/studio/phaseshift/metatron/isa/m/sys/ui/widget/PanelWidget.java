@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.reflect.SpaceRec;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -52,7 +53,7 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
 
     public static final fURI UI_PANEL_TID = f("/m/sys/ui/widget/panel");
 
-    public static final Type UI_PANEL_TYPE = Type.Builder.build()
+    public static final Type UI_PANEL_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(UI_PANEL_TID)
             .isaPredicate(rec())

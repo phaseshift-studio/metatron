@@ -19,115 +19,104 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.furi.q.QCollection.Docs;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.furi.q.QCollection.lawWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.decWrap;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * BUILD AN INSTRUCTION IN ONE CHAIN — the friendly surface over {@code instC}. A single declaration states the
  * contract ({@code tid/dom/rng/argLst}), the implementation ({@code body}), its DOCS ({@code ?docq}) and its
- * process LAWS with the two relations a row still carries — its INVERSE and its DERIVATION ({@code ?lawq}),
- * instead of scattering the four across an {@code instC} call, a {@code docWrap} call and a law-table row:
+ * process LAWS with the two relations a row still carries — its INVERSE and its DERIVATION ({@code ?decq}) —
+ * instead of scattering the four across an {@code instC} call, a documentation call and a law-table row:
  *
  * <pre>{@code
- * InstBuilder.build().tid(PLUS_INST_TID)
- *         .dom(INT_TID).docDom("the lhs integer")
- *         .rng(INT_TID).docRng("the sum")
- *         .argLst(INT_TYPE).argDocs(Map.of(jnt(0), "the int to add"))
+ * InstBuilder.build().tid(PLUS_INST_TID, "addition")
+ *         .dom(INT_TID, "the lhs integer")
+ *         .rng(INT_TID, "the sum")
+ *         .argLst(INT_TYPE, "the int to add")
  *         .body((lhs, inst) -> ...)
  *         .law(commutative, right_distributive, action, pure)
- *         .docDesc("addition")
  *         .create();
  * }</pre>
  *
- * <p>The declaration is STAGED, not written: an instruction is built before its instset is mounted (the same
- * reason {@code docWrap} soft-fails during an ISA's own setup), so the set persists it with {@link #drain} once
- * its space exists. Docq and lawq remain the stores of record — the durable form a later boot reads back — and the
- * staged map is also the QUERY INDEX a law table reads ({@link #declaration}, {@link #declarations}): a declaration
- * is answerable from memory the moment the instruction is created, so a rewrite consults it without walking the
- * registered instructions or reading the store beside each.
+ * <p>DOCUMENTATION IS INLINE: the doc string is the second argument of the method it documents, exactly as it is
+ * in {@link AbstractObjBuilder}. There is no {@code doc(...)} step and no separate documentation call, because a
+ * doc kept apart from the declaration it describes drifts from it and is forgotten on the way in. The argument
+ * docs are POSITIONAL — {@code argLst(int::T, "the addend", int::T, "the augend")} is legal and keeps both strings
+ * in the order the arguments were declared — because an instruction's arguments are a sequence, not a set, and
+ * two arguments of the same type are two distinct positions.
+ *
+ * <p>NOTHING IS WRITTEN HERE. An instruction is built while its instruction set is still initializing, before the
+ * space that would receive it exists, so {@link #create()} composes the value and QUEUES the writes — the object at
+ * its contract address, its docs at {@code ?docq}, its declaration at {@code ?decq} — and the set that owns the address
+ * republishes them when it mounts. The retained staging log ({@link PendingWrites}) IS the query index a law table
+ * reads: a declaration is answerable from memory the moment the instruction is created and stays answerable, so a
+ * rewrite costs a hash read instead of a walk. The ONE thing kept here is the declared FORM index
+ * ({@link #DECLARED_FORMS}): a form is keyed by the OPERATION's address rather than the full n-tid, because a rewrite
+ * reads the form off an instruction whose tid has been RETYPED to its declared contract, and the staging log — which
+ * is keyed by that full n-tid — would miss exactly the reads that matter.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public final class InstBuilder {
-
-    /**
-     * THE DECLARATIONS, IN MEMORY, keyed by the inst's declared n-tid. This is the QUERY INDEX over {@code ?lawq}:
-     * {@link #drain} persists a declaration to the store (the durable record, and the only one that survives a boot)
-     * while this map answers the questions a rewrite asks per pass — so a law lookup is a hash read, never a walk of
-     * every registered instruction and a space read beside each.
-     */
-    private static final Map<fURI, Declaration> DECLARATIONS = new ConcurrentHashMap<>();
-
-    /**
-     * A DECLARATION'S IDENTITY IS THE OPERATION'S, not the argument types the instruction happened to be minted with:
-     * a law/inverse/derivation is a fact about the algebra, so the {@code args} component is stripped before the index
-     * is read or written ({@code MInst.ARGS_IN_TID} can put one there, and a caller holding a rebuilt tid may not).
-     */
-    private static fURI declarationKey(final fURI tid) {
-        return null == tid || !tid.hasQ(ARGS) ? tid : tid.args(List.of());
-    }
-
-    /**
-     * The order declarations were made in. A reader that unions them ({@code LawTable.derivations}) must replay them
-     * deterministically, and a hash map's iteration order is not an order — the instructions' own build order is.
-     */
-    private static final Queue<fURI> DECLARATION_ORDER = new ConcurrentLinkedQueue<>();
-
-    /**
-     * The ordered READ-ONLY view of {@link #DECLARATIONS}, rebuilt only when a declaration lands — so the union a
-     * rewrite pass reads is one plain map, not a copy and not a hash-ordered walk.
-     */
-    private static volatile Map<fURI, Declaration> DECLARATION_VIEW = Map.of();
-    private static volatile int DECLARATION_VIEW_SIZE = -1;
-
-    /**
-     * What an instruction declares BESIDE its docs: the process laws it obeys, the opposing edge it declares, and
-     * its defining equation. Staged as one unit because a law row is one claim — a declaration carrying only an
-     * inverse or only a derivation is as complete as one carrying only laws.
-     */
-    public record Declaration(List<Law> laws, fURI inverse, Derivation derivation) {
-    }
+public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
 
     /**
      * THE DECLARED FORMS, IN MEMORY, keyed by the OPERATION's base path. A form is a fact about the operation, not
      * about one registration: every dom/rng specialization of {@code as} is the same typer, and a rewrite reads a
      * form off an instruction whose tid has been RETYPED to its declared contract, so a map keyed by the full n-tid
      * would miss exactly the reads that matter. {@link #drain} records the facet beside the instruction in
-     * {@code ?lawq}, as it does the laws, inverse and derivation.
+     * {@code ?decq}, as it does the laws, inverse and derivation.
      */
     private static final Map<fURI, Inst.Form> DECLARED_FORMS = new ConcurrentHashMap<>();
 
-    private fURI tid;
+    /**
+     * FORGET EVERY DECLARED FORM — the build-time index of the forms an {@code ?decq} claim states. Part of
+     * {@code BootLoader.resetCaches()}: a form is a property of the declaration in THIS JVM, not a fact to carry
+     * across a reset (the declarations themselves live in the retained log / the store).
+     */
+    public static void reset() {
+        DECLARED_FORMS.clear();
+    }
+
     private fURI dom;
     private fURI rng;
     private Poly<?, ?> args = lst();
     private BiFunction<Obj, Inst, Obj> body;
-    private String description;
     private String domDesc;
     private String rngDesc;
-    private Map<Obj, String> argDocs = Map.of();
-    private String[] examples = {};
+    private final List<String> argDocList = new ArrayList<>();
+
+    /**
+     * THE ARGUMENT DOCS KEYED BY THE ARGUMENT'S OWN KEY — the form a {@code rec(...)} argument list needs, where a
+     * position is not the identity.
+     */
+    private final Map<Obj, String> keyedArgDocs = new LinkedHashMap<>();
     private Obj seed;
-    private fURI inverse;
-    private Derivation derivation;
     private Inst.Form form;
-    private final List<Law> laws = new ArrayList<>();
 
     private InstBuilder() {
     }
@@ -136,13 +125,12 @@ public final class InstBuilder {
         return new InstBuilder();
     }
 
-    public InstBuilder tid(final fURI tid) {
-        this.tid = tid;
-        return this;
-    }
-
-    public InstBuilder tid(final fURI tid, final String description) {
-        return this.tid(tid).docDesc(description);
+    /**
+     * The domain — the type of the lhs the instruction is applied to — with the doc string for that domain inline.
+     */
+    public InstBuilder dom(final fURI dom, final String desc) {
+        this.domDesc = desc;
+        return this.dom(dom);
     }
 
     public InstBuilder dom(final fURI dom) {
@@ -150,29 +138,51 @@ public final class InstBuilder {
         return this;
     }
 
+    /**
+     * The range — the type of the value the instruction answers — with the doc string for that range inline.
+     */
+    public InstBuilder rng(final fURI rng, final String desc) {
+        this.rngDesc = desc;
+        return this.rng(rng);
+    }
+
     public InstBuilder rng(final fURI rng) {
         this.rng = rng;
         return this;
     }
 
-    public InstBuilder dom(final fURI dom, final String desc) {
-        return this.dom(dom).docDom(desc);
-    }
-
-    public InstBuilder rng(final fURI rng, final String desc) {
-        return this.rng(rng).docRng(desc);
+    /**
+     * The declared arguments with their docs inline, one doc per POSITION — so two arguments of the same type are
+     * two documented positions rather than one collapsed key.
+     */
+    /**
+     * THE ARGUMENT DOCS KEYED BY THE ARGUMENT'S OWN KEY — the form a {@code rec(...)} argument list needs, where a
+     * position is not the identity (an {@code apply(lhs, args)} contract documents {@code lhs} and {@code args},
+     * not "arg 0"). Merges into the doc rec's {@code args} slot beside any positional docs.
+     */
+    public InstBuilder argDocs(final Map<Obj, String> docs) {
+        if (null != docs)
+            this.keyedArgDocs.putAll(docs);
+        return this;
     }
 
     public InstBuilder argLst(final Obj arg0, final String arg0Desc) {
-        return this.argLst(arg0).argDocs(Map.of(arg0, arg0Desc));
+        this.argDocList.add(arg0Desc);
+        return this.argLst(arg0);
     }
 
     public InstBuilder argLst(final Obj arg0, final String arg0Desc, final Obj arg1, final String arg1Desc) {
-        return this.argLst(arg0, arg1).argDocs(Map.of(arg0, arg0Desc, arg1, arg1Desc));
+        this.argDocList.add(arg0Desc);
+        this.argDocList.add(arg1Desc);
+        return this.argLst(arg0, arg1);
     }
 
-    public InstBuilder argLst(final Obj arg0, final String arg0Desc, final Obj arg1, final String arg1Desc, final Obj arg2, final String arg2Desc) {
-        return this.argLst(arg0, arg1, arg2).argDocs(Map.of(arg0, arg0Desc, arg1, arg1Desc, arg2, arg2Desc));
+    public InstBuilder argLst(final Obj arg0, final String arg0Desc, final Obj arg1, final String arg1Desc,
+                              final Obj arg2, final String arg2Desc) {
+        this.argDocList.add(arg0Desc);
+        this.argDocList.add(arg1Desc);
+        this.argDocList.add(arg2Desc);
+        return this.argLst(arg0, arg1, arg2);
     }
 
     public InstBuilder argLst(final Obj... argTypes) {
@@ -198,30 +208,6 @@ public final class InstBuilder {
         return this;
     }
 
-    public InstBuilder law(final Law... laws) {
-        this.laws.addAll(List.of(laws));
-        return this;
-    }
-
-    /**
-     * the DECLARED opposing edge ({@code inverse(f) = g} claims {@code f·g = ε} only — f a section, g its
-     * retraction, never {@code g·f = ε}). Pass null for none, which is what an instruction whose carrier declares
-     * no algebra states — a retraction is a fact about the implementation, not the structure.
-     */
-    public InstBuilder inverse(final fURI inverse) {
-        this.inverse = inverse;
-        return this;
-    }
-
-    /**
-     * the DEFINING equation ({@code minus ≡ plus ∘ neg}) — what lets the carrier's algebra derive the inverse
-     * instead of the row declaring one, and what a fold's combiner is read off.
-     */
-    public InstBuilder derivation(final Derivation derivation) {
-        this.derivation = derivation;
-        return this;
-    }
-
     /**
      * Declare the instruction's {@link Inst.Form FORM} — the one facet an n-tid coefficient shape cannot derive.
      * Today the declarable form is {@code typer}: an instruction whose subject is the OBJECT'S TYPE/IDENTITY rather
@@ -229,7 +215,7 @@ public final class InstBuilder {
      * opaque to a wrapper's {@code {self} ∪ components} fan-out — {@code as} decides what the value IS, so it
      * cannot be distributed over the old basis — and the rewriter neither floats it across a coefficient change nor
      * merges two of them ({@link Inst.Form#isFloatable()} and {@link Inst.Form#isBlocked()} are both false).
-     * Staged with the other declaration facets and persisted to {@code ?lawq} by {@link #drain}.
+     * Queued with the other declaration facets and published to {@code ?decq} by {@link #drain}.
      */
     public InstBuilder form(final Inst.Form form) {
         this.form = form;
@@ -245,10 +231,10 @@ public final class InstBuilder {
 
     /**
      * Declare an ALREADY-REGISTERED operation's form by its base path — the call a registration site makes when its
-     * instructions are built by {@code instC(...)} + {@code docWrap(...)} rather than through this builder (which is
-     * how the obj/inst area registers {@code as}, {@code type()}, {@code vid()} and {@code tid()}). The declaration
-     * is per OPERATION, so every dom/rng specialization of it is covered and a RETAINED instruction still answers
-     * {@link Inst.Form#of} after a rewrite retypes its tid.
+     * instructions are built by {@code instC(...)} rather than through this builder (which is how the obj/inst area
+     * registers {@code as}, {@code type()}, {@code vid()} and {@code tid()}). The declaration is per OPERATION, so
+     * every dom/rng specialization of it is covered and a RETAINED instruction still answers {@link Inst.Form#of}
+     * after a rewrite retypes its tid.
      */
     public static void declareForm(final Inst.Form form, final fURI... opTids) {
         for (final fURI opTid : opTids)
@@ -264,35 +250,14 @@ public final class InstBuilder {
         return null == instTid ? null : DECLARED_FORMS.get(instTid.basePath());
     }
 
-    public InstBuilder docDesc(final String description) {
-        this.description = description;
-        return this;
-    }
-
-    public InstBuilder docDom(final String description) {
-        this.domDesc = description;
-        return this;
-    }
-
-    public InstBuilder docRng(final String description) {
-        this.rngDesc = description;
-        return this;
-    }
-
-    public InstBuilder argDocs(final Map<Obj, String> docs) {
-        this.argDocs = docs;
-        return this;
-    }
-
-    public InstBuilder examples(final String... examples) {
-        this.examples = null == examples ? new String[]{} : examples;
-        return this;
-    }
-
     /**
-     * The instruction. Its docs are written straight to {@code ?docq} (the space is already known when a set
-     * constructs its insts) and its declaration is staged for {@link #drain}.
+     * The instruction — composed exactly as {@code instC} would compose it, then QUEUED: the object at its contract
+     * address (the write the owning set indexes at mount), its docs at {@code ?docq} when the chain documented any
+     * slot, and its claim at {@code ?decq} when it declared laws, an inverse, a derivation or a form. Nothing is
+     * written to a space here: an instruction set builds its instructions during its own static initialization,
+     * before a machine exists to write to.
      */
+    @Override
     public Inst create() {
         if (null == this.tid)
             throw MTronException.of("tid must be set before creating an inst");
@@ -303,76 +268,113 @@ public final class InstBuilder {
         final Inst inst = null == this.seed ?
                 MInst.instC(keyed, this.args, this.body) :
                 MInst.instC(keyed, this.args, this.body, this.seed);
-        if (null != this.description)
-            docWrap(inst,
-                    null == this.domDesc ? this.dom.toString() : this.domDesc,
-                    null == this.rngDesc ? this.rng.toString() : this.rngDesc,
-                    this.argDocs, this.description, this.examples);
-        // any facet is a declaration: an instruction may state only its inverse or only its defining equation
-        if (!this.laws.isEmpty() || null != this.inverse || null != this.derivation) {
-            DECLARATIONS.put(declarationKey(inst.tid()), new Declaration(List.copyOf(this.laws), this.inverse, this.derivation));
-            DECLARATION_ORDER.add(inst.tid());
-        }
+        PendingWrites.write(inst.tid(), inst);
+        final Rec doc = this.docRec(inst);
+        if (!doc.isEmpty())
+            PendingWrites.write(PendingWrites.docq(inst.tid()), doc);
+        // AND AT THE BARE ADDRESS: a reader asks `and()`, not `and()?rng=…&args=…`, and resolving that from
+        // the doc q-proc must not require a value read (which would resolve the inst as a side effect).
+        if (!inst.tid().basePath().equals(inst.tid()))
+            PendingWrites.write(PendingWrites.docq(inst.tid().basePath()), doc);
+        final Rec claim = claimRec(List.copyOf(this.laws), this.inverse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
+        if (!claim.isEmpty())
+            PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claim);
         // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
         if (null != this.form)
             DECLARED_FORMS.put(keyed.basePath(), this.form);
+        else
+            DECLARED_FORMS.put(keyed.basePath(), Inst.Form.of(inst));
         return inst;
     }
 
     /**
-     * THE DECLARATION AN INSTRUCTION MADE BESIDE ITSELF, or null when it made none — a hash read, which is what
-     * {@code ?lawq} cannot be: the store answers by space lookup, and asking it once per registered instruction is
-     * how a law lookup became a per-evaluation cost.
-     */
-    public static Declaration declaration(final fURI instTid) {
-        return null == instTid ? null : DECLARATIONS.get(declarationKey(instTid));
-    }
-
-    /**
-     * EVERY DECLARATION IN THE REGISTRY, in the order the instructions were built, as an UNMODIFIABLE view — the
-     * read a union over all defining equations takes. Nothing is written through it: the store stays the durable
-     * record ({@link #drain}), this is the in-memory index over it. The view is rebuilt only when a declaration
-     * lands, so a rewrite pass pays one map read rather than a copy.
-     */
-    public static Map<fURI, Declaration> declarations() {
-        if (DECLARATION_VIEW_SIZE != DECLARATION_ORDER.size()) {
-            final Map<fURI, Declaration> view = new LinkedHashMap<>();
-            for (final fURI tid : DECLARATION_ORDER) {
-                final Declaration declared = DECLARATIONS.get(declarationKey(tid));
-                if (null != declared)
-                    view.put(tid, declared);
-            }
-            DECLARATION_VIEW = Collections.unmodifiableMap(view);
-            DECLARATION_VIEW_SIZE = DECLARATION_ORDER.size();
-        }
-        return DECLARATION_VIEW;
-    }
-
-    /**
-     * PERSIST an inst's staged declaration to {@code ?lawq} — the call an instset makes once its space is mounted.
-     * An inst that declared none is untouched, and a facet that was never declared is omitted rather than written
-     * as a null or an empty list, so the rec carries exactly the claims the instruction made. The declared FORM is
-     * staged per operation ({@link #declareForm}), so it is read back by the inst's base path.
+     * PERSIST an inst's staged declaration to {@code ?decq} — the call an instset makes once its space is mounted,
+     * and the call a caller makes when it wants the store to answer now.
+     *
+     * <p>THE CLAIM IS READ FROM THE RETAINED STAGING LOG, not recomposed from a registry: {@code create()} queued the
+     * exact rec (laws, inverse, derivation, form) at {@code ?decq}, and that write stays staged, so the claim published
+     * here is the claim the instruction made. The FORM facet is the one kept out of the log's key — it is declared per
+     * OPERATION ({@link #DECLARED_FORMS}) — so it is appended when the staged rec does not already carry it.
+     * {@link studio.phaseshift.metatron.furi.q.QCollection#decWrap} publishes the same rec immediately, so a rewrite
+     * that drains an instruction and then consults the store does not see a hole; both writes land at the same address
+     * with the same value, so the replay is a no-op rather than a second claim.
      */
     public static void drain(final Inst inst) {
         if (null == inst || null == inst.tid())
             return;
-        final Declaration declared = DECLARATIONS.get(declarationKey(inst.tid()));   // a DECLARATION, not a one-shot: each VM boot repersists it
+        final fURI claimAddress = PendingWrites.decq(Inst.Helper.operationTid(inst.tid()));
+        final Obj staged = PendingWrites.find(claimAddress);
         final Inst.Form form = DECLARED_FORMS.get(inst.tid().basePath());
-        if (null == declared && null == form)
+        if (null == staged && null == form)
             return;
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
-        if (null != declared) {
-            if (!declared.laws().isEmpty())
-                facets.put(uri(LAW), lst(declared.laws().stream().map(l -> (Obj) uri(l.name())).toList()));
-            if (null != declared.inverse())
-                facets.put(uri(INVERSE), uri(declared.inverse()));
-            if (null != declared.derivation())
-                facets.put(uri(DERIVATION),
-                        rec(uri(LHS), declared.derivation().lhs(), uri(RHS), declared.derivation().rhs()));
+        if (null != staged && staged.isRec()) {
+            final Rec declared = staged.asRec();
+            final Obj laws = declared.atDirect(uri(LAW));
+            if (!laws.isNoObj())
+                facets.put(uri(LAW), laws);
+            final Obj inverse = declared.atDirect(uri(INVERSE));
+            if (!inverse.isNoObj())
+                facets.put(uri(INVERSE), inverse);
+            final Obj derivation = declared.atDirect(uri(DERIVATION));
+            if (!derivation.isNoObj())
+                facets.put(uri(DERIVATION), derivation);
         }
         if (null != form)
             facets.put(uri(FORM), uri(form.name()));
-        lawWrap(inst, rec(facets));
+        final Rec claim = facets.isEmpty() ? rec0() : rec(facets);
+        PendingWrites.write(claimAddress, claim);
+        decWrap(inst, claim);
+    }
+
+    /**
+     * THE CLAIM REC — what an instruction declares beside itself, composed ONCE so the queued write and the drained
+     * write cannot disagree: the process laws it obeys, the opposing edge it declares, its defining equation and the
+     * form it declared. A facet that was never declared is omitted rather than written as a null or an empty list,
+     * so the rec carries exactly the claims the instruction made; a claim of nothing at all is the empty rec.
+     */
+    private static Rec claimRec(final List<Law> laws, final fURI inverse, final Derivation derivation,
+                                final Inst.Form form) {
+        final Map<Obj, Obj> facets = new LinkedHashMap<>();
+        if (null != laws && !laws.isEmpty())
+            facets.put(uri(LAW), lst(laws.stream().map(l -> (Obj) uri(l.name())).toList()));
+        if (null != inverse)
+            facets.put(uri(INVERSE), uri(inverse));
+        if (null != derivation)
+            facets.put(uri(DERIVATION), rec(uri(LHS), derivation.lhs(), uri(RHS), derivation.rhs()));
+        if (null != form)
+            facets.put(uri(FORM), uri(form.name()));
+        return facets.isEmpty() ? rec0() : rec(facets);
+    }
+
+    /**
+     * THE DOC REC — what the chain documented, in the one shape {@code ?docq} stores: the obj the docs describe, the
+     * {@code desc}/{@code dom}/{@code rng} prose, the POSITIONAL argument docs and the worked examples. A slot the
+     * chain never stated falls back to the contract it describes (the dom and rng addresses) and is otherwise
+     * {@code noobj}; an undocumented chain answers the empty rec, which is what tells {@link #create()} that there
+     * is no doc write to queue.
+     */
+    private Rec docRec(final Inst inst) {
+        final String domDoc = null == this.domDesc ? (null == this.dom ? null : this.dom.toString()) : this.domDesc;
+        final String rngDoc = null == this.rngDesc ? (null == this.rng ? null : this.rng.toString()) : this.rngDesc;
+        final Map<Obj, Obj> keyed = new LinkedHashMap<>();
+        this.keyedArgDocs.forEach((key, doc) -> keyed.put(key, str(doc)));
+        final Obj argsDoc = !keyed.isEmpty()
+                ? rec(keyed)
+                : this.argDocList.isEmpty() ?
+                noobj() :
+                lst(this.argDocList.stream().map(doc -> (Obj) str(null == doc ? "" : doc)).toList());
+        final List<Obj> examples = this.examples.stream().map(example -> (Obj) str(example)).toList();
+        if (null == this.description && null == this.domDesc && null == this.rngDesc
+                && argsDoc.isNoObj() && examples.isEmpty())
+            return rec0();
+        return new Docs(mutableMap(
+                uri(OBJ), inst,
+                uri(DOM), null == domDoc || domDoc.isBlank() ? noobj() : str(domDoc),
+                uri(RNG), null == rngDoc || rngDoc.isBlank() ? noobj() : str(rngDoc),
+                uri(ARGS), argsDoc,
+                uri(DESC), null == this.description || this.description.isBlank() ? noobj() : str(this.description),
+                uri(EXAMPLE), examples.isEmpty() ? noobj() : lst(examples)),
+                DOCS_TID, null);
     }
 }

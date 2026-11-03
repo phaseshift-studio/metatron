@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;

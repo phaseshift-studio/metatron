@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.webInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -56,7 +57,7 @@ public class web_httpHandler extends HttpRec {
 
     public static final fURI WEB_HTTP_TID = WEB_ISA_TID.extend("http").extend("web_http");
 
-    public static final Type WEB_HTTP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type WEB_HTTP_HANDLER_TYPE = TypeBuilder.build()
             .tid(webInstSet.REST_TID)
             .vid(WEB_HTTP_TID)
             .isaPredicate(rec(

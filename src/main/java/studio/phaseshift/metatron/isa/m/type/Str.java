@@ -20,8 +20,9 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
@@ -32,12 +33,10 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.Tokens.STR_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -285,6 +284,10 @@ public interface Str extends Mono {
 
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
+        public static boolean isQuoted(final String string) {
+            return (string.startsWith("'") && string.endsWith("'")) || (string.startsWith("\"") && string.endsWith("\""));
+        }
+
         public static String stripQuotes(String string) {
             while (string.startsWith("'") || string.startsWith("\"")) {
                 string = string.substring(1);
@@ -385,10 +388,23 @@ public interface Str extends Mono {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     //instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())))),
-                    docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue()) ? lhs : noobj()),
-                            "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
+                    InstBuilder.build().tid(HAS_INST_TID)
+                            .dom(STR_TID, "an str to check")
+                            .rng(STR_TID.maybe(), "whether the domain matches arg")
+                            .argLst(T(STR_TID), "the regex for matching")
+                            .desc("check whether the lhs str matches the regex arg")
+                            .body((lhs, inst) -> CommonUtil.findSafely(REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern), lhs.strValue()) ? lhs : noobj())
+                            .create(),
                     //    Map.of(uri(LAW), laws(Category.Law.boolean_)),
-                    docWrap(instC(SELECT_INST_TID.dom(STR_TID).rng(Tokens.LST_TID), lst(T(STR_TID)), (lhs, inst) -> {
+                    InstBuilder.build().tid(SELECT_INST_TID)
+                            .dom(STR_TID, "a str to split by regex")
+                            .rng(Tokens.LST_TID, "the regex capture groups (or full matches) of the lhs str")
+                            .argLst(T(STR_TID), "regex")
+                            .desc("split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches")
+                            .example("'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]")
+                            .example("'abc.cde'.regex('.\\..') [-- ['c.c'] --]")
+                            .example("'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]")
+                            .body((lhs, inst) -> {
                                 final Pattern pattern = REGEX_CACHE.computeIfAbsent(inst.arg(0).strValue(), CommonUtil::guardPattern);
                                 return CommonUtil.withMatcher(pattern, lhs.strValue(), matcher -> {
                                     if (matcher.groupCount() == 0) {
@@ -405,24 +421,11 @@ public interface Str extends Mono {
                                         }).toList());
                                     }
                                 });
-                            }),
-                            "a str to split by regex",
-                            "the regex capture groups (or full matches) of the lhs str",
-                            Map.of(jnt(0), "regex"),
-                            "split the lhs str by regex matches; if the regex has capture groups, each match is a lst of [fullMatch, group1, group2, ...], otherwise a flat lst of full matches",
-                            "'abc.cde'.regex('[^.]+') [-- ['abc','cde'] --]",
-                            "'abc.cde'.regex('.\\..') [-- ['c.c'] --]",
-                            "'241G'.regex('(\\d+)([KMGT])') [-- [['241G','241','G']] --]"),
+                            })
+                            .create(),
 
                     instC(UPDATE_INST_TID.dom(STR_TID).rng(STR_TID), lst(REC_TYPE), (lhs, inst) -> str(Str.Helper.project(lhs.strValue(), inst.arg(0)), lhs.tid(), lhs.vid())),
                     instC(HAS_INST_TID.dom(STR_TID).rng(STR_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> ProjectionFailureException.predicateThrow(lhs, a -> Str.Helper.project(lhs.strValue(), inst.arg(0).asRec())))
-                    //      Map.of(uri(LAW), laws(Category.Law.boolean_)),
-
-                    /*instC(WITHIN_INST_TID.dom(STR_TID).rng(B), lst(T(B)), (lhs, inst) -> Arrays.stream(lhs.strValue().split("")).map(s -> inst.arg(0).apply(str(s))).
-                            map(o -> (PlusMonoid.O) o).
-                            reduce((a, b) -> (PlusMonoid.O) a.plus(b)).
-                            map(Obj::<Obj>as).
-                            orElse(noobj()))*/
             ));
         }
     }

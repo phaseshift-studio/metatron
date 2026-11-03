@@ -19,19 +19,22 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.lawOf;
+import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -52,8 +55,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>
  * A type is declared by its ADDRESSES ({@code tid} = the representation it refines, {@code vid} = its name), its
  * PREDICATE (the refinement) and — the axis this whole effort has been moving — its ALGEBRA ({@code law => ...}),
- * the theory instances the type models. The algebra is declared with {@code Type.Builder} and persisted to
- * {@code ?lawq} by the drain that runs when this set is mounted, which is why it can be written here, before any
+ * the theory instances the type models. The algebra is declared with {@code TypeBuilder} and persisted to
+ * {@code ?decq} by the drain that runs when this set is mounted, which is why it can be written here, before any
  * space exists.
  * <p>
  * The ADDRESSES below are declared against the {@code Tokens} addresses only, so the fields depend on nothing in
@@ -70,29 +73,61 @@ public final class mTypes {
     private mTypes() {
     }
 
-    public static final Type BOOL_TYPE = Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create();
+    public static final Type BOOL_TYPE = TypeBuilder.build().tid(BOOL_TID).vid(BOOL_TID).create();
 
-    public static final Type BYTES_TYPE = Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create();
+    public static final Type BYTES_TYPE = TypeBuilder.build().tid(BYTES_TID).vid(BYTES_TID).create();
 
-    public static final Type INT_TYPE = Type.Builder.build().tid(INT_TID).vid(INT_TID).create();
+    public static final Type INT_TYPE = TypeBuilder.build().tid(INT_TID).vid(INT_TID).create();
 
-    public static final Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
+    public static final Type REAL_TYPE = TypeBuilder.build().tid(REAL_TID).vid(REAL_TID).create();
 
-    public static final Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
+    public static final Type STR_TYPE = TypeBuilder.build().tid(STR_TID).vid(STR_TID).create();
 
-    public static final Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
+    public static final Type URI_TYPE = TypeBuilder.build().tid(URI_TID).vid(URI_TID).create();
 
-    public static final Type REL_TYPE = Type.Builder.build().tid(REL_TID).vid(REL_TID).create();
+    /**
+     * {@code law::T} — the process-law vocabulary as DATA: a {@code uri} is a law exactly when its own label's address
+     * under {@link Law#LAW_TID} already holds a uri. The type is a NOMINAL refinement of {@code uri::T} at the
+     * vocabulary's own address ({@code /m/law}), registered with the base set so it mounts with {@code /m} — the law
+     * values live in the same jurisdiction, and the type is needed before the optional category renders it.
+     * <p>
+     * THE PREDICATE READS {@link Machine#current()}'s view through {@code Machine.read}: a law declared in a pushed
+     * frame resolves there (the base {@code /m} is inherited), exactly as the wildcard read of {@code /m/law/+} answers
+     * at the console — the read is the match, and no match is {@code noobj()}. The wildcard read is deliberate: the
+     * store is the truth, so there is no second index (no set, no bloom) to keep in sync with it, and ~22 labels are
+     * cheaper to scan than to hash. A predicate must never throw during boot, so a machine that is not up refuses
+     * rather than reading.
+     */
+    final static Set<String> LAWS_SET = Stream.of(Law.values()).map(Enum::name).collect(Collectors.toSet());
+    public static final Type LAW_TYPE = TypeBuilder.build()
+            .tid(URI_TID)
+            // NO DESCRIPTION HERE, deliberately: create() would compose a ?docq rec through QCollection.Docs, whose
+            // static initialization reads mInstSet.AS_INST_TID — a field this class initializes BEFORE — so a
+            // description here closes a class-initialisation cycle. The vocabulary's documentation is published by
+            // Law.register() (at the type's address and at every law's address) once the machine is up instead.
+            .vid(Law.LAW_TID)
+            .predicate((lhs, inst) -> {
+                if (!Machine.loaded() || null == lhs || !lhs.isUri())
+                    return noobj();
+                final String label = lhs.uriValue().name();
+                // the preconstructed set answers the built-in vocabulary without a read; a law WRITTEN at
+                // /m/law/<label> is admitted because law is where the uri lives, not a compiled-in list
+                return LAWS_SET.contains(label) || !Machine.read(Law.LAW_TID.extend(label)).isNoObj()
+                        ? lhs : noobj();
+            })
+            .create();
 
-    public static final Type LST_TYPE = Type.Builder.build().tid(LST_TID).vid(LST_TID).create();
+    public static final Type REL_TYPE = TypeBuilder.build().tid(REL_TID).vid(REL_TID).create();
 
-    public static final Type REC_TYPE = Type.Builder.build().tid(REC_TID).vid(REC_TID).create();
+    public static final Type LST_TYPE = TypeBuilder.build().tid(LST_TID).vid(LST_TID).create();
 
-    public static final Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
+    public static final Type REC_TYPE = TypeBuilder.build().tid(REC_TID).vid(REC_TID).create();
 
-    public static final Type CODE_TYPE = Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create();
+    public static final Type INST_TYPE = TypeBuilder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
 
-    public static final Type NOOBJ_TYPE = Type.Builder.build()
+    public static final Type CODE_TYPE = TypeBuilder.build().tid(CODE_TID).vid(CODE_TID).create();
+
+    public static final Type NOOBJ_TYPE = TypeBuilder.build()
             .tid(NOOBJ_TID.zero()).vid(NOOBJ_TID.zero())
             .predicate((lhs, inst) -> noobj())
             .create();
@@ -109,7 +144,7 @@ public final class mTypes {
     private static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
 
     /**
-     * DECLARE EVERY CARRIER'S ALGEBRA — one {@code Type.Builder.declare} per carrier, holding the theory instances
+     * DECLARE EVERY CARRIER'S ALGEBRA — one {@code TypeBuilder.declare} per carrier, holding the theory instances
      * the carrier models, keyed by instance name ({@code ring}, {@code add_group}, …). Each role points at the LIVE
      * instruction through an {@code auto_from_} ({@code !*}) pointer, so the block names the operation rather than
      * copying it, and each instance is typed by its theory ({@code ring_theory::T}, …).
@@ -120,13 +155,13 @@ public final class mTypes {
      * its constants can observe their defaults. {@code mInstSet}'s end-of-class static block invokes this after
      * every constant exists.
      * <p>
-     * The declaration is STAGED only; {@code ?lawq} is the store of record, written by the drain that runs when the
+     * The declaration is STAGED only; {@code ?decq} is the store of record, written by the drain that runs when the
      * set is mounted, and {@code LawTable.typeLaws} serves it from there. The law table restates none of it.
      */
     public static void declareAlgebras() {
         // int: a ring — an add_group (plus/neg) and a mult_monoid (mult/1, no mult_group: integer division
         // truncates, so 5.div(2).mult(2) is 4) — with the monoid constituents spelled out
-        Type.Builder.declare(INT_TYPE, rec(mutableMap(
+        declare(INT_TYPE, rec(mutableMap(
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                 uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
@@ -147,7 +182,7 @@ public final class mTypes {
                                 uri(ID), jnt(1)),
                         MONOID_THEORY_TID, null))));
         // real: a field — a ring where the non-zero mult elements are a group (inv = 1/x); plus the constituents
-        Type.Builder.declare(REAL_TYPE, rec(mutableMap(
+        declare(REAL_TYPE, rec(mutableMap(
                 uri("field"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
                                 uri(MUL), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
@@ -181,7 +216,7 @@ public final class mTypes {
                         MONOID_THEORY_TID, null))));
         // bool: a Boolean algebra — or=join(PLUS), and=meet(MULT), not=complement — a complemented distributive
         // lattice and a rig (idempotent semiring) with bottom=false / top=true
-        Type.Builder.declare(BOOL_TYPE, rec(mutableMap(
+        declare(BOOL_TYPE, rec(mutableMap(
                 uri("boolean"), rec(mutableMap(
                                 uri(OR), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
                                 uri(AND), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
@@ -202,41 +237,41 @@ public final class mTypes {
                                 uri(TOP), bool(true)),
                         LATTICE_THEORY_TID, null))));
         // str: a monoid under concatenation (PLUS), identity ""
-        Type.Builder.declare(STR_TYPE, rec(mutableMap(
+        declare(STR_TYPE, rec(mutableMap(
                 uri("concat_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(STR_TID).rng(STR_TID)).tryToInst(),
                                 uri(ID), str("")),
                         MONOID_THEORY_TID, null))));
         // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
         // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
-        Type.Builder.declare(URI_TYPE, rec(mutableMap(
+        declare(URI_TYPE, rec(mutableMap(
                 uri("mult_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
                                 uri(ID), uri("")),
                         MONOID_THEORY_TID, null))));
         // bytes: a monoid under concatenation (PLUS), identity the empty buffer
-        Type.Builder.declare(BYTES_TYPE, rec(mutableMap(
+        declare(BYTES_TYPE, rec(mutableMap(
                 uri("concat_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
                                 uri(ID), bytes(new byte[0])),
                         MONOID_THEORY_TID, null))));
         // lst: a NON-commutative monoid under concatenation (PLUS), identity the empty lst — [a]+[b] is [a,b]
         // while [b]+[a] is [b,a], which is why the theory is monoid, not commutative_monoid
-        Type.Builder.declare(LST_TYPE, rec(mutableMap(
+        declare(LST_TYPE, rec(mutableMap(
                 uri("concat_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
                                 uri(ID), lst()),
                         MONOID_THEORY_TID, null))));
         // rec: a COMMUTATIVE monoid under deep merge (PLUS), identity the empty rec — merge is keyed, so the
         // order of the two operands does not change the result
-        Type.Builder.declare(REC_TYPE, rec(mutableMap(
+        declare(REC_TYPE, rec(mutableMap(
                 uri("merge_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
                                 uri(ID), rec()),
                         COMMUTATIVE_MONOID_THEORY_TID, null))));
         // code: the function/stream ring — add=branch (parallel split/merge), mul=compose (serial),
         // zero=end (the 0-function, ≡ id{0}::T), one=id (the parametric identity), inv=additive inverse (coeff −1)
-        Type.Builder.declare(CODE_TYPE, rec(mutableMap(
+        declare(CODE_TYPE, rec(mutableMap(
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                 uri(MUL), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
@@ -262,7 +297,7 @@ public final class mTypes {
         // The morphisms act on the ADDRESS, which is why the operation is bound to the uri ring's `*`
         // (path composition): push is vid·e and pop is vid·e⁻¹, and the strict-descendant requirement is
         // what makes e invertible — an escaping extension is not in this groupoid at all.
-        Type.Builder.declare(carrier(MACH_MACHINE_TID), rec(mutableMap(
+        declare(carrier(MACH_MACHINE_TID), rec(mutableMap(
                 uri("free_groupoid"), rec(mutableMap(
                                 uri("objects"), uri(MACH_MACHINE_TID),
                                 uri("morphisms"), uri(URI_TID),
@@ -312,8 +347,8 @@ public final class mTypes {
      * </ul>
      * <p>
      * STAGED ONLY, like {@link #declareAlgebras()}: this is a method for the same class-initialisation reason — the
-     * recs name the theory tids and {@code Type.Builder.declare} writes the staged map the drain reads. The category
-     * is optional, so {@link #axiomsOf(fURI)} also answers from the staged map when no {@code ?lawq} exists.
+     * recs name the theory tids and {@code TypeBuilder.declare} writes the staged map the drain reads. The category
+     * is optional, so {@link #axiomsOf(fURI)} also answers from the staged map when no {@code ?decq} exists.
      */
     public static void declareAxioms() {
         // monoid: an associative operation with an identity
@@ -350,7 +385,7 @@ public final class mTypes {
     private static final Map<fURI, List<Law>> AXIOMS = new ConcurrentHashMap<>();
 
     /**
-     * THE LAWS A THEORY ENTAILS, keyed by the theory's address. The {@code ?lawq} declaration is read first (a
+     * THE LAWS A THEORY ENTAILS, keyed by the theory's address. The {@code ?decq} declaration is read first (a
      * theory type is a registered type once the category mounts, so its battery is persisted beside it); the staged
      * declaration is the answer when the optional category is absent — the same staged/declared precedence
      * {@code AlgebraTool} uses for a carrier. Empty when the theory declares no battery.
@@ -359,9 +394,13 @@ public final class mTypes {
         if (null == theory)
             return List.of();
         final fURI address = null == theory.basePath() ? theory : theory.basePath();
-        final Obj declared = lawOf(address);
+        final Obj declared = decOf(address);
         if (declared.isRec()) {
             final Obj battery = declared.asRec().atDirect(uri(LAW));
+            // A TYPE-VALUED SLOT MEANS "ANY LAW": a battery may state law => uri(Law.LAW_TID) (law::T) instead of a
+            // list, so the reader expands it to the vocabulary rather than answering "no battery declared".
+            if (battery.isUri() && Law.LAW_TID.equals(battery.uriValue()))
+                return List.of(Law.values());
             if (battery.isLst()) {
                 final List<Law> laws = battery.lstValue().stream()
                         .filter(Obj::isUri)
@@ -387,22 +426,40 @@ public final class mTypes {
 
     /**
      * DECLARE one theory's battery — the rec under the {@code law} key, and the staged copy {@link #axiomsOf} falls
-     * back to. {@code Type.Builder.declare} takes the address, not a {@link Type}: a theory type is registered by the
+     * back to. {@code TypeBuilder.declare} takes the address, not a {@link Type}: a theory type is registered by the
      * (optional) category, and the declaration is keyed by its vid either way.
      */
     private static void axiom(final fURI theory, final Law... laws) {
         AXIOMS.put(theory, List.of(laws));
-        Type.Builder.declare(theory, rec(uri(LAW),
+        declare(theory, rec(uri(LAW),
                 lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList())));
     }
 
     /**
-     * THE CARRIER A DECLARATION IS KEYED BY — {@code Type.Builder.declare} reads only the {@code vid}, so a carrier
-     * whose type this class does not itself declare (the machine, built in {@code machInstSet.setup()}) is named by
-     * its address. A BARE type is all the declaration needs, and building it here (rather than holding a field)
-     * keeps the cross-instset address the only cross-instset fact on this class's initialisation path.
+     * DECLARE one carrier's algebra, written as the algebra itself — the REC form of
+     * {@link TypeBuilder#declare(Type, Algebra)}, because every declaration on this class is the block a reader
+     * answers ({@code ring => [add => …, mul => …]}) and {@link Algebra#of(Rec)} is the identity on it.
+     */
+    private static void declare(final Type type, final Rec law) {
+        TypeBuilder.declare(type, Algebra.of(law));
+    }
+
+    /**
+     * {@link #declare(Type, Rec)} by ADDRESS — the form a THEORY type takes: it is registered by the (optional)
+     * category, and the declaration is keyed by its vid either way.
+     */
+    private static void declare(final fURI vid, final Rec law) {
+        TypeBuilder.declare(vid, Algebra.of(law));
+    }
+
+    /**
+     * THE CARRIER A DECLARATION IS KEYED BY — {@link TypeBuilder#declare(Type, Algebra)} reads only the {@code vid},
+     * so a carrier whose type this class does not itself declare (the machine, built in
+     * {@code machInstSet.setup()}) is named by its address. A BARE type is all the declaration needs, and building it
+     * here (rather than holding a field) keeps the cross-instset address the only cross-instset fact on this class's
+     * initialisation path.
      */
     private static Type carrier(final fURI tid) {
-        return Type.Builder.build().tid(tid).vid(tid).create();
+        return TypeBuilder.build().tid(tid).vid(tid).create();
     }
 }

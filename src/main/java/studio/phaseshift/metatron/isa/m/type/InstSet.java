@@ -45,8 +45,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 /**
  * A machine component that happens to also be a Space.
@@ -64,7 +66,7 @@ public interface InstSet extends Space, Component.Prefix {
         }.c(cInt.ZERO()).as();
     }
 
-    Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
+    Type INSTSET_TYPE = TypeBuilder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
                     uri(PATTERN).maybe().asUri(), URI_TYPE,
                     uri(CONST).maybe().asUri(), lst(T(ALL.maybe())),
@@ -86,7 +88,17 @@ public interface InstSet extends Space, Component.Prefix {
                 InstSet.mount(isa);
                 isa.setup();
                 return isa;
-            }).create();
+            })
+            .refinement("an extension of space with structural requirements regarding obj construction",
+                    "creates the instset and registers it with the global router")
+            .slots(mutableMap(
+                    uri(CONST).maybe(), "constants used across the instset",
+                    uri(TYPE).maybe(), "types used to structure objs of the instset",
+                    uri(INST).maybe(), "instructions associated with the types of the instset",
+                    uri(REWRITE).maybe(), "code<=code instructions that capture the algebraic equalities of the instset",
+                    uri(SUGAR).maybe(), "custom instruction syntax sugars given to the parser"))
+            .desc("an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse")
+            .create();
 
     fURI A = f("A");
     fURI B = f("B");

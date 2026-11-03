@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.Feature;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.db.vec.type.MVec;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -171,346 +172,17 @@ public class llmInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
-        // llm types reference mathInstSet.DATETIME_TYPE, which is only populated by
-        // mathInstSet.setup(). The ServiceLoader order that loads inst sets is not a
-        // stable contract, so ensure math is set up first rather than assuming it.
+        // MATH FIRST: every llm type that states a time/duration/datetime slot closes over mathInstSet's
+        // type objects, and mathInstSet.setup() is what creates them. The ServiceLoader order is not a
+        // stable contract, so mount math BEFORE any llm type is built -- the import used to sit after the
+        // chat_result declaration, which is exactly how its time/runtime slots came out as `real::T` holes.
         if (null == DATETIME_TYPE)
             InstSet.importInstSet(MATH_ISA_TID);
-        this.jvm().putAll(mutableMap(
-                uri(TYPE), lst(
-                        LLM_MODEL_TYPE = docWrap(Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_MODEL_TID)
-                                        .isaPredicate(rec(
-                                                uri(PROVIDER).maybe().asUri(), URI_TYPE,
-                                                uri(HOST), URI_TYPE,
-                                                uri(PROTOCOL), URI_TYPE,
-                                                uri(LLM), URI_TYPE,
-                                                uri(API_KEY).maybe(), STR_TYPE,
-                                                uri(TIMEOUT).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
-                                                uri(SIZE).maybe(), auto_from_(MATH_DATASIZE_TID).tryToInst(),
-                                                uri(QUANT).maybe(), INT_TYPE,
-                                                uri(CONTEXT).maybe(), INT_TYPE,
-                                                uri(COST).maybe(), rec(uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(), uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst()).maybe()))
-                                        .constructor(arg -> LLMFactory.createModel(arg.asRec()))
-                                        .create(),
-                                null, null,
-                                Map.of(uri(PROVIDER).maybe(), "optional name of ai model provider",
-                                        uri(HOST), "the ai model provider's http rest endpoint",
-                                        uri(PROTOCOL), "the http rest endpoint protocol (ollama, openai, anthropic)",
-                                        uri(LLM), "the name of a model offered by the ai provider",
-                                        uri(SIZE).maybe(), "the size of the model",
-                                        uri(QUANT).maybe(), "the level of quantization of the model",
-                                        uri(CONTEXT).maybe(), "the model's context window size in tokens",
-                                        uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)"),
-                                "populate a model reference rec using data from the ai provider's http-endpoint",
-                                "model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]"),
-                        docWrap(LLM_TOOL_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_TOOL_TID)
-                                        .isaPredicate(rec(
-                                                uri(INST), ALL_TYPE,
-                                                uri(NAME), URI_TYPE,
-                                                uri(DESC), STR_TYPE,
-                                                uri(ARG).maybe(), ALL_TYPE /*rec(URI_TYPE, T(ALL)).maybe())*/))
-                                        .create(),
-                                "a tool specification", "",
-                                Map.of(
-                                        uri(INST), "tool instruction",
-                                        uri(NAME), "tool name",
-                                        uri(DESC), "tool description",
-                                        uri(ARG).maybe(), "tool arguments"),
-                                "a tool function for the llm to use"),
-                        //////////////////////////////////////////////////
-                        docWrap(LLM_SESSION_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_SESSION_TID)
-                                        .isaPredicate(rec(
-                                                uri(AGENT), T(URI_TID.some()),
-                                                uri(USER), T(URI_TID.some()),
-                                                uri(ALGORITHM), REC_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(AGENT), "the agent(s) involved in the chat session",
-                                        uri(USER), "the user(s) involved in the chat session",
-                                        uri(ALGORITHM), "the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)"),
-                                "llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*"),
-                        docWrap(LLM_ITERATION_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_ITERATION_TID)
-                                        .isaPredicate(rec(
-                                                uri(SESSION), URI_TYPE,
-                                                uri(INDEX), INT_TYPE,
-                                                uri(PREV).maybe(), URI_TYPE,
-                                                uri(NEXT).maybe(), URI_TYPE,
-                                                uri(MESSAGE).maybe(), LST_TYPE,
-                                                uri(TIME), auto_from_(MATH_TIME_TID).tryToInst()))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(SESSION), "the parent session",
-                                        uri(INDEX), "1-based ordinal within the session",
-                                        uri(PREV).maybe(), "previous iteration VID in the linked list",
-                                        uri(NEXT).maybe(), "next iteration VID in the linked list",
-                                        uri(MESSAGE).maybe(), "auto_from references to message VIDs in this iteration",
-                                        uri(TIME), "creation timestamp"),
-                                "an iteration groups the messages of a single chat turn within a session and links to prev/next iterations"),
-                        //////////////////////////////////////////////////
-                        docWrap(LLM_CONCEPT_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_CONCEPT_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME), STR_TYPE,
-                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())).maybe(),
-                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())).maybe()))
-                                        .create(), "", "", Map.of(
-                                        uri(NAME), "the concept name",
-                                        uri(CONCEPT).maybe(), "a lst of related concepts",
-                                        uri(MESSAGE).maybe(), "a lst of related messages"),
-                                """
-                                a concept related to other concepts and messages.
-                                """),
-                        docWrap(LLM_TODO_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_TODO_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE,
-                                                uri(STATUS).maybe(), isa_(union_(uri(OPEN), uri(RUN), uri(BLOCK), uri(CLOSE))).else_(uri(OPEN)),
-                                                uri(TIME).maybe(), isa_(DATETIME_TYPE).else_(instB(MATH_DATETIME_NOW_TID, lst())),
-                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())),
-                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())),
-                                                uri(REFERENCE).maybe(), LST_TYPE))
-                                        .create(), "", "", Map.of(
-                                        uri(TEXT), "the todo information",
-                                        uri(STATUS).maybe(), "current status of todo (default: open)",
-                                        uri(TIME).maybe(), "datetime of todo creation (default: datetime_now())",
-                                        uri(CONCEPT).maybe(), "concepts associated with todo",
-                                        uri(MESSAGE).maybe(), "messages associated with todo",
-                                        uri(REFERENCE).maybe(), "artifacts associated with todo"),
-                                """
-                                a todo represents a task to be completed.
-                                links to concepts and messages are automatically attached to the todo at creation.
-                                reference to artifacts in metatron can be attached.
-                                """,
-                                "@/agent/todo/1 >>= [reference => +[!*/project/src,!*/project/test]] [-- adding references to a todo --]"),
-                        docWrap(LLM_TOKEN_COUNTER_TOOL_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_TOKEN_COUNTER_TOOL_TID)
-                                        .isaPredicate(rec(
-                                                uri(IN).maybe().asUri(), isa_(INT_TYPE).else_(jnt(0)),
-                                                uri(OUT).maybe(), isa_(INT_TYPE).else_(jnt(0)),
-                                                uri(MAX).maybe(), INT_TYPE,
-                                                uri(EST).maybe(), rec(
-                                                        uri(USER).maybe().asUri(), INT_TYPE,
-                                                        uri(AI).maybe(), INT_TYPE,
-                                                        uri(TOOL).maybe(), INT_TYPE,
-                                                        uri(SYSTEM).maybe(), INT_TYPE).maybe()))
-                                        .constructor(arg -> new TokenCounterTool(arg.asRec().jvm(), LLM_TOKEN_COUNTER_TOOL_TID, arg.vid()))
-                                        .create(), "", "", Map.of(
-                                        uri(IN).maybe(), "actual input tokens of the chat",
-                                        uri(OUT).maybe(), "actual output tokens of the chat (counted for the record, not drawn)",
-                                        uri(MAX).maybe(), "the context window's size in tokens — the bar's window: the sections are its share, in/max the percent, the rest the unused tail",
-                                        uri(EST).maybe(), "the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]"),
-                                "a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar",
-                                "token_counter_tool::[in=>4413,out=>66,max=>100000,est=>[system=>622,ai=>170,user=>409,tool=>334]]"),
-                        // CLAIM — a distilled proposition with provenance
-                        docWrap(LLM_CLAIM_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_CLAIM_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE,
-                                                uri(KIND), union_(
-                                                        uri("decision"),
-                                                        uri("problem"),
-                                                        uri("solution"),
-                                                        uri("observation")).tryToInst(),
-                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
-                                                uri(CONCEPT).maybe(), lst(T(ALL.maybe())),
-                                                uri("tier").maybe(), isa_(NAT_TYPE).else_(jnt(1))))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(TEXT), "the distilled proposition",
-                                        uri(KIND), "claim kind — decision, problem, solution, or observation",
-                                        uri(SOURCE).maybe(), "message vids and/or external uris the claim derives from",
-                                        uri(CONCEPT).maybe(), "concept graph links (auto_from refs)",
-                                        uri("tier"), "trust tier (nat), bounded by min(source tiers)"),
-                                "a distilled claim with provenance — the proposition layer above concept nouns",
-                                "claim::[text=>\"the scratch project writes do not persist because there is no backing write primitive\"," +
-                                        "\tkind=>problem," +
-                                        "\tsource=>[/usr/dr/message/4]," +
-                                        "\tconcept=>[/usr/dr/concept/persistence]," +
-                                        "\ttier=>nat::1]"),
-                        //////////////////////////////////////////////////
-                        // LOOSE_END — an open problem a future session can pick up cold
-                        docWrap(LLM_LOOSE_END_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_LOOSE_END_TID)
-                                        .isaPredicate(rec(
-                                                uri(TITLE), STR_TYPE,
-                                                uri(DESC), STR_TYPE,
-                                                uri(STATUS), union_(
-                                                        uri("open"),
-                                                        uri("in_progress"),
-                                                        uri("resolved"),
-                                                        uri("abandoned")).tryToInst(),
-                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
-                                                uri("claim").maybe(), lst(T(ALL.maybe())),
-                                                uri(TIME).maybe(), DATETIME_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(TITLE), "short actionable title",
-                                        uri(DESC), "what needs to happen and why",
-                                        uri(STATUS), "open, in_progress, resolved, or abandoned",
-                                        uri(SOURCE).maybe(), "message vids and/or external uris the loose end derives from",
-                                        uri("claim").maybe(), "claims that define/resolve this loose end (auto_from refs)",
-                                        uri(TIME), "last updated timestamp"),
-                                "an open problem a future session can pick up cold — the continuation point carried across sessions",
-                                "loose_end::[title=>\"wire the mcp_stdio transport\"," +
-                                        "\tdesc=>\"expose /mcp over stdin so harness can spawn metatron directly\"," +
-                                        "\tstatus=>open," +
-                                        "\tsource=>[/usr/dr/message/4]," +
-                                        "\tclaim=>[/usr/dr/claim/7]," +
-                                        "\ttime=>datetime::<//2026.08:25/15/48/02/251?tz=+0000>]"),
-                        // LLM_MESSAGE_TYPE defined below after all message sub-types
-                        docWrap(LLM_SYSTEM_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(SYSTEM_MESSAGE_TID)
-                                        .isaPredicate(rec(uri(TEXT), STR_TYPE))
-                                        //   uri(SIZE), DATA_SIZE_TYPE))
-                                        .create(),
-                                null, null,
-                                Map.of(uri(TEXT), "the system message text body"),
-                                //  uri(SIZE), "the data size of the text body"),
-                                "a system message provides behavioral and response-style instructions to the model"),
-                        docWrap(LLM_WATERMARK_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_WATERMARK_TID)
-                                        .isaPredicate(rec(
-                                                uri(TAG), STR_TYPE,
-                                                uri(KEY), STR_TYPE,
-                                                uri(BODY).maybe(), STR_TYPE,
-                                                uri(OBJ).maybe(), ALL_TYPE,
-                                                uri(ERROR).maybe(), FAIL_TYPE,
-                                                uri(INDEX).maybe(), INT_TYPE,
-                                                uri(STAGE).maybe(), URI_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(TAG), "the body codec the marker named — mtron, json, txt, html, md, xml, bson",
-                                        uri(KEY), "the feature the model addressed — loop, summarize, compaction, embed, midchat, ...",
-                                        uri(BODY).maybe(), "the raw payload text, trimmed of its surrounding whitespace",
-                                        uri(OBJ).maybe(), "the body decoded by tag — the deferred call's argument rec",
-                                        uri(ERROR).maybe(), "why the body did not decode; the marker is still stripped and still recorded",
-                                        uri(INDEX), "ordinal position of the marker in the model's output",
-                                        uri(STAGE), "the lifecycle stage it was harvested at — on_complete_response, on_partial_thinking, ..."),
-                                "one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text"),
-                        docWrap(LLM_CHAT_RESULT_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_CHAT_RESULT_TID)
-                                        .isaPredicate(rec(
-                                                uri(CHAT).maybe().asUri(), ALL_TYPE,
-                                                uri(TIME), DATETIME_TYPE,
-                                                uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
-                                                uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
-                                                uri(ERROR).maybe(), FAIL_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(CHAT), "the chat response — free-text str or structured rec per response format",
-                                        uri(TIME), "the date and time when the chat completed",
-                                        uri(RUNTIME), "elapsed time::T from user message to complete response",
-                                        uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
-                                        uri(ERROR).maybe(), "a fail chain if errors occurred"),
-                                "a response message from a chat interaction"),
-                        docWrap(LLM_USER_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(USER_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME).maybe().asUri(), STR_TYPE,
-                                                uri(TEXT).maybe(), STR_TYPE,
-                                                uri(CONTENTS).maybe(), T(ALL_STAR)))
-                                        //uri(SIZE).maybe(), DATA_SIZE_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(NAME).maybe(), "sender identity for multi-user conversations",
-                                        uri(TEXT).maybe(), "text of a single content message",
-                                        uri(CONTENTS).maybe(), "the message contents"
-                                        /*  uri(SIZE), "the data size of the message content"*/), "a user message"),
-                        docWrap(LLM_TOOL_REQUEST_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(TOOL_REQUEST_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME), URI_TYPE,
-                                                uri(ARGS).maybe(), STR_TYPE,
-                                                uri(TEXT), STR_TYPE,
-                                                uri(CONTENTS).maybe(), STR_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(NAME), "the tool name",
-                                        uri(ARGS), "the tool arguments (mapped from LC4j 'arguments' via VOCAB)",
-                                        uri(TEXT), "formatted name(args) summary",
-                                        uri(CONTENTS).maybe(), "the tool execution request id"),
-                                "a tool execution request — nested inside an ai message's tool_requests list"),
-                        docWrap(LLM_AI_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(AI_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT).maybe().asUri(), STR_TYPE,
-                                                uri(TOOL_REQUESTS).maybe(), lst(LLM_TOOL_REQUEST_MESSAGE_TYPE)))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(TEXT), "the response text",
-                                        uri(TOOL_REQUESTS), "the tool execution requests made by the model",
-                                        uri("attributes"), "extra provider metadata is stored as top-level fields on the rec"),
-                                "an ai/assistant message"),
-                        docWrap(LLM_TOOL_RESULT_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(TOOL_RESULT_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME), URI_TYPE,
-                                                uri(TEXT), STR_TYPE,
-                                                uri(CHAT).maybe(), ALL_TYPE,
-                                                //      uri(SIZE), DATA_SIZE_TYPE,
-                                                uri(ID).maybe(), STR_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
-                                        uri(NAME), "the tool that was executed",
-                                        uri(TEXT), "the text result of the tool execution",
-                                        uri(CHAT).maybe(), "mtron-serialized chat_result::T when the tool was a recursive chat call",
-                                        //   uri(SIZE), "the data size of the message text",
-                                        uri(ID).maybe(), "correlation id matching the tool execution request"),
-                                "a tool execution result message"),
-                        docWrap(LLM_THINKING_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(THINKING_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE))
-                                        .create(),
-                                null, null,
-                                Map.of(uri(TEXT), "the model's internal reasoning text"),
-                                "a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window"),
-                        docWrap(LLM_COMPACTION_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(LLM_MESSAGE_TID)
-                                        .vid(COMPACTION_MESSAGE_TID)
-                                        .isaPredicate(rec(
-                                                uri(TEXT), STR_TYPE,
-                                                uri(IN).maybe(), INT_TYPE,
-                                                uri(OUT).maybe(), INT_TYPE,
-                                                uri(COMPRESSION).maybe(), REAL_TYPE))
-                                        .create(),
-                                null, null,
-                                Map.of(uri(TEXT), "the summary of all previous messages and compactions",
-                                        uri(IN).maybe(), "total tokens processed (the input digest estimate)",
-                                        uri(OUT).maybe(), "total tokens generated (the summary estimate)",
-                                        uri(COMPRESSION).maybe(), "fraction of tokens removed — 1 - out/in (0.0 to 1.0)"),
-                                "a compaction represents a stop point for message retrieval and provides a summary of all previous messages"),
-                        docWrap(LLM_MESSAGE_TYPE = Type.Builder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_MESSAGE_TID)
-                                        .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
-                                        .create(),
-                                null, null,
-                                mutableMap(),
-                                "polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column"),
-                        //////////////////////////////////////////////////
-                        docWrap(LLM_SKILL_TYPE = Type.Builder.build()
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        if (null == LLM_SKILL_TYPE)
+            LLM_SKILL_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_SKILL_TID)
                                         .isaPredicate(rec(
@@ -522,19 +194,331 @@ public class llmInstSet extends AbstractInstSet {
                                                         uri(NAME).maybe(), STR_TYPE,
                                                         uri(DESC).maybe(), STR_TYPE,
                                                         uri(TEXT), STR_TYPE)),
-                                                uri(TOOL).maybe(), lst(ALL_TYPE))).create(),
-                                "a skill.md specification", "",
-                                mutableMap(
+                                                uri(TOOL).maybe(), lst(ALL_TYPE)))
+                                        .refinement("a skill.md specification", "", mutableMap(
                                         uri(NAME), "skill name",
                                         uri(DESC), "skill description",
                                         uri(CONTENT).maybe(), "skill.md document content",
                                         uri(RESOURCE).maybe(), "skill assets, references, and scripts",
-                                        uri(TOOL).maybe(), "skill tools"),
-                                "a skill.md specification to augment llm with specialized abilities",
-                                "*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]"),
-                        docWrap(LLM_FEATURE_TYPE = Type.Builder.build()
+                                        uri(TOOL).maybe(), "skill tools"))
+                                        .desc("a skill.md specification to augment llm with specialized abilities")
+                                        .example("*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
+                                        .create();
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        // BEFORE chat_result: a type that closes over another must be built after it, or the slot
+        // captures null and renders as [noobj] in the predicate
+        if (null == LLM_WATERMARK_TYPE)
+            LLM_WATERMARK_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
-                                        .vid(LLM_FEATURE_TID)
+                                        .vid(LLM_WATERMARK_TID, "one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text")
+                                        .isaPredicate(rec(
+                                                uri(TAG), STR_TYPE,
+                                                uri(KEY), STR_TYPE,
+                                                uri(BODY).maybe(), STR_TYPE,
+                                                uri(OBJ).maybe(), ALL_TYPE,
+                                                uri(ERROR).maybe(), FAIL_TYPE,
+                                                uri(INDEX).maybe(), INT_TYPE,
+                                                uri(STAGE).maybe(), URI_TYPE), mutableMap(
+                                        uri(TAG), "the body codec the marker named — mtron, json, txt, html, md, xml, bson",
+                                        uri(KEY), "the feature the model addressed — loop, summarize, compaction, embed, midchat, ...",
+                                        uri(BODY).maybe(), "the raw payload text, trimmed of its surrounding whitespace",
+                                        uri(OBJ).maybe(), "the body decoded by tag — the deferred call's argument rec",
+                                        uri(ERROR).maybe(), "why the body did not decode; the marker is still stripped and still recorded",
+                                        uri(INDEX), "ordinal position of the marker in the model's output",
+                                        uri(STAGE), "the lifecycle stage it was harvested at — on_complete_response, on_partial_thinking, ..."))
+                                        .create();
+        if (null == LLM_CHAT_RESULT_TYPE)
+            LLM_CHAT_RESULT_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CHAT_RESULT_TID, "a response message from a chat interaction")
+                                        .isaPredicate(rec(
+                                                uri(CHAT).maybe().asUri(), ALL_TYPE,
+                                                uri(TIME).maybe(), DATETIME_TYPE,
+                                                uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
+                                                uri(ERROR).maybe(), FAIL_TYPE), mutableMap(
+                                        uri(CHAT), "the chat response — free-text str or structured rec per response format",
+                                        uri(TIME), "the date and time when the chat completed",
+                                        uri(RUNTIME), "elapsed time::T from user message to complete response",
+                                        uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
+                                        uri(ERROR).maybe(), "a fail chain if errors occurred"))
+                                        .create();
+        this.jvm().putAll(mutableMap(
+                uri(TYPE), lst(
+                        LLM_MODEL_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_MODEL_TID, "populate a model reference rec using data from the ai provider's http-endpoint")
+                                        .isaPredicate(rec(
+                                                uri(PROVIDER).maybe().asUri(), URI_TYPE,
+                                                uri(HOST), URI_TYPE,
+                                                uri(PROTOCOL), URI_TYPE,
+                                                uri(LLM), URI_TYPE,
+                                                uri(API_KEY).maybe(), STR_TYPE,
+                                                uri(TIMEOUT).maybe(), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(SIZE).maybe(), auto_from_(MATH_DATASIZE_TID).tryToInst(),
+                                                uri(QUANT).maybe(), INT_TYPE,
+                                                uri(CONTEXT).maybe(), INT_TYPE,
+                                                uri(COST).maybe(), rec(uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(), uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst()).maybe()), Map.of(uri(PROVIDER).maybe(), "optional name of ai model provider",
+                                        uri(HOST), "the ai model provider's http rest endpoint",
+                                        uri(PROTOCOL), "the http rest endpoint protocol (ollama, openai, anthropic)",
+                                        uri(LLM), "the name of a model offered by the ai provider",
+                                        uri(SIZE).maybe(), "the size of the model",
+                                        uri(QUANT).maybe(), "the level of quantization of the model",
+                                        uri(CONTEXT).maybe(), "the model's context window size in tokens",
+                                        uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)"))
+                                        .constructor(arg -> LLMFactory.createModel(arg.asRec()))
+                                        .example("model::[provider=>deepseek,host=><http://deepseek.com/api>,protocol=>openai,llm=>deepseek-v4-pro]")
+                                        .create(),
+                        LLM_TOOL_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TOOL_TID)
+                                        .isaPredicate(rec(
+                                                uri(INST), ALL_TYPE,
+                                                uri(NAME), URI_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(ARG).maybe(), ALL_TYPE /*rec(URI_TYPE, T(ALL)).maybe())*/))
+                                        .refinement("a tool specification", "", Map.of(
+                                        uri(INST), "tool instruction",
+                                        uri(NAME), "tool name",
+                                        uri(DESC), "tool description",
+                                        uri(ARG).maybe(), "tool arguments"))
+                                        .desc("a tool function for the llm to use")
+                                        .create(),
+                        //////////////////////////////////////////////////
+                        LLM_SESSION_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_SESSION_TID, "llm session session policy with algorithm config and a resolved lst of messages from sub-path */msg/*")
+                                        .isaPredicate(rec(
+                                                uri(AGENT), T(URI_TID.some()),
+                                                uri(USER), T(URI_TID.some()),
+                                                uri(ALGORITHM), REC_TYPE), mutableMap(
+                                        uri(AGENT), "the agent(s) involved in the chat session",
+                                        uri(USER), "the user(s) involved in the chat session",
+                                        uri(ALGORITHM), "the algorithm used to manage the chat session (compaction, windowing, summarizing, etc.)"))
+                                        .create(),
+                        LLM_ITERATION_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_ITERATION_TID, "an iteration groups the messages of a single chat turn within a session and links to prev/next iterations")
+                                        .isaPredicate(rec(
+                                                uri(SESSION), URI_TYPE,
+                                                uri(INDEX), INT_TYPE,
+                                                uri(PREV).maybe(), URI_TYPE,
+                                                uri(NEXT).maybe(), URI_TYPE,
+                                                uri(MESSAGE).maybe(), LST_TYPE,
+                                                uri(TIME), auto_from_(MATH_TIME_TID).tryToInst()), mutableMap(
+                                        uri(SESSION), "the parent session",
+                                        uri(INDEX), "1-based ordinal within the session",
+                                        uri(PREV).maybe(), "previous iteration VID in the linked list",
+                                        uri(NEXT).maybe(), "next iteration VID in the linked list",
+                                        uri(MESSAGE).maybe(), "auto_from references to message VIDs in this iteration",
+                                        uri(TIME), "creation timestamp"))
+                                        .create(),
+                        //////////////////////////////////////////////////
+                        LLM_CONCEPT_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CONCEPT_TID, """
+                                a concept related to other concepts and messages.
+                                """)
+                                        .isaPredicate(rec(
+                                                uri(NAME), STR_TYPE,
+                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())).maybe(),
+                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())).maybe()), Map.of(
+                                        uri(NAME), "the concept name",
+                                        uri(CONCEPT).maybe(), "a lst of related concepts",
+                                        uri(MESSAGE).maybe(), "a lst of related messages"))
+                                        .create(),
+                        LLM_TODO_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TODO_TID, """
+                                a todo represents a task to be completed.
+                                links to concepts and messages are automatically attached to the todo at creation.
+                                reference to artifacts in metatron can be attached.
+                                """)
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE,
+                                                uri(STATUS).maybe(), isa_(union_(uri(OPEN), uri(RUN), uri(BLOCK), uri(CLOSE))).else_(uri(OPEN)),
+                                                uri(TIME).maybe(), isa_(DATETIME_TYPE).else_(instB(MATH_DATETIME_NOW_TID, lst())),
+                                                uri(CONCEPT).maybe(), lst(T(LLM_CONCEPT_TID.maybeSome())),
+                                                uri(MESSAGE).maybe(), lst(T(LLM_MESSAGE_TID.maybeSome())),
+                                                uri(REFERENCE).maybe(), LST_TYPE), Map.of(
+                                        uri(TEXT), "the todo information",
+                                        uri(STATUS).maybe(), "current status of todo (default: open)",
+                                        uri(TIME).maybe(), "datetime of todo creation (default: datetime_now())",
+                                        uri(CONCEPT).maybe(), "concepts associated with todo",
+                                        uri(MESSAGE).maybe(), "messages associated with todo",
+                                        uri(REFERENCE).maybe(), "artifacts associated with todo"))
+                                        .example("@/agent/todo/1 >>= [reference => +[!*/project/src,!*/project/test]] [-- adding references to a todo --]")
+                                        .create(),
+                        LLM_TOKEN_COUNTER_TOOL_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_TOKEN_COUNTER_TOOL_TID, "a single-line token-usage bar — the tailor-made caller of the general ui stack bar: the est categories as colored sections (smallest first, largest last, an empty one skipped) against the context window (max), with in over max as the percent and the window sized behind the bar")
+                                        .isaPredicate(rec(
+                                                uri(IN).maybe().asUri(), isa_(INT_TYPE).else_(jnt(0)),
+                                                uri(OUT).maybe(), isa_(INT_TYPE).else_(jnt(0)),
+                                                uri(MAX).maybe(), INT_TYPE,
+                                                uri(EST).maybe(), rec(
+                                                        uri(USER).maybe().asUri(), INT_TYPE,
+                                                        uri(AI).maybe(), INT_TYPE,
+                                                        uri(TOOL).maybe(), INT_TYPE,
+                                                        uri(SYSTEM).maybe(), INT_TYPE).maybe()), Map.of(
+                                        uri(IN).maybe(), "actual input tokens of the chat",
+                                        uri(OUT).maybe(), "actual output tokens of the chat (counted for the record, not drawn)",
+                                        uri(MAX).maybe(), "the context window's size in tokens — the bar's window: the sections are its share, in/max the percent, the rest the unused tail",
+                                        uri(EST).maybe(), "the estimated composition of the window: [system=>int, ai=>int, user=>int, tool=>int]"))
+                                        .constructor(arg -> new TokenCounterTool(arg.asRec().jvm(), LLM_TOKEN_COUNTER_TOOL_TID, arg.vid()))
+                                        .example("token_counter_tool::[in=>4413,out=>66,max=>100000,est=>[system=>622,ai=>170,user=>409,tool=>334]]")
+                                        .create(),
+                        // CLAIM — a distilled proposition with provenance
+                        LLM_CLAIM_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CLAIM_TID, "a distilled claim with provenance — the proposition layer above concept nouns")
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE,
+                                                uri(KIND), union_(
+                                                        uri("decision"),
+                                                        uri("problem"),
+                                                        uri("solution"),
+                                                        uri("observation")).tryToInst(),
+                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
+                                                uri(CONCEPT).maybe(), lst(T(ALL.maybe())),
+                                                uri("tier").maybe(), isa_(NAT_TYPE).else_(jnt(1))), mutableMap(
+                                        uri(TEXT), "the distilled proposition",
+                                        uri(KIND), "claim kind — decision, problem, solution, or observation",
+                                        uri(SOURCE).maybe(), "message vids and/or external uris the claim derives from",
+                                        uri(CONCEPT).maybe(), "concept graph links (auto_from refs)",
+                                        uri("tier"), "trust tier (nat), bounded by min(source tiers)"))
+                                        .example("claim::[text=>\"the scratch project writes do not persist because there is no backing write primitive\"," +
+                                        "\tkind=>problem," +
+                                        "\tsource=>[/usr/dr/message/4]," +
+                                        "\tconcept=>[/usr/dr/concept/persistence]," +
+                                        "\ttier=>nat::1]")
+                                        .create(),
+                        //////////////////////////////////////////////////
+                        // LOOSE_END — an open problem a future session can pick up cold
+                        LLM_LOOSE_END_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_LOOSE_END_TID, "an open problem a future session can pick up cold — the continuation point carried across sessions")
+                                        .isaPredicate(rec(
+                                                uri(TITLE), STR_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(STATUS), union_(
+                                                        uri("open"),
+                                                        uri("in_progress"),
+                                                        uri("resolved"),
+                                                        uri("abandoned")).tryToInst(),
+                                                uri(SOURCE).maybe(), lst(T(ALL.maybe())),
+                                                uri("claim").maybe(), lst(T(ALL.maybe())),
+                                                uri(TIME).maybe(), DATETIME_TYPE), mutableMap(
+                                        uri(TITLE), "short actionable title",
+                                        uri(DESC), "what needs to happen and why",
+                                        uri(STATUS), "open, in_progress, resolved, or abandoned",
+                                        uri(SOURCE).maybe(), "message vids and/or external uris the loose end derives from",
+                                        uri("claim").maybe(), "claims that define/resolve this loose end (auto_from refs)",
+                                        uri(TIME), "last updated timestamp"))
+                                        .example("loose_end::[title=>\"wire the mcp_stdio transport\"," +
+                                        "\tdesc=>\"expose /mcp over stdin so harness can spawn metatron directly\"," +
+                                        "\tstatus=>open," +
+                                        "\tsource=>[/usr/dr/message/4]," +
+                                        "\tclaim=>[/usr/dr/claim/7]," +
+                                        "\ttime=>datetime::<//2026.08:25/15/48/02/251?tz=+0000>]")
+                                        .create(),
+                        // LLM_MESSAGE_TYPE defined below after all message sub-types
+                        LLM_SYSTEM_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(SYSTEM_MESSAGE_TID, //  uri(SIZE), "the data size of the text body"),
+                                "a system message provides behavioral and response-style instructions to the model")
+                                        .isaPredicate(rec(uri(TEXT), STR_TYPE), Map.of(uri(TEXT), "the system message text body"))
+                                        //   uri(SIZE), DATA_SIZE_TYPE))
+                                        .create(),
+                        LLM_WATERMARK_TYPE,
+                        LLM_CHAT_RESULT_TYPE,
+                        LLM_USER_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(USER_MESSAGE_TID, "a user message")
+                                        .isaPredicate(rec(
+                                                uri(NAME).maybe().asUri(), STR_TYPE,
+                                                uri(TEXT).maybe(), STR_TYPE,
+                                                uri(CONTENTS).maybe(), T(ALL_STAR)), mutableMap(
+                                        uri(NAME).maybe(), "sender identity for multi-user conversations",
+                                        uri(TEXT).maybe(), "text of a single content message",
+                                        uri(CONTENTS).maybe(), "the message contents"
+                                        /*  uri(SIZE), "the data size of the message content"*/))
+                                        //uri(SIZE).maybe(), DATA_SIZE_TYPE))
+                                        .create(),
+                        LLM_TOOL_REQUEST_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(TOOL_REQUEST_MESSAGE_TID, "a tool execution request — nested inside an ai message's tool_requests list")
+                                        .isaPredicate(rec(
+                                                // A NESTED TOOL REQUEST IS A CARRIER OF ITS ID: `contents` names the
+                                                // tool call, and name/args/text are the model's own summary when it has
+                                                // one. Requiring name+text rejected the minimal id-only request the
+                                                // chat store builds (and stores) on its way back in.
+                                                (Obj) uri(NAME).maybe(), URI_TYPE,
+                                                uri(ARGS).maybe(), STR_TYPE,
+                                                uri(TEXT).maybe(), STR_TYPE,
+                                                uri(CONTENTS).maybe(), STR_TYPE), mutableMap(
+                                        uri(NAME), "the tool name",
+                                        uri(ARGS), "the tool arguments (mapped from LC4j 'arguments' via VOCAB)",
+                                        uri(TEXT), "formatted name(args) summary",
+                                        uri(CONTENTS).maybe(), "the tool execution request id"))
+                                        .create(),
+                        LLM_AI_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(AI_MESSAGE_TID, "an ai/assistant message")
+                                        .isaPredicate(rec(
+                                                uri(TEXT).maybe().asUri(), STR_TYPE,
+                                                uri(TOOL_REQUESTS).maybe(), lst(LLM_TOOL_REQUEST_MESSAGE_TYPE)), mutableMap(
+                                        uri(TEXT), "the response text",
+                                        uri(TOOL_REQUESTS), "the tool execution requests made by the model",
+                                        uri("attributes"), "extra provider metadata is stored as top-level fields on the rec"))
+                                        .create(),
+                        LLM_TOOL_RESULT_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(TOOL_RESULT_MESSAGE_TID, "a tool execution result message")
+                                        .isaPredicate(rec(
+                                                // the same carrier rule as a request: `contents` names the tool call, and
+                                                // name/text are the executor's summary when it has one
+                                                (Obj) uri(NAME).maybe(), URI_TYPE,
+                                                (Obj) uri(TEXT).maybe(), STR_TYPE,
+                                                uri(CHAT).maybe(), ALL_TYPE,
+                                                //      uri(SIZE), DATA_SIZE_TYPE,
+                                                uri(ID).maybe(), STR_TYPE), mutableMap(
+                                        uri(NAME), "the tool that was executed",
+                                        uri(TEXT), "the text result of the tool execution",
+                                        uri(CHAT).maybe(), "mtron-serialized chat_result::T when the tool was a recursive chat call",
+                                        //   uri(SIZE), "the data size of the message text",
+                                        uri(ID).maybe(), "correlation id matching the tool execution request"))
+                                        .create(),
+                        LLM_THINKING_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(THINKING_MESSAGE_TID, "a thinking/reasoning trace message — stored in the ledger but excluded from the LC4j chat window")
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE), Map.of(uri(TEXT), "the model's internal reasoning text"))
+                                        .create(),
+                        LLM_COMPACTION_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(LLM_MESSAGE_TID)
+                                        .vid(COMPACTION_MESSAGE_TID, "a compaction represents a stop point for message retrieval and provides a summary of all previous messages")
+                                        .isaPredicate(rec(
+                                                uri(TEXT), STR_TYPE,
+                                                uri(IN).maybe(), INT_TYPE,
+                                                uri(OUT).maybe(), INT_TYPE,
+                                                uri(COMPRESSION).maybe(), REAL_TYPE), Map.of(uri(TEXT), "the summary of all previous messages and compactions",
+                                        uri(IN).maybe(), "total tokens processed (the input digest estimate)",
+                                        uri(OUT).maybe(), "total tokens generated (the summary estimate)",
+                                        uri(COMPRESSION).maybe(), "fraction of tokens removed — 1 - out/in (0.0 to 1.0)"))
+                                        .create(),
+                        LLM_MESSAGE_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_MESSAGE_TID, "polymorphic chat message — one of system, user, ai, tool_result, thinking, or compaction; discriminated by _tid column")
+                                        .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
+                                        .create(),
+                        //////////////////////////////////////////////////
+                        LLM_SKILL_TYPE,
+                        LLM_FEATURE_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_FEATURE_TID, "each concrete feature refines llm_feature::T with its own hook implementations")
                                         .isaPredicate(rec(
                                                 // hook fields — each is an optional inst a feature can override
                                                 uri(ROOT).maybe().asUri(), URI_TYPE,
@@ -548,9 +532,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(ON_TOOL_EXECUTED).maybe(), ALL_TYPE,
                                                 uri(ON_TOOL_RESULT).maybe(), ALL_TYPE,
                                                 uri(ON_COMPLETE_RESPONSE).maybe(), ALL_TYPE,
-                                                uri(ON_ERROR).maybe(), ALL_TYPE))
-                                        .create(),
-                                null, null, mutableMap(
+                                                uri(ON_ERROR).maybe(), ALL_TYPE), mutableMap(
                                         uri(ROOT).maybe(), "the root uri location of feature data",
                                         uri(TO).maybe(), "code to evaluate on the feature result",
                                         uri(ON_AGENT_CTOR).maybe(), "inst?noobj<=agent(){ [-- one time setup --] }",
@@ -562,11 +544,11 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ON_TOOL_EXECUTED).maybe(), "inst?noobj<=agent(result=>call::T)",
                                         uri(ON_TOOL_RESULT).maybe(), "inst?#{?}<=agent(result=>#{?},request_id=>str::T){ [-- the payload the model is handed: return it unchanged for a pass-through. the only stage dispatched from mToolExecutor, not the turn --] }",
                                         uri(ON_COMPLETE_RESPONSE).maybe(), "inst?noobj<=agent(result=>chat_result::T)",
-                                        uri(ON_ERROR).maybe(), "inst?noobj<=agent(fail=>fail::T)"),
-                                "each concrete feature refines llm_feature::T with its own hook implementations"),
-                        LLM_AGENT_TYPE = docWrap(Type.Builder.build()
+                                        uri(ON_ERROR).maybe(), "inst?noobj<=agent(fail=>fail::T)"))
+                                        .create(),
+                        LLM_AGENT_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
-                                        .vid(LLM_AGENT_TID)
+                                        .vid(LLM_AGENT_TID, "an agent is an llm enriched with embodied capabilities")
                                         // name is required: the session_or_agent union matches
                                         // arms in order, and an all-optional agent refinement is
                                         // satisfied vacuously by every rec — with such an arm
@@ -576,17 +558,16 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri(NAME).asUri(), STR_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
-                                                uri(FEATURE).maybe(), LST_TYPE))
-                                        .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
-                                        .create(), null, null, Map.of(
+                                                uri(FEATURE).maybe(), LST_TYPE), Map.of(
                                         uri(NAME), "a convenient name for the agent",
                                         uri(DESC), "a description of the agent given to the agent in their system prompt",
-                                        uri(FEATURE), "the ordered lst of capabilities attached to the agent"),
-                                "an agent is an llm enriched with embodied capabilities"),
+                                        uri(FEATURE), "the ordered lst of capabilities attached to the agent"))
+                                        .constructor(arg -> new Agent(arg.recValue(), LLM_AGENT_TID, arg.vid()))
+                                        .create(),
                         // -- concrete feature types ------------------------------------------
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_CHAT_FEATURE_TID)
+                                .vid(LLM_CHAT_FEATURE_TID, "the agent's chat configuration — the model, the optional response-shaping hooks (to/complete), and the response format")
                                 .isaPredicate(rec(
                                         uri(MODEL), LLM_MODEL_TYPE,
                                         uri(RESPONSE).maybe(), rec(
@@ -594,185 +575,161 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri("complete").maybe(), ALL_TYPE).maybe(),
                                         uri(FORMAT).maybe(), ALL_TYPE))
                                 .constructor(arg -> createStageLambdas(new ChatFeature(arg.asRec().jvm(), LLM_CHAT_FEATURE_TID, arg.vid())))
-                                .create(), "the agent's chat configuration — the model, the optional response-shaping hooks (to/complete), and the response format"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_SUMMARIZE_FEATURE_TID)
+                                .vid(LLM_SUMMARIZE_FEATURE_TID, "distills a message or a whole session into claims and loose ends — the feature behind the <<mtron:summarize>> block")
                                 .constructor(arg -> createStageLambdas(new SummarizeFeature(arg.asRec().jvm(), LLM_SUMMARIZE_FEATURE_TID, arg.vid())))
-                                .create(), "distills a message or a whole session into claims and loose ends — the feature behind the <<mtron:summarize>> block"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_TOKEN_MESSAGE_FEATURE_TID)
+                                .vid(LLM_TOKEN_MESSAGE_FEATURE_TID, "message history aggregated by a token budget (algorithm => [max => N tokens])")
                                 .isaPredicate(rec(SESSION, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new TokenMessageFeature(arg.asRec().jvm(), LLM_TOKEN_MESSAGE_FEATURE_TID, arg.vid())))
-                                .create(), "message history aggregated by a token budget (algorithm => [max => N tokens])"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_WINDOW_MESSAGE_FEATURE_TID)
+                                .vid(LLM_WINDOW_MESSAGE_FEATURE_TID, "message history aggregated by a message-count window (algorithm => [max => N messages])")
                                 .isaPredicate(rec(SESSION, URI_TYPE))
                                 .constructor(arg -> createStageLambdas(new WindowMessageFeature(arg.asRec().jvm(), LLM_WINDOW_MESSAGE_FEATURE_TID, arg.vid())))
-                                .create(), "message history aggregated by a message-count window (algorithm => [max => N messages])"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_PERSISTED_FRAME_FEATURE_TID)
+                                .vid(LLM_PERSISTED_FRAME_FEATURE_TID, "a frame provider that never discards frames — the whole frame tree stays introspectable (compute memory)")
                                 .constructor(arg -> createStageLambdas(new PersistedFrameFeature(arg.asRec().jvm(), LLM_PERSISTED_FRAME_FEATURE_TID, arg.vid())))
-                                .create(), "a frame provider that never discards frames — the whole frame tree stays introspectable (compute memory)"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_TRANSIENT_FRAME_FEATURE_TID)
+                                .vid(LLM_TRANSIENT_FRAME_FEATURE_TID, "a frame provider that discards frames on completion — frames are an ephemeral call stack, not durable compute memory")
                                 .constructor(arg -> createStageLambdas(new TransientFrameFeature(arg.asRec().jvm(), LLM_TRANSIENT_FRAME_FEATURE_TID, arg.vid())))
-                                .create(), "a frame provider that discards frames on completion — frames are an ephemeral call stack, not durable compute memory"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_TOOL_FEATURE_TID)
+                                .vid(LLM_TOOL_FEATURE_TID, "the gatekeeper of the agent's tool channel — its collection of tools with an optional per-chat max")
                                 .isaPredicate(rec(uri(TOOL).maybe().asUri(), T(LST_TID.maybe()), uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(-1))))
                                 .constructor(arg -> createStageLambdas(new ToolFeature(arg.asRec().jvm(), LLM_TOOL_FEATURE_TID, arg.vid())))
-                                .create(), "the gatekeeper of the agent's tool channel — its collection of tools with an optional per-chat max"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_EMBED_FEATURE_TID)
+                                .vid(LLM_EMBED_FEATURE_TID, "the embedding model and hooks the agent uses to vectorize content into vec::T")
                                 .isaPredicate(rec(uri(f(MODEL)).maybe().asUri(), LLM_MODEL_TYPE))
                                 .constructor(arg -> createStageLambdas(new EmbedFeature(arg.asRec().jvm(), LLM_EMBED_FEATURE_TID, arg.vid())))
-                                .create(), "the embedding model and hooks the agent uses to vectorize content into vec::T"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_SKILL_FEATURE_TID)
+                                .vid(LLM_SKILL_FEATURE_TID, "the gateway of the agent's skill channel — the collection of skills, and the composition point for the tools they carry")
                                 .constructor(arg -> createStageLambdas(new SkillFeature(arg.asRec().jvm(), LLM_SKILL_FEATURE_TID, arg.vid())))
-                                .create(), "the gateway of the agent's skill channel — the collection of skills, and the composition point for the tools they carry"),
-                        docWrap(Type.Builder.build()
+                                .create(),
+                        TypeBuilder.build()
                                 .tid(LLM_FEATURE_TID)
-                                .vid(LLM_SYSTEM_FEATURE_TID)
+                                .vid(LLM_SYSTEM_FEATURE_TID, "the owner of the agent's system messages — the persistent base instruction plus per-chat contributions")
                                 .constructor(arg -> createStageLambdas(new SystemFeature(arg.asRec().jvm(), LLM_SYSTEM_FEATURE_TID, arg.vid())))
-                                .create(), "the owner of the agent's system messages — the persistent base instruction plus per-chat contributions"),
+                                .create(),
                         // [parked stub] SimilarityRecall — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
-//                         Type.Builder.build()
+//                         TypeBuilder.build()
 //                                 .tid(LLM_FEATURE_TID)
 //                                 .vid(LLM_RECALL_FEATURE_TID)
 //                                 .constructor(arg -> createStageLambdas(new SimilarityRecallFeature(arg.asRec().jvm(), LLM_RECALL_FEATURE_TID, arg.vid())))
 //                                 .create(),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_THINK_FEATURE_TID)
+                                        .vid(LLM_THINK_FEATURE_TID, "think feature captures thinking text during response generation")
                                         .constructor(arg -> createStageLambdas(new ThinkFeature(arg.asRec().jvm(), LLM_THINK_FEATURE_TID, arg.vid())))
                                         .create(),
-                                mutableMap(),
-                                "think feature captures thinking text during response generation"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_MIDCHAT_FEATURE_TID)
+                                        .vid(LLM_MIDCHAT_FEATURE_TID, "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered")
                                         .constructor(arg -> createStageLambdas(new MidChatFeature(arg.asRec().jvm(), LLM_MIDCHAT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                Map.of(),
-                                "the mid-chat channel: relays what the model says to the user mid-iteration, and carries what the user says back through the tool result of the call it answered"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_TAGGING_CONCEPT_FEATURE_TID)
+                                        .vid(LLM_TAGGING_CONCEPT_FEATURE_TID, "extracts concepts from the agent response and thinking stream by parsing inline <<concept:>> tags")
                                         .constructor(arg -> createStageLambdas(new TaggingConceptFeature(arg.asRec().jvm(), LLM_TAGGING_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                mutableMap(),
-                                "extracts concepts from the agent response and thinking stream by parsing inline <<concept:>> tags"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_AGENT_CONCEPT_FEATURE_TID)
+                                        .vid(LLM_AGENT_CONCEPT_FEATURE_TID, "extracts concepts from the agent response and thinking stream via a translator LLM")
                                         .constructor(arg -> createStageLambdas(new AgentConceptFeature(arg.asRec().jvm(), LLM_AGENT_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null,
-                                mutableMap(),
-                                "extracts concepts from the agent response and thinking stream via a translator LLM"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_LUCENE_CONCEPT_FEATURE_TID)
+                                        .vid(LLM_LUCENE_CONCEPT_FEATURE_TID, "extracts concepts from the agent response and thinking stream by TF-IDF over a Lucene message index")
                                         .constructor(arg -> createStageLambdas(new LuceneConceptFeature(arg.asRec().jvm(), LLM_LUCENE_CONCEPT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null,
-                                mutableMap(),
-                                "extracts concepts from the agent response and thinking stream by TF-IDF over a Lucene message index"),
                         // [parked stub] Comment — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
-//                         docWrap(Type.Builder.build()
+//                         docWrap(TypeBuilder.build()
 //                                         .tid(LLM_FEATURE_TID)
 //                                         .vid(LLM_COMMENT_FEATURE_TID)
 //                                         .constructor(arg -> createStageLambdas(new CommentFeature(arg.asRec().jvm(), LLM_COMMENT_FEATURE_TID, arg.vid())))
 //                                         .create(),
 //                                 null, null, mutableMap(),
 //                                 "allows user to interject with a comment in the current chat lifecycle of the agent"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_COST_FEATURE_TID)
+                                        .vid(LLM_COST_FEATURE_TID, "tracks real token-based LLM costs via CostCalculator, persists in/out/total to space")
                                         .isaPredicate(rec(
                                                 uri(RATE), rec(
                                                         uri(IN), auto_from_(MATH_CURRENCY_TID).tryToInst(),
-                                                        uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst())))
-                                        .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                null, null, mutableMap(
+                                                        uri(OUT), auto_from_(MATH_CURRENCY_TID).tryToInst())), mutableMap(
                                         uri(f(RATE).extend(IN)), "cost per million input tokens",
                                         uri(f(RATE).extend(OUT)), "cost per million output tokens"
-                                ),
-                                "tracks real token-based LLM costs via CostCalculator, persists in/out/total to space",
-                                "cost_feature::[root=>/usr/dr/cost,cost=>[in_cost=>usd_currency::0.065,out_cost=>usd_currency::0.001]]"),
-                        docWrap(Type.Builder.build()
+                                ))
+                                        .constructor(arg -> createStageLambdas(new CostFeature(arg.asRec().jvm(), LLM_COST_FEATURE_TID, arg.vid())))
+                                        .example("cost_feature::[root=>/usr/dr/cost,cost=>[in_cost=>usd_currency::0.065,out_cost=>usd_currency::0.001]]")
+                                        .create(),
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_LAMBDA_FEATURE_TID)
+                                        .vid(LLM_LAMBDA_FEATURE_TID, "supports arbitrary instructions to be run at the different stages of the llm's lifecycle")
                                         .isaPredicate(rec(
-                                                uri(STAGE).maybe().asUri(), rec(union_(Stream.of(Feature.Stage.values()).map(v -> uri(v.name())).toList().toArray(Obj[]::new)).tryToInst(), LST_TYPE).maybe()))
+                                                uri(STAGE).maybe().asUri(), rec(union_(Stream.of(Feature.Stage.values()).map(v -> uri(v.name())).toList().toArray(Obj[]::new)).tryToInst(), LST_TYPE).maybe()), mutableMap(uri(STAGE).maybe(), "lambdas to execute at the different lifecycle stages"))
                                         .constructor(arg -> createStageLambdas(new LambdaFeature(arg.asRec().jvm(), LLM_LAMBDA_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null, mutableMap(uri(STAGE).maybe(), "lambdas to execute at the different lifecycle stages"),
-                                "supports arbitrary instructions to be run at the different stages of the llm's lifecycle"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_TODO_FEATURE_TID)
+                                        .vid(LLM_TODO_FEATURE_TID, "persistent agent-owned todo list for cross-turn task tracking")
                                         .constructor(arg -> createStageLambdas(new ToDoFeature(arg.asRec().jvm(), LLM_TODO_FEATURE_TID, arg.vid())))
                                         .create(),
-                                "persistent agent-owned todo list for cross-turn task tracking"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_COMPACTION_FEATURE_TID)
+                                        .vid(LLM_COMPACTION_FEATURE_TID, "compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection")
                                         .isaPredicate(rec(
                                                 uri(MODEL).maybe().asUri(), LLM_MODEL_TYPE,
                                                 uri(THRESHOLD).maybe().asUri(), REAL_TYPE,
-                                                uri(CONTEXT).maybe().asUri(), INT_TYPE))
+                                                uri(CONTEXT).maybe().asUri(), INT_TYPE), mutableMap(uri(MODEL), "the model to analyze message history",
+                                        uri(THRESHOLD), "auto-compaction trigger — fraction of the model context window full (default 0.8)",
+                                        uri(CONTEXT), "context window size in tokens, overriding the model's advertised value"))
                                         .constructor(arg -> createStageLambdas(new CompactionFeature(arg.asRec().jvm(), LLM_COMPACTION_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null, mutableMap(uri(MODEL), "the model to analyze message history",
-                                        uri(THRESHOLD), "auto-compaction trigger — fraction of the model context window full (default 0.8)",
-                                        uri(CONTEXT), "context window size in tokens, overriding the model's advertised value"),
-                                "compacts historic messages and inserts a compaction message into message stream which acts as a stop sentinel for agents history introspection"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_AUDIT_FEATURE_TID)
+                                        .vid(LLM_AUDIT_FEATURE_TID, "lifecycle audit trail with table text and widget result")
                                         .constructor(arg -> createStageLambdas(new AuditFeature(arg.asRec().jvm(), LLM_AUDIT_FEATURE_TID, arg.vid())))
                                         .create(),
-                                null, null, mutableMap(),
-                                "lifecycle audit trail with table text and widget result"),
-                        docWrap(Type.Builder.build()
+                        TypeBuilder.build()
                                         .tid(LLM_FEATURE_TID)
-                                        .vid(LLM_LOOP_FEATURE_TID)
+                                        .vid(LLM_LOOP_FEATURE_TID, "multi-pass reasoning loop with iteration control and polling")
                                         .isaPredicate(rec(
                                                 uri("max_loop").maybe().asUri(), INT_TYPE,
                                                 uri("max_time").maybe().asUri(), TIME_TYPE,
                                                 uri("delay").maybe().asUri(), TIME_TYPE,
-                                                uri("preserve").maybe().asUri(), LST_TYPE))
-                                        .constructor(arg -> createStageLambdas(new LoopFeature(arg.asRec().jvm(), LLM_LOOP_FEATURE_TID, arg.vid())))
-                                        .create(),
-                                null, null, mutableMap(
+                                                uri("preserve").maybe().asUri(), LST_TYPE), mutableMap(
                                         uri("max_loop").maybe(), "max iterations (default 10)",
                                         uri("max_time").maybe(), "wall-clock ceiling (time::T)",
                                         uri("delay").maybe(), "delay between iterations for polling (time::T)",
-                                        uri("preserve").maybe(), "fields to carry forward across iterations"),
-                                "multi-pass reasoning loop with iteration control and polling",
-                                "loop_feature::[max_loop=>5,delay=>second::2]"),
-                        docWrap(Type.Builder.build()
-                                        .vid(REC_TID)
+                                        uri("preserve").maybe(), "fields to carry forward across iterations"))
+                                        .constructor(arg -> createStageLambdas(new LoopFeature(arg.asRec().jvm(), LLM_LOOP_FEATURE_TID, arg.vid())))
+                                        .example("loop_feature::[max_loop=>5,delay=>second::2]")
+                                        .create(),
+                        TypeBuilder.build()
+                                        .vid(REC_TID, "a session::T or agent::T union")
                                         .tid(LLM_ISA_TID.extend("session_or_agent"))
                                         .isaPredicate(union_(LLM_AGENT_TYPE, LLM_SESSION_TYPE).tryToInst())
                                         .create(),
-                                "a session::T or agent::T union"),
                         // [parked stub] Ledger — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
-//                         docWrap(Type.Builder.build()
+//                         docWrap(TypeBuilder.build()
 //                                         .tid(LLM_FEATURE_TID)
 //                                         .vid(LLM_LEDGER_FEATURE_TID)
 //                                         .isaPredicate(rec(uri("init").maybe().asUri(), LST_TYPE))
@@ -785,7 +742,7 @@ public class llmInstSet extends AbstractInstSet {
 //                                 "ledger_feature::[init=>['task 1','task 2']]"),
                         // [parked stub] Iteration — out of the active roster during the
                         // channel refactor (skill/tool/message owners); un-comment to revive.
-//                         docWrap(Type.Builder.build()
+//                         docWrap(TypeBuilder.build()
 //                                         .tid(LLM_FEATURE_TID)
 //                                         .vid(LLM_ITERATION_FEATURE_TID)
 //                                         .constructor(arg -> createStageLambdas(new IterationFeature(arg.asRec().jvm(), LLM_ITERATION_FEATURE_TID, arg.vid())))

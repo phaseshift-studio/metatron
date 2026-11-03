@@ -22,20 +22,22 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import studio.phaseshift.metatron.util.MathUtil;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.REAL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MATH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
@@ -125,8 +127,19 @@ public interface Real extends Mono {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    docWrap(instC(AS_INST_TID.dom(REAL_TID).rng(Tokens.INT_TID), lst(T(Tokens.INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())), "a real", "the lhs real truncated to an int", Map.of(jnt(0), "the target type (int::T)"), "an int function: the lhs real truncated to an int"),
-                    docWrap(instC(MATH_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(T(Tokens.STR_TID)), (lhs, inst) -> {
+                    InstBuilder.build().tid(AS_INST_TID)
+                            .dom(REAL_TID, "a real")
+                            .rng(Tokens.INT_TID, "the lhs real truncated to an int")
+                            .argLst(T(Tokens.INT_TID), "the target type (int::T)")
+                            .desc("an int function: the lhs real truncated to an int")
+                            .body((lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid()))
+                            .create(),
+                    InstBuilder.build().tid(MATH_INST_TID)
+                            .dom(ALL.maybe(), "a real")
+                            .rng(REAL_TID, "the value of the arg math expression")
+                            .argLst(T(Tokens.STR_TID), "the math expression to evaluate")
+                            .desc("a math function: evaluates the arg math expression over the lhs real, reading named variables from space")
+                            .body((lhs, inst) -> {
                                 final String equation = inst.arg(0).strValue();
                                 final Set<String> variables = MathUtil.getVariables(equation);
                                 final double result = new ExpressionBuilder(equation)
@@ -141,9 +154,8 @@ public interface Real extends Mono {
                                                         HashMap::new)))
                                         .evaluate();
                                 return real(result);
-                            }),
-                            "a real", "the value of the arg math expression", Map.of(jnt(0), "the math expression to evaluate"), "a math function: evaluates the arg math expression over the lhs real, reading named variables from space"),
-                    docWrap(instC(ORDER_INST_TID.dom(REAL_TID.maybeSome()).rng(Tokens.LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asReal().realValue())))), "a stream of reals", "the lhs reals sorted in ascending order", Map.of(), "an ordering function: sorts the lhs reals in natural (ascending) order")));
+                            })
+                            .create()));
         }
     }
 

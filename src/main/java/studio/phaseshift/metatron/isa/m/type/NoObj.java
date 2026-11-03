@@ -20,17 +20,15 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -229,8 +227,13 @@ public final class NoObj implements Obj, Inst {
     public static final class NoObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    docWrap(instC(START_INST_TID.dom(fURI.Singleton.NOOBJ).rng(A.any()), lst(T(A.any())), (lhs, inst) -> inst.arg(0)),
-                            "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x")
+                    InstBuilder.build().tid(START_INST_TID)
+                            .dom(fURI.Singleton.NOOBJ, "noobj")
+                            .rng(A.any(), "initial objs")
+                            .argLst(T(A.any()), "initial objs")
+                            .desc("the initial function f()->x")
+                            .body((lhs, inst) -> inst.arg(0))
+                            .create()
             ));
         }
     }

@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.m.web.space.http.SseStream;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.mcpServer;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -65,7 +66,7 @@ public class mcp_httpHandler extends HttpRec {
 
     public static final fURI HTTP_MCP_HANDLER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_http");
 
-    public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
+    public static final Type HTTP_MCP_HANDLER_TYPE = TypeBuilder.build()
             .tid(MCP_TID)
             .vid(HTTP_MCP_HANDLER_TID)
             .isaPredicate(rec(

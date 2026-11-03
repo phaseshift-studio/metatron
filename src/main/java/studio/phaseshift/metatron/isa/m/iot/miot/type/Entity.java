@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -87,12 +88,12 @@ public final class Entity {
 
 
     public static void installTypes(final Set<Type> types, final Set<Inst> insts) {
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(Tokens.REC_TID)
                 .vid(MIOT_ENTITY_TID)
                 .isaPredicate(rec(uri(SUPER), T(MIOT_DEVICE_TID)))
                 .create(types, insts);
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(MIOT_ENTITY_TID)
                 .vid(miotInstSet.MIOT_GPIO_TID)
                 .isaPredicate(rec(URI_TYPE, INT_TYPE))
@@ -103,7 +104,7 @@ public final class Entity {
                 .inst(miotInstSet.MIOT_INST_TID.extend("off").dom(miotInstSet.MIOT_GPIO_TID).rng(miotInstSet.MIOT_GPIO_TID), lst(INT_TYPE),
                         (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), x -> jnt(0)))
                 .create(types, insts);
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(MIOT_ENTITY_TID)
                 .vid(miotInstSet.MIOT_PWM_TID)
                 .isaPredicate(rec(URI_TYPE, INT_TYPE))

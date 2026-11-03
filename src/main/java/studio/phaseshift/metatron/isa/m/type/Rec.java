@@ -26,7 +26,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ProjectionFailureException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -149,7 +150,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
     default <OBJ extends Obj> OBJ at(final Obj key) {
         return Rec.Helper.atToggle(this, key, true);
     }
-    
+
     @Override
     default <O extends Obj> O atDirect(final Obj key) {
         return Rec.Helper.atToggle(this, key, false);
@@ -373,18 +374,4 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
     }
 
-    /*
-     * WHAT REMAINS HERE, and why: NOTHING. Both `as` conversions this class registered are gone -- rec->lst and
-     * rec->uri are the LOSSY directions of their pairs (a rec of pairs re-keys and reorders through a lst, and only
-     * a rec of uri components reads back as a uri), so they declare NO inverse anywhere and live in mInsts.recs()
-     * beside the rec operations. The SOUND uri->rec direction, whose inverse is rec->uri, still cannot leave
-     * Uri.UriType because its body calls Uri.Helper.parseQ (package-private there), so it keeps its own law row;
-     * no row declares rec->uri any more. The class stays as the carrier's registration hook.
-     */
-    final class RecType {
-
-        public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.<Inst>of());
-        }
-    }
 }

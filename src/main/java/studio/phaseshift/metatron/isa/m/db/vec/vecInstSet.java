@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.db.vec.space.vecSpace;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -58,13 +59,13 @@ public class vecInstSet extends AbstractInstSet {
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
 
 
-    public static final Type VEC_TYPE = Type.Builder.build().tid(LST_TID).vid(VEC_TID).create();
-    public static final Type CMPLX_TYPE = Type.Builder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
-    public static final Type MTRX_TYPE = Type.Builder.build()
+    public static final Type VEC_TYPE = TypeBuilder.build().tid(LST_TID).vid(VEC_TID).create();
+    public static final Type CMPLX_TYPE = TypeBuilder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
+    public static final Type MTRX_TYPE = TypeBuilder.build()
             .tid(LST_TID)
             .vid(MTRX_TID)
             .create();
-    public static Type VEC_EMBEDDING_TYPE = Type.Builder.build()
+    public static Type VEC_EMBEDDING_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(VEC_EMBEDDING_TID)
             .isaPredicate(rec(

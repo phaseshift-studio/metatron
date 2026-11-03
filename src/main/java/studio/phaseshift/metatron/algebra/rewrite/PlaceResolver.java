@@ -18,23 +18,18 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.LOCAL;

@@ -19,17 +19,17 @@
 package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,7 +42,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.INST;
-import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -78,7 +77,9 @@ public class InstSetDocGenerator {
      */
     private static ObjmtronUISerializer SER;
 
-    /** The one place the page renderer's serializer is chosen — called by {@link #main} after {@code boot}. */
+    /**
+     * The one place the page renderer's serializer is chosen — called by {@link #main} after {@code boot}.
+     */
     static void initSerializers() {
         SER = ObjmtronUISerializer.prettyPrint();
     }
@@ -601,7 +602,7 @@ public class InstSetDocGenerator {
                         navBtn("types", "types", types, "bg-primary") +
                         navBtn("spaces", "spaces", spaces, "bg-info") +
                         navBtn("instructions", "insts", insts, "bg-success") +
-                        navBtn("defined", "defined elsewhere", contributed, "bg-info") +
+                        navBtn("defined", "external definition", contributed, "bg-info") +
                         navBtn("rewrites", "rewrites", rewrites, "bg-warning"));
     }
 
@@ -661,7 +662,7 @@ public class InstSetDocGenerator {
 
         // Defined elsewhere — the contracts this set declared at ANOTHER set's address. They are documented
         // on the address's page too; this is the page that says who wrote them.
-        tocFlatGroup(cols, "defined elsewhere", "bg-info", "D",
+        tocFlatGroup(cols, "external definition", "bg-info", "D",
                 page.contributed().stream()
                         .collect(Collectors.toMap(
                                 inst -> inst.tid().name(),
@@ -838,7 +839,7 @@ public class InstSetDocGenerator {
      * {@code add_group => …} — that says which algebraic structures the type models.
      * <p>
      * Read through {@link LawTable#typeLawsOf(Type)}, the CONSOLIDATED door: the algebra a type declares
-     * beside itself (the {@code ?lawq} block a builder stages) is resolved first, the instruction set's in-code
+     * beside itself (the {@code ?decq} block a builder stages) is resolved first, the instruction set's in-code
      * law table second, and the longest matching table owns the answer. Reading the builder's staging map
      * directly would answer {@code rec0()} for every type whose algebra lives in its set's table, i.e. for
      * most of them, and reading the {@code as(object::T)} lift directly would resolve the same block a second
@@ -1307,7 +1308,7 @@ public class InstSetDocGenerator {
      * <p>
      * Read through {@link LawTable#lawsOf(fURI)}, the CONSOLIDATED door: an instruction's laws may be declared
      * in code by the instruction set's law table, OR beside the instruction by
-     * {@code InstBuilder}/{@code Type.Builder} (persisted to {@code ?lawq}), and the lookup answers BOTH —
+     * {@code InstBuilder}/{@code TypeBuilder} (persisted to {@code ?decq}), and the lookup answers BOTH —
      * the in-code row, the declaration registry, the store, and the inverse the carrier's algebra derives.
      * Reading one source directly would silently miss the other, which is how half the instructions would
      * have rendered without badges.
@@ -1444,11 +1445,10 @@ public class InstSetDocGenerator {
         if (contributed.isEmpty()) return "";
         return """
                 <div class="container-xxl mb-4" id="defined">
-                    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">%d</span></h3>
+                    <h3 class="text-primary mb-3">external definition <span class="pill-label badge bg-info">%d</span></h3>
                     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-                        contracts declared HERE whose address belongs to another instruction set — so they are
-                        documented there too. Declared by
-                        <span class="code text-info">%s</span>, for use with the types it introduces.
+                        inst definitions that override an external instruction set's definition
+                        are stored in the corresponding instruction set.
                     </p>
                     %s
                 </div>""".formatted(contributed.size(), DocsUtil.esc(instsetVid),
@@ -1548,8 +1548,8 @@ public class InstSetDocGenerator {
      * the page that documents the address. A row this page both owns and declared gets nothing.
      */
     static String provenanceChip(final Inst inst, final String instsetVid,
-                                         final Map<String, String> declaring, final Set<String> built,
-                                         final boolean contributedSection) {
+                                 final Map<String, String> declaring, final Set<String> built,
+                                 final boolean contributedSection) {
         final String anchor = vidToAnchor(inst.tid().basePath().toString());
         if (contributedSection) {
             final String home = extractInstset(inst.tid().toString());
@@ -1932,7 +1932,7 @@ public class InstSetDocGenerator {
      * Example: item "/m/db/tble/rrow" owns to "/m/db/tble", not "/m".
      */
     static boolean owns(final String itemVid, final String instsetVid,
-                                final Collection<String> allInstsetVids) {
+                        final Collection<String> allInstsetVids) {
         if (itemVid == null || itemVid.isEmpty()) return false;
         String best = "";
         for (final String candidate : allInstsetVids) {

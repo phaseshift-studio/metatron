@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -99,7 +100,7 @@ public final class mqttServer extends Listener {
 
     private static final GraphittyLogger LOG = Graphitty.log(mqttServer.class);
 
-    public static final Type MQTT_SERVER_TYPE = Type.Builder.build()
+    public static final Type MQTT_SERVER_TYPE = TypeBuilder.build()
             .tid(LISTENER_TID)
             .vid(MQTT_SERVER_TID)
             .isaPredicate(rec(SYS_KEY.maybe().asUri(), rec(URI_TYPE, T(ALL))))

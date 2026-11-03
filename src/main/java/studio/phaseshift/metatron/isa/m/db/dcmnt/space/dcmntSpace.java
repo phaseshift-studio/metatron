@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -250,7 +251,7 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
             final String colName = collectionType.vid().segments().getLast();
             rootPredicate.put(uri(colName).maybe(), collectionType);
         }
-        final Type rootType = Type.Builder.build()
+        final Type rootType = TypeBuilder.build()
                 .tid(REC_TID)
                 .isaPredicate(rec(rootPredicate))
                 .create();

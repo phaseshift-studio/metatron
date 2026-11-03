@@ -22,10 +22,10 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -251,7 +251,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                         obj = str(jpstr, tid, null);
                 } else {
                     try {
-                        if ((jpstr.startsWith("\"") || jpstr.startsWith("'") && jpstr.endsWith("\"") || jpstr.endsWith("'"))) {
+                        if (Str.Helper.isQuoted(jpstr)) {
                             return str(Str.Helper.stripQuotes(jpstr));
                         } else if ((jpstr.startsWith("<") && jpstr.endsWith(">")) || jpstr.startsWith("http:") || jpstr.startsWith("https:") || jpstr.startsWith("uri::")) {
                             String clean = (jpstr.startsWith("<") && jpstr.endsWith(">")) ? jpstr.substring(1, jpstr.length() - 1) :
@@ -260,7 +260,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                         } else if (literalStr()) {
                             // literal(): an untyped string is a string. Only an address is recognised, because
                             // JSON has no uri type — nothing else in JSON looks like <x> or declares a scheme.
-                            if (biasTowardsUri() && !jpstr.contains(" ")) {
+                            if (biasTowardsUri() && !jpstr.contains(" ") && -1 == jpstr.indexOf('\n')) {
                                 try {
                                     obj = uri(jpstr);
                                 } catch (final Exception e) {
@@ -276,7 +276,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                                 // uri-bias only when the schema declared nothing — a declared
                                 // structural type (lst/rec/etc.) means the string is a mismatch
                                 // the tool should handle, not a uri to be mangled by uri-parse
-                                if (tid == null && biasTowardsUri() && !jpstr.contains(" "))
+                                if (tid == null && biasTowardsUri() && !jpstr.contains(" ") && -1 == jpstr.indexOf('\n'))
                                     obj = uri(jpstr);
                                 else
                                     obj = str(jpstr);

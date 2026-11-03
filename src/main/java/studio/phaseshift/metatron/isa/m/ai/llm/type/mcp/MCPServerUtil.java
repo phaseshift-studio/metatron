@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.ai.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -31,14 +32,13 @@ import static studio.phaseshift.metatron.isa.m.web.webInstSet.MCP_SERVER_TID;
 /**
  * Static builder provider for MCP server types.
  * <p>
- * {@link Builder} extends {@code Type.Builder} with a cumulative
- * {@code tool(Inst)} step: each tool inst is keyed under its {@code mTool}
- * name, and {@code Type.Builder#create()} produces the {@code mcp_server::T}
- * type whose constructor materializes the {@code mcpServer} (see
- * {@code mcpMessageServer.createType()} for a complete example).
+ * {@link Builder} DELEGATES to {@link TypeBuilder} with a cumulative {@code tool(Inst)} step: each tool inst is keyed
+ * under its {@code mTool} name, and {@code create()} produces the {@code mcp_server::T} type whose constructor
+ * materializes the {@code mcpServer} (see {@code mcpMessageServer.createType()} for a complete example).
  * <p>
- * Note: do not add a {@code create()} override here — it would shadow
- * {@code Type.Builder#create()} and re-dispatch to itself.
+ * It is a WRAPPER, not a subclass: a type builder is {@code final} because {@code create()} is the one place a type
+ * is composed and queued (a subclass that widened the composition would publish a type nobody declared). The fluent
+ * steps this class adds are delegation, and {@code create()} is the builder's own — never a second composition.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -53,12 +53,20 @@ public class MCPServerUtil {
     // Builder
     // ========================================
 
-    public static class Builder extends Type.Builder {
+    public static class Builder {
 
+        /**
+         * The tools this server type declares, keyed by their {@code mTool} name.
+         */
         public final Rec tools = rec();
 
+        /**
+         * The type being declared — every fluent step below is this builder's.
+         */
+        private final TypeBuilder builder = TypeBuilder.build().tid(MCP_SERVER_TID);
+
         public static Builder build() {
-            return new Builder().tid(MCP_SERVER_TID);
+            return new Builder();
         }
 
         public Builder tool(final Inst inst) {
@@ -67,11 +75,17 @@ public class MCPServerUtil {
         }
 
         public Builder vid(final fURI vid) {
-            return (Builder) super.vid(vid);
+            this.builder.vid(vid);
+            return this;
         }
 
-        public Builder tid(final fURI vid) {
-            return (Builder) super.tid(vid);
+        public Builder tid(final fURI tid) {
+            this.builder.tid(tid);
+            return this;
+        }
+
+        public Type create() {
+            return this.builder.create();
         }
     }
 }

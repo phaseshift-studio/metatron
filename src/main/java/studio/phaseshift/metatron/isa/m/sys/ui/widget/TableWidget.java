@@ -270,6 +270,22 @@ public class TableWidget extends SpaceRec<TableWidget> implements Widget<TableWi
     }
 
     /**
+     * Replace one cell in place (read-merge-write: the rec is the only copy).
+     * A no-op when the row or column is out of range.
+     */
+    public TableWidget setCell(final int row, final int column, final Object value) {
+        final List<Obj> rows = new ArrayList<>(this.raw(this.read(), K_ROW));
+        if (row < 0 || row >= rows.size()) return this;
+        final List<Obj> fresh = new ArrayList<>();
+        forEachValue(rows.get(row), fresh::add);
+        if (column < 0 || column >= fresh.size()) return this;
+        fresh.set(column, obj(value));
+        rows.set(row, asLst(fresh));
+        this.put(K_ROW, asLst(rows));
+        return this;
+    }
+
+    /**
      * Append a metadata row (data behind a displayed row, not shown).
      */
     public TableWidget addMetadata(final List<?> cells) {

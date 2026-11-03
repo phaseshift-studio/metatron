@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
@@ -126,7 +127,7 @@ public final class SoC {
 
     public static void installTypes(final Set<Type> types, final Set<Inst> insts) {
         /// /////////////////////////////////////////////////////////
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(MIOT_DEVICE_TID)
                 .vid(MIOT_SOC_TID)
                 .isaPredicate(rec(
@@ -134,13 +135,13 @@ public final class SoC {
                         uri("arch"), is_(or_(eq_(uri("esp32")), eq_(uri("esp8266"))))))
                 .create(types, insts);
         /// /////////////////////////////////////////////////////////
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(MIOT_SOC_TID)
                 .vid(MIOT_ESP32_TID)
                 .isaPredicate(rec(uri("arch"), uri("esp32")))
                 .create(types, insts);
         /// /////////////////////////////////////////////////////////
-        Type.Builder.build()
+        TypeBuilder.build()
                 .tid(MIOT_ESP32_TID)
                 .vid(MIOT_WEMOS_D1_MINI_TID)
                 .isaPredicate(rec(uri("arch"), uri("esp32")))

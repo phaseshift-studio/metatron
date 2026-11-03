@@ -499,8 +499,8 @@ nested documents, typed collections, and schema-enforced writes — all within m
             pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
             inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/lawq::[
-            pattern=&gt;lawq,
+           /m/qproc/decq::[
+            pattern=&gt;decq,
             pre_read=&gt;inst(uri::T){&lt;j&gt;},
             pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
@@ -529,8 +529,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
              {?}reference=&gt;{?}[uri::T],
              {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace],
           inst=&gt;[
-           mql?rec{*}&lt;=dcmntspace(uri::T,
-                                  rec::T){&lt;j&gt;},
+           mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;},
            mql?rec{*}&lt;=collection(rec::T){&lt;j&gt;}],
           rewrite=&gt;[
            /m/db/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(){&lt;j&gt;},
@@ -671,12 +670,12 @@ nested documents, typed collections, and schema-enforced writes — all within m
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
-  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
-  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
   <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
   <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
+  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -705,8 +704,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
         <small class="text-muted code">/m/db/dcmnt/inst/mql</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__dcmnt__inst__mql-doc-0-tab').click();document.getElementById('__m__db__dcmnt__inst__mql-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rec{*}&lt;=dcmntspace(uri::T,
-                       rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__dcmnt__inst__mql-doc-0-tab').click();document.getElementById('__m__db__dcmnt__inst__mql-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -825,7 +823,7 @@ maps an obj to objs (rng_c = {0,})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 1, 2026 19:18MST<br>
+        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>
