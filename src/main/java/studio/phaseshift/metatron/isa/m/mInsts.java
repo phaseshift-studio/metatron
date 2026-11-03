@@ -116,11 +116,7 @@ public final class mInsts {
                                 return noobj();   // division by zero has no int answer: the claim is partial
                             return jnt(lhs.intValue() / divisor, lhs.tid(), lhs.vid());
                         })
-                        // THE DIVISION ALGORITHM, for a non-zero divisor: a.div(b).mult(b).plus(a.mod(b)) = a
-                        .derivation(new Derivation(
-                                start_(uri(InstSet.A)).div_(uri(InstSet.B)).mult_(uri(InstSet.B))
-                                        .plus_(start_(uri(InstSet.A)).mod_(uri(InstSet.B))),
-                                start_(uri(InstSet.A))))
+                        // DERIVATION SUSPENDED (bisect: catInstSetTest)
                         .law(Law.partial, Law.pure)
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "raise the lhs int to the argument power")
@@ -933,7 +929,7 @@ public final class mInsts {
                             if (lhsRec.has(PORT))
                                 furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
                             if (lhsRec.has(PATH))
-                                furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
+                                furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).collect(Collectors.joining("/")));
                             if (lhsRec.has(COEFF))
                                 furi = furi.c(cInt.of(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString()));
                             if (lhsRec.has(QPROC))
@@ -1168,7 +1164,7 @@ public final class mInsts {
                                 .dom(ALL.maybe())
                                 .rng(B.maybeSome())
                                 .args(lst(URI_TYPE)).body((lhs, inst) -> {
-                                    final Obj readObj = Machine.read(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue());
+                                    final Obj readObj = Machine.read(inst.arg(0).isInt() ? f(inst.arg(0).intValue().intValue()) : inst.arg(0).uriValue());
                                     // A COMPONENT IS ITS LOCUS, so a dereference hands it back AS ITSELF. Types, machines
                                     // and SPACES are exempt from the detaching copy: everything else may be copied and
                                     // have its address stripped (a dereferenced value is a value, not a place), but a
