@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
@@ -471,7 +471,7 @@ public class Placement extends MRec {
      * one cycle: this class migrates it on the way in ({@link #of(Rec)}) and never writes it, and
      * {@link PlanInterpreter#hop} reads it off a chain.
      */
-    static final String HOP_ALIAS = "hops";
+    public static final String HOP_ALIAS = "hops";
 
     /**
      * The tree-sharding hop budget, or 0 for a decision that states no depth — the pre-axes int accessor, now the

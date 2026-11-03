@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -57,15 +57,25 @@ public class Span extends MRec {
      * The region of the chain a span names.
      */
     public enum Kind {
-        /** the floatable run before the cut — {@code F_m ∪ F_f ∪ F_fm}, Thm 5/6 */
+        /**
+         * the floatable run before the cut — {@code F_m ∪ F_f ∪ F_fm}, Thm 5/6
+         */
         PRE,
-        /** the cut itself — the blocked anchor, Thm 17 */
+        /**
+         * the cut itself — the blocked anchor, Thm 17
+         */
         AT,
-        /** everything after the cut — stays home on the master's chain */
+        /**
+         * everything after the cut — stays home on the master's chain
+         */
         POST,
-        /** the run between two cuts — the pipeline case */
+        /**
+         * the run between two cuts — the pipeline case
+         */
         BETWEEN,
-        /** the seed — the chain's initial inst, whose bulk is the data that factors */
+        /**
+         * the seed — the chain's initial inst, whose bulk is the data that factors
+         */
         SEED
     }
 

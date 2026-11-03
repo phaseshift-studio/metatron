@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m;
+package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;

@@ -22,20 +22,20 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.schema.MQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.db.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,11 +48,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -102,20 +102,20 @@ public class dcmntInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         COLLECTION_TYPE,
                         DCMNT_SPACE_TYPE = TypeBuilder.build()
-                                        .tid(SPACE_TID)
-                                        .vid(DCMNT_SPACE_TID)
-                                        .isaPredicate(rec(
-                                                uri(PATTERN), URI_TYPE,
-                                                uri(HOST), URI_TYPE,
-                                                uri(SERIALIZER).maybe(), URI_TYPE,
-                                                uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                                                uri(ROOT).maybe(), T(TYPE_TID),
-                                                uri(SCHEMA).maybe(), T(INSTSET_TID)
-                                        ))
-                                        .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
-                                                lst(REC_TYPE),
-                                                (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
-                                        .refinement("a rec describing a document database connection", "a rec with fields for configuring a document database connection", Map.of(
+                                .tid(SPACE_TID)
+                                .vid(DCMNT_SPACE_TID)
+                                .isaPredicate(rec(
+                                        uri(PATTERN), URI_TYPE,
+                                        uri(HOST), URI_TYPE,
+                                        uri(SERIALIZER).maybe(), URI_TYPE,
+                                        uri(ROUTE), rec(URI_TYPE, URI_TYPE),
+                                        uri(ROOT).maybe(), T(TYPE_TID),
+                                        uri(SCHEMA).maybe(), T(INSTSET_TID)
+                                ))
+                                .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
+                                        lst(REC_TYPE),
+                                        (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                                .refinement("a rec describing a document database connection", "a rec with fields for configuring a document database connection", Map.of(
                                         uri(PATTERN), "the pattern for accessing documents",
                                         uri(HOST), "connection uri (mongodb://host:port/database?options)",
                                         uri(SERIALIZER).maybe(), "the serializer for BSON documents",
@@ -123,18 +123,18 @@ public class dcmntInstSet extends AbstractInstSet {
                                         uri(ROOT).maybe(), "the root type constraint — writes at document root must satisfy this type; defaults to rec::T",
                                         uri(SCHEMA).maybe(), "an instset of collection types auto-discovered from the live database"
                                 ))
-                                        .desc("an interface to document-oriented databases (MongoDB wire protocol)")
-                                        .example("""
-                                dcmntspace::[pattern => moviedb:#,
-                                             host    => <mongodb://localhost:27017/movies>,
-                                             root    => rec::T,
-                                             route   => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
-                                """)
-                                        .example("""
-                                *moviedb:schema
-                                *moviedb:movie/
-                                """)
-                                        .create().asType()),
+                                .desc("an interface to document-oriented databases (MongoDB wire protocol)")
+                                .example("""
+                                        dcmntspace::[pattern => moviedb:#,
+                                                     host    => <mongodb://localhost:27017/movies>,
+                                                     root    => rec::T,
+                                                     route   => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
+                                        """)
+                                .example("""
+                                        *moviedb:schema
+                                        *moviedb:movie/
+                                        """)
+                                .create().asType()),
                 uri(INST), lst(
                         instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
                         docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Machine.current().memory().<dcmntSpace>getSpaceFor(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
@@ -143,8 +143,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                 Map.of(jnt(0), "an mql query represented as a rec"),
                                 "the provided rec is translated to an bson query document and evaluated against the domain collection",
                                 """
-                                *moviedb:movies.mql([title => 'The Matrix'])  [-- movies.find({"title":"The Matrix"}) --]
-                                """)),
+                                        *moviedb:movies.mql([title => 'The Matrix'])  [-- movies.find({"title":"The Matrix"}) --]
+                                        """)),
                 uri(REWRITE), lst(
                         // Optimize: *collection.count() → MongoDB countDocuments()
                         CommonRewrites.countRewrite(

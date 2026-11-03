@@ -308,6 +308,12 @@ public final class PendingWrites {
             // the thousands of declarations a set carries.
             if (!under(write.address(), prefix) || isFacet(write.address()))
                 continue;
+            // A LIVE REGISTRATION WINS OVER A STAGED COPY. The log is process-wide, so the type/inst objects in it
+            // belong to the boot that STAGED them; replaying one into a later space replaces that boot's own
+            // registration with an object of a dead machine -- address-equal, identity-different -- and every type
+            // test that closes over the address then disagrees. Publish only what the space does not answer.
+            if (!Machine.read(write.address()).isNoObj())
+                continue;
             Machine.write(write.address(), write.value());
             drained++;
         }
@@ -344,6 +350,21 @@ public final class PendingWrites {
         return drain(write -> !isFacet(write.address())
                 && memory.hasSpaceFor(write.address())
                 && Machine.read(write.address()).isNoObj());
+    }
+
+    /**
+     * RESET THE WHOLE STAGING PIPELINE — the log, its address index, the insertion order, the snapshot and the
+     * revision. This is what a test (or a console {@code :reset}) calls to forget every staged write; the boot calls
+     * it through {@code BootLoader.resetCaches()} so a fresh VM never inherits another boot's queue. Unlike
+     * {@link #clear()} it also resets the revision and the snapshot, so a reader cannot see a stale view.
+     */
+    public static void reset() {
+        WRITES.clear();
+        INDEX.clear();
+        ORDER.clear();
+        VIEW = List.of();
+        VIEW_REVISION = -1;
+        REVISION.incrementAndGet();
     }
 
     /**

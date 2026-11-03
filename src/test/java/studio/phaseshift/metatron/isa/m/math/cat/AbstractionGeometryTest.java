@@ -24,25 +24,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.algebra.rewrite.Placement;
-import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
-import studio.phaseshift.metatron.algebra.rewrite.Span;
+import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.mach.network.TransportRewriteHarness;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.network.TransportRewriteHarness;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -66,8 +62,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
 
     @BeforeAll
     public static void importAllInstSets() {
-        InstSet.importInstSet(f("#"));
-        InstSet.importInstSet(f("/m/math"));
+        InstSet.importInstSet(MATH_ISA_TID);
     }
 
     @BeforeEach
@@ -185,7 +180,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     public void testLoweredShardWithAHomeLaneReadsTheAddresslessRoute() {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         // a synthetic home authority: a test VM listens on nothing, so `local` would name no place on its own
-        final studio.phaseshift.metatron.algebra.rewrite.Env env = studio.phaseshift.metatron.algebra.rewrite.Env.of(
+        final Env env = Env.of(
                 Machine.current().network().peers(),
                 Machine.current().network().machines(),
                 java.util.Set.of(f("loop://mantis:8555")));

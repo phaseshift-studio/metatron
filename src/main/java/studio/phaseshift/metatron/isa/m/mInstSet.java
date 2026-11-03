@@ -83,7 +83,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
     public static final fURI MONOID_THEORY_TID = THEORY_TID.extend("monoid_theory");
-    public static final fURI COMMUTATIVE_MONOID_THEORY_TID = THEORY_TID.extend("commutative_monoid");
+    public static final fURI COMMUTATIVE_MONOID_THEORY_TID = THEORY_TID.extend("commutative_monoid_theory");
     public static final fURI FIELD_THEORY_TID = THEORY_TID.extend("field_theory");
     public static final fURI RIG_THEORY_TID = THEORY_TID.extend("rig_theory");
     public static final fURI BOOLEAN_THEORY_TID = THEORY_TID.extend("boolean_theory");
@@ -256,8 +256,6 @@ public class mInstSet extends AbstractInstSet {
 
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space").extend("memspace");
     public static Type MEM_SPACE_TYPE;
-    public static final fURI ESTORE_SPACE_TID = M_ISA_TID.extend("space").extend("estorespace");
-    public static Type ESTORE_SPACE_TYPE;
     public static Type REGEX_TYPE;
     public static final fURI REGEX_TID = STR_TID.extend("rx");
 
@@ -463,16 +461,16 @@ public class mInstSet extends AbstractInstSet {
     // resolved rewrite match patterns, memoized on first use so the per-application
     // is_(eq_(zero_())) / is_(eq_(one_())) construction (each inst build runs
     // objCheckAndSave → objTypeCheck → a full type test) happens once, not on every rewrite pass.
-    private static final AtomicReference<List<Inst>> PLUS_ZERO_MATCH = new AtomicReference<>();
-    private static final AtomicReference<List<Inst>> MULT_ONE_MATCH = new AtomicReference<>();
+    //private static final AtomicReference<List<Inst>> PLUS_ZERO_MATCH = new AtomicReference<>();
+    //private static final AtomicReference<List<Inst>> MULT_ONE_MATCH = new AtomicReference<>();
 
-    private static List<Inst> cachedMatch(final AtomicReference<List<Inst>> ref, final java.util.function.Supplier<List<Inst>> build) {
+    /*private static List<Inst> cachedMatch(final AtomicReference<List<Inst>> ref, final java.util.function.Supplier<List<Inst>> build) {
         final List<Inst> existing = ref.get();
         if (null != existing)
             return existing;
         ref.compareAndSet(null, build.get());
         return ref.get();
-    }
+    }*/
 
     public void setup() {
         // RE-STAGED EVERY BOOT, not once per JVM. The algebra recs point at LIVE operation insts (`!*plus`, `!*mult`,

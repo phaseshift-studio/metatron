@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;

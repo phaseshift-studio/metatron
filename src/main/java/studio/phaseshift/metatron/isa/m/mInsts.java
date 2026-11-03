@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -103,11 +104,24 @@ public final class mInsts {
                         .body((lhs, inst) -> lhs.asInt().neg())
                         .law(Law.involution, Law.pure)
                         .create(),
+                // NOT mult's inverse. Truncating division is not injective (7.div(2).mult(2) is 6, not 7), so no
+                // left inverse exists; the declared relation is PARTIAL (undefined at 0) and the honest law is
+                // `partial`, not `action` -- int models a mult_monoid, never a group.
                 InstBuilder.build().tid(DIV_INST_TID, "divide the lhs int by the argument int")
                         .dom(INT_TID, "the dividend int").rng(INT_TID, "the truncated quotient")
                         .argLst(INT_TYPE, "the divisor int")
-                        .body((lhs, inst) -> jnt(Double.valueOf(lhs.intValue().doubleValue() / inst.arg(0).intValue().doubleValue()).longValue(), lhs.tid(), lhs.vid()))
-                        .law(Law.action, Law.pure)
+                        .body((lhs, inst) -> {
+                            final long divisor = inst.arg(0).intValue();
+                            if (0L == divisor)
+                                return noobj();   // division by zero has no int answer: the claim is partial
+                            return jnt(lhs.intValue() / divisor, lhs.tid(), lhs.vid());
+                        })
+                        // THE DIVISION ALGORITHM, for a non-zero divisor: a.div(b).mult(b).plus(a.mod(b)) = a
+                        .derivation(new Derivation(
+                                start_(uri(InstSet.A)).div_(uri(InstSet.B)).mult_(uri(InstSet.B))
+                                        .plus_(start_(uri(InstSet.A)).mod_(uri(InstSet.B))),
+                                start_(uri(InstSet.A))))
+                        .law(Law.partial, Law.pure)
                         .create(),
                 InstBuilder.build().tid(POW_INST_TID, "raise the lhs int to the argument power")
                         .dom(INT_TID, "the base int").rng(INT_TID, "the power")
@@ -171,15 +185,14 @@ public final class mInsts {
                         .example("{1,2,3,4}.sum() [-- 10 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
-                // MULT AND MINUS DECLARE THE TWO RELATIONS A ROW STILL CARRIED: mult's one-way retraction to div
-                // (int models a mult_monoid, not a group — 5.div(2).mult(2) is 4) and minus's defining equation
-                // (minus ≡ plus ∘ neg), which is what lets int's add_group derive the pair instead of declaring it
+                // MULT DECLARES NO INVERSE. int is a mult_monoid, not a group: 5.div(2).mult(2) is 4, so div is a
+                // one-way retraction at best and never the two-sided inverse `?decq inverse` would claim. MINUS
+                // keeps its defining equation (minus ≡ plus ∘ neg), which is what lets int's add_group derive it
                 InstBuilder.build().tid(MULT_INST_TID, "multiply the lhs int by the argument int")
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the multiplication")
                         .argLst(INT_TYPE, "the int to multiply the lhs by")
                         .body((lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue()))
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
-                        .inverse(DIV_INST_TID.dom(INT_TID).rng(INT_TID))
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "subtract the argument int from the lhs int")
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the subtraction")
@@ -210,6 +223,8 @@ public final class mInsts {
                                 "1.plus(plus(1))    [-- 3 nested application --]",
                                 "1+(+1)             [-- 3 sugar nested form  --]")
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                        .form(Inst.Form.mapper)
+                        //.inverse(MINUS_INST_TID.dom(INT_TID).rng(INT_TID))
                         .create()
         ));
     }

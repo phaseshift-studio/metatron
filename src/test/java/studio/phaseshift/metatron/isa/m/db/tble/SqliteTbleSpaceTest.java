@@ -23,9 +23,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.TestReport;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -203,15 +203,15 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
              final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("DROP TABLE IF EXISTS users");
             stmt.executeUpdate("""
-                               CREATE TABLE users (
-                                   id INTEGER PRIMARY KEY,
-                                   name TEXT NOT NULL,
-                                   age INTEGER,
-                                   salary REAL,
-                                   active BOOLEAN,
-                                   email TEXT
-                               )
-                               """);
+                    CREATE TABLE users (
+                        id INTEGER PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        age INTEGER,
+                        salary REAL,
+                        active BOOLEAN,
+                        email TEXT
+                    )
+                    """);
             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, 1, 'alice@example.com')");
             stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, 1, 'bob@example.com')");
             stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, 0, 'charlie@example.com')");

@@ -32,9 +32,9 @@ import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -120,7 +120,7 @@ public interface Machine extends Rec, AutoCloseable {
      */
     static Machine current() {
         final Machine machine = CURRENT.get();
-        return null != machine ? machine : root();
+        return null == machine ? root() : machine;
     }
 
     /**

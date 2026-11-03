@@ -781,31 +781,11 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     public void setup() {
-        this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
-                uri(TYPE), lst(
-                        TypeBuilder.build()
-                                .tid(INT_TID)
-                                .vid(MATH_PERCENT_TID, "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100")
-                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
-                                .constructor(arg ->
-                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
-                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
-                                                arg.asInt())
-                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
-                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
-                                // reading that looks like a fact. The type declares its own real->percent edge,
-                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
-                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
-                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
-                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
-                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
-                                                lhs.asInt())
-                                .create(),
-                        docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
-                        docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),
-                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
-                        DATETIME_TYPE = TypeBuilder.build()
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        if (null == DATETIME_TYPE)
+            DATETIME_TYPE = TypeBuilder.build()
                                 .tid(URI_TID)
                                 .vid(MATH_DATETIME_TID, "a datetime as uri: <//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm>")
                                 .predicate((lhs, inst) -> {
@@ -835,7 +815,32 @@ public class mathInstSet extends AbstractInstSet {
                                     if (!dt.qMap().containsKey("tz")) return noobj();
                                     return inst.arg(0);
                                 })
+                                .create();
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        TypeBuilder.build()
+                                .tid(INT_TID)
+                                .vid(MATH_PERCENT_TID, "a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100")
+                                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100))))
+                                .constructor(arg ->
+                                        (arg.isReal() && (arg.asReal().jvm() < 1.0d)) ?
+                                                jnt(new Double(arg.asReal().jvm() * 100.0d).longValue()) :
+                                                arg.asInt())
+                                // THE CAST IS THE CONSTRUCTOR'S RULE. percent::T is an int::T, so the generic
+                                // as(percent::T) cast TRUNCATES: a free fraction of 0.707 became percent::0 — a
+                                // reading that looks like a fact. The type declares its own real->percent edge,
+                                // with the SAME `below 1.0` guard as the constructor, so a fraction scales while a
+                                // value already in 0..100 (real::50.0) is left alone instead of becoming 5000.
+                                .inst(AS_INST_TID.dom(REAL_TID).rng(MATH_PERCENT_TID), lst(), (lhs, inst) ->
+                                        (lhs.isReal() && lhs.asReal().jvm() < 1.0d) ?
+                                                jnt(new Double(lhs.asReal().jvm() * 100.0d).longValue()) :
+                                                lhs.asInt())
                                 .create(),
+                        docWrap(NAT_TYPE, "a positive integer greater than 0 \\(\\mathbb{N}\\)"),
+                        docWrap(CMPLX_TYPE, "a complex number contains a real and imaginary component \\(\\mathbb{C}\\)"),
+                        docWrap(DATA_SIZE_TYPE, "the nominal base type of data size"),
+                        DATETIME_TYPE,
                         docWrap(BYTE_TYPE, "a byte of data"),
                         docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
                         docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),

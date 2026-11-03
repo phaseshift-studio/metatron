@@ -223,8 +223,9 @@ public class PendingWritesTest extends AbstractMetatronTest {
                 "the drained write is published through Machine.write, so the space answers it now");
         assertEquals(tag.vid(null), Machine.read(label).vid(null),
                 "every drained write is published, not only the first in arrival order");
-        assertEquals(3, PendingWrites.drainUnder(root),
-                "a second drain publishes the same jurisdiction again — the count reports what was published, not what is left");
+        assertEquals(0, PendingWrites.drainUnder(root),
+                "a second drain publishes nothing: the space already answers every one of them, and a live "
+                        + "registration must never be replaced by the staged copy");
         assertEquals(4, PendingWrites.size(), "and still removes nothing");
     }
 

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -74,12 +74,16 @@ public final class Hop {
         return new Hop(height, arity);
     }
 
-    /** No depth — the point: the fold runs where it stands. */
+    /**
+     * No depth — the point: the fold runs where it stands.
+     */
     public static Hop point() {
         return new Hop(0, cInt.ANY());
     }
 
-    /** {@code height} levels, each bound by the receiver's own out-degree — the free tree (today's behavior). */
+    /**
+     * {@code height} levels, each bound by the receiver's own out-degree — the free tree (today's behavior).
+     */
     public static Hop tree(final int height) {
         return new Hop(height, cInt.ANY());
     }
@@ -113,12 +117,16 @@ public final class Hop {
         return new Hop(value.asInt().intValue().intValue(), value.c().isOne() ? cInt.ANY() : value.c());
     }
 
-    /** How many times the rule may re-apply to the code it produced. */
+    /**
+     * How many times the rule may re-apply to the code it produced.
+     */
     public int height() {
         return this.height;
     }
 
-    /** How many children one level may fan out to; {@code cInt.ANY()} is the receiver's local out-degree. */
+    /**
+     * How many children one level may fan out to; {@code cInt.ANY()} is the receiver's local out-degree.
+     */
     public cInt arity() {
         return this.arity;
     }
@@ -132,7 +140,9 @@ public final class Hop {
         return null != exact && exact.equals(this.arity.max()) && 1L == exact;
     }
 
-    /** Whether this hop has no depth at all — the point, where the fold runs where it stands. */
+    /**
+     * Whether this hop has no depth at all — the point, where the fold runs where it stands.
+     */
     public boolean isPoint() {
         return 0 == this.height;
     }

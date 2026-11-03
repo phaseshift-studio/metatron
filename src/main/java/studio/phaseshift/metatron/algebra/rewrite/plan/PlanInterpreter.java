@@ -16,15 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
+import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
+import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.Places;

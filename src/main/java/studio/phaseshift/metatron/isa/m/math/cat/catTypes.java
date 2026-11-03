@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.rewrite.Plan;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mTypes;
@@ -31,7 +31,6 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
@@ -73,33 +72,33 @@ public class catTypes {
         catInstSet.LAW_TYPE = mTypes.LAW_TYPE;
         return lst(
                 CATEGORY_TYPE = TypeBuilder.build()
-                                .tid(REC_TID.poly(f(OBJ)))
-                                .vid(CATEGORY_TID, "a categorical structure to be refined into an object or morphism")
-                                .isaPredicate(rec(
-                                        uri(OBJ), ALL_TYPE,
-                                        uri(INSTSET).maybe(), lst(URI_TYPE),
-                                        uri(ORBIT).maybe(), T(CATEGORY_TID)), Map.of(
+                        .tid(REC_TID.poly(f(OBJ)))
+                        .vid(CATEGORY_TID, "a categorical structure to be refined into an object or morphism")
+                        .isaPredicate(rec(
+                                uri(OBJ), ALL_TYPE,
+                                uri(INSTSET).maybe(), lst(URI_TYPE),
+                                uri(ORBIT).maybe(), T(CATEGORY_TID)), Map.of(
                                 uri(OBJ), "the type \\(X\\) lifted to a vertex: \\(\\mathrm{obj} = X\\)",
                                 uri(INSTSET).maybe(), "uri patterns \\(P\\) selecting the instsets \\(\\mathcal{S}\\) from which the category's morphisms are generated",
                                 uri(ORBIT).maybe(), "the reversible-core component: \\(\\mathrm{orbit}(X) = \\{Y : X \\sim^{*} Y\\}\\), where \\(X \\sim Y \\iff X \\to Y \\wedge Y \\to X\\)"))
-                                .create(),
+                        .create(),
                 CLASS_TYPE = TypeBuilder.build()
                         .tid(REC_TID)
                         .vid(CLASS_TID, "the set-theoretic class of a morphism — the union of the class labels")
                         .isaPredicate(union_(Arrays.stream(MorphClass.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst())
                         .create(),
                 MORPHISM_TYPE = TypeBuilder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(MORPHISM_TID, "an inst as a categorical morphism incident to a source object (dom) and a target object (rng)")
-                                .isaPredicate(rec(
-                                        uri(OBJ), INST_TYPE,
-                                        uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
-                                        uri(SRC).maybe(), T(OBJECT_TID),
-                                        uri(TRGT).maybe(), T(OBJECT_TID),
-                                        uri(ANALYSIS).maybe(), T(REC_TID),
-                                        uri(LAW).maybe(), lst(catInstSet.LAW_TYPE.c(cInt.SOME())),
-                                        uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME())),
-                                        uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)), mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
+                        .tid(CATEGORY_TID)
+                        .vid(MORPHISM_TID, "an inst as a categorical morphism incident to a source object (dom) and a target object (rng)")
+                        .isaPredicate(rec(
+                                uri(OBJ), INST_TYPE,
+                                uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
+                                uri(SRC).maybe(), T(OBJECT_TID),
+                                uri(TRGT).maybe(), T(OBJECT_TID),
+                                uri(ANALYSIS).maybe(), T(REC_TID),
+                                uri(LAW).maybe(), lst(catInstSet.LAW_TYPE.c(cInt.SOME())),
+                                uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME())),
+                                uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)), mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
                                 uri(SRC), "the source object the morphism leaves: \\(\\mathrm{src}(f) = \\mathrm{dom}(f)\\)",
                                 uri(TRGT), "the target object the morphism enters: \\(\\mathrm{trgt}(f) = \\mathrm{rng}(f)\\)",
                                 uri("analysis/position").maybe(), "the edge's place among its siblings: \\(\\mathrm{position}(f) \\subseteq \\{\\mathrm{duplicate}, \\mathrm{ambiguous}, \\mathrm{incomparable}, \\mathrm{coupling}, \\mathrm{isochain}, \\mathrm{retract}\\}\\)",
@@ -111,229 +110,229 @@ public class catTypes {
                                 uri(LAW), "the declared process laws \\(\\mathcal{L}\\) the morphism obeys, e.g. \\(\\mathrm{commutative}: f(x,y) = f(y,x)\\)",
                                 uri(CLASS), "the set-theoretic class of the morphism: \\(\\mathrm{class}(f) \\subseteq \\{\\mathrm{endo}, \\mathrm{iso}, \\mathrm{auto}, \\mathrm{mono}, \\mathrm{epi}, \\mathrm{section}, \\mathrm{retraction}\\}\\)",
                                 uri(DERIVATION), "the declared derivation of the morphism: \\(\\mathrm{lhs}\\) the derived instruction and \\(\\mathrm{rhs}\\) its primitive composition, e.g. \\(a / b \\mapsto a \\cdot b^{-1}\\)"))
-                                .constructor(arg -> {
-                                    final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
-                                    final Inst inst = objInstRec.atDirect(OBJ).asInst();
-                                    final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
-                                    // no table entry and no contract of its own: the form and class are read off the dom/rng
-                                    // its registrations agree on, so start's {0} => A is initial, not the bare # => # mapper
-                                    final List<Inst> shapes = null == entry && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
-                                    final Map<Obj, Obj> block = new LinkedHashMap<>();
-                                    block.put(uri(NAME), uri(inst.tid().name()));
-                                    block.put(uri(FORM), uri(formOf(shapes, inst).name()));
-                                    final Lst clazz = classOf(shapes);
-                                    if (0 < clazz.count())
-                                        block.put(uri(CLASS), clazz);
-                                    block.put(uri(SRC), auto_(instLambda(inst.dom().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
-                                    block.put(uri(TRGT), auto_(instLambda(inst.rng().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
-                                    block.put(uri(ANALYSIS), auto_(instLambda((_, _) -> {
-                                        final Map<Obj, Obj> analysis = new LinkedHashMap<>();
-                                        analysis.put(uri(FAMILY), auto_(instLambda((_, _) -> catGraph.family(inst))).tryToInst());
-                                        analysis.put(uri(CONTESTED), auto_(instLambda((_, _) -> catGraph.contested(inst))).tryToInst());
-                                        analysis.put(uri(ORBIT), auto_(instLambda((_, _) -> catGraph.orbit(inst))).tryToInst());
-                                        analysis.put(uri(POSITION), auto_(instLambda((_, _) -> catGraph.position(inst))).tryToInst());
-                                        if (null != entry && null != entry.inverse())
-                                            analysis.put(uri(INVERSE), uri(entry.inverse()));
-                                        // the edge the partials recombine through -- computed off the laws and the
-                                        // derivation, never declared (LawTable.combiner); a reducer without one has none
-                                        final fURI combiner = LawTable.combinerOf(inst);
-                                        if (null != combiner)
-                                            analysis.put(uri(COMBINER), uri(combiner));
-                                        return rec(analysis);
-                                    })).tryToInst());
-                                    block.putAll(objInstRec.jvm());
-                                    if (null != entry && !entry.laws().isEmpty())
-                                        block.put(uri(LAW), entry.laws());
-                                    if (null != entry && null != entry.derivation())
-                                        block.put(uri(DERIVATION), rec(uri(LHS), entry.derivation().lhs(), uri(RHS), entry.derivation().rhs()));
-                                    return rec(block).clone().selfTID(MORPHISM_TID.poly(inst.typeId()));
-                                })
-                                .create(),
+                        .constructor(arg -> {
+                            final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
+                            // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
+                            final Inst inst = objInstRec.atDirect(OBJ).asInst();
+                            final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
+                            // no table entry and no contract of its own: the form and class are read off the dom/rng
+                            // its registrations agree on, so start's {0} => A is initial, not the bare # => # mapper
+                            final List<Inst> shapes = null == entry && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
+                            final Map<Obj, Obj> block = new LinkedHashMap<>();
+                            block.put(uri(NAME), uri(inst.tid().name()));
+                            block.put(uri(FORM), uri(formOf(shapes, inst).name()));
+                            final Lst clazz = classOf(shapes);
+                            if (0 < clazz.count())
+                                block.put(uri(CLASS), clazz);
+                            block.put(uri(SRC), auto_(instLambda(inst.dom().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.dom()), OBJECT_TID, null)).tryToInst()));
+                            block.put(uri(TRGT), auto_(instLambda(inst.rng().vid().name(), (_, _) -> rec(mutableMap(uri(OBJ), inst.rng()), OBJECT_TID, null)).tryToInst()));
+                            block.put(uri(ANALYSIS), auto_(instLambda((_, _) -> {
+                                final Map<Obj, Obj> analysis = new LinkedHashMap<>();
+                                analysis.put(uri(FAMILY), auto_(instLambda((_, _) -> catGraph.family(inst))).tryToInst());
+                                analysis.put(uri(CONTESTED), auto_(instLambda((_, _) -> catGraph.contested(inst))).tryToInst());
+                                analysis.put(uri(ORBIT), auto_(instLambda((_, _) -> catGraph.orbit(inst))).tryToInst());
+                                analysis.put(uri(POSITION), auto_(instLambda((_, _) -> catGraph.position(inst))).tryToInst());
+                                if (null != entry && null != entry.inverse())
+                                    analysis.put(uri(INVERSE), uri(entry.inverse()));
+                                // the edge the partials recombine through -- computed off the laws and the
+                                // derivation, never declared (LawTable.combiner); a reducer without one has none
+                                final fURI combiner = LawTable.combinerOf(inst);
+                                if (null != combiner)
+                                    analysis.put(uri(COMBINER), uri(combiner));
+                                return rec(analysis);
+                            })).tryToInst());
+                            block.putAll(objInstRec.jvm());
+                            if (null != entry && !entry.laws().isEmpty())
+                                block.put(uri(LAW), entry.laws());
+                            if (null != entry && null != entry.derivation())
+                                block.put(uri(DERIVATION), rec(uri(LHS), entry.derivation().lhs(), uri(RHS), entry.derivation().rhs()));
+                            return rec(block).clone().selfTID(MORPHISM_TID.poly(inst.typeId()));
+                        })
+                        .create(),
                 OBJECT_TYPE = TypeBuilder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(OBJECT_TID, "a type as a categorical object incident to targeting morphisms and sourcing morphisms")
-                                .isaPredicate(rec(
-                                        uri(OBJ), TYPE_TYPE,
-                                        uri(MORPHED_TO).maybe().asUri(), lst(T(MORPHISM_TID)),
-                                        uri(MORPHED_FROM).maybe().asUri(), lst(T(MORPHISM_TID)),
-                                        uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
+                        .tid(CATEGORY_TID)
+                        .vid(OBJECT_TID, "a type as a categorical object incident to targeting morphisms and sourcing morphisms")
+                        .isaPredicate(rec(
+                                uri(OBJ), TYPE_TYPE,
+                                uri(MORPHED_TO).maybe().asUri(), lst(T(MORPHISM_TID)),
+                                uri(MORPHED_FROM).maybe().asUri(), lst(T(MORPHISM_TID)),
+                                uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
                                 uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
                                 uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
                                 uri(LAW), "the structural theories \\(\\mathcal{T}\\) the object models"))
-                                .constructor(arg -> {
-                                    final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Obj obj = object.at(OBJ);
-                                    // a type with no address models no object: answer noobj (the caller's
-                                    // orElse already means "no theories"), never raise — a fail here is
-                                    // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
-                                    if (!obj.isType() || null == obj.vid())
-                                        return noobj();
-                                    object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
-                                    object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
-                                        final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
-                                        return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
-                                    })).tryToInst(), MUTABLE);
-                                    object.at(MORPHED_FROM, auto_(instLambda((o, i) -> {
-                                        final Obj insts = Machine.read(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
-                                        return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
-                                    })).tryToInst(), MUTABLE);
-                                    return object.selfTID(OBJECT_TID.poly(obj.typeId()));
-                                })
-                                .create(),
+                        .constructor(arg -> {
+                            final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
+                            final Obj obj = object.at(OBJ);
+                            // a type with no address models no object: answer noobj (the caller's
+                            // orElse already means "no theories"), never raise — a fail here is
+                            // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
+                            if (!obj.isType() || null == obj.vid())
+                                return noobj();
+                            object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
+                            object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
+                                final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
+                                return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
+                            })).tryToInst(), MUTABLE);
+                            object.at(MORPHED_FROM, auto_(instLambda((o, i) -> {
+                                final Obj insts = Machine.read(f("/m/inst/+")/*.dom(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())*/.rng(obj.vid())); // TODO: constrain to instset
+                                return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
+                            })).tryToInst(), MUTABLE);
+                            return object.selfTID(OBJECT_TID.poly(obj.typeId()));
+                        })
+                        .create(),
                 PATH_TYPE = TypeBuilder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(PATH_TID, "code as a categorical path incident to iso-semantic rewritten forms")
-                                .isaPredicate(rec(
-                                        uri(OBJ), CODE_TYPE,
-                                        uri(ORIGIN).maybe(), T(PLACE_TID),
-                                        uri(WHERE).maybe(), REC_TYPE,
-                                        uri(PEER).maybe(), lst(REC_TYPE),
-                                        T(URI_TID).maybe(), T(PLAN_TID)), Map.of(
+                        .tid(CATEGORY_TID)
+                        .vid(PATH_TID, "code as a categorical path incident to iso-semantic rewritten forms")
+                        .isaPredicate(rec(
+                                uri(OBJ), CODE_TYPE,
+                                uri(ORIGIN).maybe(), T(PLACE_TID),
+                                uri(WHERE).maybe(), REC_TYPE,
+                                uri(PEER).maybe(), lst(REC_TYPE),
+                                T(URI_TID).maybe(), T(PLAN_TID)), Map.of(
                                 uri(OBJ), "the code \\(p\\) itself — the vertex",
                                 uri(ORIGIN).maybe(), "where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)",
                                 uri(WHERE).maybe(), "the realized placement — span → place, written by the pass that applied a distribution rule",
                                 uri(PEER).maybe(), "the peer recs the deployment used",
                                 T(URI_TID).maybe(), "one out-edge per live rewrite \\(r\\), keyed by the rule's name and holding its \\(\\mathrm{plan}\\): \\(\\mathrm{lower}(\\mathrm{plan}_r)(p) = r(p)\\); a rule the abstraction proves the identity on \\(p\\) is no edge, so a normal form has none"))
-                                .constructor(arg -> {
-                                    final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
-                                    final Code code = path.atDirect(OBJ);
-                                    if (!code.isCode())
-                                        return noobj();
-                                    // the location coordinate: attach the machine's own place as origin when the path
-                                    // has none — a program is placeable only where it answers (bind requires it)
-                                    if (path.at(ORIGIN).isNoObj()) {
-                                        final Obj origin = Places.self();
-                                        if (!origin.isNoObj())
-                                            path.at(ORIGIN, origin, MUTABLE);
-                                    }
-                                    // the plan-driven liveness reads the abstraction, not the code: lift ONCE, then
-                                    // each rewrite's out-edge is materialized iff its selector matches the morphism
-                                    // list's form/law/name fields — decided endogenously (the abstraction already
-                                    // computed them), so it is type-checking-independent.
-                                    final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
-                                    final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
-                                    final Obj reach = Places.reachable();   // the distribution candidates, read once per lift
-                                    for (final Inst rewrite : self.rewrites()) {
-                                        try {
-                                            if (!maybeNotIdentity(morphisms, rewrite))
-                                                continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
-                                            final Plan plan = catRewrite.planOf(rewrite.tid().name());
-                                            if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
-                                                continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
-                                            final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
-                                            final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
-                                            path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
-                                        } catch (final Exception e) {
-                                            //do nothing
-                                        }
-                                    }
-                                    return path.selfTID(PATH_TID);
-                                })
-                                .create(),
+                        .constructor(arg -> {
+                            final Rec path = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
+                            final Code code = path.atDirect(OBJ);
+                            if (!code.isCode())
+                                return noobj();
+                            // the location coordinate: attach the machine's own place as origin when the path
+                            // has none — a program is placeable only where it answers (bind requires it)
+                            if (path.at(ORIGIN).isNoObj()) {
+                                final Obj origin = Places.self();
+                                if (!origin.isNoObj())
+                                    path.at(ORIGIN, origin, MUTABLE);
+                            }
+                            // the plan-driven liveness reads the abstraction, not the code: lift ONCE, then
+                            // each rewrite's out-edge is materialized iff its selector matches the morphism
+                            // list's form/law/name fields — decided endogenously (the abstraction already
+                            // computed them), so it is type-checking-independent.
+                            final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
+                            final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
+                            final Obj reach = Places.reachable();   // the distribution candidates, read once per lift
+                            for (final Inst rewrite : self.rewrites()) {
+                                try {
+                                    if (!maybeNotIdentity(morphisms, rewrite))
+                                        continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
+                                    final Plan plan = catRewrite.planOf(rewrite.tid().name());
+                                    if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
+                                        continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
+                                    final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
+                                    final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
+                                    path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
+                                } catch (final Exception e) {
+                                    //do nothing
+                                }
+                            }
+                            return path.selfTID(PATH_TID);
+                        })
+                        .create(),
                 ABSTRACTION_TYPE = TypeBuilder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(ABSTRACTION_TID, "code lifted pointwise along \\(\\alpha\\) into the classification alphabet — the pure search surface a plan's selector reads")
-                                .isaPredicate(rec(
-                                        uri(OBJ), lst(T(MORPHISM_TID)),
-                                        uri(WHERE).maybe(), lst(T(CATEGORY_TID))), Map.of(
+                        .tid(CATEGORY_TID)
+                        .vid(ABSTRACTION_TID, "code lifted pointwise along \\(\\alpha\\) into the classification alphabet — the pure search surface a plan's selector reads")
+                        .isaPredicate(rec(
+                                uri(OBJ), lst(T(MORPHISM_TID)),
+                                uri(WHERE).maybe(), lst(T(CATEGORY_TID))), Map.of(
                                 uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code",
                                 uri(WHERE).maybe(), "the α place-class word: the located path's places as a list (the α image of \\(\\mathrm{path}.where\\) / \\(\\mathrm{path}.origin\\)) — the surface a placement guard reads"))
-                                .constructor(arg -> {
-                                    final boolean located = arg.isRec() && arg.asRec().has(uri(OBJ));
-                                    final Obj source = located ? arg.asRec().at(OBJ) : arg;
-                                    if (source.isLst())
-                                        return arg.asRec().selfTID(ABSTRACTION_TID);    // already lifted
-                                    if (!source.isCode())
-                                        return noobj();
-                                    final Code code = source.asCode();
-                                    final List<Type> carriers = carriers(code);
-                                    final List<Inst> contracts = contracts(code);
-                                    final List<Obj> morphisms = new ArrayList<>();
-                                    for (int i = 0; i < code.insts().size(); i++) {
-                                        final Inst chain = code.insts().get(i);
-                                        // the declared n-tid keys the chain instruction into the law table in-graph, read at
-                                        // the carrier flowing into it
-                                        final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carriers.get(i));
-                                        final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
-                                        Obj morphism;
-                                        try {
-                                            morphism = MORPHISM_TYPE.constructor().apply(keyed);
-                                        } catch (final Exception e) {
-                                            morphism = noobj();
-                                        }
-                                        // lossless α: store the ORIGINAL inst in obj, so γ (walk obj in order)
-                                        // recovers the exact code — the form/law/class were computed from keyed
-                                        if (morphism.isNoObj())
-                                            morphisms.add(rec(mutableMap(uri(OBJ), chain), MORPHISM_TID, null));
-                                        else {
-                                            final Rec block = morphism.asRec();
-                                            block.at(uri(OBJ), chain, MUTABLE);
-                                            if (null == declared)
-                                                attachShape(block, chain, contracts.get(i));
-                                            morphisms.add(block);
-                                        }
-                                    }
-                                    final Rec abstraction = rec(uri(OBJ), lst(morphisms));
-                                    // the place-class word (§11.4): where the code can GO — its dialed peers — or the
-                                    // realized placement when the pass has written one. Computed for any code, not just
-                                    // a located path: the reach is the machine's, not the program's.
-                                    final Obj word = located ? placeWord(arg.asRec()) : Places.reachable();
-                                    if (!word.isNoObj())
-                                        abstraction.at(uri(WHERE), word, MUTABLE);
-                                    return abstraction.selfTID(ABSTRACTION_TID);
-                                })
-                                .create(),
+                        .constructor(arg -> {
+                            final boolean located = arg.isRec() && arg.asRec().has(uri(OBJ));
+                            final Obj source = located ? arg.asRec().at(OBJ) : arg;
+                            if (source.isLst())
+                                return arg.asRec().selfTID(ABSTRACTION_TID);    // already lifted
+                            if (!source.isCode())
+                                return noobj();
+                            final Code code = source.asCode();
+                            final List<Type> carriers = carriers(code);
+                            final List<Inst> contracts = contracts(code);
+                            final List<Obj> morphisms = new ArrayList<>();
+                            for (int i = 0; i < code.insts().size(); i++) {
+                                final Inst chain = code.insts().get(i);
+                                // the declared n-tid keys the chain instruction into the law table in-graph, read at
+                                // the carrier flowing into it
+                                final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carriers.get(i));
+                                final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
+                                Obj morphism;
+                                try {
+                                    morphism = MORPHISM_TYPE.constructor().apply(keyed);
+                                } catch (final Exception e) {
+                                    morphism = noobj();
+                                }
+                                // lossless α: store the ORIGINAL inst in obj, so γ (walk obj in order)
+                                // recovers the exact code — the form/law/class were computed from keyed
+                                if (morphism.isNoObj())
+                                    morphisms.add(rec(mutableMap(uri(OBJ), chain), MORPHISM_TID, null));
+                                else {
+                                    final Rec block = morphism.asRec();
+                                    block.at(uri(OBJ), chain, MUTABLE);
+                                    if (null == declared)
+                                        attachShape(block, chain, contracts.get(i));
+                                    morphisms.add(block);
+                                }
+                            }
+                            final Rec abstraction = rec(uri(OBJ), lst(morphisms));
+                            // the place-class word (§11.4): where the code can GO — its dialed peers — or the
+                            // realized placement when the pass has written one. Computed for any code, not just
+                            // a located path: the reach is the machine's, not the program's.
+                            final Obj word = located ? placeWord(arg.asRec()) : Places.reachable();
+                            if (!word.isNoObj())
+                                abstraction.at(uri(WHERE), word, MUTABLE);
+                            return abstraction.selfTID(ABSTRACTION_TID);
+                        })
+                        .create(),
                 PLAN_TYPE = TypeBuilder.build()
-                                .tid(REC_TID)
-                                .vid(PLAN_TID, "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)")
-                                .isaPredicate(rec(
-                                        uri(NAME), URI_TYPE,
-                                        uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
-                                        uri(CUT).maybe().asUri(), rec(
-                                                uri(FORM).maybe().asUri(), URI_TYPE,
-                                                uri(LAW).maybe().asUri(), lst(catInstSet.LAW_TYPE),
-                                                uri(ROLE).maybe().asUri(), URI_TYPE),
-                                        uri(WHERE).maybe(), lst(rec(
-                                                // the derived token is OPTIONAL now: a rec stated in the axes alone is
-                                                // a plan::T (C9), and the legacy encoding is still read for one cycle
-                                                uri(SHAPE).maybe().asUri(), URI_TYPE,
-                                                uri(TARGET).maybe(), ALL_TYPE,
-                                                // the decision's three axes (§1 of the qparam plan): the place set
-                                                // (a uri, a lst of designators, or a weighted rec), the depth (a counted
-                                                // int, or [height, arity] for the arities a coefficient cannot spell), and
-                                                // the partition (a counted uri). ALL_TYPE because each axis decides its
-                                                // value's shape; the coefficient is ANY because a COUNTED object fails a
-                                                // plain <#> — the coefficient IS the axis' value (arity, part count) and
-                                                // the type's own coefficient is what a counted obj is tested against.
-                                                // Pinned by DecisionModelTest.testTheAxesArePlanT.
-                                                uri(PLACE).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                                uri(HOP).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                                uri(SPLIT).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                                uri(INST).maybe(), lst(URI_TYPE),
-                                                uri(SPAN), lst(rec(
-                                                        uri(SPAN), URI_TYPE,
-                                                        uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()), Map.of(
+                        .tid(REC_TID)
+                        .vid(PLAN_TID, "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)")
+                        .isaPredicate(rec(
+                                uri(NAME), URI_TYPE,
+                                uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
+                                uri(CUT).maybe().asUri(), rec(
+                                        uri(FORM).maybe().asUri(), URI_TYPE,
+                                        uri(LAW).maybe().asUri(), lst(catInstSet.LAW_TYPE),
+                                        uri(ROLE).maybe().asUri(), URI_TYPE),
+                                uri(WHERE).maybe(), lst(rec(
+                                        // the derived token is OPTIONAL now: a rec stated in the axes alone is
+                                        // a plan::T (C9), and the legacy encoding is still read for one cycle
+                                        uri(SHAPE).maybe().asUri(), URI_TYPE,
+                                        uri(TARGET).maybe(), ALL_TYPE,
+                                        // the decision's three axes (§1 of the qparam plan): the place set
+                                        // (a uri, a lst of designators, or a weighted rec), the depth (a counted
+                                        // int, or [height, arity] for the arities a coefficient cannot spell), and
+                                        // the partition (a counted uri). ALL_TYPE because each axis decides its
+                                        // value's shape; the coefficient is ANY because a COUNTED object fails a
+                                        // plain <#> — the coefficient IS the axis' value (arity, part count) and
+                                        // the type's own coefficient is what a counted obj is tested against.
+                                        // Pinned by DecisionModelTest.testTheAxesArePlanT.
+                                        uri(PLACE).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                        uri(HOP).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                        uri(SPLIT).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                        uri(INST).maybe(), lst(URI_TYPE),
+                                        uri(SPAN), lst(rec(
+                                                uri(SPAN), URI_TYPE,
+                                                uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()), Map.of(
                                 uri(NAME), "the plan's name — the rewrite rule it embodies",
                                 uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
                                 uri(WHERE).maybe(), "the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)",
                                 uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"))
-                                .constructor(arg -> {
-                                    final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
-                                    return plan.selfTID(PLAN_TID);
-                                })
-                                .create(),
+                        .constructor(arg -> {
+                            final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
+                            return plan.selfTID(PLAN_TID);
+                        })
+                        .create(),
                 PLACE_TYPE = TypeBuilder.build()
-                                .tid(CATEGORY_TID)
-                                .vid(PLACE_TID, "a machine as the location coordinate — where code runs, the vertex beside path::T")
-                                .isaPredicate(rec(
-                                        uri(OBJ), URI_TYPE,
-                                        uri(AUTHORITY), lst(URI_TYPE),
-                                        uri(INSTSET).maybe(), lst(URI_TYPE),
-                                        uri(SOURCE).maybe(), URI_TYPE,
-                                        uri(LINKED_TO).maybe().asUri(), lst(REC_TYPE),
-                                        uri(LINKED_FROM).maybe().asUri(), lst(REC_TYPE),
-                                        uri(STATUS).maybe().asUri(), URI_TYPE), mutableMap(
+                        .tid(CATEGORY_TID)
+                        .vid(PLACE_TID, "a machine as the location coordinate — where code runs, the vertex beside path::T")
+                        .isaPredicate(rec(
+                                uri(OBJ), URI_TYPE,
+                                uri(AUTHORITY), lst(URI_TYPE),
+                                uri(INSTSET).maybe(), lst(URI_TYPE),
+                                uri(SOURCE).maybe(), URI_TYPE,
+                                uri(LINKED_TO).maybe().asUri(), lst(REC_TYPE),
+                                uri(LINKED_FROM).maybe().asUri(), lst(REC_TYPE),
+                                uri(STATUS).maybe().asUri(), URI_TYPE), mutableMap(
                                 uri(OBJ), "the machine address //host[/path] — who evaluates: \\(host()\\) is the roster key, \\(path()\\) the frame vid (empty = the root machine)",
                                 uri(AUTHORITY), "the transports that reach the machine scheme://host:port; two aliases of one machine are values, never two places",
                                 uri(INSTSET).maybe(), "ISAs resolvable here (the vocabulary coordinate)",
@@ -341,8 +340,8 @@ public class catTypes {
                                 uri(LINKED_TO).maybe(), "outbound peers whose service is this place",
                                 uri(LINKED_FROM).maybe(), "inbound peers from this place",
                                 uri(STATUS).maybe(), "up/down/known, derived over the dials"))
-                                .constructor(Places::place)
-                                .create(),
+                        .constructor(Places::place)
+                        .create(),
                 THEORY_TYPE = TypeBuilder.build()
                         .tid(REC_TID)
                         .vid(THEORY_TID, "the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \\(\\mathrm{ring} \\mapsto \\{\\mathrm{add}, \\mathrm{mul}, \\mathrm{zero}, \\mathrm{one}\\}\\)")
