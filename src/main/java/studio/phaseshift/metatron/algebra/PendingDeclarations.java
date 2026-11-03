@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.Derivation;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
