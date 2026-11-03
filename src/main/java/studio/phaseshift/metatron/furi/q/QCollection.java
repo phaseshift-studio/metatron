@@ -529,18 +529,10 @@ public final class QCollection {
                                 && OBJ_DOCS.read(opAddr.removeQ(DOCQ)).isNoObj())
                             LAZY_PUBLISH.test(opAddr);
                     }
-                    // A DOC IS KEYED BY THE INST'S OWN TID (the builder queues it at the address carrying
-                    // args/rng), while a reader asks at the bare operation address: resolve through the live inst.
-                    Obj looked = INST_DOCS.read(vidBig.removeQ(DOCQ));
-                    if (looked.isNoObj()) {
-                        final Obj live = Machine.read(vidBig.removeQ(DOCQ));
-                        if (live.isInst()) {
-                            final fURI full = live.<Inst>as().tid();
-                            LAZY_PUBLISH.test(full.addQ(DOCQ));
-                            looked = INST_DOCS.read(full);
-                        }
-                    }
-                    final Obj instDoc = looked;
+                    // PURE READS ONLY inside a q-proc: a value read of an inst/type address RESOLVES it, and doing
+                    // that on every doc miss perturbed type resolution for the rest of the VM. The builder writes
+                    // the doc at the bare address as well, so the lookup below finds it without a side effect.
+                    final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
                             OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.Helper.readLocal(Machine.current(), vidBig.removeQ(DOCQ))))) :
                             instDoc;

@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.db.tble;
 
-import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
-import studio.phaseshift.metatron.algebra.rewrite.DBRewriteBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewrites;
+import studio.phaseshift.metatron.algebra.rewrite.db.DBRewriteBuilder;
 import studio.phaseshift.metatron.furi.DataPath;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -28,8 +28,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.db.tble.schema.SQLRewriteUtils;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
 import java.sql.*;

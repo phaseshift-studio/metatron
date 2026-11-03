@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.db.tble;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -26,20 +27,20 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractDataPathSpaceTest;
 import studio.phaseshift.metatron.SkipRegexTest;
 import studio.phaseshift.metatron.Training;
-import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
+import studio.phaseshift.metatron.algebra.rewrite.db.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.IncrQTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -53,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.AI_MESSAGE_TID;
+import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -65,7 +67,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
@@ -75,6 +76,7 @@ import static studio.phaseshift.metatron.isa.m.db.tble.tbleInstSet.TBLE_ISA_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Isolated
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SkipRegexTest(value = {
         // Remaining testUpdateWrite skips are schema-fixed incompatibilities, NOT the
@@ -2936,7 +2938,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
             final fURI subtypeTid = f("/m/ai/llm/chat_result");  // base is /m/rec
             final Rec nestedRec = rec(
                     uri("response"), str("nested response text"),
-                    uri("time"), str("1.234s")
+                    // a duration is a runtime (time::T is a real refinement), not the datetime the `time`
+                    // slot declares -- the fixture used to put "1.234s" there and only passed while the
+                    // type was not enforced on tid()
+                    uri("runtime"), real(1.234d)
             ).tid(subtypeTid).asRec();
 
             Machine.write(f("sst:" + tableName + "/1"), rec(

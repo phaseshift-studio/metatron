@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection.Docs;
-import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -36,18 +36,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
-import static studio.phaseshift.metatron.Tokens.ARGS;
-import static studio.phaseshift.metatron.Tokens.DERIVATION;
-import static studio.phaseshift.metatron.Tokens.DESC;
-import static studio.phaseshift.metatron.Tokens.DOM;
-import static studio.phaseshift.metatron.Tokens.EXAMPLE;
-import static studio.phaseshift.metatron.Tokens.FORM;
-import static studio.phaseshift.metatron.Tokens.INVERSE;
-import static studio.phaseshift.metatron.Tokens.LAW;
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.OBJ;
-import static studio.phaseshift.metatron.Tokens.RHS;
-import static studio.phaseshift.metatron.Tokens.RNG;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.decWrap;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -103,6 +92,15 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * {@code ?decq}, as it does the laws, inverse and derivation.
      */
     private static final Map<fURI, Inst.Form> DECLARED_FORMS = new ConcurrentHashMap<>();
+
+    /**
+     * FORGET EVERY DECLARED FORM — the build-time index of the forms an {@code ?decq} claim states. Part of
+     * {@code BootLoader.resetCaches()}: a form is a property of the declaration in THIS JVM, not a fact to carry
+     * across a reset (the declarations themselves live in the retained log / the store).
+     */
+    public static void reset() {
+        DECLARED_FORMS.clear();
+    }
 
     private fURI dom;
     private fURI rng;
@@ -274,12 +272,18 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         final Rec doc = this.docRec(inst);
         if (!doc.isEmpty())
             PendingWrites.write(PendingWrites.docq(inst.tid()), doc);
-        final Rec claim = claimRec(List.copyOf(this.laws), this.inverse, this.derivation, this.form);
+        // AND AT THE BARE ADDRESS: a reader asks `and()`, not `and()?rng=…&args=…`, and resolving that from
+        // the doc q-proc must not require a value read (which would resolve the inst as a side effect).
+        if (!inst.tid().basePath().equals(inst.tid()))
+            PendingWrites.write(PendingWrites.docq(inst.tid().basePath()), doc);
+        final Rec claim = claimRec(List.copyOf(this.laws), this.inverse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
         if (!claim.isEmpty())
             PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claim);
         // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
         if (null != this.form)
             DECLARED_FORMS.put(keyed.basePath(), this.form);
+        else
+            DECLARED_FORMS.put(keyed.basePath(), Inst.Form.of(inst));
         return inst;
     }
 

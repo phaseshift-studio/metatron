@@ -172,11 +172,79 @@ public class llmInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
-        // llm types reference mathInstSet.DATETIME_TYPE, which is only populated by
-        // mathInstSet.setup(). The ServiceLoader order that loads inst sets is not a
-        // stable contract, so ensure math is set up first rather than assuming it.
+        // MATH FIRST: every llm type that states a time/duration/datetime slot closes over mathInstSet's
+        // type objects, and mathInstSet.setup() is what creates them. The ServiceLoader order is not a
+        // stable contract, so mount math BEFORE any llm type is built -- the import used to sit after the
+        // chat_result declaration, which is exactly how its time/runtime slots came out as `real::T` holes.
         if (null == DATETIME_TYPE)
             InstSet.importInstSet(MATH_ISA_TID);
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        if (null == LLM_SKILL_TYPE)
+            LLM_SKILL_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_SKILL_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME), URI_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(CONTENT).maybe(), STR_TYPE,
+                                                uri(RESOURCE).maybe(), lst(rec(
+                                                        uri(URI), URI_TYPE,
+                                                        uri(NAME).maybe(), STR_TYPE,
+                                                        uri(DESC).maybe(), STR_TYPE,
+                                                        uri(TEXT), STR_TYPE)),
+                                                uri(TOOL).maybe(), lst(ALL_TYPE)))
+                                        .refinement("a skill.md specification", "", mutableMap(
+                                        uri(NAME), "skill name",
+                                        uri(DESC), "skill description",
+                                        uri(CONTENT).maybe(), "skill.md document content",
+                                        uri(RESOURCE).maybe(), "skill assets, references, and scripts",
+                                        uri(TOOL).maybe(), "skill tools"))
+                                        .desc("a skill.md specification to augment llm with specialized abilities")
+                                        .example("*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
+                                        .create();
+        // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
+        // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
+        // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
+        // BEFORE chat_result: a type that closes over another must be built after it, or the slot
+        // captures null and renders as [noobj] in the predicate
+        if (null == LLM_WATERMARK_TYPE)
+            LLM_WATERMARK_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_WATERMARK_TID, "one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text")
+                                        .isaPredicate(rec(
+                                                uri(TAG), STR_TYPE,
+                                                uri(KEY), STR_TYPE,
+                                                uri(BODY).maybe(), STR_TYPE,
+                                                uri(OBJ).maybe(), ALL_TYPE,
+                                                uri(ERROR).maybe(), FAIL_TYPE,
+                                                uri(INDEX).maybe(), INT_TYPE,
+                                                uri(STAGE).maybe(), URI_TYPE), mutableMap(
+                                        uri(TAG), "the body codec the marker named — mtron, json, txt, html, md, xml, bson",
+                                        uri(KEY), "the feature the model addressed — loop, summarize, compaction, embed, midchat, ...",
+                                        uri(BODY).maybe(), "the raw payload text, trimmed of its surrounding whitespace",
+                                        uri(OBJ).maybe(), "the body decoded by tag — the deferred call's argument rec",
+                                        uri(ERROR).maybe(), "why the body did not decode; the marker is still stripped and still recorded",
+                                        uri(INDEX), "ordinal position of the marker in the model's output",
+                                        uri(STAGE), "the lifecycle stage it was harvested at — on_complete_response, on_partial_thinking, ..."))
+                                        .create();
+        if (null == LLM_CHAT_RESULT_TYPE)
+            LLM_CHAT_RESULT_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_CHAT_RESULT_TID, "a response message from a chat interaction")
+                                        .isaPredicate(rec(
+                                                uri(CHAT).maybe().asUri(), ALL_TYPE,
+                                                uri(TIME).maybe(), DATETIME_TYPE,
+                                                uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
+                                                uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
+                                                uri(ERROR).maybe(), FAIL_TYPE), mutableMap(
+                                        uri(CHAT), "the chat response — free-text str or structured rec per response format",
+                                        uri(TIME), "the date and time when the chat completed",
+                                        uri(RUNTIME), "elapsed time::T from user message to complete response",
+                                        uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
+                                        uri(ERROR).maybe(), "a fail chain if errors occurred"))
+                                        .create();
         this.jvm().putAll(mutableMap(
                 uri(TYPE), lst(
                         LLM_MODEL_TYPE = TypeBuilder.build()
@@ -364,40 +432,8 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(uri(TEXT), STR_TYPE), Map.of(uri(TEXT), "the system message text body"))
                                         //   uri(SIZE), DATA_SIZE_TYPE))
                                         .create(),
-                        LLM_WATERMARK_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_WATERMARK_TID, "one in-band control marker a model wrote into its own output: which feature it addresses, the argument rec of the call it defers, and markup that is removed from the visible text")
-                                        .isaPredicate(rec(
-                                                uri(TAG), STR_TYPE,
-                                                uri(KEY), STR_TYPE,
-                                                uri(BODY).maybe(), STR_TYPE,
-                                                uri(OBJ).maybe(), ALL_TYPE,
-                                                uri(ERROR).maybe(), FAIL_TYPE,
-                                                uri(INDEX).maybe(), INT_TYPE,
-                                                uri(STAGE).maybe(), URI_TYPE), mutableMap(
-                                        uri(TAG), "the body codec the marker named — mtron, json, txt, html, md, xml, bson",
-                                        uri(KEY), "the feature the model addressed — loop, summarize, compaction, embed, midchat, ...",
-                                        uri(BODY).maybe(), "the raw payload text, trimmed of its surrounding whitespace",
-                                        uri(OBJ).maybe(), "the body decoded by tag — the deferred call's argument rec",
-                                        uri(ERROR).maybe(), "why the body did not decode; the marker is still stripped and still recorded",
-                                        uri(INDEX), "ordinal position of the marker in the model's output",
-                                        uri(STAGE), "the lifecycle stage it was harvested at — on_complete_response, on_partial_thinking, ..."))
-                                        .create(),
-                        LLM_CHAT_RESULT_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_CHAT_RESULT_TID, "a response message from a chat interaction")
-                                        .isaPredicate(rec(
-                                                uri(CHAT).maybe().asUri(), ALL_TYPE,
-                                                uri(TIME), DATETIME_TYPE,
-                                                uri(RUNTIME), auto_from_(MATH_TIME_TID).tryToInst(),
-                                                uri(WATERMARK).maybe(), lst(LLM_WATERMARK_TYPE),
-                                                uri(ERROR).maybe(), FAIL_TYPE), mutableMap(
-                                        uri(CHAT), "the chat response — free-text str or structured rec per response format",
-                                        uri(TIME), "the date and time when the chat completed",
-                                        uri(RUNTIME), "elapsed time::T from user message to complete response",
-                                        uri(WATERMARK).maybe(), "the in-band markers the model emitted, in order; their markup is stripped from chat",
-                                        uri(ERROR).maybe(), "a fail chain if errors occurred"))
-                                        .create(),
+                        LLM_WATERMARK_TYPE,
+                        LLM_CHAT_RESULT_TYPE,
                         LLM_USER_MESSAGE_TYPE = TypeBuilder.build()
                                         .tid(LLM_MESSAGE_TID)
                                         .vid(USER_MESSAGE_TID, "a user message")
@@ -415,9 +451,13 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(LLM_MESSAGE_TID)
                                         .vid(TOOL_REQUEST_MESSAGE_TID, "a tool execution request — nested inside an ai message's tool_requests list")
                                         .isaPredicate(rec(
-                                                uri(NAME), URI_TYPE,
+                                                // A NESTED TOOL REQUEST IS A CARRIER OF ITS ID: `contents` names the
+                                                // tool call, and name/args/text are the model's own summary when it has
+                                                // one. Requiring name+text rejected the minimal id-only request the
+                                                // chat store builds (and stores) on its way back in.
+                                                (Obj) uri(NAME).maybe(), URI_TYPE,
                                                 uri(ARGS).maybe(), STR_TYPE,
-                                                uri(TEXT), STR_TYPE,
+                                                uri(TEXT).maybe(), STR_TYPE,
                                                 uri(CONTENTS).maybe(), STR_TYPE), mutableMap(
                                         uri(NAME), "the tool name",
                                         uri(ARGS), "the tool arguments (mapped from LC4j 'arguments' via VOCAB)",
@@ -438,8 +478,10 @@ public class llmInstSet extends AbstractInstSet {
                                         .tid(LLM_MESSAGE_TID)
                                         .vid(TOOL_RESULT_MESSAGE_TID, "a tool execution result message")
                                         .isaPredicate(rec(
-                                                uri(NAME), URI_TYPE,
-                                                uri(TEXT), STR_TYPE,
+                                                // the same carrier rule as a request: `contents` names the tool call, and
+                                                // name/text are the executor's summary when it has one
+                                                (Obj) uri(NAME).maybe(), URI_TYPE,
+                                                (Obj) uri(TEXT).maybe(), STR_TYPE,
                                                 uri(CHAT).maybe(), ALL_TYPE,
                                                 //      uri(SIZE), DATA_SIZE_TYPE,
                                                 uri(ID).maybe(), STR_TYPE), mutableMap(
@@ -473,28 +515,7 @@ public class llmInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(uri(SESSION).maybe().asUri(), URI_TYPE))
                                         .create(),
                         //////////////////////////////////////////////////
-                        LLM_SKILL_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(LLM_SKILL_TID)
-                                        .isaPredicate(rec(
-                                                uri(NAME), URI_TYPE,
-                                                uri(DESC), STR_TYPE,
-                                                uri(CONTENT).maybe(), STR_TYPE,
-                                                uri(RESOURCE).maybe(), lst(rec(
-                                                        uri(URI), URI_TYPE,
-                                                        uri(NAME).maybe(), STR_TYPE,
-                                                        uri(DESC).maybe(), STR_TYPE,
-                                                        uri(TEXT), STR_TYPE)),
-                                                uri(TOOL).maybe(), lst(ALL_TYPE)))
-                                        .refinement("a skill.md specification", "", mutableMap(
-                                        uri(NAME), "skill name",
-                                        uri(DESC), "skill description",
-                                        uri(CONTENT).maybe(), "skill.md document content",
-                                        uri(RESOURCE).maybe(), "skill assets, references, and scripts",
-                                        uri(TOOL).maybe(), "skill tools"))
-                                        .desc("a skill.md specification to augment llm with specialized abilities")
-                                        .example("*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]")
-                                        .create(),
+                        LLM_SKILL_TYPE,
                         LLM_FEATURE_TYPE = TypeBuilder.build()
                                         .tid(REC_TID)
                                         .vid(LLM_FEATURE_TID, "each concrete feature refines llm_feature::T with its own hook implementations")

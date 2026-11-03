@@ -16,22 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.HASH_FURI;
-import static studio.phaseshift.metatron.Tokens.LOCAL;
-import static studio.phaseshift.metatron.Tokens.PEER;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -76,15 +70,25 @@ public final class PlaceSet {
      * through the roster while a {@code scheme://host:port} is an authority as written.
      */
     public enum Form {
-        /** {@code local} — this frame's place; a place set holding only these ships nothing */
+        /**
+         * {@code local} — this frame's place; a place set holding only these ships nothing
+         */
         LOCAL,
-        /** {@code peer} — the dialed set */
+        /**
+         * {@code peer} — the dialed set
+         */
         PEER,
-        /** {@code #} — every remaining reachable place */
+        /**
+         * {@code #} — every remaining reachable place
+         */
         ANY,
-        /** {@code //host[:port]} — the addressing redirect */
+        /**
+         * {@code //host[:port]} — the addressing redirect
+         */
         ADDRESS,
-        /** {@code scheme://host:port} — one authority as written */
+        /**
+         * {@code scheme://host:port} — one authority as written
+         */
         AUTHORITY
     }
 
@@ -100,18 +104,24 @@ public final class PlaceSet {
             Objects.requireNonNull(demand, "a designator states a demand");
         }
 
-        /** Whether this designator is the place the code already stands on. */
+        /**
+         * Whether this designator is the place the code already stands on.
+         */
         public boolean isLocal() {
             return Form.LOCAL == this.form;
         }
 
-        /** The designator as written — the view an error message or a test reads. */
+        /**
+         * The designator as written — the view an error message or a test reads.
+         */
         public String name() {
             return this.uri.toString();
         }
     }
 
-    /** The empty place set — nothing ships (the {@code none} shape's decision). */
+    /**
+     * The empty place set — nothing ships (the {@code none} shape's decision).
+     */
     private static final PlaceSet NONE = new PlaceSet(List.of());
 
     private final List<Designator> designators;
@@ -120,22 +130,30 @@ public final class PlaceSet {
         this.designators = List.copyOf(designators);
     }
 
-    /** Nowhere — the empty set, the {@code none} shape's decision. */
+    /**
+     * Nowhere — the empty set, the {@code none} shape's decision.
+     */
     public static PlaceSet none() {
         return NONE;
     }
 
-    /** {@code [local]} — this frame's own place. */
+    /**
+     * {@code [local]} — this frame's own place.
+     */
     public static PlaceSet local() {
         return of(uri(LOCAL));
     }
 
-    /** {@code [peer]} — the dialed set, one uniform share each. */
+    /**
+     * {@code [peer]} — the dialed set, one uniform share each.
+     */
     public static PlaceSet peer() {
         return of(uri(PEER));
     }
 
-    /** {@code [#]} — every remaining reachable place. */
+    /**
+     * {@code [#]} — every remaining reachable place.
+     */
     public static PlaceSet any() {
         return of(uri(HASH_FURI));
     }
@@ -211,17 +229,23 @@ public final class PlaceSet {
         return new Designator(form, address, demand);
     }
 
-    /** The designators, in the order they were written, each with its demand. */
+    /**
+     * The designators, in the order they were written, each with its demand.
+     */
     public List<Designator> designators() {
         return this.designators;
     }
 
-    /** Whether this set names no place at all. */
+    /**
+     * Whether this set names no place at all.
+     */
     public boolean isEmpty() {
         return this.designators.isEmpty();
     }
 
-    /** The designators that leave home — every designator that is not {@code local}. */
+    /**
+     * The designators that leave home — every designator that is not {@code local}.
+     */
     public List<Designator> nonLocal() {
         return this.designators.stream().filter(designator -> !designator.isLocal()).toList();
     }
@@ -264,7 +288,9 @@ public final class PlaceSet {
         return cInt.of(min, max);
     }
 
-    /** The designators as written — the resolved-name view a test, a log line or a refusal reads. */
+    /**
+     * The designators as written — the resolved-name view a test, a log line or a refusal reads.
+     */
     public List<String> names() {
         return this.designators.stream().map(Designator::name).toList();
     }

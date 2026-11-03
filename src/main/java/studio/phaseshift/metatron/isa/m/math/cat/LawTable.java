@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.m.math.cat;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.Derivation;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -54,8 +54,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       ({@link #lookup(fURI)}). These are proved once and registered per family; they cannot be derived.
  *       The operation's inverse is a relation, not a law, so it is a paired field on {@link Entry} rather
  *       than mixed into the law list — but it is <em>computed</em> wherever the carrier's algebra states it
- *       ({@link #derivedInverse}), the declared field being the source only where the algebra says nothing
- *       (a one-way retraction such as int's {@code div}).</li>
+ *       ({@link #derivedInverse}). A field is declared only where the carrier's algebra is silent AND the operation
+ *       genuinely has one; int's {@code mult}/{@code div} pair declares none, because truncating division is not a
+ *       two-sided inverse.</li>
  *   <li><b>structural laws</b> — the algebraic theories an <em>object</em> models, keyed by the type
  *       ({@link #typeLaws(Type)}). These are the theory types ({@code ring_theory::T}, {@code group_theory::T},
  *       …) on {@code object::T}, not process laws.</li>
@@ -130,7 +131,11 @@ public abstract class LawTable {
      */
     public static void reset() {
         STORE_DERIVATIONS = Map.of();
+        STORE_DERIVATIONS_AT = -1;
+        STORE_DERIVATIONS_WAS_LOADED = false;
+        LOG_SNAPSHOT = null;
         LOG_DERIVATIONS = Map.of();
+        LOG_DECLARATIONS = 0;
         TABLES.values().forEach(table -> table.typeLawsCache.clear());
     }
 
@@ -193,8 +198,8 @@ public abstract class LawTable {
      * The inverse is not a fact re-declared per instruction: it is read off the carrier's algebra
      * ({@link #derivedInverse}) whenever that algebra states one, the stored field being the source only for a
      * carrier that states none. So {@code real}'s {@code mult}/{@code div} pair follows from the {@code field}'s
-     * {@code mult_group} together with {@code div}'s own definition, while {@code int}'s {@code mult}→{@code div}
-     * stays declared, int modeling a {@code mult_monoid} and no group — a truncating one-way retraction.
+     * {@code mult_group} together with {@code div}'s own definition, while {@code int} declares neither: its
+     * multiplicative side is a {@code mult_monoid}, not a group, and {@code div} is partial (undefined at 0).
      */
     public final Entry lookup(final fURI instTid) {
         final Entry declared = this.row(instTid);

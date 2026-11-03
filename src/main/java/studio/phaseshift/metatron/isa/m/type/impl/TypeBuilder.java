@@ -117,6 +117,15 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
     private static final Map<fURI, Set<Inst>> INSTS = new ConcurrentHashMap<>();
 
     /**
+     * FORGET THE PER-ADDRESS ATTRIBUTION of the instructions a type declared — the build-time record
+     * {@code drain(Type, InstSet)} replays into a set's own {@code inst} list. Part of
+     * {@code BootLoader.resetCaches()}.
+     */
+    public static void reset() {
+        INSTS.clear();
+    }
+
+    /**
      * The type's refinement: what an obj must satisfy to BE an instance of this type.
      */
     private Call predicate;

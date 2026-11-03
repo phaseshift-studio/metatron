@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.TypeGraph;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -33,8 +33,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TYPE;
 
 
 public class MType extends MObj implements Type {
@@ -194,9 +194,7 @@ public class MType extends MObj implements Type {
                             final boolean sameDeclaration = String.valueOf(obj.asType().predicate()).equals(String.valueOf(predicate))
                                     && String.valueOf(obj.asType().constructor()).equals(String.valueOf(constructor));
                             if (!sameDeclaration) {
-                                studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty
-                                        .log(MType.class)
-                                        .warn("unable to redefine %s — noobj() its vid first, then redefine", obj.asType().vid());
+                                LOG.warn("unable to redefine %s without first performing %s -> noobj", obj.asType().vid(), obj.asType().vid());
                                 if (REFUSE_REDEFINITION)
                                     return checkPolyPoly(obj.asType());
                             }

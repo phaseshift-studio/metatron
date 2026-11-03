@@ -21,6 +21,8 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -138,6 +140,30 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     static {
         LOG = Graphitty.log(new BootLoader());
+    }
+
+    /**
+     * RESET EVERY LAW/INST/ALGEBRA CACHE AND THE STAGED-WRITE LOG — one door for the whole publication pipeline.
+     * A boot calls this before anything mounts (so a fresh VM never inherits another boot's queue or memo), and a
+     * test calls it to go back to a blank slate:
+     *
+     * <pre>{@code BootLoader.resetCaches();}</pre>
+     *
+     * <p>What it clears, and why each piece exists:
+     * <ul>
+     *   <li>{@link PendingWrites#reset()} — the retained log, its address index, arrival order, snapshot, revision;</li>
+     *   <li>{@link LawTable#reset()} — the per-table algebra memo and every derivation snapshot (store and log);</li>
+     *   <li>{@link InstBuilder#reset()} — the declared-form index;</li>
+     *   <li>{@link TypeBuilder#reset()} — the per-address INSTS attribution;</li>
+     *   <li>{@code QCollection.LAZY_PUBLISH} — the reader hook, reinstalled by {@link PendingWrites#install()}.</li>
+     * </ul>
+     */
+    public static void resetCaches() {
+        PendingWrites.reset();
+        LawTable.reset();
+        InstBuilder.reset();
+        TypeBuilder.reset();
+        QCollection.LAZY_PUBLISH = address -> false;
     }
 
     public static void main(final String[] args) throws IOException {
@@ -578,7 +604,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // THE READER HOOK AND THE CACHES COME FIRST: an algebra read happens during a set's own setup, so the
             // lazy `?decq` publication must be installed before the first mount, and the law tables' memo must not
             // carry a previous boot's algebra views.
-            LawTable.reset();
+            resetCaches();
             PendingWrites.install();
             // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own
             // instset. Hand-registering these three with addSpace alone is why `instset()` could not answer for

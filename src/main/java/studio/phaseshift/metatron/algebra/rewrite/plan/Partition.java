@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -59,17 +59,29 @@ public final class Partition {
      * the keys use.
      */
     public enum Kind {
-        /** stride division — any exact division; the default, and today's emitter */
+        /**
+         * stride division — any exact division; the default, and today's emitter
+         */
         STREAM,
-        /** contiguous runs, recombined in order — needs order */
+        /**
+         * contiguous runs, recombined in order — needs order
+         */
         BLOCK,
-        /** bucketed by key; equal keys co-locate — the keyed fan-out */
+        /**
+         * bucketed by key; equal keys co-locate — the keyed fan-out
+         */
         KEY,
-        /** one part per address owner — needs an addressed seed */
+        /**
+         * one part per address owner — needs an addressed seed
+         */
         OWNER,
-        /** ranges of an index space — the body generates the members, nothing ships */
+        /**
+         * ranges of an index space — the body generates the members, nothing ships
+         */
         INDEX,
-        /** the whole seed on every lane — one part, {@code stream{1}} */
+        /**
+         * the whole seed on every lane — one part, {@code stream{1}}
+         */
         COPY
     }
 
@@ -143,12 +155,16 @@ public final class Partition {
         return new Partition(kind, parts);
     }
 
-    /** What counts as one place's share. */
+    /**
+     * What counts as one place's share.
+     */
     public Kind kind() {
         return this.kind;
     }
 
-    /** How many parts the seed is divided into; {@code cInt.ANY()} is as many parts as there are lanes. */
+    /**
+     * How many parts the seed is divided into; {@code cInt.ANY()} is as many parts as there are lanes.
+     */
     public cInt parts() {
         return this.parts;
     }

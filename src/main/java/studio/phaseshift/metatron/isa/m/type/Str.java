@@ -284,6 +284,10 @@ public interface Str extends Mono {
 
         public final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
+        public static boolean isQuoted(final String string) {
+            return (string.startsWith("'") && string.endsWith("'")) || (string.startsWith("\"") && string.endsWith("\""));
+        }
+
         public static String stripQuotes(String string) {
             while (string.startsWith("'") || string.startsWith("\"")) {
                 string = string.substring(1);

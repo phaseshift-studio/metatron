@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite;
+package studio.phaseshift.metatron.algebra.rewrite.plan;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,7 +149,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     public void testHopKeyAndItsDeprecatedAlias(final String source, final int expected) {
         final Plan shard = catRewrite.planOf("law_shard");
         assertNotNull(shard, "no plan registered under law_shard");
-        assertEquals(expected, PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
+        Assertions.assertEquals(expected, PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
                 "the hop budget of " + source);
     }
 
