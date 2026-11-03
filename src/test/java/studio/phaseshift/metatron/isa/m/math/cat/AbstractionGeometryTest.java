@@ -24,10 +24,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.algebra.rewrite.Placement;
-import studio.phaseshift.metatron.algebra.rewrite.PlanBuilder;
-import studio.phaseshift.metatron.algebra.rewrite.PlanInterpreter;
-import studio.phaseshift.metatron.algebra.rewrite.Span;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Span;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -185,7 +185,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     public void testLoweredShardWithAHomeLaneReadsTheAddresslessRoute() {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         // a synthetic home authority: a test VM listens on nothing, so `local` would name no place on its own
-        final studio.phaseshift.metatron.algebra.rewrite.Env env = studio.phaseshift.metatron.algebra.rewrite.Env.of(
+        final studio.phaseshift.metatron.algebra.rewrite.plan.Env env = studio.phaseshift.metatron.algebra.rewrite.plan.Env.of(
                 Machine.current().network().peers(),
                 Machine.current().network().machines(),
                 java.util.Set.of(f("loop://mantis:8555")));
