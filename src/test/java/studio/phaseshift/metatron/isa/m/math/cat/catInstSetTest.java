@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -83,7 +84,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     @BeforeAll
     public static void importAllInstSets() {
         //BootLoader.resetCaches();
-        //InstSet.importInstSet(MATH_ISA_TID);
+        InstSet.importInstSet(MATH_ISA_TID);
         //InstSet.importInstSet(CAT_ISA_TID, f("cat"));
         // the catch-all import re-adds the base /m instset, and re-adding an already-mounted instset
         // re-registers its types against a fresh space, orphaning the types derived from them (e.g.

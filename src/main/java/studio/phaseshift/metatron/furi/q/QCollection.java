@@ -24,17 +24,17 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
@@ -63,7 +64,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread.virtual;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -200,35 +200,35 @@ public final class QCollection {
             .create();
     public static final Type LOCK_TYPE =
             TypeBuilder.build()
-                            .tid(REC_TID)
-                            .vid(LOCKQ_LOCK_TID, "an advisory lock over a region of space")
-                            .isaPredicate(rec(
-                                    uri(USR), URI_TYPE,
-                                    uri(EXPIRE).maybe(), DATETIME_TYPE), mutableMap(
+                    .tid(REC_TID)
+                    .vid(LOCKQ_LOCK_TID, "an advisory lock over a region of space")
+                    .isaPredicate(rec(
+                            uri(USR), URI_TYPE,
+                            uri(EXPIRE).maybe(), DATETIME_TYPE), mutableMap(
                             uri(USR), "the owner of the lock",
                             uri(EXPIRE), "when the lock expires (a datetime::T) — no value means never"))
-                            .example("cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]", "cs:src/.../Foo.java -> ...  [-- throws while a matching lock is held --]", "cs:src/#?lockq -> noobj    [-- releases the lock --]")
-                            .create();
+                    .example("cs:src/#?lockq -> lock::[usr=>/usr/agent1,expire=>datetime://...]", "cs:src/.../Foo.java -> ...  [-- throws while a matching lock is held --]", "cs:src/#?lockq -> noobj    [-- releases the lock --]")
+                    .create();
     public static final Type SUB_TYPE =
             TypeBuilder.build()
-                            .tid(REC_TID)
-                            .vid(SUBQ_SUB_TID, "subscribe to mutations over regions of space")
-                            .isaPredicate(rec(
-                                    uri(TARGET).maybe().asUri(), URI_TYPE,
-                                    uri(CODE), T(ALL.dom(LST_TID))), mutableMap(
+                    .tid(REC_TID)
+                    .vid(SUBQ_SUB_TID, "subscribe to mutations over regions of space")
+                    .isaPredicate(rec(
+                            uri(TARGET).maybe().asUri(), URI_TYPE,
+                            uri(CODE), T(ALL.dom(LST_TID))), mutableMap(
                             uri(TARGET), "the pattern that will trigger the code callback (automatically added when new sub created)",
                             uri(CODE), "the code to execute when target state changes"))
-                            .example("abc?subq -> sub::[code=>print(>>1+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]", "abc -> 5                                [-- prints 6 to stdout                                             --]", "see pub::T")
-                            .create();
+                    .example("abc?subq -> sub::[code=>print(>>1+1)] [-- mutations to abc generate pub::T objs pass through sub::T code --]", "abc -> 5                                [-- prints 6 to stdout                                             --]", "see pub::T")
+                    .create();
     public static final Type PUB_TYPE =
             TypeBuilder.build()
-                            .tid(LST_TID)
-                            .vid(SUBQ_PUB_TID, "publications are generated when there is a source<=>target match with subscriptions")
-                            .isaPredicate(lst(URI_TYPE, T(ALL_STAR)), mutableMap(
+                    .tid(LST_TID)
+                    .vid(SUBQ_PUB_TID, "publications are generated when there is a source<=>target match with subscriptions")
+                    .isaPredicate(lst(URI_TYPE, T(ALL_STAR)), mutableMap(
                             jnt(0), "the uri that triggered this publication",
                             jnt(1), "the obj that triggered this publication"))
-                            .example("abc?subq -> sub::[code=>>>1+1.println(_).to(abc)] [-- mutations to abc generate pub::T objs passed through sub::T code --]", "abc      -> 5                                       [-- triggers creation of pub::[abc,5]                      --]", "see sub::T")
-                            .create();
+                    .example("abc?subq -> sub::[code=>>>1+1.println(_).to(abc)] [-- mutations to abc generate pub::T objs passed through sub::T code --]", "abc      -> 5                                       [-- triggers creation of pub::[abc,5]                      --]", "see sub::T")
+                    .create();
 
     private QCollection() {
         // do nothing 
@@ -427,9 +427,8 @@ public final class QCollection {
         protected final Map<fURI, Set<Rec>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
         protected final Map<fURI, Rec> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
-
         public DocInstSet() {
-            super(true);
+            super(INSTSET_TID, null);
         }
 
         @Override
@@ -482,6 +481,51 @@ public final class QCollection {
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))));
+        }
+    }
+
+    /**
+     * THE DECLARATION SPACE — the {@code ?decq} store as MACHINE MEMORY, the mirror of {@link DocInstSet}: one
+     * instance per q-proc (one per machine), keyed by the DECLARATION ADDRESS (an instruction's {@code operationTid},
+     * a type's vid). This is the space `?docq` and `?decq` now share a realization with; {@code LawTable} is a
+     * READ-ONLY CACHE over it and holds no store of its own.
+     */
+    protected final static class DecInstSet extends AbstractInstSet {
+        private final Map<fURI, Obj> DECL_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+
+        public DecInstSet() {
+            super(INSTSET_TID, null);
+        }
+
+        @Override
+        public Obj write(final fURI vid, final Obj obj) {
+            DECL_TABLE.put(vid, obj);
+            return obj;
+        }
+
+        @Override
+        public Obj read(final fURI pattern) {
+            final Obj exact = DECL_TABLE.get(pattern);
+            if (null != exact)
+                return exact;
+            // a PATTERN read (a wildcard over the declaration space): match by address, then by the queried dom/rng —
+            // the type subsumption the InstSet read applies, so `plus?real<=#&decq` answers the contracts whose carrier
+            // refines real rather than every plus.
+            final List<Obj> matches;
+            synchronized (DECL_TABLE) {
+                matches = DECL_TABLE.entrySet().stream()
+                        .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
+                        .filter(kv -> !pattern.hasDom() || kv.getKey().hasDom() && T(kv.getKey().dom()).test(T(pattern.dom().big())))
+                        .filter(kv -> !pattern.hasRng() || kv.getKey().hasRng() && T(kv.getKey().rng()).test(T(pattern.rng().big())))
+                        .map(kv -> pattern.isNode() ? kv.getValue() : (Obj) rel(kv.getKey().toUri(), kv.getValue()))
+                        .toList();
+            }
+            return objs(matches);
+        }
+
+        @Override
+        public String toString() {
+            return "DecInstSet[" + DECL_TABLE.size() + "]";
         }
     }
 
@@ -565,11 +609,15 @@ public final class QCollection {
     // an algebra user-declarable and inspectable: nothing is held in a side table, and the declaring instset
     // need not be the one that analyzes it (the category lift merely READS).
 
-    /** the q name a declaration is written under ({@code int::T?decq}). */
+    /**
+     * the q name a declaration is written under ({@code int::T?decq}).
+     */
     public static final String DECQ = "decq";
     public static final fURI DECQ_PATTERN = f(DECQ);
     public static final fURI DECQ_TID = QPROC_TID.extend(DECQ_PATTERN);
-    /** the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}). */
+    /**
+     * the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}).
+     */
     public static final fURI LAWS = f("laws");
 
     public static QProc decQ() {
@@ -582,7 +630,7 @@ public final class QCollection {
      * stores the block under the plain address; {@code preRead} strips it again and answers the block.
      */
     public static QProc decQ(final Obj initialDeclarations) {
-        final memSpace declarations = memSpace.unregistered(ALL, null);
+        final InstSet declarations = new DecInstSet();
         final QProc decq = QProc.Helper.build(DECQ_TID, DECQ_PATTERN)
                 .obj(f(OBJ), declarations)
                 .preWrite((vid, obj) -> {
@@ -593,14 +641,16 @@ public final class QCollection {
                     return obj;
                 })
                 .preRead((vid) -> {
-                    final fURI vidBig = vid.big();
-                    if (!vidBig.equals(vid))
-                        return Machine.read(vidBig);
-                    final Obj staged = declarations.read(vidBig.removeQ(DECQ));
-                    // LAZY PUBLICATION: the writer staged the declaration; this read is the first to ask for it
-                    if (staged.isNoObj() && LAZY_PUBLISH.test(vid))
-                        return declarations.read(vidBig.removeQ(DECQ));
-                    return staged;
+                    final fURI bare = vid.removeQ(DECQ);
+                    final fURI key = Inst.Helper.operationTid(bare.big());     // ← the write's own spelling
+                    Obj decl = declarations.read(key);
+                    if (decl.isNoObj()) {                                       // lazy: publish from the retained log
+                        LAZY_PUBLISH.test(key.addQ(DECQ));
+                        decl = declarations.read(key);
+                    }
+                    if (decl.isNoObj())                                         // a contract-specific fallback
+                        decl = declarations.read(bare.big());
+                    return decl;                                                // noobj, never the inst
                 })
                 .create();
         if (!initialDeclarations.isNoObj())

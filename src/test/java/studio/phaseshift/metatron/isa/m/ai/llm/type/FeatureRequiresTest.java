@@ -13,10 +13,11 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.FEATURE;
-import static studio.phaseshift.metatron.Tokens.NAME;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.ai.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.m.ai.llm.space.AbstractLLMSessionIntegrationTest.MODEL_NAME;
+import static studio.phaseshift.metatron.isa.m.ai.llm.space.AbstractLLMSessionIntegrationTest.PROVIDER_HOST;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -77,7 +78,12 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
         // the wrong feature; only the full tid resolves now
         final Agent agent = Agent.agent(rec(mutableMap(
                         uri(NAME), str("exactness-agent"),
-                        uri(FEATURE), lst(new ChatFeature(mutableMap(), LLM_CHAT_FEATURE_TID, null),
+                        uri(FEATURE), lst(new ChatFeature(mutableMap(uri(MODEL), mModel.model(rec(
+                                        NAME, uri(MODEL_NAME),
+                                        PROVIDER, uri("ollama"),
+                                        PROTOCOL, uri("ollama"),
+                                        HOST, uri(PROVIDER_HOST),
+                                        LLM, uri(MODEL_NAME)))), LLM_CHAT_FEATURE_TID, null),
                                 new SkillFeature(mutableMap(), LLM_SKILL_FEATURE_TID, null),
                                 new ToolFeature(mutableMap(), LLM_TOOL_FEATURE_TID, null))),
                 LLM_AGENT_TID, null));

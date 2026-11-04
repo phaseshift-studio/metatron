@@ -30,15 +30,32 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import static studio.phaseshift.metatron.Tokens.ACTION;
+import static studio.phaseshift.metatron.Tokens.ACTOR;
+import static studio.phaseshift.metatron.Tokens.ATTRIBUTES;
+import static studio.phaseshift.metatron.Tokens.EXIT;
+import static studio.phaseshift.metatron.Tokens.ID;
+import static studio.phaseshift.metatron.Tokens.NAME;
+import static studio.phaseshift.metatron.Tokens.OBJ;
+import static studio.phaseshift.metatron.Tokens.TIME;
+import static studio.phaseshift.metatron.Tokens.TYPE;
 import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet.DCKR_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet.DOCKER_EVENT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -115,6 +132,11 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
         if (obj.isInt())
             return obj;  // keep Docker integer values (e.g. container count) as-is
         if (obj.isRec()) {
+            // actor.Attributes is a flat string map (the same shape as docker labels) — re-stringify from the
+            // raw value, never coerce: literal() already uri-ified "24.04" and "7", and re-typing them again
+            // would lose the text exactly as the label bug did.
+            if ("attributes".equals(field))
+                return stringMap(obj.asRec());
             final Map<Obj, Obj> cleaned = new LinkedHashMap<>();
             obj.asRec().jvm().forEach((k, v) -> {
                 final String rawKey = k.isUri() ? k.uriValue().name() : k.toString();
@@ -124,6 +146,10 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
                     value = parseLabels(Str.Helper.cleanString(value, true));
                 else if ("labels".equals(key) && value.isUri())
                     value = parseLabels(value.uriValue().toString());
+                else if (("mounts".equals(key) || "networks".equals(key)) && (value.isStr() || value.isUri()))
+                    value = splitCsv(value, true);
+                else if ("ports".equals(key) && (value.isStr() || value.isUri()))
+                    value = splitCsv(value, false);
                 cleaned.put(uri(key), value);
             });
             return rec(cleaned);
@@ -211,6 +237,99 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
                 labels.at(uri(pair.substring(0, eq).trim()), str(pair.substring(eq + 1).trim()), MUTABLE);
         }
         return labels;
+    }
+
+    /**
+     * A docker attribute map is a flat string map — the same shape as {@link #parseLabels(String)} but already a
+     * rec on the wire ({@code actor.Attributes}). Every value is text: an image tag, a name, an exit code, a
+     * source path. Re-stringify from the raw value rather than coerce it, so {@code 24.04} stays {@code 24.04} and
+     * {@code 7} stays {@code 7} — the first-class {@code exit} field is the one place a number is surfaced as an int.
+     */
+    private static Rec stringMap(final Rec attributes) {
+        final Map<Obj, Obj> out = new LinkedHashMap<>();
+        attributes.jvm().forEach((k, v) -> out.put(k, str(Str.Helper.cleanString(v, true))));
+        return rec(out);
+    }
+
+    /**
+     * Docker reports {@code Mounts}/{@code Networks}/{@code Ports} as comma-joined strings. Split them into a stream
+     * here — this is parsing, so it belongs in the serializer, not the space. A path-like source becomes a uri; a
+     * port spec (which carries {@code ->}) stays text.
+     */
+    private static Obj splitCsv(final Obj csv, final boolean toUri) {
+        final List<Obj> parts = new ArrayList<>();
+        for (final String part : Str.Helper.cleanString(csv, true).split(",")) {
+            final String p = part.trim();
+            if (p.isEmpty()) continue;
+            if (toUri) {
+                try {
+                    parts.add(uri(p));
+                } catch (final Exception e) {
+                    parts.add(str(p));
+                }
+            } else
+                parts.add(str(p));
+        }
+        return objs(parts);
+    }
+
+    /**
+     * Read one NDJSON line of {@code docker events --format json} as a lean, typed {@code dckrevent::T}.
+     * <p>
+     * The event's meaning is {@code type} (uri), {@code action} (a str — docker puts the exec command here for
+     * {@code exec_start}/{@code exec_die}, so it is not an address), {@code exit} (the exit code — inline because
+     * only the event carries pass/fail), and {@code time} (a true {@code datetime::T}). {@code obj} is an
+     * auto-dereferencing {@code !*} reference into the container, keyed by NAME (the space's container key), so a
+     * filter walks straight off the event into the subject's graph. Everything else docker reports is dropped.
+     */
+    public Obj readEvent(final String jsonLine) {
+        final Rec rec = (Rec) read(jsonLine);
+        final Obj type = rec.at(uri(TYPE));
+        final Obj actionRaw = rec.at(uri(ACTION));
+        final Obj action = actionRaw.isNoObj() ? noobj() : str(Str.Helper.cleanString(actionRaw, true));
+        final Obj actor = rec.at(uri(ACTOR));
+        Obj exit = noobj();
+        String actorName = null;
+        if (actor.isRec()) {
+            final Obj attrs = actor.asRec().at(uri(ATTRIBUTES));
+            if (attrs.isRec()) {
+                final Obj name = attrs.asRec().at(uri(NAME));
+                if (!name.isNoObj())
+                    actorName = Str.Helper.cleanString(name, true);
+                final Obj exitCode = attrs.asRec().at(uri("exitCode"));
+                final String exitText = exitCode.isNoObj() ? null : Str.Helper.cleanString(exitCode, true);
+                if (null != exitText && CommonUtil.isInt(exitText))
+                    exit = jnt(Long.parseLong(exitText));
+            }
+        }
+        // time: docker reports `time` (epoch seconds) and `timeNano` (full epoch nanos); the datetime comes from
+        // the nanos so sub-second precision survives — timeNano is NOT the nanosecond-of-second.
+        final long nanos = rec.at(uri("time_nano")).isInt() ? rec.at(uri("time_nano")).intValue()
+                : rec.at(uri(TIME)).isInt() ? rec.at(uri(TIME)).intValue() * 1_000_000_000L : 0L;
+        final Obj time = mathInstSet.buildDatetimeUri(Instant.ofEpochSecond(0, nanos).atZone(ZoneId.systemDefault()));
+        Obj obj = noobj();
+        if (null != actorName)
+            obj = instB(AUTO_FROM_INST_TID, lst(uri("docker:container/" + actorName)));
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(TYPE), type);
+        map.put(uri(ACTION), action);
+        if (!exit.isNoObj())
+            map.put(uri(EXIT), exit);
+        map.put(uri(TIME), time);
+        if (!obj.isNoObj())
+            map.put(uri(OBJ), obj);
+        return rec(map, DOCKER_EVENT_TID, null);
+    }
+
+    /**
+     * The event's {@code timeNano} (full epoch nanos) — for the space's watermark, not the event's meaning. It is
+     * deliberately NOT part of {@link #readEvent(String)}'s rec: the watermark needs nanosecond precision, but the
+     * event's {@code time} is a human/query-facing {@code datetime::T}.
+     */
+    public long eventTimeNano(final String jsonLine) {
+        final Obj parsed = OBJ_JSON_SERIALIZER.inputBytes(jsonLine);
+        final Obj timeNano = parsed.isRec() ? parsed.asRec().at(uri("timeNano")) : noobj();
+        return timeNano.isInt() ? timeNano.intValue() : 0L;
     }
 
     // ===================================================================

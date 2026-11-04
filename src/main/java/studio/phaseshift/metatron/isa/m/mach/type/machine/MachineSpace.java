@@ -21,24 +21,17 @@ package studio.phaseshift.metatron.isa.m.mach.type.machine;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.Tokens.COMPILER;
-import static studio.phaseshift.metatron.Tokens.INSTSET;
-import static studio.phaseshift.metatron.Tokens.MEMORY;
-import static studio.phaseshift.metatron.Tokens.REDIRECT;
-import static studio.phaseshift.metatron.Tokens.NETWORK;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.PROCESSOR;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -108,6 +101,7 @@ public final class MachineSpace extends memSpace {
         // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over:
         // a fail is minted at ~/sys/fail/_?incrq, and a ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here too
         this.addQ(QCollection.docQ());
+        this.addQ(QCollection.decQ());
         this.addQ(QCollection.subQ());
         this.addQ(QCollection.incrQ());
         this.addQ(QCollection.mimeQ());

@@ -200,6 +200,32 @@ overrides the required insts AND online) → shardTargets`. Only `shardTargets` 
 fan-out, never poisons the reduction. The category graph (`docs/skills/mtron/references/cat-instset-mtron.md`) is the
 rewrite table: types are objects, insts are morphisms, `path::T` is code-as-vertex, `plan::T` is a rule-as-value.
 
+### 4.4 The pattern layer — `?decq` and the cat-graph
+
+The plan's `cut`/`span`/`LawTable` are all **predicates over algebraic metadata** that metatron already serves through
+the **`?decq`** q-proc (the algebra twin of `?docq`):
+
+| `?decq` on | returns | the cat-graph read |
+|---|---|---|
+| a **type** (`*int?decq`) | the structural theories — `ring`/`group`/`monoid` with roles (`add`/`mul`/`zero`/`one`/`id`/`inv`) | `object::T>>law` |
+| an **inst** (`*plus?decq`) | the process laws + `form` + bound obj, one per registration | `morphism::T>>law` + `>>form` + `>>obj` |
+
+So the plan's Java types are a re-encoding of this one door:
+
+| Java today | the `?decq` query it re-implements |
+|---|---|
+| `Cut.reducer(Law.monoidic, Law.commutative)` | `form == reducer` and `law ⊇ {monoidic, commutative}` |
+| `Cut.role("id")` (the unit law) | the theory role `id` off `*<type>?decq` |
+| `Span.floatable()` / `.blocked` | `form ∈ {mapper, filter, flatmapper}` vs `{reducer, gather}` |
+| `LawTable.combiner(keyed, laws)` | `?decq>>law` (monoidic+commutative → self; `derivation` → the defining fold) |
+
+The cat-graph takes `?decq` from *local* to *global*: types are objects, insts are morphisms, and the structure answers
+*which rewrite is live and unique* for a given code — **iso-clusters** (`analysis.orbit` / `coupling` / `retract`, the
+reversible core), **unique transformation paths** (`path::T` as a vertex whose out-edges are the live rewrites; a normal
+form prints as its own certificate; a traversal is a derivation witness), and **lifting code to a rewrite graph**
+(`path::T`/`abstraction::T`, the third lift). So "find the fold and rewrite it" is a *navigation of the rewrite graph*,
+not a scan: `code.as(path::T)` → the live out-edges (guarded by `?decq` through a-priori pruning) → `lower(>>plan)`.
+
 ---
 
 ## 5. The unification — one instruction, one primitive
@@ -265,6 +291,13 @@ They share **no overlapping behavior**: one decides *where the code factors* (al
 input. The organic tree is the two phases *alternating machine by machine*: phase 2 ships a lane raw, the landing
 machine's compiler runs phase 1 (factor again) then phase 2 (place again).
 
+**The hard line is already drawn in the code.** In `PlanInterpreter.shard`, everything up to and including the
+combiner + seed factoring is stream ring (laws, coefficient shape, `LawTable.combiner`, `?split`); everything from
+`resolve()`/`shares()` onward is machine ring (place resolution, lane order, `virtual`/`eval`/`to(uri)`). And
+`PlaceResolver` is already a **separate class** — the machine-ring side is already extracted (the design's C4). So the
+refactor is to *finish* that extraction: `factor` (emit `branch`) and `place` (emit `to(uri)`), meeting only at the
+`branch` node.
+
 ### 6.2 `branch()` is the single primitive
 
 `branch` is currently an ordinary instruction (`BRANCH_INST_TID = /m/branch`, glyph `-<[]>-`), not part of the
@@ -315,6 +348,29 @@ thread born on the current machine, a handler thread born on the remote machine,
 distance (wire vs reference) really is the *only* difference: the handler is just another worker thread, home from
 birth, no different in kind from a virtual thread.
 
+### 6.5 The plan is metatron code — no mini-DSL
+
+The plan is already a metatron rec (`plan::T` = `[name, cut, where]`), its axes are already coefficient values
+(`{2}4`, `{2}block`, `[local, peer]`), and `Placement`'s enum→axes migration proves the "mini-DSL" is already collapsing
+into metatron values. The whole plan is **three metatron-native mechanisms composed**:
+
+| part of a plan | metatron-native | replaces the Java |
+|---|---|---|
+| **pattern** (find the fold) | `?decq` / `cat::path::T` (form / law / theory) | `Cut`, `Span`, `InstPattern` in `shard` |
+| **transform** (factor + emit) | `as(rec::T)` + `branch` (`-<[]>-`) + `>>=` (index / duplicate / splice) | the `shard` emit (factor + `start/select/merge`) |
+| **route** (place) | `to(uri)` (the vid) | `Placement`, `PlaceSet`, `PlaceResolver` |
+
+The transform is the demo in one line:
+
+```
+code.as(rec::T).branch(n copies).map(copy_i => copy_i >>= [0 => |start(part_i)]).sum()
+```
+
+`as(rec::T)` indexes the chain (the `cut`/`span` *positions*); `branch` duplicates (the `+`); `>>=` splices the seed
+factor (the `?split`); `.sum()` is the combiner. **No new `cut`/`span` instruction is needed** — they are *derived*
+operations on the code rec. The only residue that stays Java is the orchestration — find the fold by law (`?decq`),
+hand the index to the splice — and that *is* `lower(plan)` on a `path::T`.
+
 ---
 
 ## 7. Addressability — the loose end
@@ -353,6 +409,9 @@ are individually dereferenceable and applicable. What is wanted — point at `~/
 13. **`planRec` ↔ `plan::T.where`** — state the relationship (index→place = resolved span→shape) (§6.3).
 14. **`plan()` immutability** — copy-returning, fixpoint-safe (§6.3).
 15. **obj-ring axioms** — state them or leave them a musing (§1.2).
+16. **Delete the mini-DSL** — `Cut`/`Span`/`Placement` are a Java re-encoding of `?decq` (pattern) +
+    `as(rec::T)`/`branch`/`>>=` (transform) + `to(uri)` (route); finish the enum→axes migration and replace them
+    (§4.4, §6.5).
 
 ---
 
@@ -367,4 +426,6 @@ a compiler binds them to functions; shipping is moving signatures, compilation i
 where the bound code evolves under interchangeable worker threads, gated by the barrier that *is* the `+`'s join.
 Distribution, finally, is `branch` — factor the fold, write each lane to a processor uri with `to(uri)`, and let the
 machine at that vid compile and run it. The one remaining seam is **addressability**: the processor's internals must
-become as first-class as the compiler's stages already are.
+become as first-class as the compiler's stages already are. And the plan is not a DSL — it is metatron end to end:
+`?decq` reads a thing's algebra, the cat-graph lifts it into a rewrite graph with unique transformation paths,
+`as(rec::T)`+`branch`+`>>=` factors the fold, and `to(uri)` places it.

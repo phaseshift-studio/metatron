@@ -18,22 +18,19 @@
 
 package studio.phaseshift.metatron.isa;
 
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.IteratorUtil;
-
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.SCHEMA;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.WILD_ONE;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.instset_noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -42,7 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface SchemaSpace extends Space {
 
     default InstSet schema() {
-        return this.at(uri(SCHEMA)).orElse(instset0()).as();
+        return this.at(uri(SCHEMA)).orElse(instset_noobj()).as();
     }
 
     /**

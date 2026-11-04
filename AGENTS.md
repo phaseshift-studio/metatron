@@ -5,14 +5,32 @@ A distributed data-oriented computing language and virtual machine built in Java
 - **metatron** (lowercase): the runtime system / VM environment
 - **mtron** (lowercase): the functional programming language (like Java to JVM)
 
-This file holds the rules every session needs. The long references live in `docs/agents/` and are linked where they apply.
+This file holds the rules every session needs. The long references live in `docs/agents/` and are linked where they
+apply.
 
 ---
 
-## Strict Rules
+## Absolute Rule
 
 * Under no circumstance should you perform any git operations. Do not check out, do not stash, do not merge, do not
   commit, and do not push. Git is off limits.
+* bin/metatron-docker is the build infrastructure for agents. Do not use mvn, mvnw, etc. We don't want to fight over
+  target/. Use bin/metatron-remote status to see how many builds are running concurrently. If machine CPUs
+  are pegged, don't throw another build on the pile. Wait.
+
+## Strict Rules
+
+* Do not create methods for method creation's sake. One-liners should be inlined at their call site.
+* Don't create multiple data access pathways in the codebase. Machine.read () and Machine.write () should be your
+  primary access points for data.
+* Don't create Java classes that can't be introspected by mtron. Everything must be a metatron Obj (typically, a Rec).
+* Code is not our friend. Minimalistic, targeted edits/additions. If you need help thinking how best to create a simple
+  implementation, ask for advice.
+* Know the API. The internal metatron API is rich with builder APIs, fluent data manipulation APIs, public static helper
+  APIs. Unless you are doing very novel code, code exists to do what you want to do -- don't roll your own
+  implementation.
+* Do not invent vocabulary. For instance, an instruction set is not called a "vocabulary" nor a "schema". Don't know
+  what call something, ask.
 
 ## Memory — Hindsight is the shared, harness-agnostic store
 
@@ -130,11 +148,11 @@ correction, not a preference. Read this before adding a method, a nested type, o
 Expose only what a USER of the component asks for. Everything else — lifecycle, I/O front doors, algorithms — is a
 `public static` in the component's `X.Helper`.
 
-| smell | the move |
-|---|---|
-| `Machine.bootstrap()` — a `default` interface method run once at construction | `Machine.Helper.bootstrap(Machine)` |
-| `Machine.evaluate(File)` and `evaluate(File, Consumer<FileParseError>)` — file I/O on the interface | `Machine.Helper.evaluate(File, …)`, and the `FileParseError` record moved with them |
-| `Network.connect(...)`, declared "sugar" in its own javadoc | `Network.Helper.connect(Network, …)` |
+| smell                                                                                                       | the move                                                                                                                                         |
+|-------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Machine.bootstrap()` — a `default` interface method run once at construction                               | `Machine.Helper.bootstrap(Machine)`                                                                                                              |
+| `Machine.evaluate(File)` and `evaluate(File, Consumer<FileParseError>)` — file I/O on the interface         | `Machine.Helper.evaluate(File, …)`, and the `FileParseError` record moved with them                                                              |
+| `Network.connect(...)`, declared "sugar" in its own javadoc                                                 | `Network.Helper.connect(Network, …)`                                                                                                             |
 | an algorithm on the interface: `effectivePrefix` / `effectivePrefixes` / `inheritedPrefix` / the level walk | `Component.Prefix.Helper` (the contract keeps only `prefixes()`, `previousLevel()`, `on()`, `registerPrefix`, `unregisterPrefix`, `alignPrefix`) |
 
 A Helper nested in an interface is implicitly `public static`, so `Machine.Helper.bootstrap(machine)` needs no extra
@@ -170,6 +188,7 @@ same hooks — short names for paths, authorities, scheme aliases — so none co
 `Component.Prefix` and adding one line to `PrefixParentalTest`:
 
 ```java
+
 @Test
 void theNetworkHonoursTheParentalPrefixContract() {
     AbstractMetatronTest.testParentalChildPrefix(Machine.current().network());
@@ -301,8 +320,19 @@ A wildcard space read that matched several things hands you an `Objs` in Java. I
 obj alone**. So one code path covers "one match" and "many matches" with no shape inspection:
 
 ```java
-objs(jnt(1), jnt(2), jnt(3)).stream().forEach(...);   // many
-jnt(1).stream().forEach(...);                         // one — the same code
+objs(jnt(1),jnt(2),
+
+jnt(3)).
+
+stream().
+
+forEach(...);   // many
+
+jnt(1).
+
+stream().
+
+forEach(...);                         // one — the same code
 ```
 
 That uniformity is not luck: `MObjs.objs(...)` collapses an empty collection to `noobj()` and **a single element to that

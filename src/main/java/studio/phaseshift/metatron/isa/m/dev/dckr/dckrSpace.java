@@ -107,6 +107,11 @@ public class dckrSpace extends AbstractMemorySpace {
     private final ProgressTableWidget progressWidget;
     private final String dockerHost;
 
+    // the docker event stream is mirrored at event/<n> with a nanosecond watermark, so a re-read emits only
+    // what came after the last read and never replays a long-running daemon's whole history
+    private long eventSeq = 0;
+    private long eventSinceNano = System.currentTimeMillis() * 1_000_000L;
+
     // ===================================================================
     // Factory & Constructor
     // ===================================================================
@@ -197,6 +202,8 @@ public class dckrSpace extends AbstractMemorySpace {
         } else if ("network".equals(dp.collection())) {
             refreshNetworks();
             refreshContainers();
+        } else if ("event".equals(dp.collection())) {
+            refreshEvents();
         }
 
         if (vid.isBranch())
@@ -241,25 +248,29 @@ public class dckrSpace extends AbstractMemorySpace {
                                     + n.uriValue().name()))
                             .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    image.asRec().jvm().put(uri("container"), lst(refs));
+                    image.asRec().jvm().put(uri("containers"), objs(refs));
                     this.cache.write(f("image").extend(imageName), image);
                 }
             });
 
             // -- Network graph: container <-> network --
+            // ObjDockerSerializer already split Networks into a stream of uris; each becomes a !* edge.
             final Map<String, List<Obj>> byNetwork = new LinkedHashMap<>();
             containers.asRec().jvm().forEach((name, obj) -> {
                 if (!obj.isRec()) return;
                 final Rec c = obj.asRec();
-                // Docker field is "Networks" → ObjDockerSerializer produces "networks"
-                final String netName = c.at(uri("networks")).isNoObj() ? null
-                        : objToString(c.at(uri("networks")));
-                if (netName != null && !netName.isBlank()) {
-                    final Obj netRef = auto_from_(uri(this.pattern().retractPattern().toString() + "network/" + netName)).tryToInst();
-                    c.jvm().put(uri("network"), netRef);
-                    c.jvm().remove(uri("networks"));
+                final Obj networksObj = c.at(uri("networks"));
+                if (networksObj.isNoObj()) return;
+                final List<Obj> netRefs = new ArrayList<>();
+                networksObj.stream().forEach(net -> {
+                    final String n = Str.Helper.cleanString(net, true);
+                    if (n.isEmpty()) return;
+                    netRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "network/" + n)).tryToInst());
+                    byNetwork.computeIfAbsent(n, k -> new ArrayList<>()).add(name);
+                });
+                if (!netRefs.isEmpty()) {
+                    c.jvm().put(uri("networks"), objs(netRefs));
                     this.cache.write(f("container").extend(name.uriValue().name()), c);
-                    byNetwork.computeIfAbsent(netName, k -> new ArrayList<>()).add(name);
                 }
             });
             byNetwork.forEach((netName, containerNames) -> {
@@ -270,14 +281,25 @@ public class dckrSpace extends AbstractMemorySpace {
                                     + n.uriValue().name()))
                             .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    network.asRec().at(uri("container"), lst(refs), Poly.MUTABLE);
+                    network.asRec().at(uri("containers"), objs(refs), Poly.MUTABLE);
                     this.cache.write(f("network").extend(netName), network);
                 }
             });
 
             // -- Volume graph: container <-> volume --
-            // Docker field is "Mounts" → ObjDockerSerializer produces "mounts".
-            // Named volumes (non-path source) are tracked in docker volume ls.
+            // ObjDockerSerializer already split Mounts into a stream of uris (the sources). Classify each: a
+            // named volume (bare name) or an anonymous volume (mountpoint match) → !*; a bind path stays a uri.
+            final Map<String, String> mountpointToName = new LinkedHashMap<>();
+            final Obj allVolumes = this.cache.read(f("volume"));
+            if (!allVolumes.isNoObj() && allVolumes.isRec())
+                for (final Obj v : allVolumes.asRec().jvm().values()) {
+                    if (!v.isRec()) continue;
+                    final Obj nameObj = v.asRec().at(uri("name"));
+                    final Obj mpObj = v.asRec().at(uri("mountpoint"));
+                    if (!nameObj.isNoObj() && !mpObj.isNoObj())
+                        mountpointToName.put(Str.Helper.cleanString(mpObj, true), Str.Helper.cleanString(nameObj, true));
+                }
+
             final Map<String, List<Obj>> byVolume = new LinkedHashMap<>();
             containers.asRec().jvm().forEach((name, obj) -> {
                 if (!obj.isRec()) return;
@@ -285,27 +307,30 @@ public class dckrSpace extends AbstractMemorySpace {
                 final Obj mountsObj = c.at(uri("mounts"));
                 if (mountsObj.isNoObj()) return;
 
-                final List<Obj> containerVolRefs = new ArrayList<>();
-                if (mountsObj.isUri()) {
-                    final String volName = extractVolumeName(mountsObj);
+                final List<Obj> volumeRefs = new ArrayList<>();
+                final List<Obj> bindPaths = new ArrayList<>();
+                mountsObj.stream().forEach(mount -> {
+                    final String m = Str.Helper.cleanString(mount, true);
+                    String volName = extractVolumeName(mount);   // named volume → its name
+                    if (volName == null)                          // anonymous volume → resolve by mountpoint
+                        volName = mountpointToName.get(m);
                     if (volName != null)
-                        containerVolRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "volume/" + volName)).tryToInst());
-                } else if (mountsObj.isLst()) {
-                    mountsObj.asLst().elements().forEach(mount -> {
-                        final String volName = extractVolumeName(mount);
-                        if (volName != null)
-                            containerVolRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "volume/" + volName)).tryToInst());
-                    });
-                }
-                if (!containerVolRefs.isEmpty()) {
-                    c.jvm().put(uri("mount"), lst(containerVolRefs));
-                    c.jvm().remove(uri("mounts"));
-                    this.cache.write(f("container").extend(name.uriValue().name()), c);
-                    containerVolRefs.forEach(ref -> {
+                        volumeRefs.add(auto_from_(uri(this.pattern().retractPattern().toString() + "volume/" + volName)).tryToInst());
+                    else
+                        bindPaths.add(mount);                     // already a uri
+                });
+                if (!volumeRefs.isEmpty()) {
+                    c.jvm().put(uri("volumes"), objs(volumeRefs));
+                    volumeRefs.forEach(ref -> {
                         final String volName = ref.asInst().arg(0).uriValue().name();
                         byVolume.computeIfAbsent(volName, k -> new ArrayList<>()).add(name);
                     });
                 }
+                if (!bindPaths.isEmpty())
+                    c.jvm().put(uri("mounts"), objs(bindPaths));
+                else
+                    c.jvm().remove(uri("mounts"));
+                this.cache.write(f("container").extend(name.uriValue().name()), c);
             });
             // Path-based lookup may need fallback to Rec scan for memSpace individual writes
             final Obj allVols = this.cache.read(f("volume"));
@@ -326,9 +351,9 @@ public class dckrSpace extends AbstractMemorySpace {
                     final List<Obj> refs = containerNames.stream()
                             .map(n -> uri(this.pattern().retractPattern().toString() + "container/"
                                     + n.uriValue().name()))
-                            .map(i -> (Obj) i)
+                            .map(i -> (Obj) auto_from_(i).tryToInst())
                             .toList();
-                    volume.asRec().jvm().put(uri("container"), lst(refs));
+                    volume.asRec().jvm().put(uri("containers"), objs(refs));
                     this.cache.write(f("volume").extend(volName), volume);
                 }
             });
@@ -416,6 +441,37 @@ public class dckrSpace extends AbstractMemorySpace {
                 if (name != null)
                     this.cache.write(f("network").extend(name), net);
             }
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    /**
+     * Mirror the recent docker event stream into the cache at {@code event/<n>}, one typed entry per NDJSON line.
+     * <p>
+     * {@code --until} is mandatory: {@code docker events} streams forever without it, so a read would never
+     * return. {@code --since} is the nanosecond watermark (a fractional-seconds timestamp the daemon accepts),
+     * so a re-read emits only events after the last one seen and never replays a long-running daemon's whole
+     * history. Entries are numbered, so {@code +} matches each and {@code .take(-5)} is the tail.
+     */
+    private void refreshEvents() {
+        try {
+            final long sinceSec = this.eventSinceNano / 1_000_000_000L;
+            final long sinceNano = this.eventSinceNano % 1_000_000_000L;
+            final String since = sinceSec + "." + String.format("%09d", sinceNano);
+            final long until = System.currentTimeMillis() / 1000L + 1L;
+            final ProcessResult r = exec(dockerCmd("events", "--format", "json",
+                    "--since", since, "--until", String.valueOf(until)));
+            long maxNano = this.eventSinceNano;
+            for (final String line : r.stdout().split("\\R")) {
+                if (line.isBlank()) continue;
+                final Rec event = (Rec) DOCKER_SERIALIZER.readEvent(line);
+                this.cache.write(f("event").extend(String.valueOf(this.eventSeq++)), event);
+                final long timeNano = DOCKER_SERIALIZER.eventTimeNano(line);
+                if (timeNano > maxNano)
+                    maxNano = timeNano;
+            }
+            this.eventSinceNano = maxNano;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

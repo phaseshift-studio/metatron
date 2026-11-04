@@ -165,6 +165,25 @@ The instset prints that list itself, and each rewrite documents its own before/a
 */m/db/tble?docq
 ```
 
+### when a read stays in mtron
+
+The match is structural and it DECLINES rather than guesses, so a read that names a table can still run in the VM. Each
+of these is a deliberate fall-back, not a silent downgrade — `explain()` shows which one happened:
+
+* **the predicate does not fit the formatter** — a non-`rec` predicate, a wildcard field (`_`, `+`), or a value that is
+  not a uri/int/real/str/bool/comparison (a call, a variable, a nested rec). The `where` rewrite leaves the pair alone
+  and the rows are filtered in mtron.
+* **the collection is not a real table** — a `kv_store` path (see `kv_count`/`kv_limit` above) or a wildcard collection.
+  `where`/`count`/`take` match only a collection that the discovered schema actually holds, so the key/value rules
+  handle the kv form and nothing else pushes down.
+* **the read is not a plain row multiplicity** — `count()` after a field or an extension (e.g. `*db:table/+/name.count()`
+  is a count of *distinct names*, i.e. `SELECT COUNT(name)`) does not match the row-count rule; it is a different
+  question, not a missed optimization.
+
+A fused op is only fused because the space could be resolved from it: `sql_where` stores the address as the `from`
+instruction wrote it (`db:table/+`), and every `sql_where_*` rule resolves the space from that address before it agrees
+to fuse. An arg that no longer names a space is a rule that declines, quietly.
+
 ## native sql
 
 When the vocabulary is not enough, go to the backend. `sql` takes a `str` — templates included — and yields `rec{*}`,

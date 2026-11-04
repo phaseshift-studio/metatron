@@ -651,6 +651,7 @@ public interface Machine extends Rec, AutoCloseable {
                 // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/sys/fail
                 // into this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
                 machineSpace.addQ(QCollection.docQ());
+                machineSpace.addQ(QCollection.decQ());
                 machineSpace.addQ(QCollection.subQ());
                 machineSpace.addQ(QCollection.incrQ());
                 machineSpace.addQ(QCollection.mimeQ());

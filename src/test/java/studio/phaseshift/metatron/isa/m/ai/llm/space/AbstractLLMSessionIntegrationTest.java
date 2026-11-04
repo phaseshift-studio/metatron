@@ -33,10 +33,10 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.Agent;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.feature.*;
 import studio.phaseshift.metatron.isa.m.ai.llm.type.mModel;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -112,9 +112,9 @@ public abstract class AbstractLLMSessionIntegrationTest extends AbstractMetatron
     private SpaceChatSessionStore sessionStore;
     private Agent agent;
 
-    private static final String MODEL_NAME = "qwen3:latest";
-    private static final String PROVIDER_HOST = "http://localhost:11434";
-    private static final int WINDOW_MAX = 30;
+    public static final String MODEL_NAME = "qwen3:latest";
+    public static final String PROVIDER_HOST = "http://localhost:11434";
+    public static final int WINDOW_MAX = 30;
 
     /* ------------------------------------------------------------
      * Lifecycle

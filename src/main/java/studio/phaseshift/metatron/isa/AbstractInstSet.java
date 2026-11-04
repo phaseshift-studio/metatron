@@ -18,38 +18,29 @@
 
 package studio.phaseshift.metatron.isa;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
-import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
 
@@ -219,15 +210,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return true;
     }
 
-    private boolean old = true;
-
-    public AbstractInstSet(final boolean noDocq) {
-        super(new LinkedHashMap<>(), mutableMap(
-                uri(Tokens.PATTERN), uri(ALL)), INSTSET_TID, null);
-        old = false;
-    }
-
-    private static Map<Obj, Obj> addDocQ(final Map<Obj, Obj> jvm) {
+    private static Map<Obj, Obj> addMetaQProcs(final Map<Obj, Obj> jvm) {
         if (jvm.containsKey(uri(QPROC))) {
             Obj qprocs = jvm.get(uri(QPROC));
             if (qprocs.isFail() || qprocs.isNoObj())
@@ -245,9 +228,16 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     }
 
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), addDocQ(jvm), tid, vid);
+        // addMetaQProcs WRITES the qprocs into the map it is handed, so give it a mutable copy:
+        // a caller supplying an immutable map (the schema-less instset fallback instset_noobj(),
+        // reached via SchemaSpace -> tbleSpace.directReader) otherwise throws
+        // UnsupportedOperationException before the instset is ever constructed.
+        super(new LinkedHashMap<>(), addMetaQProcs(new LinkedHashMap<>(jvm)), tid, vid);
         this.sugars().forEach(mParser::addSugar);
-        old = false;
+    }
+
+    public AbstractInstSet(final fURI tid, final fURI vid) {
+        super(new LinkedHashMap<>(), new LinkedHashMap<>(), tid, vid);
     }
 
     @Override
@@ -324,22 +314,22 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public Set<Obj> consts() {
-        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(CONST_TABLE.values());
+        return new LinkedHashSet<>(CONST_TABLE.values());
     }
 
     @Override
     public Set<Type> types() {
-        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(TYPE_TABLE.values());
+        return new LinkedHashSet<>(TYPE_TABLE.values());
     }
 
     @Override
     public Set<Inst> insts() {
-        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(INST_TABLE.values().stream().flatMap(Set::stream).toList());
+        return new LinkedHashSet<>(INST_TABLE.values().stream().flatMap(Set::stream).toList());
     }
 
     @Override
     public Set<Inst> rewrites() {
-        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(REWRITE_TABLE.values());
+        return new LinkedHashSet<>(REWRITE_TABLE.values());
     }
 
     @Override
