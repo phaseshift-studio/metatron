@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
@@ -98,8 +99,14 @@ public class catTypes {
                         .isaPredicate(rec(
                                 uri(OBJ), INST_TYPE,
                                 uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
-                                uri(SRC).maybe(), T(OBJECT_TID),
-                                uri(TRGT).maybe(), T(OBJECT_TID),
+                                // THE MORPHISM REACHES ITS OBJECTS BY REFERENCE (auto_from), never by embedding the
+                                // registered object::T: object's predicate embeds morphism::T, so an embedded object here
+                                // closed a cycle, and each boot re-registered the previous boot's staged objects one level
+                                // deeper (x4 rendered size per test class, measured 443 -> 842,361 chars after five). One
+                                // edge by reference breaks the cycle; the list slots keep T(...) because an auto_from in a
+                                // lst slot resolves against the value lst (a vid-less type) and fails the check.
+                                uri(SRC).maybe(), auto_from_(OBJECT_TID).tryToInst(),
+                                uri(TRGT).maybe(), auto_from_(OBJECT_TID).tryToInst(),
                                 uri(ANALYSIS).maybe(), T(REC_TID),
                                 uri(LAW).maybe(), lst(catInstSet.LAW_TYPE.c(cInt.SOME())),
                                 uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME())),
