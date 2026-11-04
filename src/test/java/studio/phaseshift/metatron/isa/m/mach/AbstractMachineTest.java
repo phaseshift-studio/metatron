@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -313,6 +314,26 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         final Compiler compiler = BasicCompiler.defaults();
         machine.compiler(compiler);
         assertEquals(compiler, machine.compiler(), "fetch returns the bound compiler instance");
+    }
+
+    /**
+     * A COMPILER STAGE SWAPS ON THE LIVE MACHINE. Under type_pred a write that changes a slot re-checks the whole
+     * machine against machine::T, and the booted root failed its own type: the instset's {@code reference} is a
+     * multiplicity of vids, which the /m/instset type declared as a lst — so every real rebinding was refused, while a
+     * write equal to the bound value passed and hid it.
+     */
+    @Test
+    public void testBindNonDefaultCompilerStageOnTheCurrentMachine() {
+        final Machine machine = Machine.current();
+        assertTrue(machine.test(machine.type()), "the booted machine is a machine::T");
+        final Compiler original = machine.compiler();
+        try {
+            machine.compiler(ObjmtronSerializer.<Compiler>parse("compiler::[rewriter=>identity_rewriter::[=>]]"));
+            assertInstanceOf(IdentityRewriter.class, machine.compiler().rewriter(), "the identity rewriter is the bound stage");
+        } finally {
+            machine.compiler(original);
+        }
+        assertEquals(original.toString(), machine.compiler().toString(), "the original compiler is restored");
     }
 
     // ======================== template minting ========================
