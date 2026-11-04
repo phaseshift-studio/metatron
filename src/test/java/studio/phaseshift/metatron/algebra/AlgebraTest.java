@@ -30,12 +30,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.RING_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -59,16 +59,16 @@ public class AlgebraTest extends AbstractMetatronTest {
         // A THEORY INSTANCE IS A WITNESS, NOT A VIEW: a ring states its operations (add/mul are inst::T) and a
         // group states its inverse -- a rec that omits them is a fragment, and the theory type is right to refuse it.
         final Map<Obj, Obj> ring = new LinkedHashMap<>();
-        ring.put(uri(ADD), uri("plus"));
-        ring.put(uri(MUL), uri("mult"));
+        ring.put(uri(ADD), plus_(INT_TYPE).tryToInst());
+        ring.put(uri(MUL), mult_(INT_TYPE).tryToInst());
         ring.put(uri(ZERO), jnt(0));
         ring.put(uri(ONE), jnt(1));
         final Map<Obj, Obj> group = new LinkedHashMap<>();
-        group.put(uri(OP), uri("plus"));
+        group.put(uri(OP), plus_(INT_TYPE).tryToInst());
         group.put(uri(ID), jnt(0));
-        group.put(uri(INV), uri("neg"));
+        group.put(uri(INV), neg_().tryToInst());
         final Map<Obj, Obj> block = new LinkedHashMap<>();
-        block.put(uri("ring"), rec(ring, RING_THEORY_TID, null));
+        block.put(uri(RING), rec(ring, RING_THEORY_TID, null));
         block.put(uri("group"), rec(group, GROUP_THEORY_TID, null));
         return rec(block);
     }
@@ -78,11 +78,11 @@ public class AlgebraTest extends AbstractMetatronTest {
      */
     private static Rec richerRing() {
         final Map<Obj, Obj> ring = new LinkedHashMap<>();
-        ring.put(uri(ADD), uri("plus"));
-        ring.put(uri(MUL), uri("mult"));
+        ring.put(uri(ADD), plus_(INT_TYPE).tryToInst());
+        ring.put(uri(MUL), mult_(INT_TYPE).tryToInst());
         ring.put(uri(ZERO), jnt(0));
         ring.put(uri(ONE), jnt(1));
-        ring.put(uri("neg"), uri("neg"));   // the extra role this extension adds
+        ring.put(uri(INV), neg_().tryToInst());   // the extra role this extension adds
         return rec(ring, RING_THEORY_TID, null);
     }
 
@@ -94,17 +94,17 @@ public class AlgebraTest extends AbstractMetatronTest {
     void theoriesAreListedInDeclarationOrder() {
         final Algebra algebra = Algebra.of(laws());
 
-        assertEquals(List.of(f("ring"), f("group")), algebra.theories());
-        assertTrue(algebra.models(f("ring")));
+        assertEquals(List.of(f(RING), f("group")), algebra.theories());
+        assertTrue(algebra.models(f(RING)));
         assertTrue(algebra.models(f("group")));
         assertFalse(algebra.models(f("field")));
 
-        final Obj zero = algebra.theory("ring").at(uri(ZERO));
-        final Obj one = algebra.theory(f("ring")).at(uri(ONE));
+        final Obj zero = algebra.theory(RING).at(uri(ZERO));
+        final Obj one = algebra.theory(f(RING)).at(uri(ONE));
         final Obj op = algebra.theory("group").at(uri(OP));
         assertEquals(jnt(0), zero);
         assertEquals(jnt(1), one);
-        assertEquals(uri("plus"), op);
+        assertEquals(plus_(INT_TYPE).tryToInst(), op);
     }
 
     /**
@@ -115,14 +115,14 @@ public class AlgebraTest extends AbstractMetatronTest {
     void aValueThatDeclaresNoTheoriesAnswersEmpty() {
         final Algebra fromNoObj = Algebra.of(noobj().asRec());
         final Algebra fromEmptyRec = Algebra.of(rec());
-        final Algebra fromNothing = Algebra.of((Rec) null);
+        final Algebra fromNothing = Algebra.of(null);
 
         assertTrue(fromNoObj.theories().isEmpty());
-        assertEquals(rec0(), fromNoObj.theory("ring"));
-        assertFalse(fromNoObj.models(f("ring")));
+        assertEquals(rec0(), fromNoObj.theory(RING));
+        assertFalse(fromNoObj.models(f(RING)));
         assertTrue(fromEmptyRec.theories().isEmpty());
         assertTrue(fromNothing.theories().isEmpty());
-        assertEquals(rec0(), fromNothing.theory(f("ring")));
+        assertEquals(rec0(), fromNothing.theory(f(RING)));
     }
 
     /**
@@ -133,15 +133,15 @@ public class AlgebraTest extends AbstractMetatronTest {
     void withIsCopyOnWrite() {
         final Rec laws = laws();
         final Algebra original = Algebra.of(laws);
-        final Rec declaredRing = original.theory("ring");
+        final Rec declaredRing = original.theory(RING);
 
         final Rec richerRing = richerRing();
-        final Algebra amended = original.with(f("ring"), richerRing);
-        assertEquals(richerRing, amended.theory("ring"));
+        final Algebra amended = original.with(f(RING), richerRing);
+        assertEquals(richerRing, amended.theory(RING));
         // the extension adds a FIFTH role (neg); mul is part of every legitimate ring, so it cannot be the added one
-        assertEquals(uri("neg"), amended.theory("ring").at(uri("neg")));
-        assertEquals(declaredRing, original.theory("ring"));
-        assertTrue(original.theory("ring").at(uri("neg")).isNoObj());
+        assertEquals(neg_().tryToInst(), amended.theory(RING).at(uri(INV)));
+        assertEquals(declaredRing, original.theory(RING));
+        assertTrue(original.theory(RING).at(uri(INV)).isNoObj());
 
         final Algebra extended = original.with(f("field"), rec(new LinkedHashMap<>()));
         assertTrue(extended.models(f("field")));
@@ -150,7 +150,7 @@ public class AlgebraTest extends AbstractMetatronTest {
         assertEquals(3, extended.theories().size());
         // the source block is the table's: the copy-on-write never reaches it
         assertEquals(2, laws.jvm().size());
-        assertEquals(declaredRing, Algebra.of(laws).theory("ring"));
+        assertEquals(declaredRing, Algebra.of(laws).theory(RING));
     }
 
     /**
@@ -176,9 +176,9 @@ public class AlgebraTest extends AbstractMetatronTest {
 
         assertTrue(algebra.isRec());
         assertEquals(REC_TID, algebra.tid());
-        final Obj ring = algebra.at(uri("ring"));
+        final Obj ring = algebra.at(uri(RING));
         assertTrue(ring.isRec());
-        assertEquals(algebra.theory("ring"), ring.asRec());
+        assertEquals(algebra.theory(RING), ring.asRec());
         assertEquals(jnt(1), ring.asRec().at(uri(ONE)));
 
         algebra.jvm().put(uri("semilattice"), rec(new LinkedHashMap<>()));

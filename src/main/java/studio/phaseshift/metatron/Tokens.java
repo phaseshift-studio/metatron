@@ -123,6 +123,7 @@ public final class Tokens {
     public static final String FEATURE = "feature";
     public static final String ALGORITHM = "algorithm";
     public static final String WATERMARK = "watermark";
+    public static final String RING = "ring";
     public static final String ID = "id";
     public static final String IN = "in";
     public static final String OUT = "out";

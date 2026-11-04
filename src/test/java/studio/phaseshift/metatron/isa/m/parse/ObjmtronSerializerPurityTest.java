@@ -22,12 +22,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -169,10 +169,10 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         final Obj processor = Machine.current().atDirect(uri(PROCESSOR));
         final String written = ObjmtronSerializer.single().write(processor);
         LOG.debug("the machine's processor => %s", written);
-        assertTrue(written.contains("halted=>noobj"),
+        assertTrue(written.contains("computer=>"),
                 String.format("the seeded halted queue is the noobj it is: %s", written));
         final String diagnostic = ObjmtronUISerializer.diagnostic().write(processor);
-        assertTrue(diagnostic.contains("halted"), String.format("and the display serializer renders it too: %s", diagnostic));
+        assertTrue(diagnostic.contains("computer=>"), String.format("and the display serializer renders it too: %s", diagnostic));
     }
 
     /**

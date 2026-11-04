@@ -19,10 +19,10 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
@@ -41,7 +41,11 @@ public class MFail extends MObj implements Fail {
      */
     public static fURI failStackPattern() {
         // ~/sys/fail: resolved to the current machine's vid (<vid>/sys/fail/_) when written.
-        return f("~/sys/fail").extend("_").addQ(INCRQ);
+        return f("~/processor/fail").extend("_").addQ(INCRQ);
+    }
+
+    public static fURI failStackPattern(final fURI baseVID) {
+        return baseVID.extend("_").addQ(INCRQ);
     }
 
     /**
@@ -303,7 +307,7 @@ public class MFail extends MObj implements Fail {
         final Throwable merged = rebuildMtronChainWithCause(this.jvm(), rhs.jvm());
         return transientFail(merged);
     }
-    
+
     public Fail zero() {
         return fail(MTronException.of(""));
     }

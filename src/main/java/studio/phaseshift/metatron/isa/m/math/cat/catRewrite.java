@@ -18,21 +18,15 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.LawTable;
-import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.rewrite.plan.*;
-import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter.*;
+import static studio.phaseshift.metatron.Tokens.INST;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 

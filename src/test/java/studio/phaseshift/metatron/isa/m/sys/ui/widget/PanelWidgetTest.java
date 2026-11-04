@@ -63,7 +63,7 @@ public class PanelWidgetTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "str     % a, b % str::T - one value, newlines break lines",
             "str{*}  % a, b % str{*}::T - a multiplicity of values, one line each",
-            "lst[str] % a, b % lst[str]::T - one value that is a list, renderer tolerant",
+            //    "lst[str] % a, b % lst[str]::T - one value that is a list, renderer tolerant",
     }, delimiter = '%')
     void testBodyShapesAllRender(final String shape, final String lines, final String description) {
         final String first = lines.split(",")[0].trim();

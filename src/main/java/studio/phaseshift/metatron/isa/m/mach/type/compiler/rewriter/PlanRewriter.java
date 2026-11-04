@@ -16,15 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.algebra.rewrite.plan;
+package studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.mInstSetLawTable;
 import studio.phaseshift.metatron.algebra.mathInstSetLawTable;
+import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;

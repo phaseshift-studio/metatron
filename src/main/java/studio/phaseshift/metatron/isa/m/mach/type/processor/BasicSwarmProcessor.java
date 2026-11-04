@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -66,7 +65,6 @@ public class BasicSwarmProcessor extends MRec implements Processor {
         //final Lst index = this.atDirect(uri(COMPUTER)).orElse(lst()).asLst();
         //if (!index.isNoObj())
         //   index.add(computer, MUTABLE);
-        Machine.write(CommonUtil.mintShortUUID(Machine.current().vid().extend(PROCESSOR).extend(COMPUTER), true), computer);
         return computer;
     }
 
