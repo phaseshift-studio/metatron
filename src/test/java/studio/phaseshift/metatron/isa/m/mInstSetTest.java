@@ -1424,7 +1424,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         // the processor walks a chain by position vid, so an un-numbered inst is a walk it cannot make
         for (final Inst inst : compiled.insts())
             assertNotNull(inst.vid(), "a compiled inst must carry its position vid: " + inst.tid() + " in " + code);
-        final Obj result = Machine.current().processor().code(compiled).apply(noobj());
+        final Obj result = Machine.current().processor().apply(compiled).apply(noobj());
         assertFalse(result.isFail(), code + " must not fail: " + result);
         assertEquals(expectedVID, result.type().vid().toString(), code + " => " + result);
     }

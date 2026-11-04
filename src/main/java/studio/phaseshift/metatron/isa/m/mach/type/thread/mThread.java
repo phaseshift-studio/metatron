@@ -20,25 +20,25 @@ package studio.phaseshift.metatron.isa.m.mach.type.thread;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
 import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.CURRENT_SYS;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
  * mThread — the unified thread lifecycle contract.
  *
  * Both {@code AbstractThread} (and its subclasses {@code VirtualThread},
- * {@code CoreThread}) and {@code Processor} (and its refinements like
- * {@code MonadProcessor}, {@code SwarmProcessor}) share this contract.  A thread is a callable
- * object with a lifecycle: it can be started, paused, resumed, and
+ * {@code CoreThread}) and {@code Computer} (a computing instance — the watchdog for the chip) share this
+ * contract.  A thread is a callable object with a lifecycle: it can be started, paused, resumed, and
  * stopped, and it yields a result.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface mThread {
+public interface mThread extends Rec {
 
     public static final fURI CURRENT_SYS_THREAD = CURRENT_SYS.extend("thread");
 

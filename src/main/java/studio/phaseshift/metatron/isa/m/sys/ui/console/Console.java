@@ -27,7 +27,7 @@ import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.mSystem;
@@ -122,7 +122,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * evaluation.  Set when the console binds its repl thread.
      */
     public static volatile fURI CONSOLE_THREAD_VID = null;
-    public Processor machine = null;
+    public Computer machine = null;
     public static AtomicBoolean userMode = new AtomicBoolean(false);
 
     /**
@@ -481,11 +481,20 @@ public class Console extends MRec implements Closeable, Runnable {
         try {
             this.jobs.close();
             this.reader.getBuffer().clear();
+            final FloatingSurface surface = this.getFloatingSurface();
             // Everything that has been asked for is in the terminal before the terminal
             // is given back: the render thread is a daemon and exiting will not wait for
             // it, so without this drain its queued lines — the shutdown log among them —
             // would race the shell's prompt for the same tty
-            this.getFloatingSurface().drain();
+            surface.drain();
+            // Stop the render thread once it has drained, not merely wait for it.  A
+            // task queued after the drain returns — a screen paint the shutdown's own log
+            // lines ask for, a widget re-render — would still run, dereferencing the
+            // terminal after it is closed and handed back, printing a "[terminal-writer]
+            // task threw" line for each and interleaving its writes with the shell's
+            // prompt.  Once the thread is stopped the stragglers drain quietly and nothing
+            // more reaches the terminal.
+            surface.shutdown();
             // The terminal's modes — mouse tracking and the extended key reporting —
             // outlive the process until something writes them off, and they may have
             // been armed by jline itself (a modal tool's trackMouse) as well as by
@@ -498,6 +507,20 @@ public class Console extends MRec implements Closeable, Runnable {
                 terminal.trackMouse(Terminal.MouseTracking.Off);
             } catch (final Exception ignored) {
                 // the release above already wrote the terminal's bytes
+            }
+            // Hand the terminal back with the cursor on a fresh line.  In screen mode the
+            // rows are painted at absolute positions and the render thread's save/restore
+            // can leave the cursor mid-transcript, so a bare newline lands there and the
+            // shell's prompt interleaves with the closing text.  Drop the cursor to the
+            // bottom of the terminal first, then down a line.  In non-screen mode jline
+            // already leaves the cursor on a fresh line, so nothing is added.
+            if (screenMode()) {
+                try {
+                    terminal.writer().print("\033[999B\r\n");
+                    terminal.writer().flush();
+                } catch (final Exception ignored) {
+                    // the process is going away: nothing here is worth an error
+                }
             }
             terminal.close();
         } catch (final IOException e) {
@@ -1568,7 +1591,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * @return true when the job was detached with {@code <alt>+b} (it is still
      * running — the console returns to the prompt)
      */
-    boolean awaitForeground(final Processor mach, final FutureObj<Obj> future, final String line) {
+    boolean awaitForeground(final Computer mach, final FutureObj<Obj> future, final String line) {
         return this.jobs.awaitForeground(mach, future, line);
     }
 
@@ -1655,7 +1678,7 @@ public class Console extends MRec implements Closeable, Runnable {
      * @return the jobs detached with {@code <alt>+b} that have not yet halted,
      * in detach order
      */
-    public List<Processor> backgroundJobs() {
+    public List<Computer> backgroundJobs() {
         return this.jobs.backgroundJobs();
     }
 
@@ -1821,7 +1844,12 @@ public class Console extends MRec implements Closeable, Runnable {
                     // Enter already ends that line — echoing here as well put a second
                     // newline on it, which is the stray blank line between the first
                     // prompts and none after.
-                    if (screenMode() && !screenAppends()) this.screenView.screenOutput(this.prompt() + "\n");
+                    //
+                    // appendRow, not screenOutput: the prompt is one finished row, and
+                    // screenOutput's immediate paint request raced the next prompt's own render,
+                    // leaving a stray blank row between consecutive empty prompts.  A bare Enter
+                    // echoes exactly the one prompt row and nothing else.
+                    if (screenMode() && !screenAppends()) this.screenView.screen().appendRow(this.prompt());
                     continue;
                 }
                 if (line.startsWith(COLON)) {

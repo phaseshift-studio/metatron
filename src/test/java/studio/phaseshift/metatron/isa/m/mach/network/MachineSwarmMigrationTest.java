@@ -12,7 +12,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -108,9 +109,9 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
         final Code codeC = c.compiler().apply(ObjmtronSerializer.parse(
                 "plus(2).plus(10).sum().to(/usr/marko/a/barrier/c)")).asCode();
 
-        final SwarmProcessor pa = a.processor().code(codeA).as();
-        final SwarmProcessor pb = b.processor().code(codeB).as();
-        final SwarmProcessor pc = c.processor().code(codeC).as();
+        final BasicSwarmComputer pa = (BasicSwarmComputer) a.processor().apply(codeA);
+        final BasicSwarmComputer pb = (BasicSwarmComputer) b.processor().apply(codeB);
+        final BasicSwarmComputer pc = (BasicSwarmComputer) c.processor().apply(codeC);
 
         final FutureObj<Obj> aResult = pa.applyAsync(objs(jnt(1), jnt(2), jnt(3)));
         pb.applyAsync(objs(jnt(10), jnt(20), jnt(30)));
@@ -191,7 +192,7 @@ public class MachineSwarmMigrationTest extends AbstractMetatronTest {
     private static FutureObj<Obj> barrierOn(final fURI mailbox) {
         final Code code = Machine.current().compiler().apply(ObjmtronSerializer.parse(
                 "plus(2).plus(10).barrier(" + mailbox + ").sum()")).asCode();
-        final SwarmProcessor processor = Machine.current().processor().code(code).as();
+        final Computer processor = Machine.current().processor().apply(code);
         return processor.applyAsync(objs(jnt(1), jnt(2), jnt(3)));
     }
 

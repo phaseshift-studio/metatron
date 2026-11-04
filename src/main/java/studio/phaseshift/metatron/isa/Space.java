@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Stats;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -260,7 +259,7 @@ public interface Space extends Addressable, Rec, Closeable {
 
         public static Obj resolveApply(final Space space, final Obj rhs) {
             if (rhs.isCode()) {
-                return SwarmProcessor.of(rhs.as()).apply();
+                return Machine.current().processor().apply(rhs.asCode()).apply();
             } else if (rhs.isInst()) {
                 return rhs.<Inst>as().apply();
             } else {

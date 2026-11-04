@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.sys.ui.console;
 
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -29,12 +29,10 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 import static studio.phaseshift.metatron.Tokens.DEBUG;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
@@ -130,11 +128,11 @@ public final class Executor {
                     // reading the perspective here does not steal it.)
                     final Machine machine = Machine.current();
                     final Code compiled = machine.compiler().apply(resolvedResult).asCode();
-                    final Processor mach = machine.processor().code(compiled);
-                    final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
+                    final Computer mach = machine.processor().apply(compiled);
+                    //  final Consumer<Obj> defaultOnHalt = mach.onHalt(); // accumulate into HALTED
                     // persist in HALTED collection
                     //this.printResult(o);      // display
-                    mach.onHalt(defaultOnHalt::accept);
+                    //  mach.onHalt(defaultOnHalt::accept);
                     // Track machine in both places for interruption
                     this.console.machine = mach;
                     if (this.console.getActivePane() != null) {

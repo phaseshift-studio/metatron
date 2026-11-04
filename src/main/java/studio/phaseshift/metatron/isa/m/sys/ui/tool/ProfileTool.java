@@ -106,7 +106,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
         return padToWidth(" " + String.join(", ", argTokens(args)));
     }
 
-    private static String summarizeArg(final Obj o) {
+    public static String summarizeArg(final Obj o) {
         return o.isCall()
                 ? o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("")
                 : o.toShortString();

@@ -16,25 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.mach.type.processor;
+package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
+import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Map;
+import java.util.Optional;
 
-/**
- * AbstractProcessor — the thin wrapper around a {@code processor::T} thread. It holds no fields of
- * its own; the processor's state (code, result) lives in the thread's jvm map, and execution is
- * {@code mThread}'s apply/stop/pause/resume/result.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public abstract class AbstractProcessor extends AbstractThread implements Processor {
+import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
 
-    public AbstractProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+public class BranchInst extends MInst {
+
+    public BranchInst(final Tuple.Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+    }
+
+    public Rec routes() {
+        return Optional.ofNullable(this.jvm().get2()).orElse(rec_noobj()).asRec();
     }
 }

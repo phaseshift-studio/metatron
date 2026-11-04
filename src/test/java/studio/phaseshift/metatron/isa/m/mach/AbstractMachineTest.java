@@ -24,9 +24,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Code;
@@ -126,7 +127,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         // THE HOME FORM, logged because it is the one artifact a distributed run never shows: the workers' forms are
         // printed by the shards as they run, so when the home stalls there is nothing to compare them against.
         LOG.debug("checkDistributedCode: home form %s", compiled);
-        final SwarmProcessor processor = home.processor().code(compiled).as();
+        final Computer processor = home.processor().apply(compiled);
 
         // EVERY MACHINE BUT THE HOME runs the worker form the rewrite shipped to its OWN inbox, on its own thread.
         // The home is in the roster too -- it is one of the machines -- but it is not a peer of itself: it runs the
@@ -301,7 +302,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     @Test
     public void testAddEagerProcessorThenFetch() {
         final Machine machine = this.newMachine();
-        final Processor processor = SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
+        final Processor processor = BasicSwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
         machine.processor(processor);
         assertEquals(processor, machine.processor(), "fetch returns the bound processor instance");
     }
@@ -321,7 +322,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
         final Machine machine = this.newMachine();
         machine.processor(start_(rec()).as_(MACH_SWARM_PROCESSOR_TYPE).tryToInst());
         final Processor processor = machine.processor();
-        assertInstanceOf(SwarmProcessor.class, processor, "a processor template mints a swarm processor on fetch");
+        assertInstanceOf(BasicSwarmProcessor.class, processor, "a processor template mints a swarm processor on fetch");
     }
 
     @Test
@@ -353,7 +354,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     @Test
     public void testProcessorMachineBackRef() {
         final Machine machine = this.newMachine();
-        final Processor processor = SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
+        final Processor processor = BasicSwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null);
         machine.processor(processor);
         assertSame(machine, processor.machine(), "a bound processor resolves its machine through the parent nest");
     }

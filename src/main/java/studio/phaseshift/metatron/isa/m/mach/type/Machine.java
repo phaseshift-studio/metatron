@@ -307,7 +307,7 @@ public interface Machine extends Rec, AutoCloseable {
             // wrapStart prepends start(value) for a value lhs; a monadic lhs passes through unchanged and rides
             // START so the monad's loop/state context survives into the processor.
             final Code compiled = machine.compiler().apply(Code.wrapStart(lhs, call.as())).asCode();
-            return machine.processor().code(compiled).apply(lhs.isMonad() ? lhs : noobj());
+            return machine.processor().apply(compiled).apply(lhs.isMonad() ? lhs : noobj());
         }
         // single inst: dispatch by the inst's own monad flag. A monadic inst (loop()) receives the monad; a value
         // inst is resolved and applied against the monad's obj.
@@ -599,9 +599,7 @@ public interface Machine extends Rec, AutoCloseable {
      */
     default Processor processor() {
         final Obj protoProcessor = this.atDirect(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        if (protoProcessor.isCall())
-            return protoProcessor.apply().as();
-        return protoProcessor.clone().as();
+        return protoProcessor.isCall() ? protoProcessor.apply().as() : protoProcessor.as();
     }
 
     /**

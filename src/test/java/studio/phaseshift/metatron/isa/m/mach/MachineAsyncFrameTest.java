@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MLst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 
 import java.util.List;
@@ -65,7 +65,7 @@ public class MachineAsyncFrameTest extends AbstractMetatronTest {
         });
         final Machine machine = Machine.current();
         final Code compiled = machine.compiler().apply(resolved).asCode();
-        final Processor mach = machine.processor().code(compiled);
+        final Computer mach = machine.processor().apply(compiled);
         final Obj result = mach.applyAsync().get();
         // the worker records its landing BEFORE the future completes (AbstractThread.complete), so get() returning
         // guarantees landedPerspective() is already published — a direct read, no polling, no race window.

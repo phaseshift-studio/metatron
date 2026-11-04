@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -60,7 +60,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class BasicMachine extends AbstractMachine {
 
-    private Processor cachedProcessor = null;
     private Compiler cachedCompiler = null;
     //private Network cachedNetwork = null;
 
@@ -119,9 +118,7 @@ public class BasicMachine extends AbstractMachine {
                 // what keeps a slot from needing a compiler (or a machine) before one exists.
                 uri(INSTSET), instset,
                 uri(COMPILER), BasicCompiler.defaults(),
-                uri(PROCESSOR), SwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, null)), tid, vid);
-        // uri("+").c(cInt.of(-1, 1)), instC(f("+").c(cInt.of(-1, 1)).dom(MACH_MACHINE_TID).rng(MACH_MACHINE_TID), lst(),
-        //       (lhs, inst) -> lhs.asMachine().move(f(inst.tid().name()).c(inst.tid().c())))), tid, vid);
+                uri(PROCESSOR), BasicSwarmProcessor.processor(mutableMap(), MACH_SWARM_PROCESSOR_TID, vid.extend(PROCESSOR))), tid, vid);
     }
 
     // ======================== hot slot reads ========================
@@ -139,10 +136,8 @@ public class BasicMachine extends AbstractMachine {
 
     @Override
     public Processor processor() {
-        if (null != this.cachedProcessor)
-            return this.cachedProcessor.clone().as();
         final Obj proto = this.at(PROCESSOR).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        return (this.cachedProcessor = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
+        return proto.isCall() ? proto.apply().as() : proto.as();
     }
 
     @Override
@@ -165,13 +160,11 @@ public class BasicMachine extends AbstractMachine {
 
     @Override
     public Machine processor(final Processor processor) {
-        this.cachedProcessor = null;
         return super.processor(processor);
     }
 
     @Override
     public Machine processor(final Call templateProcessor) {
-        this.cachedProcessor = null;
         return super.processor(templateProcessor);
     }
 

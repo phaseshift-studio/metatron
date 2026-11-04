@@ -19,89 +19,57 @@
 package studio.phaseshift.metatron.isa.m.mach.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.transientFail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Processor — runs compiled {@code code::T} to {@code obj}. A processor is the machine's execution
- * axis (a thread) <em>and</em> an {@code obj} (its state lives in a rec's jvm map), so it is both
- * an {@code mThread} and an {@code Obj}. The monad-shaped surface (run/barrier/halt queues) lives on
- * the {@code monad_processor::T} refinement, not here — a processor need not be monadic. Resolution
- * is the {@code Obj#resolve(Obj)} contract inherited from {@code Obj}, not a distinct axis.
+ * processor::T — the architecture: a machine component (never a thread). It is the schema of computation,
+ * registered once, holding no per-computation state. {@link #apply(Code)} instantiates a {@link Computer} — the
+ * instance that runs the code. The per-instruction runtime lives in {@link Helper} (resolve-one → guards →
+ * function application → coefficient), inherited by every call path.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Processor extends mThread, Component {
+public interface Processor extends Component {
 
     /**
-     * Redeclared abstract to fold the abstract {@code mThread.apply} and the default
-     * {@code Obj.apply} into one contract — a processor is a callable obj, and the concrete
-     * processor (a thread) supplies the single implementation.
+     * INSTANTIATE — apply this architecture to {@code code} and mint a computing instance. The returned computer is
+     * dormant until {@code apply}/{@code applyAsync} (inherited from {@code mThread}) starts it.
      */
-    @Override
-    Obj apply(final Obj input);
+    Computer apply(Code code);
 
     /**
-     * @return the code this processor is executing
+     * @return the computers this architecture has minted — its index, a Rec field.
      */
-    default Code code() {
-        return this.at(CODE).orElse(code0());
-    }
+    Lst computers();
 
     /**
-     * @return a copy of this processor executing the given code
+     * REAP every computer this architecture indexes — the dual of {@link #apply(Code)}, the same shape as
+     * {@code index}/{@code drop}.
      */
-    default Processor code(final Code code) {
-        return this.at(uri(CODE), code, MUTABLE).as();
-    }
-
-    /**
-     * @return a copy of this processor with the given onHalt callback registered
-     */
-    Processor onHalt(final Consumer<Obj> halted);
-
-    /**
-     * @return the current onHalt callback
-     */
-    Consumer<Obj> onHalt();
+    void close();
 
     // ======================== runtime (computeArgs + apply) ========================
 
-    /**
-     * THE EXECUTOR — apply an instruction to a value and nothing else: compute the arguments, invoke the function,
-     * sum a fan-out, propagate a fail, carry the coefficient.
-     * <p>
-     * It makes no type or resolution decisions of its own. WHICH instruction a call refers to is the
-     * {@link Selector}'s ({@link Selector.Helper#resolve}); WHAT a call is about — the bundle, a fiber, or every
-     * candidate — is the {@link Typer}'s ({@link Typer.Helper#candidates}, {@link Typer.Helper#applicable},
-     * {@link Typer.Helper#supersedes}), together with every admission check ({@link Typer.Helper#domRngMatch}) and
-     * the assertion levels ({@link Typer.Helper#instDom()}, {@link Typer.Helper#instRng()}). The executor asks
-     * those two and runs what they name, so a fibered type's bundle-vs-fiber choice is a type-system answer, not a
-     * property of the execution loop.
-     */
     class Helper {
 
         private Helper() {
@@ -164,7 +132,7 @@ public interface Processor extends mThread, Component {
             final List<Obj> candidates = Typer.Helper.bundleAndFibers(subject, inst);
             return candidates.size() == 1 ?
                     invoke(subject, Selector.Helper.resolve(subject, inst), inst) :
-                    fanOut(subject, candidates, inst);
+                    applyFiberedRec(subject, candidates, inst);
         }
 
         /**
@@ -192,7 +160,7 @@ public interface Processor extends mThread, Component {
          * accepted as a weaponed through the ninja it exposes), the bundle IS the answer and its fibers are not
          * asked. When it does not qualify, the fibers are offered the filter as usual.
          */
-        private static Obj fanOut(final Obj lhs, final List<Obj> candidates, final Inst inst) {
+        private static Obj applyFiberedRec(final Obj lhs, final List<Obj> candidates, final Inst inst) {
             final Inst bundleInst = Selector.Helper.resolve(lhs, inst);
             if (Typer.Helper.supersedes(lhs, bundleInst, inst))
                 return invoke(lhs, bundleInst, inst);

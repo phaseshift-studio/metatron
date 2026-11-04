@@ -792,6 +792,15 @@ public class FloatingSurface {
     }
 
     /**
+     * Whether the render thread has been asked to stop (see {@link #shutdown()}).
+     * True once {@link #shutdown()} has been called; the thread drains any stragglers
+     * quietly and then exits.
+     */
+    public boolean isShutdown() {
+        return !this.running;
+    }
+
+    /**
      * True when {@code t} is (or wraps) the signal that the terminal is closed —
      * the expected result of a test (or the console) closing the terminal while the
      * render thread still has a queued write.  Nothing further can be written, so the

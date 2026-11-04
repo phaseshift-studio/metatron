@@ -100,4 +100,11 @@ public class ExplainToolTest extends AbstractMetatronTest {
         assertEquals(ProfileTool.ARGS_WIDTH, summary.length());
         assertEquals(" 1, 2", summary.substring(0, 5));   // leading pointer slot + "1, 2"
     }
+
+    @Test
+    public void testRenderPolyPlacesSelectorOnBracketAndComma() {
+        // element 0 → the selector replaces the opening bracket; element 1 → it replaces the comma
+        assertEquals(">1,2]", ExplainTool.renderPoly(lst(jnt(1), jnt(2)), List.of(0), "", ">"));
+        assertEquals("[1>2]", ExplainTool.renderPoly(lst(jnt(1), jnt(2)), List.of(1), "", ">"));
+    }
 }

@@ -142,6 +142,7 @@ public final class Tokens {
     public static final String TOP = "top";
     public static final String COMPOSE = "compose";
     public static final String TOTAL = "total";
+    public static final String COUNT = "count";
     public static final String CONTEXT = "context";
     public static final String THRESHOLD = "threshold";
     public static final String COMPRESSION = "compression";
@@ -229,6 +230,7 @@ public final class Tokens {
     public static final String DIV = "div";
     public static final String QUOTE = "quote";
     public static final String CODE = "code";
+    public static final String THREAD = "thread";
     public static final String ESC = "esc";
     public static final String LANG = "lang";
     public static final String START = "start";
@@ -254,6 +256,7 @@ public final class Tokens {
      */
     public static final String LISTENER = "listener";
     public static final String NETWORK = "network";
+    public static final String DISCOVERY = "discovery";
     public static final String SUPERVISOR = "supervisor";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
@@ -317,6 +320,7 @@ public final class Tokens {
     public static final String STATUS = "status";
     public static final String DISCOVER = "discover";
     public static final String TODO = "todo";
+    public static final String ON_HALT = "on_halt";
     public static final String ON_KEY = "on_key";
     public static final String KEY = "key";
     public static final String ON_OPEN = "on_open";
@@ -463,6 +467,8 @@ public final class Tokens {
     public static final String INSTSET = "instset";
     public static final String COMPILER = "compiler";
     public static final String PROCESSOR = "processor";
+    public static final String COMPONENT = "component";
+    public static final String COMPUTER = "computer";
     public static final String PARSER = "parser";
     public static final String REWRITER = "rewriter";
     public static final String RESOLVER = "resolver";

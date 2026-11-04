@@ -665,28 +665,14 @@ public final class QCollection {
      * lets a caller fall back to its in-code declaration.
      */
     public static Obj decOf(final Obj obj) {
-        return decOf(decId(obj));
+        return decOf(obj.isInst() ? null == obj.tid() || !obj.tid().hasQ(ARGS) ? obj.tid() : obj.tid().removeQ(ARGS) : obj.vid());
     }
-
-    /**
-     * THE ADDRESS THE ALGEBRA IS DECLARED AT — a type's vid, or an instruction's OPERATION address (its tid with the
-     * {@code args} component removed). A declaration is a fact about the operation, not about the argument types the
-     * instruction happened to be minted with, so a reader and a writer cannot disagree merely because one was minted
-     * with {@code MInst.ARGS_IN_TID} on.
-     */
-    private static fURI decId(final Obj obj) {
-        return obj.isInst() ? decId(obj.tid()) : obj.vid();
-    }
-
-    private static fURI decId(final fURI id) {
-        return null == id || !id.hasQ(ARGS) ? id : id.removeQ(ARGS);
-    }
-
+    
     /**
      * {@link #decOf(Obj)} by address — what a declaration lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
      */
     public static Obj decOf(final fURI objIDUnstripped) {
-        final fURI objID = decId(objIDUnstripped);
+        final fURI objID = null == objIDUnstripped || !objIDUnstripped.hasQ(ARGS) ? objIDUnstripped : objIDUnstripped.removeQ(ARGS);
         if (null == objID)
             return noobj();
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
@@ -721,7 +707,7 @@ public final class QCollection {
      * again once the set is mounted, which is what the builder's setup does.
      */
     public static <OBJ extends Obj> OBJ decWrap(final OBJ obj, final Rec declaration) {
-        final fURI objID = decId(obj);
+        final fURI objID = obj.isInst() ? !obj.tid().hasQ(ARGS) ? obj.tid() : obj.tid().removeQ(ARGS) : obj.vid();
         if (null == objID || null == declaration)
             return obj;
         final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?

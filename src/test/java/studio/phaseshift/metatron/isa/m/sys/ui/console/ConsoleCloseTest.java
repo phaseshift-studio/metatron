@@ -53,9 +53,9 @@ public class ConsoleCloseTest extends AbstractMetatronTest {
         // after it is handed back — for the rest of the process
         final Console console = new Console(rec(), f("/sys/console_close_test"));
         final FloatingSurface surface = console.getFloatingSurface();
-       // assertFalse(surface.isShutdown(), "the render thread starts running");
+        assertFalse(surface.isShutdown(), "the render thread starts running");
         closeConsole(console);
-       // assertTrue(surface.isShutdown(), "closing the console stops the render thread");
+        assertTrue(surface.isShutdown(), "closing the console stops the render thread");
     }
 
     @Test

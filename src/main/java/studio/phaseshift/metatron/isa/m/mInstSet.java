@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -1243,7 +1243,7 @@ public class mInstSet extends AbstractInstSet {
         ScoringResolver.resetTimings();
         FixPointRewriter.resetRewriteTimings();
         StatefulMonad.resetTimings();
-        SwarmProcessor.resetTimings();
+        BasicSwarmComputer.resetTimings();
         final int iters = 5;
         long resolveMin = Long.MAX_VALUE, resolveMax = 0L;
         long rewriteMin = Long.MAX_VALUE, rewriteMax = 0L;
@@ -1355,7 +1355,7 @@ public class mInstSet extends AbstractInstSet {
         final long monads = StatefulMonad.MONADS.get();
         final long coeffSum = StatefulMonad.COEFF_SUM.get();
         sb.append(String.format("  flow       monads=%d coeff-sum=%d compression=%.2f processors=%d%n",
-                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, SwarmProcessor.PROCESSORS.get()));
+                monads, coeffSum, 0L == monads ? 0.0 : (double) coeffSum / (double) monads, BasicSwarmComputer.PROCESSORS.get()));
         sb.append(String.format("  cache     hits=%d misses=%d hit=%.1f%%%n", graph.hits(), graph.misses(), graph.hitRate() * 100.0));
         final String text = sb.toString();
         final double ms = 1_000_000.0; // nanos -> millis
@@ -1413,7 +1413,7 @@ public class mInstSet extends AbstractInstSet {
                 uri(FLOW), rec(
                         uri(MONADS), jnt(monads), uri(C_SUM), jnt(coeffSum),
                         uri(COMPRESSION), real(0L == monads ? 0.0 : (double) coeffSum / (double) monads),
-                        uri(PROCESSORS), jnt(SwarmProcessor.PROCESSORS.get())),
+                        uri(PROCESSORS), jnt(BasicSwarmComputer.PROCESSORS.get())),
                 uri(CACHE), rec(
                         uri(HITS), jnt(graph.hits()), uri(MISSES), jnt(graph.misses()),
                         uri(HIT_RATE), real(graph.hitRate()))), PROFILING_TID, null);
