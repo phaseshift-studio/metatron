@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +30,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;

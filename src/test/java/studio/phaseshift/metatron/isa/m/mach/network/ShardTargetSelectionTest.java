@@ -18,20 +18,20 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
-import studio.phaseshift.metatron.isa.m.mach.machInstSet;
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Span;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;

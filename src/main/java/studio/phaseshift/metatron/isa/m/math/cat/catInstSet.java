@@ -18,10 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TYPE;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.mInstSetLawTable;
 import studio.phaseshift.metatron.algebra.mathInstSetLawTable;
-import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
@@ -40,6 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;

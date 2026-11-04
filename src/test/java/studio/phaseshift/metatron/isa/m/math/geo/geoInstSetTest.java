@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mach.type.Machine.Helper.evalAt;
 import static studio.phaseshift.metatron.isa.m.mach.type.Machine.current;
 import static studio.phaseshift.metatron.isa.m.mach.type.Machine.parse;
@@ -53,7 +52,9 @@ public class geoInstSetTest extends AbstractInstSetTest {
         super(geoInstSet::new);
     }
 
-    /** evaluate one mtron expression in the mounted machine */
+    /**
+     * evaluate one mtron expression in the mounted machine
+     */
     private static studio.phaseshift.metatron.isa.m.type.Obj eval(final String code) {
         return evalAt(current(), () -> parse(code).apply(noobj()));
     }
@@ -83,7 +84,9 @@ public class geoInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    /** The kind, the coordinates, the envelope and the measures — the questions the wire answers with a `type` key. */
+    /**
+     * The kind, the coordinates, the envelope and the measures — the questions the wire answers with a `type` key.
+     */
     @ParameterizedTest
     @CsvSource(value = {
             POINT + ".type()                                        % point::T",
@@ -103,7 +106,9 @@ public class geoInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    /** The predicates: containment, inside an envelope, and overlap. */
+    /**
+     * The predicates: containment, inside an envelope, and overlap.
+     */
     @ParameterizedTest
     @CsvSource(value = {
             POLYGON + ".inside(bbox2d::[-123.2,44.4,-122.9,44.6])         % " + POLYGON,
@@ -118,7 +123,9 @@ public class geoInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    /** The wire: the document carries the wrapper, the value does not — and `as(json::T)` is the door. */
+    /**
+     * The wire: the document carries the wrapper, the value does not — and `as(json::T)` is the door.
+     */
     @ParameterizedTest
     @CsvSource(value = {
             POINT + ".as(json::T)    % json::'{\"type\":\"Point\",\"coordinates\":[-123.13,44.47]}'",
@@ -167,7 +174,8 @@ public class geoInstSetTest extends AbstractInstSetTest {
         eval("person::[name=>'marko',geo:location=>point::[-123.0,44.5]]@marko");
         // the untyped geo question is answered by the geometry at the fiber
         assertTrue(eval("*marko.type()").isType());
-        assertTrue(eval("*marko.?point::T").isNoObj() || eval("*marko.?point::T").isRec());
+        assertNotEquals(noobj(), eval("*marko.?point::T"));
+        // assertTrue(eval("*marko.?point::T").isNoObj() || eval("*marko.?point::T").isRec());
         assertTrue(eval("*marko>>geo:location").isLst());
         // an envelope question reaches the point inside the person, and the filter answers WITH that point
         assertEquals(eval("point::[-123.0,44.5]"), eval("*marko.inside(bbox2d::[-123.2,44.4,-122.9,44.6])"));

@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TID;
 import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
@@ -27,6 +25,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
@@ -37,11 +36,12 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.*;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TID;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
+import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;

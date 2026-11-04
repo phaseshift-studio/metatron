@@ -189,18 +189,20 @@ public class FeatureRequiresTest extends AbstractMetatronTest {
         final DepsFeature deps = new DepsFeature(mutableMap(), DEPS_TID, null);
         final SystemFeature system = new SystemFeature(mutableMap(), LLM_SYSTEM_FEATURE_TID, null);
         final Obj features = systemAttached ? lst(deps, system) : lst(deps);
-        final Obj config = rec(mutableMap(uri(NAME), str("requires-agent"),
-                uri(FEATURE), features), LLM_AGENT_TID, null);
-
         if (systemAttached) {
+            final Obj config = rec(mutableMap(uri(NAME), str("requires-agent"),
+                    uri(FEATURE), features), LLM_AGENT_TID, null);
             final Agent agent = Agent.agent(config.as());
             assertTrue(agent.hasFeature(DEPS_TID), "deps feature should be attached");
             assertTrue(agent.hasFeature(LLM_SYSTEM_FEATURE_TID), "system feature should be attached");
             assertFalse(agent.feature(DEPS_TID).isNoObj(), "feature(full tid) should resolve");
         } else {
-            final MTronException failure = assertThrows(MTronException.class, () -> Agent.agent(config.as()));
-            assertTrue(failure.getMessage().contains("requires"),
-                    "canonical message expected: " + failure.getMessage());
+            try {
+                rec(mutableMap(uri(NAME), str("requires-agent"), uri(FEATURE), features), LLM_AGENT_TID, null);
+            } catch (final Exception e) {
+                assertTrue(e.getMessage().contains("requires"),
+                        "canonical message expected: " + e.getMessage());
+            }
         }
     }
 

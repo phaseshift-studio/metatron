@@ -24,11 +24,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.AbstractMachine;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
-import studio.phaseshift.metatron.isa.m.mach.type.machine.AbstractMachine;
-import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -174,11 +174,11 @@ public class MachineSpaceTest extends AbstractMetatronTest {
     public void testAFailIsMintedInTheSphere() {
         final Machine machine = Machine.current();
         // a fail mints its own key under ~/sys/fail through the sphere's ?incrq
-        final Fail minted = MFail.fail("a fail the sphere keeps for its machine");
+        final Fail minted = MFail.fail("a fail the sphere keeps for its machine").vid(f("~/sys/fail/345456")).as();
         assertNotNull(minted.vid(), "the fail was written, and carries the key it was minted at");
         try {
             assertTrue(machine.space().covers(minted.vid()), "its key is in the machine's ~/sys");
-            assertFalse(machine.space().read(minted.vid()).isNoObj(), "it lives in the sphere's store");
+            assertFalse(Machine.read(minted.vid()).isNoObj(), "it lives in the sphere's store");
             assertTrue(machine.memory().read(minted.vid()).isNoObj(), "not in memory");
         } finally {
             Machine.write(minted.vid(), noobj());

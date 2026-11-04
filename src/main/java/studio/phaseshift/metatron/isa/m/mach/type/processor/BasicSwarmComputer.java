@@ -147,13 +147,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     }
 
     public BasicSwarmComputer code(final Code code) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>(this.jvm());
-        map.put(uri(CODE), code);
-        // constructor (not clone/self) and fresh queues: MRec.self → cleanMap strips the noobj-valued
-        // halt queue, and a shallow copy would share the running/barrier/halted state with the cached
-        // template across runs — drop the queues so the constructor re-seeds fresh ones.
-        map.remove(uri(CACHE));
-        return new BasicSwarmComputer(map, this.tid(), this.vid());
+        return new BasicSwarmComputer(mutableMap(uri(CODE), code), this.tid(), this.vid());
     }
 
     public Obj halted() {
@@ -191,7 +185,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     private Inst makeOnHalt() {
         return MInst.instC(mInstSet.CATCH_INST_TID.dom(ALL_STAR.any()).rng(NOOBJ_TID), lst(), o -> {
             if (o.isFail()) {
-                MFail.incrStackWrap(o.asFail(), MFail.failStackPattern());
+                MFail.incrStackWrap(o.asFail(), MFail.failStackPattern(this.vid()));
             }
             final Obj h = this.jvm().getOrDefault(uri(CACHE), rec()).recValue().get(uri(HALTED));
             if (null != h && h.isObjs())
@@ -371,7 +365,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                                 Machine.current().memory().stats().monadicStats().incrHaltedMonads(1L);
                                 // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
                                 if (no.isUncaughtFail())
-                                    MFail.incrStackWrap(no.asFail(), MFail.failStackPattern());
+                                    MFail.incrStackWrap(no.asFail(), MFail.failStackPattern(this.vid()));
                                 this.onHalt().apply(no);
                             });
                         } else {
@@ -498,7 +492,8 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
         map.putIfAbsent(uri(RUN), this.running());
         map.putIfAbsent(uri(BARRIER), this.barriers());
         map.putIfAbsent(uri(HALTED), this.halted());
-        clone.self(rec(uri(CACHE), rec(map)), tid, null == this.vid() ? vid : this.vid());
+        ((Map<Obj, Obj>) jvm).put(uri(CACHE), rec(map));
+        clone.self(jvm, tid, null == this.vid() ? vid : this.vid());
         // RESULT auto-pointer must point to the clone's own HALTED
         clone.at(uri(f(CACHE).extend(RESULT)), auto_from_(uri(clone.vid().extend(HALTED))).tryToInst(), MUTABLE);
         clone.at(uri(f(CACHE).extend(ON_HALT)), clone.makeOnHalt(), MUTABLE); // fresh callback bound to the clone

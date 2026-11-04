@@ -20,16 +20,15 @@ package studio.phaseshift.metatron.isa.m.mach;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -46,10 +45,7 @@ public class BasicSwarmComputerTest extends AbstractMetatronTest {
     public void testSyncApplyReturnsExpectedResult() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
         final BasicSwarmComputer mach = BasicSwarmComputer.of(code);
-
         final Obj result = mach.apply(noobj());
-        System.out.println("result: " + result);
-
         assertFalse(result.isNoObj(), "expected non-noobj result from 1+2");
         assertTrue(result.toString().contains("3"), "expected result to contain 3");
     }
@@ -84,20 +80,15 @@ public class BasicSwarmComputerTest extends AbstractMetatronTest {
     public void testMachineStateIsInJvm() {
         final Code code = ObjmtronSerializer.parse("1.plus(2)").as();
         final BasicSwarmComputer mach = BasicSwarmComputer.of(code);
-
-        // Before execution: defaults exist
-        final Map<Obj, Obj> jvmBefore = mach.jvm();
-        assertTrue(jvmBefore.containsKey(uri(CODE)), "jvm should contain /code");
-        assertTrue(jvmBefore.containsKey(uri(RUN)), "jvm should contain /run (default)");
-        assertTrue(jvmBefore.containsKey(uri(BARRIER)), "jvm should contain /barrier (default)");
-        assertTrue(jvmBefore.containsKey(uri(HALTED)), "jvm should contain /halted (default)");
-
+        LOG.warn(mach);
+        assertTrue(mach.at(f(CACHE).extend(RUN)).isNoObj());
+        assertFalse(mach.at(f(CACHE).extend(BARRIER)).isNoObj());
+        assertTrue(mach.at(f(CACHE).extend(HALTED)).isNoObj());
+        assertFalse(mach.at(CODE).isNoObj());
         // Execute synchronously
         mach.apply(noobj());
-
         // After execution: halted should have results
-        final Map<Obj, Obj> jvmAfter = mach.jvm();
-        final Obj halted = jvmAfter.get(uri(HALTED));
+        final Obj halted = mach.at(f(CACHE).extend(HALTED));
         assertNotNull(halted, "halted should exist after execution");
         assertFalse(halted.isNoObj(), "halted should not be noobj after execution");
     }
@@ -123,7 +114,7 @@ public class BasicSwarmComputerTest extends AbstractMetatronTest {
         // Clone should be independently executable with new code
         final Code newCode = ObjmtronSerializer.parse("3.plus(4)").as();
         final BasicSwarmComputer reclone = clone.code(newCode);
-        final Obj result = reclone.apply(noobj());
+        final Obj result = reclone.apply();
         assertFalse(result.isNoObj(), "reclone with new code should execute");
     }
 
