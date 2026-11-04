@@ -21,18 +21,18 @@ package studio.phaseshift.metatron.isa.m.mach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
  * Inherits the machine-universal contract from {@link AbstractMachineTest}; this class only supplies
@@ -48,7 +48,7 @@ public class BasicMachineTest extends AbstractMachineTest {
 
     @Override
     protected Machine newMachine() {
-        return BasicMachine.of(MACH_MACHINE_TID, null);
+        return BasicMachine.of(MACH_MACHINE_TID, f("/abc"));
     }
 
     @Test
