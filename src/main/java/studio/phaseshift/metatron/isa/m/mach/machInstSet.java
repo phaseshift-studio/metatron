@@ -36,7 +36,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
+import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmProcessor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -211,14 +212,17 @@ public class machInstSet extends AbstractInstSet {
     public static Type MACH_CORE_THREAD_TYPE;
     public static Type MACH_MACHINE_TYPE;
 
-    public static final fURI MACH_MACHINE_COMPONENT_TID = MACH_ISA_TID.extend("component");
-    // the processor family — structural apply(code)->obj contract, then nominal monad marker, then concrete strategies
+    public static final fURI MACH_MACHINE_COMPONENT_TID = MACH_ISA_TID.extend(COMPONENT);
+    // the processor family — the architecture contract (apply(code)->computer) and the concrete swarm strategy
     public static final fURI MACH_PROCESSOR_TID = MACH_MACHINE_COMPONENT_TID.extend(PROCESSOR);
-    public static final fURI MACH_MONAD_PROCESSOR_TID = MACH_PROCESSOR_TID.extend(MONAD);
-    public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_MONAD_PROCESSOR_TID.extend("swarm");
+    public static final fURI MACH_SWARM_PROCESSOR_TID = MACH_PROCESSOR_TID.extend("swarm");
     public static Type MACH_PROCESSOR_TYPE;
-    public static Type MACH_MONAD_PROCESSOR_TYPE;
     public static Type MACH_SWARM_PROCESSOR_TYPE;
+    // the computer family — the computing instance the architecture mints (a watchdog thread + workers + a cache)
+    public static final fURI MACH_COMPUTER_TID = MACH_PROCESSOR_TID.extend(COMPUTER);
+    public static final fURI MACH_SWARM_COMPUTER_TID = MACH_COMPUTER_TID.extend("swarm");
+    public static Type MACH_COMPUTER_TYPE;
+    public static Type MACH_SWARM_COMPUTER_TYPE;
     // the compiler family — structural apply(source)->code contract, then the four stage families it composes
     public static final fURI MACH_COMPILER_TID = MACH_MACHINE_COMPONENT_TID.extend(COMPILER);
     public static Type MACH_COMPILER_TYPE;
@@ -266,7 +270,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_NETWORK_TID = MACH_MACHINE_COMPONENT_TID.extend(NETWORK);
     public static Type MACH_NETWORK_TYPE;
     public static Type MACH_MACHINE_COMPONENT_TYPE;
-    public static final fURI MACH_DISCOVERY_TID = MACH_NETWORK_TID.extend("discovery");
+    public static final fURI MACH_DISCOVERY_TID = MACH_NETWORK_TID.extend(DISCOVERY);
     public static Type MACH_DISCOVERY_TYPE;
 
 
@@ -297,123 +301,137 @@ public class machInstSet extends AbstractInstSet {
                                         uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
                                         uri(RESULT).maybe(), T(ALL.maybeSome())))
                                 .create(),
-                        MACH_MONAD_PROCESSOR_TYPE = TypeBuilder.build()
-                                .tid(MACH_PROCESSOR_TID)
-                                .vid(MACH_MONAD_PROCESSOR_TID)
-                                .create(),
                         MACH_SWARM_PROCESSOR_TYPE = TypeBuilder.build()
-                                        .tid(MACH_PROCESSOR_TID)
-                                        .vid(MACH_SWARM_PROCESSOR_TID)
-                                        .constructor(machine -> SwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()),
-                                                Map.of(uri(CODE), "the code the processor will evaluate"))
-                                        .desc("a swarm processor schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result")
-                                        .create(),
+                                .tid(MACH_PROCESSOR_TID)
+                                .vid(MACH_SWARM_PROCESSOR_TID)
+                                .constructor(machine -> BasicSwarmProcessor.processor(machine.jvm(), machine.tid(), machine.vid()))
+                                .desc("the swarm architecture: mints a swarm computer per apply(code), which schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result")
+                                .create(),
+                        // the computer family — the computing instance the architecture mints
+                        MACH_COMPUTER_TYPE = TypeBuilder.build()
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_COMPUTER_TID)
+                                .isaPredicate(rec(uri(CODE), ALL_TYPE, uri(CACHE).maybe().asUri(), REC_TYPE))
+                                .create(),
+                        MACH_SWARM_COMPUTER_TYPE = TypeBuilder.build()
+                                .tid(MACH_COMPUTER_TID)
+                                .vid(MACH_SWARM_COMPUTER_TID)
+                                .isaPredicate(rec(uri(CACHE).maybe().asUri(),
+                                        rec(uri(HALTED).maybe().asUri(), T(ALL.maybeSome()),
+                                                uri(RUN).maybe(), T(ALL.maybeSome()),
+                                                uri(BARRIER).maybe(), LST_TYPE)))
+                                /* Map.of(uri(CACHE).maybe(), "three monad streams contain the current state of the computation",
+                                         uri(f(CACHE).extend(RUN)).maybe(), "monads still actively computing (inst x obj)",
+                                         uri(f(CACHE).extend(HALTED)).maybe(), "monads denote the result (inst0 x obj)",
+                                         uri(f(CACHE).extend(BARRIER)).maybe(), "a lst[monad] of the ordered barriers in the code"))*/
+                                .constructor(arg -> new BasicSwarmComputer(arg.asRec().jvm(), MACH_SWARM_COMPUTER_TID, arg.vid()))
+                                .create(),
                         // the compiler family — structural apply(source)->code contract holding its four stages
                         MACH_COMPILER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_COMPILER_TID, "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.")
-                                        .isaPredicate(rec(
-                                                uri(PARSER).maybe().asUri(), T(MACH_PARSER_TID),
-                                                uri(REWRITER).maybe().asUri(), T(MACH_REWRITER_TID),
-                                                uri(RESOLVER).maybe().asUri(), T(MACH_RESOLVER_TID),
-                                                uri(TYPER).maybe().asUri(), T(MACH_TYPER_TID)), Map.of(
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_COMPILER_TID, "the compiler contract of machine::T — a machine's lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=>] is the default compiler.")
+                                .isaPredicate(rec(
+                                        uri(PARSER).maybe().asUri(), T(MACH_PARSER_TID),
+                                        uri(REWRITER).maybe().asUri(), T(MACH_REWRITER_TID),
+                                        uri(RESOLVER).maybe().asUri(), T(MACH_RESOLVER_TID),
+                                        uri(TYPER).maybe().asUri(), T(MACH_TYPER_TID)), Map.of(
                                         uri(PARSER).maybe(), "the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default",
                                         uri(REWRITER).maybe(), "the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites",
                                         uri(RESOLVER).maybe(), "the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default",
                                         uri(TYPER).maybe(), "the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code /compiler/typer/check}, not a global registry"))
-                                        .constructor(arg -> new BasicCompiler(BasicCompiler.stages(arg.asRec().jvm()), MACH_COMPILER_TID, arg.vid()))
-                                        .example("compiler::[rewriter=>fixpoint_rewriter::[max=>3],resolver=>scoring_resolver::[=>]]   [-- wire the stages that matter; parser and typer default --]", "compiler::[parser=>mtron_parser::[=>]]   [-- name the read stage explicitly --]", "compiler::[=>]   [-- the default compiler: mtron parse, fixpoint, scoring, typer --]")
-                                        .create(),
+                                .constructor(arg -> new BasicCompiler(BasicCompiler.stages(arg.asRec().jvm()), MACH_COMPILER_TID, arg.vid()))
+                                .example("compiler::[rewriter=>fixpoint_rewriter::[max=>3],resolver=>scoring_resolver::[=>]]   [-- wire the stages that matter; parser and typer default --]", "compiler::[parser=>mtron_parser::[=>]]   [-- name the read stage explicitly --]", "compiler::[=>]   [-- the default compiler: mtron parse, fixpoint, scoring, typer --]")
+                                .create(),
                         // the parser family — structural contract, one concrete language (mtron itself)
                         MACH_PARSER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_PARSER_TID, "the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. Because the type system supports both object-oriented and functional designs and the language is Turing-complete, most languages can map onto mtron code::T.")
-                                        .create(),
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_PARSER_TID, "the parse contract of compiler::T — the first stage, the only one that runs before there is any code, and the seam where a language is hosted: any language can be parsed as long as it generates code::T. Because the type system supports both object-oriented and functional designs and the language is Turing-complete, most languages can map onto mtron code::T.")
+                                .create(),
                         MACH_MTRON_PARSER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_PARSER_TID)
-                                        .vid(MACH_MTRON_PARSER_TID, "at the parse stage of compiler::T, mtron_parser::T reads metatron's own language through the mtron serializer, so what it accepts is exactly what a console line, a source file and a test row accept — the one parser metatron ships, and the compiler's default")
-                                        .constructor(arg -> new mtronParser(arg.asRec().jvm(), MACH_MTRON_PARSER_TID, arg.vid()))
-                                        .example("mtron_parser::[=>]   [-- the default parse stage of compiler::T --]")
-                                        .create(),
+                                .tid(MACH_PARSER_TID)
+                                .vid(MACH_MTRON_PARSER_TID, "at the parse stage of compiler::T, mtron_parser::T reads metatron's own language through the mtron serializer, so what it accepts is exactly what a console line, a source file and a test row accept — the one parser metatron ships, and the compiler's default")
+                                .constructor(arg -> new mtronParser(arg.asRec().jvm(), MACH_MTRON_PARSER_TID, arg.vid()))
+                                .example("mtron_parser::[=>]   [-- the default parse stage of compiler::T --]")
+                                .create(),
                         // the rewriter family — structural contract, concrete fixpoint strategy
                         MACH_REWRITER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_REWRITER_TID, "the rewrite contract of compiler::T — a lowering from code::T to code::T that runs before any type is resolved, so it decides what the instruction chain is: rules see generic dom/rng, and a rule-driven collapse, a native pushdown, or a distributed reduce's gather point all enter the compiled form here.")
-                                        .create(),
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_REWRITER_TID, "the rewrite contract of compiler::T — a lowering from code::T to code::T that runs before any type is resolved, so it decides what the instruction chain is: rules see generic dom/rng, and a rule-driven collapse, a native pushdown, or a distributed reduce's gather point all enter the compiled form here.")
+                                .create(),
                         MACH_IDENTITY_REWRITER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_REWRITER_TID)
-                                        .vid(MACH_IDENTITY_REWRITER_TID, "at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged — for a compiler that wants no rewrites at all, since fixpoint_rewriter::T is the default")
-                                        .constructor(arg -> IdentityRewriter.single())
-                                        .example("identity_rewriter::[=>]   [-- the compiler's default rewrite stage --]")
-                                        .create(),
+                                .tid(MACH_REWRITER_TID)
+                                .vid(MACH_IDENTITY_REWRITER_TID, "at the rewrite stage of compiler::T, identity_rewriter::T is the no-op rewriter: it returns the code unchanged — for a compiler that wants no rewrites at all, since fixpoint_rewriter::T is the default")
+                                .constructor(arg -> IdentityRewriter.single())
+                                .example("identity_rewriter::[=>]   [-- the compiler's default rewrite stage --]")
+                                .create(),
                         MACH_FIXPOINT_REWRITER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_REWRITER_TID)
-                                        .vid(MACH_FIXPOINT_REWRITER_TID, "at the rewrite stage of compiler::T, fixpoint_rewriter::T applies every rewrite rule registered by every instset, in turn, over the whole code, and repeats the pass until the code hash is unchanged for max consecutive passes, so a rule re-runs on every pass and must be idempotent")
-                                        .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))), Map.of(uri(MAX).maybe(), "the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)"))
-                                        .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
-                                        .example("fixpoint_rewriter::[max=>3]   [-- accept the fixpoint after three stable passes --]")
-                                        .create(),
+                                .tid(MACH_REWRITER_TID)
+                                .vid(MACH_FIXPOINT_REWRITER_TID, "at the rewrite stage of compiler::T, fixpoint_rewriter::T applies every rewrite rule registered by every instset, in turn, over the whole code, and repeats the pass until the code hash is unchanged for max consecutive passes, so a rule re-runs on every pass and must be idempotent")
+                                .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))), Map.of(uri(MAX).maybe(), "the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)"))
+                                .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
+                                .example("fixpoint_rewriter::[max=>3]   [-- accept the fixpoint after three stable passes --]")
+                                .create(),
                         // the resolver family — structural contract, concrete scoring + firstfind strategies (empty config)
                         MACH_RESOLVER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_RESOLVER_TID, "the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler's widest-reaching stage: it threads each inst's range into the next inst's domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter's {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast's range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)")
-                                        .isaPredicate(rec(
-                                                uri(SELECTOR).maybe().asUri(), T(MACH_SELECTOR_TID),
-                                                uri(BINDER).maybe().asUri(), T(MACH_BINDER_TID)), Map.of(
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_RESOLVER_TID, "the resolution contract of compiler::T — the stage that turns a generic instruction chain into a typed one, and the compiler's widest-reaching stage: it threads each inst's range into the next inst's domain and, per inst, delegates to a selector (fetch and order the candidates) and a binder (make the chosen candidate concrete, or reject it), so which concrete inst a call becomes — and with it whether the inst is a filter, a gather/barrier, or an initial — is settled here, per element type. What it settles is what the processor then runs (a filter's {0,1} wing dropped for compile-time typing, an initial inst seeding the element type from its own argument, a cast's range rebound to the named type), and an inst it cannot resolve is left in place for runtime resolution — a semi-resolved code, not a failed one. Structural, not nominal: its two collaborators are rec fields, both optional and both defaulting, so a resolver is its walk plus whichever strategies it names. Its members are scoring_resolver::T (the default pair), firstfind_resolver::T (first match, no scoring) and identity_resolver::T (the no-op)")
+                                .isaPredicate(rec(
+                                        uri(SELECTOR).maybe().asUri(), T(MACH_SELECTOR_TID),
+                                        uri(BINDER).maybe().asUri(), T(MACH_BINDER_TID)), Map.of(
                                         uri(SELECTOR).maybe(), "the strategy that decides which candidates a call may resolve to, and in what order — absent, the walk uses specificity_selector::T (score by signature specificity, take the first the binder can bind)",
                                         uri(BINDER).maybe(), "the strategy each candidate is handed to — absent, the walk uses generic_binder::T (bind generics to the lhs, gate on the lhs domain, resolve the call's arguments)"))
-                                        .example("scoring_resolver::[selector=>firstfind_selector::[=>]]   [-- a resolver::T: the same walk, first-match selection --]", "scoring_resolver::[=>]   [-- a resolver::T: both strategies default --]")
-                                        .create(),
+                                .example("scoring_resolver::[selector=>firstfind_selector::[=>]]   [-- a resolver::T: the same walk, first-match selection --]", "scoring_resolver::[=>]   [-- a resolver::T: both strategies default --]")
+                                .create(),
                         MACH_IDENTITY_RESOLVER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_RESOLVER_TID)
-                                        .vid(MACH_IDENTITY_RESOLVER_TID, "at the resolution stage of compiler::T, identity_resolver::T is the no-op resolver: it threads no type and resolves no instruction — it returns the code unchanged — for a compiler whose resolve stage is done elsewhere")
-                                        .constructor(arg -> IdentityResolver.single())
-                                        .example("identity_resolver::[=>]   [-- a resolve stage that does nothing --]")
-                                        .create(),
+                                .tid(MACH_RESOLVER_TID)
+                                .vid(MACH_IDENTITY_RESOLVER_TID, "at the resolution stage of compiler::T, identity_resolver::T is the no-op resolver: it threads no type and resolves no instruction — it returns the code unchanged — for a compiler whose resolve stage is done elsewhere")
+                                .constructor(arg -> IdentityResolver.single())
+                                .example("identity_resolver::[=>]   [-- a resolve stage that does nothing --]")
+                                .create(),
                         MACH_SCORING_RESOLVER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_RESOLVER_TID)
-                                        .vid(MACH_SCORING_RESOLVER_TID, "at the resolution stage of compiler::T, scoring_resolver::T is the walk plus the default pair of collaborators: it threads each inst's range into the next inst's domain and, per inst, hands the call to its selector (specificity_selector::T by default) with its binder (generic_binder::T by default) — so which concrete inst a call becomes is settled here, per element type; wire a selector or binder entry to compose a different resolution")
-                                        .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
-                                        .example("scoring_resolver::[=>]   [-- the default resolution stage of compiler::T --]")
-                                        .create(),
+                                .tid(MACH_RESOLVER_TID)
+                                .vid(MACH_SCORING_RESOLVER_TID, "at the resolution stage of compiler::T, scoring_resolver::T is the walk plus the default pair of collaborators: it threads each inst's range into the next inst's domain and, per inst, hands the call to its selector (specificity_selector::T by default) with its binder (generic_binder::T by default) — so which concrete inst a call becomes is settled here, per element type; wire a selector or binder entry to compose a different resolution")
+                                .constructor(arg -> new ScoringResolver(arg.asRec().jvm(), MACH_SCORING_RESOLVER_TID, arg.vid()))
+                                .example("scoring_resolver::[=>]   [-- the default resolution stage of compiler::T --]")
+                                .create(),
                         MACH_FIRSTFIND_RESOLVER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_RESOLVER_TID)
-                                        .vid(MACH_FIRSTFIND_RESOLVER_TID, "at the resolution stage of compiler::T, firstfind_resolver::T is the same walk wired to firstfind_selector::T — a call resolves to the first viable candidate in read order, with no specificity scoring; the pre-scoring behavior, kept as the A/B counterpart of scoring_resolver::T")
-                                        .constructor(arg -> {
-                                            final Map<Obj, Obj> stages = mutableMap(uri(SELECTOR), FirstFindSelector.single(), uri(BINDER), GenericBinder.single());
-                                            stages.putAll(arg.asRec().jvm());
-                                            return new ScoringResolver(stages, MACH_FIRSTFIND_RESOLVER_TID, arg.vid());
-                                        })
-                                        .example("firstfind_resolver::[=>]   [-- first match wins, no scoring --]")
-                                        .create(),
+                                .tid(MACH_RESOLVER_TID)
+                                .vid(MACH_FIRSTFIND_RESOLVER_TID, "at the resolution stage of compiler::T, firstfind_resolver::T is the same walk wired to firstfind_selector::T — a call resolves to the first viable candidate in read order, with no specificity scoring; the pre-scoring behavior, kept as the A/B counterpart of scoring_resolver::T")
+                                .constructor(arg -> {
+                                    final Map<Obj, Obj> stages = mutableMap(uri(SELECTOR), FirstFindSelector.single(), uri(BINDER), GenericBinder.single());
+                                    stages.putAll(arg.asRec().jvm());
+                                    return new ScoringResolver(stages, MACH_FIRSTFIND_RESOLVER_TID, arg.vid());
+                                })
+                                .example("firstfind_resolver::[=>]   [-- first match wins, no scoring --]")
+                                .create(),
                         // the binder family — the resolver's "make this candidate concrete" strategy
                         MACH_BINDER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_BINDER_TID, "the binding contract of resolver::T — the collaborator that turns one selected candidate into the instruction a call becomes, or rejects it: it binds the candidate's generics to the lhs, gates it on the lhs domain, and resolves its arguments (compiling nested code args), returning null when the candidate cannot be made concrete; because a candidate that fails to bind must not be selectable, binding gates selection rather than following it, which is why a binder is a strategy inside the resolve stage and never a stage of its own. The candidate arrives already shaped with the call's dom/rng hints — that shaping is the selector's rule.")
-                                        .create(),
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_BINDER_TID, "the binding contract of resolver::T — the collaborator that turns one selected candidate into the instruction a call becomes, or rejects it: it binds the candidate's generics to the lhs, gates it on the lhs domain, and resolves its arguments (compiling nested code args), returning null when the candidate cannot be made concrete; because a candidate that fails to bind must not be selectable, binding gates selection rather than following it, which is why a binder is a strategy inside the resolve stage and never a stage of its own. The candidate arrives already shaped with the call's dom/rng hints — that shaping is the selector's rule.")
+                                .create(),
                         MACH_GENERIC_BINDER_TYPE = TypeBuilder.build()
-                                        .tid(MACH_BINDER_TID)
-                                        .vid(MACH_GENERIC_BINDER_TID, "at the resolution stage of compiler::T, generic_binder::T is the binding algorithm: it binds the candidate's generics to the lhs, gates on the lhs domain, resolves the call's arguments, seeds an initial inst's range from its own argument, and copies the user's query maps — returning null at any step that rejects the candidate; the call's dom/rng hints (including a cast's named type) are applied by the selector before the candidate reaches it")
-                                        .constructor(arg -> new GenericBinder(arg.asRec().jvm(), MACH_GENERIC_BINDER_TID, arg.vid()))
-                                        .example("generic_binder::[=>]   [-- the default binder::T --]")
-                                        .create(),
+                                .tid(MACH_BINDER_TID)
+                                .vid(MACH_GENERIC_BINDER_TID, "at the resolution stage of compiler::T, generic_binder::T is the binding algorithm: it binds the candidate's generics to the lhs, gates on the lhs domain, resolves the call's arguments, seeds an initial inst's range from its own argument, and copies the user's query maps — returning null at any step that rejects the candidate; the call's dom/rng hints (including a cast's named type) are applied by the selector before the candidate reaches it")
+                                .constructor(arg -> new GenericBinder(arg.asRec().jvm(), MACH_GENERIC_BINDER_TID, arg.vid()))
+                                .example("generic_binder::[=>]   [-- the default binder::T --]")
+                                .create(),
                         // the selector family — the resolver's "which candidate" strategy
                         MACH_SELECTOR_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_SELECTOR_TID, "the candidate contract of resolver::T — the collaborator that fetches the instructions a call may resolve to, orders them by its own rule, shapes each one with the call's dom/rng hints, and returns the first its binder can make concrete: the ordering rule is the whole strategy, and it is where resolution strategy varies — specificity_selector::T scores by signature specificity, firstfind_selector::T takes the first viable candidate in read order; a selector that cannot resolve an instruction returns null and leaves it for runtime resolution rather than failing the code")
-                                        .create(),
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_SELECTOR_TID, "the candidate contract of resolver::T — the collaborator that fetches the instructions a call may resolve to, orders them by its own rule, shapes each one with the call's dom/rng hints, and returns the first its binder can make concrete: the ordering rule is the whole strategy, and it is where resolution strategy varies — specificity_selector::T scores by signature specificity, firstfind_selector::T takes the first viable candidate in read order; a selector that cannot resolve an instruction returns null and leaves it for runtime resolution rather than failing the code")
+                                .create(),
                         MACH_SPECIFICITY_SELECTOR_TYPE = TypeBuilder.build()
-                                        .tid(MACH_SELECTOR_TID)
-                                        .vid(MACH_SPECIFICITY_SELECTOR_TID, "at the resolution stage of compiler::T, specificity_selector::T orders a call's candidates by how specific their signatures are and takes the first its binder can bind: a concrete domain, an exact domain base-path match, a non-base dom/rng, matching arguments, and the large bonus that makes an as() candidate whose range names the requested type win; the from/at and as() shortcuts live here, since they return a finished contract rather than a candidate and so bypass the binder. Two legacy hint forms are preserved here and named: a single candidate replaces the dom outright, while a scored field keeps the API's declared dom and takes the call's coefficient")
-                                        .constructor(arg -> new SpecificitySelector(arg.asRec().jvm(), MACH_SPECIFICITY_SELECTOR_TID, arg.vid()))
-                                        .example("specificity_selector::[=>]   [-- the default selector::T --]")
-                                        .create(),
+                                .tid(MACH_SELECTOR_TID)
+                                .vid(MACH_SPECIFICITY_SELECTOR_TID, "at the resolution stage of compiler::T, specificity_selector::T orders a call's candidates by how specific their signatures are and takes the first its binder can bind: a concrete domain, an exact domain base-path match, a non-base dom/rng, matching arguments, and the large bonus that makes an as() candidate whose range names the requested type win; the from/at and as() shortcuts live here, since they return a finished contract rather than a candidate and so bypass the binder. Two legacy hint forms are preserved here and named: a single candidate replaces the dom outright, while a scored field keeps the API's declared dom and takes the call's coefficient")
+                                .constructor(arg -> new SpecificitySelector(arg.asRec().jvm(), MACH_SPECIFICITY_SELECTOR_TID, arg.vid()))
+                                .example("specificity_selector::[=>]   [-- the default selector::T --]")
+                                .create(),
                         MACH_FIRSTFIND_SELECTOR_TYPE = TypeBuilder.build()
-                                        .tid(MACH_SELECTOR_TID)
-                                        .vid(MACH_FIRSTFIND_SELECTOR_TID, "at the resolution stage of compiler::T, firstfind_selector::T takes the first viable candidate in read order, with no specificity scoring, so selection is order-dependent — the pre-scoring strategy, kept as the A/B counterpart of specificity_selector::T")
-                                        .constructor(arg -> new FirstFindSelector(arg.asRec().jvm(), MACH_FIRSTFIND_SELECTOR_TID, arg.vid()))
-                                        .example("firstfind_selector::[=>]   [-- first match wins, no scoring --]")
-                                        .create(),
+                                .tid(MACH_SELECTOR_TID)
+                                .vid(MACH_FIRSTFIND_SELECTOR_TID, "at the resolution stage of compiler::T, firstfind_selector::T takes the first viable candidate in read order, with no specificity scoring, so selection is order-dependent — the pre-scoring strategy, kept as the A/B counterpart of specificity_selector::T")
+                                .constructor(arg -> new FirstFindSelector(arg.asRec().jvm(), MACH_FIRSTFIND_SELECTOR_TID, arg.vid()))
+                                .example("firstfind_selector::[=>]   [-- first match wins, no scoring --]")
+                                .create(),
                         // the typer family — structural contract, runtime type assertions (identity for now)
                         MACH_TYPER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
@@ -435,8 +453,8 @@ public class machInstSet extends AbstractInstSet {
                         // executable without a socket, and what keeps Helper.dial free of scheme branches:
                         // loop:'s default dialer is this type, resolved through the one dial path.
                         ID_CLIENT_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(ID_CLIENT_TID, """
+                                .tid(REC_TID)
+                                .vid(ID_CLIENT_TID, """
                                         the identity client — the identity element of the protocol-client family:
                                         dialing loop://<name> constructs one, and its eval override runs the shipped code
                                         in the receiver's perspective (Machine.Helper.evalAt at the root), so the caller is
@@ -444,44 +462,44 @@ public class machInstSet extends AbstractInstSet {
                                         executable form of the self-similarity contract: a read through a loop peer equals
                                         the local read.
                                         """)
-                                        .isaPredicate(rec(
-                                                uri(HOST).maybe().asUri(), URI_TYPE,
-                                                uri(INST).maybe().asUri(), REC_TYPE,
-                                                // optional here, installed by the constructor (mdns_discovery's rule)
-                                                uri(STATUS).maybe().asUri(), BOOL_TYPE,
-                                                uri(CLOSE).maybe().asUri(), INST_TYPE), Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
+                                .isaPredicate(rec(
+                                        uri(HOST).maybe().asUri(), URI_TYPE,
+                                        uri(INST).maybe().asUri(), REC_TYPE,
+                                        // optional here, installed by the constructor (mdns_discovery's rule)
+                                        uri(STATUS).maybe().asUri(), BOOL_TYPE,
+                                        uri(CLOSE).maybe().asUri(), INST_TYPE), Map.of(uri(HOST), "the dialed uri (identity: the local machine answers)",
                                         uri(INST), "the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from/to answer as the local read/write",
                                         uri(STATUS), "true: the far side is this machine, live as long as the client exists",
                                         uri(CLOSE), "nothing to hang up"))
-                                        .constructor(arg -> {
-                                            // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
-                                            // side" being this machine, each the native with the identity body:
-                                            //   code.eval(<uri>) runs the lhs code on the far side, which is HERE;
-                                            //   from(<uri>) is the local read of the localized address;
-                                            //   obj.to(<uri>) evaluates start(obj).to(</path>) here, so an unquoted
-                                            //   program shipped to a loop peer runs, exactly as on a wire peer.
-                                            // EVAL IS THE ONLY ONE THAT CAN MOVE THE CALLER, because it is the only one
-                                            // that runs arbitrary code (the tail may contain `move`). It answers where
-                                            // the ws client calls ship(): the program is run in the RECEIVER's
-                                            // perspective (Machine.Helper.evalAt at the root) and the caller is left where
-                                            // it stood -- the frame of reference is the far side's, and it goes back.
-                                            final Obj client = rec(
-                                                    uri(HOST), arg.asRec().at(uri(HOST)),
-                                                    uri(INST), rec(
-                                                            uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID,
-                                                                    (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()))),
-                                                            uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
-                                                            uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
-                                                    // the far side is this machine, so it is live as long as it exists
-                                                    uri(STATUS), Network.Helper.statusOf(() -> true),
-                                                    uri(CLOSE), instLambda((lhs, inst) -> noobj()));
-                                            // indexing is a BACKGROUND behavior upon successful construction:
-                                            // the client exists as an obj either way, the index merely observes
-                                            Network.Helper.index(client);
-                                            return client;
-                                        })
-                                        .example("id_client::[host=><loop://self>] [-- the identity peer: reads and writes answer locally --]")
-                                        .create(),
+                                .constructor(arg -> {
+                                    // THE IDENTITY MINI-INSTSET — the ws client's instructions with "the far
+                                    // side" being this machine, each the native with the identity body:
+                                    //   code.eval(<uri>) runs the lhs code on the far side, which is HERE;
+                                    //   from(<uri>) is the local read of the localized address;
+                                    //   obj.to(<uri>) evaluates start(obj).to(</path>) here, so an unquoted
+                                    //   program shipped to a loop peer runs, exactly as on a wire peer.
+                                    // EVAL IS THE ONLY ONE THAT CAN MOVE THE CALLER, because it is the only one
+                                    // that runs arbitrary code (the tail may contain `move`). It answers where
+                                    // the ws client calls ship(): the program is run in the RECEIVER's
+                                    // perspective (Machine.Helper.evalAt at the root) and the caller is left where
+                                    // it stood -- the frame of reference is the far side's, and it goes back.
+                                    final Obj client = rec(
+                                            uri(HOST), arg.asRec().at(uri(HOST)),
+                                            uri(INST), rec(
+                                                    uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID,
+                                                            (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()))),
+                                                    uri(FROM_INST_TID), Network.Helper.override(FROM_INST_TID, (lhs, inst) -> Machine.read(inst.arg(0).uriValue().localize())),
+                                                    uri(TO_INST_TID), Network.Helper.override(TO_INST_TID, (lhs, inst) -> start_(lhs).to_(inst.arg(0).uriValue().localize().toUri()).tryToInst().apply(noobj()))),
+                                            // the far side is this machine, so it is live as long as it exists
+                                            uri(STATUS), Network.Helper.statusOf(() -> true),
+                                            uri(CLOSE), instLambda((lhs, inst) -> noobj()));
+                                    // indexing is a BACKGROUND behavior upon successful construction:
+                                    // the client exists as an obj either way, the index merely observes
+                                    Network.Helper.index(client);
+                                    return client;
+                                })
+                                .example("id_client::[host=><loop://self>] [-- the identity peer: reads and writes answer locally --]")
+                                .create(),
                         // the URI refinements the network types stand on -- a name for a service, a service, a key
                         AUTHORITY_TYPE = TypeBuilder.build()
                                 .tid(URI_TID)
@@ -509,104 +527,104 @@ public class machInstSet extends AbstractInstSet {
                                 }).create(),
                         // network — a machine's OWN reachable peers: never inherited, never shared with children
                         PEER_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(PEER_TID, """
+                                .tid(REC_TID)
+                                .vid(PEER_TID, """
                                         one metatron machine as the network records it — the value of a network peer
                                         connection. Absent `host` and `handler` is not a broken peer: it is a peer
                                         reference that crossed a wire, known here and not reachable from here.
                                         """)
-                                        // ONE TYPE, TWO HONEST STATES — and the difference is which fields are
-                                        // filled, never which type it is. An authority alone is a peer we know
-                                        // of but cannot reach from here, which is what a peer reference looks
-                                        // like after it has crossed a wire; an authority with a client is a
-                                        // peer the current machine talks to — with the instructions that client
-                                        // declares (its `inst`), never through a field of the peer's own.
-                                        .isaPredicate(rec(
-                                                // THE ORIGIN, and the one field a peer cannot do without: a
-                                                // roster lookup matches on this same service uri. The MAP KEY is
-                                                // the dial's path encoding (`ws/localhost/8555/mtron`), never this
-                                                // field -- a peer is one SURFACE, its origin is the service.
-                                                uri(ORIGIN), ORIGIN_TYPE,
-                                                // where to dial it from here, route included -- a place to reach,
-                                                // not an authority: `ws://host:port/mtron` carries a path. Absent
-                                                // for a peer reference that crossed a wire: known, not reachable.
-                                                uri(HOST).maybe().asUri(), URI_TYPE,
-                                                // the protocol CLIENT the dial constructed (a ws_client::T or kin,
-                                                // typed ALL because this instruction set sits below /m/web). It IS the
-                                                // connection: its `inst` is what the peer is talked to with, its
-                                                // `status` whether it is live, and drop hangs it up. absent only for
-                                                // a peer reference that crossed a wire.
-                                                uri(CLIENT).maybe(), T(ALL)), Map.of(uri(ORIGIN), "the service this peer reaches, scheme://host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without",
+                                // ONE TYPE, TWO HONEST STATES — and the difference is which fields are
+                                // filled, never which type it is. An authority alone is a peer we know
+                                // of but cannot reach from here, which is what a peer reference looks
+                                // like after it has crossed a wire; an authority with a client is a
+                                // peer the current machine talks to — with the instructions that client
+                                // declares (its `inst`), never through a field of the peer's own.
+                                .isaPredicate(rec(
+                                        // THE ORIGIN, and the one field a peer cannot do without: a
+                                        // roster lookup matches on this same service uri. The MAP KEY is
+                                        // the dial's path encoding (`ws/localhost/8555/mtron`), never this
+                                        // field -- a peer is one SURFACE, its origin is the service.
+                                        uri(ORIGIN), ORIGIN_TYPE,
+                                        // where to dial it from here, route included -- a place to reach,
+                                        // not an authority: `ws://host:port/mtron` carries a path. Absent
+                                        // for a peer reference that crossed a wire: known, not reachable.
+                                        uri(HOST).maybe().asUri(), URI_TYPE,
+                                        // the protocol CLIENT the dial constructed (a ws_client::T or kin,
+                                        // typed ALL because this instruction set sits below /m/web). It IS the
+                                        // connection: its `inst` is what the peer is talked to with, its
+                                        // `status` whether it is live, and drop hangs it up. absent only for
+                                        // a peer reference that crossed a wire.
+                                        uri(CLIENT).maybe(), T(ALL)), Map.of(uri(ORIGIN), "the service this peer reaches, scheme://host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without",
                                         uri(HOST), "where to dial it from here, route included: ws://host:port/mtron",
                                         uri(CLIENT), "the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up"))
-                                        .example("peer::[origin=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>] [-- a peer the current machine can ship to --]", "peer::[origin=><ws://192.168.1.42:8555>] [-- known, and not reachable from here --]")
-                                        .create(),
+                                .example("peer::[origin=><ws://192.168.1.42:8555>,host=><ws://192.168.1.42:8555/mtron>] [-- a peer the current machine can ship to --]", "peer::[origin=><ws://192.168.1.42:8555>] [-- known, and not reachable from here --]")
+                                .create(),
                         // network — a machine's PRESENCE: the sockets it answers on. A port binds once per physical
                         // machine, so a socket is opened by one machine and inherited by every machine below it; each
                         // machine serving through it keeps its OWN routing table on it, in its own level.
                         LISTENER_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(LISTENER_TID, """
+                                .tid(REC_TID)
+                                .vid(LISTENER_TID, """
                                         a socket a machine answers on, and that machine's routes on it. The machine that opens
                                         a socket owns it, and its pop releases the port. Every machine below it inherits the
                                         socket and serves through it by keeping its own routing table here, which its own pop
                                         takes away. A connection is answered by the most specific route across every machine
                                         sharing the socket, and the peer it makes joins that machine's network.
                                         """)
-                                        .isaPredicate(rec(
-                                                // THE KEY: the socket's service uri, scheme://host:port
-                                                uri(ORIGIN), ORIGIN_TYPE,
-                                                // THIS machine's routes on the socket, in the map idiom: path => target.
-                                                // Absent rather than empty while the machine serves nothing through it.
-                                                uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
-                                                // the protocol SERVER holding the socket (a ws_server::T or kin, typed
-                                                // ALL because this instruction set sits below /m/web) -- the opener's
-                                                // entry and every sharer's hold the same one
-                                                uri(SERVER).maybe(), T(ALL)), Map.of(uri(ORIGIN), "the socket's service uri as spelled, scheme://host:port — the map key is its path encoding (`ws/localhost/8555`): one socket per authority on a physical machine",
+                                .isaPredicate(rec(
+                                        // THE KEY: the socket's service uri, scheme://host:port
+                                        uri(ORIGIN), ORIGIN_TYPE,
+                                        // THIS machine's routes on the socket, in the map idiom: path => target.
+                                        // Absent rather than empty while the machine serves nothing through it.
+                                        uri(ROUTE).maybe().asUri(), rec(URI_TYPE, T(ALL)),
+                                        // the protocol SERVER holding the socket (a ws_server::T or kin, typed
+                                        // ALL because this instruction set sits below /m/web) -- the opener's
+                                        // entry and every sharer's hold the same one
+                                        uri(SERVER).maybe(), T(ALL)), Map.of(uri(ORIGIN), "the socket's service uri as spelled, scheme://host:port — the map key is its path encoding (`ws/localhost/8555`): one socket per authority on a physical machine",
                                         uri(ROUTE), "this machine's routing table on the socket, <path> => target; a connection is answered by the most specific route across every machine sharing the socket",
                                         uri(SERVER), "the protocol server holding the socket — held so the owner's pop can release the port"))
-                                        .example("listener::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- a machine's routes on its socket --]")
-                                        .create(),
+                                .example("listener::[origin=><ws://0.0.0.0:8555>,route=>[/mtron=>mtron_ws,/mcp=>mcp_mtron]] [-- a machine's routes on its socket --]")
+                                .create(),
                         NETWORK_SUPERVISOR_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(NETWORK_SUPERVISOR_TID, """
+                                .tid(REC_TID)
+                                .vid(NETWORK_SUPERVISOR_TID, """
                                         the per-level reconciler that keeps a network's index true: it supervises the
                                         machine's dialed peers (redials a down link on capped backoff, drops a hung-up one,
                                         reports a recovered one online). One per level, minted on the first link it indexes
                                         and closed with the level — construction is connection, destruction is disconnect.
                                         """)
-                                        // one observable field: the liveness marker, updated on close. the
-                                        // supervised network and the ticking thread are the engine, not rec state.
-                                        .isaPredicate(rec(
-                                                uri(STATUS), union_(uri("supervising"), uri("closed")).tryToInst()), Map.of(uri(STATUS), "supervising / closed — the liveness marker, updated on close"))
-                                        // construction is connection, destruction is disconnect: minting starts the
-                                        // supervisor (and files it in ~/network/supervisor); writing noobj there
-                                        // closes it.
-                                        .constructor(arg -> {
-                                            final Network network = Machine.current().network();
-                                            NetworkSupervisor.watch(network);
-                                            return network.at(uri(SUPERVISOR));
-                                        })
-                                        .example("network_supervisor::[=>] [-- start supervising the current machine's network --]")
-                                        .create(),
+                                // one observable field: the liveness marker, updated on close. the
+                                // supervised network and the ticking thread are the engine, not rec state.
+                                .isaPredicate(rec(
+                                        uri(STATUS), union_(uri("supervising"), uri("closed")).tryToInst()), Map.of(uri(STATUS), "supervising / closed — the liveness marker, updated on close"))
+                                // construction is connection, destruction is disconnect: minting starts the
+                                // supervisor (and files it in ~/network/supervisor); writing noobj there
+                                // closes it.
+                                .constructor(arg -> {
+                                    final Network network = Machine.current().network();
+                                    NetworkSupervisor.watch(network);
+                                    return network.at(uri(SUPERVISOR));
+                                })
+                                .example("network_supervisor::[=>] [-- start supervising the current machine's network --]")
+                                .create(),
                         MACH_DISCOVERY_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(MACH_DISCOVERY_TID, """
+                                .tid(REC_TID)
+                                .vid(MACH_DISCOVERY_TID, """
                                         a discovery protocol — a source of machine endpoints for the one roster/machine table. Existence is its interface: construction starts it, deletion stops it, and it publishes no verbs. It requires exactly one field, status, because liveness is the only thing a consumer cannot work out for itself. Where an endpoint was learned is irrelevant: every protocol writes into the shared table rather than exposing a listing of its own, so peers are generated from one consolidated index. Distinct from /m/web/discovery, which is the protocol surface it discovers over""")
-                                        // ONE REQUIREMENT, AND EXACTLY ONE. A protocol's product is ROWS in
-                                        // roster/machine rather than fields on itself, so nothing else need be
-                                        // readable off the protocol -- but liveness must be, or a dead protocol
-                                        // is indistinguishable from a quiet network and
-                                        // `discover/+.?[status=>false]` has nothing to ask.
-                                        //
-                                        // It is also what makes this type decide anything: an implementation's
-                                        // tid descends from its own protocol surface (/m/web/mdns), never from
-                                        // here, so a purely nominal discovery::T would admit nothing at all.
-                                        .isaPredicate(rec(uri(STATUS), BOOL_TYPE), Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself"))
-                                        .create(),
+                                // ONE REQUIREMENT, AND EXACTLY ONE. A protocol's product is ROWS in
+                                // roster/machine rather than fields on itself, so nothing else need be
+                                // readable off the protocol -- but liveness must be, or a dead protocol
+                                // is indistinguishable from a quiet network and
+                                // `discover/+.?[status=>false]` has nothing to ask.
+                                //
+                                // It is also what makes this type decide anything: an implementation's
+                                // tid descends from its own protocol surface (/m/web/mdns), never from
+                                // here, so a purely nominal discovery::T would admit nothing at all.
+                                .isaPredicate(rec(uri(STATUS), BOOL_TYPE), Map.of(uri(STATUS), "the one field every discovery protocol must answer: true while it is live and finding machines. Derived on read, never stored — a responder whose interface went away does not announce itself"))
+                                .create(),
                         MACH_NETWORK_TYPE = TypeBuilder.build()
-                                        .tid(MACH_MACHINE_COMPONENT_TID)
-                                        .vid(MACH_NETWORK_TID, """
+                                .tid(MACH_MACHINE_COMPONENT_TID)
+                                .vid(MACH_NETWORK_TID, """
                                         a machine's network: the endpoints the system knows about, the peers the
                                         current machine has dialed, and the handlers that discover them. membership is
                                         declared, never emergent — a uri must not be able to make itself a peer merely
@@ -615,81 +633,81 @@ public class machInstSet extends AbstractInstSet {
                                         from its listeners — the sockets it opened and those it inherits, up to the root\from the host every listening space
                                         declares.
                                         """)
-                                        // EVERY COMPONENT PREDICATE FOLLOWS ONE CONVENTION — all keys OPTIONAL
-                                        // (see processor::T and compiler::T beside it) — so a slot's deferred
-                                        // default and a partially-filled level both pass: the predicate
-                                        // constrains what IS present and nothing more. A required-key or
-                                        // map-only predicate is a different test, and on a slot that still holds
-                                        // its default it fails machine construction outright. Measured.
-                                        //
-                                        // THREE FIELDS, THREE QUESTIONS, deliberately not one map: `roster` is
-                                        // what the system KNOWS (connectionless — a name and where it is, at
-                                        // the ROOT so every machine reads the one listing), `peer` is what the
-                                        // CURRENT MACHINE has DIALED (at ~, so a child's reach is its own and a
-                                        // pop retracts exactly what that machine dialed), and `source` is HOW
-                                        // the roster is produced. Knowledge is inherited and reach is not, which
-                                        // is why the two are addressed at different scopes rather than told apart
-                                        // by the Java-side set (PeerSpawn.DECLARED) this replaces.
-                                        //
-                                        // A roster is a map, which a fixed-key rec cannot describe, so the map
-                                        // idiom is the positional (keyType, valueType) pair — the same one a
-                                        // space's `route` uses. Both fields are reached through Network: the
-                                        // roster at /network/roster (an address, so an entry may be written one
-                                        // at a time), the connections at the machine's own ~/network/peer.
-                                        //
-                                        // `source` names an implementation and stops there. Values are handler
-                                        // tids AS URIS (`</m/web/mdns>`), never web types: this instruction set
-                                        // sits below /m/web and does not import it, which is also why peer::T's
-                                        // `handler` is a uri. The key is a free mechanism label rather than the
-                                        // protocol's own tid, because discovering several segments independently
-                                        // is a real deployment — this host carries a physical LAN and a dozen
-                                        // docker bridges — so two mDNS sources with different interfaces and
-                                        // different trust must be able to sit side by side.
-                                        //
-                                        // CONFIGURATION IS NOT CARRIED HERE, because it is already carried
-                                        // elsewhere: a handler type's predicate supplies its defaults and boot
-                                        // args supply the deployment's values, exactly as every boot profile
-                                        // binds a `host` and lets `.else()` fill the rest. If a source ever does
-                                        // need an instance configured inline, take the route table's shape (a
-                                        // uri, a type reference, or an instruction) rather than widening this
-                                        // value to a bare rec — which reads stricter than ALL_TYPE while
-                                        // admitting any rec at all.
-                                        .isaPredicate(rec(
-                                                // the component is its own address space: the branch it answers
-                                                // for, <vid>/network/# once its machine mounts it (~/network/# until)
-                                                uri(PATTERN).maybe().asUri(), URI_TYPE,
-                                                uri(HOST).maybe().asUri(), URI_TYPE,
-                                                uri(ROSTER).maybe().asUri(), rec(
-                                                        uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
-                                                        // THE ADDRESSES PER HOST — knowledge, never reach: discovery
-                                                        // and a declaration both write where the machine answers
-                                                        // (scheme://host:port, a route where the dial needs one), and
-                                                        // reaching it is dialing one of them -- the client the dial
-                                                        // constructs brings its own instructions (its `inst`).
-                                                        uri(MACHINE).maybe(), rec(URI_TYPE, T(URI_TID.some()))),
-                                                uri(PEER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(PEER_TID)),
-                                                // PRESENCE, the third question: the sockets THIS machine serves
-                                                // through, at ~ like peer -- its own and the inherited ones it keeps
-                                                // routes on, so a pop takes exactly this machine's routes
-                                                uri(LISTENER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(LISTENER_TID)),
-                                                uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
-                                                // THE FOURTH QUESTION, beside known/reached/served: what you CALL a
-                                                // peer. <label> => <full origin> -- a name is denotation, so this is
-                                                // the one field of the four whose key is a LABEL rather than an
-                                                // address, and it is read at the root for exactly that reason.
-                                                uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE).maybe(),
-                                                // the AUTO STATUS INST BasicNetwork installs at construction --
-                                                // a method-shaped field, not a map: the component rec is
-                                                // re-typechecked on every peer write, so this slot must say what
-                                                // the component actually stores.
-                                                uri(STATUS).maybe().asUri(), INST_TYPE), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
+                                // EVERY COMPONENT PREDICATE FOLLOWS ONE CONVENTION — all keys OPTIONAL
+                                // (see processor::T and compiler::T beside it) — so a slot's deferred
+                                // default and a partially-filled level both pass: the predicate
+                                // constrains what IS present and nothing more. A required-key or
+                                // map-only predicate is a different test, and on a slot that still holds
+                                // its default it fails machine construction outright. Measured.
+                                //
+                                // THREE FIELDS, THREE QUESTIONS, deliberately not one map: `roster` is
+                                // what the system KNOWS (connectionless — a name and where it is, at
+                                // the ROOT so every machine reads the one listing), `peer` is what the
+                                // CURRENT MACHINE has DIALED (at ~, so a child's reach is its own and a
+                                // pop retracts exactly what that machine dialed), and `source` is HOW
+                                // the roster is produced. Knowledge is inherited and reach is not, which
+                                // is why the two are addressed at different scopes rather than told apart
+                                // by the Java-side set (PeerSpawn.DECLARED) this replaces.
+                                //
+                                // A roster is a map, which a fixed-key rec cannot describe, so the map
+                                // idiom is the positional (keyType, valueType) pair — the same one a
+                                // space's `route` uses. Both fields are reached through Network: the
+                                // roster at /network/roster (an address, so an entry may be written one
+                                // at a time), the connections at the machine's own ~/network/peer.
+                                //
+                                // `source` names an implementation and stops there. Values are handler
+                                // tids AS URIS (`</m/web/mdns>`), never web types: this instruction set
+                                // sits below /m/web and does not import it, which is also why peer::T's
+                                // `handler` is a uri. The key is a free mechanism label rather than the
+                                // protocol's own tid, because discovering several segments independently
+                                // is a real deployment — this host carries a physical LAN and a dozen
+                                // docker bridges — so two mDNS sources with different interfaces and
+                                // different trust must be able to sit side by side.
+                                //
+                                // CONFIGURATION IS NOT CARRIED HERE, because it is already carried
+                                // elsewhere: a handler type's predicate supplies its defaults and boot
+                                // args supply the deployment's values, exactly as every boot profile
+                                // binds a `host` and lets `.else()` fill the rest. If a source ever does
+                                // need an instance configured inline, take the route table's shape (a
+                                // uri, a type reference, or an instruction) rather than widening this
+                                // value to a bare rec — which reads stricter than ALL_TYPE while
+                                // admitting any rec at all.
+                                .isaPredicate(rec(
+                                        // the component is its own address space: the branch it answers
+                                        // for, <vid>/network/# once its machine mounts it (~/network/# until)
+                                        uri(PATTERN).maybe().asUri(), URI_TYPE,
+                                        uri(HOST).maybe().asUri(), URI_TYPE,
+                                        uri(ROSTER).maybe().asUri(), rec(
+                                                uri(DISCOVER).maybe().asUri(), T(MACH_DISCOVERY_TID.maybeSome()),
+                                                // THE ADDRESSES PER HOST — knowledge, never reach: discovery
+                                                // and a declaration both write where the machine answers
+                                                // (scheme://host:port, a route where the dial needs one), and
+                                                // reaching it is dialing one of them -- the client the dial
+                                                // constructs brings its own instructions (its `inst`).
+                                                uri(MACHINE).maybe(), rec(URI_TYPE, T(URI_TID.some()))),
+                                        uri(PEER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(PEER_TID)),
+                                        // PRESENCE, the third question: the sockets THIS machine serves
+                                        // through, at ~ like peer -- its own and the inherited ones it keeps
+                                        // routes on, so a pop takes exactly this machine's routes
+                                        uri(LISTENER).maybe().asUri(), rec(PATH_ENCODING_TYPE, T(LISTENER_TID)),
+                                        uri(SUPERVISOR).maybe().asUri(), T(NETWORK_SUPERVISOR_TID),
+                                        // THE FOURTH QUESTION, beside known/reached/served: what you CALL a
+                                        // peer. <label> => <full origin> -- a name is denotation, so this is
+                                        // the one field of the four whose key is a LABEL rather than an
+                                        // address, and it is read at the root for exactly that reason.
+                                        uri(PREFIX).maybe().asUri(), rec(URI_TYPE, URI_TYPE).maybe(),
+                                        // the AUTO STATUS INST BasicNetwork installs at construction --
+                                        // a method-shaped field, not a map: the component rec is
+                                        // re-typechecked on every peer write, so this slot must say what
+                                        // the component actually stores.
+                                        uri(STATUS).maybe().asUri(), INST_TYPE), Map.of(uri(PATTERN).maybe().asUri(), "the branch this network answers as a space: <vid>/network/#, every field at its own address and every member at its key's path",
                                         uri(ROSTER).maybe(), "known machines, connectionless: <host> => uri{+}, every address the machine answers at (scheme://host:port); knowledge, not reach — a machine is reached by dialing one of them",
                                         uri(PEER).maybe(), "machine's own connections, one per surface: <dial as a path> => peer::T (ws/localhost/8555/mtron), each addressable at ~/network/peer/<key> and hung up by writing noobj there",
                                         uri(LISTENER).maybe(), "the sockets this machine serves through, one per authority: <authority as a path> => listener::T (ws/localhost/8555) carrying this machine's own routes — a socket it opened, or one inherited from above",
                                         uri(STATUS).maybe(), "the health method — an auto inst closing over this network, one peer::T report per declared peer"))
-                                        .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
-                                        .example("network::[roster=>[b=><ws://192.168.1.42:8555>]] [-- a network that knows a peer before dialing it --]", "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]")
-                                        .create(),
+                                .constructor(arg -> new BasicNetwork(arg.asRec().jvm()))
+                                .example("network::[roster=>[b=><ws://192.168.1.42:8555>]] [-- a network that knows a peer before dialing it --]", "network::[peer=>[<ws/localhost/39111/worker>=>[origin=><ws://localhost:39111>]]] [-- a machine whose reach is the one node it holds --]")
+                                .create(),
                         MACH_MACHINE_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
                                 .vid(MACH_MACHINE_TID, """
@@ -716,21 +734,21 @@ public class machInstSet extends AbstractInstSet {
                                 .create(),
                         /// /////////////////////
                         THREAD_EXECUTOR_TYPE = TypeBuilder.build()
-                                        .tid(REC_TID)
-                                        .vid(THREAD_EXECUTOR_TID, "the gateway interface for all threads in metatron")
-                                        .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
+                                .tid(REC_TID)
+                                .vid(THREAD_EXECUTOR_TID, "the gateway interface for all threads in metatron")
+                                .isaPredicate(rec(uri(RUN), lst(), uri(STOP), lst())).create(),
                         MACH_CORE_THREAD_TYPE = TypeBuilder.build()
-                                        .tid(MACH_THREAD_TID)
-                                        .vid(MACH_CORE_THREAD_TID, "run a concurrent core thread")
-                                        .constructor(cthread -> new CoreThread(cthread.jvm(), MACH_CORE_THREAD_TID, cthread.vid()))
-                                        .example("core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@~/thread/ping")
-                                        .create(),
+                                .tid(MACH_THREAD_TID)
+                                .vid(MACH_CORE_THREAD_TID, "run a concurrent core thread")
+                                .constructor(cthread -> new CoreThread(cthread.jvm(), MACH_CORE_THREAD_TID, cthread.vid()))
+                                .example("core::[code=>ping(<phaseshift.studio:80>),loop=>second::1.0]@~/thread/ping")
+                                .create(),
                         MACH_VIRTUAL_THREAD_TYPE = TypeBuilder.build()
-                                        .tid(MACH_THREAD_TID)
-                                        .vid(MACH_VIRTUAL_THREAD_TID, "run a concurrent virtual thread")
-                                        .constructor(vthread -> new VirtualThread(vthread.jvm(), MACH_VIRTUAL_THREAD_TID, vthread.vid()))
-                                        .example("virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")
-                                        .create()),
+                                .tid(MACH_THREAD_TID)
+                                .vid(MACH_VIRTUAL_THREAD_TID, "run a concurrent virtual thread")
+                                .constructor(vthread -> new VirtualThread(vthread.jvm(), MACH_VIRTUAL_THREAD_TID, vthread.vid()))
+                                .example("virtual::[code=>ping(<phaseshift.studio:80>),loop=>second::1.5]@~/thread/ping")
+                                .create()),
                 uri(INST), lst(Stream.concat(Stream.empty(), Stream.of(
                        /* instC(THREAD_INST_TID.dom(ALL.maybe()).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("~/thread");

@@ -88,6 +88,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         int selectedRow;
         int selectedCol;
         int selectedArg;         // -1 = column mode; >= 0 = the arg under the inline selector
+        final List<Integer> argPath = new ArrayList<>(); // descent path within the selected arg (empty = arg level)
         int windowedRow;         // the row whose args cell currently holds the inline selector (-1 = none)
         final List<String> savedScreen; // What was underneath this level
         final String pointer;      // The pointer character with color (e.g., "{{r}}>")
@@ -225,6 +226,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             case DOWN_ROW:
                 current.selectedRow = Math.min(current.selectedRow + 1, current.dataRowCount() - 1);
                 current.selectedArg = -1;   // a row change exits the inline arg selector
+                current.argPath.clear();
                 break;
 
             case UP_ROW:
@@ -233,6 +235,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 } else {
                     current.selectedRow = Math.max(current.selectedRow - 1, 0);
                     current.selectedArg = -1;
+                    current.argPath.clear();
                 }
                 break;
 
@@ -267,34 +270,18 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
     /**
      * Move one column left ({@code dir = -1}) or right ({@code dir = +1}). The args
-     * column is a linear sub-cursor: {@code rng → divider → arg0 → … → arg n-1 → f}.
-     * The divider ({@code selectedArg == -1}) is the args-Poly-as-a-whole; entering the
-     * column from the left lands on it, entering from the right lands on the last arg.
+     * column is an in-order cursor over the args tree: {@code rng → divider → arg0 →
+     * elem0 → … → arg n-1 → f}. The divider ({@code selectedArg == -1}) is the args
+     * Poly as a whole; RIGHT descends into a non-empty poly's first element, LEFT
+     * ascends back out. Entering from the left lands on the divider, from the right
+     * on the last arg.
      */
     private void moveColumn(final ExplainLevel current, final int dir) {
         final int lastCol = current.table.rows().get(0).size() - 1;
         if (current.selectedCol == ARGS_COL) {
-            final int n = argCount(current, current.selectedRow);
-            if (dir > 0) {
-                if (n == 0) {
-                    current.selectedCol = Math.min(current.selectedCol + 1, lastCol);
-                } else if (current.selectedArg < n - 1) {
-                    current.selectedArg++;   // divider(-1)→0, 0→1, …
-                } else {
-                    current.selectedArg = -1;
-                    current.selectedCol = Math.min(current.selectedCol + 1, lastCol);   // arg n-1 → f
-                }
-            } else {
-                if (n == 0) {
-                    current.selectedCol = Math.max(current.selectedCol - 1, 0);
-                } else if (current.selectedArg > 0) {
-                    current.selectedArg--;   // i → i-1
-                } else if (current.selectedArg == 0) {
-                    current.selectedArg = -1;                                             // arg 0 → divider
-                } else {
-                    current.selectedCol = Math.max(current.selectedCol - 1, 0);           // divider → rng
-                }
-            }
+            final Poly<?, ?> args = getMetadataArgs(current, current.selectedRow);
+            if (dir > 0) moveArgNext(current, args, lastCol);
+            else moveArgPrev(current, args);
             return;
         }
         current.selectedCol = dir > 0
@@ -302,8 +289,56 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 : Math.max(current.selectedCol - 1, 0);
         if (current.selectedCol == ARGS_COL) {
             final int n = argCount(current, current.selectedRow);
-            current.selectedArg = dir > 0 ? -1 : (n >= 1 ? n - 1 : -1);   // left entry → divider, right entry → last arg
+            current.selectedArg = dir > 0 ? -1 : (n >= 1 ? n - 1 : -1);
+            current.argPath.clear();
         }
+    }
+
+    private void moveArgNext(final ExplainLevel current, final Poly<?, ?> args, final int lastCol) {
+        final int n = args == null ? 0 : (int) args.count();
+        if (current.selectedArg < 0) {
+            if (n == 0) current.selectedCol = Math.min(current.selectedCol + 1, lastCol);
+            else { current.selectedArg = 0; current.argPath.clear(); }
+            return;
+        }
+        final Obj node = atPath(args, current.selectedArg, current.argPath);
+        if (node.isPoly() && !node.<Poly<?, ?>>as().isEmpty()) {
+            current.argPath.add(0);   // descend into the first element
+            return;
+        }
+        if (nextSibling(current, args)) return;
+        current.selectedArg = -1;      // walked off the args → f
+        current.argPath.clear();
+        current.selectedCol = Math.min(current.selectedCol + 1, lastCol);
+    }
+
+    private boolean nextSibling(final ExplainLevel current, final Poly<?, ?> args) {
+        while (!current.argPath.isEmpty()) {
+            final int lastIdx = current.argPath.size() - 1;
+            final int last = current.argPath.get(lastIdx);
+            final Obj parent = atPath(args, current.selectedArg, current.argPath.subList(0, lastIdx));
+            if (last < (int) parent.<Poly<?, ?>>as().count() - 1) { current.argPath.set(lastIdx, last + 1); return true; }
+            current.argPath.remove(lastIdx);
+        }
+        if (current.selectedArg < (int) args.count() - 1) { current.selectedArg++; return true; }
+        return false;
+    }
+
+    private void moveArgPrev(final ExplainLevel current, final Poly<?, ?> args) {
+        final int n = args == null ? 0 : (int) args.count();
+        if (current.selectedArg < 0) {
+            current.selectedCol = Math.max(current.selectedCol - 1, 0);   // divider → rng
+            return;
+        }
+        if (!current.argPath.isEmpty()) {
+            final int lastIdx = current.argPath.size() - 1;
+            final int last = current.argPath.get(lastIdx);
+            if (last > 0) current.argPath.set(lastIdx, last - 1);
+            else current.argPath.remove(lastIdx);
+            return;
+        }
+        if (current.selectedArg > 0) current.selectedArg--;
+        else current.selectedArg = -1;
     }
 
     private int argCount(final ExplainLevel level, final int row) {
@@ -318,6 +353,15 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         }
         final List<Obj> values = new ArrayList<>(args.recValue().values());
         return idx >= 0 && idx < values.size() ? values.get(idx) : noobj();
+    }
+
+    private static Obj atPath(final Poly<?, ?> args, final int argIdx, final List<Integer> path) {
+        Obj node = argAt(args, argIdx);
+        for (final int idx : path) {
+            if (!node.isPoly()) return noobj();
+            node = argAt(node.as(), idx);
+        }
+        return node;
     }
 
     /**
@@ -564,10 +608,14 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             return;
         }
         if (current.selectedArg < 0) {
-            // on the divider: the args Poly as a whole
-            current.panelPopup = CardUtil.popup(args);
+            current.panelPopup = CardUtil.popup(args);   // the args Poly as a whole
+            return;
+        }
+        final Obj node = atPath(args, current.selectedArg, current.argPath);
+        if (node.isPoly()) {
+            current.panelPopup = CardUtil.popup(node);   // a poly node: Enter shows it as a whole
         } else {
-            drillIntoObj(current, argAt(args, current.selectedArg));
+            drillIntoObj(current, node);
         }
     }
 
@@ -719,9 +767,14 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         if (args == null) return;
         final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
         final boolean window = level.selectedCol == ARGS_COL && level.selectedArg >= 0;
-        final String body = window
-                ? argsCell(ProfileTool.argTokens(args), level.selectedArg, ProfileTool.ARGS_WIDTH, base, level.pointer)
-                : ProfileTool.argsSummary(args);
+        final String body;
+        if (window && !level.argPath.isEmpty()) {
+            body = argsCellDescended(args, level.selectedArg, level.argPath, ProfileTool.ARGS_WIDTH, base, level.pointer);
+        } else if (window) {
+            body = argsCell(ProfileTool.argTokens(args), level.selectedArg, ProfileTool.ARGS_WIDTH, base, level.pointer);
+        } else {
+            body = ProfileTool.argsSummary(args);
+        }
         level.table.setCell(row, ARGS_COL, base + body);
         level.windowedRow = window ? row : -1;
     }
@@ -775,6 +828,55 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         if (len > width) return clipVisual(result, width);   // a single over-long token: never reflow
         if (len < width) return result + " ".repeat(width - len);
         return result;
+    }
+
+    /**
+     * The args cell when the selector is descended into a poly argument: the selected
+     * arg is rendered via {@link #renderPoly} (brackets + commas with the selector
+     * inside), every other arg as its summary. No selector at the slot. Width is
+     * measured with {@link Highlighter#visualLength}.
+     */
+    static String argsCellDescended(final Poly<?, ?> args, final int argIdx, final List<Integer> path,
+                                    final int width, final String base, final String selector) {
+        final List<String> tokens = ProfileTool.argTokens(args);
+        final StringBuilder sb = new StringBuilder(" ");
+        for (int i = 0; i < tokens.size(); i++) {
+            if (i > 0) sb.append(", ");
+            if (i == argIdx) sb.append(renderPoly(argAt(args, i).as(), path, base, selector));
+            else sb.append(tokens.get(i));
+        }
+        final String result = sb.toString();
+        final int len = Highlighter.visualLength(result);
+        if (len > width) return clipVisual(result, width);
+        if (len < width) return result + " ".repeat(width - len);
+        return result;
+    }
+
+    /**
+     * Render a poly (lst/rec) with the selector descended into it along {@code path}.
+     * At the leaf of the path the selector replaces the opening bracket (element 0) or
+     * a comma (later elements); deeper levels recurse without a selector, so exactly one
+     * {@code >} is drawn, at the selected element.
+     */
+    static String renderPoly(final Poly<?, ?> poly, final List<Integer> path, final String base, final String selector) {
+        final String ptr = selector + base;
+        final String open = poly.isLst() ? "[" : "{";
+        final String close = poly.isLst() ? "]" : "}";
+        final int sel = path.get(0);
+        final boolean leaf = path.size() == 1;
+        final List<String> tokens = ProfileTool.argTokens(poly);
+        final StringBuilder sb = new StringBuilder();
+        sb.append(leaf && sel == 0 ? ptr : open);
+        for (int i = 0; i < tokens.size(); i++) {
+            if (i > 0) sb.append(leaf && sel == i ? ptr : ",");
+            if (i == sel && !leaf && argAt(poly, i).isPoly()) {
+                sb.append(renderPoly(argAt(poly, i).as(), path.subList(1, path.size()), base, selector));
+            } else {
+                sb.append(tokens.get(i));
+            }
+        }
+        sb.append(close);
+        return sb.toString();
     }
 
     /** Clip to {@code width} visual columns, carrying {@code {{…}}} markup spans through verbatim. */

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -82,7 +82,7 @@ public final class TransportRewriteHarness {
      */
     public static Obj evaluate(final Code code) {
         final Code compiled = Machine.current().compiler().apply(code).asCode();
-        final SwarmProcessor processor = Machine.current().processor().code(compiled).as();
+        final Computer processor = Machine.current().processor().apply(compiled);
         try {
             return processor.applyAsync(noobj()).get(30, TimeUnit.SECONDS);
         } catch (final Exception e) {

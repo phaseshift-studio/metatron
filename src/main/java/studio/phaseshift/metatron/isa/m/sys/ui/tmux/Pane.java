@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
@@ -74,7 +74,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
     private static final Logger log = LoggerFactory.getLogger(Pane.class);
 
     private final int id;
-    private Processor processor;
+    private Computer processor;
     private final List<String> outputBuffer;
     private final int maxOutputLines;
     private volatile boolean needsRedraw = false;
@@ -179,11 +179,11 @@ public class Pane implements PaneNode, Stylable<Pane> {
         return this.id;
     }
 
-    public Processor machine() {
+    public Computer machine() {
         return this.processor;
     }
 
-    public Pane machine(final Processor machine) {
+    public Pane machine(final Computer machine) {
         this.processor = machine;
         return this;
     }

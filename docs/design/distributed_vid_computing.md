@@ -123,11 +123,13 @@ function. `plus(0)` vanishing is `theory_unit_removal` — a declared law firing
 optimization. Rewrites run before resolution in the default schedule; law-driven rewrites read `LawTable.declared` to
 re-type the bare addresses.
 
-### 3.2 The runtime — monad, processor, thread, barrier
+### 3.2 The runtime — monad, computer, thread, barrier
 
 - A **monad** = (instruction pointer, data pointer) — the program counter and data pointer, unified. The atom of
   computation.
-- A **processor** = a **pool of monads** (`run` / `barrier` / `halt`).
+- A **computer** = a **pool of monads** — its `cache` = `{run, barrier, halt}`. (A **processor** is the *architecture*
+  — stateless, registered once; a **computer** is the *instance* it mints. See
+  `processor-computer-analysis.md`.)
 - A **thread** = a *worker*: grab a monad, apply the data to the instruction, route the result —
   - PC → `noobj` → **halted** (into `halt`),
   - data → `noobj` → **killed** (GC'd),
@@ -308,33 +310,46 @@ themselves with *where the branches go* — no law re-checking.
 > **TODO** — determine whether `branch` is currently lowered to `start/select/merge` or is a distinct processor
 > instruction; that decides whether phase 1 can emit `branch` directly and let a *lowering* realize the three modes.
 
-### 6.3 The plan Rec — a list of `to(uri)` writes
+### 6.3 The branch — `Triplet(args, f, route)`; the kernel is the route
 
-`BranchInstruction` (extends `MInst`) carries its plan in the **seed slot** (§3.3). Post-compilation it is:
+`branch` is a `Triplet<Poly, Inst.f, Obj>` = `(args, f, seed)`:
 
 ```
-[ branch => [
-  0 => to(~/processor/_?incrq&spawn=virtual)
-  1 => to(/abc/processor/_?incrq)
-  2 => to(~/network/peer/ws/remote/8555/mtron/processor/_?incrq)
-]]
+args = [ plus(1), plus(2).mult(5), mult(2) ]          // the lanes (programs)
+f    = the body (mtron or Java)                       // eval_i(lane_i)
+seed = [ route => [                                   // the kernel = the ROUTE
+  0 => *<~/network/peer/ws/remote/8555/mtron/instset/m/inst/eval>,
+  1 => *<~/processor/345acd/instset/m/inst/eval>,
+  2 => *</abc/instset/m/inst/eval> ]]
 ```
 
-The branch's dispatch is one line: **apply lane `i`'s code to `planRec[i]`** — `lane_i.apply(to(uri_i))` — a write of
-the signature-code to a processor uri. Everything falls out:
+The kernel is the **route** — index → the *component's* `eval` instruction, dereferenced. The body is one line:
 
-- **`to(uri)` is the distribution** — the most primitive instruction (write obj to address) is the entire transport.
-- **The uri path is the route** — `~` (relative, this machine), `/abc` (absolute, local machine),
-  `~/network/peer/ws/remote/8555/mtron` (through the peer map, remote). The four-way vid is the routing table.
-- **`?incrq`** = "new a processor here" (auto-increment, as in `tblespace`/`thread_executor`).
-- **`spawn=virtual` / `spawn=core`** = the thread kind.
+```java
+objs(route.elements().map(rel -> read(rel.second()).apply(args[rel.first()])))
+```
 
-> **TODO** — is `planRec` (index → *concrete* place) the *resolved* form of `plan::T.where` (span → *shape/target*)?
-> I.e. phase 1 consumes `where`'s `?split` and emits concrete lanes; phase 2 resolves `where`'s shapes into `planRec`'s
-> concrete authorities. Confirm, or state the relationship.
+i.e. **for each lane, apply the route's `eval` to the lane's code.** `eval` is the *single* ship-code verb, and every
+component overrides it with its mechanical interpretation — `ws_client` (send_recv, remote), `computer` (spawn a
+thread), `machine` (move, re-home the frame). So **"peer as mini-instset" generalizes to "every component is a
+mini-instset"**: each component's `instset/m/inst/eval` (and `/to`, `/from`) is its own transport, and the branch never
+learns a protocol — it hands each lane to the component's own `eval`.
 
-> **TODO** — `plan()` should mint a *new* `BranchInstruction` (copy-returning), not mutate in place, to stay
-> fixpoint-safe under the `code→code` rewrite stage.
+The body is expressible two ways — a **Java lambda**, or **mtron** (the "plan, non-lambda"):
+
+```
+inst(args=>rec::T route=>rec::T){ *args.zip(*route).map(-<[>>0, *(*(route.>>(>>1)))]) }
+```
+
+— it *queries the args (branches), then queries the route (evals), then applies each branch to its eval*. So the
+branch's `Inst.f` **is** the plan, written in mtron, introspectable and rewriteable.
+
+Two sugar / introspection conventions:
+
+- **`branch(...)`** = bare (no route); **`branch::(...)`** = with route. Same tid — `::` is toString sugar for "the seed
+  slot holds a route."
+- **`>>route`** reveals it: `[code]==[as(lst::T)]==[>>2>>route]` reads the branch's route — the `to`/`from`/`eval`
+  wiring, hidden by `::` but one `>>` away, as a *structured rec*, never spaghetti.
 
 ### 6.4 The peer = a server-spawned handler thread
 
@@ -356,7 +371,7 @@ into metatron values. The whole plan is **three metatron-native mechanisms compo
 
 | part of a plan | metatron-native | replaces the Java |
 |---|---|---|
-| **pattern** (find the fold) | `?decq` / `cat::path::T` (form / law / theory) | `Cut`, `Span`, `InstPattern` in `shard` |
+| **pattern** (find the fold) | `?decq` (form / law / theory) | `Cut`, `Span`, `InstPattern` in `shard` |
 | **transform** (factor + emit) | `as(rec::T)` + `branch` (`-<[]>-`) + `>>=` (index / duplicate / splice) | the `shard` emit (factor + `start/select/merge`) |
 | **route** (place) | `to(uri)` (the vid) | `Placement`, `PlaceSet`, `PlaceResolver` |
 
@@ -369,49 +384,61 @@ code.as(rec::T).branch(n copies).map(copy_i => copy_i >>= [0 => |start(part_i)])
 `as(rec::T)` indexes the chain (the `cut`/`span` *positions*); `branch` duplicates (the `+`); `>>=` splices the seed
 factor (the `?split`); `.sum()` is the combiner. **No new `cut`/`span` instruction is needed** — they are *derived*
 operations on the code rec. The only residue that stays Java is the orchestration — find the fold by law (`?decq`),
-hand the index to the splice — and that *is* `lower(plan)` on a `path::T`.
+hand the index to the splice — and that is a **plain `code → code` rewrite rule**, registered like `move_extract`.
+(*Not* `lower(plan)` on a `path::T`: the rewrite graph — `path::T`, `lower`, `catRewrite`, the a-priori prune — is
+itself built on `PlanBuilder`/`PlanInterpreter`, so leaning on it to replace them would be circular. `path::T` is
+optional introspection, retireable or re-baseable, never a prerequisite for the planner.)
+
+**And there is no plan interpreter at all.** The plan is the branch's mtron `f` (§6.3), so the rewrite rules just *aim
+at* `branch()`: find the fold (`?decq` guard), factor the seed (`?split`), emit `branch(lanes, route)`. No rec to
+interpret, no Java to lower it — the rewrite *is* the plan. What remains as optional "plan data" is a **deducible
+block-diff**: wrap the rewrite in `inspect(rewrite())`, and when code goes in as lhs and out as rhs, `inspect` deduces
+the `[block@vid_a => block@vid_b, …]` substitution table — "this block became this block," keyed by the instructions'
+vids (their location in the code). That table is the introspection answer to "what did this rewrite do?" (for
+`explain()`), and it says *what changed*, not *why* — the *why* is the `?decq` guard. Without `inspect()`, you just
+execute `rewrite()`, the network populates `[route => …]`, the processor evaluates, and the branch fires when a monad
+reaches it.
 
 ---
 
-## 7. Addressability — the loose end
+## 7. Addressability — resolved by the Processor/Computer split
 
-The compiler already has what the processor doesn't: **addressability**. `!*/compiler/parser`, `resolver`, `rewriter`
-are individually dereferenceable and applicable. What is wanted — point at `~/processor/barrier`, `~/processor/run`,
-`~/processor/halt` and drop threads there dynamically — is the *same* addressability, one component over.
+The compiler already has what the processor (architecture) used to lack: **addressability**. `!*/compiler/parser`,
+`resolver`, `rewriter` are individually dereferenceable and applicable. The **Processor/Computer design**
+(`processor-computer-analysis.md`) resolves the wall: the addressable unit is the **Computer**, and its `cache()` — a
+Rec keyed `{run, barrier, halt}` — makes the pools first-class addresses. `to(~/processor/_?incrq)` mints a computer;
+`to(<computer>/cache/run)` enqueues a monad; `*<computer>/cache/halt` reads the answer. The watchdog/worker split (the
+computer is *a thread that supervises threads*) is what turns "add a thread to a pool" into a write, not a mechanism.
 
-> **TODO (the expressivity wall)** — processor addressing. Make the processor's internals (barrier / run / halt pools)
-> first-class addressable components, so threads can be *dynamically added to parts of the processor's pipeline* (not
-> just the whole processor), and "point a thread at the barrier" becomes `to(~/processor/barrier/_?incrq&spawn=core)`.
-
-> **TODO** — thread migration. `/sys/thread` is the *old* architecture; threads should be **stored at the machine
-> where they execute** (`~/sys/thread/…`), not globally aggregated.
+> **TODO** — thread migration. `/sys/thread` is the *old* architecture; threads migrate to
+> `/processor/<computer>/thread/<id>` (partitioned by their computer).
 
 ---
 
 ## 8. Consolidated TODOs
 
-1. **Processor addressing** — make `barrier`/`run`/`halt` addressable (the expressivity wall, §7).
+1. ~~**Processor addressing**~~ **resolved** — the Processor/Computer split makes `cache/{run,barrier,halt}` addressable
+   (the Computer's `cache()` Rec); landed in `processor-computer-analysis.md` (§7).
 2. **`?split` kinds** — `block`/`key`/`owner`/`index` decline today; each needs its seed's data-ring structure (an
    ordered `[]`, a key, an addressed seed, a generated range) before it can factor (§4.1).
-3. **Cut-less plans** — `bind`/`relocate` (the whole-program `move` plan) is unregistered; every live rewrite has a
-   `cut` (§4.2).
-4. **`branch` lowering** — is `branch` lowered to `start/select/merge` or distinct? decides the emit (§6.2).
-5. **`?hop` budget** — currently stamped on the fold's `q(HOP)`; phase 2 must preserve the decremented budget on the
-   shipped lane (§4.1).
+3. ~~**Cut-less plans**~~ **moot** — `bind`/`relocate` die with `PlanInterpreter`; the rewrites just emit `branch`.
+4. ~~**`branch` lowering**~~ **resolved** — `branch` is a `Triplet(args, mtron-f, route)` (§6.3), not `start/select/merge`.
+5. **`?hop` budget** — currently stamped on the fold's `q(HOP)`; the shipped lane must preserve the decremented budget (§4.1).
 6. **`move()` signature** — does it generalize to processor-location targets, or stay machine-address-shaped (§5.5)?
-7. **`@` anchor on code** — currently value@address; the "code@place" form needs to be expressible (§2, §6.3).
-8. **Seed-slot reuse** — confirm unused, then hold the plan Rec there, not a Java field (§3.3).
+7. ~~**`@` anchor on code**~~ **moot** — the route holds `eval` instructions, not `@`-anchored places.
+8. ~~**Seed-slot reuse**~~ **resolved** — the seed slot holds the route (§6.3).
 9. **`cut()` dom** — currently `ALL.maybeSome()`; target is the Kleene `A{*}` barrier, with `?<=A{n}` paging (§4.2).
 10. **`move` as arity-1 branch** — fold `extractMove` into the branch placement, `cut()` as its lowering (§5.4).
 11. **`thread::T` unification** — virtual / core / current / machine as `thread::T` at processor locations (§5.5).
 12. **Machine-ring `0` and `+`** — the explicit empty machine and the fan-out operator are sketched, not encoded
     (`docs/design/machine-ring.md`).
-13. **`planRec` ↔ `plan::T.where`** — state the relationship (index→place = resolved span→shape) (§6.3).
-14. **`plan()` immutability** — copy-returning, fixpoint-safe (§6.3).
+13. ~~**`planRec` ↔ `plan::T.where`**~~ **moot** — no `plan::T` remains.
+14. ~~**`plan()` immutability**~~ **moot** — no `plan()` method remains.
 15. **obj-ring axioms** — state them or leave them a musing (§1.2).
-16. **Delete the mini-DSL** — `Cut`/`Span`/`Placement` are a Java re-encoding of `?decq` (pattern) +
-    `as(rec::T)`/`branch`/`>>=` (transform) + `to(uri)` (route); finish the enum→axes migration and replace them
-    (§4.4, §6.5).
+16. ~~**Delete the mini-DSL**~~ **resolved by design** — no `PlanInterpreter`/`PlanBuilder`/`Cut`/`Span`/`Placement`; the
+    plan is the branch's mtron `f`, and the "plan data" is a deducible block-diff via `inspect(rewrite())` (§6.5).
+17. **Delete `PlanInterpreter`/`PlanBuilder`** — the interpreter and mini-DSL are superseded by rewrite-rules-that-emit-
+    `branch`; slated for deletion, not refactor (§6.3, §6.5).
 
 ---
 
@@ -424,8 +451,10 @@ coefficient), the machine ring over *places* (`move`/`+`), and Thm 19 glues them
 memory, network, instset, compiler, processor — selected by the thread's `Machine.current()`. Code is signatures until
 a compiler binds them to functions; shipping is moving signatures, compilation is binding them, and the monad pool is
 where the bound code evolves under interchangeable worker threads, gated by the barrier that *is* the `+`'s join.
-Distribution, finally, is `branch` — factor the fold, write each lane to a processor uri with `to(uri)`, and let the
-machine at that vid compile and run it. The one remaining seam is **addressability**: the processor's internals must
-become as first-class as the compiler's stages already are. And the plan is not a DSL — it is metatron end to end:
-`?decq` reads a thing's algebra, the cat-graph lifts it into a rewrite graph with unique transformation paths,
-`as(rec::T)`+`branch`+`>>=` factors the fold, and `to(uri)` places it.
+Distribution, finally, is `branch` — a `Triplet(args, f, route)`: the rewrite rules aim at `branch()` (find the fold
+via `?decq`, factor the seed, emit `branch`), the route maps each lane to a component's `eval` (the ship-code verb), and
+the branch's mtron `f` applies each lane to its eval. There is no plan interpreter and no mini-DSL — the plan *is* the
+branch's mtron body, and the "plan data" is a deducible block-diff (`inspect(rewrite())` → `[lhs => rhs]` by vid).
+Addressability is resolved by the Processor/Computer split (the Computer's `cache` makes the pools first-class
+addresses). `to`/`from`/`eval` are the imperative floor; `branch` is the declarative noun that names a sound pattern of
+them; Thm 19 is *why* the pattern is sound.
