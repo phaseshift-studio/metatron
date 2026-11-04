@@ -105,6 +105,25 @@ public class catInstSetTest extends AbstractInstSetTest {
         return Machine.read(AS_INST_TID.rng(URI_TID).dom(INT_TID)).as();
     }
 
+    /**
+     * THE MORPHISM REACHES ITS OBJECTS BY REFERENCE: morphism::T's src and trgt are auto_from references to object::T,
+     * never the registered object type itself. object::T embeds morphism::T, so an embedded object closed a cycle, and
+     * since every boot re-registers the previous boot's staged objects, each test class nested one level deeper (x4
+     * rendered size per class, 443 -> 842,361 chars after five) until a per-test remount spent seconds rendering it.
+     */
+    @Test
+    public void testTheMorphismReachesItsObjectsByAddress() {
+        final Rec slots = T(catInstSet.MORPHISM_TID).predicate().asInst().arg(0).asRec();
+        // the STORED slot, not its resolution: an auto_from dereferences on access (Rel.second), which would answer
+        // the object it points at
+        final List<Obj> ends = slots.elements()
+                .filter(slot -> slot.firstDirect().isUri() && List.of(SRC, TRGT).contains(slot.firstDirect().uriValue().name()))
+                .map(Rel::secondDirect)
+                .toList();
+        assertEquals(2, ends.size(), "morphism::T declares src and trgt: " + slots);
+        ends.forEach(end -> assertTrue(Obj.Helper.isAutoPointer(end), "a morphism end is an auto_from reference, not an embedded object::T: " + end));
+    }
+
     @Test
     public void testIntFamilyShipsItsAlgebra() {
         // the declarations ship with the Int registrations — read the shipped algebra back through ?catq
