@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TID;
+import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -37,6 +40,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -98,18 +103,18 @@ public class catTypes {
                                 uri(ANALYSIS).maybe(), T(REC_TID),
                                 uri(LAW).maybe(), lst(catInstSet.LAW_TYPE.c(cInt.SOME())),
                                 uri(CLASS).maybe(), lst(CLASS_TYPE.c(cInt.SOME())),
-                                uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)), mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (^{\\ast}, 1),\\; \\mathrm{flatmapper} = (1, ^{+}),\\; \\ldots\\)",
+                                uri(DERIVATION).maybe(), rec(uri(LHS), CODE_TYPE, uri(RHS), CODE_TYPE)), mutableMap(uri(FORM), "the n-tid coefficient shape \\((c_{\\mathrm{dom}}, c_{\\mathrm{rng}})\\) in regex notation: \\(\\mathrm{mapper} = (1,1),\\; \\mathrm{filter} = (1, ?),\\; \\mathrm{reducer} = (\\ast, 1),\\; \\mathrm{flatmapper} = (1, +),\\; \\ldots\\)",
                                 uri(SRC), "the source object the morphism leaves: \\(\\mathrm{src}(f) = \\mathrm{dom}(f)\\)",
                                 uri(TRGT), "the target object the morphism enters: \\(\\mathrm{trgt}(f) = \\mathrm{rng}(f)\\)",
                                 uri("analysis/position").maybe(), "the edge's place among its siblings: \\(\\mathrm{position}(f) \\subseteq \\{\\mathrm{duplicate}, \\mathrm{ambiguous}, \\mathrm{incomparable}, \\mathrm{coupling}, \\mathrm{isochain}, \\mathrm{retract}\\}\\)",
-                                uri("analysis/contested").maybe(), "the witness edges behind the ambiguous/incomparable labels: \\(\\mathrm{contested}(f) = \\{g : \\mathrm{trgt}(g) = \\mathrm{trgt}(f) \\wedge \\mathrm{src}(g) \\perp \\mathrm{src}(f)\\} \\cup \\{g : \\mathrm{src}(g) = \\mathrm{src}(f) \\wedge \\mathrm{trgt}(g) \\perp \\mathrm{trgt}(f)\\}\\)",
+                                uri("analysis/contested").maybe(), "the witness edges behind the ambiguous/incomparable labels: \\(\\mathrm{contested}(f) = \\{g : \\mathrm{trgt}(g) = \\mathrm{trgt}(f) \\wedge \\mathrm{src}(g) \\parallel \\mathrm{src}(f)\\} \\cup \\{g : \\mathrm{src}(g) = \\mathrm{src}(f) \\wedge \\mathrm{trgt}(g) \\parallel \\mathrm{trgt}(f)\\}\\)",
                                 uri("analysis/orbit").maybe(), "the reversible-core component of the morphism's dom: \\(\\mathrm{orbit}(f) = \\{X : \\mathrm{dom}(f) \\sim^{*} X\\}\\)",
                                 uri("analysis/family").maybe(), "the same-name siblings: \\(\\mathrm{family}(f) = \\{g : \\mathrm{op}(g) = \\mathrm{op}(f)\\}\\)",
                                 uri("analysis/inverse").maybe(), "the opposing edge \\(f^{-1}\\) with \\(f \\cdot f^{-1} = 1\\)",
                                 uri("analysis/combiner").maybe(), "the fold the partials of a reducer recombine through, computed from its laws and derivation: \\((a \\uplus b) \\cdot r = (a \\cdot r \\uplus b \\cdot r) \\cdot \\mathrm{combiner}(r)\\)",
                                 uri(LAW), "the declared process laws \\(\\mathcal{L}\\) the morphism obeys, e.g. \\(\\mathrm{commutative}: f(x,y) = f(y,x)\\)",
                                 uri(CLASS), "the set-theoretic class of the morphism: \\(\\mathrm{class}(f) \\subseteq \\{\\mathrm{endo}, \\mathrm{iso}, \\mathrm{auto}, \\mathrm{mono}, \\mathrm{epi}, \\mathrm{section}, \\mathrm{retraction}\\}\\)",
-                                uri(DERIVATION), "the declared derivation of the morphism: \\(\\mathrm{lhs}\\) the derived instruction and \\(\\mathrm{rhs}\\) its primitive composition, e.g. \\(a / b \\mapsto a \\cdot b^{-1}\\)"))
+                                uri(DERIVATION), "the declared derivation of the morphism: \\(\\mathrm{lhs}\\) the derived instruction and \\(\\mathrm{rhs}\\) its primitive composition, e.g. \\(a \\div b \\mapsto a \\cdot b^{-1}\\)"))
                         .constructor(arg -> {
                             final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
                             // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
@@ -188,7 +193,7 @@ public class catTypes {
                                 uri(ORIGIN).maybe(), T(PLACE_TID),
                                 uri(WHERE).maybe(), REC_TYPE,
                                 uri(PEER).maybe(), lst(REC_TYPE),
-                                T(URI_TID).maybe(), T(PLAN_TID)), Map.of(
+                                T(URI_TID).maybe(), T(MACH_PLAN_TID)), Map.of(
                                 uri(OBJ), "the code \\(p\\) itself — the vertex",
                                 uri(ORIGIN).maybe(), "where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)",
                                 uri(WHERE).maybe(), "the realized placement — span → place, written by the pass that applied a distribution rule",
@@ -217,11 +222,11 @@ public class catTypes {
                                 try {
                                     if (!maybeNotIdentity(morphisms, rewrite))
                                         continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
-                                    final Plan plan = catRewrite.planOf(rewrite.tid().name());
+                                    final Plan plan = PlanRewriter.planOf(rewrite.tid().name());
                                     if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
                                         continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
                                     final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
-                                    final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), PLAN_TID, null) : plan;
+                                    final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), MACH_PLAN_TID, null) : plan;
                                     path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
                                 } catch (final Exception e) {
                                     //do nothing
@@ -237,7 +242,7 @@ public class catTypes {
                                 uri(OBJ), lst(T(MORPHISM_TID)),
                                 uri(WHERE).maybe(), lst(T(CATEGORY_TID))), Map.of(
                                 uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code",
-                                uri(WHERE).maybe(), "the α place-class word: the located path's places as a list (the α image of \\(\\mathrm{path}.where\\) / \\(\\mathrm{path}.origin\\)) — the surface a placement guard reads"))
+                                uri(WHERE).maybe(), "the α place-class word: the located path's places as a list (the α image of \\(\\mathrm{path}.\\mathrm{where}\\) / \\(\\mathrm{path}.\\mathrm{origin}\\)) — the surface a placement guard reads"))
                         .constructor(arg -> {
                             final boolean located = arg.isRec() && arg.asRec().has(uri(OBJ));
                             final Obj source = located ? arg.asRec().at(OBJ) : arg;
@@ -283,45 +288,6 @@ public class catTypes {
                             return abstraction.selfTID(ABSTRACTION_TID);
                         })
                         .create(),
-                PLAN_TYPE = TypeBuilder.build()
-                        .tid(REC_TID)
-                        .vid(PLAN_TID, "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)")
-                        .isaPredicate(rec(
-                                uri(NAME), URI_TYPE,
-                                uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
-                                uri(CUT).maybe().asUri(), rec(
-                                        uri(FORM).maybe().asUri(), URI_TYPE,
-                                        uri(LAW).maybe().asUri(), lst(catInstSet.LAW_TYPE),
-                                        uri(ROLE).maybe().asUri(), URI_TYPE),
-                                uri(WHERE).maybe(), lst(rec(
-                                        // the derived token is OPTIONAL now: a rec stated in the axes alone is
-                                        // a plan::T (C9), and the legacy encoding is still read for one cycle
-                                        uri(SHAPE).maybe().asUri(), URI_TYPE,
-                                        uri(TARGET).maybe(), ALL_TYPE,
-                                        // the decision's three axes (§1 of the qparam plan): the place set
-                                        // (a uri, a lst of designators, or a weighted rec), the depth (a counted
-                                        // int, or [height, arity] for the arities a coefficient cannot spell), and
-                                        // the partition (a counted uri). ALL_TYPE because each axis decides its
-                                        // value's shape; the coefficient is ANY because a COUNTED object fails a
-                                        // plain <#> — the coefficient IS the axis' value (arity, part count) and
-                                        // the type's own coefficient is what a counted obj is tested against.
-                                        // Pinned by DecisionModelTest.testTheAxesArePlanT.
-                                        uri(PLACE).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                        uri(HOP).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                        uri(SPLIT).maybe(), ALL_TYPE.c(cInt.ANY()),
-                                        uri(INST).maybe(), lst(URI_TYPE),
-                                        uri(SPAN), lst(rec(
-                                                uri(SPAN), URI_TYPE,
-                                                uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()), Map.of(
-                                uri(NAME), "the plan's name — the rewrite rule it embodies",
-                                uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
-                                uri(WHERE).maybe(), "the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)",
-                                uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"))
-                        .constructor(arg -> {
-                            final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
-                            return plan.selfTID(PLAN_TID);
-                        })
-                        .create(),
                 PLACE_TYPE = TypeBuilder.build()
                         .tid(CATEGORY_TID)
                         .vid(PLACE_TID, "a machine as the location coordinate — where code runs, the vertex beside path::T")
@@ -333,7 +299,7 @@ public class catTypes {
                                 uri(LINKED_TO).maybe().asUri(), lst(REC_TYPE),
                                 uri(LINKED_FROM).maybe().asUri(), lst(REC_TYPE),
                                 uri(STATUS).maybe().asUri(), URI_TYPE), mutableMap(
-                                uri(OBJ), "the machine address //host[/path] — who evaluates: \\(host()\\) is the roster key, \\(path()\\) the frame vid (empty = the root machine)",
+                                uri(OBJ), "the machine address //host[/path] — who evaluates: \\(\\mathrm{host}()\\) is the roster key, \\(\\mathrm{path}()\\) the frame vid (empty = the root machine)",
                                 uri(AUTHORITY), "the transports that reach the machine scheme://host:port; two aliases of one machine are values, never two places",
                                 uri(INSTSET).maybe(), "ISAs resolvable here (the vocabulary coordinate)",
                                 uri(SOURCE).maybe(), "who declared it (mdns, boot profile, a dial)",
@@ -349,7 +315,7 @@ public class catTypes {
                         .create(),
                 RING_THEORY_TYPE = TypeBuilder.build()
                         .tid(THEORY_TID)
-                        .vid(RING_THEORY_TID, "the theory of rings \\(\\langle R, +, \\cdot, 0, 1 \\rangle\\): \\(+\\) an abelian group, \\(\\cdot\\) a monoid, and \\(a \\cdot (b + c) = a \\cdot b + a \\cdot c\\)")
+                        .vid(RING_THEORY_TID, "the theory of rings \\(\\langle R, +, \\cdot, 0, 1 \\rangle\\): \\(+\\) an abelian group, \\(\\cdot\\) a monoid, distributive on both sides: \\(a \\cdot (b + c) = a \\cdot b + a \\cdot c\\) and \\((a + b) \\cdot c = a \\cdot c + b \\cdot c\\)")
                         .isaPredicate(rec(
                                 uri(ADD), INST_TYPE,
                                 uri(MUL), INST_TYPE,
@@ -418,7 +384,7 @@ public class catTypes {
                         .create(),
                 NEAR_RING_THEORY_TYPE = TypeBuilder.build()
                         .tid(THEORY_TID)
-                        .vid(NEAR_RING_THEORY_TID, "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a monoid, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")
+                        .vid(NEAR_RING_THEORY_TID, "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a semigroup, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")
                         .isaPredicate(rec(
                                 uri(ADD), INST_TYPE,
                                 uri(MUL), INST_TYPE,

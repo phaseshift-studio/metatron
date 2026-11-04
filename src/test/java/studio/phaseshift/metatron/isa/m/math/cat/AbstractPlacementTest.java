@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -154,7 +156,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     public void testLoweredShardCarriesRealizedWhere() {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode();
-        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(catRewrite.planOf("law_shard"), code));
+        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanRewriter.planOf("law_shard"), code));
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a shipped shard writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
         assertEquals("[//localhost=>1]", places.toString(),
@@ -176,7 +178,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
                 Machine.current().network().peers(),
                 Machine.current().network().machines(),
                 java.util.Set.of(f("loop://mantis:8555")));
-        final Code emitted = PlanInterpreter.apply(catRewrite.planOf("law_shard"),
+        final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum()").asCode(), env);
         assertTrue(emitted.insts().get(1).arg(0).asLst().lstValue().getFirst().asRec().at(uri(CODE)).asInst().args().isEmpty(),
                 "the home lane's route is the addressless eval: " + emitted);
@@ -198,7 +200,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     public void testRealizedWhereRecordsTheRealizedDemands() {
         Network.Helper.connect(Machine.current().network(), f("loop://ginger:8555"));
         Network.Helper.connect(Machine.current().network(), f("loop://booger:8555"));
-        final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
+        final Code emitted = PlanInterpreter.lower(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final Obj lifted = catInstSet.realized(emitted);
         final Obj demands = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
@@ -215,7 +217,7 @@ public class AbstractPlacementTest extends AbstractInstSetTest {
     public void testUnshippedLowerHasNoWhere() {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).side(plus(1)).sum()").asCode();
-        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(catRewrite.planOf("law_shard"), code));
+        final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanRewriter.planOf("law_shard"), code));
         assertTrue(lifted.isCode(), "an unshipped lower leaves the code as-is (no realized where): " + lifted);
     }
 

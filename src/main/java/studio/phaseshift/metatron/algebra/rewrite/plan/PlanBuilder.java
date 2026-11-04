@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PLAN_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -180,7 +180,7 @@ public final class PlanBuilder {
         if (null != this.cut)
             jvm.put(uri(CUT), this.cut);
         jvm.put(uri(WHERE), lst(this.placements.stream().map(p -> (Obj) p).toList()));
-        return new Plan(jvm, PLAN_TID, null);
+        return new Plan(jvm, MACH_PLAN_TID, null);
     }
 
     private void validateObligations() {

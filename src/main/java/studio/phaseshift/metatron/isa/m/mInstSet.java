@@ -794,7 +794,7 @@ public class mInstSet extends AbstractInstSet {
                                                         }
                                                     }
                                                     return matched;
-                                                })).asCode()), "applies the abelian monoid law on split code paths: \\(\\mathrm{split}([f, \\ldots, f]) \\cdot \\mathrm{merge} \\leadsto f\\{\\sum_i c_i\\}\\)"),
+                                                })).asCode()), "applies the abelian monoid law on split code paths: \\(\\mathrm{split}([f\\{c_1\\}, \\ldots, f\\{c_n\\}]) \\cdot \\mathrm{merge} \\leadsto f\\{\\sum_i c_i\\}\\)"),
 
                         // Left factoring: pull out common prefix from split branches
                         // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-

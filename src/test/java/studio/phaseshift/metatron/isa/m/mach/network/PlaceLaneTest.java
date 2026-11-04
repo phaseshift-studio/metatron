@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -162,7 +162,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     void testDuplicateDesignatorsSumTheirShare(final String tail, final int expected) {
         Network.Helper.connect(Machine.current().network(), GINGER);
         Network.Helper.connect(Machine.current().network(), BOOGER);
-        final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
+        final Code emitted = PlanInterpreter.lower(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6})." + tail).asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(List.of(GINGER, GINGER, BOOGER), layout.routes(),
@@ -179,7 +179,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     @Test
     void testTheDefaultEmitsTheLayoutItAlwaysDid() {
         Network.Helper.connect(Machine.current().network(), PEER);
-        final Code emitted = PlanInterpreter.lower(catRewrite.planOf("law_shard"),
+        final Code emitted = PlanInterpreter.lower(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(List.of(PEER), layout.routes(), "the dialed set, and no home lane: " + emitted);
@@ -204,7 +204,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     void testAnUnreadablePlaceSetIsRefused(final String stated, final String expected) {
         final Code code = ObjmtronSerializer.parse("start?place=" + stated + "({1,2,3,4}).plus(1).sum()").asCode();
         final MTronException refused = assertThrows(MTronException.class,
-                () -> PlanInterpreter.apply(catRewrite.planOf("law_shard"), code, alone()),
+                () -> PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), code, alone()),
                 "a place set that cannot be read must be refused, not ignored: " + stated);
         assertTrue(refused.getMessage().contains(expected),
                 "the refusal names the key and the text it could not read: " + refused.getMessage());
@@ -286,7 +286,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     void testNoLevelOrNoBranchIsTheIdentity(final String source) {
         connectAll();
         final Code original = ObjmtronSerializer.parse(source).asCode();
-        final Code emitted = PlanInterpreter.apply(catRewrite.planOf("law_shard"), original, homeAndPeer());
+        final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), original, homeAndPeer());
         assertEquals(original.toString(), emitted.toString(), "the point is the original chain, byte for byte: " + emitted);
         assertTrue(DistributedSweep.layout(emitted).lanes().isEmpty(), "and nothing ships: " + emitted);
     }
@@ -347,7 +347,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
      * {@code (plan, code, env)}, with no rewriter dispatch and no dial.
      */
     private static Code lower(final Env env, final String source) {
-        return PlanInterpreter.apply(catRewrite.planOf("law_shard"),
+        return PlanInterpreter.apply(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse(source).asCode(), env);
     }
 

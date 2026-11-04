@@ -457,7 +457,7 @@ public class PlaceResolverTest extends AbstractMetatronTest {
     private static List<fURI> legacyTargets(final Env env, final Placement route) {
         return env.peers().values()
                 .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                .filter(peer -> Places.serves(peer, route))
+                .filter(peer -> PlaceResolver.serves(peer, route))
                 .map(peer -> peer.asRec().<Obj>atDirect(uri(ORIGIN)))
                 .filter(Obj::isUri)
                 .map(Obj::uriValue)

@@ -23,7 +23,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
+import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;

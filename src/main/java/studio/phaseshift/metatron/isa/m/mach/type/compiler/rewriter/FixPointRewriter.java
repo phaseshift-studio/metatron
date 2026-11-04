@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -95,10 +94,11 @@ public class FixPointRewriter extends AbstractRewriter {
         int hash = c.hashCode();
         int done = this.at(MAX).orElse(jnt(2)).intValue().intValue();
         while (done != 0) {
-            // THE RULES COME FROM INSTRUCTION MEMORY, not from the data index: the machine's own instset is the
-            // union of every ISA this frame uses (own level, its imports, the enclosing machine's), so a rewrite
-            // declared in a child applies in that child and dies with its frame — and an ISA no longer has to be
-            // a registered space for its rules to fire. rewrites() merges by tid identity, nearest level first.
+            // THE RULES ARE THIS REWRITER'S OWN (rewrites()): by default they come from INSTRUCTION MEMORY, not from
+            // the data index — the machine's own instset is the union of every ISA this frame uses (own level, its
+            // imports, the enclosing machine's), so a rewrite declared in a child applies in that child and dies with
+            // its frame, and an ISA no longer has to be a registered space for its rules to fire. A refinement names
+            // another set (plan_rewriter::T: the law-driven plans).
             //
             // ANALYSIS RULES RUN LAST, and the order is stated here rather than inherited from the mount order.
             // An analysis rule (profile_analysis, explain_analysis) CAPTURES the code before its marker and
@@ -112,7 +112,7 @@ public class FixPointRewriter extends AbstractRewriter {
             // The ordering is memoized against the rules themselves (orderedRules), so a pass pays it once per
             // rule set rather than once per code value — and this method runs once per value AND once per branch
             // member it descends into.
-            final List<Inst> rules = orderedRules(Machine.current().instset().rewrites());
+            final List<Inst> rules = orderedRules(this.rewrites());
             rules
                     .forEach(r -> {
                         //this.logger().warn("rewrite: %s", r);

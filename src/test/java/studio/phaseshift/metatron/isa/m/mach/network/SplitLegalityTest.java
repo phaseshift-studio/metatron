@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -212,7 +212,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
     void testAnUnreadablePartitionIsRefused(final String stated, final String expected) {
         final Code code = ObjmtronSerializer.parse("start?split=" + stated + "({1,2,3,4}).plus(1).sum()").asCode();
         final MTronException refused = assertThrows(MTronException.class,
-                () -> PlanInterpreter.apply(catRewrite.planOf("law_shard"), code, env()),
+                () -> PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), code, env()),
                 "a partition that cannot be read must be refused, not defaulted: " + stated);
         assertTrue(refused.getMessage().contains(expected),
                 "the refusal names the key and the text it could not read: " + refused.getMessage());
@@ -251,7 +251,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
      */
     private static void declines(final String source) {
         final Code original = ObjmtronSerializer.parse(source).asCode();
-        final Code emitted = PlanInterpreter.apply(catRewrite.planOf("law_shard"), original, env());
+        final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), original, env());
         assertEquals(original.toString(), emitted.toString(), "a decline is the unchanged chain: " + source);
         assertTrue(DistributedSweep.layout(emitted).lanes().isEmpty(), "and nothing ships: " + source);
     }
@@ -267,7 +267,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
      * The same lowering of an already-built chain.
      */
     private static Code lower(final Code source) {
-        return PlanInterpreter.apply(catRewrite.planOf("law_shard"), source, env());
+        return PlanInterpreter.apply(PlanRewriter.planOf("law_shard"), source, env());
     }
 
     /**

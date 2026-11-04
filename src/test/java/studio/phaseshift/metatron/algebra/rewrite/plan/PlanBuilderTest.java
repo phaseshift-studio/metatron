@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite.plan;
 
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -147,7 +148,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
             "{1,2,3,4}.plus(1).sum()                          % 1",
     }, delimiter = '%')
     public void testHopKeyAndItsDeprecatedAlias(final String source, final int expected) {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         assertNotNull(shard, "no plan registered under law_shard");
         Assertions.assertEquals(expected, PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
                 "the hop budget of " + source);
@@ -173,7 +174,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
             "start?hop=4{2}({1,2,3,4}).plus(1).sum()         % ?hop=4{2}",
     }, delimiter = '%')
     public void testHopRefusesAnUnreadableBudget(final String source, final String stated) {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         assertNotNull(shard, "no plan registered under law_shard");
         final MTronException refused = assertThrows(MTronException.class,
                 () -> PlanInterpreter.hop(shard, ObjmtronSerializer.parse(source).asCode()),
@@ -189,7 +190,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
      */
     @Test
     public void testHopRefusesAnEmptyStatedBudget() {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         assertNotNull(shard, "no plan registered under law_shard");
         final ArrayList<Inst> insts = new ArrayList<>(ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode().insts());
         insts.set(0, insts.getFirst().tid(insts.getFirst().tid().q(HOP, "")));
@@ -222,9 +223,9 @@ public class PlanBuilderTest extends AbstractInstSetTest {
                 .where(Placement.local(Span.at()))
                 .where(Placement.tree(1, Span.at()))
                 .create();
-        assertTrue(shard.test(catInstSet.PLAN_TYPE), "a cut plan is a plan::T: " + shard);
+        assertTrue(shard.test(machInstSet.MACH_PLAN_TYPE), "a cut plan is a plan::T: " + shard);
         final Plan move = PlanBuilder.plan("move_star").where(Placement.tree(1, Span.at())).create();
-        assertTrue(move.test(catInstSet.PLAN_TYPE), "a cut-less plan is a plan::T: " + move);
+        assertTrue(move.test(machInstSet.MACH_PLAN_TYPE), "a cut-less plan is a plan::T: " + move);
     }
 
     /**
@@ -250,7 +251,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
             "branch_collapse         % 1.branch(+2,+2)                     % start(1).branch(plus{2}(2))",
     }, delimiter = '%')
     public void testEmittedCodeIsUnchangedByRename(final String rule, final String source, final String expected) {
-        final Plan plan = catRewrite.planOf(rule);
+        final Plan plan = PlanRewriter.planOf(rule);
         assertNotNull(plan, "no plan registered under " + rule);
         final Code rewritten = PlanInterpreter.lower(plan, ObjmtronSerializer.parse(source).asCode());
         assertEquals(ObjmtronSerializer.parse(expected).asCode(), rewritten,
@@ -263,7 +264,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
      */
     @Test
     public void testBindDeclinesCutPlan() {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         assertNotNull(shard);
         final Code code = ObjmtronSerializer.parse("start({1,2,3,4}).plus(1).sum()").asCode();
         assertEquals(code, PlanInterpreter.bind(shard, code), "bind declines a plan with a cut");
@@ -295,7 +296,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
                 .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
                 .where(Placement.tree(1, Span.seed().partition(), Span.before().floatable().withoutSeed(), Span.at()))
                 .create();
-        assertTrue(plan.test(catInstSet.PLAN_TYPE), "an axes-declared decision is a plan::T: " + plan);
+        assertTrue(plan.test(machInstSet.MACH_PLAN_TYPE), "an axes-declared decision is a plan::T: " + plan);
         assertEquals(2, plan.where().size(), "the two decisions are kept apart");
         // the origin's tail: the place set is local alone, so nothing ships and no law is demanded
         final Placement tail = plan.where().get(0);
@@ -393,9 +394,9 @@ public class PlanBuilderTest extends AbstractInstSetTest {
      */
     @Test
     public void testLawShardSpeaksTheAxesAlone() {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         assertNotNull(shard, "no plan registered under law_shard");
-        assertTrue(shard.test(catInstSet.PLAN_TYPE), "a plan stated in the axes is a plan::T: " + shard);
+        assertTrue(shard.test(machInstSet.MACH_PLAN_TYPE), "a plan stated in the axes is a plan::T: " + shard);
         final String rec = shard.toString();
         assertFalse(rec.contains("shape="), "no derived shape token in the assembled rec: " + rec);
         assertFalse(rec.contains("target="), "no derived target in the assembled rec: " + rec);
@@ -425,11 +426,11 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     public void testAnAxesOnlyDecisionIsAPlanT() {
         assertTrue(ObjmtronSerializer.parse(
                                 "[name=><axes_only>,where=>[[place=>[peer],hop=>1,split=>stream,span=>[[span=><at>]]]]]")
-                        .test(catInstSet.PLAN_TYPE),
+                        .test(machInstSet.MACH_PLAN_TYPE),
                 "a decision stated in the axes alone is a plan::T");
         assertTrue(ObjmtronSerializer.parse(
                                 "[name=><legacy_only>,where=>[[shape=><tree>,span=>[[span=><at>]]]]]")
-                        .test(catInstSet.PLAN_TYPE),
+                        .test(machInstSet.MACH_PLAN_TYPE),
                 "and the legacy encoding is still read for one cycle");
     }
 

@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TYPE;
+import studio.phaseshift.metatron.algebra.mInstSetLawTable;
+import studio.phaseshift.metatron.algebra.mathInstSetLawTable;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
@@ -62,7 +65,6 @@ public class catInstSet extends AbstractInstSet {
     public static final fURI OBJECT_TID = CATEGORY_TID.extend("object");
     public static final fURI PATH_TID = CATEGORY_TID.extend("path");
     public static final fURI ABSTRACTION_TID = CATEGORY_TID.extend("abstraction");
-    public static final fURI PLAN_TID = CATEGORY_TID.extend("plan");
     public static final fURI PLACE_TID = CATEGORY_TID.extend("place");
     // the algebra vocabulary lives with the instruction set (mInstSet.THEORY_TID ...): the category RENDERS it.
     // law::T relocates with its data: the vocabulary is stored under /m/law, so the type is the base set's
@@ -96,7 +98,6 @@ public class catInstSet extends AbstractInstSet {
      * {@code [name, cut, route]} — the cut is its selector, the routes its distribution — carrying no lambda;
      * the one {@code lower(plan::T)} instruction applies it
      */
-    public static Type PLAN_TYPE;
 
     /**
      * {@code place::T} — the location coordinate: the machine a chunk runs on, as a vertex beside {@code path::T}.
@@ -173,14 +174,14 @@ public class catInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(CAT_ISA_TID.extend(ALL)),
                 uri(TYPE), catTypes.registered(this),
                 uri(INST), lst(
-                        instC(CAT_LOWER_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
+                        instC(CAT_LOWER_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(MACH_PLAN_TYPE), (lhs, inst) -> {
                             // lower(plan::T): path → path — read the plan rec, apply it to the path's code, re-lift,
                             // carrying the realized placement (where the emitter shipped the shard).
                             final Plan plan = Plan.of(inst.arg(0).asRec());
                             final Code code = lhs.asRec().at(OBJ).asCode();
                             return PATH_TYPE.constructor().apply(realized(PlanInterpreter.lower(plan, code)));
                         }),
-                        instC(CAT_BIND_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(PLAN_TYPE), (lhs, inst) -> {
+                        instC(CAT_BIND_INST_TID.dom(PATH_TID).rng(PATH_TID), lst(MACH_PLAN_TYPE), (lhs, inst) -> {
                             // bind(plan::T): path → path — the cut-less operator: re-route located code. Symmetric
                             // with lower: the gating (a cut-less plan, an admissible target) lives in
                             // PlanInterpreter.bind and relocate; a declined bind is the identity, the path unchanged.

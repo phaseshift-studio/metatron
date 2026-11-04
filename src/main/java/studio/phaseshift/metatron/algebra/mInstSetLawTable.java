@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -76,7 +76,7 @@ public final class mInstSetLawTable extends LawTable {
      * table, as {@code mathInstSetLawTable} does for nat and cmplx — keeps one place to answer.
      */
     @Override
-    protected Rec typeLawsUncached(final Type type) {
+    public Rec typeLawsUncached(final Type type) {
         return rec0();
     }
 

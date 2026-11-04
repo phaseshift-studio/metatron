@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.OBJECT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -85,7 +84,7 @@ public class TheoryHelper extends MRec {
      * The rec of a named theory instance from a type's law block — the empty rec when the type models it not.
      */
     public static Rec instance(final Type type, final String name) {
-        return OBJECT_TYPE.constructor().apply(type).orElse(rec0()).at(LAW).orElse(rec0()).at(f(name)).orElse(rec0());
+        return instances(type).at(f(name)).orElse(rec0());
     }
 
     public static Rec instance(final Type type, final fURI theoryTID) {
@@ -140,17 +139,11 @@ public class TheoryHelper extends MRec {
      * algebraic structure. This is the enumeration a law-driven rewrite walks.
      */
     public static Rec instances(final Type type) {
-        // A TYPE THAT CANNOT BE LIFTED DECLARES NOTHING — the constructor answers a `fail` for a carrier with no
-        // categorical object (an unresolved rng, a generic), and `orElse` returns its receiver, so an unconditional
-        // read here threw `ClassCastException: MFail cannot be cast to Rec` out of the law lookup (a *crash* where a
-        // law query must answer "no instances" and let its caller decline). A fail is no algebra, never an exception.
-        final Obj object = OBJECT_TYPE.constructor().apply(type);
-        if (object.isFail())
-            return rec0();
-        // ANY OTHER READ ANSWERS THE STORE, noobj included: a type that declares nothing answers the empty rec, and a
-        // carrier whose object the constructor could not mint is not turned into a second, silent "declares nothing"
-        // rule here — the declaration is read exactly as every other caller reads it.
-        return object.orElse(rec0()).at(LAW).orElse(rec0());
+        // THE DECLARED ALGEBRA, READ LEANLY: object::T's law field IS LawTable.typeLawsOf(type), so the instances are
+        // read there directly rather than by minting the categorical lift (an object::T with its lazy incidence) that
+        // only the category instset builds. A type with no address, or one that declares nothing, answers the empty
+        // algebra — never a fail, so a law query declines rather than crashing.
+        return LawTable.typeLawsOf(type);
     }
 
     /**
@@ -267,11 +260,13 @@ public class TheoryHelper extends MRec {
     }
 
     /**
-     * The op address a law block's role binds, or null when the role is absent or binds a literal: the value
-     * arrives as a {@code !*} auto pointer naming its target in its own argument, so the address is read
-     * without resolving — the target may be an as-yet-unresolved registration.
+     * The op address a law block's role binds, or null when the block or the role is absent, or the role binds a
+     * literal: the value arrives as a {@code !*} auto pointer naming its target in its own argument, so the address
+     * is read without resolving — the target may be an as-yet-unresolved registration.
      */
     static fURI roleAddress(final Rec block, final String role) {
+        if (null == block)
+            return null;
         final Obj holder = block.atDirect(uri(role));
         if (holder.isNoObj())
             return null;

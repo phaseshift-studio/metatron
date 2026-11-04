@@ -221,7 +221,7 @@ public class geoInstSet extends AbstractInstSet {
                 "the lhs geometry (the container)",
                 "the lhs itself when it holds the arg, otherwise \\(\\mathrm{noobj}\\) — a filter, not a bool",
                 Map.of(ALL_TYPE, "what to look for: a geometry (inside the lhs), or a \\(\\mathrm{geo{:}bbox2d}::T\\) envelope"),
-                "the containment predicate as a filter: \\(a \\sqsupset b\\) when every position of \\(b\\) lies inside \\(a\\). Because it answers the object rather than a bool, a fibered rec lifts it — \\(*marko.has(region)\\) is marko, or a miss",
+                "the containment predicate as a filter: \\(a \\sqsupset b\\) when every position of \\(b\\) lies inside \\(a\\). Because it answers the object rather than a bool, a fibered rec lifts it — \\(*\\mathrm{marko}.\\mathrm{has}(\\mathrm{region})\\) is marko, or a miss",
                 "geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:has(geo:point::[-123.05,44.5])   [-- the polygon --]",
                 "geo:point::[-123.05,44.5].geo:has(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- noobj: a point holds nothing --]"));
         // a box is a container too: BOTH envelopes answer `has` against a geometry
@@ -242,7 +242,7 @@ public class geoInstSet extends AbstractInstSet {
                 "the lhs geometry (the contained thing)",
                 "the lhs itself when it lies in the arg, otherwise \\(\\mathrm{noobj}\\)",
                 Map.of(ALL_TYPE, "the container: a geometry, or a \\(\\mathrm{geo{:}bbox2d}::T\\) envelope"),
-                "the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \\(a.inside(b) \\iff b.has(a)\\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec",
+                "the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \\(a.\\mathrm{inside}(b) \\iff b.\\mathrm{has}(a)\\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec",
                 "geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]"));
         /**
          * The {@code as} instructions: a GeoJSON or WKT string onto any geo type, a plain rec onto any geo type (the

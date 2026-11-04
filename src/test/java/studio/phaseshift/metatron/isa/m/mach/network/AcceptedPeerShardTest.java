@@ -135,7 +135,7 @@ public class AcceptedPeerShardTest extends AbstractMetatronTest {
     void testTheTwinIsNotAShardTarget() {
         // indexed as a ws_client constructor indexes itself: the host is the claim, the client serves eval and to, and
         // its status says it is live — a shard target must be online AND serve what its slave ships through and needs
-        // applied (Places.serves)
+        // applied (PlaceResolver.serves)
         Machine.current().network().index(rec(
                 uri(HOST), uri(DIALED),
                 uri(INST), silent(DIALED),

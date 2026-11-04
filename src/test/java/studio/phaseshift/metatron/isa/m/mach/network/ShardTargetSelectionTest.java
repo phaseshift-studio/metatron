@@ -18,9 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.mach.network;
 
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
@@ -30,9 +33,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
-import studio.phaseshift.metatron.isa.m.math.cat.Places;
-import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
-import studio.phaseshift.metatron.isa.m.math.cat.catRewrite;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * client declares {@code eval} — eval is exactly "apply this program and answer its value", and {@code to} alone only
  * writes an obj to an address. The requirement is {@code plan::T} data — each placement's {@code inst} (the key
  * mirrors a client's {@code inst}), defaulted from the placement's shape — so every distribution rule reads it through
- * one check, {@link Places#serves}.
+ * one check, {@link PlaceResolver#serves}.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
@@ -103,11 +103,11 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
 
     @Test
     void testLawShardsPlanStatesWhatItsTargetMustServe() {
-        final Plan shard = catRewrite.planOf("law_shard");
+        final Plan shard = PlanRewriter.planOf("law_shard");
         final Placement route = shard.where().stream().filter(p -> p.shape().distributes()).findFirst().orElseThrow();
         assertEquals(lst(uri(EVAL_INST_TID)), route.asRec().at(uri(INST)),
                 "the plan says it: inst=>[</m/inst/eval>] on its tree placement");
-        assertTrue(shard.test(catInstSet.PLAN_TYPE), "and it is still a plan::T: " + shard);
+        assertTrue(shard.test(machInstSet.MACH_PLAN_TYPE), "and it is still a plan::T: " + shard);
         // a placement written as a rec, without inst, still requires what its shape ships through
         assertEquals(Set.of(EVAL_INST_TID), Placement.of(rec(uri(SHAPE), uri("tree"), uri(SPAN), lst()).asRec()).inst());
     }
@@ -117,19 +117,19 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
         final Placement route = Placement.tree(1, Span.at());
         final Obj online = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), client(SERVANT, EVAL_INST_TID, TO_INST_TID));
-        assertTrue(Places.serves(online, route), "online and serving eval: a target");
+        assertTrue(PlaceResolver.serves(online, route), "online and serving eval: a target");
         final Obj evalOnly = rec(uri(ORIGIN), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, EVAL_INST_TID));
-        assertTrue(Places.serves(evalOnly, route), "online and serving eval alone: a target — eval is all the route needs");
+        assertTrue(PlaceResolver.serves(evalOnly, route), "online and serving eval alone: a target — eval is all the route needs");
         final Obj writer = rec(uri(ORIGIN), uri(EVALER), uri(HOST), uri(EVALER),
                 uri(CLIENT), client(EVALER, FROM_INST_TID, TO_INST_TID));
-        assertFalse(Places.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
+        assertFalse(PlaceResolver.serves(writer, route), "online and serving to, but no eval — a POST writer stores a program, it runs none");
         final Obj offline = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), new DownLink(client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().jvm()));
-        assertFalse(Places.serves(offline, route), "serving eval, but its link is down: not a target");
+        assertFalse(PlaceResolver.serves(offline, route), "serving eval, but its link is down: not a target");
         final Obj silent = rec(uri(ORIGIN), uri(SERVANT), uri(HOST), uri(SERVANT),
                 uri(CLIENT), rec(uri(HOST), uri(SERVANT), uri(INST), client(SERVANT, EVAL_INST_TID, TO_INST_TID).asRec().at(uri(INST))));
-        assertFalse(Places.serves(silent, route), "serving eval, but its client never says it is live: not a target");
+        assertFalse(PlaceResolver.serves(silent, route), "serving eval, but its client never says it is live: not a target");
     }
 
     @Test

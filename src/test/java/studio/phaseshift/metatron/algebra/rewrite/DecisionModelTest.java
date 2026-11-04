@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -475,7 +476,7 @@ public class DecisionModelTest extends AbstractInstSetTest {
                 .place(PlaceSet.peer()).hop(2, cInt.of(2L)).split(Partition.of(Partition.Kind.BLOCK, cInt.of(2L)))
                 .where(Placement.peers(Span.seed().partition()))
                 .create();
-        assertTrue(plan.test(catInstSet.PLAN_TYPE), "counted axes are still a plan::T: " + plan);
+        assertTrue(plan.test(machInstSet.MACH_PLAN_TYPE), "counted axes are still a plan::T: " + plan);
         // the hop rides the pair form (arity two IS a coefficient, so this one is the counted spelling) and the split
         // its coefficient; both are counted objects, which is exactly what the widening admits
         assertEquals(2, plan.where().getFirst().hopAxis().height());

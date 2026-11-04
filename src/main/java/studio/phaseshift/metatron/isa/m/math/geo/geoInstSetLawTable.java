@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.geo;
 
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
+import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 

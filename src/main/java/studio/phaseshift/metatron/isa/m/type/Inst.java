@@ -532,6 +532,22 @@ public interface Inst extends Call {
     }
 
     final class Helper {
+
+        /**
+         * Two chain elements are the same operation, whatever their operands — the guard for a law that
+         * relates an operation to itself (poset comparison composition).
+         */
+        public static boolean sameOp(final Inst a, final Inst b) {
+            return a.tid().basePath().equals(b.tid().basePath());
+        }
+
+        /**
+         * Two chain elements are the same operation AND the same operands — the guard for a law that relates an
+         * operation to itself (involution, idempotent, monoidic fold).
+         */
+        public static boolean same(final Inst a, final Inst b) {
+            return sameOp(a, b) && a.args().equals(b.args());
+        }
         private Helper() {
             // do nothing
         }
