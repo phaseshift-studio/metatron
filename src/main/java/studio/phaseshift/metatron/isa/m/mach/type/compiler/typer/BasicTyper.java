@@ -33,7 +33,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.LST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.LAW_TID;
+import static studio.phaseshift.metatron.algebra.Law.LAW_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;

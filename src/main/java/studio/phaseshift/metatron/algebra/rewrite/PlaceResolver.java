@@ -24,13 +24,13 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.math.cat.Places;
-import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.CLIENT;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.LOCAL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -69,7 +69,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       path and the query off a spelled authority. A place is a host and its authority; {@code //host/a/b} names the
  *       same place as {@code //host}, and the port is not a selector either ({@code //host:9999} resolves through the
  *       host's transports — {@code Places.place}'s own reading).</li>
- *   <li><b>Liveness</b> — {@link #dialed}: a place is a candidate only when {@link Places#serves} says so — the client
+ *   <li><b>Liveness</b> — {@link #dialed}: a place is a candidate only when {@link PlaceResolver#serves} says so — the client
  *       is <em>online</em> ∧ declares the instructions the route requires (a shipped shard travels as
  *       {@code eval(<authority>)}, so {@code eval}). An offline peer is dropped (a shard shipped down it answers
  *       {@code not connected} and poisons the reduction) and so is a client that cannot {@code eval}. A {@code //host}
@@ -85,7 +85,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * and nothing else off the machine; {@link Places} is consulted for its <em>predicates</em> ({@code serves}) and
  * {@link Signatures} for the declared liveness of a scheme, both of which are reads of an obj and the ISA rather than
  * of the network. So the same place set resolves over the same <em>membership and reach</em> twice off one
- * {@code Env} — but a member's liveness is read <em>when it is asked</em> ({@code Places.serves} reads the client's own
+ * {@code Env} — but a member's liveness is read <em>when it is asked</em> ({@code PlaceResolver.serves} reads the client's own
  * status), so a peer that goes offline between the snapshot and the resolution is dropped, exactly as it always was.
  * That is what makes a sweep over synthetic peers — no dial, no forked peer — the same question the emitter asks.
  *
@@ -285,7 +285,7 @@ public final class PlaceResolver {
      * {@code peer} — THE DIALED SET, one place per dialed peer that can take a share, in the peer map's own order (the
      * order the emitted routes have always had; the emitter canonicalises the lanes it emits, home shares first, which
      * is its rule and not this one's): a peer is a target when it carries a {@code host} (where to dial back from
-     * here — an inbound accept carries none, being a client we cannot ship to) and {@link Places#serves} it (online ∧
+     * here — an inbound accept carries none, being a client we cannot ship to) and {@link PlaceResolver#serves} it (online ∧
      * declaring the route's {@code inst}). The authority is the peer's {@code origin}: the wire address it answers at,
      * never its key, which is a local path.
      * <p>
@@ -295,7 +295,7 @@ public final class PlaceResolver {
     private static List<fURI> dialed(final Env env, final Placement requires) {
         return env.peers().values()
                 .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                .filter(peer -> Places.serves(peer, requires))
+                .filter(peer -> serves(peer, requires))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
                 .toList();
@@ -307,7 +307,7 @@ public final class PlaceResolver {
      * set). The <em>host</em> is the selector: a path in the designator names no frame and the port names no socket
      * ({@code //ginger:9999} resolves through ginger's transports), so a place is an authority, never a frame path.
      * <p>
-     * The two tables are gated by the half of liveness each one can answer: a dialed peer by {@link Places#serves}
+     * The two tables are gated by the half of liveness each one can answer: a dialed peer by {@link PlaceResolver#serves}
      * (there is a client to ask), a roster row by {@link Signatures#resolves} (there is none — the declared half of the
      * test is all a machine this one only knows can be asked for).
      */
@@ -329,11 +329,11 @@ public final class PlaceResolver {
                         .forEach(transports::add));
         // the peer map (realized): the authorities this machine actually dialed to that host, if it serves the route.
         // A DIALED PEER, NOT EVERY PEER — the same `host` marker dialed() keeps: an accepted inbound session serves
-        // everything a shard needs (Places.serves says yes), but it has no host to dial back to, so its origin is an
+        // everything a shard needs (PlaceResolver.serves says yes), but it has no host to dial back to, so its origin is an
         // ephemeral port nothing answers at.
         env.peers().values()
                 .filter(peer -> peer.isRec() && peer.asRec().at(uri(HOST)).isUri())
-                .filter(peer -> Places.serves(peer, requires))
+                .filter(peer -> serves(peer, requires))
                 .map(Network.Helper::originOf)
                 .filter(Objects::nonNull)
                 .filter(origin -> host.equals(origin.host()))
@@ -366,11 +366,29 @@ public final class PlaceResolver {
     }
 
     /**
-     * The requirement a target must satisfy, in the one form {@link Places#serves} reads it — a placement carrying the
+     * The requirement a target must satisfy, in the one form {@link PlaceResolver#serves} reads it — a placement carrying the
      * {@code inst} set. The decision is not resolved here: this placement is a value handed to a predicate, never
      * emitted.
      */
     private static Placement requires(final Set<fURI> inst) {
         return Placement.peers().inst(null == inst ? new fURI[0] : inst.toArray(fURI[]::new));
+    }
+
+    /**
+     * The realized half of the liveness test (§4) — {@code Places.admissible} is the declared half: a dialed {@code peer}
+     * can take {@code placement} when its client SERVES every instruction the placement requires
+     * ({@link Placement#inst()}: a distributing shape ships through {@code to(<target>)} a program the target applies,
+     * so it must serve {@code to} and {@code eval}) and is ONLINE — the client's own {@code status}
+     * ({@link Network.Helper#online}). Serving is the client's mini-instset declaring an override the type system
+     * accepts ({@link Network.Helper#overrideIn}). Read off this peer's own client — not the first peer of its service.
+     */
+    public static boolean serves(final Obj peer, final Placement placement) {
+        if (!peer.isRec())
+            return false;
+        // what the client DECLARES first — a map read — and only then whether it is live: a status may be a round
+        // trip (an http client's HEAD), and a client that cannot serve the placement is never worth asking
+        final Obj client = peer.asRec().at(uri(CLIENT));
+        return placement.inst().stream().allMatch(instTID -> Network.Helper.overrideIn(client, instTID).isObjInst())
+                && Network.Helper.online(peer);
     }
 }

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.isa.m.mach.type.network;
 
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 

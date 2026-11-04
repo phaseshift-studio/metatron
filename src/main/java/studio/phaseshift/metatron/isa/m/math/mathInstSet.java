@@ -1108,7 +1108,7 @@ public class mathInstSet extends AbstractInstSet {
                                     return lhs.jvm(mutableList(real((a * c + b * d) / norm2), real((b * c - a * d) / norm2)));
                                 }),
                                 "a complex number \\(z = a + bi\\)",
-                                "the complex quotient \\(z / w\\)",
+                                "the complex quotient \\(\\frac{z}{w}\\)",
                                 Map.of(CMPLX_TYPE, "the complex divisor \\(w = c + di\\)"),
                                 "complex division: \\((a+bi)/(c+di)=\\frac{ac+bd}{c^2+d^2}+\\frac{bc-ad}{c^2+d^2}i\\)",
                                 "cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]"),

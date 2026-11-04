@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra.rewrite;
 
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -130,6 +131,6 @@ public class ObligationsTest extends AbstractInstSetTest {
                 .where(Placement.peer(f("ws://ginger.local:8555"), Span.at())).create();
         assertEquals(Placement.Shape.PEER, plan.where().get(0).shape());
         assertEquals(f("ws://ginger.local:8555"), plan.where().get(0).target());
-        assertTrue(plan.test(catInstSet.PLAN_TYPE), "an addressed placement is a plan::T: " + plan);
+        assertTrue(plan.test(machInstSet.MACH_PLAN_TYPE), "an addressed placement is a plan::T: " + plan);
     }
 }

@@ -72,7 +72,7 @@ public final class Env {
      * <p>It freezes exactly what the snapshot freezes and nothing more: the peer map's members, the roster's members,
      * and the authority set are <em>shallow-copied</em> into fresh {@link MRec}s and a fresh {@link LinkedHashSet}, so
      * the two maps' membership (and their order) cannot change under the caller. A member's own liveness is still read
-     * off the member — that is what {@code Places.serves} asks — so a peer that goes offline between the snapshot and
+     * off the member — that is what {@code PlaceResolver.serves} asks — so a peer that goes offline between the snapshot and
      * the resolution is dropped, as it always was. The {@link #fingerprint()} is the same hash of the same three
      * fields.
      */

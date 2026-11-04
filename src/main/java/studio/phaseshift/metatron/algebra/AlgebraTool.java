@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -55,12 +54,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * is a hypothesis, and an unverified hypothesis must not become a declaration.
  *
  * <p>WHERE THE ROLES COME FROM — the type's declared algebra ({@code object::T>>law}): instance name → rec of role
- * → operation. {@link studio.phaseshift.metatron.isa.m.math.cat.LawTable#typeLawsOf(Type)} serves it, and that
+ * → operation. {@link LawTable#typeLawsOf(Type)} serves it, and that
  * served rec is itself the {@code ?decq} declaration the base carriers write at their type; when no law table is
  * mounted (the category is optional) the declaration is read directly, so the tool answers on a plain boot. Role
- * pointers are read exactly as {@code TheoryHelper#roleAddress} reads them ({@code atDirect} plus
- * {@link Obj.Helper#getPointer}); that helper is package-private in {@code isa.m.math.cat}, so the two-line read
- * is copied here rather than widening it.
+ * pointers are read by {@link TheoryHelper#roleAddress} ({@code atDirect} plus {@link Obj.Helper#getPointer}).
  *
  * <p>WHICH OPERATIONS ARE ANALYZED — {@link #analyzeType(Type, List)} runs {@link #analyzeTypeInst(Type, Inst, List)}
  * for every role-bearing operation the type declares and unions the reports; {@link #analyzeTypeInst(Type, Inst,
@@ -460,23 +457,6 @@ public final class AlgebraTool {
     }
 
     /**
-     * The op address an algebra's role binds, or null when the role is absent — the two-line read
-     * {@code TheoryHelper#roleAddress} makes, copied because that helper is package-private in
-     * {@code isa.m.math.cat}: the value arrives as a {@code !*} auto pointer naming its target in its own
-     * argument, so the address is read without resolving it.
-     */
-    private static fURI roleAddress(final Rec block, final String role) {
-        if (null == block)
-            return null;
-        final Obj holder = block.atDirect(uri(role));
-        if (holder.isNoObj())
-            return null;
-        if (holder.isUri())
-            return holder.uriValue();
-        return Obj.Helper.getPointer(holder).orElse(null);
-    }
-
-    /**
      * The VALUE a role binds — a literal element ({@code zero => 0}, {@code id => ""}, {@code one => <>}) or,
      * for an operation used as a value (the code ring's {@code one => !*id}), the operation itself. Null when the
      * role is absent or names an operation the type does not register.
@@ -533,7 +513,7 @@ public final class AlgebraTool {
                 continue;
             final Rec block = entry.getValue().asRec();
             for (final String role : OP_ROLES) {
-                final fURI address = roleAddress(block, role);
+                final fURI address = TheoryHelper.roleAddress(block, role);
                 if (null == address || null == address.basePath() || ops.containsKey(address.basePath().toString()))
                     continue;
                 final Op op = bind(type, address);
@@ -565,14 +545,14 @@ public final class AlgebraTool {
                 continue;
             final Rec block = entry.getValue().asRec();
             for (final String role : OP_ROLES) {
-                final fURI bound = roleAddress(block, role);
+                final fURI bound = TheoryHelper.roleAddress(block, role);
                 if (null == bound || null == bound.basePath() || !bound.basePath().equals(address.basePath()))
                     continue;
                 final Op candidate = new Op(address, inst, role, entry.getKey().uriValue().name(), block,
                         address.basePath().name(), 1 == inst.args().count());
                 final int score = (OP.equals(role) ? 4 : 0)
                         + (null != identity(type, candidate) ? 2 : 0)
-                        + (null != roleAddress(block, INV) ? 1 : 0);
+                        + (null != TheoryHelper.roleAddress(block, INV) ? 1 : 0);
                 if (score > bestScore) {
                     best = candidate;
                     bestScore = score;
@@ -627,7 +607,7 @@ public final class AlgebraTool {
 
     private static fURI first(final Rec block, final List<String> roles) {
         for (final String role : roles) {
-            final fURI address = roleAddress(block, role);
+            final fURI address = TheoryHelper.roleAddress(block, role);
             if (null != address && null != address.basePath())
                 return address;
         }
@@ -733,7 +713,7 @@ public final class AlgebraTool {
     private static List<Result> involution(final Type type, final Op op, final Roles roles, final Law law) {
         if (null == roles.inv())
             return List.of(Result.unchecked(law, INV, "the type declares no inverse operation"));
-        final fURI bound = null != roleAddress(op.block(), INV) ? roleAddress(op.block(), INV) : roleAddress(op.block(), NOT);
+        final fURI bound = null != TheoryHelper.roleAddress(op.block(), INV) ? TheoryHelper.roleAddress(op.block(), INV) : TheoryHelper.roleAddress(op.block(), NOT);
         if (null != bound && null != bound.basePath() && bound.basePath().equals(op.address().basePath()))
             return List.of(evaluate(law, op.role(), call(op.name(), call(op.name(), A)), A));
         if (null == bound || !groupish(op.instance()))
@@ -773,7 +753,7 @@ public final class AlgebraTool {
     private static List<Result> complement(final Type type, final Op op, final Roles roles, final Law law) {
         if (!op.binary())
             return List.of(notBinary(law, op));
-        final fURI bound = null != roleAddress(op.block(), INV) ? roleAddress(op.block(), INV) : roles.inv();
+        final fURI bound = null != TheoryHelper.roleAddress(op.block(), INV) ? TheoryHelper.roleAddress(op.block(), INV) : roles.inv();
         if (null == bound || null == bound.basePath())
             return List.of(Result.unchecked(law, INV, "the type declares no inverse operation"));
         final Obj identity = identity(type, op);

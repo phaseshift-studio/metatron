@@ -18,6 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
+import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
+import studio.phaseshift.metatron.algebra.mInstSetLawTable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -924,7 +928,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.is(gt(1)).plus(2).zero()     % # /m/int /m/int /m/int",
     }, delimiter = '%')
     void testCarriers(final String code, final String expected) {
-        final List<Type> carriers = catLiveness.carriers(ObjmtronSerializer.parse(code).asCode());
+        final List<Type> carriers = Rewriter.Helper.carriers(ObjmtronSerializer.parse(code).asCode());
         checkEquality(LOG, str(expected), str(carriers.stream().map(t -> t.vid().toString()).collect(Collectors.joining(" "))), true);
     }
 
@@ -1004,6 +1008,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "gt     % /m/int  % /m/bool  % true",
             "plus   % /m/real % /m/real  % true",
             "side   % /m/int  % /m/int   % false",
+            // a declared-pure filter floats by its form (A => A{?}); is is pure too, but its A{?} dom is no filter's form
+            "filter % A       % A{?}     % true",
+            "is     % A{?}    % A{?}     % false",
     }, delimiter = '%')
     void testFloatableRequiresPure(final String op, final String dom, final String rng, final boolean floats) {
         final Inst inst = instB(M_ISA_INST_TID.extend(op).dom(f(dom)).rng(f(rng)), lst());
@@ -1034,6 +1041,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4,5}.is(lt(4)).is(lt(2))            % start({1,2,3,4,5}).is(lt(2))            % 1",
             "{1,2,3,4,5}.is(gte(2)).is(gte(4))          % start({1,2,3,4,5}).is(gte(4))           % {4,5}",
             "{1,2,3,4,5}.is(lte(4)).is(lte(2))          % start({1,2,3,4,5}).is(lte(2))           % {1,2}",
+            // the comparison decides which bound is stricter: the first bound wins when it is the one ordered past
+            "{1,2,3,4,5}.is(lt(2)).is(lt(4))            % start({1,2,3,4,5}).is(lt(2))            % 1",
+            // a strict comparison orders neither of two equal bounds past the other: either one is the pair
+            "{1,2,3,4,5}.is(gt(3)).is(gt(3))            % start({1,2,3,4,5}).is(gt(3))            % {4,5}",
             "{1,2,3,4,5}.filter(gt(1)).filter(gt(3))    % start({1,2,3,4,5}).filter(gt(3))        % {4,5}",
             "{1.0,2.5,3.5}.is(gt(1.5)).is(gt(2.0))      % start({1.0,2.5,3.5}).is(gt(2.0))        % {2.5,3.5}",
             "{\"a\",\"m\",\"z\"}.is(gt(\"b\")).is(gt(\"n\"))    % start({\"a\",\"m\",\"z\"}).is(gt(\"n\"))    % \"z\"",
@@ -1079,6 +1090,19 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testInverseCancellation(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * {@code inverse_cancellation} keeps a pair whose operand is its type's declared {@code zero}: the zero annihilates
+     * under {@code mult}, so {@code x.mult(0.0).div(0.0)} is no identity (it answers NaN, never {@code x}). Only the
+     * rewritten shape is asserted. Each row: the chain % the chain the category leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.0.mult(0.0).div(0.0)    % start(5.0).mult(0.0).div(0.0)",
+    }, delimiter = '%')
+    void testInverseKeepsTheZero(final String code, final String expected) {
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
     }
 
     /**

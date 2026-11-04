@@ -22,12 +22,14 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.IdentityRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
@@ -236,9 +238,14 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_REWRITER_TID = MACH_MACHINE_COMPONENT_TID.extend(REWRITER);
     public static final fURI MACH_FIXPOINT_REWRITER_TID = MACH_REWRITER_TID.extend("fixpoint_rewriter");
     public static final fURI MACH_IDENTITY_REWRITER_TID = MACH_REWRITER_TID.extend("identity_rewriter");
+    public static final fURI MACH_PLAN_REWRITER_TID = MACH_REWRITER_TID.extend("plan_rewriter");
     public static Type MACH_REWRITER_TYPE;
     public static Type MACH_FIXPOINT_REWRITER_TYPE;
     public static Type MACH_IDENTITY_REWRITER_TYPE;
+    public static Type MACH_PLAN_REWRITER_TYPE;
+    // the plan rewriter's rule format — a rewrite rule as a first-class value, the morphism path → path
+    public static final fURI MACH_PLAN_TID = MACH_ISA_TID.extend("plan");
+    public static Type MACH_PLAN_TYPE;
     // the resolver family — structural resolve(code)->code contract, concrete scoring + firstfind strategies
     public static final fURI MACH_RESOLVER_TID = MACH_MACHINE_COMPONENT_TID.extend(RESOLVER);
     public static final fURI MACH_IDENTITY_RESOLVER_TID = MACH_RESOLVER_TID.extend("identity_resolver");
@@ -370,6 +377,52 @@ public class machInstSet extends AbstractInstSet {
                                 .isaPredicate(rec(uri(MAX).maybe().asUri(), isa_(INT_TYPE).else_(jnt(2))), Map.of(uri(MAX).maybe(), "the convergence window: the number of consecutive stable passes the code must show before the fixpoint is accepted (default 2)"))
                                 .constructor(arg -> new FixPointRewriter(arg.asRec().jvm(), MACH_FIXPOINT_REWRITER_TID, arg.vid()))
                                 .example("fixpoint_rewriter::[max=>3]   [-- accept the fixpoint after three stable passes --]")
+                                .create(),
+                        MACH_PLAN_REWRITER_TYPE = TypeBuilder.build()
+                                .tid(MACH_FIXPOINT_REWRITER_TID)
+                                .vid(MACH_PLAN_REWRITER_TID, "at the rewrite stage of compiler::T, plan_rewriter::T is a fixpoint_rewriter::T whose rules are the law-driven plans (plan::T) rather than the rewrites the machine's instsets register: each plan reads the algebra the instructions and types declare (?decq) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (law_shard), with no rule naming an instruction. Only the plans run")
+                                .constructor(arg -> new PlanRewriter(arg.asRec().jvm(), MACH_PLAN_REWRITER_TID, arg.vid()))
+                                .example("plan_rewriter::[=>]   [-- rewrite with the law-driven plans alone --]")
+                                .create(),
+                        // the plan rewriter's rule format
+                        MACH_PLAN_TYPE = TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(MACH_PLAN_TID, "a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)")
+                                .isaPredicate(rec(
+                                        uri(NAME), URI_TYPE,
+                                        uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
+                                        uri(CUT).maybe().asUri(), rec(
+                                                uri(FORM).maybe().asUri(), URI_TYPE,
+                                                uri(LAW).maybe().asUri(), lst(mTypes.LAW_TYPE),
+                                                uri(ROLE).maybe().asUri(), URI_TYPE),
+                                        uri(WHERE).maybe(), lst(rec(
+                                                // the derived token is OPTIONAL now: a rec stated in the axes alone is
+                                                // a plan::T (C9), and the legacy encoding is still read for one cycle
+                                                uri(SHAPE).maybe().asUri(), URI_TYPE,
+                                                uri(TARGET).maybe(), ALL_TYPE,
+                                                // the decision's three axes (§1 of the qparam plan): the place set
+                                                // (a uri, a lst of designators, or a weighted rec), the depth (a counted
+                                                // int, or [height, arity] for the arities a coefficient cannot spell), and
+                                                // the partition (a counted uri). ALL_TYPE because each axis decides its
+                                                // value's shape; the coefficient is ANY because a COUNTED object fails a
+                                                // plain <#> — the coefficient IS the axis' value (arity, part count) and
+                                                // the type's own coefficient is what a counted obj is tested against.
+                                                // Pinned by DecisionModelTest.testTheAxesArePlanT.
+                                                uri(PLACE).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                                uri(HOP).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                                uri(SPLIT).maybe(), ALL_TYPE.c(cInt.ANY()),
+                                                uri(INST).maybe(), lst(URI_TYPE),
+                                                uri(SPAN), lst(rec(
+                                                        uri(SPAN), URI_TYPE,
+                                                        uri(FLAGS).maybe(), lst(URI_TYPE))))).maybe()), Map.of(
+                                        uri(NAME), "the plan's name — the rewrite rule it embodies",
+                                        uri(CUT).maybe(), "the cut selector: the morphism classes (form + laws + theory) the plan anchors on",
+                                        uri(WHERE).maybe(), "the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)",
+                                        uri(RESULT).maybe(), "only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T"))
+                                .constructor(arg -> {
+                                    final Rec plan = arg.isRec() && arg.asRec().has(uri(NAME)) ? arg.asRec() : rec(uri(NAME), arg);
+                                    return plan.selfTID(MACH_PLAN_TID);
+                                })
                                 .create(),
                         // the resolver family — structural contract, concrete scoring + firstfind strategies (empty config)
                         MACH_RESOLVER_TYPE = TypeBuilder.build()
@@ -777,7 +830,7 @@ public class machInstSet extends AbstractInstSet {
                                 .example("push(xyz)                              [-- mint /xyz --]")
                                 .example("push(<../b>)                           [-- the sibling b, minted from the shared parent: = move(<..>).push(b) --]")
                                 .example("push(<a/b>)                            [-- the descendant /a/b, minted from the machine at /a --]")
-                                .example("push()                                 [-- an anonymous child, \\(c = \\mathrm{mintShortUUID}(\\mathrm{vid}(\\mathrm{here}))\\) --]")
+                                .example("push()                                 [-- an anonymous child, c = mintShortUUID(vid(here)) --]")
                                 .example("push(<ws://localhost:8555/worker>)     [-- refused: a peer, not a machine in this tree --]")
                                 .example("move(//remote).push(a/b)               [-- create a machine at a remote location by moving to that location first --]")
                                 .body((lhs, inst) -> {
@@ -857,7 +910,7 @@ public class machInstSet extends AbstractInstSet {
                         // pop() destroys the frame it leaves, move() leaves it standing and reachable by address
                         InstBuilder.build().tid(MOVE_INST_TID)
                                 .dom(A.maybe(), "the lhs flows through: move re-homes the machine the next code runs in, and the value continues untouched")
-                                .rng(A.maybeSome(), "the value, unchanged — \\(\\mathrm{move}(t) \\mapsto x\\) where the machine \\(t\\) addresses becomes current")
+                                .rng(A.maybeSome(), "the value, unchanged — \\(\\mathrm{move}(t)\\colon x \\mapsto x\\) where the machine \\(t\\) addresses becomes current")
                                 .argLst(T(URI_TID.maybe()), "\\(t\\), the address to stand in: `~` is the current machine, `a` (or `~/a`) its child, `..` its parent, `../b` the sibling \\(b\\), and `../../..` walks up. Absent, \\(t = \\;..\\) — bare `move()` is `move(<..>)`")
                                 .desc("""
                                         choose where the next inst will evaluate, and close nothing. The address is folded

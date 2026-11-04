@@ -25,11 +25,12 @@ import studio.phaseshift.metatron.algebra.rewrite.*;
 import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
-import studio.phaseshift.metatron.isa.m.math.cat.LawTable;
-import studio.phaseshift.metatron.isa.m.math.cat.Places;
-import studio.phaseshift.metatron.isa.m.math.cat.Signatures;
-import studio.phaseshift.metatron.isa.m.math.cat.TheoryHelper;
+import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
@@ -40,14 +41,17 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.*;
+import static studio.phaseshift.metatron.algebra.LawTable.declares;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
+import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.same;
+import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.sameOp;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -213,8 +217,10 @@ public final class PlanInterpreter {
 
         final List<Inst> insts = code.insts();
         // the shape is [initial, {*}elementwise, reducer] — {*} = ZERO or more, so the minimum is
-        // seed + reducer (2 insts); a bare reduction over the bulk is shardable.
-        if (2 > insts.size() || !START_INST_TID.equals(insts.getFirst().tid().basePath()))
+        // seed + reducer (2 insts); a bare reduction over the bulk is shardable. THE SEED IS THE INITIAL FORM
+        // (dom {0}), read off the contract the chain's own typing resolved it to — never off its name.
+        final Inst initial = 2 > insts.size() ? null : contracts(code).getFirst();
+        if (null == initial || !initial.isInitial())
             return code;
 
         final Cut cut = plan.cut();
@@ -579,7 +585,7 @@ public final class PlanInterpreter {
      * {@code host} is the field {@code peer::T} reserves for a peer the current machine can ship to — where to
      * dial it from here — so a target is a peer that carries one.
      * <p>
-     * A TARGET IS ONLINE AND SERVES THE ROUTE ({@link Places#serves}). AN OFFLINE PEER IS NO TARGET: a dialed peer
+     * A TARGET IS ONLINE AND SERVES THE ROUTE ({@link PlaceResolver#serves}). AN OFFLINE PEER IS NO TARGET: a dialed peer
      * whose link is down stays in the map (it is being redialed), but a shard shipped down it answers {@code not
      * connected} and that fail poisons the reduction — so an outage SHRINKS the fan-out instead, and the fold
      * completes on the peers that answer. A PEER THAT CANNOT {@code eval} IS NO TARGET EITHER: the route ships each
@@ -815,19 +821,17 @@ public final class PlanInterpreter {
 
     /**
      * Whether {@code b} is the declared inverse of {@code a} with equal operands. Endpoints are unavailable
-     * before resolution, so the operand type that selected the declaration is the type guard. A literal zero
-     * operand never cancels: {@code mult(0)} has no inverse, and {@code plus(0)} is the unit law's anyway.
+     * before resolution, so the operand type that selected the declaration is the type guard. An operand that is
+     * its type's declared {@code zero} never cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no
+     * inverse), and under {@code plus} it is the unit law's anyway.
      */
     private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
         final LawTable.Declared declared = LawTable.declared(a.tid().basePath(), carrier);
         return null != declared && null != declared.entry().inverse()
                 && b.tid().basePath().equals(declared.entry().inverse().basePath())
                 && a.args().equals(b.args())
-                && a.args().elements().noneMatch(PlanInterpreter::isZeroLiteral);
-    }
-
-    private static boolean isZeroLiteral(final Obj arg) {
-        return (arg.isInt() && 0L == arg.asInt().intValue()) || (arg.isReal() && 0.0d == arg.asReal().realValue());
+                && a.args().elements().noneMatch(arg -> LawTable.typeLawsOf(arg.type()).jvm().values().stream()
+                .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
     }
 
     /**
@@ -859,7 +863,8 @@ public final class PlanInterpreter {
     /**
      * Compose two adjacent filters — the same filter ({@code is} or {@code filter}), each on the same comparison,
      * declared {@code poset} at their carrier — to one filter on the stricter bound, the poset law
-     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. Null when the pair does not compose.
+     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. The bound is decided by evaluating the comparison, so it must also be
+     * declared {@code pure}. Null when the pair does not compose.
      */
     private static Inst posetCompose(final Inst a, final Inst b, final Type carrier) {
         if (!sameOp(a, b))
@@ -867,7 +872,7 @@ public final class PlanInterpreter {
         final Inst first = comparisonOf(a);
         final Inst second = comparisonOf(b);
         if (null == first || null == second || !sameOp(first, second) || !declares(first, carrier, Law.poset)
-                || 1 != first.args().count() || 1 != second.args().count())
+                || !declares(first, carrier, Law.pure) || 1 != first.args().count() || 1 != second.args().count())
             return null;
         final Obj bound = stricter(first, second);
         if (null == bound)
@@ -878,28 +883,22 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The stricter of two bounds of the same comparison — the larger for {@code gt}/{@code gte}, the smaller for
-     * {@code lt}/{@code lte} — or null when the bounds are not two ints, two reals, or two strs.
+     * The stricter of two bounds of one comparison, decided by THE COMPARISON ITSELF rather than by its name: the
+     * {@code poset} law makes it transitive, so when {@code b cmp a} holds, {@code x cmp b} implies {@code x cmp a} and
+     * the pair is {@code x cmp b} — the larger bound under {@code gt}, the smaller under {@code lt}, by the order's own
+     * answer. An equal pair is either bound. Null when the bounds are not values, or the order relates neither way (a
+     * partial order need not; a comparison that cannot be evaluated answers a fail).
      */
     private static Obj stricter(final Inst first, final Inst second) {
-        final String op = first.tid().basePath().name();
-        final boolean upper = op.equals(GT_INST_TID.name()) || op.equals(GTE_INST_TID.name());
-        final boolean lower = op.equals(LT_INST_TID.name()) || op.equals(LTE_INST_TID.name());
-        if (!upper && !lower)
+        final Obj a = first.arg(0);
+        final Obj b = second.arg(0);
+        if (a.isCall() || b.isCall())
             return null;
-        final Obj x = first.arg(0);
-        final Obj y = second.arg(0);
-        final Obj bound;
-        if (x.isInt() && y.isInt())
-            bound = jnt(upper ? Math.max(x.asInt().intValue(), y.asInt().intValue()) : Math.min(x.asInt().intValue(), y.asInt().intValue()));
-        else if (x.isReal() && y.isReal())
-            bound = real(upper ? Math.max(x.asReal().realValue(), y.asReal().realValue()) : Math.min(x.asReal().realValue(), y.asReal().realValue()));
-        else if (x.isStr() && y.isStr()) {
-            final int comparison = x.asStr().strValue().compareTo(y.asStr().strValue());
-            bound = (upper ? 0 <= comparison : 0 >= comparison) ? x : y;
-        } else
-            return null;
-        return bound;
+        if (Processor.Helper.apply(b, first).booleanCheck())
+            return b;
+        if (Processor.Helper.apply(a, second).booleanCheck())
+            return a;
+        return a.equals(b) ? a : null;
     }
 
     /**
@@ -925,12 +924,14 @@ public final class PlanInterpreter {
     /**
      * The absorbing law (local): an absorbing op is a constant of the chain, so the run before it that cannot change
      * what it answers is dead code — {@code …·g·zero ↦ …·zero}. Each absorbing op swallows its predecessors back to
-     * the first one that is not {@link #absorbable}, and never the seed.
+     * the first one that is not {@link #absorbable}, and never the seed — the chain's initial form, read off the
+     * contract its typing resolved it to.
      */
     private static Code absorbingRemoval(final Code code) {
         final List<Inst> insts = code.insts();
-        final int seed = (!insts.isEmpty() && START_INST_TID.equals(insts.getFirst().tid().basePath())) ? 1 : 0;
         final List<Type> carriers = carriers(code);
+        final Inst initial = insts.isEmpty() ? null : contracts(code).getFirst();
+        final int seed = null != initial && initial.isInitial() ? 1 : 0;
         final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
         for (int i = 0; i < insts.size(); i++) {
             final Inst inst = insts.get(i);
@@ -1220,5 +1221,49 @@ public final class PlanInterpreter {
             return code(headed);
         }
         return member.c(c);
+    }
+
+    /**
+     * The stream lift, {@code map} — kept keyed on the operation itself: its {@code {?} → {?}} coefficient
+     * shape is shared by other instructions ({@code is} is also {@code {?} → {?}}), so a shape-only test
+     * would unwrap a predicate. The chain instruction carries no endpoints, so the op <em>address</em> is
+     * what identifies it.
+     */
+    private static boolean isMap(final Inst inst) {
+        return inst.tid().basePath().equals(MAP_INST_TID);
+    }
+
+    /**
+     * The instruction a {@code map} wraps, or null when it wraps no instruction. Before resolution the
+     * wrapped operand arrives as a uri (the op symbol), so it is read back as an instruction.
+     */
+    public static Obj mapArgument(final Inst inst, final Type carrier) {
+        if (1 != inst.args().count() || !isMap(inst))
+            return null;
+        final Obj arg = inst.arg(0);
+        if (arg.isObjInst())
+            return arg;
+        if (!arg.isUri())
+            return null;
+        final fURI op = arg.uriValue().isAbsolute() ? arg.uriValue() : M_ISA_TID.extend(INST).extend(arg.uriValue().name());
+        final Inst wrapped = instB(op, lst());
+        // keep the chain's pre-resolution form (the op address), but only when the address is a real op
+        if (!Machine.read(op).isNoObj())
+            return wrapped;
+        return null;
+    }
+
+    /**
+     * The one instruction a filter tests — {@code is(gt(a))} or {@code filter(gt(a))}, whose one argument is
+     * {@code gt(a)} (an instruction, or a one-instruction code) — or null when the instruction is no filter of one
+     * instruction. Whether that instruction is a COMPARISON is its declaration's to say, never its name's: the callers
+     * gate on {@code poset}. A bare {@code gt(a)} is no filter: it answers a bool, which is why only filters compose.
+     */
+    public static Inst comparisonOf(final Inst filter) {
+        final fURI op = filter.tid().basePath();
+        if ((!IS_INST_TID.equals(op) && !FILTER_INST_TID.equals(op)) || 1 != filter.args().count() || !filter.arg(0).isCall())
+            return null;
+        final List<Inst> insts = filter.arg(0).<Call>as().asCode().insts();
+        return 1 == insts.size() ? insts.getFirst() : null;
     }
 }

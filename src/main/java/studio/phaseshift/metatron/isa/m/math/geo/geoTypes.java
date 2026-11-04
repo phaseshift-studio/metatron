@@ -103,7 +103,7 @@ public class geoTypes {
                         .slots(Map.of(jnt(0), "the x (longitude) coordinate",
                                 jnt(1), "the y (latitude) coordinate",
                                 jnt(2).maybe(), "the z (altitude) coordinate"))
-                        .desc("a point — a coordinate pair, or a triple with an altitude. \\([\\lambda, \\varphi[, h]]\\)")
+                        .desc("a point — a coordinate pair, or a triple with an altitude. \\([\\lambda, \\varphi]\\) or \\([\\lambda, \\varphi, h]\\)")
                         .example("geo:point::[-123.13,44.47]", "geo:point::[-123.13,44.47,1240.0]")
                         .create(),
                 LINE_TYPE = kindBuilder(LINE_TID, GEOMETRY_TID,

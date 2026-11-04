@@ -216,14 +216,16 @@ The rewrite stage runs **before resolution**, so the rules see generic dom/rng r
 the shape of the compiled chain is decided: a rule-driven collapse, a native pushdown, and a distributed reduce's
 gather point all enter the compiled form here.
 
-| rewriter               | the rule                                                                                                                                                                                                                            |
-|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `fixpoint_rewriter::T` | apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for `max` consecutive passes (default `2`) — so a rule re-runs on every pass and must be idempotent |
-| `identity_rewriter::T` | return the code unchanged — for a compiler whose rewriting happens elsewhere                                                                                                                                                        |
+| rewriter               | the rule                                                                                                                                                                                                                                                                                                                                                                              |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fixpoint_rewriter::T` | apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for `max` consecutive passes (default `2`) — so a rule re-runs on every pass and must be idempotent                                                                                                                                                   |
+| `identity_rewriter::T` | return the code unchanged — for a compiler whose rewriting happens elsewhere                                                                                                                                                                                                                                                                                                          |
+| `plan_rewriter::T`     | a `fixpoint_rewriter::T` whose rules are the law-driven plans (`plan::T`) rather than every instset's rewrites: each reads the algebra the instructions and types declare (`?decq`) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (`law_shard`), with no rule naming an instruction |
 
 ```mtron_pre
 fixpoint_rewriter::[=>]
 fixpoint_rewriter::[max=>3]
+plan_rewriter::[=>]
 ```
 
 ### resolve — the walk and its two strategies
@@ -741,13 +743,13 @@ Peers forked on one host share it; telling them apart takes their service author
 Everything above is a subtype of `component::T` at `/m/mach/component` — except `machine::T` itself and the
 non-component families, which hang directly off `/m/mach`:
 
-| family   | types (`::T`)                                                                                                                                                                                                                                                        |
-|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer` |
-| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                    |
-| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                        |
-| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                         |
-| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares                                             |
+| family   | types (`::T`)                                                                                                                                                                                                                                                                                   |
+|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`           |
+| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                                               |
+| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                                                   |
+| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                                                    |
+| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `plan` (a rewrite rule as a value — `plan_rewriter::T`'s rule format), `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares |
 
 ## appendix — writing another language
 

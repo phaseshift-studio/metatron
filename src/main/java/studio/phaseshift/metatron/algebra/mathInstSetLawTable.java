@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.rewrite.Derivation;

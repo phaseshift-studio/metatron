@@ -74,7 +74,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * cannot import. Those retire as {@code InstBuilder} grows the remaining facets; the rows then delete with them.
  * <p>BECAUSE A DECLARATION IS KEYED BY THE INSTRUCTION'S N-TID ({@code tid.dom(A).rng(B)}), a migrated entry must
  * sit at the ROW'S OWN address ({@code tid(op).dom(A).rng(B)}): that is how the declaration is served in place of
- * the row, and how {@link studio.phaseshift.metatron.isa.m.math.cat.LawTable#derivations()} dedupes the two
+ * the row, and how {@link studio.phaseshift.metatron.algebra.LawTable#derivations()} dedupes the two
  * forms into one rule.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -254,19 +254,19 @@ public final class mInsts {
                         .body((lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() <= inst.arg(0).realValue()).isPresent()))
                         .law(Law.poset, Law.pure)
                         .create(),
-                InstBuilder.build().tid(NEG_INST_TID, "a negation function \\(f(x) \\nearrow -x\\): the additive inverse of the lhs real")
+                InstBuilder.build().tid(NEG_INST_TID, "a negation function \\(f(x) \\mapsto -x\\): the additive inverse of the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the negated lhs real")
                         .argLst()
                         .body((lhs, inst) -> lhs.asReal().neg())
                         .law(Law.involution, Law.pure)
                         .create(),
-                InstBuilder.build().tid(PLUS_INST_TID, "a sum function \\(f(x, y) \\nearrow x + y\\): adds the rhs real to the lhs real")
+                InstBuilder.build().tid(PLUS_INST_TID, "a sum function \\(f(x, y) \\mapsto x + y\\): adds the rhs real to the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the sum")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().plus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
                         .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
                         .create(),
-                InstBuilder.build().tid(MULT_INST_TID, "a product function \\(f(x, y) \\nearrow xy\\): multiplies the lhs real by the rhs real")
+                InstBuilder.build().tid(MULT_INST_TID, "a product function \\(f(x, y) \\mapsto xy\\): multiplies the lhs real by the rhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the product")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().mult(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
@@ -284,7 +284,7 @@ public final class mInsts {
                         .body((lhs, inst) -> lhs.asReal().one())
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(INV_INST_TID, "an inverse function \\(f(x) \\nearrow 1/x\\): the multiplicative inverse of the lhs real")
+                InstBuilder.build().tid(INV_INST_TID, "an inverse function \\(f(x) \\mapsto 1/x\\): the multiplicative inverse of the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the multiplicative inverse")
                         .argLst()
                         .body((lhs, inst) -> lhs.asReal().inv())
@@ -309,7 +309,7 @@ public final class mInsts {
                         .example("{1.0,2.0,3.0}.mean() [-- 2.0 --]")
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(POW_INST_TID, "a power function \\(f(x, n) \\nearrow x^n\\): the lhs real raised to the arg real")
+                InstBuilder.build().tid(POW_INST_TID, "a power function \\(f(x, n) \\mapsto x^n\\): the lhs real raised to the arg real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the lhs real raised to the arg real")
                         .argLst(T(REAL_TID), "the exponent real")
                         .body((lhs, inst) -> real(Math.pow(lhs.realValue(), inst.arg(0).realValue())))
@@ -318,14 +318,14 @@ public final class mInsts {
                 // DIV AND MINUS DECLARE THEIR DEFINING EQUATIONS, which is what lets real's field (and its
                 // add_group) derive the inverse pairs instead of a row declaring them: div ≡ mult ∘ inv,
                 // minus ≡ plus ∘ neg. The carrier states the group; the equation states which instruction it is.
-                InstBuilder.build().tid(DIV_INST_TID, "a quotient function \\(f(x, y) \\nearrow x/y\\): the lhs real divided by the rhs real")
+                InstBuilder.build().tid(DIV_INST_TID, "a quotient function \\(f(x, y) \\mapsto x/y\\): the lhs real divided by the rhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the quotient")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().div(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
                         .derivation(new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())))
                         .law(Law.right_distributive, Law.action, Law.pure)
                         .create(),
-                InstBuilder.build().tid(MINUS_INST_TID, "a difference function \\(f(x, y) \\nearrow x - y\\): the rhs real subtracted from the lhs real")
+                InstBuilder.build().tid(MINUS_INST_TID, "a difference function \\(f(x, y) \\mapsto x - y\\): the rhs real subtracted from the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the difference")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().minus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
@@ -576,14 +576,14 @@ public final class mInsts {
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the branch union")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().plus(inst.arg(0).asUri()))
-                        .desc("a branch function \\(f(x, y) \\nearrow x \\sqcup y\\): the union of the lhs and rhs uri paths")
+                        .desc("a branch function \\(f(x, y) \\mapsto x \\sqcup y\\): the union of the lhs and rhs uri paths")
                         .law(Law.commutative, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MULT_INST_TID, "concatenate the path of the argument uri onto the path of the lhs uri")
                         .dom(URI_TID, "a uri").rng(URI_TID.maybe(), "the path extension")
                         .argLst(T(URI_TID.maybe()), "the rhs uri")
                         .body((lhs, inst) -> lhs.asUri().mult(inst.arg(0).asUri()))
-                        .desc("a product function \\(f(x, y) \\nearrow xy\\): concatenates the rhs uri path onto the lhs uri path")
+                        .desc("a product function \\(f(x, y) \\mapsto xy\\): concatenates the rhs uri path onto the lhs uri path")
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(ONE_INST_TID, "the one of the uri monoid")
@@ -1132,7 +1132,7 @@ public final class mInsts {
                         .dom(A, "the lhs obj to pass to the rhs")
                         .rng(A, "an rhs obj is the lhs obj")
                         .argLst()
-                        .desc("the obj identity function \\(f(x)\\to x\\)")
+                        .desc("the obj identity function \\(f(x) \\mapsto x\\)")
                         .body((lhs, _) -> lhs)
                         .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
                         .create(),

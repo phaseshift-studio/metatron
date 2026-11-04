@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
+import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -29,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanRewriter.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MAP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
@@ -42,171 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class catRewrite {
-
-    /**
-     * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
-     * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
-     * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
-     * ({@link LawTable#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
-     * {@code sum}, {@code order(s)} through {@code kmerge(s)}, and a keyed {@code group([k⇒h])} pointwise — the rec
-     * {@code sum} merges its partials by key, then each key folds through {@code h}'s combiner. The master recombines behind the barrier and runs the
-     * tail at home; each peer takes one factor of the seed bulk with the floatable run replicated and a local partial
-     * reduce. {@link PlanInterpreter#lower} consumes the cut.
-     * <p>
-     * The placement is a TREE: a peer re-plans the part it is handed over its own dialed peers while budget remains, and
-     * recombines its children's partials through the same combiner. The budget is the plan's {@code hop} unless the
-     * chain states one ({@code ?hop=n}); the default of one level is the star — the master's peers fold their parts
-     * where they stand.
-     */
-    private static final Cut SHARD_CUT = Cut.reducer(Law.monoidic, Law.commutative);
-    private static final Span SHARD_PRE = Span.before().floatable();
-    private static final Span SHARD_AT = Span.at();
-    private static final Span SHARD_POST = Span.after();
-    private static final Plan SHARD_PLAN = PlanBuilder.plan("law_shard")
-            .cut(SHARD_CUT)
-            // THE ORIGIN'S TAIL, stated in the axes: the home place alone, no depth, strided — so nothing ships and the
-            // cut is re-applied in place. It stays a TAIL (the AT/POST spans, no SEED span and no regrouping set), which
-            // is what keeps the plan's gather from becoming a lane.
-            .place(PlaceSet.local()).hop(0, cInt.ANY()).split(Partition.stream())
-            .where(Placement.local(SHARD_AT, SHARD_POST))
-            // THE FAN-OUT that factors the seed: the dialed set, one level deep, strided
-            .place(PlaceSet.peer()).hop(1, cInt.ANY()).split(Partition.stream())
-            .where(Placement.tree(1, Span.seed().partition(), SHARD_PRE.withoutSeed(), SHARD_AT))
-            .create();
-
-    /**
-     * The local unit-law plan — cut the identity (the {@code id} role) and route it to {@code none}: the span
-     * is deleted, the unit law's transform. No {@code law} selector — the theory names the role.
-     */
-    private static final Cut UNIT_CUT = Cut.role(ID);
-    private static final Plan UNIT_PLAN = PlanBuilder.plan("theory_unit_removal")
-            .cut(UNIT_CUT)
-            .where(Placement.none(Span.at()))
-            .create();
-
-    /**
-     * The involution plan — cut the self-inverse op ({@code law => [involution]}): the f·f ↦ ε fold.
-     */
-    private static final Cut INVOLUTION_CUT = Cut.law(Law.involution);
-    private static final Plan INVOLUTION_PLAN = PlanBuilder.plan("theory_involution")
-            .cut(INVOLUTION_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The idempotent plan — cut the idempotent op ({@code law => [idempotent]}): the f·f ↦ f fold.
-     */
-    private static final Cut IDEMPOTENT_CUT = Cut.law(Law.idempotent);
-    private static final Plan IDEMPOTENT_PLAN = PlanBuilder.plan("law_idempotent")
-            .cut(IDEMPOTENT_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The monoidic plan — cut a monoidic fold ({@code law => [monoidic]}): the f·f ↦ f fold on a reducer/join.
-     */
-    private static final Cut MONOIDIC_CUT = Cut.law(Law.monoidic);
-    private static final Plan MONOIDIC_PLAN = PlanBuilder.plan("law_monoidic")
-            .cut(MONOIDIC_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The inverse-cancellation plan — cut a declared inverse ({@code role => inverse}): the f·f⁻¹ ↦ ε fold on
-     * the declared opposing edge.
-     */
-    private static final Cut INVERSE_CUT = Cut.role(INVERSE);
-    private static final Plan INVERSE_PLAN = PlanBuilder.plan("inverse_cancellation")
-            .cut(INVERSE_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The like-term plan — cut the additive op ({@code role => add}): the route-as-function form, where the
-     * transform IS the ring's own addition (sum like terms).
-     */
-    private static final Cut BRANCH_CUT = Cut.role(ADD);
-    private static final Plan BRANCH_COLLAPSE_PLAN = PlanBuilder.plan("branch_collapse")
-            .cut(BRANCH_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The one-term plan — cut the additive identity ({@code role => zero}): the single addend is that addend
-     * (the implicit zero drops out).
-     */
-    private static final Cut BRANCH_INLINE_CUT = Cut.role(ZERO);
-    private static final Plan BRANCH_INLINE_PLAN = PlanBuilder.plan("branch_inline")
-            .cut(BRANCH_INLINE_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The poset plan — cut a poset comparison ({@code law => [poset]}): adjacent filters on the same comparison
-     * compose to the filter on the stricter bound.
-     */
-    private static final Cut POSET_CUT = Cut.law(Law.poset);
-    private static final Plan POSET_PLAN = PlanBuilder.plan("law_poset")
-            .cut(POSET_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The map-unwrap plan — cut the stream lift ({@code role => map}): the transparent map unwraps its value.
-     */
-    private static final Cut MAP_CUT = Cut.role(MAP_INST_TID.name());
-    private static final Plan MAP_UNWRAP_PLAN = PlanBuilder.plan("form_map_unwrap")
-            .cut(MAP_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The absorbing plan — cut an absorbing op ({@code law => [absorbing]}): everything before it is dead code.
-     */
-    private static final Cut ABSORBING_CUT = Cut.law(Law.absorbing);
-    private static final Plan ABSORBING_PLAN = PlanBuilder.plan("law_absorbing")
-            .cut(ABSORBING_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The derivation plan — cut a derived op ({@code role => derivation}): fold its primitive composition back
-     * to the derived operation.
-     */
-    private static final Cut DERIVATION_CUT = Cut.role(DERIVATION);
-    private static final Plan DERIVATION_PLAN = PlanBuilder.plan("derivation_contraction")
-            .cut(DERIVATION_CUT)
-            .where(Placement.local(Span.at()))
-            .create();
-
-    /**
-     * The rewrite-name → plan registry — the bridge the path's out-edges look up when a rewrite rule has a
-     * declarative plan ({@code cut}/{@code where}) rather than a bare lambda. A Plan is the {@code plan::T} rec
-     * itself, so there is no serialization step: the value is handed out as-is.
-     */
-    private static final Map<String, Plan> PLANS = new LinkedHashMap<>();
-
-    static {
-        PLANS.put(SHARD_PLAN.name(), SHARD_PLAN);
-        PLANS.put(UNIT_PLAN.name(), UNIT_PLAN);
-        PLANS.put(INVOLUTION_PLAN.name(), INVOLUTION_PLAN);
-        PLANS.put(IDEMPOTENT_PLAN.name(), IDEMPOTENT_PLAN);
-        PLANS.put(MONOIDIC_PLAN.name(), MONOIDIC_PLAN);
-        PLANS.put(INVERSE_PLAN.name(), INVERSE_PLAN);
-        PLANS.put(BRANCH_COLLAPSE_PLAN.name(), BRANCH_COLLAPSE_PLAN);
-        PLANS.put(BRANCH_INLINE_PLAN.name(), BRANCH_INLINE_PLAN);
-        PLANS.put(POSET_PLAN.name(), POSET_PLAN);
-        PLANS.put(MAP_UNWRAP_PLAN.name(), MAP_UNWRAP_PLAN);
-        PLANS.put(ABSORBING_PLAN.name(), ABSORBING_PLAN);
-        PLANS.put(DERIVATION_PLAN.name(), DERIVATION_PLAN);
-    }
-
-    /**
-     * The plan registered under a rewrite rule's name, or null when the rule is still a bare lambda.
-     */
-    public static Plan planOf(final String name) {
-        return PLANS.get(name);
-    }
 
     /**
      * The {@code /rewrite} registrations — the law-driven rules the category ships, each its
@@ -341,7 +178,7 @@ public class catRewrite {
                 // pointed at object[int].law would run on plus with no body change.
                 docWrap(InstSet.Helper.rewriter(rewriteTID("branch_collapse"),
                                 code -> PlanInterpreter.lower(BRANCH_COLLAPSE_PLAN, code)),
-                        "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[code].law\\), \\(S = branch\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
+                        "the additive like-term law, law-indexed: equal members of any occurrence of the algebra's additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \\(\\mathrm{object}[\\mathrm{code}].\\mathrm{law}\\), \\(S = \\mathrm{branch}\\)) \\(\\mathrm{branch}(+2, +4, +2) \\leadsto \\mathrm{branch}(+2\\{2\\}, +4)\\) -- the additive normal form the code ring's distributivity law consumes"),
 
                 docWrap(InstSet.Helper.rewriter(rewriteTID("branch_inline"),
                                 code -> PlanInterpreter.lower(BRANCH_INLINE_PLAN, code)),
@@ -360,7 +197,7 @@ public class catRewrite {
                 // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
                 // the pure run before it that hands it one obj per obj is dead code.
                 docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
-                        code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(f \\circ g = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\(x + 3 \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
+                        code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(g \\cdot f = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
 
                 // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
                 // the identity of the reduction), so an adjacent identical reducer/join collapses.

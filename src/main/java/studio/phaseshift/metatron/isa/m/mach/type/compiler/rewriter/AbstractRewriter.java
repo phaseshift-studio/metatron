@@ -31,11 +31,14 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public abstract class AbstractRewriter extends MRec implements Rewriter {
 
     public AbstractRewriter(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
-        jvm.putIfAbsent(uri(REWRITE), auto_(instLambda(lhs -> objs(new ArrayList<>(this.rewrites())))));
+        // a copy: the rewriter adds its rewrite entry, and the rec it was constructed from (an mtron rec literal's map is
+        // immutable) is not the rewriter's to change
+        super(mutableMap(jvm), tid, vid);
+        this.jvm().putIfAbsent(uri(REWRITE), auto_(instLambda(lhs -> objs(new ArrayList<>(this.rewrites())))));
     }
 }

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.math.cat;
+package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
@@ -758,7 +758,7 @@ public abstract class LawTable {
             return null;
         final List<Obj> folds = keyed.arg(0).asRec().elements().map(Rel::secondDirect).toList();
         final Obj fold = folds.isEmpty() ? null : folds.getFirst();
-        if (null == fold || !fold.isInst() || !folds.stream().allMatch(f -> f.isInst() && catLiveness.same(f.asInst(), fold.asInst())))
+        if (null == fold || !fold.isInst() || !folds.stream().allMatch(f -> f.isInst() && Inst.Helper.same(f.asInst(), fold.asInst())))
             return null;
         final Obj perKey = perKey(fold, laws);
         return null == perKey ? null : sum_().select_(rec(id_().tryToInst(), perKey));
@@ -901,7 +901,7 @@ public abstract class LawTable {
      * and no inverse, so {@code plus(0)} never folds and {@code plus(3).minus(3)} never cancels — the two rows of
      * {@code PlanBuilderTest.testEmittedCodeIsUnchangedByRename} a peer suite left red.
      */
-    static boolean memoizable(final Rec laws, final boolean spaceAnswered) {
+    public static boolean memoizable(final Rec laws, final boolean spaceAnswered) {
         return !laws.jvm().isEmpty() || spaceAnswered;
     }
 
@@ -1069,5 +1069,20 @@ public abstract class LawTable {
      */
     protected static Lst laws(final Law... laws) {
         return lst(Arrays.stream(laws).map(l -> (Obj) uri(l.name())).toList());
+    }
+
+    /**
+     * Whether an instruction declares a process law for the carrier's type. The chain instruction carries no
+     * endpoints (the rewriter runs before resolution), so the declaration is resolved by op address,
+     * disambiguated by the operand type — never guessed across types.
+     */
+    public static boolean declares(final Inst inst, final Type carrier, final Law law) {
+        final Declared declared = declared(inst.tid().basePath(), carrier);
+        return null != declared && declares(declared, law);
+    }
+
+    public static boolean declares(final Declared declared, final Law law) {
+        return declared.entry().laws().lstValue().stream()
+                .anyMatch(l -> l.uriValue().name().equals(law.name()));
     }
 }

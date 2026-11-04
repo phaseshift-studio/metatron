@@ -335,13 +335,14 @@ A pattern is a declaration, not a new subsystem. The recipe, in the order the ma
    `merge().<combiner>.<tail>`, no SEED span — a tail, never a lane), and the fan-out is `.place(PlaceSet.peer())
    .hop(1, cInt.ANY()).split(Partition.stream())` over `tree(1, seed.partition(), pre.withoutSeed(), at)`.
    `create()` validates the axes' obligations and writes no derived `shape`/`target`.
-4. **Register it.** The plan joins `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key — a `plan::T` out-edge
+4. **Register it.** The plan joins `PlanRewriter`'s registry — the rule set of `plan_rewriter::T`, which runs the
+   plans without the category — and `catRewrite.rules()`, wired into `catInstSet`'s `REWRITE` key — a `plan::T` out-edge
    on every `path::T` it can move.
 5. **The interpreter lowers it.** `PlanInterpreter.shard` matches the one-cut shape
    `[initial, {*}floatable, blocked(reducer ∧ laws), {*}tail]`, factors the seed bulk, and emits
    `start([slaves]).select([to(p_i)]).merge().<combiner>`.
 6. **Liveness gates it.** The plan is a live out-edge only over reach (`Places.reachable()` — roster ∪ dialed peers) and
-   ships only to targets that `serve` the route (`Places.serves`: online, and the client overrides the placement's
+   ships only to targets that `serve` the route (`PlaceResolver.serves`: online, and the client overrides the placement's
    insts). An outage *shrinks* the fan-out; it never poisons the reduction.
 
 ## see also

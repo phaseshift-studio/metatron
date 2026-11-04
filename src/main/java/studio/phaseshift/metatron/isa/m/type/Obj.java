@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
@@ -1397,7 +1398,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybe(), "any obj")
                             .rng(B.maybeSome(), "the objs parsed from the command output")
                             .argLst(STR_TYPE, "the command to execute")
-                            .desc("a command execution function \\(f(x) \\nearrow x'\\): executes the arg command and parses its output as objs")
+                            .desc("a command execution function \\(f(x) \\mapsto x'\\): executes the arg command and parses its output as objs")
                             .body((lhs, inst) -> {
                                 final Str command = inst.arg(0).asStr();
                                 return MTronException.wrap(() ->
@@ -1414,7 +1415,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(A.maybe(), "the lhs if any arg type matches, noobj otherwise")
                             .argLst(T(B), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()), T(B.maybe()))
-                            .desc("a union type test function \\(f(x) \\nearrow \\{x \\mid \\emptyset\\}\\): maps the lhs if it matches any of the arg types")
+                            .desc("a union type test function \\(f(x) \\in \\{x, \\emptyset\\}\\): maps the lhs if it matches any of the arg types")
                             .body((lhs, inst) -> inst.args().lstValue().stream().anyMatch(o -> o.test(lhs)) ? lhs : noobj())
                             .create(),
                     InstBuilder.build()
@@ -1422,7 +1423,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B, "the serial form of the lhs obj")
                             .argLst(T(OBJ_SERIAL_TID), "the serializer to apply to the lhs")
-                            .desc("a serialization function \\(f(x) \\nearrow x'\\): serializes the lhs obj with the arg serializer")
+                            .desc("a serialization function \\(f(x) \\mapsto x'\\): serializes the lhs obj with the arg serializer")
                             .body((lhs, inst) -> {
                                 final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                                 try {
@@ -1438,7 +1439,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any obj")
                             .rng(A.maybeSome(), "the lhs obj")
                             .argLst(ALL_TYPE, "the code to apply asynchronously to the lhs")
-                            .desc("a fork function \\(f(x) \\nearrow x\\): the arg code applied to the lhs in a virtual thread, immediately yielding the lhs")
+                            .desc("a fork function \\(f(x) \\mapsto x\\): the arg code applied to the lhs in a virtual thread, immediately yielding the lhs")
                             .body((lhs, inst) -> {
                                 VirtualThread.virtual(inst.arg(0)).applyAsync(lhs);
                                 return lhs;
@@ -1449,11 +1450,11 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "a window of the lhs objs")
                             .argLst(INT_TYPE, "the starting offset", isa_(INT_TYPE).else_(jnt(0)).tryToInst(), "the window length (defaults to 0)")
-                            .desc("a windowing function \\(f(x, i, n) \\nearrow x'\\): the objs starting at offset i for a span of n")
+                            .desc("a windowing function \\(f(X, i, n) \\mapsto X'\\): the objs starting at offset i for a span of n")
                             .body((lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0())
                             .create(),
                     InstBuilder.build()
-                            .tid(ORDER_INST_TID, "a sorting function \\(f(X)\\to X'\\)")
+                            .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")
                             .dom(A.maybeSome(), "maybe some A to sort")
                             .rng(LST_TID.poly(A.maybeSome()), "a sorted lst of the lhs A{*}")
                             .argLst(T(ALL.maybe()), "a projection of A to compare")
@@ -1466,7 +1467,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(LST_TID.poly(A.maybeSome()).maybeSome(), "maybe some sorted lists")
                             .rng(LST_TID.poly(A.maybeSome()), "a lst k-way merged by the arg obj")
                             .argLst(ALL_TYPE, "the obj to merge by")
-                            .desc("a sorted merge function \\(f(X)\\to X'\\): k-way merges the lhs sorted lists by the arg obj")
+                            .desc("a sorted merge function \\(f(X) \\mapsto X'\\): k-way merges the lhs sorted lists by the arg obj")
                             .body((lhs, inst) -> {
                                 if (lhs.isNoObj())
                                     return noobj();
@@ -1500,7 +1501,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B, "the lhs obj after the conversion chain")
                             .argLst(REL_TYPE, "a chain rel of the types to convert through")
-                            .desc("a conversion function \\(f(x) \\nearrow x'\\): applies successive as_ conversions following the chain of types in the arg")
+                            .desc("a conversion function \\(f(x) \\mapsto x'\\): applies successive as_ conversions following the chain of types in the arg")
                             .body((lhs, inst) -> {
                                 Rel currentTransform = inst.arg(0).asRel();
                                 Obj currentObj = lhs;
@@ -1521,7 +1522,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(NOOBJ_TID.zero(), "noobj")
                             .argLst()
-                            .desc("a casting function \\(f(x) \\nearrow \\emptyset\\): casts the lhs obj to noobj")
+                            .desc("a casting function \\(f(x) \\mapsto \\emptyset\\): casts the lhs obj to noobj")
                             .body((lhs, inst) -> noobj())
                             .create(),
                     InstBuilder.build()
@@ -1529,7 +1530,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(STR_TID, "a clean str rendering of the lhs obj")
                             .argLst(STR_TYPE, "the target type (str::T)")
-                            .desc("a string function \\(f(x) \\nearrow s\\): the lhs obj rendered as a clean str")
+                            .desc("a string function \\(f(x) \\mapsto s\\): the lhs obj rendered as a clean str")
                             .body((lhs, inst) -> str(Str.Helper.cleanString(lhs), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null))
                             .create(),
                     InstBuilder.build()
@@ -1537,7 +1538,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B, "the lhs obj as the arg type")
                             .argLst(ALL_TYPE, "the type to cast to")
-                            .desc("a type casting function \\(f(x)\\to x\\)")
+                            .desc("a type casting function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0))))
                             .create(),
                     InstBuilder.build()
@@ -1554,7 +1555,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "the deduplicated objs")
                             .argLst()
-                            .desc("a deduplication function \\(f({c}X) \\to {1<=c}X\\)")
+                            .desc("a deduplication function \\(f(x\\{c\\}) \\mapsto x\\{1\\}\\)")
                             .body((lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct()))
                             .create(),
                     InstBuilder.build()
@@ -1562,7 +1563,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "the objs as a rec")
                             .argLst(URI_TYPE, "the rec to merge into")
-                            .desc("a rec merging function \\(f(X)\\to X\\)")
+                            .desc("a rec merging function \\(f(X) \\mapsto X'\\)")
                             .body((lhs, inst) -> {
                                 try {
                                     final fURI mailbox = inst.arg(0).uriValue();
@@ -1598,7 +1599,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "the objs as is")
                             .argLst()
-                            .desc("a passthrough function \\(f(X) \\to \\parallel X \\)")
+                            .desc("a passthrough function \\(f(X) \\mapsto X\\)")
                             .body((lhs, inst) -> lhs)
                             .create(),
                     InstBuilder.build()
@@ -1606,7 +1607,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B, "the lhs obj as the arg type")
                             .argLst(T(B), "the type to construct from the lhs")
-                            .desc("a type construction function \\(f(x)\\to x\\)")
+                            .desc("a type construction function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> lhs.tid(inst.arg(0).asType().vid()))
                             .create(),
                     InstBuilder.build()
@@ -1614,7 +1615,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(INT_TID, "the unchanged lhs obj")
                             .argLst()
-                            .desc("a loop state function \\(f(x) \\nearrow x\\): the loop frame marker over the monad")
+                            .desc("a loop state function \\(f(x) \\mapsto x\\): the loop frame marker over the monad")
                             .body((lhs, inst) -> lhs)
                             .create(),
                     InstBuilder.build()
@@ -1622,7 +1623,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(LST_TID, "the unchanged lhs obj")
                             .argLst()
-                            .desc("a path state function \\(f(x) \\nearrow x\\): the path frame marker over the monad")
+                            .desc("a path state function \\(f(x) \\mapsto x\\): the path frame marker over the monad")
                             .body((lhs, inst) -> lhs)
                             .create(),
                     InstBuilder.build()
@@ -1683,7 +1684,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybe(), "any obj")
                             .rng(ALL.maybeSome(), "the result of applying the arg to the lhs")
                             .argLst(T(ALL.maybe()), "the inst to apply to the lhs")
-                            .desc("an auto function \\(f(x) \\nearrow x'\\): the arg applied to the lhs (sugar'd !)")
+                            .desc("an auto function \\(f(x) \\mapsto x'\\): the arg applied to the lhs (sugar'd !)")
                             .body((lhs, inst) -> inst.arg(0).apply(lhs))
                             .create(),
                     InstBuilder.build()
@@ -1726,7 +1727,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL_STAR, "terminal objs")
                             .rng(NOOBJ_TID, "noobj")
                             .argLst()
-                            .desc("the terminal function \\(f(x)\\to \\emptyset\\)")
+                            .desc("the terminal function \\(f(x) \\mapsto \\emptyset\\)")
                             .body((lhs, inst) -> noobj())
                             .create(),
                     InstBuilder.build()
@@ -1734,7 +1735,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybe(), "the rhs obj")
                             .rng(ALL.maybeSome(), "the lhs obj")
                             .argLst(T(ALL_STAR), "concatenated args followed by newline written to stdout")
-                            .desc("a side-effect function \\(f(x)\\nearrow x\\)")
+                            .desc("a side-effect function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator()))))
                             .create(),
                     InstBuilder.build()
@@ -1742,7 +1743,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybe(), "the rhs obj")
                             .rng(ALL.maybeSome(), "the lhs obj")
                             .argLst(T(ALL_STAR), "concatenated args followed by newline written to stdout")
-                            .desc("a side-effect function \\(f(x)\\nearrow x\\)")
+                            .desc("a side-effect function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none(o.isStr() ? o.strValue() : o.toString())).reduce(noobj(), (a, b) -> noobj()).orElse(lhs)))
                             .create(),
                     InstBuilder.build()
@@ -1750,7 +1751,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybe(), "any obj")
                             .rng(ALL.maybeSome(), "the result of applying the arg to the lhs")
                             .argLst(T(LST_TID.maybe()), "the inst to apply to the lhs")
-                            .desc("an auto function \\(f(x) \\nearrow x'\\): the arg applied to the lhs (sugar'd !)")
+                            .desc("an auto function \\(f(x) \\mapsto x'\\): the arg applied to the lhs (sugar'd !)")
                             .body((lhs, inst) -> inst.arg(0).orElse(lhs).asLst().values().reduce(lhs, (a, b) -> b.apply(a)))
                             .create(),
                     InstBuilder.build()
@@ -1774,7 +1775,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "an rhs obj")
                             .rng(A, "an lhs obj")
                             .argLst()
-                            .desc("the obj identity function \\(f(x)\\to x\\)")
+                            .desc("the obj identity function \\(f(x) \\mapsto x\\)")
                             .body((lhs, inst) -> lhs)
                             .create(),
                     // TODO: do we gut this and rely fully on the non-barried form?
@@ -1783,7 +1784,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "the rhs obj")
                             .rng(A.maybeSome(), "the lhs obj")
                             .argLst()
-                            .desc("a objs barrier identity function \\(f(X)\\to X\\)")
+                            .desc("a objs barrier identity function \\(f(X) \\mapsto X\\)")
                             .body((lhs, inst) -> lhs)
                             .create(),
                     InstBuilder.build()
@@ -1791,7 +1792,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any objs")
                             .rng(BOOL_TID, "true if all objs are true")
                             .argLst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe())
-                            .desc("logical \\(\\texttt{and}\\) function \\(f(X)\\to \\tt{true}\\) if all \\(X\\) are true")
+                            .desc("logical \\(\\texttt{and}\\) function \\(f(X) \\mapsto \\mathtt{true}\\) if all \\(X\\) are true")
                             .body((lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_TRUE)).allMatch(Obj::boolValue)))
                             .create(),
                     InstBuilder.build()
@@ -1799,7 +1800,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any objs")
                             .rng(BOOL_TID, "true if any objs are true")
                             .argLst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe())
-                            .desc("logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true")
+                            .desc("logical \\(\\texttt{or}\\) function \\(f(X) \\mapsto \\mathtt{true}\\) if any \\(X\\) are true")
                             .body((lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue)))
                             .create(),
                     InstBuilder.build()
@@ -1809,7 +1810,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .args(rec(uri(LHS).maybe().asUri(), T(ALL_STAR), uri(ARGS).maybe(), LST_TYPE.maybe()))
                             .argDocs(Map.of(uri(LHS), "the obj to apply the lhs inst to",
                                     uri(ARGS), "the inst args (optional)"))
-                            .desc("an apply function \\(f(x) \\nearrow x'\\): applies the lhs inst to the given obj with the given args")
+                            .desc("an apply function \\(f(x) \\mapsto x'\\): applies the lhs inst to the given obj with the given args")
                             .body((lhs, inst) -> (inst.args().count() == 1 ? lhs.asInst() : lhs.asInst().args(inst.arg(1).asPoly())).apply(inst.arg(0)))
                             .create(),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(ALL_MAYBE_TYPE), (lhs, inst) -> lhs.apply(inst.arg(0))),
@@ -1820,14 +1821,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(T(B.maybe()), "any obj")
                             .desc("applies the lhs obj to the arg obj to yield the rhs obj")
                             .body((lhs, inst) -> inst.arg(0).apply(lhs))
+                            .law(Law.pure)
                             .create(),
                     InstBuilder.build()
                             .tid(FILTER_INST_TID)
                             .dom(A, "any obj")
                             .rng(A.maybe(), "the lhs if the arg predicate holds, noobj otherwise")
                             .argLst(T(ALL.maybe()), "the predicate to apply to the lhs")
-                            .desc("a filter function \\(f(x) \\nearrow \\{x \\mid \\emptyset\\}\\): the lhs mapped if the arg predicate passes")
+                            .desc("a filter function \\(f(x) \\in \\{x, \\emptyset\\}\\): the lhs mapped if the arg predicate passes")
                             .body((lhs, inst) -> inst.arg(0).apply(lhs).booleanCheck() ? lhs : noobj())
+                            .law(Law.partial, Law.pure)
                             .create(),
                     InstBuilder.build()
                             .tid(SIDE_INST_TID)
@@ -1871,7 +1874,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .rng(ALL.maybe(), "the lhs obj else the arg obj")
                             .argLst(T(ALL.maybe()), "the rhs obj is the lhs is noobj")
                             .desc("""
-                                    \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]
+                                    \\[ f(\\mathtt{lhs}) = \\left\\{ \\begin{aligned} \\mathtt{lhs} & \\quad \\text{if } \\mathtt{lhs} \\neq \\emptyset \\\\ \\mathtt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]
                                     """)
                             .body((lhs, inst) -> lhs.isNoObj() ? inst.arg(0).apply(lhs) : lhs)
                             .create(),// TODO: rec args needs resolution on generics connected
@@ -1882,6 +1885,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst(), "filter lhs if false")
                             .desc("filters the lhs obj")
                             .body((lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj())
+                            .law(Law.partial, Law.pure)
                             .create(), // TODO: generics are not working for some reason
                     InstBuilder.build()
                             .tid(SORTA_INST_TID)
@@ -1896,7 +1900,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybe(), "any obj")
                             .rng(BOOL_TID, "whether the lhs matches the arg type")
                             .argLst(T(ALL.maybe()), "the type to match the lhs against")
-                            .desc("a matching function \\(f(x) \\nearrow b\\): structurally checks whether the lhs obj matches the arg type")
+                            .desc("a matching function \\(f(x) \\mapsto b\\): structurally checks whether the lhs obj matches the arg type")
                             .body((lhs, inst) -> bool(lhs.test(inst.arg(0))))
                             .create(),
                     InstBuilder.build()
@@ -1912,7 +1916,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL, "any obj")
                             .rng(ALL.maybeSome(), "the branch results as objs")
                             .argLst(T(ALL.some()), "the branches to split into")
-                            .desc("a split function \\(f(x) \\nearrow x'\\): the lhs applied through each branch (sugar'd -<[...]>-)")
+                            .desc("a split function \\(f(x) \\mapsto x'\\): the lhs applied through each branch (sugar'd -<[...]>-)")
                             .body((lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs))))
                             .create(),
                     InstBuilder.build()
@@ -1968,7 +1972,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A.maybeSome(), "the merged objs")
                             .argLst(T(A.maybeSome()), "the objs to merge with the lhs")
-                            .desc("a superposition function \\(f(X) \\nearrow x'\\): merges the lhs objs with the arg objs (sugar'd >-)")
+                            .desc("a superposition function \\(f(X) \\mapsto X'\\): merges the lhs objs with the arg objs (sugar'd >-)")
                             .body((lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream())))
                             .create(),
                     InstBuilder.build()
@@ -1976,7 +1980,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL, "any obj")
                             .rng(BOOL_TID, "the negated truth value of the arg")
                             .argLst(T(ALL.maybe()), "the obj to negate")
-                            .desc("a negation function \\(f(x) \\nearrow x'\\): true if the arg obj is falsy")
+                            .desc("a negation function \\(f(x) \\mapsto x'\\): true if the arg obj is falsy")
                             .body((lhs, inst) -> bool(!inst.arg(0).booleanCheck()))
                             .create(),
                     InstBuilder.build()
@@ -1984,7 +1988,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any objs")
                             .rng(BOOL_TID, "true if lhs equals rhs")
                             .argLst(T(A), "the rhs obj")
-                            .desc("an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
+                            .desc("an equality function \\[ f(\\mathtt{lhs}) = \\left\\{ \\begin{aligned} \\mathtt{true} & \\quad \\text{if } \\mathtt{lhs} = \\mathtt{arg}_0 \\\\ \\mathtt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
                             .body((lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE))
                             .create(),
                     InstBuilder.build()
@@ -1992,7 +1996,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any objs")
                             .rng(BOOL_TID, "true if lhs does not equal rhs")
                             .argLst(T(A), "the rhs obj")
-                            .desc("an inequality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} \\neq \tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
+                            .desc("an inequality function \\[ f(\\mathtt{lhs}) = \\left\\{ \\begin{aligned} \\mathtt{true} & \\quad \\text{if } \\mathtt{lhs} \\neq \\mathtt{arg}_0 \\\\ \\mathtt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]")
                             .body((lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE))
                             .create(),
                     InstBuilder.build()
@@ -2055,7 +2059,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybeSome(), "any obj")
                             .rng(FAIL_TID, "a fail::T carrying the arg message")
                             .argLst(T(ALL.maybe()), "the failure message")
-                            .desc("a throwing function \\(f(x) \\nearrow \\emptyset\\): fails with the arg message")
+                            .desc("a throwing function \\(f(x) \\mapsto \\bot\\): fails with the arg message")
                             .body((lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).isStr()
                                     // A STRING'S MESSAGE IS ITS TEXT, NOT ITS SPELLING: toString() of a str is its mtron literal
                                     // ('bad'), and a fail's message is written as a str on the wire — so the quoted spelling would
@@ -2068,7 +2072,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL, "any obj")
                             .rng(ALL.maybe(), "the parent of the lhs obj")
                             .argLst()
-                            .desc("a parent function \\(f(x) \\nearrow x'\\): the parent link of the lhs obj")
+                            .desc("a parent function \\(f(x) \\mapsto x'\\): the parent link of the lhs obj")
                             .body((lhs, inst) -> lhs.parent())
                             .create(),
                     InstBuilder.build()
@@ -2134,7 +2138,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(REC_TID, "a rec describing the lhs obj structure")
                             .argLst()
-                            .desc("a reify function \\(f(x) \\nearrow x'\\): describes the lhs obj as a rec of type/vid/jvm components")
+                            .desc("a reify function \\(f(x) \\mapsto x'\\): describes the lhs obj as a rec of type/vid/jvm components")
                             .body((lhs, inst) -> rec(
                                     "type", rec(
                                             "tid", rec(
@@ -2170,7 +2174,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A.maybeSome(), "any objs")
                             .rng(A, "the result of applying the arg inst to each obj")
                             .argLst(T(ALL.maybe()), "the inst to apply to each obj")
-                            .desc("a reduce function \\(f(X) \\to x\\)")
+                            .desc("a reduce function \\(f(X) \\mapsto x\\)")
                             .body((lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj()))
                             .create(),
                     InstBuilder.build()
@@ -2178,7 +2182,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(ALL.maybeSome(), "any objs")
                             .rng(REC_TID, "a rec of the grouped results")
                             .argLst(T(REC_TID), "the grouping key rec, the value inst computing each group")
-                            .desc("a grouping function \\(f(X) \\nearrow x'\\): groups the objs by the key rec and computes each group (sugar'd %==)")
+                            .desc("a grouping function \\(f(X) \\mapsto x'\\): groups the objs by the key rec and computes each group (sugar'd %==)")
                             .body((lhs, inst) -> {
                                 final Map<Obj, Obj> result = new LinkedHashMap<>();
                                 lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
@@ -2225,7 +2229,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B.maybeSome(), "the obj descended into from the lhs")
                             .argLst(T(C.maybeSome()), "the depth or path to descend by (default 1)")
-                            .desc("a shift function \\(f(x) \\nearrow x'\\): descends into the lhs obj (sugar'd >>)")
+                            .desc("a shift function \\(f(x) \\mapsto x'\\): descends into the lhs obj (sugar'd >>)")
                             .body((lhs, inst) -> {
                                 // DATETIME_TYPE is registry-driven (set during math instset setup)
                                 // and is null in a VM where the math set is not registered
@@ -2249,7 +2253,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .dom(A, "any obj")
                             .rng(B.maybeSome(), "the obj ascended to from the lhs")
                             .argLst(T(C.maybeSome()), "the depth or path to ascend by (default 1)")
-                            .desc("a shift function \\(f(x) \\nearrow x'\\): ascends out of the lhs obj (sugar'd <<)")
+                            .desc("a shift function \\(f(x) \\mapsto x'\\): ascends out of the lhs obj (sugar'd <<)")
                             .body((lhs, inst) -> {
                                 if (lhs.isRec()) {
                                     return Rec.Helper.lshiftRec(lhs.asRec(), inst.arg(0));
