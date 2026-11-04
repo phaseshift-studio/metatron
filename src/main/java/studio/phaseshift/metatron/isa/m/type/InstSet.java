@@ -77,7 +77,7 @@ public interface InstSet extends Space, Component.Prefix {
                     // the union's MEMBERSHIP: the imported ISAs, by vid, IN IMPORT ORDER (earlier = higher
                     // precedence). Declared here because it is what makes the union reflective — this is the field
                     // that answers "what are my insts, rewrites, sugars and types" without walking the mounts.
-                    uri(REFERENCE).maybe().asUri(), lst(URI_TYPE).maybe(),
+                    uri(REFERENCE).maybe().asUri(), T(URI_TID.maybeSome()),
                     // THE NAMES: <short scheme> => <the vid it denotes> — what `import(/m/math, math)` binds, and the
                     // reason `math:cos` names /m/math/inst/cos. It lives HERE because a MOUNT is what gave the name: an
                     // ISA owns its own shorthand the way it owns its consts and insts, and memory holds no part of it.
