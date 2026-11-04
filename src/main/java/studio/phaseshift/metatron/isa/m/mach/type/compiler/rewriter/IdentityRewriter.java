@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_REWRITER_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_IDENTITY_REWRITER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -35,16 +35,12 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class IdentityRewriter extends AbstractRewriter {
 
-    private static final IdentityRewriter INSTANCE = new IdentityRewriter(mutableMap(), MACH_REWRITER_TID, null);
+    private static final IdentityRewriter INSTANCE = new IdentityRewriter(mutableMap(), MACH_IDENTITY_REWRITER_TID, null);
 
     public static IdentityRewriter single() {
         return INSTANCE;
     }
-
-    public IdentityRewriter() {
-        this(mutableMap(), MACH_REWRITER_TID, null);
-    }
-
+    
     public IdentityRewriter(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
