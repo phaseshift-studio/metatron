@@ -21,30 +21,24 @@ package studio.phaseshift.metatron.algebra;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.algebra.rewrite.Derivation;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static studio.phaseshift.metatron.Tokens.ONE;
-import static studio.phaseshift.metatron.Tokens.ZERO;
-import static studio.phaseshift.metatron.algebra.Law.commutative;
-import static studio.phaseshift.metatron.algebra.Law.monoidic;
-import static studio.phaseshift.metatron.algebra.Law.pure;
-import static studio.phaseshift.metatron.algebra.Law.right_distributive;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.Law.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.RING_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.mult_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -89,6 +83,8 @@ public class PendingDeclarationsTest extends AbstractMetatronTest {
         final Map<Obj, Obj> ring = new LinkedHashMap<>();
         ring.put(uri(ZERO), jnt(0));
         ring.put(uri(ONE), jnt(1));
+        ring.put(uri(ADD), plus_(INT_TYPE).dom(INT_TID).rng(INT_TID).tryToInst());
+        ring.put(uri(MUL), mult_(INT_TYPE).dom(INT_TID).rng(INT_TID).tryToInst());
         final Map<Obj, Obj> block = new LinkedHashMap<>();
         block.put(uri("ring"), rec(ring, RING_THEORY_TID, null));
         return Algebra.of(rec(block));
@@ -160,11 +156,11 @@ public class PendingDeclarationsTest extends AbstractMetatronTest {
     @Test
     void anAlgebraIsKeyedByItsTypesBasePath() {
         final Algebra ring = ringAlgebra();
-        final Algebra staged = PendingDeclarations.declareAlgebra(f("/m/int"), ring);
+        final Algebra staged = PendingDeclarations.declareAlgebra(INT_TID, ring);
 
         assertSame(ring, staged, "the staged algebra is the one handed in, not a copy");
-        assertSame(ring, PendingDeclarations.findAlgebra(f("/m/int")));
-        assertEquals(Map.of(f("/m/int"), ring), PendingDeclarations.algebras());
+        assertSame(ring, PendingDeclarations.findAlgebra(INT_TID));
+        assertEquals(Map.of(INT_TID, ring), PendingDeclarations.algebras());
         assertSame(ring, PendingDeclarations.findAlgebra(f("/m/int?dom=/m/int")),
                 "the query is erased: the key is the type's base path");
         assertNull(PendingDeclarations.findAlgebra(f("/m/real")), "a type that staged none answers null");
@@ -184,16 +180,16 @@ public class PendingDeclarationsTest extends AbstractMetatronTest {
         assertNull(PendingDeclarations.declareInst(null, List.of(pure), null, null), "a null address stages no row");
         assertNull(PendingDeclarations.findInst(null), "a null address answers no row");
         assertNull(PendingDeclarations.declareAlgebra(null, ringAlgebra()), "a null vid stages no algebra");
-        assertNull(PendingDeclarations.declareAlgebra(f("/m/int"), null), "a null algebra stages nothing");
+        assertNull(PendingDeclarations.declareAlgebra(INT_TID, null), "a null algebra stages nothing");
         assertNull(PendingDeclarations.findAlgebra(null), "a null vid answers no algebra");
         assertEquals(0, PendingDeclarations.size(), "nulls leave the ledger untouched");
 
         PendingDeclarations.declareInst(f("/m/inst/probe?rng=/m/int&dom=/m/int"), List.of(pure), null, null);
         assertEquals(1, PendingDeclarations.size(), "one instruction row");
-        PendingDeclarations.declareAlgebra(f("/m/int"), ringAlgebra());
+        PendingDeclarations.declareAlgebra(INT_TID, ringAlgebra());
         assertEquals(2, PendingDeclarations.size(), "the ledger counts both facets");
         PendingDeclarations.declareInst(f("/m/inst/probe?rng=/m/int&dom=/m/int"), List.of(pure), null, null);
-        PendingDeclarations.declareAlgebra(f("/m/int"), ringAlgebra());
+        PendingDeclarations.declareAlgebra(INT_TID, ringAlgebra());
         assertEquals(2, PendingDeclarations.size(), "re-declaring an address does not inflate the ledger");
     }
 }

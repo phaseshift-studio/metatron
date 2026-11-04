@@ -2713,6 +2713,86 @@ public abstract class AbstractTbleSpaceTest extends AbstractDataPathSpaceTest im
     }
 
     // =========================================================================
+    //  where + count push-down
+    // =========================================================================
+
+    /**
+     * A CHAIN rule reads the address off its PREDECESSOR's own argument, so that argument must name
+     * the space again. It did not: the where rewrite stored the redirect-stripped form
+     * ({@code rewrite_test/+}), {@code Memory.getSpaceFor} answered the noobj space for it, and every
+     * fused op declined in silence — a filtered count scanned the table and reduced in the VM while
+     * still answering the right number.
+     *
+     * <p>The PLAN is therefore what is asserted, not only the integer: the two-op plan and the fused
+     * op agree on the answer, which is exactly why the defect outlived the result-only tests.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.isa([value=>?>5]).count()   % 5",
+            "*db:rewrite_test/+.isa([value=>?<3]).count()   % 2",
+            "*db:rewrite_test/+.isa([value=>?>=5]).count()  % 6",
+            "*db:rewrite_test/+.isa([value=>1]).count()     % 1",
+            "@db:rewrite_test/+.isa([value=>1]).count()     % 1",
+    })
+    public void testFilteredCountIsOneNativeOp(final String code, final int expected) {
+        final Obj compiled = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(1, compiled.asCode().insts().size(),
+                "a filtered count must compile to ONE native op, not a where-then-count scan: " + code);
+        assertEquals("sql_where_count", compiled.asCode().insts().getFirst().tid().name(),
+                "the single op must be the fused native count: " + code);
+        assertEquals(jnt(expected), ObjmtronSerializer.parse(code).apply(),
+                "the fused count must agree with the filtered read: " + code);
+    }
+
+    /**
+     * The FUSING rules read the address off the preceding rewrite's arg, so the where/offset rules must write it in a
+     * form a space can be resolved from (see {@code WhereDBRewriteBuilder}). These are the ops that silently declined
+     * while that arg was the redirect-stripped, scheme-less form — every one of them had never executed, so a single
+     * {@code explain()} showing the plain {@code sql_where} was the only symptom.
+     *
+     * <p>The {@code %}-delimited rows are {@code code % the one op it must compile to}. The integer is not re-checked
+     * here — that is {@code testFilteredCountIsOneNativeOp}'s job — only that the pair fuses at all.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.isa([value=>?>5]).count()                  % sql_where_count",
+            "*db:rewrite_test/+.isa([value=>?>5]).take(2)                  % sql_where_limit",
+            "*db:rewrite_test/+.skip(2).take(2)                            % sql_offset_limit",
+    })
+    public void testChainRulesFuseToOneNativeOp(final String code, final String fusedOp) {
+        final Obj compiled = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(1, compiled.asCode().insts().size(), "the chain must fuse, not stack: " + code);
+        assertEquals(fusedOp, compiled.asCode().insts().getFirst().tid().name(),
+                "the single op must be " + fusedOp + ": " + code);
+    }
+
+    /**
+     * The ORDER fusions are GATED on purpose — see the gate comment in {@code CommonRewrites} and
+     * t-mw19gny3-hhgle5: the fused op returns its rows coefficient-shaped, so a chained {@code count()} counts
+     * members (5 rows answered 15). Declining keeps the mtron path, which is CORRECT but not fused, so the
+     * plan keeps the {@code order}/{@code skip}/{@code take} ops after the native where — which also means
+     * {@code sql_where_offset_limit} cannot compose, since its source {@code sql_where_offset} is gated too.
+     *
+     * <p>This asserts the GATE, not the ideal. When the row shape is fixed and the gates are lifted, this test
+     * is expected to fail — that failure is the signal to fold these rows back into
+     * {@link #testChainRulesFuseToOneNativeOp}.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "*db:rewrite_test/+.isa([value=>?>5]).order(select(value))            % 2",
+            "*db:rewrite_test/+.isa([value=>?>5]).skip(2)                         % 2",
+            "*db:rewrite_test/+.isa([value=>?>5]).order(select(value)).skip(2)    % 3",
+            "*db:rewrite_test/+.isa([value=>?>5]).skip(2).take(2)                 % 3",
+    })
+    public void testOrderFusionsAreGated(final String code, final int ops) {
+        final Obj compiled = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(code));
+        assertEquals(ops, compiled.asCode().insts().size(),
+                "a gated chain keeps its ops (and is correct, just not fused): " + code);
+        assertEquals("sql_where", compiled.asCode().insts().getFirst().tid().name(),
+                "the first op of a gated chain is still the native where: " + code);
+    }
+
+    // =========================================================================
     //  Long-prefix count/where rewrite tests
     // =========================================================================
 

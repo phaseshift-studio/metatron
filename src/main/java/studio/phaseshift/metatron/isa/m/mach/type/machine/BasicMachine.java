@@ -20,8 +20,6 @@ package studio.phaseshift.metatron.isa.m.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
@@ -30,16 +28,18 @@ import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.SwarmProcessor;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -112,7 +112,7 @@ public class BasicMachine extends AbstractMachine {
                 // live mutable rec from the start. `Rec.orElse` eagerly evaluates its fallback, so an absent
                 // index is a throwaway map and every addSpace into it would be silently lost.
                 uri(PATTERN), uri(ALL),
-                uri(QPROC), lst(QCollection.docQ()),
+                uri(QPROC), lst(QCollection.docQ(), QCollection.decQ()),
                 uri(MEMORY), memory,
                 uri(NETWORK), network,
                 // the ISA is bound as ITSELF, like every other component — there is no template to apply, which is

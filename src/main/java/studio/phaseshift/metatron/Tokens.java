@@ -199,6 +199,9 @@ public final class Tokens {
     public static final String TOOL_REQUESTS = "tool_requests";
     public static final String CONTENTS = "contents";
     public static final String ATTRIBUTES = "attributes";
+    public static final String ACTION = "action";
+    public static final String ACTOR = "actor";
+    public static final String EXIT = "exit";
     public static final String DEPTH = "depth";
     public static final String CHAT_ID = "chat_id";
     public static final String PARENT = "parent";

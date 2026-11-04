@@ -1172,7 +1172,7 @@ public final class mInsts {
                                     // every dereference of `*~/instset` a different object from `*</instset>` — two
                                     // reads of one slot that could not be compared — and no identity-stable read of a
                                     // memory, an ISA or a mounted space was possible at all.
-                                    return readObj.isType() || readObj.isMachine() || readObj.isSpace()
+                                    return readObj.isType() || readObj.isMachine() || readObj.isAddressable()
                                             ? readObj
                                             : readObj.clone().selfVID(null);
                                 })

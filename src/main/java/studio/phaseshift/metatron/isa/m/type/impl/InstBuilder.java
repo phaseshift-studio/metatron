@@ -276,7 +276,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         // the doc q-proc must not require a value read (which would resolve the inst as a side effect).
         if (!inst.tid().basePath().equals(inst.tid()))
             PendingWrites.write(PendingWrites.docq(inst.tid().basePath()), doc);
-        final Rec claim = claimRec(List.copyOf(this.laws), this.inverse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
+        final Rec claim = claimRec(inst, List.copyOf(this.laws), this.inverse, this.derivation, null == this.form ? Inst.Form.of(inst) : this.form);
         if (!claim.isEmpty())
             PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claim);
         // a FORM is a declaration too, but one made per OPERATION: every specialization of the op is the same typer
@@ -308,6 +308,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         if (null == staged && null == form)
             return;
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
+        facets.put(uri(OBJ), inst);
         if (null != staged && staged.isRec()) {
             final Rec declared = staged.asRec();
             final Obj laws = declared.atDirect(uri(LAW));
@@ -333,7 +334,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * form it declared. A facet that was never declared is omitted rather than written as a null or an empty list,
      * so the rec carries exactly the claims the instruction made; a claim of nothing at all is the empty rec.
      */
-    private static Rec claimRec(final List<Law> laws, final fURI inverse, final Derivation derivation,
+    private static Rec claimRec(final Inst inst, final List<Law> laws, final fURI inverse, final Derivation derivation,
                                 final Inst.Form form) {
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
         if (null != laws && !laws.isEmpty())
@@ -344,7 +345,12 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
             facets.put(uri(DERIVATION), rec(uri(LHS), derivation.lhs(), uri(RHS), derivation.rhs()));
         if (null != form)
             facets.put(uri(FORM), uri(form.name()));
-        return facets.isEmpty() ? rec0() : rec(facets);
+        if (facets.isEmpty())
+            return rec0();
+        // the instruction the declaration is made about, exactly as docq's obj slot names it — so several contracts
+        // that declare the SAME laws stay distinct, and a reader can tell which obj a declaration belongs to
+        facets.put(uri(OBJ), inst);
+        return rec(facets);
     }
 
     /**

@@ -24,14 +24,30 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+
+import java.time.Instant;
+import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.ACTION;
+import static studio.phaseshift.metatron.Tokens.ACTOR;
+import static studio.phaseshift.metatron.Tokens.ATTRIBUTES;
+import static studio.phaseshift.metatron.Tokens.EXIT;
+import static studio.phaseshift.metatron.Tokens.NAME;
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.Tokens.STR_TID;
+import static studio.phaseshift.metatron.Tokens.TIME;
+import static studio.phaseshift.metatron.Tokens.TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet.DOCKER_EVENT_TID;
+import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrInstSet.DOCKER_EVENT_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -324,5 +340,148 @@ public class ObjDockerSerializerTest extends AbstractMetatronTest {
         assertEquals("mB", field("{\"Size\":\"405MB\"}", "size").tid().name());
         assertEquals("gB", field("{\"Size\":\"1.02GB\"}", "size").tid().name());
         assertEquals(1, field("{\"Containers\":\"1\"}", "containers").intValue().intValue());
+    }
+
+    // ===================================================================
+    // docker events — dckrevent::T
+    // ===================================================================
+
+    private static String eventLine(final String action, final String exitCode) {
+        final String attrs = exitCode == null
+                ? "\"image\":\"nginx:alpine\",\"name\":\"web-server\""
+                : "\"exitCode\":\"" + exitCode + "\",\"image\":\"nginx:alpine\",\"name\":\"web-server\"";
+        return "{\"status\":\"" + action + "\",\"id\":\"a1b2c3d4e5f6\",\"from\":\"nginx:alpine\","
+                + "\"Type\":\"container\",\"Action\":\"" + action + "\","
+                + "\"Actor\":{\"ID\":\"a1b2c3d4e5f6\",\"Attributes\":{" + attrs + "}},"
+                + "\"scope\":\"local\",\"time\":1699000000,\"timeNano\":1699000000000000000}";
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "create    % -   % create emits no exit",
+            "start     % -   % start emits no exit",
+            "die       % 0   % clean exit",
+            "die       % 137 % killed exit",
+            "exec_die  % 1   % exec exit",
+    }, delimiter = '%')
+    void testEventShape(final String action, final String exitCode, final String desc) {
+        final Rec rec = S.readEvent(eventLine(action, "-".equals(exitCode) ? null : exitCode)).asRec();
+        assertEquals(DOCKER_EVENT_TID, rec.tid(), desc + ": typed dckrevent");
+        assertEquals("container", rec.at(uri(TYPE)).uriValue().toString(), desc + ": type");
+        assertTrue(rec.at(uri(ACTION)).isStr(), desc + ": action is str");
+        assertEquals(action, rec.at(uri(ACTION)).strValue(), desc + ": action text");
+        assertTrue(rec.at(uri(TIME)).isUri(), desc + ": time is uri (datetime)");
+        assertEquals(MATH_DATETIME_TID, rec.at(uri(TIME)).tid(), desc + ": time is datetime::T");
+        final Obj objF = rec.atDirect(uri(OBJ));
+        assertTrue(Obj.Helper.isAutoPointer(objF),
+                desc + ": obj is !* (raw=" + objF + ")");
+        assertEquals("docker:container/web-server", Obj.Helper.autoPointerVID(objF).toString(),
+                desc + ": obj is name-keyed");
+        if ("-".equals(exitCode))
+            assertTrue(rec.at(uri(EXIT)).isNoObj(), desc + ": no exit");
+        else
+            assertEquals(Long.parseLong(exitCode), rec.at(uri(EXIT)).intValue().longValue(), desc + ": exit");
+    }
+
+    /**
+     * A docker event's {@code time} must be a true {@code datetime::T} — not an epoch int that merely looks typed —
+     * or a refinement like {@code ?>(datetime_now() - hour::1)} will not type-check.
+     */
+    @Test
+    void testEventTimeIsTrueDatetime() {
+        final Obj time = S.readEvent(eventLine("die", "0")).asRec().at(uri(TIME));
+        assertFalse(time.isInt(), "time must not be an epoch int");
+        assertEquals(MATH_DATETIME_TID, time.tid(), "time carries datetime::T");
+    }
+
+    /**
+     * The actor attribute {@code exitCode} is text on the wire, but the first-class {@code exit} it names is the int
+     * you filter on — {@code *docker:event/+.?[exit => ?>(0)]}.
+     */
+    @Test
+    void testExitCodeIsSurfacedAsInt() {
+        final Rec rec = S.readEvent(eventLine("die", "0")).asRec();
+        assertEquals(0L, rec.at(uri(EXIT)).intValue().longValue(), "first-class exit is int");
+    }
+
+    /**
+     * The typed rec matches its own type, so {@code .matches(docker_event::T)} and a type-headed filter are the same
+     * act and the tid survives a filter.
+     */
+    @Test
+    void testEventMatchesType() {
+        final Rec rec = S.readEvent(eventLine("die", "137")).asRec();
+        assertTrue(rec.test(DOCKER_EVENT_TYPE), "a die event rec matches docker_event::T");
+    }
+
+    /**
+     * The datetime VALUE must be the epoch instant, not merely a tid. {@code timeNano} is full epoch nanos, so
+     * {@code ofEpochSecond(0, timeNano)} — not {@code ofEpochSecond(time, timeNano)}, which doubles the epoch.
+     */
+    @Test
+    void testEventTimeValue() {
+        final long nanos = 1700000000L * 1_000_000_000L;
+        final String line = "{\"status\":\"die\",\"id\":\"a1\",\"from\":\"nginx\",\"Type\":\"container\","
+                + "\"Action\":\"die\",\"Actor\":{\"ID\":\"a1\",\"Attributes\":{\"exitCode\":\"0\",\"name\":\"web-server\"}},"
+                + "\"scope\":\"local\",\"time\":1700000000,\"timeNano\":" + nanos + "}";
+        final Obj time = S.readEvent(line).asRec().at(uri(TIME));
+        final Obj expected = mathInstSet.buildDatetimeUri(Instant.ofEpochSecond(0, nanos).atZone(ZoneId.systemDefault()));
+        assertEquals(expected, time, "datetime value must be the epoch instant");
+    }
+
+    /**
+     * A filter over a seeded space: {@code *evt/+.?[action=>?=die]} answers exactly the die recs, each still typed
+     * {@code docker_event::T}. This proves typing is load-bearing (not decorative) and that the filter runs without a
+     * daemon.
+     */
+    @Test
+    void testEventFilterByAction() {
+        final memSpace space = memSpace.of(f("evt:#"), f("/sys/space/evt"));
+        space.write(f("evt:0"), S.readEvent(eventLine("die", "137")));
+        space.write(f("evt:1"), S.readEvent(eventLine("create", null)));
+        space.write(f("evt:2"), S.readEvent(eventLine("die", "0")));
+        space.write(f("evt:3"), S.readEvent(eventLine("exec_die", "1")));
+
+        final Obj all = ObjmtronSerializer.eval("*evt:+");
+        assertEquals(4, all.stream().count(), "seed read returns 4 recs");
+
+        final Obj dies = ObjmtronSerializer.eval("*evt:+.?[action => 'die']");
+        assertEquals(2, dies.stream().count(), "two die events");
+        dies.stream().forEach(d -> assertEquals(DOCKER_EVENT_TID, d.tid(), "filter preserves docker_event::T"));
+    }
+
+    /**
+     * {@code action} must tolerate STRINGS: docker puts the exec command into the action field for
+     * {@code exec_start}/{@code exec_die}, so {@code action => "exec_start: node -e …"} is not an address. The rec
+     * must still match {@code docker_event::T} and the text must survive intact.
+     */
+    @Test
+    void testExecStartActionSurvivesAsStr() {
+        final String cmd = "exec_start: node -e Promise.all([fetch('http://127.0.0.1:3080')])";
+        final String line = "{\"status\":\"exec_start\",\"id\":\"a1\",\"from\":\"nginx\",\"Type\":\"container\","
+                + "\"Action\":\"" + cmd + "\","
+                + "\"Actor\":{\"ID\":\"a1\",\"Attributes\":{\"name\":\"web-server\"}},"
+                + "\"scope\":\"local\",\"time\":1700000000,\"timeNano\":1700000000000000000}";
+        final Rec rec = S.readEvent(line).asRec();
+        assertTrue(rec.test(DOCKER_EVENT_TYPE), "exec_start event still matches docker_event::T");
+        assertTrue(rec.at(uri(ACTION)).isStr(), "action is str");
+        assertEquals(cmd, rec.at(uri(ACTION)).strValue(), "action text survives intact");
+    }
+
+    /**
+     * A computed numeric refinement: {@code exit => ?>(0)} (is-greater-than) runs per candidate and answers only the
+     * events with a positive exit code.
+     */
+    @Test
+    void testEventFilterNumericRefinement() {
+        final memSpace space = memSpace.of(f("evt2:#"), f("/sys/space/evt2"));
+        space.write(f("evt2:0"), S.readEvent(eventLine("die", "137")));
+        space.write(f("evt2:1"), S.readEvent(eventLine("create", null)));
+        space.write(f("evt2:2"), S.readEvent(eventLine("die", "0")));
+        space.write(f("evt2:3"), S.readEvent(eventLine("exec_die", "1")));
+
+        final Obj positive = ObjmtronSerializer.eval("*evt2:+.?[exit => ?>(0)]");
+        assertEquals(2, positive.stream().count(), "exit>0 = the 137 and the 1");
+        positive.stream().forEach(d -> assertEquals(DOCKER_EVENT_TID, d.tid(), "refinement preserves docker_event::T"));
     }
 }

@@ -29,8 +29,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
@@ -73,6 +73,7 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
         this.addQ(QCollection.refQ());
         this.addQ(QCollection.mintQ());
         this.addQ(QCollection.docQ());
+        this.addQ(QCollection.decQ());
     }
 
     @Override

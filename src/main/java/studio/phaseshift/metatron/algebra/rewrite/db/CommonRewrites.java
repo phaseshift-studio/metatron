@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.util.MTronException;
@@ -126,11 +127,14 @@ public final class CommonRewrites {
                 .match(ALL, COUNT_INST_TID)
                 .matchPredicate(matches -> {
                     final Inst first = matches.getFirst().asInst();
-                    // Accept any data-source instruction: FROM (*) / AT (@), or a
-                    // pushed-down sql_limit/sql_where/sql_skip that already carries the
-                    // resolved data-path URI in arg(0).
-                    if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID)
-                            && !first.arg(0).isUri())
+                    // ONLY A SOURCE MAY BE COUNTED. This used to also accept a preceding pushed-down
+                    // sql_where/sql_limit/sql_skip ("it already carries the resolved data-path URI"), and that
+                    // is a WRONG ANSWER, not an optimization: `SELECT COUNT(*) FROM table` over a filtered,
+                    // limited or offset read counts every row. A chain like isa().take(2).count() means "count
+                    // of the two rows", and the plain count answered 10 — the same silent-downgrade family as
+                    // the case this rewrite sits beside. A pair the FUSING rules decline is counted in mtron,
+                    // where the filter/limit is real.
+                    if (!first.tid().basePath().equals(FROM_INST_TID) && !first.tid().basePath().equals(AT_INST_TID))
                         return false;
                     final Obj ref = first.arg(0);
                     // only apply when the path ends at collection level (no field/extensions)
@@ -832,7 +836,12 @@ public final class CommonRewrites {
                 return java.util.List.of(
                         instC(
                                 this.rewriteTid.dom(ALL.maybe()).rng(this.resultTid),
-                                lst(uri(expandedfURI), str(filterClause)),
+                                // THE ADDRESS STAYS RESOLVABLE: a CHAIN rule (where+count, where+order, …) reads this
+                                // arg and must name the space again, and the redirected (prefix-stripped) form names
+                                // none — getSpaceFor answers the noobj space for `table/+` and the rule declines in
+                                // silence. The arg carries the address as the FROM instruction did; a consumer that
+                                // needs the redirected form asks the space for it.
+                                lst(uri(oldfURI), str(filterClause)),
                                 (lhs, inst) -> {
                                     // Barrier re-application guard: if the SwarmProcessor
                                     // already accumulated results via the gather barrier,
@@ -1094,7 +1103,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+count on %s with clause '%s' in space %s",
                         furi, filterClause, space);
@@ -1241,7 +1250,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+limit on %s with clause '%s' and limit %d in space %s",
                         furi, filterClause, limitValue, space);
@@ -1373,7 +1382,8 @@ public final class CommonRewrites {
 
                 return List.of(instC(
                         this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
-                        lst(uri(expandedfURI), jnt(skipValue)),
+                        // same reason as the where rewrite: offset+limit is a CHAIN rule and must resolve this arg.
+                        lst(uri(oldfURI), jnt(skipValue)),
                         (lhs, inst) -> {
                             try {
                                 return this.skipOperation.execute(typedSpace, dp, skipValue);
@@ -1500,7 +1510,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native offset+limit on %s with skip %d, limit %d in space %s",
                         furi, skipValue, limitValue, space);
@@ -1583,11 +1593,8 @@ public final class CommonRewrites {
             final WhereOffsetOperation<S> whereOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOffsetDBRewriteBuilder<>(spaceType, whereRewriteTID, whereOffsetFunction, matchSpacePredicate)
-                .tid(rewriteTID)
-                .rng(Tokens.ALL_STAR)
-                .match(whereRewriteTID, SKIP_INST_TID)
-                .build();
+        // GATED — t-mw19gny3-hhgle5, same coefficient-shaped rows as where+order.
+        return InstSet.Helper.rewriter(rewriteTID, code -> code);
     }
 
     private static class WhereOffsetDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
@@ -1639,7 +1646,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+offset on %s with clause '%s' and skip %d in space %s",
                         furi, filterClause, skipValue, space);
@@ -1683,11 +1690,12 @@ public final class CommonRewrites {
             final WhereOrderOperation<S> whereOrderFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOrderDBRewriteBuilder<>(spaceType, whereRewriteTID, whereOrderFunction, matchSpacePredicate)
-                .tid(rewriteTID)
-                .rng(Tokens.ALL_STAR)
-                .match(whereRewriteTID, ORDER_INST_TID)
-                .build();
+        // GATED — t-mw19gny3-hhgle5. The fused op's rows come back COEFFICIENT-shaped (a rec's fields carry
+        // the rec's coefficient), so a chained `count()` counts members: 5 rows answered 15, and an
+        // `order(select(...))` after a filter answered 3× the survivors. Declining here is not a defect hidden:
+        // the pair stays `sql_where` + `order`, which is CORRECT and merely two ops. Un-gate (restore the
+        // builder below) when the row shape is fixed — the plan, the args and the SQL are already right.
+        return InstSet.Helper.rewriter(rewriteTID, code -> code);
     }
 
     private static class WhereOrderDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
@@ -1752,7 +1760,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+order on %s with clause '%s' and columns %s in space %s",
                         furi, filterClause, columns, space);
@@ -1796,11 +1804,8 @@ public final class CommonRewrites {
             final WhereOrderOffsetOperation<S> whereOrderOffsetFunction,
             final BiPredicate<S, List<Inst>> matchSpacePredicate) {
 
-        return new WhereOrderOffsetDBRewriteBuilder<>(spaceType, whereOrderRewriteTID, whereOrderOffsetFunction, matchSpacePredicate)
-                .tid(rewriteTID)
-                .rng(Tokens.ALL_STAR)
-                .match(whereOrderRewriteTID, SKIP_INST_TID)
-                .build();
+        // GATED — t-mw19gny3-hhgle5, same coefficient-shaped rows as where+order.
+        return InstSet.Helper.rewriter(rewriteTID, code -> code);
     }
 
     private static class WhereOrderOffsetDBRewriteBuilder<S extends Space> extends DBRewriteBuilder<S> {
@@ -1854,7 +1859,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+order+offset on %s clause='%s' columns=%s skip=%d in space %s",
                         furi, filterClause, columns, skipValue, space);
@@ -1955,7 +1960,7 @@ public final class CommonRewrites {
                     return matchedInsts.stream().map(Obj::asInst).toList();
                 }
 
-                final DataPath dp = DataPath.withoutDB(furi);
+                final DataPath dp = DataPath.withoutDB(space.redirect(furi, true));
 
                 LOG.debug("evaluating native where+offset+limit on %s with clause '%s', skip %d, limit %d in space %s",
                         furi, filterClause, skipValue, limitValue, space);

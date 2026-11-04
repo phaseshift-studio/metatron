@@ -18,27 +18,28 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.instset;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import studio.phaseshift.metatron.isa.m.mach.type.ComponentUnion;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.mach.type.ComponentUnion;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.REFERENCE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import studio.phaseshift.metatron.isa.m.mach.type.Component;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The machine's OWN instset: instruction memory, and the one machine component that is a FACADE as well as a union.
@@ -70,7 +71,7 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     private InstSet previous = null;
 
     public BasicInstSet() {
-        super(false);
+        super(mutableMap(uri(Tokens.PATTERN), uri(ALL)), INSTSET_TID, null);
         // the jurisdiction is the references' (see pattern()), never the "#" a bare instset is built with: a level
         // that refers nothing reports its enclosing machine's, through at()'s walk up the chain
         this.jvm().remove(uri(PATTERN));
@@ -146,7 +147,9 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
         return this;
     }
 
-    /** THE PARENTAL CHAIN's next link — the level above this ISA, for the shared prefix walk. */
+    /**
+     * THE PARENTAL CHAIN's next link — the level above this ISA, for the shared prefix walk.
+     */
     @Override
     public Component.Prefix previousLevel() {
         return this.previous;

@@ -22,6 +22,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -477,6 +478,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
     default boolean isMachine() {
         return this instanceof Machine;
+    }
+
+    default boolean isAddressable() {
+        return this instanceof Addressable;
     }
 
 

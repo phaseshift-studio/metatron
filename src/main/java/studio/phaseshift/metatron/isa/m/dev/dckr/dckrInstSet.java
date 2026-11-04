@@ -30,9 +30,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.dev.dckr.dckrSpace.DCKR_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATASIZE_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_DATETIME_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -72,6 +74,7 @@ public class dckrInstSet extends AbstractInstSet {
     public static final fURI DOCKER_CONTAINER_STATE_TID = DCKR_ISA_TID.extend("container_state");
     public static final fURI DOCKER_VOLUME_TID = DCKR_ISA_TID.extend("volume");
     public static final fURI DOCKER_NETWORK_TID = DCKR_ISA_TID.extend("networks");
+    public static final fURI DOCKER_EVENT_TID = DCKR_ISA_TID.extend("event");
 
     public static final String DOCKER_IMAGE_TID_STRING = "/m/dev/dckr/image";
     public static final String DOCKER_CONTAINER_TID_STRING = "/m/dev/dckr/container";
@@ -90,6 +93,7 @@ public class dckrInstSet extends AbstractInstSet {
     public static Type DOCKER_COMPOSE_TYPE;
     public static Type DOCKER_VOLUME_TYPE;
     public static Type DOCKER_NETWORK_TYPE;
+    public static Type DOCKER_EVENT_TYPE;
 
     public dckrInstSet() {
         super(mutableMap(uri(PATTERN), uri(DCKR_ISA_TID.extend(HASH_FURI))), INSTSET_TID, DCKR_ISA_TID);
@@ -167,6 +171,18 @@ public class dckrInstSet extends AbstractInstSet {
                                         .isaPredicate(rec(
                                                 uri("services"), rec()))
                                         .example("[services => [web => [image => \"nginx\"]]]", "matches docker_compose::T")
+                                        .create(),
+                        DOCKER_EVENT_TYPE = TypeBuilder.build()
+                                        .tid(REC_TID)
+                                        .vid(DOCKER_EVENT_TID, "a docker daemon event — one NDJSON line from `docker events --format json`")
+                                        .isaPredicate(rec(
+                                                (Obj) uri(TYPE).maybe(), URI_TYPE,
+                                                uri(ACTION).maybe(), STR_TYPE,
+                                                uri(EXIT).maybe(), INT_TYPE,
+                                                uri(TIME).maybe(), T(MATH_DATETIME_TID),
+                                                uri(OBJ).maybe(), ALL_TYPE))
+                                        .example("[type => container, action => 'die', exit => 137, time => <//2026.11:3/14/36/38/596?tz=-0700>, obj => !*<docker:container/web-server>]",
+                                                "matches dckrevent::T")
                                         .create())));
         docWrap(this, "an instruction set to manipulate docker and docker compose");
         super.setup();
