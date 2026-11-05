@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.ListMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.monad.StatefulMonad;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -366,7 +367,10 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
                                 // this.halted().append(no); // TODO: make configurable (lazy result or aggregate result)
                                 if (no.isUncaughtFail())
                                     MFail.incrStackWrap(no.asFail(), MFail.failStackPattern(this.vid()));
-                                this.onHalt().apply(no);
+                                // THE HALT CALLBACK TAKES THE RESULT AS IT IS: invoke, not apply. apply() fans a
+                                // fibered rec out to its bundle and fibers (the callback's domain is any obj), so a
+                                // halted person[ninja] halted its ninja beside it
+                                Processor.Helper.invoke(no, Selector.Helper.resolve(no, this.onHalt()), this.onHalt());
                             });
                         } else {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
