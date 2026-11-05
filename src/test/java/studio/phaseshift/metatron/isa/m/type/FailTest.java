@@ -294,6 +294,18 @@ public class FailTest extends AbstractObjTest {
     }
 
     /**
+     * AN EMPTY STACK READS EMPTY. A read under {@code ~/processor} is the sphere's to answer, nothing included:
+     * declined, it fell through to memory, whose machine-key fallback walked the branch pattern {@code @} reads into the
+     * machine rec and answered every computer, so a catch over cleared stacks counted the processor's whole index.
+     */
+    @Test
+    public void testAnEmptyStackReadsEmpty() {
+        ObjmtronSerializer.parse("@~/processor/computer/+/fail/+.catch(_)").apply();
+        assertTrue(Machine.read(f("~/processor/computer/+/fail/+/")).isNoObj(), "the cleared stacks hold nothing");
+        checkEquality(LOG, jnt(0), ObjmtronSerializer.parse("@~/processor/computer/+/fail/+.catch(_).count()").apply(), true);
+    }
+
+    /**
      * every fail filed in this machine: its own stack, and each evaluation's under the computer that ran it
      */
     private static long failStackDepth() {
