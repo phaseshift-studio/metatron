@@ -225,7 +225,7 @@ public class ObjDockerSerializer extends AbstractObjSerializer<String> {
      * version like {@code 11.2.6} is not a real, a tag like {@code 16} is not the integer 16, and a number renders
      * bare, so the text could not be recovered afterwards), and it was EXPENSIVE IN THE LEDGER: a value that is not an
      * mtron literal produced a parse ERROR, a parse error is a fail, and a fail FILES ITSELF in the machine's fail
-     * stack ({@code MFail.fail} → {@code incrStackWrap} writes {@code ~/sys/fail/_?incrq}). Two attempts per label,
+     * stack ({@code MFail.fail} → {@code incrStackWrap} writes {@code ~/processor/fail/_?incrq}). Two attempts per label,
      * re-read on every refresh, is how a machine that had never failed showed a fail stack in the thousands. A label
      * is a string; reading it as one says exactly what docker said.
      */

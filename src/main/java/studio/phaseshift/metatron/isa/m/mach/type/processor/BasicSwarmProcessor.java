@@ -23,8 +23,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.LinkedHashMap;
@@ -33,14 +33,14 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.COMPUTER;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_SWARM_PROCESSOR_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * BasicSwarmProcessor — the swarm architecture: a machine component (never a thread) that mints a
  * {@link BasicSwarmComputer} per {@link #apply(Code)} and indexes it. Zero Java fields; the computers index lives in
- * the Rec jvm map under {@code computers}.
+ * the Rec jvm map under {@code computer}, keyed by each computer's number: a computer is written at
+ * {@code ~/processor/computer/<n>} when it is minted, and that write is the indexing.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -48,7 +48,7 @@ public class BasicSwarmProcessor extends MRec implements Processor {
 
     public BasicSwarmProcessor(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.jvm().putIfAbsent(uri(COMPUTER), lst());
+        this.jvm().putIfAbsent(uri(COMPUTER), rec());
     }
 
     public static BasicSwarmProcessor processor(final Map<Obj, Obj> state, final fURI tid, final fURI vid) {
@@ -61,24 +61,20 @@ public class BasicSwarmProcessor extends MRec implements Processor {
 
     @Override
     public BasicSwarmComputer apply(final Code code) {
-        final BasicSwarmComputer computer = BasicSwarmComputer.of(code);
-        //final Lst index = this.atDirect(uri(COMPUTER)).orElse(lst()).asLst();
-        //if (!index.isNoObj())
-        //   index.add(computer, MUTABLE);
-        return computer;
+        return BasicSwarmComputer.of(code);
     }
 
     @Override
-    public Lst computers() {
-        return this.at(uri(COMPUTER)).orElse(lst0()).asLst();
+    public Rec computers() {
+        return this.at(uri(COMPUTER)).orElse(rec()).asRec();
     }
 
     @Override
     public void close() {
-        this.computers().stream().forEach(obj -> {
+        this.computers().values().forEach(obj -> {
             if (obj instanceof Computer computer)
                 computer.stop();
         });
-        this.at(uri(COMPUTER), lst(), MUTABLE);
+        this.at(uri(COMPUTER), rec(), MUTABLE);
     }
 }

@@ -297,6 +297,11 @@ axes of a machine.
 | `monad_processor::T` | a processor that carries monadic state                                                                                                                                |
 | `swarm_processor::T` | the default: it schedules independently executing monads across the code's inst chain; barriers synchronize them, and the objects of the halted monads are the result |
 
+Each evaluation runs in a **computer** the processor mints, indexed by number at `~/processor/computer/<n>`. The
+processor also holds the machine's **fail stacks**: an evaluation's uncaught fail is filed under the computer that ran
+it (`~/processor/computer/<n>/fail/<k>`), and a fail raised outside any evaluation at `~/processor/fail/<k>`. A fail
+read back from a stack is still uncaught, so `catch(_)` it to use it as a value; catching removes it from the stack.
+
 ### threads
 
 ```mtron_pre
@@ -606,8 +611,9 @@ pop()
 *~.vid()
 ```
 
-Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set and network — so it is a
-clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts
+Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set, network and processor —
+so it is a clean scope: what it writes, imports and dials, and the fails its evaluations file, are its own, and a pop
+retracts exactly that. Reach in particular starts
 empty: a pushed frame holds **no peers** until it dials one, which makes a frame the natural scope of a mini-cluster.
 
 **The authority boundary.** A frame lives in this process. `push(<ws://localhost:8555/worker>)` names another process,

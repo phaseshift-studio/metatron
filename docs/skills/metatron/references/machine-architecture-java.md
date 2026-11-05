@@ -338,15 +338,22 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   `BasicMemory.read`/`write` route an address to the space that covers it (`readAbsolute`/`writeAbsolute`) — which is
   why a bulk wildcard write reaches the space it names rather than the argument stack.
 - **`~/sys` is the sphere's own store, not memory's** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"). It
-  carries the q-procs `~/sys` speaks (docq, subq, incrq, mimeq, lockq), so a fail still mints at `~/sys/fail/_?incrq`.
-  A closing machine DROPS its sphere after memory's spaces and never closes its values: the system thread's executor
-  lives in `~/sys`, and closing it from one of its own threads waits on itself forever (memory's `removeSpace` only
-  logs "closed space" — it never closed the old sys space either). Code that re-reads an obj at its own vid goes through
+  carries the q-procs `~/sys` speaks (docq, subq, incrq, mimeq, lockq). A closing machine DROPS its sphere after
+  memory's spaces and never closes its values: the system thread's executor lives in `~/sys`, and closing it from one
+  of its own threads waits on itself forever (memory's `removeSpace` only logs "closed space" — it never closed the
+  old sys space either). Code that re-reads an obj at its own vid goes through
   `Machine.Helper.readLocal`/`writeLocal` (sphere, then memory), **never `memory()` directly**: memory holds no
-  `~/sys`, and `Machine.read` would scan instruction memory on a miss. The sphere owns writes to the network branch
-  and `~/sys`; the machine rec's and the other components' writes still go to memory. An address with a scheme or a
-  host is no sphere's (`ws://peer/sys/…` is the peer's), and a query on the machine or a component (`~/processor?docq`)
-  is declined to memory's q-procs. `~/sys` is a holding area: its parts are expected to move into the components.
+  `~/sys`, and `Machine.read` would scan instruction memory on a miss. The sphere owns writes to the network branch,
+  `~/sys`, the compiler and the processor; the machine rec's and the other components' writes still go to memory. An
+  address with a scheme or a host is no sphere's (`ws://peer/sys/…` is the peer's), and a query on the machine or a
+  component (`~/processor?docq`) is declined to memory's q-procs. `~/sys` is a holding area: its parts are expected to
+  move into the components.
+- **Fails are filed in the processor** (Marko, 2026-11-04), through the sphere's `incrq`: a fail raised outside any
+  evaluation at `~/processor/fail/_?incrq`, and an evaluation's at `~/processor/computer/<n>/fail/_?incrq`, under the
+  computer that ran it. The processor indexes its computers by number (`computer => [<n> => computer::[…]]`): a
+  computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. So the
+  processor is per machine: `push()` mints the child's own, of its parent's architecture, beside its memory, ISA and
+  network levels.
 
 ## Migration state (why it reads as two systems at once)
 

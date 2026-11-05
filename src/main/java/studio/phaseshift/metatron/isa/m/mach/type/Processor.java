@@ -42,10 +42,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 
 /**
- * processor::T — the architecture: a machine component (never a thread). It is the schema of computation,
- * registered once, holding no per-computation state. {@link #apply(Code)} instantiates a {@link Computer} — the
- * instance that runs the code. The per-instruction runtime lives in {@link Helper} (resolve-one → guards →
- * function application → coefficient), inherited by every call path.
+ * processor::T — the architecture: a machine component (never a thread). It is the schema of computation, one per
+ * machine, and a computation's state is its computer's, not its own: it only indexes the computers it mints
+ * ({@code ~/processor/computer/<n>}) and holds the machine's fail stack ({@code ~/processor/fail}).
+ * {@link #apply(Code)} instantiates a {@link Computer} — the instance that runs the code. The per-instruction runtime
+ * lives in {@link Helper} (resolve-one → guards → function application → coefficient), inherited by every call path.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -58,9 +59,10 @@ public interface Processor extends Component {
     Computer apply(Code code);
 
     /**
-     * @return the computers this architecture has minted — its index, a Rec field.
+     * @return the computers this architecture has minted — its index, a Rec field keyed by each computer's number
+     * ({@code ~/processor/computer/<n>}).
      */
-    Lst computers();
+    Rec computers();
 
     /**
      * REAP every computer this architecture indexes — the dual of {@link #apply(Code)}, the same shape as

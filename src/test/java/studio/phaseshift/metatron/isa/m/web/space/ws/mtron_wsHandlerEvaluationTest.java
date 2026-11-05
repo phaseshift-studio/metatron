@@ -272,9 +272,9 @@ public class mtron_wsHandlerEvaluationTest extends AbstractMetatronTest {
             assertFalse(message.contains("parse error"), Graphitty.string("the fail did not survive the wire: %s", message));
             assertFalse(message.contains("no reply from"), Graphitty.string("the trip timed out instead of matching its answer: %s", message));
             // THE TRIP'S TAG IS THE TRANSPORT'S, NOT THE FAIL'S: what comes back is addressed in THIS machine's fail
-            // stack (~/sys/fail/_?incrq), never at the tag the connection minted to find the slot
+            // stack (~/processor/fail/_?incrq), never at the tag the connection minted to find the slot
             assertNotNull(reply.vid(), Graphitty.string("the re-homed fail must carry the stack address: %s", reply));
-            assertTrue(reply.vid().toString().contains("sys/fail"),
+            assertTrue(reply.vid().toString().contains("processor/fail"),
                     Graphitty.string("a received fail belongs at the receiving machine's fail stack, got %s", reply.vid()));
         }
     }

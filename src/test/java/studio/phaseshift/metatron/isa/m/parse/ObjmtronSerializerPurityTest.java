@@ -228,12 +228,15 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         final Obj third = Machine.parse("/etc/ssl/mqtt-client.crt");
         LOG.debug("speculative parses => %s / %s / %s", first, second, third);
         assertTrue(first.isFail() && second.isFail() && third.isFail(), "these are not mtron, so they are faults");
-        assertEquals(before, failStackDepth(), "a parse attempt must not file into ~/sys/fail");
+        assertEquals(before, failStackDepth(), "a parse attempt must not file into a fail stack");
     }
 
+    /**
+     * every fail filed in this machine: its own stack, and each evaluation's under the computer that ran it
+     */
     private static long failStackDepth() {
-        final Obj stack = Machine.read(f("~/sys/fail/+"));
-        return stack.isNoObj() ? 0 : stack.stream().count();
+        return Machine.read(f("~/processor/fail/+")).stream().count()
+                + Machine.read(f("~/processor/computer/+/fail/+")).stream().count();
     }
 
     @Test

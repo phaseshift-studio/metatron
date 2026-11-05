@@ -158,14 +158,17 @@ public class MemoryIsolationScriptTest extends AbstractMetatronTest {
             "*~/compiler % *</xyz/compiler> % true",
             "*~/processor % *</xyz/processor> % true",
             // THE FRAME'S COMPONENT IS NOT THE ROOT'S. A slot read is per-machine now rather than an alias of the
-            // parent's — for the two components a machine actually mints (memory and the instruction set). The other
-            // three are still the enclosing machine's INSTANCE: the network's roster is shared by design today (the
-            // open shadow-and-deny question), and compiler/processor are stateless axes whose accessors clone per
-            // fetch, so a row for them would assert the aliasing rather than the ownership.
+            // parent's — for the components a machine actually mints: memory, the instruction set, and the processor,
+            // which indexes the machine's computers and holds its fail stacks. The other two are still the enclosing
+            // machine's INSTANCE: the network's roster is shared by design today (the open shadow-and-deny question),
+            // and the compiler is a stateless axis whose accessor clones per fetch, so a row for it would assert the
+            // aliasing rather than the ownership.
             "*~/memory % *</memory> % false",
             "*</xyz/memory> % *</memory> % false",
             "*~/instset % *</instset> % false",
             "*</xyz/instset> % *</instset> % false",
+            "*~/processor % *</processor> % false",
+            "*</xyz/processor> % *</processor> % false",
             "*</.>     % *<~>                 % false",
             /*"~/memory() % /memory() % false",
             "*~/memory % *</memory> % false",

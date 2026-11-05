@@ -280,8 +280,9 @@ public final class MtronPreprocessor {
                 } else if (!result.isNoObj() && input.isType()) {
                     outputs.add(resultLine(SER.write(input)));
                 }
-                // clear the fail stack so errors don't leak across blocks
-                if (!hidden) SER.inputBytes("~/sys/fail/+ -> noobj").apply();
+                // clear the machine's fail stack so errors don't leak across blocks (a block's own evaluation files
+                // its fails under the computer that ran it, ~/processor/computer/<n>/fail)
+                if (!hidden) SER.inputBytes("~/processor/fail -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }

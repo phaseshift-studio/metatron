@@ -932,7 +932,7 @@ public class mParser {
 
     /**
      * A PARSE FAULT IS MINTED UNFILED. {@code MFail.fail} writes the fail into the machine's fail space as it mints
-     * it ({@code ~/sys/fail/_?incrq}), which is right for a failure being REPORTED and wrong for one being
+     * it ({@code ~/processor/fail/_?incrq}), which is right for a failure being REPORTED and wrong for one being
      * INSPECTED: a read that merely asks "is this text mtron?" — a JSON string value, a docker label, an MQTT
      * discovery field — produced a parse fail per non-mtron string and so added a frame to the fail stack of a
      * machine that had never failed. The fault travels as an ordinary {@code fail::T} either way, addressable once

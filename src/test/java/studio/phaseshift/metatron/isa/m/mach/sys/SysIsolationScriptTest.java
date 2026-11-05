@@ -159,30 +159,32 @@ public class SysIsolationScriptTest extends AbstractMetatronTest {
             "[COVERED /sys/log]",
             "*/sys/sys/probe/covered % 1 % true",
             "[COVERED /sys/log/level]",
-            "*/sys/sys/probe/covered % 1 % true",
-            // the fail stack's home — a narrowed infra pattern de-homes this and the write is dropped without a word
-            "[COVERED /sys/fail/_]",
             "*/sys/sys/probe/covered % 1 % true"
     })
     void testSysAddressesAreAnsweredByASpace() {
     }
 
     /**
-     * A fail lands in the machine's sys directory, and the address it used to land at stays empty.
+     * A fail lands in the machine's processor — an evaluation's under the computer that ran it — and the addresses it
+     * used to land at stay empty.
      */
     @StatefulParametrizedTest
     @StatefulCSVSource({
             "[STATE] 1.plus(b)                          [-- produce and stack a fail --]",
-            "*~/sys/fail/+.count().gt(0) % true",
+            // filed in the stack of the computer that ran it. A fail read back is uncaught and propagates past
+            // count(), so it is the stacks that are counted, not their fails
+            "*~/processor/computer/+/fail.count().gt(0) % true",
             // the counter REPLACED the `_`, so the stack holds numbered addresses — not the `_?incrq` pattern
-            "*~/sys/fail/1 % noobj % false",
-            // the old absolute path is orphaned — nothing writes there now
+            "*~/processor/computer/+/fail/1 % noobj % false",
+            // the old paths are orphaned — nothing writes there now
+            "*~/sys/fail/+.count() % 0 % true",
             "*~/fail/+.count() % 0 % true",
-            // and the stack is per machine: a frame that has failed nothing has an empty one
+            // and the stacks are per machine: a frame that has failed nothing has empty ones
             "[STATE] *~.push(xyz)",
-            "*~/sys/fail/+ % noobj % true",
+            "*~/processor/computer/+/fail/+ % noobj % true",
+            "*~/processor/fail/+ % noobj % true",
             "[STATE] *~.pop(_)"
     })
-    void testFailsLandInTheMachineSysDirectory() {
+    void testFailsLandInTheMachinesProcessor() {
     }
 }

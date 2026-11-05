@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * THE MACHINE'S OWN SPHERE (Marko, 2026-10-25). Each machine holds a {@link MachineSpace} that {@code Machine.read} and
@@ -117,7 +118,8 @@ public class MachineSpaceTest extends AbstractMetatronTest {
     @CsvSource(delimiter = '%', value = {
             "/                                  % true",
             "/network/roster                    % true",
-            "/sys/fail/_?incrq                  % true",
+            "/processor/fail/_?incrq            % true",
+            "/processor/computer/7/fail/1       % true",
             "/memory?docq                       % true",
             "/scratch/x                         % false",
             "ws://10.0.0.9:8555/                % false",
@@ -173,13 +175,18 @@ public class MachineSpaceTest extends AbstractMetatronTest {
     @Test
     public void testAFailIsMintedInTheSphere() {
         final Machine machine = Machine.current();
-        // a fail mints its own key under ~/sys/fail through the sphere's ?incrq
-        final Fail minted = MFail.fail("a fail the sphere keeps for its machine").vid(f("~/sys/fail/345456")).as();
+        // a fail mints its own key under ~/processor/fail through the sphere's ?incrq
+        final Fail minted = MFail.fail("a fail the sphere keeps for its machine");
         assertNotNull(minted.vid(), "the fail was written, and carries the key it was minted at");
         try {
-            assertTrue(machine.space().covers(minted.vid()), "its key is in the machine's ~/sys");
-            assertFalse(Machine.read(minted.vid()).isNoObj(), "it lives in the sphere's store");
-            assertTrue(machine.memory().read(minted.vid()).isNoObj(), "not in memory");
+            assertTrue(machine.space().covers(minted.vid()), "its key is in the machine's ~/processor");
+            assertFalse(Machine.read(minted.vid()).isNoObj(), "it reads back");
+            assertFalse(machine.processor().at(uri(f("fail").extend(minted.vid().name()))).isNoObj(),
+                    "it lives in the machine's processor");
+            // memory answers a machine's own keys from the machine (readAbsolute's fallback), so the check is that its
+            // data level stored no copy
+            assertTrue(machine.memory().findSpace(minted.vid()).read(minted.vid()).isNoObj(),
+                    "memory's data level holds no copy of it");
         } finally {
             Machine.write(minted.vid(), noobj());
         }
