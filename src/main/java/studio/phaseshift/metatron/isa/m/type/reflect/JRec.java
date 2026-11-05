@@ -153,7 +153,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
     /**
      * Read the source-of-truth JVM for this object.  If the object has a
      * persistent address ({@link #vid()}), the latest state is fetched from
-     * wherever the machine keeps it, via {@link Machine.Helper#readLocal} (its sphere, then its memory).
+     * the machine's memory, where the machine's own space ({@code ~/sys} among it) is mounted.
      * Otherwise the local construction-time JVM is returned.
      *
      * <p>Subclasses should call this before every rendering pass so that
@@ -162,8 +162,8 @@ public class JRec<OBJECT> extends MObj implements Rec {
     protected final Map<Obj, Obj> jvmRead() {
         if (this.vid() == null) return this.jvm();
         try {
-            // a LOCAL read: an anchored rec may live in the machine's sphere (~/sys) as well as in memory
-            final Obj fresh = Machine.Helper.readLocal(Machine.current(), this.vid());
+            // a LOCAL read, never the network: an anchored rec in ~/sys is in the machine's space, mounted in memory
+            final Obj fresh = Machine.current().memory().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm(); // fallback: space unavailable
@@ -191,14 +191,14 @@ public class JRec<OBJECT> extends MObj implements Rec {
             return;
         }
         try {
-            // LOCAL, both ways: the rec is re-read and written back wherever the machine keeps it (sphere or memory)
-            final Obj current = Machine.Helper.readLocal(Machine.current(), this.vid());
+            // LOCAL, both ways: the rec is re-read from the machine's memory and written back there
+            final Obj current = Machine.current().memory().read(this.vid());
             final Map<Obj, Obj> merged = new LinkedHashMap<>(current.isRec() ? current.jvm() : this.jvm());
             merged.put(key, value);
-            Machine.Helper.writeLocal(Machine.current(), this.vid(), rec(merged, current.tid(), this.vid()));
+            Machine.current().memory().write(this.vid(), rec(merged, current.tid(), this.vid()));
         } catch (final Exception e) {
             // Fallback: direct sub-path write
-            Machine.Helper.writeLocal(Machine.current(), this.vid().extend(key.uriValue()), value);
+            Machine.current().memory().write(this.vid().extend(key.uriValue()), value);
         }
     }
 

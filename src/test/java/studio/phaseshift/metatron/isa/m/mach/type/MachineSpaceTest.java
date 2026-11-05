@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.machine.AbstractMachine;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,11 +38,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * THE MACHINE'S OWN SPHERE (Marko, 2026-10-25). Each machine holds a {@link MachineSpace} that {@code Machine.read} and
- * {@code Machine.write} ask FIRST: the machine itself, its components and its system information, which it keeps in its
- * own store ({@code ~/sys}). It is not in memory, and it declines everything else under the machine's vid — the
- * machine's data — so memory's spaces answer that exactly as before. A child's sphere is its own vid; an address outside
- * every enclosing sphere, or carrying a scheme or a host, is no sphere's.
+ * THE MACHINE'S OWN SPACE (Marko, 2026-10-25), mounted in its memory (2026-11-05: "necessary and sufficient"). Each
+ * machine mounts a {@link MachineSpace} at {@code <vid>/#}, and memory's ordinary routing reaches it: it answers the
+ * machine itself and its components live, and keeps its system information ({@code ~/sys}) and its data in its own
+ * store. A more specific space still wins its own addresses. A child's space is its own vid; an address outside every
+ * enclosing machine's parts, or carrying a scheme or a host, is no machine's part.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
@@ -52,63 +53,72 @@ public class MachineSpaceTest extends AbstractMetatronTest {
         this.resetToRoot();
     }
 
+    /**
+     * a machine's own space, as memory finds it at the space's own vid ({@code <vid>/space})
+     */
+    private static MachineSpace spaceOf(final Machine machine) {
+        return machine.memory().findSpace(machine.vid().resolve().extend("space"));
+    }
+
     @Test
-    public void testTheRootsSphereIsTheRootAndItsComponents() {
+    public void testTheRootsSpaceIsTheRootAndItsComponents() {
         final Machine root = Machine.root();
-        final MachineSpace sphere = root.space();
-        assertNotNull(sphere, "every machine with a vid holds its own sphere");
-        assertTrue(sphere.covers(f("/")), "the machine itself");
-        assertTrue(sphere.covers(f("/network/roster")), "a component");
-        assertTrue(sphere.covers(f("/sys/log")), "its system information");
-        assertFalse(sphere.covers(f("/scratch/x")), "the machine's data is not the machine");
-        assertNotSame(sphere, root.memory().findSpace(f("/network")), "the sphere is not a space in memory");
-        assertSame(root, Machine.read(f("/.")), "/. is the root machine, answered by its sphere");
-        assertSame(root.memory(), Machine.read(f("/memory")), "a component reads live");
+        final MachineSpace space = spaceOf(root);
+        assertNotNull(space, "every machine with a vid mounts its own space");
+        assertTrue(space.covers(f("/")), "the machine itself");
+        assertTrue(space.covers(f("/network/roster")), "a component");
+        assertTrue(space.covers(f("/sys/log")), "its system information");
+        assertFalse(space.covers(f("/scratch/x")), "the machine's data is not one of its parts");
+        assertSame(space, root.memory().findSpace(f("/network")), "memory routes a component to the machine's space");
+        assertSame(space, root.memory().findSpace(f("/scratch/x")), "and the machine's data");
+        assertSame(root, Machine.read(f("/.")), "/. is the root machine, answered by its space");
+        assertSame(root.memory(), root.memory().read(f("/memory")), "memory alone answers a component, live");
         assertSame(root.network(), Machine.read(f("/network")), "the network reads as itself");
     }
 
     @Test
-    public void testAChildsSphereIsItsOwnAndTheRootsIsReachedByWalkingUp() {
+    public void testAChildsSpaceIsItsOwnAndTheRootsIsReachedByWalkingUp() {
         final Machine parent = Machine.current();
-        final Machine child = parent.push(f("sphere_child"));
+        final Machine child = parent.push(f("space_child"));
         try {
-            assertNotSame(parent.space(), child.space(), "a pushed frame binds a sphere of its own");
-            assertSame(child.memory(), Machine.read(f("~/memory")), "~ is the child's own sphere");
+            assertNotSame(spaceOf(parent), spaceOf(child), "a pushed frame mounts a space of its own");
+            assertSame(child.memory(), Machine.read(f("~/memory")), "~ is the child's own space");
             assertSame(child.network(), Machine.read(f("~/network")));
-            // an address in no child's sphere is an enclosing machine's: the walk goes up the machine chain to the root
+            // an address the child's space does not cover is an enclosing level's: memory walks up to the root
             assertSame(Machine.root().network(), Machine.read(f("/network")), "the root's components stay reachable from a child");
-            final fURI childNetwork = child.vid().resolve().extend("network");
-            assertSame(child.space(), Machine.Helper.sphereOf(child, childNetwork));
-            assertSame(Machine.root().space(), Machine.Helper.sphereOf(child, f("/network")));
+            assertSame(spaceOf(child), child.memory().findSpace(child.vid().resolve().extend("network")));
+            assertSame(spaceOf(Machine.root()), child.memory().findSpace(f("/network")));
         } finally {
             child.pop();
         }
     }
 
     @Test
-    public void testASiblingsSphereIsNoSphereOfMine() {
+    public void testASiblingsComponentsAreNoPartOfMine() {
         final Machine parent = Machine.current();
-        final Machine sibling = parent.push(f("sphere_sibling"));
+        final Machine sibling = parent.push(f("space_sibling"));
         final fURI siblingNetwork = sibling.vid().resolve().extend("network");
         sibling.pop();
-        final Machine child = parent.push(f("sphere_child"));
+        final Machine child = parent.push(f("space_child"));
         try {
-            assertNull(Machine.Helper.sphereOf(child, siblingNetwork), "a sibling's components are in neither my sphere nor the root's");
+            assertFalse(spaceOf(child).covers(siblingNetwork), "a sibling's components are not my parts");
+            assertFalse(spaceOf(Machine.root()).covers(siblingNetwork), "nor the root's");
         } finally {
             child.pop();
         }
     }
 
     @Test
-    public void testTheMachinesDataIsDeclinedToMemory() {
-        final Machine child = Machine.current().push(f("sphere_data"));
+    public void testTheMachinesDataIsInItsSpace() {
+        final Machine child = Machine.current().push(f("space_data"));
         try {
             Machine.write(f("~/scratch/x"), jnt(7));
             checkEquality(LOG, jnt(7), Machine.read(f("~/scratch/x")), true);
-            // the sphere declined it: the data lives in memory, at the machine's own data level
+            // data under the vid is no part of the machine, so the space keeps it in its own store
             final fURI at = child.vid().resolve().extend("scratch").extend("x");
-            assertFalse(child.space().covers(at), "data under the vid is not the machine's sphere");
-            checkEquality(LOG, jnt(7), child.memory().read(at), true);
+            assertFalse(spaceOf(child).covers(at), "data under the vid is not one of the machine's parts");
+            assertSame(spaceOf(child), child.memory().findSpace(at), "memory routes it to the machine's space");
+            checkEquality(LOG, jnt(7), spaceOf(child).read(at), true);
         } finally {
             child.pop();
         }
@@ -126,91 +136,102 @@ public class MachineSpaceTest extends AbstractMetatronTest {
             "ws://10.0.0.9:8555/network/roster  % false",
             "ws://10.0.0.9:8555/sys/log         % false",
             "ide:command                        % false"})
-    public void testTheRootsSphereCoversOnlyItsOwnPaths(final String address, final boolean covered) {
+    public void testTheRootsSpaceCoversOnlyItsOwnParts(final String address, final boolean covered) {
         // the root's vid, /, prefixes every path, so a scheme or a host must be refused on its own: a peer's /network or
-        // /sys is the peer's, never answered by this machine's sphere
-        assertEquals(covered, Machine.root().space().covers(f(address)), address);
+        // /sys is the peer's, never one of this machine's parts
+        assertEquals(covered, spaceOf(Machine.root()).covers(f(address)), address);
     }
 
     @Test
-    public void testSysIsTheSpheresOwnStore() {
+    public void testSysIsInTheMachinesSpace() {
         final Machine machine = Machine.current();
-        // "I would have sys/# simply go into MachineSpace" (Marko, 2026-10-25): the log sink is in the sphere's store, and
-        // memory — whose catch-all still covers the address — holds no ~/sys at all
+        // "I would have sys/# simply go into MachineSpace" (Marko, 2026-10-25): the log sink is in the space's store, and
+        // memory reaches it there as it reaches every address the space covers
         final fURI log = machine.vid().resolve().extend("sys").extend("log");
-        assertTrue(machine.space().ownsWrite(log), "~/sys is the sphere's to write");
-        assertFalse(machine.space().read(log).isNoObj(), "the log sink is in the sphere's own store");
-        assertTrue(machine.memory().read(log).isNoObj(), "memory holds no ~/sys");
+        assertSame(spaceOf(machine), machine.memory().findSpace(log), "memory routes ~/sys to the machine's space");
+        assertFalse(spaceOf(machine).read(log).isNoObj(), "the log sink is in the space's own store");
         final fURI tally = machine.vid().resolve().extend("sys").extend("tally");
         try {
             Machine.write(f("~/sys/tally"), jnt(3));
-            checkEquality(LOG, jnt(3), machine.space().read(tally), true);
+            checkEquality(LOG, jnt(3), spaceOf(machine).read(tally), true);
             checkEquality(LOG, jnt(3), Machine.read(f("~/sys/tally")), true);
-            assertTrue(machine.memory().read(tally).isNoObj(), "a ~/sys write lands in the sphere, never in memory");
         } finally {
             Machine.write(f("~/sys/tally"), noobj());
         }
-        assertTrue(machine.space().read(tally).isNoObj(), "and a noobj write is its deletion");
+        assertTrue(spaceOf(machine).read(tally).isNoObj(), "and a noobj write is its deletion");
     }
 
     @Test
     public void testASpaceBeneathSysStillGainsItsAddresses() {
         // a space mounted beneath ~/sys (a tbleSpace's schema instset at /sys/space/<name>/instset/# is one) claims its
-        // addresses more specifically than ~/sys does, so it answers them — as when ~/sys was a space in memory
-        final fURI vid = f("/sys/space/sphere_yield/space");
-        final memSpace beneath = memSpace.of(f("/sys/space/sphere_yield/#"), vid);
+        // addresses more specifically than the machine's space does, so it answers them
+        final fURI vid = f("/sys/space/beneath/space");
+        final memSpace beneath = memSpace.of(f("/sys/space/beneath/#"), vid);
         try {
-            Machine.write(f("/sys/space/sphere_yield/tally"), jnt(4));
-            checkEquality(LOG, jnt(4), beneath.read(f("/sys/space/sphere_yield/tally")), true);
-            assertTrue(Machine.root().space().read(f("/sys/space/sphere_yield/tally")).isNoObj(), "the sphere declines it");
-            assertFalse(Machine.root().space().ownsWrite(f("/sys/space/sphere_yield/tally")), "and does not own its write");
-            checkEquality(LOG, jnt(4), Machine.read(f("/sys/space/sphere_yield/tally")), true);
-            // the rest of ~/sys is still the sphere's
-            assertTrue(Machine.root().space().ownsWrite(f("/sys/tally")));
+            Machine.write(f("/sys/space/beneath/tally"), jnt(4));
+            assertSame(beneath, Machine.root().memory().findSpace(f("/sys/space/beneath/tally")), "the more specific space gains it");
+            checkEquality(LOG, jnt(4), beneath.read(f("/sys/space/beneath/tally")), true);
+            assertTrue(spaceOf(Machine.root()).read(f("/sys/space/beneath/tally")).isNoObj(), "the machine's space holds no copy");
+            checkEquality(LOG, jnt(4), Machine.read(f("/sys/space/beneath/tally")), true);
+            // the rest of ~/sys is still the machine's space's
+            assertSame(spaceOf(Machine.root()), Machine.root().memory().findSpace(f("/sys/tally")));
         } finally {
             Machine.root().memory().removeSpace(vid);
         }
     }
 
     @Test
-    public void testAFailIsMintedInTheSphere() {
+    public void testAFailIsMintedInTheMachinesSpace() {
         final Machine machine = Machine.current();
-        // a fail mints its own key under ~/processor/fail through the sphere's ?incrq
-        final Fail minted = MFail.fail("a fail the sphere keeps for its machine");
+        // a fail mints its own key under ~/processor/fail through the space's ?incrq
+        final Fail minted = MFail.fail("a fail the space keeps for its machine");
         assertNotNull(minted.vid(), "the fail was written, and carries the key it was minted at");
         try {
-            assertTrue(machine.space().covers(minted.vid()), "its key is in the machine's ~/processor");
+            assertTrue(spaceOf(machine).covers(minted.vid()), "its key is in the machine's ~/processor");
+            assertSame(spaceOf(machine), machine.memory().findSpace(minted.vid()), "memory routes it to the machine's space");
             assertFalse(Machine.read(minted.vid()).isNoObj(), "it reads back");
             assertFalse(machine.processor().at(uri(f("fail").extend(minted.vid().name()))).isNoObj(),
                     "it lives in the machine's processor");
-            // memory answers a machine's own keys from the machine (readAbsolute's fallback), so the check is that its
-            // data level stored no copy
-            assertTrue(machine.memory().findSpace(minted.vid()).read(minted.vid()).isNoObj(),
-                    "memory's data level holds no copy of it");
         } finally {
             Machine.write(minted.vid(), noobj());
         }
     }
 
     @Test
-    public void testAQueryOnAComponentIsMemorys() {
-        final MachineSpace sphere = Machine.root().space();
-        // the q-processors that answer a ?docq are memory's: the component is not its own documentation
-        assertSame(Machine.root().memory(), sphere.read(f("/memory")), "the component reads live");
-        assertTrue(sphere.read(f("/memory?docq")).isNoObj(), "a query on it is declined to memory");
-        assertTrue(sphere.read(f("/.?docq")).isNoObj(), "and so is a query on the machine itself");
+    public void testAWriteUnderAComponentThatIsNoPartOfItReadsBack() {
+        // ~/memory/note is no field of the memory: the write lands in the space's store, and the read finds it there
+        // once the component has no answer
+        final fURI note = Machine.root().vid().resolve().extend("memory").extend("note");
+        try {
+            Machine.write(f("~/memory/note"), jnt(11));
+            checkEquality(LOG, jnt(11), Machine.read(f("~/memory/note")), true);
+            checkEquality(LOG, jnt(11), spaceOf(Machine.root()).read(note), true);
+        } finally {
+            Machine.write(f("~/memory/note"), noobj());
+        }
+        assertTrue(Machine.read(note).isNoObj(), "and a noobj write is its deletion");
     }
 
     @Test
-    public void testACopyOfAMachineKeepsItsSphere() {
-        final Machine child = Machine.current().push(f("sphere_copy"));
+    public void testAQueryOnAComponentIsTheSpacesQProcs() {
+        final MachineSpace space = spaceOf(Machine.root());
+        // the q-processors that answer a ?docq are the space's: the component is not its own documentation
+        assertSame(Machine.root().memory(), space.read(f("/memory")), "the component reads live");
+        final Obj doc = space.read(f("/memory?docq"));
+        assertFalse(doc.isNoObj(), "a query on it is answered by the space's q-processors");
+        assertNotSame(Machine.root().memory(), doc, "not by the component");
+    }
+
+    @Test
+    public void testACopyOfAMachineReachesItsSpace() {
+        final Machine child = Machine.current().push(f("space_copy"));
         try {
             Machine.write(f("~/sys/tally"), jnt(9));
-            // a copy is the same machine — what move reads back at its address, or a pop lands on — so it answers the
-            // same ~/sys; only a pushed child binds a sphere of its own
+            // a copy is the same machine — what move reads back at its address, or a pop lands on — so it reaches the
+            // same space through the memory it shares; only a pushed child mounts a space of its own
             final Machine copy = ((AbstractMachine) child).clone(null, child.tid(), child.vid());
-            assertSame(child.space(), copy.space(), "a copy keeps the machine's sphere");
-            checkEquality(LOG, jnt(9), copy.space().read(child.vid().resolve().extend("sys").extend("tally")), true);
+            assertSame(spaceOf(child), spaceOf(copy), "a copy reaches the machine's space");
+            checkEquality(LOG, jnt(9), copy.memory().read(child.vid().resolve().extend("sys").extend("tally")), true);
         } finally {
             child.pop();
         }
@@ -218,16 +239,16 @@ public class MachineSpaceTest extends AbstractMetatronTest {
 
     @Test
     public void testAChildsSysIsItsOwnAndLeavesWithIt() {
-        final Machine child = Machine.current().push(f("sphere_sys"));
+        final Machine child = Machine.current().push(f("space_sys"));
         final fURI tally = child.vid().resolve().extend("sys").extend("tally");
         try {
             Machine.write(f("~/sys/tally"), jnt(5));
-            checkEquality(LOG, jnt(5), child.space().read(tally), true);
-            assertTrue(Machine.root().space().read(f("/sys/tally")).isNoObj(), "the root's ~/sys is untouched");
+            checkEquality(LOG, jnt(5), spaceOf(child).read(tally), true);
+            assertTrue(spaceOf(Machine.root()).read(f("/sys/tally")).isNoObj(), "the root's ~/sys is untouched");
         } finally {
             child.pop();
         }
-        // from the root, the popped frame's ~/sys is in no sphere, and memory never held it
+        // from the root, the popped frame's ~/sys left with the frame's space
         assertTrue(Machine.read(tally).isNoObj(), "a frame's ~/sys leaves with the frame");
     }
 }

@@ -278,8 +278,8 @@ public class FailTest extends AbstractObjTest {
     }
 
     /**
-     * A STACK IS CLEARED BY CATCHING IT AT ITS ADDRESSES. {@code @} reads each fail where it is filed — the sphere
-     * answers a branch pattern as {@code vid => obj}, as a space does — so {@code catch(_)} deletes it, a lone fail
+     * A STACK IS CLEARED BY CATCHING IT AT ITS ADDRESSES. {@code @} reads each fail where it is filed — the machine's
+     * space answers a branch pattern as {@code vid => obj}, as every space does — so {@code catch(_)} deletes it, a lone fail
      * included ({@code *} hands back a detached copy, which has no address to delete).
      */
     @Test
@@ -294,9 +294,10 @@ public class FailTest extends AbstractObjTest {
     }
 
     /**
-     * AN EMPTY STACK READS EMPTY. A read under {@code ~/processor} is the sphere's to answer, nothing included:
-     * declined, it fell through to memory, whose machine-key fallback walked the branch pattern {@code @} reads into the
-     * machine rec and answered every computer, so a catch over cleared stacks counted the processor's whole index.
+     * AN EMPTY STACK READS EMPTY. A read under {@code ~/processor} is the machine's space's to answer, nothing
+     * included: falling through on its empty answer, memory's machine-key fallback walked the branch pattern {@code @}
+     * reads into the machine rec and answered every computer, so a catch over cleared stacks counted the processor's
+     * whole index.
      */
     @Test
     public void testAnEmptyStackReadsEmpty() {

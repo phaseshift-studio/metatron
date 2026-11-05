@@ -890,9 +890,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid);
 
     default void delete() {
-        // a LOCAL write: the obj is deleted wherever the machine keeps it — its sphere (~/sys) or its memory
+        // a LOCAL write: deleted from the machine's memory, where its space (~/sys, the fail stacks) is mounted
         if (null != this.vid())
-            Machine.Helper.writeLocal(Machine.current(), this.vid(), noobj());
+            Machine.current().memory().write(this.vid(), noobj());
     }
 
     /**

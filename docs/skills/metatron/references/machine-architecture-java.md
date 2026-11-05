@@ -14,10 +14,10 @@ description: |
 A **Machine** is a *space of spaces* — the container in which address resolution happens. The interface is
 `Machine extends Rec, AutoCloseable` and the concrete body is `AbstractMachine extends MRec`. Its five members
 (`instset`, `memory`, `network`, `compiler`, `processor`) are rec entries shaped as `machine::T`. Its own address
-surface is its **sphere** — `MachineSpace`, a `memSpace` the machine holds and memory never indexes (2026-10-25):
-`Machine.read`/`write` ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
-its components, its `sys`), then the network, then memory, then instruction memory. `~/sys` lives in the sphere's own
-store; the sphere declines everything else under the vid, so the machine's data stays memory's. Of the five:
+surface is its **space** — `MachineSpace`, a `memSpace` mounted in its memory at `<vid>/#` (2026-11-05: the
+machine's sphere and its data level are one space). `Machine.read`/`write` ask the network (host addresses only), then
+memory, then instruction memory, and memory's ordinary routing reaches the machine's space: it answers the machine
+itself and its components live, and keeps `~/sys` and the machine's data in its own store. Of the five:
 
 - **Memory** is the facade over the world of spaces — the single read/write surface.
 - **Compiler** lowers code; **Processor** runs it; neither is an address space.
@@ -42,10 +42,10 @@ isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: fram
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/machine/MachineSpace.java     ← the machine's own sphere: the machine, its components and ~/sys — asked
-                                        first by Machine.read/write, held by the machine, never in memory
+isa/mach/type/machine/MachineSpace.java     ← the machine's own space, mounted in its memory at <vid>/#: the machine
+                                        and its components live; ~/sys and its data in its store
 isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
-                                        <vid>/network/# when the machine's sphere hands it an address there
+                                        <vid>/network/# when the machine's space hands it an address there
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
@@ -332,23 +332,26 @@ turns a monoidic reducer into a distributed gather over `/usr/compute` peers —
   no-op, so writes there are silently dropped. The roster lives at `/network/roster`.
 - **`push()` must mint a child, not the parent.** Use the 3-arg `clone` — `selfVID` *pins* an already-set vid, so a
   2-arg clone would silently keep the parent's address.
-- **A machine's own addresses are its sphere's** (`MachineSpace`, asked before the network and memory, never in
-  memory): the machine at its vid, a component below it, `~/sys`. A covered address the sphere has no answer for is
-  declined, as is everything else under the vid. Address *resolution* of all the rest belongs to memory:
-  `BasicMemory.read`/`write` route an address to the space that covers it (`readAbsolute`/`writeAbsolute`) — which is
-  why a bulk wildcard write reaches the space it names rather than the argument stack.
-- **`~/sys` is the sphere's own store, not memory's** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"). It
-  carries the q-procs `~/sys` speaks (docq, subq, incrq, mimeq, lockq). A closing machine DROPS its sphere after
-  memory's spaces and never closes its values: the system thread's executor lives in `~/sys`, and closing it from one
-  of its own threads waits on itself forever (memory's `removeSpace` only logs "closed space" — it never closed the
-  old sys space either). Code that re-reads an obj at its own vid goes through
-  `Machine.Helper.readLocal`/`writeLocal` (sphere, then memory), **never `memory()` directly**: memory holds no
-  `~/sys`, and `Machine.read` would scan instruction memory on a miss. The sphere owns writes to the network branch,
-  `~/sys`, the compiler and the processor; the machine rec's and the other components' writes still go to memory. An
-  address with a scheme or a host is no sphere's (`ws://peer/sys/…` is the peer's), and a query on the machine or a
-  component (`~/processor?docq`) is declined to memory's q-procs. `~/sys` is a holding area: its parts are expected to
-  move into the components.
-- **Fails are filed in the processor** (Marko, 2026-11-04), through the sphere's `incrq`: a fail raised outside any
+- **A machine's own addresses are its space's** (`MachineSpace`, mounted in its memory at `<vid>/#`; Marko,
+  2026-11-05: "necessary and sufficient"): the machine at its vid, a component below it, `~/sys` and the machine's data.
+  There is no lookup beside memory's: `BasicMemory.read`/`write` route an address to the most specific space that
+  covers it (`readAbsolute`/`writeAbsolute`) — which is why a bulk wildcard write reaches the space it names rather
+  than the argument stack — and a covering space's answer is final, empty or not. The machine-key fallback
+  (`machine.at(…)`) answers only where no space covers, a machine with no vid. A more specific space (a schema instset
+  at `/sys/space/<name>/instset/#`) still gains its own addresses.
+- **`~/sys` is in the machine's space's own store** (Marko, 2026-10-25: "sys/# simply go into MachineSpace"), with
+  the q-procs the machine's addresses speak (docq, decq, subq, incrq, mimeq, lockq). A closing root REMOVES its space
+  with memory's other spaces and never closes its values: the system thread's executor lives in `~/sys`, and closing
+  it from one of its own threads waits on itself forever (memory's `removeSpace` only logs "closed space"). Code that
+  re-reads an obj at its own vid reads `Machine.current().memory()` directly: `Machine.read` would ask the network and
+  scan instruction memory on a miss. The space folds writes to the network branch, the compiler and the processor into
+  those components and stores the rest; a component's address reads live, and what the component does not hold, the
+  store answers. The machine itself answers live at its vid and is never stored in its own space: a stored copy goes
+  stale (a pushed child's kept its parent's processor). `push` still registers each child in the root's store, which
+  is what `move` reads. An address with a scheme or a host is no machine's part (`ws://peer/sys/…` is the peer's), and a
+  query on the machine or a component (`~/processor?docq`) is answered by the space's q-procs. `~/sys` is a holding
+  area: its parts are expected to move into the components.
+- **Fails are filed in the processor** (Marko, 2026-11-04), through the machine's space's `incrq`: a fail raised outside any
   evaluation at `~/processor/fail/_?incrq`, and an evaluation's at `~/processor/computer/<n>/fail/_?incrq`, under the
   computer that ran it. The processor indexes its computers by number (`computer => [<n> => computer::[…]]`): a
   computer is written at `~/processor/computer/<n>` when it is minted, and that write is the indexing. So the

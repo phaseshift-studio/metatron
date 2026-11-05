@@ -71,8 +71,8 @@ public abstract class SpaceRec<T extends SpaceRec<T>> extends MRec {
     protected Map<Obj, Obj> read() {
         if (null == this.vid()) return this.jvm();
         try {
-            // a LOCAL read: an anchored rec may live in the machine's sphere (~/sys) as well as in memory
-            final Obj fresh = Machine.Helper.readLocal(Machine.current(), this.vid());
+            // a LOCAL read, never the network: an anchored rec in ~/sys is in the machine's space, mounted in memory
+            final Obj fresh = Machine.current().memory().read(this.vid());
             return fresh.isRec() ? fresh.jvm() : this.jvm();
         } catch (final Exception e) {
             return this.jvm();   // space unavailable (boot, headless, store gone)

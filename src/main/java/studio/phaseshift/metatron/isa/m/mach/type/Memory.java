@@ -234,9 +234,9 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
     }*/
 
     /**
-     * An absolute address is a space's to answer. When no space covers it the machine in effect answers with its
-     * own rec — which is what makes {@code /} the root: the machine's own keys are addressable there
-     * ({@code &#42;/processor}, {@code &#42;/memory}), and no space has to be mounted inside itself.
+     * An absolute address is a space's to answer, nothing included: the machine's own space ({@code <vid>/#}) answers
+     * the machine's components itself. Only when no space covers it does the machine answer with its own rec — a
+     * machine with no vid, which mounts no space of its own.
      * <p>
      * The machine is asked with {@code at}, <b>never</b> {@code read}: a read would come straight back here and
      * a root read would re-enter itself.
@@ -245,13 +245,10 @@ public interface Memory extends Space, Component, Component.Prefix, Closeable {
         // findSpace, not getSpaceFor: the machine's own keys are the fallback, not a space, and resolving them is
         // this method's job — getSpaceFor must never return the machine cast to a Space (Machine is a Rec).
         final Space space = this.findSpace(vid);
-        if (null != space) {
-            final Obj result = space.read(vid);
-            if (!result.isNoObj())
-                return result;
-            // the space covered the vid but answered noobj (the /# infra catch-all does this for /memory, /processor,
-            // …) — fall through so the machine's own rec keys still answer.
-        }
+        // A COVERING SPACE'S ANSWER IS FINAL: falling through on its noobj walked a branch pattern into the machine rec
+        // with Rec.at, which does not honor a pattern there, and answered every computer for an empty fail stack
+        if (null != space)
+            return space.read(vid);
         final Machine machine = this.machine();
         if (null != machine) {
             final Obj key = machine.at(uri(rootRelative(vid)));

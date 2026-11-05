@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.mach.type;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
@@ -32,7 +31,6 @@ import studio.phaseshift.metatron.isa.m.mach.type.memory.BasicMemory;
 import studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion;
 import studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork;
 import studio.phaseshift.metatron.isa.m.mach.type.network.PeerSpawn;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -76,8 +74,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     <li><b>the perspective</b> -- {@code CURRENT}, {@code current()}, {@code relativeToCurrent}: where THIS thread
  *     stands, which is what lets the machine be the machine.</li>
  *     <li><b>the address surface</b> -- {@code read}, {@code write}, {@code loaded}: the one way in, asking the
- *     machine's own sphere ({@link MachineSpace}: the machine, its components, its system information), then the
- *     network, then data memory, then instruction memory.</li>
+ *     network, then data memory — where the machine's own space ({@link MachineSpace}: the machine, its components,
+ *     its system information and its data) is mounted — then instruction memory.</li>
  *     <li><b>the component contract</b> -- {@link Component} and its {@code machine()} walk.</li>
  *     <li><b>execution</b> -- {@code push}, {@code pop}, {@code move}, and {@code evalAt} (the scoped move). {@code
  *     apply} is inherited identity here: the
@@ -139,10 +137,9 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     // ======================== the address surface ========================
-    // The one way in. A read asks the machine's own sphere (MachineSpace), then the network, then data memory, then
-    // instruction memory; a write mirrors it. The
-    // space contract itself -- addSpace/removeSpace/getSpaceFor/spaces and the route table -- is Memory's, reached
-    // through memory().
+    // The one way in. A read asks the network, then data memory (where the machine's own space is mounted), then
+    // instruction memory; a write mirrors it. The space contract itself -- addSpace/removeSpace/getSpaceFor/spaces and
+    // the route table -- is Memory's, reached through memory().
 
     static Obj read(final fURI vid) {
         if (null == ROOT_MACHINE)
@@ -152,12 +149,6 @@ public interface Machine extends Rec, AutoCloseable {
         // answers noobj for an address with no authority, or one whose authority is not in the roster, so the local
         // path is untouched (an empty roster is the normal case).
         final Machine machine = Machine.current();
-        // THE MACHINE'S OWN SPHERE ANSWERS FIRST (MachineSpace): the machine itself, its components and its system
-        // information, from the innermost machine whose sphere covers the address. It is not in memory, and it declines
-        // everything else — the machine's data among it — so the network and memory below answer as they always have.
-        final Optional<Obj> owned = Helper.readSphere(machine, vid);
-        if (owned.isPresent())
-            return owned.get();
         // THE ROUTER OF ROUTERS ALIGNS THE NAME ONCE. a prefixed spelling (ide:command) names the same
         // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
         // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
@@ -222,11 +213,6 @@ public interface Machine extends Rec, AutoCloseable {
         // Network.write answers noobj for an undeclared authority, so the local path is untouched — but a declared
         // peer that is silent answers a fail, which must NOT be swallowed by the local fall-through.
         final Machine machine = Machine.current();
-        // THE MACHINE'S OWN SPHERE FIRST, exactly as read — and a write the sphere OWNS is final, whatever it answers:
-        // a member's deletion answers noobj, and handing that on as a decline would land a stray deletion in memory
-        final Optional<Obj> owned = Helper.writeSphere(machine, vid, obj);
-        if (owned.isPresent())
-            return owned.get();
         // aligned once at the gatekeeper, exactly as read -- a prefixed spelling must land where its
         // aligned form lands, on the wire and in the index alike.
         final fURI name = Helper.align(machine, vid);
@@ -381,18 +367,6 @@ public interface Machine extends Rec, AutoCloseable {
     }
 
     /**
-     * This machine's own SPHERE ({@link MachineSpace}): the machine itself, its components and its system information,
-     * answered by {@link #read} and {@link #write} before the network and memory. Held by the machine and never indexed
-     * by memory; {@code null} for a machine with no vid, which has no address to answer for.
-     */
-    MachineSpace space();
-
-    /**
-     * Bind this machine's sphere — {@link Helper#bootstrap(Machine)} does, once per machine.
-     */
-    Machine space(final MachineSpace space);
-
-    /**
      * This thread's machine stack, not initialized eagerly: until {@link #push()} is used there is no machine, and every
      * component accessor falls through to the machine's own slot.
      */
@@ -486,8 +460,8 @@ public interface Machine extends Rec, AutoCloseable {
         child.jvm().put(uri(MEMORY), memory);
         child.jvm().put(uri(INSTSET), childInstSet);
         child.jvm().put(uri(NETWORK), childNetwork);
-        // THE CHILD IS CURRENT WHILE IT BOOTSTRAPS. bootstrap writes the child's own infra (the machine rec at
-        // its vid, the per-machine log sink, ~-relative state), and every one of those writes belongs to the
+        // THE CHILD IS CURRENT WHILE IT BOOTSTRAPS. bootstrap writes the child's own infra (its space, the
+        // per-machine log sink, ~-relative state), and every one of those writes belongs to the
         // CHILD's level. Left on the parent, each self-write landed in the parent's catch-all space instead,
         // so the parent answered for the child's own address with a synthesized rec — and a sibling could not
         // read the child back at its vid, which is what `move(<child>)` resolves.
@@ -496,7 +470,7 @@ public interface Machine extends Rec, AutoCloseable {
         // ... and its own PROCESSOR, of this machine's architecture: a processor indexes the computers its machine mints
         // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
         // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
-        // child's sphere is bound, so its write at <child>/processor is the child's.
+        // child's space is mounted, so its write at <child>/processor is the child's.
         final Processor processor = this.processor();
         child.jvm().put(uri(PROCESSOR), processor.clone(new LinkedHashMap<>(), processor.tid(), childVID.extend(PROCESSOR)).parent(child));
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
@@ -626,59 +600,40 @@ public interface Machine extends Rec, AutoCloseable {
          */
         public static final fURI SYS_DIR = f("sys");
 
-        private static final fURI TILDE = f("~");
-
         /**
-         * Mount this machine's own data level and bind its sphere. The data level is a space with pattern
-         * {@code <vid>/#}, so {@code ~/thread} and every other address of the machine's data resolve there as space
-         * values, not through any vid intercept. The sphere ({@link MachineSpace}) — which {@link #read}/{@link #write}
-         * ask before the network and memory — answers the machine itself and its components (a fail stack, such as
-         * {@code ~/processor/fail}, is written into the processor), and holds its system information
-         * ({@code ~/sys/log}, …) in its own store. Called for the root in
+         * Mount this machine's own space in its memory. The space ({@link MachineSpace}) has pattern {@code <vid>/#}, so
+         * every address of the machine resolves there through memory: the machine itself and its components, live (a
+         * fail stack, such as {@code ~/processor/fail}, is written into the processor), and its system information
+         * ({@code ~/sys/log}, …) and data ({@code ~/thread}, …) in its store. Called for the root in
          * {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
          * <p>
-         * Everything here goes through {@code machine.memory()} or the sphere itself at a resolved address, because
+         * Everything here goes through {@code machine.memory()} or the space itself at a resolved address, because
          * bootstrap runs before the machine is reachable through {@code Machine.write} or {@code ~}.
          */
         public static Machine bootstrap(final Machine machine) {
             if (machine.hasVID()) {
-                // The infra PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is
-                // everything. But the machine rec is written at the UNRESOLVED node vid (/.): a rec at a node is a
-                // single value, whereas at the branch / it would fan out into /q, /instset, … entries.
-                final fURI resolved = machine.vid().resolve();
-                // This machine's OWN address space, at <vid>/# (the root's is /#): what a vid-less `#` cache used to
-                // claim by accident, before it was made unregistered. It must be PER MACHINE — a single root /# also
-                // matches /xyz/iso, so a child's write would land in the root and outlive its machine. The vid-scoped
-                // pattern is more specific than /# and less specific than every mounted space, so mostSpecific gives
-                // each machine its own level: own, no leak up, no leak across — by construction rather than by accident.
-                final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
-                // The machine's own address space carries the same q-processors as the sphere's ~/sys store: an address
-                // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/processor/fail
-                // into this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
-                machineSpace.addQ(QCollection.docQ());
-                machineSpace.addQ(QCollection.decQ());
-                machineSpace.addQ(QCollection.subQ());
-                machineSpace.addQ(QCollection.incrQ());
-                machineSpace.addQ(QCollection.mimeQ());
-                machineSpace.addQ(QCollection.lockQ());
-                machine.memory().addSpace(machineSpace);
-                // THE MACHINE'S OWN SPHERE (Marko, 2026-10-25): the machine itself, its components and its system
-                // information, answered FIRST by Machine.read/write and never indexed by memory, which keeps the machine's
-                // data (the catch-all above). One per machine, so a pushed frame's sphere is its own and leaves with it.
-                // ~/sys/# is the sphere's own store ("sys/# simply go into MachineSpace"): there is no sys space in memory.
-                machine.space(new MachineSpace(machine));
-                // THE NETWORK ANSWERS ITS OWN BRANCH, through the sphere: the component answers <vid>/network/# from its rec
-                // — every field at its own address, a peer or a listener at its key's path, and a noobj write on a member
-                // that member's retraction. mount stamps the branch; the network is not a space in memory.
+                // The PATTERN is the resolved vid (/. → /#): /thread must match, and the root's "local" is everything.
+                // This machine's OWN address space, at <vid>/# (the root's is /#), mounted in its memory: the machine
+                // itself, its components, its system information and its data (Marko, 2026-11-05: putting it in memory is
+                // "necessary and sufficient"). It must be PER MACHINE — a single root /# also matches /xyz/iso, so a
+                // child's write would land in the root and outlive its machine. The vid-scoped pattern is more specific
+                // than /# and less specific than every mounted space, so mostSpecific gives each machine its own level:
+                // own, no leak up, no leak across — by construction rather than by accident.
+                // The space answers the machine at <vid> live, so the machine is never stored in it: a stored copy goes
+                // stale (a pushed child's kept the processor it had before its own, and its store unrolled the parent's
+                // fails for the child's stacks).
+                final MachineSpace space = new MachineSpace(machine);
+                machine.memory().addSpace(space);
+                // THE NETWORK ANSWERS ITS OWN BRANCH, through the machine's space: the component answers <vid>/network/#
+                // from its rec — every field at its own address, a peer or a listener at its key's path, and a noobj
+                // write on a member that member's retraction. mount stamps the branch; the network is not a space.
                 if (machine.network() instanceof BasicNetwork network)
                     network.mount(machine);
-                // the machine rec embeds at its own vid: ~ → <vid> reaches it, and its entries are space embeddings.
-                machine.memory().write(machine.vid(), machine);
-                // this machine's log sink, in its sphere's ~/sys: a machine with none answers noobj, and
+                // this machine's log sink, in its space's ~/sys: a machine with none answers noobj, and
                 // GraphittyObjLogger.doLog then logs every level
                 final fURI vid = machine.vid().resolve().extend(Helper.SYS_DIR.extend(LOGG));
                 GraphittyObjLogger.setLogger(Helper.LOG_SINK);
-                machine.space().write(vid, LogObj.sink(Helper.logLevels(machine), vid));
+                space.write(vid, LogObj.sink(Helper.logLevels(machine), vid));
             }
             return machine;
         }
@@ -736,87 +691,6 @@ public interface Machine extends Rec, AutoCloseable {
          * A statement of a source file that failed, with its line and the source it came from.
          */
         public record FileParseError(int lineNumber, String lineString, Exception parseException) {
-        }
-
-        /**
-         * The sphere that answers {@code vid} for a thread standing in {@code machine}: the innermost machine — this
-         * one, then each enclosing machine — whose {@link MachineSpace} covers the address, or {@code null} when none
-         * does. A child's sphere is its own vid, so {@code ~/network} is the child's network, while
-         * {@code /network/roster}, outside every child's sphere, is the root's.
-         */
-        public static MachineSpace sphereOf(final Machine machine, final fURI vid) {
-            Obj level = machine;
-            while (level instanceof Machine at) {
-                final MachineSpace space = at.space();
-                if (null != space && space.covers(vid))
-                    return space;
-                final Obj parent = at.parent();
-                if (parent == at)
-                    return null;
-                level = parent;
-            }
-            return null;
-        }
-
-        /**
-         * The address a sphere would answer {@code vid} at: {@code ~} resolved against the machine the thread stands in,
-         * exactly as memory resolves it on a write, and an absolute address as given. A relative name is never in a
-         * sphere, so it answers {@code null} — as does {@code ~} on a machine with no vid.
-         */
-        static fURI sphereAddress(final Machine machine, final fURI vid) {
-            if (vid.hasPrefix(TILDE))
-                return machine.hasVID() ? machine.vid().extend(vid.pretract(1)).resolve() : null;
-            return vid.isAbsolute() ? vid : null;
-        }
-
-        /**
-         * The sphere's answer for {@code vid}, read by a thread standing in {@code machine} — empty, the decline, when no
-         * sphere covers the address or the covering one has nothing there and does not own the read. An owned read is
-         * final, nothing included, as an owned write is: declined, an empty stack read fell through to memory, whose
-         * machine-key fallback walked the branch pattern into the machine rec and answered every computer. The first
-         * step of {@link Machine#read}, and of {@link #readLocal}.
-         */
-        static Optional<Obj> readSphere(final Machine machine, final fURI vid) {
-            final fURI here = sphereAddress(machine, vid);
-            final MachineSpace sphere = null == here ? null : sphereOf(machine, here);
-            if (null == sphere)
-                return Optional.empty();
-            final Obj answer = sphere.read(here);
-            return answer.isNoObj() && !sphere.ownsRead(here) ? Optional.empty() : Optional.of(answer);
-        }
-
-        /**
-         * The sphere's write of {@code obj} at {@code vid}, when a sphere OWNS the address — empty when none does, and
-         * the write goes on. Owned is final, whatever it answers: a member's deletion answers {@code noobj}, and handing
-         * that on as a decline would land a stray deletion in memory. An obj written at its own {@code ~} vid is stamped
-         * with the resolved one, as memory stamps it, so the obj and its address agree on where it lives.
-         */
-        static Optional<Obj> writeSphere(final Machine machine, final fURI vid, final Obj obj) {
-            final fURI here = sphereAddress(machine, vid);
-            final MachineSpace sphere = null == here ? null : sphereOf(machine, here);
-            if (null == sphere || !sphere.ownsWrite(here))
-                return Optional.empty();
-            if (!here.equals(vid) && vid.equals(obj.vid()))
-                obj.selfVID(here);
-            return Optional.of(sphere.write(here, obj));
-        }
-
-        /**
-         * A read IN THIS PROCESS: the machine's sphere, then its memory — where an address lives locally, without the
-         * network's gate or instruction memory's union fallback. For code that re-reads an obj at its own vid (the log
-         * sink, a reflected rec): it must find the obj wherever the machine keeps it, and {@code ~/sys} is the sphere's,
-         * not memory's. (An address an instruction set holds is memory's lookup to route: it weighs the instset's
-         * libraries.) A miss costs nothing here, where {@link Machine#read} would go on to scan instruction memory.
-         */
-        public static Obj readLocal(final Machine machine, final fURI vid) {
-            return readSphere(machine, vid).orElseGet(() -> machine.memory().read(vid));
-        }
-
-        /**
-         * A write IN THIS PROCESS: to the sphere when it owns the address, else to memory — {@link #readLocal}'s pair.
-         */
-        public static Obj writeLocal(final Machine machine, final fURI vid, final Obj obj) {
-            return writeSphere(machine, vid, obj).orElseGet(() -> machine.memory().write(vid, obj));
         }
 
         /**
@@ -1008,8 +882,8 @@ public interface Machine extends Rec, AutoCloseable {
         static Rec logLevels(final Machine machine) {
             final Obj parent = machine.parent();
             if (parent instanceof Machine enclosing && enclosing.hasVID()) {
-                // the enclosing machine's own sink, in its sphere (~/sys is not memory's)
-                final Obj sink = Helper.readLocal(enclosing, enclosing.vid().resolve().extend(SYS_DIR.extend(LOGG)));
+                // the enclosing machine's own sink, in its space's store
+                final Obj sink = enclosing.memory().read(enclosing.vid().resolve().extend(SYS_DIR.extend(LOGG)));
                 if (sink.isRec()) {
                     final Obj levels = sink.asRec().at(uri(LEVEL));
                     if (levels.isRec())
@@ -1063,16 +937,6 @@ public interface Machine extends Rec, AutoCloseable {
                 if (null == this.memory)
                     this.memory = new BasicMemory();
                 return this.memory;
-            }
-
-            @Override
-            public MachineSpace space() {
-                return null;
-            }
-
-            @Override
-            public Machine space(final MachineSpace space) {
-                return this;
             }
 
             private Network network = null;

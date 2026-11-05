@@ -54,9 +54,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * frame directly and nothing the boundary acts on is hidden from reflection.
  * <p>
  * <b>THE COMPONENT ANSWERS ITS OWN BRANCH.</b> {@link #mount} stamps it as {@code <vid>/network/#} (each machine's, at
- * bootstrap), and the machine's own sphere ({@link studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace} —
- * the first thing {@code Machine.read}/{@code write} ask, never a space in memory) hands every address under the branch
- * here, where it is answered from this rec as it stands: the space STORES NOTHING beside it. A field sits at
+ * bootstrap), and the machine's own space ({@link studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace},
+ * mounted in its memory at {@code <vid>/#}) hands every address under the branch here, where it is answered from this
+ * rec as it stands: the space STORES NOTHING beside it. A field sits at
  * {@code <vid>/network/<field>} and a member of a map the
  * network owns at its key's path; everything deeper is the unrolling every space gets ({@link Space.Helper#resolveRead}):
  * <pre>
@@ -135,10 +135,10 @@ public class BasicNetwork extends AbstractSpace<Object> implements Network {
 
     /**
      * Mount this level as {@code machine}'s network branch, {@code <vid>/network/#}: the pattern is stamped resolved, and
-     * the branch is answered through the machine's own sphere
+     * the branch is answered through the machine's own space
      * ({@link studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace}), which hands every address under it to
      * this level — the network is not a space in memory. A pushed frame's network answers for that frame alone and
-     * leaves with it, as its sphere does.
+     * leaves with it, as its space does.
      */
     public BasicNetwork mount(final Machine machine) {
         this.at(uri(PATTERN), uri(machine.vid().resolve().extend(NETWORK).extend(ALL)), MUTABLE);
