@@ -313,7 +313,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
      * next — and a memo keyed by text alone would be wrong for the same reason, so a
      * block that is split is colorized through this instead.
      *
-     * <p>{@link #highlight(String)} locks the shared highlighter for the duration of the
+     * <p> Locks the shared highlighter for the duration of the
      * call: an instance is not thread safe, and the console render thread shares it with
      * the loggers.
      */

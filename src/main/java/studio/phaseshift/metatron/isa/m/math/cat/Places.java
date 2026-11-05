@@ -66,7 +66,13 @@ public final class Places {
      */
     public static Obj place(final Obj arg) {
         final Rec raw = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
-        final Obj obj = raw.atDirect(OBJ);
+        final Obj spelled = raw.atDirect(OBJ);
+        // A PLACE MAY BE NAMED BY AN ALIAS: resolve the machine address through the one door, so //ginger is the
+        // place its origin names. An unbound name is answered unchanged, and then simply reaches no roster row.
+        final Machine current = Machine.current();
+        final Obj obj = spelled.isUri() && null != current
+                ? uri(Machine.Helper.align(current, spelled.uriValue()))
+                : spelled;
         final fURI machine = obj.isUri() ? obj.uriValue() : null;
         final Lst authorities = authorities(machine);
         if (0 == authorities.count())

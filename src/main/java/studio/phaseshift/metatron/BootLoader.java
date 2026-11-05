@@ -20,10 +20,8 @@ package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import studio.phaseshift.metatron.algebra.PendingWrites;
-import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
-import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -34,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.BasicMachine;
+import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.mThread;
@@ -50,8 +49,10 @@ import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
@@ -449,9 +450,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
         // --- Headless mode: signal restart via exit code -----------------
         // not while serving a stdio session: exiting 100 makes bin/metatron swap the JVM under a live pipe,
         // which strands in-flight requests and answers a strict client's next initialize with silence
-        if (RESET && !mcp)
+        if (RESET && !mcp) {
+            BootLoader.close();
             System.exit(EXIT_RESET);
-        else if (RESET)
+        } else if (RESET)
             LOG.warn("reset ignored while serving mcp stdio — restart the harness to reboot the vm");
     }
 
@@ -733,7 +735,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Machine.Helper.closeSources();
             Machine.root().close();
             // the root closed its own level; a frame that dialed and was never popped still holds a supervised one
-            studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor.closeAll();
+            NetworkSupervisor.closeAll();
             ROOT_MACHINE = null;
             ARGS = null;
             ThreadExecutor.instance().shutdown();

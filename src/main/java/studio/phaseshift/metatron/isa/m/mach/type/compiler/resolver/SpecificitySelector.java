@@ -87,7 +87,7 @@ public class SpecificitySelector extends MRec implements Selector {
         if (!userInst.hasRng()) {
             final Optional<fURI> fromOrAt = Inst.Helper.isFromOrAtInstToUri(userInst);
             if (fromOrAt.isPresent()) {
-                if (!fromOrAt.get().hasPattern()) {
+                if (!fromOrAt.get().hasPattern() && !fromOrAt.get().hasHost()) {
                     final Obj fromOrAtObj = Machine.read(fromOrAt.get());
                     if (!fromOrAtObj.isNothing() && !fromOrAtObj.isCall()) {
                         userInst.logger().debug("fast from/at() resolution: %s", fromOrAt.get());
@@ -222,6 +222,14 @@ public class SpecificitySelector extends MRec implements Selector {
     }
 
     private boolean checkArgs(final Poly<?, ?> userInstArgs, final Poly<?, ?> instArgs) {
+        // OPEN-KEYED ARGS: a TYPE-valued key declares the SHAPE of the caller's keys, not a key set or an
+        // arity, so there is nothing positional to compare — the binder keeps the caller's entries whole.
+        if (Inst.Helper.isOpenArgs(instArgs))
+            return true;
+        // A REC-SHAPED CALL HAS NO ORDER TO COMPARE POSITIONALLY — and lstValue() on a rec throws, so an
+        // ordered declaration is simply not a candidate for it.
+        if (instArgs.isLst() && !userInstArgs.isLst())
+            return false;
         if (instArgs.isEmpty()) // user_args and inst_args have no values, easy true
             return userInstArgs.isEmpty();
         if (userInstArgs.count() > instArgs.count()) // user_args can be less dude to {?}-zeroable inst_args

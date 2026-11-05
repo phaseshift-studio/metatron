@@ -63,6 +63,24 @@ has *no colocational requirement* — i.e. where the term is additive (`+`), not
 only operator under which the referents are independent. `move()` survives as the arity-1 case (§5.4): a branch of one
 lane is still a `+`.
 
+### 1.4 The coefficient — the one granularity knob
+
+The coefficient `{c}` is the multiplicity, and it is the *single* "how many," read the same way everywhere. On an
+instruction's **dom**, it is the **granularity** — how much of a stream is aggregated before the instruction fires:
+
+| dom coefficient | semantics | ships (for `{1,3,4,51}`) |
+|---|---|---|
+| `{1}` (bare) | **map** — one obj at a time | `start(1)`, `start(3)`, `start(4)`, `start(51)` |
+| `{n}` | **page** — exactly n at a time | `start({1,3})`, `start({4,51})` (n=2) |
+| `{min,max}` | **elastic band** — fill up to max, tail takes the rest | `start({1,3,4})`, `start({51})` (1..3) |
+| `{*}` | **gather** — the whole stream as one | `start({1,3,4,51})` |
+
+So `branch?<=int{c}` is the whole shipping verb: the coefficient tunes **traffic** (chunk size), **backpressure** (the
+band's max — page as big as you can, then let the remainder be the last page), and **traversal order** (element-major /
+page-major / peer-major) — one value. It is the *same* band in every slot: `?hop={2,4}3` (arity 2..4), `?split={2,4}stream`
+(2..4 parts), `PlaceSet={2,5}` (demand 2..5), and `cut()`'s dom `A{*}` (the Kleene barrier — "gather the monads"). One
+coefficient, five faces, all "how many."
+
 ---
 
 ## 2. The vid — addressability as placement
@@ -350,6 +368,10 @@ Two sugar / introspection conventions:
   slot holds a route."
 - **`>>route`** reveals it: `[code]==[as(lst::T)]==[>>2>>route]` reads the branch's route — the `to`/`from`/`eval`
   wiring, hidden by `::` but one `>>` away, as a *structured rec*, never spaghetti.
+
+The branch's **dom coefficient** is the shipping granularity (§1.4): `branch?<=int{*}(place => lane)` ships each lane
+the *whole* seed as one bulked payload, `{n}` pages it, `{1}` maps it per-obj. Distribution defaults to `{*}` — the
+whole shard as one `send_recv` — and the coefficient is what makes the branch the only verb you need.
 
 ### 6.4 The peer = a server-spawned handler thread
 

@@ -21,23 +21,20 @@ package studio.phaseshift.metatron.isa.m;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.petitparser.context.Context;
-import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
-import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.lang.reflect.Field;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +44,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -667,7 +663,24 @@ public class mParserTest extends AbstractMetatronTest {
                 "an in-range pick must still return the token");
     }
 
-    // ========================================
-    // THE ONE DOOR — parse() returns an obj, or a fail::T
-    // ========================================
+    /**
+     * A keyed branch call keeps the caller's keys: the arguments are a rec (not a list of rels), so each key
+     * names a place and its value is the program. An ordered call is the same instruction — the local branch.
+     */
+    @Test
+    public void testBranchRelations() {
+        final Inst keyed = mParser.parse("start(1).plus(2).branch(a => 23, b => plus(100))")
+                .asCall().tryToInst().insts().getLast();
+        assertEquals(BRANCH_INST_TID, keyed.tid().basePath());
+        assertTrue(keyed.args().isRec(), "keyed branch args are a rec");
+        assertEquals(2, keyed.args().count());
+        final var routes = keyed.args().asRec().recValue();
+        assertEquals(jnt(23), routes.get(uri("a")), "a value member rides as the value; keys=" + routes.keySet());
+        assertTrue(routes.get(uri("b")).isCall(), "a call rides as a program; keys=" + routes.keySet());
+        final Inst ordered = mParser.parse("start(1).plus(2).branch(plus(4), plus(10))")
+                .asCall().tryToInst().insts().getLast();
+        assertEquals(BRANCH_INST_TID, ordered.tid().basePath());
+        assertTrue(ordered.args().isLst(), "an ordered call is the positional branch");
+        assertEquals(2, ordered.args().count());
+    }
 }

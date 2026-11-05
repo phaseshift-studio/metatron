@@ -25,12 +25,12 @@ import studio.phaseshift.metatron.isa.Addressable;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.network.NetworkSupervisor;
+import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
+import studio.phaseshift.metatron.isa.m.space.variableStack;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
-import studio.phaseshift.metatron.isa.m.space.variableStack;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -265,7 +265,9 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
         // the wire's own gate is the HOST (Network.read), and `loop:` has none besides.
         if (!full.hasScheme() || !full.hasHost())
             return vid;
-        return full.extend(vid.pathString()).c(vid.c()).q(vid.qMap());
+        // THE WHOLE TAIL RIDES, and so do the qualifiers: an aligned spelling means what the spelled-out twin
+        // means, coefficient, poly and query included.
+        return Component.Prefix.Helper.substitute(full, vid, vid.pathString());
     }
 
     /**
@@ -367,16 +369,22 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
     /**
      * The first member this level holds for a SERVICE — matched by the origin it carries, so any of its surfaces —
      * or noobj. {@link #peer} is the exact lookup, by key.
+     * <p>
+     * THE SERVICE IS ALIGNED FIRST: a caller may name a peer by its bound alias ({@code //ginger}) as naturally as by
+     * its origin, and every membership question — this one, {@link #overrideOf}, {@link #submit}, {@link Helper#reach}
+     * — asks here, so the aliases are resolved once, at the boundary, and no consumer has to remember.
      */
     default Obj peerOf(final fURI service) {
+        final Machine machine = this.machine();
+        final fURI name = null == machine ? service : Component.Prefix.Helper.align(machine, service);
         final List<Obj> members = this.peers().values().toList();
         return members.stream()
-                .filter(peer -> Helper.sameService(Helper.originOf(peer), service))
+                .filter(peer -> Helper.sameService(Helper.originOf(peer), name))
                 .findFirst()
                 // A WILDCARD ORIGIN COVERS WHAT IT MATCHES, after every exact one: http_client::[host=><http://#>] is
                 // the web's gateway, and a client built for one site answers for that site before it
                 .or(() -> members.stream()
-                        .filter(peer -> Helper.covers(Helper.originOf(peer), service))
+                        .filter(peer -> Helper.covers(Helper.originOf(peer), name))
                         .max(Comparator.comparingInt(peer -> Helper.specificity(Helper.originOf(peer)))))
                 .orElse(noobj());
     }
@@ -391,7 +399,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
      * instruction's own does not accept is not an override of it (the caller then derives it, or falls through to the
      * local definition).
      */
-    default Obj overrideOf(final fURI origin, final fURI instTID) {
+    default Inst overrideOf(final fURI origin, final fURI instTID) {
         final Obj peer = this.peerOf(origin);
         if (!peer.isRec())
             return noobj();
@@ -1097,7 +1105,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          * — or noobj: absent, or of a signature the type system does not accept as that instruction's ({@link #accepts}).
          * Read flat, by key equality: {@code at()} would resolve the absolute tid key into nested path segments.
          */
-        public static Obj overrideIn(final Obj client, final fURI instTID) {
+        public static Inst overrideIn(final Obj client, final fURI instTID) {
             final Obj inst = client.isRec() ? client.asRec().at(uri(INST)) : noobj();
             if (!inst.isRec())
                 return noobj();
@@ -1111,7 +1119,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
                 WIRE_LOG.debug("override %s rejected: its signature is not %s's", override, instTID);
                 return noobj();
             }
-            return override;
+            return override.asInst();
         }
 
         /**
@@ -1314,13 +1322,18 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          * {@link #connect(Network, fURI)} with the dialer named explicitly.
          */
         public static Obj connect(final Network network, final fURI dialURI, final fURI handler) {
+            // A DIAL IS A SPELLING TOO: an alias names the origin to dial, and the key the peer is indexed under is
+            // that origin's path encoding — so both the ensure-peered lookup and the dial ask the ONE door. The table
+            // is the NETWORK'S LEVEL, not whatever thread happens to be current: a name means what the level that
+            // holds the connection says it means.
+            final fURI uri = Component.Prefix.Helper.align(network.machine(), dialURI);
             // ENSURE-PEERED, as an optimization: a surface this level already holds is not dialed twice. A member
             // its owner hung up is not one to answer -- it is retracted, and the dial below replaces it.
-            final Obj existing = network.peer(dialURI.pathEncoding());
+            final Obj existing = network.peer(uri.pathEncoding());
             if (!existing.isNoObj() && !Helper.hungUp(existing))
                 return existing;
-            final Obj dialed = Helper.dial(dialURI, handler);
-            WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", dialURI, handler, System.identityHashCode(network), dialed);
+            final Obj dialed = Helper.dial(uri, handler);
+            WIRE_LOG.debug("connect %s handler=%s net=%s dialed=%s", uri, handler, System.identityHashCode(network), dialed);
             if (dialed.isNoObj() || dialed.isFail())
                 return noobj();
             return network.index(dialed);
@@ -1332,19 +1345,23 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
             // scheme default the table carries is loop: -> id_client::T, the identity element of the
             // client family (its eval override evaluates the shipped code against the local machine) --
             // discovery supplies dialers per description for everything else (step 5).
-            final String scheme = dialURI.scheme();
+            // AN ALIAS IS A NAME FOR THE ORIGIN: resolve it here, so `connect(//ginger)` dials what the name
+            // denotes. Whether that origin is dialable is the mapped value's business, not the alias's.
+            final Machine machine = Machine.current();
+            final fURI uri = null == machine ? dialURI : Component.Prefix.Helper.align(machine, dialURI);
+            final String scheme = uri.scheme();
             final String dialerTid = null == scheme ? null : Signatures.dialerOf(scheme);
             final fURI dialer = null != handler ? handler
                     : null == dialerTid ? null : f(dialerTid);
             if (null == dialer)
                 return noobj();
             final Obj resolved = Machine.read(dialer);
-            WIRE_LOG.debug("dial %s dialer=%s resolved=%s isType=%s hasCtor=%s", dialURI, dialer, resolved.toShortString(), resolved.isType(), resolved.isType() && resolved.asType().hasConstructor());
+            WIRE_LOG.debug("dial %s dialer=%s resolved=%s isType=%s hasCtor=%s", uri, dialer, resolved.toShortString(), resolved.isType(), resolved.isType() && resolved.asType().hasConstructor());
             if (resolved.isType() && resolved.asType().hasConstructor())
                 return resolved.asType().constructor().asInst()
-                        .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(dialURI))))
+                        .args(studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(rec(uri(HOST), uri(uri))))
                         .apply(noobj());
-            return resolved.isObjInst() ? resolved.asInst().apply(uri(dialURI)) : noobj();
+            return resolved.isObjInst() ? resolved.asInst().apply(uri(uri)) : noobj();
         }
 
         /**

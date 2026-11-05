@@ -377,11 +377,11 @@ agent::[
                                           }
                                         }
                                         """@codegraph).as(mcp_client::T)),
-                                        mcp_client::[host=><http://127.0.0.1:64342/stream>],
+                                        [==mcp_client::[host=><http://127.0.0.1:64342/stream>]==],
                                         !*find_file,
                                         !*read_file,
                                         !*edit_file,
-                                        mcp_client::[host=><http://ginger.local:11437/mcp>],
+                                        [==mcp_client::[host=><http://ginger.local:11437/mcp>]==],
                                         /m/inst/web?str<=#{?}(url=>union(uri::T,str::T),native=>bool{?}::T){ *<url>.as(uri::T).*_.-<|[*native.else(false) => as(rec::T).as(str::T), _ => _]>> },
                                         !*bash?reject=['\brm\b','\bgit\b'],
                                         mcp_client::[host=><http://localhost:8777/mcp>]],

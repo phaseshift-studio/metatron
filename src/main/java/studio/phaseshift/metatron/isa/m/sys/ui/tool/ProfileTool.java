@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
@@ -90,6 +91,9 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
         final List<String> tokens = new ArrayList<>();
         if (args.isLst()) {
             for (final Obj arg : args.lstValue()) tokens.add(summarizeArg(arg));
+        } else if (args.isRel()) {
+            final Rel rel = args.asRel();
+            tokens.add(rel.first().uriValue().toString() + "=>" + summarizeArg(rel.second()));
         } else {
             for (final Map.Entry<Obj, Obj> kv : args.recValue().entrySet())
                 tokens.add(kv.getKey().uriValue().toString() + "=>" + summarizeArg(kv.getValue()));

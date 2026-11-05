@@ -31,6 +31,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer.parse;
@@ -106,5 +107,13 @@ public class ExplainToolTest extends AbstractMetatronTest {
         // element 0 → the selector replaces the opening bracket; element 1 → it replaces the comma
         assertEquals(">1,2]", ExplainTool.renderPoly(lst(jnt(1), jnt(2)), List.of(0), "", ">"));
         assertEquals("[1>2]", ExplainTool.renderPoly(lst(jnt(1), jnt(2)), List.of(1), "", ">"));
+    }
+
+    @Test
+    public void testRelArgIsRenderedAsKeyValue() {
+        // a rel is a single key=>value pair, not a rec — render it without recValue()
+        final List<String> tokens = ProfileTool.argTokens(rel(uri("//0"), jnt(1)));
+        assertEquals(1, tokens.size());
+        assertEquals("//0=>", tokens.get(0).substring(0, 5));
     }
 }

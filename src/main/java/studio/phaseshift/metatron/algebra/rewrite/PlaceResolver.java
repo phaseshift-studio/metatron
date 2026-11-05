@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.PlaceSet;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Placement;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -312,7 +313,10 @@ public final class PlaceResolver {
      * test is all a machine this one only knows can be asked for).
      */
     private static List<fURI> address(final fURI address, final Env env, final Placement requires) {
-        final String host = address.host();
+        // A DESIGNATOR MAY BE AN ALIAS: resolve it through the one door before reading its host, so //ginger names
+        // the place its origin names. An unbound name is answered unchanged, and then matches nothing.
+        final fURI aligned = Machine.Helper.align(Machine.current(), address);
+        final String host = aligned.host();
         if (null == host)
             return List.of();
         final List<fURI> transports = new ArrayList<>();

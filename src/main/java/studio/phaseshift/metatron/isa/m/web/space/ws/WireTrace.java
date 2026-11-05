@@ -183,9 +183,15 @@ public final class WireTrace {
 
     /**
      * one row of a lane, as a view renders it.
+     * <p>
+     * {@code request} and {@code reply} are the row's one-line text (always present). {@code requestDetail} and
+     * {@code replyDetail} are the objs themselves while the exchange is still in the detail window and
+     * {@code null} once it has left it — a view that can render an obj should prefer it, because the obj carries
+     * what the text cannot (its type's colors, its links, its compact form).
      */
     public record Row(long seq, String peer, String kind, String tag, String request, String reply,
-                      long elapsedMs, boolean ok, long startedMs, boolean detail) {
+                      long elapsedMs, boolean ok, long startedMs, boolean detail,
+                      Obj requestDetail, Obj replyDetail) {
     }
 
     /**
@@ -352,7 +358,8 @@ public final class WireTrace {
                     rows.add(new Row(exchange.seq(), exchange.peer(), kindOf(exchange), tagOf(exchange),
                             exchange.request(), exchange.reply(), exchange.elapsedMs(),
                             Outcome.OK == exchange.outcome(), exchange.startedMs(),
-                            null != exchange.requestDetail() || null != exchange.replyDetail()));
+                            null != exchange.requestDetail() || null != exchange.replyDetail(),
+                            exchange.requestDetail(), exchange.replyDetail()));
                 }
                 lanes.add(new Lane(entry.getKey(), state.exchanges(), state.timeouts(),
                         lastLatency(state), state.lastActivityMs(), rows));

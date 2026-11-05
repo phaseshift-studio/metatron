@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -147,6 +148,54 @@ public interface Component extends Rec {
             public static Obj inheritedPrefix(final Prefix of, final fURI label) {
                 final Prefix above = of.previousLevel();
                 return null == above ? noobj() : effectivePrefix(above, label);
+            }
+
+            /**
+             * THE ONE DOOR: a SPELLING to the ADDRESS it denotes. Two phases, one function:
+             * <ol>
+             *   <li>GLOBAL MAP — each prefixed component replaces the key at ITS slot with its effective table's
+             *       value: the ISA owns the SCHEME ({@code math:cos}), the network owns the HOSTED AUTHORITY
+             *       ({@code //ginger/a}). The slots are disjoint, so the order cannot matter and a second pass is
+             *       the identity — which is what lets any boundary align defensively.</li>
+             *   <li>COMPONENT-LOCAL PLACEMENT — the matched component settles what the mapped root leaves open
+             *       (the ISA asks memory's redirects where a short name lives under its root; the network has
+             *       none).</li>
+             * </ol>
+             * A relative name (no scheme and no host) is NOT this door's: "in the machine" is memory's contract.
+             */
+            public static fURI align(final Machine machine, final fURI vid) {
+                if (null == machine || null == vid || (!vid.hasScheme() && !vid.hasHost()))
+                    return vid;
+                fURI name = vid;
+                // isPrefixed() IS the scheme slot's predicate: a scheme with NO host names a vocabulary (math:cos),
+                // while a scheme WITH a host already names a transport (loop://self) and can never be a prefix.
+                if (vid.isPrefixed()) {
+                    final fURI aligned = machine.instset().alignPrefix(vid);
+                    // alignPrefix answers the coefficient-one form for an UNPREFIXED spelling too; the original must
+                    // be kept then, so a caller's coefficient survives an alignment that had nothing to align
+                    if (!aligned.equals(vid.one()))
+                        name = aligned;
+                }
+                // ... AND THE AUTHORITY SLOT. Disjoint from the scheme slot (one needs a scheme and no host, the
+                // other a host and no port), so the order above is unobservable and there is no precedence to get
+                // wrong — which is what keeps this a canonicalization rather than a ladder.
+                return name.hasHost() ? machine.network().alignPrefix(name) : name;
+            }
+
+            /**
+             * THE REPLACEMENT — the table's value with the spelling's TAIL and everything that qualifies it (poly,
+             * coefficient, query) carried over. One rule for both slots: the network's tail is the path after the
+             * authority, the ISA's the text after the scheme. A substitution that silently dropped the coefficient
+             * or the query would make {@code //ginger/a{2}?depth=3} mean something else.
+             *
+             * @param value     the table's value (an origin for the network, a root path for the ISA)
+             * @param spelling  the address as written — the qualifiers come from here
+             * @param remainder the tail after the key, or empty/ null when the value already names the whole address
+             */
+            public static fURI substitute(final fURI value, final fURI spelling, final String remainder) {
+                final fURI extended = null == remainder || remainder.isEmpty() ? value : value.extend(remainder);
+                final fURI polyphonic = spelling.hasPoly() ? extended.poly(spelling.poly()) : extended;
+                return polyphonic.c(spelling.c()).q(spelling.qMap());
             }
 
             /**

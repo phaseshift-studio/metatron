@@ -1094,7 +1094,9 @@ public final class PlanInterpreter {
         boolean changed = false;
         final List<Inst> out = new ArrayList<>(code.insts().size());
         for (final Inst inst : code.insts()) {
-            if (!matches(op, inst, carrier) || 2 > inst.args().count()) {
+            // A REC ARGUMENT LIST IS A ROUTE TABLE: its members are SCHEDULED (each runs at its key's place),
+            // not free additive terms — collapsing two of them would change how many times one runs.
+            if (!matches(op, inst, carrier) || inst.args().isRec() || 2 > inst.args().count()) {
                 out.add(inst);
                 continue;
             }
@@ -1139,7 +1141,9 @@ public final class PlanInterpreter {
         boolean changed = false;
         final List<Inst> out = new ArrayList<>(code.insts().size());
         for (final Inst inst : code.insts()) {
-            if (matches(op, inst, carrier) && 1 == inst.args().count()) {
+            // A keyed branch is a route table, not a one-term sum: inlining its single route would drop the
+            // place and run the program here instead.
+            if (matches(op, inst, carrier) && !inst.args().isRec() && 1 == inst.args().count()) {
                 final Obj member = absorb(inst.arg(0), inst.c());
                 changed = true;
                 if (member.isCall())

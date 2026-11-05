@@ -481,6 +481,7 @@ public class Console extends MRec implements Closeable, Runnable {
         try {
             this.jobs.close();
             this.reader.getBuffer().clear();
+            this.status.close();
             final FloatingSurface surface = this.getFloatingSurface();
             // Everything that has been asked for is in the terminal before the terminal
             // is given back: the render thread is a daemon and exiting will not wait for

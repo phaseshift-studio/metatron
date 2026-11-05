@@ -44,7 +44,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.CUT_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.REPLY_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.Lst.lst_noobj;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -309,6 +308,7 @@ public interface Inst extends Call {
                 base.equals(UPDATE_INST_TID) ||
                 base.equals(GROUP_INST_TID) ||
                 base.equals(REPEAT_INST_TID) ||
+                base.equals(BRANCH_INST_TID) ||
                 base.equals(ELSE_INST_TID) ||
                 base.equals(CATCH_INST_TID);
     }
@@ -548,6 +548,7 @@ public interface Inst extends Call {
         public static boolean same(final Inst a, final Inst b) {
             return sameOp(a, b) && a.args().equals(b.args());
         }
+
         private Helper() {
             // do nothing
         }
@@ -654,6 +655,17 @@ public interface Inst extends Call {
         }
 
         /**
+         * Whether a declared argument list is OPEN-KEYED: a rec whose KEY is a TYPE rather than a name —
+         * {@code branch(uri::T => B)}. The declaration states the SHAPE of the caller's keys (every key
+         * conforms to the key type), never a key SET: the caller supplies the keys, keeps every one, and
+         * may supply more than the contract names (a rec is open-world). An ordered call is admitted too,
+         * since the same declaration is the positional branch's contract.
+         */
+        public static boolean isOpenArgs(final Poly<?, ?> args) {
+            return null != args && args.isRec() && args.asRec().elements().anyMatch(kv -> kv.first().isType());
+        }
+
+        /**
          * Resolve arguments from the user instruction against the API instruction signature.
          * Used by InstResolver implementations during instruction resolution.
          *
@@ -699,12 +711,29 @@ public interface Inst extends Call {
                 return lst(resolvedArgs);
             } else if (apiInst.args().isRec()) {
                 LOG.trace("processing rec args of %s", apiInst);
+                // OPEN KEYED ARGS: a KEY THAT IS A TYPE names the shape of the caller's keys, not their names.
+                // The caller owns the key set (open world), so every entry is kept and only its value is bound.
+                if (isOpenArgs(apiInst.args())) {
+                    final Obj valueSpec = apiInst.args().asRec().elements()
+                            .filter(kv -> kv.first().isType()).findFirst().map(Rel::second).orElse(noobj());
+                    if (!userInst.args().isRec())
+                        // AN ORDERED CALL HAS NO KEYS: it is the positional branch, resolved slot-wise against
+                        // the declaration's value spec, exactly as an ordered declaration's call is resolved.
+                        return resolveArgs(userInst, apiInst.args(lst(Collections.nCopies((int) userInst.args().count(), valueSpec))), lhs);
+                    return rec(userInst.args().asRec().elements()
+                            .map(kv -> rel(kv.first(), Helper.bindParam(kv.first(), valueSpec, kv.second()))));
+                }
+                // NAMED PARAMS: bind the declared entries and KEEP the caller's undeclared keys — a rec is
+                // open-world, so a caller may carry more than the contract names.
+                final Map<Obj, Obj> given = userInst.args().isRec()
+                        ? new LinkedHashMap<>(userInst.args().asRec().recValue())
+                        : new LinkedHashMap<>();
                 final AtomicInteger counter = new AtomicInteger(0);
-                return rec(apiInst.args().asRec().elements()
-                        .map(kv -> {
-                            final Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
-                            return rel(kv.first(), Helper.bindParam(kv.first(), kv.second(), this_arg));
-                        }));
+                apiInst.args().asRec().elements().forEach(kv -> {
+                    final Obj thisArg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
+                    given.put(kv.first(), Helper.bindParam(kv.first(), kv.second(), thisArg));
+                });
+                return rec(given);
             } else
                 throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
         }
@@ -799,6 +828,10 @@ public interface Inst extends Call {
             // hasQ first: args() PARSES the query body, and an instset minted with the flag off (the common case) has
             // no key at all, so the gate must cost one lookup, not a parse, per candidate
             if (null == candidate || null == user || null == candidate.tid() || !candidate.tid().hasQ(ARGS))
+                return true;
+            // OPEN-KEYED ARGS admit any caller shape and arity: the keys are the caller's, and the declaration
+            // states only their type (see {@link #isOpenArgs(Poly)}).
+            if (isOpenArgs(candidate.args()))
                 return true;
             // a BARE `args` key DECLARES ZERO arguments — a claim, which is why the gate is hasQ and not isEmpty: no
             // key at all is "no argument claim" and admits anything (the early return above)
