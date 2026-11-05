@@ -33,6 +33,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -55,7 +57,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     <li>{@code <vid>/processor/…} — the processor, read live and written in place: the computers it indexes
  *     ({@code computer/<n>}) and the fail stacks, the machine's ({@code fail}) and each evaluation's under the computer
  *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
- *     <li>{@code <vid>/<component>/…} — any other component, read live;</li>
+ *     <li>{@code <vid>/<component>/…} — any other component, read live; a branch pattern answers each match at its
+ *     address ({@code vid => obj}), as a space's does, which is what {@code @} needs to anchor a value;</li>
  *     <li>{@code <vid>/sys/#} — threads, processors and the log sink, held in this space's OWN store (it is a
  *     {@link memSpace} for that), with the q-processors {@code ~/sys} speaks: Marko, 2026-10-25, "I would have sys/#
  *     simply go into MachineSpace". {@code ~/sys} is a holding area: its parts are expected to move, over time, into
@@ -178,6 +181,14 @@ public final class MachineSpace extends memSpace {
         // any other component, read live: the path below the machine walked into the component as it stands (the
         // whole remaining path, so <vid>/memory/previous walks into the memory rather than collapsing to its name)
         final List<String> segments = vid.qLess().resolve().segments();
+        // A BRANCH PATTERN (what @ reads) answers each match at its address, vid => obj, as a space's pattern read
+        // does: @ stamps the value with it, so a fail read that way from a stack can be caught out of it
+        final Obj component = this.owner.at(uri(segments.get(this.depth)));
+        if (vid.isBranch() && vid.hasPattern() && component.isPoly())
+            return objs(Space.Helper.unrollPoly(this.root.extend(segments.get(this.depth)), component.as(), vid.qLess().resolve().asNode())
+                    .stream()
+                    .filter(id -> !id.obj().isNoObj())
+                    .map(id -> rel(id.furi().toUri(), id.obj())));
         return this.owner.at(uri(String.join("/", segments.subList(this.depth, segments.size()))));
     }
 

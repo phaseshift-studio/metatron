@@ -300,7 +300,8 @@ axes of a machine.
 Each evaluation runs in a **computer** the processor mints, indexed by number at `~/processor/computer/<n>`. The
 processor also holds the machine's **fail stacks**: an evaluation's uncaught fail is filed under the computer that ran
 it (`~/processor/computer/<n>/fail/<k>`), and a fail raised outside any evaluation at `~/processor/fail/<k>`. A fail
-read back from a stack is still uncaught, so `catch(_)` it to use it as a value; catching removes it from the stack.
+read back from a stack is still uncaught, so `catch(_)` it to use it as a value. Read the stack with `@` to clear it:
+`@` keeps each fail's address, so catching it removes it, while `*` hands back a detached copy.
 
 ### threads
 
