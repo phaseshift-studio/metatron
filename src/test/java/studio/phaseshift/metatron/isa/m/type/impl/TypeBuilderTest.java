@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -35,6 +36,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -199,6 +202,27 @@ public class TypeBuilderTest extends AbstractMetatronTest {
         final Obj law = QCollection.decOf(later);
         assertTrue(law.isRec() && law.asRec().has(f("add_monoid")),
                 "the later declaration reaches ?decq, got " + law);
+    }
+
+    /**
+     * (f) A CONTRACT AT ANOTHER SET'S ADDRESS IS PUBLISHED BY THE DRAIN. A type may declare its instruction where the
+     * declaring set has no jurisdiction (geo:point's {@code as(json::T)} lives at {@code /m/inst/as?…}, which /m owns):
+     * that set mounted before the type was built, and the declaring set's {@code drainUnder} does not reach the
+     * address, so the drain is the one door that publishes it. A second drain (a re-mount) does not register it again.
+     */
+    @Test
+    void testDrainPublishesAContractDeclaredAtAnotherSetsAddress() {
+        final fURI vid = TEST_NAMESPACE.extend("crossed");
+        final Inst asStr = instC(AS_INST_TID.dom(vid).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str("crossed"));
+        final Type crossed = TypeBuilder.build().tid(INT_TID).vid(vid).inst(asStr).create();
+        assertEquals(0, Machine.read(AS_INST_TID).stream().filter(live -> asStr.tid().equals(live.tid())).count(),
+                "nothing publishes the contract before the drain");
+        TypeBuilder.drain(crossed, new BasicInstSet());
+        assertEquals(1, Machine.read(AS_INST_TID).stream().filter(live -> asStr.tid().equals(live.tid())).count(),
+                "the drain publishes the contract at " + asStr.tid());
+        TypeBuilder.drain(crossed, new BasicInstSet());
+        assertEquals(1, Machine.read(AS_INST_TID).stream().filter(live -> asStr.tid().equals(live.tid())).count(),
+                "a second drain does not register the contract again");
     }
 
     // ============================ helpers ============================
