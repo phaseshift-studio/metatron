@@ -1938,7 +1938,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .tid(BRANCH_INST_TID)
                             .dom(A, "any obj")
                             .rng(B.maybeSome(), "the branch results as objs")
-                            .argLst(T(B.some()), T(B.some()), T(B.maybeSome()), T(B.maybeSome()))
+                            // ONE member is a branch too: {plus(4)} is the parser's own spelling, and branch_inline's law
+                            // (a lone member is the member itself) presumes it resolves
+                            .argLst(T(B.some()), T(B.maybeSome()), T(B.maybeSome()), T(B.maybeSome()))
                             .desc("a branching function: the lhs applied through each arg branch, the results as objs with their branch coefficients")
                             .body((lhs, inst) -> objs(inst.args().elements().map(o -> o.apply(lhs).c(lhs.c().mult(o.c())))))
                             .create(),
