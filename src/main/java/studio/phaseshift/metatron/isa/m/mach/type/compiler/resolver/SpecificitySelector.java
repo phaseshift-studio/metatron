@@ -120,6 +120,11 @@ public class SpecificitySelector extends MRec implements Selector {
         final Obj fetched = Machine.read(basePath);
         ScoringResolver.T_RESOLVE.addAndGet(System.nanoTime() - t0);
 
+        // A GENERIC CAST TARGET NAMES NO RANGE. A cast's target IS its range, so as(A::T) asks for no particular
+        // type, and an overload that produces one (rec => json) cannot serve it: only a generic-range cast can,
+        // and that cast refuses to type a value generic
+        final boolean genericCast = basePath.equals(AS_INST_TID) && userInst.args().count() == 1
+                && userInst.arg(0).isType() && userInst.arg(0).asType().isGeneric();
         // Collect viable candidates after cheap pre-filters (before the expensive bind + resolveArgs)
         final List<Inst> viable = fetched.stream()
                 .filter(Obj::isObjInst)
@@ -128,6 +133,7 @@ public class SpecificitySelector extends MRec implements Selector {
                         (i.tid().hasQ(MONAD_IN) || i.tid().hasQ(MONAD_OUT)) ||
                         this.checkArgs(userInst.args(), i.args()))
                 .filter(i -> !lhs.isObjInst() || (i.dom().baseTypeID().equals(Tokens.M_ISA_INST_TID)))
+                .filter(i -> !genericCast || Obj.Helper.specificTypeId(i.rng()).isGeneric())
                 .toList();
 
         if (viable.isEmpty())
