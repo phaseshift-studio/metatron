@@ -278,6 +278,22 @@ public class FailTest extends AbstractObjTest {
     }
 
     /**
+     * A STACK IS CLEARED BY CATCHING IT AT ITS ADDRESSES. {@code @} reads each fail where it is filed — the sphere
+     * answers a branch pattern as {@code vid => obj}, as a space does — so {@code catch(_)} deletes it, a lone fail
+     * included ({@code *} hands back a detached copy, which has no address to delete).
+     */
+    @Test
+    public void testCatchingAStackAtItsAddressesClearsIt() {
+        final Fail filed = MFail.fail("a lone fail, caught out of the machine's stack");
+        ObjmtronSerializer.parse("@~/processor/fail/+.catch(_)").apply();
+        assertTrue(Machine.read(filed.vid()).isNoObj(), "catching " + filed.vid() + " at its address removes it");
+        ObjmtronSerializer.parse("1.plus(b)").apply();
+        assertNotEquals(0L, Machine.read(f("~/processor/computer/+/fail/+")).stream().count(), "the evaluation filed its fail");
+        ObjmtronSerializer.parse("@~/processor/computer/+/fail/+.catch(_)").apply();
+        assertEquals(0L, Machine.read(f("~/processor/computer/+/fail/+")).stream().count(), "catching the stacks cleared them");
+    }
+
+    /**
      * every fail filed in this machine: its own stack, and each evaluation's under the computer that ran it
      */
     private static long failStackDepth() {

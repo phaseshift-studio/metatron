@@ -290,7 +290,10 @@ public interface Space extends Addressable, Rec, Closeable {
                             final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
                             if (!r.jvm().get1().isPoly() || key.test(pattern))
                                 results.add(IdObj.of(key, r.jvm().get1()));
-                            else if (r.jvm().get1().isPoly())
+                            // a poly is unrolled only where the pattern can still match beneath it: a component's
+                            // pattern read must not walk every computer's code and its running monads
+                            else if (pattern.hasPattern("#") || (key.segmentLength() < pattern.segmentLength()
+                                    && key.test(pattern.asNode().head(key.segmentLength()))))
                                 results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));
                         });
             }
