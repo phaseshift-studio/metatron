@@ -12,7 +12,7 @@ The exception handling architecture of metatron leverages a fail monad with some
 
 [source,mtron]
 ----
-[HIDDEN] */sys/fail/+.catch(_)
+[HIDDEN] @~/processor/computer/+/fail/+.catch(_)
 1.plus(b).plus(3).mult(5)
 ----
 
@@ -31,7 +31,7 @@ The exception handling architecture of metatron leverages a fail monad with some
 
 [mtron]
 ----
-[HIDDEN] */sys/fail/+.catch(_)
+[HIDDEN] @~/processor/computer/+/fail/+.catch(_)
 1.plus(b).plus(3).catch(2).mult(5)
 ----
 
@@ -55,26 +55,26 @@ The diagram above illustrates the concept of https://en.wikipedia.org/wiki/Monad
 [discrete]
 === fail space
 
-The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail space_. When an exception occurs and a fail monad is created, the `fail::T` obj is immediately written to the subspace identified at `boot/fail_pattern`. The uri `/sys/fail?incr=./+` is the default fail space pattern. There are two reasons for this behavior.
+The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail space_. When an evaluation halts with a fail monad, the `fail::T` obj is written to the fail stack of the computer that ran the evaluation, `~/processor/computer/<n>/fail/_?incrq`, where `<n>` numbers the evaluation. A `fail::T` raised outside any evaluation is written to the machine's own stack, `~/processor/fail/_?incrq`. There are two reasons for this behavior.
 
 . The exception hasn't been handled and can be resumed at a later time in a coroutine-esque manner. This is possible even after the underlying machine has completed execution of the instruction graph.
 . The exception stack trace can be clipped to reduce visual clutter, and only when accessed and caught from fail space will the fail's trace be unrolled and available to introspection.
 
 [mtron]
 ----
-[HIDDEN] */sys/fail/+.catch(_)
-[ERROR] 1.plus(b)                  [-- <1> --]
-*/sys/fail/+               [-- <2> --]
-*/sys/fail/+.catch(_)      [-- <3> --]
-*/sys/fail                 [-- <4> --]
+[HIDDEN] @~/processor/computer/+/fail/+.catch(_)
+[ERROR] 1.plus(b)                         [-- <1> --]
+[ERROR] *~/processor/computer/+/fail/+    [-- <2> --]
+@~/processor/computer/+/fail/+.catch(_)   [-- <3> --]
+*~/processor/computer/+/fail/+            [-- <4> --]
 ----
 
 <1> A `fail::T` monad is generated and is not caught.
-<2> The uncaught `fail::T` is written to `/sys/fail` using the `incrq` query processor.
+<2> The uncaught `fail::T` is written to the stack of the computer that ran `1.plus(b)`, `~/processor/computer/<n>/fail`, using the `incrq` query processor.
 <3> The uncaught `fail::T` remains uncaught until caught.
 <4> A caught `fail::T` is removed from space.
 
-`*/sys/fail/+.catch(_)` is useful `code` for clearing the fail space and releasing memory.
+`@~/processor/computer/+/fail/+.catch(_)` is useful `code` for clearing the fail space and releasing memory: `@` reads each `fail::T` where it is filed, so catching it removes it.
 
 [discrete]
 === the cause of failure
@@ -83,7 +83,7 @@ Finally, the `cause()` instruction enables recursive stack walking for reflectiv
 
 [mtron]
 ----
-[HIDDEN] */sys/fail/+.catch(_)
+[HIDDEN] @~/processor/computer/+/fail/+.catch(_)
 *cause                               [-- <1> --]
 1+b.catch(cause())                   [-- <2> --]
 throw('bad').catch(cause())          [-- <3> --]
