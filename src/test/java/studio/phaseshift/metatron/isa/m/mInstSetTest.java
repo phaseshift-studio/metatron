@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -253,6 +254,62 @@ public class mInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A keyed branch call routes by its keys. A host-less key (a relative path, {@code local}) is a logical
+     * place and runs where the code stands, so these rows need no peer; a host-bearing key would ship.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.branch(a => plus(2))                            % 3",
+            "1.branch(a => plus(2), b => plus(3))              % {3,4}",
+            "1.branch(local => plus(2))                        % 3",
+            "1.branch(a => 23)                                 % 23",
+            "1.branch(a => plus(2), a => plus(3))              % {3,4}",
+            "1.branch(+2, +4)                                  % {3,5}",
+            "1.branch(+2, +4, +8, +16, +32)                    % {3,5,9,17,33}",
+            "1.map{2}(2).neg()                                 % {2}-2",
+            "1.branch(map{2}(2).neg(), map(4).neg())           % {{2}-2,-4}",
+    }, delimiter = '%')
+    public void testBranchRoutes(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A host-bearing key names a PLACE: the program ships through the peer's eval override. The loop client's far
+     * side is this machine, so the row proves the route ran without needing a socket.
+     */
+    @Test
+    public void testBranchRoutesToADialedPlace() {
+        final Network network = Machine.current().network();
+        Network.Helper.connect(network, f("loop://self"));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://self> => plus(2))", "3");
+        } finally {
+            // reach is per level and a peer left behind would make every later test in this VM look distributed
+            network.drop(f("loop://self"));
+        }
+    }
+
+    /**
+     * The branch contract is OPEN-KEYED: its args are a rec whose key is a TYPE ({@code uri::T}), so the caller
+     * supplies the places and their programs. The tid keeps an args component — it is not the zero-argument
+     * claim — and the parameter names stay on the argument poly.
+     */
+    @Test
+    public void testBranchDeclaresOpenRouteArgs() {
+        final Inst branch = Machine.read(mInstSet.BRANCH_INST_TID).stream()
+                .filter(Obj::isObjInst)
+                .map(Obj::asInst)
+                .filter(i -> mInstSet.BRANCH_INST_TID.equals(i.tid().basePath()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("branch is not registered"));
+        assertTrue(branch.args().isRec(), "branch declares rec::T args");
+        assertTrue(branch.args().asRec().elements().findFirst().orElseThrow().first().isType(),
+                "the rec key is a TYPE (uri::T), not a name");
+        assertTrue(branch.tid().hasArgs(), "the args component is kept");
+        assertFalse(branch.tid().args().isEmpty(), "an open route arg is not the zero-argument claim");
     }
 
     @ParameterizedTest

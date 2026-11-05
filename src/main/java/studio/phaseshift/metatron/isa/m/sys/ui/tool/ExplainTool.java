@@ -302,7 +302,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             return;
         }
         final Obj node = atPath(args, current.selectedArg, current.argPath);
-        if (node.isPoly() && !node.<Poly<?, ?>>as().isEmpty()) {
+        if ((node.isLst() || node.isRec()) && !node.<Poly<?, ?>>as().isEmpty()) {
             current.argPath.add(0);   // descend into the first element
             return;
         }
@@ -343,13 +343,17 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
     private int argCount(final ExplainLevel level, final int row) {
         final Poly<?, ?> args = getMetadataArgs(level, row);
-        return args == null ? 0 : (int) args.count();
+        if (args == null) return 0;
+        return args.isRel() ? 1 : (int) args.count();
     }
 
     private static Obj argAt(final Poly<?, ?> args, final int idx) {
         if (args.isLst()) {
             final List<Obj> list = args.lstValue();
             return idx >= 0 && idx < list.size() ? list.get(idx) : noobj();
+        }
+        if (args.isRel()) {
+            return idx == 0 ? args.asRel().second() : noobj();
         }
         final List<Obj> values = new ArrayList<>(args.recValue().values());
         return idx >= 0 && idx < values.size() ? values.get(idx) : noobj();
@@ -629,6 +633,10 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 entries.add(arg);
                 labels.add("[" + idx++ + "] " + summarizeArg(arg));
             }
+        } else if (args.isRel()) {
+            final Rel rel = args.asRel();
+            entries.add(rel.second());
+            labels.add(rel.first().uriValue().toString() + " => " + summarizeArg(rel.second()));
         } else {
             for (Map.Entry<Obj, Obj> kv : args.recValue().entrySet()) {
                 entries.add(kv.getValue());

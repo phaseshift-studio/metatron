@@ -156,16 +156,17 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     }
 
     /**
-     * RESOLVE a name: this level's table first, then the enclosing machine's — the frame law applied to names, so a
-     * child that imports its own shorthand shadows the parent's and every miss still walks outward. A name is
-     * knowledge, not reach: nothing is retracted from the level above, and a popped frame takes only its own names.
+     * THE DOOR ANSWERS WHAT RESOLUTION SEES: the EFFECTIVE prefix table — this level's rows shadowing the enclosing
+     * machine's — not this level's own rec. A child that binds one name still shows every name it inherits, because
+     * that is the table {@code alignPrefix} walks; the mirror in the rec is a write, the map is the source, and the
+     * door must not disagree with the resolver.
      */
     @Override
-    public fURI alignPrefix(final fURI vid) {
-        final fURI aligned = super.alignPrefix(vid);
-        if (!aligned.equals(vid.one()))
-            return aligned;
-        return null == this.previous ? aligned : this.previous.alignPrefix(vid);
+    public <O extends Obj> O at(final Obj key) {
+        if (key.isUri() && PREFIX.equals(key.uriValue().name()))
+            return (O) Component.Prefix.Helper.effectivePrefixes(this);
+        final O own = super.at(key);
+        return own.isNoObj() && this.previous instanceof BasicInstSet enclosing ? enclosing.at(key) : own;
     }
 
     /**
@@ -290,13 +291,9 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
      * readable inside a frame: {@code *~/instset/reference} was {@code noobj} in a child even though that child
      * resolved every ISA its parent had imported, so the single locus went unaskable in the one place a frame makes
      * it matter. The rec stays LAZY — nothing is copied up front — so an import the parent makes later is still seen.
+     * The PREFIX table is the one key the door answers from the EFFECTIVE view (see the override where the old
+     * skip-table accessor stood); every other key keeps this own-then-parent walk.
      */
-    @Override
-    public <O extends Obj> O at(final Obj key) {
-        final O own = super.at(key);
-        return own.isNoObj() && this.previous instanceof BasicInstSet enclosing ? enclosing.at(key) : own;
-    }
-
     @Override
     public <O extends Obj> O atDirect(final Obj key) {
         final O own = super.atDirect(key);

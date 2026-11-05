@@ -27,10 +27,10 @@ import org.jline.terminal.MouseEvent;
 import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -207,6 +207,8 @@ public final class CommandPalette extends MRec {
         // ===== reset =====
         this.at("reset", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
             BootLoader.RESET = true;
+            BootLoader.close();
+            System.out.println("\n");
             console.close();
             System.exit(BootLoader.EXIT_RESET);
             return noobj();

@@ -78,4 +78,51 @@ public class InstSetPrefixTest extends AbstractMetatronTest {
         }
         assertTrue(Machine.read(f("tag:pi")).isNoObj(), "an unbound name denotes nothing");
     }
+
+    /**
+     * THE SAME TWO PROPERTIES AS THE NETWORK'S NAMES: the substitution carries the qualifiers, and a second pass is
+     * the identity — which is what lets every boundary align defensively. The coefficient is the one most easily
+     * lost: the table supplies the ROOT, never the multiplicity the caller wrote.
+     */
+    @TestData(value = {
+            "import(/m/math,math)"}, oneTime = true)
+    @ParameterizedTest
+    @CsvSource(value = {
+            "math:e{3}   | /m/math/e{3}",
+            "math:cos    | /m/math/inst/cos",
+    }, delimiter = '|')
+    void testTheAlignmentIsIdempotentAndKeepsTheCoefficient(final String small, final String big) {
+        final fURI once = Machine.Helper.align(Machine.current(), f(small));
+        assertEquals(f(big), once, small + " denotes " + big);
+        assertEquals(once, Machine.Helper.align(Machine.current(), once),
+                "align is the identity on an aligned address: " + small);
+    }
+
+    /**
+     * THE CHILD'S DOOR SHOWS WHAT RESOLUTION SEES: the EFFECTIVE table, own rows shadowing the enclosing machine's.
+     * A level that binds one name still shows every name it inherits, because a door that showed only the own table
+     * would disagree with {@code alignPrefix}'s walk in exactly the place a reader checks it.
+     */
+    @TestData(value = {
+            "import(/m/math,math)"}, oneTime = true)
+    @Test
+    void testTheChildDoorShowsTheEffectiveTable() {
+        final Machine root = Machine.current();
+        final String name = "prefixprobe" + Math.abs(RANDOM.nextInt(1_000_000));
+        final Machine child = root.push(f(name));
+        try {
+            Machine.current(child);
+            child.instset().registerPrefix(f("childprobe"), f("/m/math"));
+            // THE CHILD'S DOOR, not the root's: the component lives under the machine's own address.
+            final fURI door = f("/" + name + "/instset/prefix");
+            final Obj table = Machine.read(door);
+            assertTrue(table.isRec(), "the child door answers a table: " + table);
+            assertEquals(f("/m/math"), table.asRec().at(uri("math")).uriValue(), "the inherited row is visible");
+            assertEquals(f("/m/math"), table.asRec().at(uri("childprobe")).uriValue(), "the child's own row is visible");
+        } finally {
+            Machine.current(child);
+            child.pop();
+            Machine.current(root);
+        }
+    }
 }

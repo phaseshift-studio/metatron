@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -143,32 +144,35 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     /**
      * RESOLVE a prefixed spelling: {@code math:cos} becomes {@code /m/math/inst/cos}.
      * <p>
-     * The prefix supplies the ROOT and the short name supplies the rest, but the rest is not simply appended: the
-     * name {@code cos} has its own home inside the vocabulary ({@code /m/math/inst/cos}, not {@code /m/math/cos}), and
-     * only memory's redirect table knows where. So the candidates are asked for and filtered to those lying UNDER the
-     * prefix's root — a candidate from another vocabulary is not this prefix's to place — and only when none lies
-     * there does the name extend naively under the root.
+     * THE MAPPING IS THE EFFECTIVE TABLE'S: the same parental walk the network's names use, so a frame that binds
+     * nothing still resolves the root's shorthand and its own row shadows it. The PREFIX supplies the ROOT; the
+     * short name is then PLACED inside that vocabulary, because {@code cos} lives at {@code /m/math/inst/cos}, not
+     * {@code /m/math/cos}, and only memory's redirect table knows where. The mapping and the placement are the two
+     * phases of the one resolver ({@link Component.Prefix.Helper#align(Machine, fURI)}).
+     * <p>
+     * The table value supplies only the root (or the placed home): the COEFFICIENT, POLY and QUERY are the caller's
+     * and ride the substitution, so {@code math:e{3}} stays {@code /m/math/e{3}} and a query survives.
      */
     @Override
     public fURI alignPrefix(final fURI vid) {
         final fURI readableVID = vid.one();
         if (!readableVID.hasScheme())
             return readableVID;
-        final fURI prefixed = this.PREFIX_TABLE.getRaw(f(readableVID.scheme()));
-        if (null == prefixed)
+        final Obj prefix = Component.Prefix.Helper.effectivePrefix(this, f(readableVID.scheme()));
+        if (!prefix.isUri())
             return readableVID;
+        final fURI prefixed = prefix.uriValue();
         final fURI suffix = readableVID.scheme(null);
         // THE REDIRECT TABLE IS MEMORY'S, and this is a question for it rather than a copy of it: the winner
         // redirect() would return answers "where does this name live", which is the wrong question when the asker
         // already knows the root it must live under.
         final Machine current = Machine.current();
         final Set<fURI> routes = null == current ? Set.of() : current.memory().redirects(suffix);
-        final java.util.Optional<fURI> target = routes.stream()
+        final Optional<fURI> target = routes.stream()
                 .filter(r -> r.hasPrefix(prefixed.toString()))
                 .findFirst();
-        if (target.isPresent())
-            return target.get().c(suffix.c()).q(suffix.qMap());
-        return prefixed.extend(suffix);
+        return Component.Prefix.Helper.substitute(target.orElse(prefixed), vid,
+                target.isPresent() ? "" : suffix.pathString());
     }
 
     /**

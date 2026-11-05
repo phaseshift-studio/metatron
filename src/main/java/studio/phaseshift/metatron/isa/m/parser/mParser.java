@@ -406,7 +406,7 @@ public class mParser {
     public static Parser m_inst_b() {
         return seq(
                 m_inst_furi(), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args"), of('{').not()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_inst_arg_key(), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args"), of('{').not()).pick(1), // 1 inst_args
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> {
@@ -423,10 +423,20 @@ public class mParser {
                 });
     }
 
+    /**
+     * A named call argument's KEY. {@code m_furi} reads whitespace as part of a bare uri (FULL_FURI_CHARS carries
+     * a space so a lax address can stand beside a delimiter), so the key the caller wrote — {@code a => v} —
+     * arrives as {@code a }. A trailing space is never spelling in a key: strip it, or the key can never match the
+     * parameter the definition names.
+     */
+    private static Parser m_inst_arg_key() {
+        return m_furi().map(t -> f(((fURI) t).toString().stripTrailing()).toUri());
+    }
+
     public static Parser m_inst_c() {
         return seq(
                 choice(m_inst_furi(), m_type_prefix(Tokens.M_ISA_INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args")).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_inst_arg_key(), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), labeledCloser(of(')').trim(), "')' to close the inst args")).pick(1), // 1 inst_args
                 seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),

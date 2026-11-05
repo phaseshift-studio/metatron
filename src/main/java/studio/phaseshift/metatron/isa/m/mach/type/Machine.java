@@ -50,7 +50,6 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -504,9 +503,9 @@ public interface Machine extends Rec, AutoCloseable {
     @Override
     default void close() {
         this.logger().info("closing machine %s", this.vid());
+        this.network().close();
         this.memory().close();
         this.instset().close();
-        this.network().close();
         this.pop();
     }
 
@@ -709,42 +708,30 @@ public interface Machine extends Rec, AutoCloseable {
         }
 
         /**
-         * CANONICALIZE A SPELLING — the ONE door a short name is turned into the address it denotes, and the reason
-         * it is a method rather than three inline expressions is that it has three callers with no other way to
-         * agree: {@link Machine#read}, {@link Machine#write}, and the compiler's move-extractor.
+         * CANONICALIZE A SPELLING — the ONE door a short name is turned into the address it denotes. The composition
+         * lives with the contract ({@link Component.Prefix.Helper#align(Machine, fURI)}); this method is the gateway
+         * every caller knows, and every boundary that accepts an address asks it: {@link Machine#read},
+         * {@link Machine#write}, the network's membership lookup, the dial, and the plan's place designators.
          * <p>
          * Each component owns the slot it can match, and only that slot: the ISA keeps the <b>scheme</b> prefixes
-         * ({@code math:cos} → {@code /m/math/cos}) because an import is what gave the name, and the network keeps
+         * ({@code math:cos} → {@code /m/math/inst/cos}) because an import is what gave the name, and the network keeps
          * the <b>authority</b> prefixes ({@code //ginger/a} → {@code ws://ginger.local:8555/a}) because a peer is
          * what the name reaches. The two slots cannot collide, so the order they are asked in never matters — which
-         * is what keeps this a canonicalization rather than a precedence ladder.
+         * is what keeps this a canonicalization rather than a precedence ladder — and a second pass is the identity,
+         * so a boundary may align defensively.
          * <p>
-         * A scheme-less vid passes through untouched: {@code alignPrefix} normalizes to coefficient one, which must
-         * not be imposed on an ordinary read, and a RELATIVE name stays relative — "in the machine" is memory's
-         * contract to interpret, not this door's.
+         * A scheme-less, host-less vid passes through untouched: {@code alignPrefix} normalizes to coefficient one,
+         * which must not be imposed on an ordinary read, and a RELATIVE name stays relative — "in the machine" is
+         * memory's contract to interpret, not this door's.
          *
          * @param machine the machine whose components hold the tables ({@code null} passes the vid through)
          * @param vid     the address as spelled
          * @return the address the spelling denotes, or {@code vid} itself when no table holds it
          */
         public static fURI align(final Machine machine, final fURI vid) {
-            if (null == machine || null == vid || (!vid.hasScheme() && !vid.hasHost()))
-                return vid;
-            fURI name = vid;
-            // isPrefixed() IS the scheme slot's predicate: a scheme with NO host names a vocabulary (math:cos), while a
-            // scheme WITH a host already names a transport (loop://self) and can never be a prefix.
-            if (vid.isPrefixed()) {
-                final fURI aligned = machine.instset().alignPrefix(vid);
-                // alignPrefix answers the coefficient-one form for an UNPREFIXED spelling too; the original must be
-                // kept then, so a caller's coefficient survives an alignment that had nothing to align
-                if (!aligned.equals(vid.one()))
-                    name = aligned;
-            }
-            // ... AND THE AUTHORITY SLOT, after the scheme slot. The network's own guard narrows it to a name-shaped
-            // authority -- no scheme, a host, no port -- because isAddressed() alone would also claim ws://host:8555. The two cannot fire on the same spelling (one needs a
-            // scheme and no host, the other a host and no port), so the order is unobservable and no precedence rule
-            // exists to get wrong -- which is what makes this a canonicalization and not a ladder.
-            return name.hasHost() ? machine.network().alignPrefix(name) : name;
+            // THE COMPOSITION LIVES WITH THE CONTRACT (Component.Prefix.Helper.align): this method is the gateway
+            // every caller knows, and the slot rules stay on the components that own them.
+            return Component.Prefix.Helper.align(machine, vid);
         }
 
         /**

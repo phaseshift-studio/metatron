@@ -38,6 +38,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_NETWORK_PANEL_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -95,8 +96,8 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * A lane leads with its peer and its own totals, then that peer's newest exchanges — the request, because that
-     * is what a human reads; the reply is the detail view's job.
+     * A lane leads with its peer and its own totals, then that peer's newest exchanges — the request, then the
+     * answer tabbed in under it.
      */
     @Test
     void shouldDrawALaneThenItsExchanges() {
@@ -108,6 +109,71 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         assertTrue(row.contains("sqr(3)"), "the exchange shows the request that was sent: " + row);
         assertTrue(row.contains("4ms"), "and how long the answer took: " + row);
         assertTrue(row.contains("send_recv"), "and what kind of move it was: " + row);
+    }
+
+    /**
+     * A SENT MESSAGE AND THE ANSWER IT GOT ARE ONE EXCHANGE, read as one conversation: the reply is tabbed in
+     * beneath the request with a down-right arrow, and carries no second time (the round trip is the request's).
+     */
+    @Test
+    void shouldTabTheReplyUnderTheRequestItAnswers() {
+        exchange(PEER_A, "sqr(3)", 4L);
+        final List<String> lines = lines(false, 12, "", 120);
+        final String reply = plain(lines.get(3));
+        assertTrue(reply.startsWith("    ↳ "), "the reply is tabbed in under the request it answers: " + reply);
+        assertTrue(reply.contains("answer:sqr(3)"), "and shows the answer that came back: " + reply);
+        assertFalse(reply.contains("ms"), "the round trip is stated once, on the request line: " + reply);
+    }
+
+    /**
+     * The frames are OBJS, so each is drawn through the console's own serializer: a uri arrives with its color
+     * and its link, while the panel's chrome (a lane header, the arrows, the timing) never carries either.
+     */
+    @Test
+    void shouldDrawTheFramesThroughTheUiSerializer() {
+        WireTrace.exchange(PEER_A, null, uri("/a/b"), uri("/c/d"), System.currentTimeMillis(), 4L,
+                WireTrace.Outcome.OK);
+        final List<String> lines = lines(false, 12, "", 120);
+        assertTrue(lines.get(2).contains("{{link}}"), "the sent obj is the serializer's rendering: " + lines.get(2));
+        assertTrue(lines.get(3).contains("{{link}}"), "and so is the received obj: " + lines.get(3));
+        assertFalse(lines.get(1).contains("{{link}}"), "a lane header is chrome, not a frame: " + lines.get(1));
+    }
+
+    /**
+     * A row that overflows is CUT, and what survives stays colored: the frame is clipped BEFORE it is colored,
+     * so a long request does not come out plain while its short answer is colored — which is exactly how the
+     * `send_recv …` prefix made the sent obj look unhighlighted. A frame that fits keeps the serializer's own
+     * rendering untouched.
+     */
+    @Test
+    void shouldKeepTheColorWhenARowIsClipped() {
+        WireTrace.exchange(PEER_A, null, str("this.is.a.long.request." + "x".repeat(120)), uri("/m/answer"),
+                System.currentTimeMillis(), 56L, WireTrace.Outcome.OK);
+        final List<String> lines = lines(false, 12, "", 40);
+        assertTrue(lines.get(2).contains("\u001B["),
+                "the visible part of a clipped sent obj stays colored: " + lines.get(2).replace("\u001B", "\\e"));
+        assertTrue(plain(lines.get(2)).contains("…"), "and the row says it was cut: " + plain(lines.get(2)));
+        assertTrue(lines.get(3).contains("{{link}}"),
+                "a frame that fits keeps the serializer's rendering: " + lines.get(3));
+    }
+
+    /**
+     * A frame that arrived with no round trip waiting for it is an INBOUND move — a left arrow, no round trip to
+     * time, and never the red cross of a deadline that was missed.
+     */
+    @Test
+    void shouldDrawAnUnsolicitedFrameAsReceivedNotAsATimeout() {
+        WireTrace.push(PEER_A, uri("/m/listen"));
+        final List<String> lines = lines(false, 12, "", 120);
+        final String row = plain(lines.get(2));
+        assertTrue(row.contains("←"), "a received frame leads with a left arrow: " + row);
+        assertTrue(row.contains("/m/listen"), "and shows the frame that arrived: " + row);
+        assertTrue(row.contains("push"), "as the inbound move it is: " + row);
+        assertFalse(row.contains("timeout"), "a received frame never wears the timeout label: " + row);
+        assertFalse(row.contains("✗"), "and never the red cross of a missed deadline: " + row);
+        assertEquals(3, lines.size(), "it is a row of its own, with nothing tabbed under it: " + lines);
+        assertTrue(lines.get(2).contains("{{link}}"),
+                "the received frame is drawn by the UI serializer: " + lines.get(2));
     }
 
     /**
@@ -173,6 +239,7 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         assertTrue(plain(lines.getFirst()).contains("✗ 1"), "the summary counts the timeout with a cross, not a clock: " + plain(lines.getFirst()));
         assertTrue(plain(lines.get(1)).contains("✗ 1"), "and the lane does too: " + plain(lines.get(1)));
         assertTrue(plain(lines.get(2)).contains("timeout"), "the exchange says what happened: " + plain(lines.get(2)));
+        assertEquals(3, lines.size(), "nothing came back, so nothing is tabbed under it: " + lines);
     }
 
     /**
@@ -273,10 +340,11 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         exchange(PEER_A, "alpha", 1L);
         exchange(PEER_B, "beta", 1L);
         final List<String> lines = lines(false, 12, "", 120);
-        // body row 0 is the summary; each lane is then a header (with the button) followed by its rows
+        // body row 0 is the summary; each lane is then a header (with the button), its exchange and the tabbed
+        // answer under it, so the two lane headers sit at body rows 1 and 4
         assertFalse(plain(lines.get(0)).contains("[x]"), "the summary line carries no button: " + plain(lines.get(0)));
         assertTrue(plain(lines.get(1)).contains("[x]"), "the first lane header carries the button: " + plain(lines.get(1)));
-        assertTrue(plain(lines.get(3)).contains("[x]"), "and the second does too: " + plain(lines.get(3)));
+        assertTrue(plain(lines.get(4)).contains("[x]"), "and the second does too: " + plain(lines.get(4)));
     }
 
     /**
@@ -304,6 +372,7 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
      */
     @Test
     void shouldKeepTheRightBorderAlignedWhenALineIsClipped() {
+        exchange(PEER_A, "1.plus(2)", 1L);       // short, and highlighted whole: measured with ANSI in it
         exchange(PEER_A, "x".repeat(200), 1L);   // longer than the panel, so the row clips with an ellipsis
         final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
         final String[] rows = Graphitty.strip(Graphitty.string(tool.format())).split("\n");

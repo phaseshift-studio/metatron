@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
@@ -1108,10 +1109,14 @@ public final class mInsts {
                                 return lhs.c(c -> c.plus(inst.arg(0).c()));
                             else {
                                 List<Obj> branches = new ArrayList<>();
-                                if (lhs.asCode().insts().size() == 1 && lhs.asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)) {
+                                // ONLY a POSITIONAL branch flattens: a keyed branch is a route table, and
+                                // splicing its rels into a lst would turn the routes into ordered members.
+                                if (lhs.asCode().insts().size() == 1 && lhs.asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)
+                                        && lhs.asCode().insts().getFirst().args().isLst()) {
                                     branches.addAll(lhs.asCode().insts().getFirst().args().elements().toList());
                                 }
-                                if (inst.arg(0).asCode().insts().size() == 1 && inst.arg(0).asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)) {
+                                if (inst.arg(0).asCode().insts().size() == 1 && inst.arg(0).asCode().insts().getFirst().tid().basePath().equals(BRANCH_INST_TID)
+                                        && inst.arg(0).asCode().insts().getFirst().args().isLst()) {
                                     branches.addAll(inst.arg(0).asCode().insts().getFirst().args().elements().toList());
                                 }
                                 return branch_(branches.toArray(new Obj[0])).as();
@@ -1135,6 +1140,47 @@ public final class mInsts {
                         .desc("the obj identity function \\(f(x) \\mapsto x\\)")
                         .body((lhs, _) -> lhs)
                         .law(Law.pure, Law.idempotent, Law.involution, Law.unit)
+                        .create(),
+                InstBuilder.build()
+                        .tid(BRANCH_INST_TID)
+                        .dom(A, "any obj")
+                        .rng(B.maybeSome(), "the branch results as objs")
+                        // REC ARGS ARE ROUTES — `place => program`. The key is a TYPE (uri::T), not a name: the
+                        // declaration states the SHAPE of the caller's keys, so the caller supplies them all and
+                        // the resolver keeps every one (a rec is open-world: it may carry more than its contract
+                        // names). An ordered call is still the local branch, so one definition serves both.
+                        .args(rec(URI_TYPE, T(B.some())))
+                        .desc("""
+                                a branching function: the lhs applied to each argument.
+                                an ordered call is the local branch: each member applied at current machine.
+                                a keyed call routes: `place => program` evaluates the lhs through the program at that
+                                place, an addressless key (or `local`) runs it here, and a host-bearing key with no
+                                dialed peer is unreachable. arguments are blocked, so a call is not computed here.
+                                """)
+                        .body((lhs, inst) -> {
+                            if (!inst.args().isRec())
+                                // the member's own application already carries its multiplicity (an inst's
+                                // coefficient, or a code's head-inst coefficient); the branch contributes its lhs
+                                return objs(inst.args().elements().map(o -> o.apply(lhs).c(c -> lhs.c().mult(c))));
+                            return objs(inst.args().asRec().elements()
+                                    // the args frame carries the lhs under the reserved `lhs` key (Processor)
+                                    .filter(kv -> !uri(LHS).equals(kv.first()))
+                                    .map(kv -> {
+                                        final fURI place = kv.first().uriValue().resolve();
+                                        final List<Inst> program = kv.second().isCall()
+                                                ? kv.second().asCall().insts()
+                                                : List.of((Inst) map_(kv.second()).tryToInst());
+                                        final Obj route = null == place.host()
+                                                ? noobj()
+                                                : Machine.current().network().overrideOf(place, EVAL_INST_TID);
+                                        if (route.isObjInst())
+                                            return route.apply(start_(lhs).addInsts(program));
+                                        if (null != place.host())
+                                            throw Network.Helper.unreachable(Machine.current(), EVAL_INST_TID, place);
+                                        // an addressless key is a logical place: run the program where the code stands
+                                        return kv.second().apply(lhs).c(c -> lhs.c().mult(c));
+                                    }));
+                        })
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)

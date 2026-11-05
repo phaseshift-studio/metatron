@@ -184,7 +184,7 @@ public interface Resolver extends Component {
             int i = 0;
             for (final Inst inst : code.insts()) {
                 try {
-                    final boolean isBranchInst = inst.tid().basePath().equals(BRANCH_INST_TID);
+                    final boolean isBranchInst = false && inst.tid().basePath().equals(BRANCH_INST_TID);
                     final Inst resolvedInst = isBranchInst ? inst : inst.resolve(token, sel, binder);
                     if (isBranchInst) {
                         final Obj token2 = token;

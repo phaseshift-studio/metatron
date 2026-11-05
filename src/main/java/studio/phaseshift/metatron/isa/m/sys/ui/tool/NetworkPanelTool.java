@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.sys.ui.tool;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Console;
@@ -29,8 +30,10 @@ import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +46,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>
  * It is an {@link AccordionWidget}: the foldable header (a {@code [-]} / {@code [+]} toggle) and the collapse
  * come from the accordion, while the BODY is a live read of the wire's ledger ({@link WireTrace}) — never mirrored
- * into the rec, because a trace is volatile by nature and mirroring it would spend a store write per tick. It is
- * created from mtron and displayed:
+ * into the rec, because a trace is volatile by nature and mirroring it would spend a store write per tick. Both
+ * directions are drawn: a round trip leads with the request that was sent and tabs its reply in beneath it (the
+ * answer is anchored to the request's vid, so the pair reads as one move), while a frame that arrived with no
+ * round trip waiting for it leads with a left arrow as a received row of its own. The frames themselves are objs,
+ * so each is drawn through the console's own serializer
+ * ({@link ObjmtronUISerializer#unlinked()}, flattened to one line) — it colors what a type carries, tags a uri as a
+ * link, and uses the compact form — while the panel's chrome (peers, counts, arrows, timings) is not. It is created
+ * from mtron and displayed:
  *
  * <pre>{@code
  * network_panel_tool::[
@@ -92,13 +101,26 @@ public class NetworkPanelTool extends AccordionWidget {
      * box-local columns a body row's content starts after: the left border side and the leading space
      */
     private static final int CONTENT_OFFSET = 2;
+    /**
+     * the glyph that tabs an ANSWER in under the request it answers — U+21B3, a down-right arrow (↳), indented to
+     * the column the request's kind starts at, so the two lines read as one move
+     */
+    private static final String REPLY_TAB = "    {{c}}↳{{X}}";
+    /**
+     * the glyph that leads a frame which ARRIVED with no round trip waiting for it
+     */
+    private static final String RECEIVED_MARK = "{{c}}←";
+    /**
+     * the syntax a frame is drawn in: what crosses the wire is mtron code, so the obj is highlighted as mtron
+     */
+    private static final String FRAME_SYNTAX = "mtron";
 
     private static volatile long lastNudgeMs = 0L;
     private static volatile boolean listening = false;
 
     public NetworkPanelTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid, false);
-        this.title("net");
+        this.title(Machine.current().network().at(HOST).orElse(uri(LOCALHOST)) + " network");
         // the defaults apply only when the creator wrote no style of their own — a creator's style is their write
         // and must survive the re-hydration every .display() performs, not be overwritten by the panel's defaults
         if (!Stylable.Style.isStyle(this.at(uri(studio.phaseshift.metatron.Tokens.STYLE)))) {
@@ -230,7 +252,8 @@ public class NetworkPanelTool extends AccordionWidget {
     }
 
     /**
-     * The panel's lines: a summary line, then one line per lane and its newest exchanges.
+     * The panel's lines: a summary line, then one line per lane and its newest exchanges — each round trip with
+     * its answer tabbed in beneath it, and each unsolicited inbound frame as a received row.
      * <p>
      * Pure — the snapshot comes in, markup comes out — so the layout is tested without a terminal.
      *
@@ -260,7 +283,7 @@ public class NetworkPanelTool extends AccordionWidget {
         // numbers reads as a clock — which is exactly how it was misread. Drawn only when there is one, so a
         // healthy wire says nothing at all.
         final String alarms = snapshot.timeouts() > 0 ? " {{w}}\u2717 {{r}}%d{{w}}".formatted(snapshot.timeouts()) : "";
-        lines.add(clip("{{w}}⇄{{%s}}%d {{w}}↓{{%s}}%d {{w}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
+        lines.add(clip("{{c}}⇄{{%s}}%d {{c}}↓{{%s}}%d {{c}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
                         .formatted(trouble, snapshot.roundTrips(),
                                 trouble, snapshot.received(),
                                 trouble, snapshot.sent(),
@@ -276,38 +299,94 @@ public class NetworkPanelTool extends AccordionWidget {
                 break;
             if (!peerFilter.isEmpty() && !lane.peer().contains(peerFilter))
                 continue;
-            final String last = lane.lastLatencyMs() < 0 ? "" : "  " + lane.lastLatencyMs() + "ms";
+            final String last = lane.lastLatencyMs() < 0 ? "" : "  {{y}}" + lane.lastLatencyMs() + "ms{{X}}";
             final String timeout = lane.timeouts() > 0 ? "  {{r}}\u2717 " + lane.timeouts() : "";
             // the lane header carries the clear button, right after the marker and before the peer's name
-            lines.add(clip(LANE_MARKER + CLEAR_BUTTON + "%s  {{y}}⇄%d%s%s"
+            lines.add(clip(LANE_MARKER + CLEAR_BUTTON + "%s  {{c}}⇄%d%s%s"
                     .formatted(lane.peer(), lane.exchanges(), last, timeout), width));
             clearPeers.add(lane.peer());
             remaining--;
+            // how many of the lane's exchanges this lane has actually drawn, so the "older" line counts what is
+            // left rather than what the snapshot happened to hold
+            int shown = 0;
             for (final WireTrace.Row row : lane.rows()) {
-                if (remaining <= 0)
+                // THE ANSWER BELONGS UNDER THE QUESTION. A round trip's reply shares the request's vid, so it is
+                // drawn tabbed in beneath the request; a request drawn without its answer (or the answer alone)
+                // is half a conversation, so the pair is drawn only when both lines fit.
+                final boolean received = "push".equals(row.kind());
+                final boolean answered = row.ok() && !row.reply().isEmpty();
+                final int needed = !received && answered ? 2 : 1;
+                if (remaining < needed)
                     break;
-                final String mark = row.ok() ? "{{w}}→" : "{{r}}✗";
-                final String elapsed = row.ok() ? row.elapsedMs() + "ms" : "timeout";
-                final String body = row.request().isEmpty() ? row.reply() : row.request();
-                lines.add(clip("{{w}}  " + mark + " {{m}}" + row.kind() + "{{w}} " + elapsed + "  "
-                        + (row.ok() ? "{{w}}" : "{{r}}") + body, width));
-                clearPeers.add("");
-                remaining--;
+                if (received) {
+                    // a frame that arrived with no round trip waiting for it is an INBOUND move, not a failure:
+                    // it leads with a left arrow and has no round trip to time
+                    final String prefix = "{{w}}  " + RECEIVED_MARK + " {{m}}" + row.kind() + "{{w}} ";
+                    lines.add(clip(prefix + frame(row.requestDetail(), row.reply(), prefix, width), width));
+                    clearPeers.add("");
+                } else {
+                    final String mark = row.ok() ? "{{c}}→" : "{{r}}✗";
+                    final String elapsed = row.ok() ? "{{y}}" + row.elapsedMs() + "ms{{X}}" : "timeout";
+                    // THE FRAME IS THE OBJ AND THE REST IS CHROME, so only the frame is drawn through the UI
+                    // serializer: the arrow, the kind and the timing keep their panel colors
+                    final String prefix = "{{w}}  " + mark + " {{m}}" + row.kind() + "{{w}} " + elapsed + " "
+                            + (row.ok() ? "{{w}}" : "{{r}}");
+                    lines.add(clip(prefix + frame(row.requestDetail(),
+                            row.request().isEmpty() ? row.reply() : row.request(), prefix, width), width));
+                    clearPeers.add("");
+                    if (answered) {
+                        lines.add(clip(REPLY_TAB + frame(row.replyDetail(), row.reply(), REPLY_TAB, width), width));
+                        clearPeers.add("");
+                    }
+                }
+                remaining -= needed;
+                shown++;
             }
-            if (remaining > 0 && lane.rows().size() < lane.exchanges()) {
-                lines.add(clip("{{w}}  … %d older".formatted(lane.exchanges() - lane.rows().size()), width));
+            if (remaining > 0 && shown < lane.exchanges()) {
+                lines.add(clip("{{w}}  … %d older".formatted(lane.exchanges() - shown), width));
                 clearPeers.add("");
                 remaining--;
             }
         }
         if (snapshot.lanes().isEmpty()) {
-            lines.add(clip("{{w}}  no peers have spoken yet", width));
+            lines.add(clip("{{k}} no network traffic", width));
             clearPeers.add("");
         } else if (snapshot.dropped() > 0 && remaining > 0) {
             lines.add(clip("{{w}}  (dropped %d off the window)".formatted(snapshot.dropped()), width));
             clearPeers.add("");
         }
         return new PanelLayout(lines, clearPeers);
+    }
+
+    /**
+     * A FRAME DRAWN AS THE OBJ IT IS — through the UI serializer, which is the console's own rendering: it colors
+     * what has meaning (a uri and its link, a typed value, a code body in its own syntax) and draws its compact
+     * form. That form breaks collections over lines, so the render is flattened back to the one line a row is.
+     * <p>
+     * The frame is clipped to the columns it has left BEFORE it is colored. Coloring first and clipping after is
+     * what loses the highlight: the clipper hands back plain text (so a cut line can never end inside a markup
+     * tag), which is exactly how a long request came out uncolored while its short answer stayed colored. The
+     * row's leading text (the arrow, the kind, the timing) is chrome: it is measured to know how much room the
+     * frame has, and is never drawn as part of it.
+     * <p>
+     * Without the obj — it has left the detail window (see {@link WireTrace.Row}) — the row's stored text is all
+     * there is, and it is highlighted as mtron so an old row is still readable.
+     *
+     * @param obj    the frame itself, or {@code null} when the trace no longer holds it
+     * @param text   the frame's one-line text (see {@link WireTrace#render(Obj)})
+     * @param prefix the row's chrome, drawn before the frame
+     * @param width  the display columns the whole row may occupy, or {@code <= 0} for no limit
+     * @return the frame as it will be drawn, ending in "…" when it was cut
+     */
+    private static String frame(final Obj obj, final String text, final String prefix, final int width) {
+        final String rendered = null == obj
+                ? Highlighter.highlightLine(FRAME_SYNTAX, text)
+                : Highlighter.highlightLine(FRAME_SYNTAX, Arrays.stream(ObjmtronUISerializer.unlinked().write(obj).split("\n")).map(String::strip).reduce("", (a, b) -> a + " " + b));
+        if (width <= 0 || Graphitty.viewLength(prefix + rendered) <= width)
+            return rendered;
+        // the ellipsis takes a column of its own, so the visible frame is one column narrower
+        final int room = Math.max(1, width - Graphitty.viewLength(prefix) - 1);
+        return Highlighter.highlightLine(FRAME_SYNTAX, Graphitty.viewPrefix(Graphitty.strip(rendered), room)) + "…";
     }
 
     /**

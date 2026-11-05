@@ -25,12 +25,12 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.reflect.TypedRec.typedRec;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StatusLine implements Runnable {
+public class StatusLine implements Runnable, AutoCloseable {
 
     /**
      * How many banner messages are retained; the oldest scroll off the tail.
@@ -119,6 +119,12 @@ public class StatusLine implements Runnable {
             message(f(lhs.asRec().at(TARGET).uriValue().name()), lhs.asRec().at(OBJ));
             return noobj();
         }));
+    }
+
+    @Override
+    public void close() {
+        this.status.hide();
+        this.status.close();
     }
 
     /**

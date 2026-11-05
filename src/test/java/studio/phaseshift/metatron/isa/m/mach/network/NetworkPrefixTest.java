@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.math.cat.Places;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -33,13 +34,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.AUTHORITY;
 import static studio.phaseshift.metatron.Tokens.PREFIX;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 /**
  * A NETWORK NAME IS DENOTATION, NOT REACH: {@code //self/a} denotes {@code loop://self/a} because a name was BOUND to
@@ -337,5 +342,68 @@ public class NetworkPrefixTest extends AbstractMetatronTest {
         final Obj moved = Machine.evaluate("move(//boo:a)");
         assertTrue(moved.isFail(), "a move to a path that is not a machine fails: " + moved);
         assertFalse(moved.toString().contains("Index"), "it must fail by address, not crash the printer: " + moved);
+    }
+
+    /**
+     * THE MEMBERSHIP DOOR SPEAKS NAMES TOO: {@code overrideOf} / {@code submit} / {@code reachable} ask
+     * {@link Network#peerOf}, which aligns at its boundary — so a caller may address a peer by its bound alias exactly
+     * as by its origin, and no consumer has to remember the prefix table.
+     */
+    @Test
+    void testTheAliasAnswersTheMembershipLookup() {
+        final Network network = Machine.current().network();
+        assertTrue(network.overrideOf(NAME, EVAL_INST_TID).isObjInst(), "an alias is a peer for overrideOf");
+        assertTrue(Network.Helper.reachable(Machine.current(), NAME), "an alias is reachable");
+        assertEquals(jnt(3), network.submit(NAME, ObjmtronSerializer.parse("1.plus(2)")),
+                "submit evaluates on the aliased peer (the loop identity)");
+    }
+
+    /**
+     * THE SUBSTITUTION CARRIES THE QUALIFIERS, and a second pass is the identity — the two properties that let any
+     * boundary align defensively: {@code //ginger/a{2}} means {@code ws://ginger.local:8555/a{2}}, coefficient and
+     * query included.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "//ginger/a{2}          % ws://ginger.local:8555/a{2}",
+            "//ginger/a/b?depth=3   % ws://ginger.local:8555/a/b?depth=3",
+    })
+    void testTheAlignmentCarriesTheQualifiersAndIsIdempotent(final String written, final String resolved) {
+        final fURI once = Machine.Helper.align(Machine.current(), f(written));
+        assertEquals(f(resolved), once, written);
+        assertEquals(once, Machine.Helper.align(Machine.current(), once),
+                "align is the identity on an aligned address: " + written);
+    }
+
+    /**
+     * A BRANCH ROUTES BY ALIAS: the key is a place, and the place is resolved where the branch runs. The shipped tail
+     * evaluates on the loop peer's own machine, so no socket is needed to prove the route.
+     */
+    @Test
+    void testABranchRoutesByAlias() {
+        final Network network = Machine.current().network();
+        final fURI alias = f("//worker");
+        final fURI origin = f("loop://worker");
+        network.registerPrefix(alias, origin);
+        Network.Helper.connect(network, origin);
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG,
+                    "1.plus(2).branch(<//worker> => plus(3).plus(6)).sum()", "12");
+        } finally {
+            network.drop(origin);
+            network.unregisterPrefix(alias);
+        }
+    }
+
+    /**
+     * A PLACE MAY BE NAMED BY AN ALIAS: {@code Places.place} resolves the machine address through the one door, so
+     * {@code //self} is the place its origin names.
+     */
+    @Test
+    void testAPlaceMayBeNamedByAlias() {
+        final Obj place = Places.place(uri("//self"));
+        assertTrue(place.isRec(), "an alias names a place: " + place);
+        assertTrue(place.asRec().at(uri(AUTHORITY)).toCleanString().contains("loop://self"),
+                "the place answers the origin's authority: " + place);
     }
 }
