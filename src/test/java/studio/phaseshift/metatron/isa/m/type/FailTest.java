@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
+import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -40,15 +41,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
 import static studio.phaseshift.metatron.Tokens.CODE_TID;
+import static studio.phaseshift.metatron.Tokens.INT_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gte_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.lte_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -249,6 +257,24 @@ public class FailTest extends AbstractObjTest {
         final long before = failStackDepth();
         assertFalse(Machine.parse("start(1)").apply().test(T(CODE_TID)), "an int is not a code::T");
         assertEquals(before, failStackDepth(), "a type test must not file into a fail stack");
+    }
+
+    /**
+     * A REC'S VALUE IS TESTED ONLY UNDER A KEY THAT MATCHED. Pairing it with every value of the predicate rec ran
+     * unrelated refinements on it — the math ISA's self-documentation ran percent::T's ?>=0 on its docq, at every docs
+     * boot — and a refinement of two predicates runs as code, an evaluation that files its miss in its computer's
+     * fail stack.
+     */
+    @Test
+    public void testARecTestRunsNoPredicateUnderAnUnmatchedKey() {
+        // percent::T's shape: one refinement of two predicates
+        final Type gauge = TypeBuilder.build().tid(INT_TID).vid(f("fail_gauge"))
+                .isaPredicate(is_(gte_(jnt(0))).is_(lte_(jnt(100)))).create();
+        // the docs case: an instset tested against itself, which paired its q-procs with its types
+        final Rec holder = rec(uri("q"), lst(rec(uri("x"), jnt(1))), uri("type"), lst(gauge));
+        final long before = failStackDepth();
+        assertTrue(holder.test(holder), "a rec is its own type");
+        assertEquals(before, failStackDepth(), "the type list's refinement must not run on the q list's rec");
     }
 
     /**
