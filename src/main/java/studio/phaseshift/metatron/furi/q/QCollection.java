@@ -578,7 +578,7 @@ public final class QCollection {
                     // the doc at the bare address as well, so the lookup below finds it without a side effect.
                     final Obj instDoc = INST_DOCS.read(vidBig.removeQ(DOCQ));
                     final Obj doc = instDoc.isNoObj() ?
-                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.Helper.readLocal(Machine.current(), vidBig.removeQ(DOCQ))))) :
+                            OBJ_DOCS.read(vidBig.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Machine.current().memory().read(vidBig.removeQ(DOCQ))))) :
                             instDoc;
                     // dual-mode interface doc: a doc carrying 'build' (how to implement) alongside
                     // 'desc' (how to use).  The branch is implementation status: an interface inst's
@@ -586,7 +586,7 @@ public final class QCollection {
                     // write — so implemented iff the live inst is no longer the interface.  Unimplemented
                     // → surface the build docs; implemented → surface the use docs.
                     if (doc.isRec() && doc.asRec().has(DOC_BUILD)) {
-                        final Obj live = Machine.Helper.readLocal(Machine.current(), vidBig.removeQ(DOCQ));
+                        final Obj live = Machine.current().memory().read(vidBig.removeQ(DOCQ));
                         final boolean implemented = !live.isNoObj() && live.isInst() &&
                                 !live.<Inst>as().tid().basePath().equals(vidBig.removeQ(DOCQ));
                         if (!implemented)

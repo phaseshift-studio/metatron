@@ -24,7 +24,9 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 
 
@@ -38,7 +40,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE NETWORK BRANCH IS THE COMPONENT. A machine's {@code <vid>/network/#} is answered by its network itself — handed
- * there by the machine's own sphere (MachineSpace), not mounted in memory — so a field written there lands on the network the machine holds
+ * there by the machine's own space (MachineSpace, mounted in memory; the network is no space there) — so a field written
+ * there lands on the network the machine holds
  * (never a rebuilt copy), the root's {@code /network/roster} is the root network's own roster, and the component itself
  * is not a value an address can overwrite. An address under no network branch is still the authority dispatch's.
  */
@@ -54,15 +57,16 @@ public class NetworkBranchTest extends AbstractMetatronTest {
     @Test
     public void testEachMachinesBranchIsItsOwnNetwork() {
         final Machine root = Machine.current();
-        // the branch is answered through the machine's own sphere (MachineSpace), never by a space in memory
-        assertSame(root.space(), Machine.Helper.sphereOf(root, f("/network/peer")), "the root's branch is in the root's own sphere");
-        assertNotSame(root.network(), root.memory().findSpace(f("/network/peer")), "the network is not a space in memory");
+        // the branch is answered through the machine's own space (MachineSpace), never by a network space in memory
+        final Space rootSpace = root.memory().findSpace(f("/network/peer"));
+        assertInstanceOf(MachineSpace.class, rootSpace, "the root's branch is in the root's own space");
         checkEquality(LOG, root.network().atDirect(uri(PATTERN)), uri("/network/#"), true);
         final Machine child = root.push(f("branch_child"));
         try {
             assertNotSame(root.network(), child.network());
-            assertSame(child.space(), Machine.Helper.sphereOf(child, child.vid().resolve().extend("network").extend("peer")),
-                    "a pushed frame's branch is in that frame's own sphere");
+            final Space own = child.memory().findSpace(child.vid().resolve().extend("network").extend("peer"));
+            assertInstanceOf(MachineSpace.class, own, "a pushed frame's branch is in a machine's space");
+            assertNotSame(rootSpace, own, "the frame's own, not the root's");
             assertSame(child.network(), Machine.read(f("~/network")), "~/network reads the component itself");
             assertSame(child.network(), ObjmtronSerializer.parse("*<~/network>").apply(), "a dereference hands the component back as itself");
         } finally {

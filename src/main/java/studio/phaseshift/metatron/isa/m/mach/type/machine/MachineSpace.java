@@ -32,23 +32,19 @@ import java.util.Set;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * MACHINE SPACE — a machine's own sphere of influence, as an address space (Marko, 2026-10-25: "this space will be the
- * primary space when accessing a Machine and will be used solely for the Machine sphere of influence").
- * <p>
- * <b>IT IS NOT IN MEMORY.</b> {@link Machine#read} and {@link Machine#write} ask it FIRST — the innermost machine whose
- * sphere covers the address ({@link Machine.Helper#sphereOf}) — and only then the network and memory, where the full
- * range of spaces and patterns applies as it always has. Its pattern is the machine's vid, and its jurisdiction is what
- * a machine IS: the machine itself, the components {@code machine::T} declares ({@code instset}, {@code compiler},
- * {@code memory}, {@code network}, {@code processor}) and its system information ({@code sys}). Every other address
- * under the vid is the machine's DATA, not the machine, so it is declined ({@code noobj}) and memory's spaces answer it
- * — the per-machine data level at {@code <vid>/#} among them, which keeps a child's {@code ~/x} the child's.
+ * MACHINE SPACE — a machine's own address space (Marko, 2026-10-25: "this space will be the primary space when
+ * accessing a Machine and will be used solely for the Machine sphere of influence"), and its ONLY one: mounted in the
+ * machine's memory at {@code <vid>/#} (the root's is {@code /#}), so memory's ordinary routing reaches it (Marko,
+ * 2026-11-05: the sphere and the machine's data level are one space, "necessary and sufficient"). The innermost level
+ * answers first ({@link studio.phaseshift.metatron.isa.m.mach.type.memory.MemoryUnion}), {@code ~} resolves there, and
+ * a more specific space — a schema instset at {@code /sys/space/<name>/instset/#}, a space mounted beneath the vid —
+ * wins its own addresses, as the most specific space always does. What it answers itself:
  * <ul>
  *     <li>{@code <vid>} — the machine itself, live;</li>
  *     <li>{@code <vid>/network/…} — the network's own branch: the component answers from its rec as it stands, a field
@@ -57,56 +53,46 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     <li>{@code <vid>/processor/…} — the processor, read live and written in place: the computers it indexes
  *     ({@code computer/<n>}) and the fail stacks, the machine's ({@code fail}) and each evaluation's under the computer
  *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
- *     <li>{@code <vid>/<component>/…} — any other component, read live; a branch pattern answers each match at its
- *     address ({@code vid => obj}), as a space's does, which is what {@code @} needs to anchor a value;</li>
- *     <li>{@code <vid>/sys/#} — threads, processors and the log sink, held in this space's OWN store (it is a
- *     {@link memSpace} for that), with the q-processors {@code ~/sys} speaks: Marko, 2026-10-25, "I would have sys/#
- *     simply go into MachineSpace". {@code ~/sys} is a holding area: its parts are expected to move, over time, into
- *     the components they belong to. A space in memory that claims an address beneath it more specifically (a schema
- *     instset at {@code /sys/space/<name>/instset/#}) still answers that address: the most specific claimant wins,
- *     as when {@code ~/sys} was a space in memory.</li>
+ *     <li>{@code <vid>/compiler/…} — written in place: the typer's state lives at
+ *     {@code <vid>/compiler/typer/check};</li>
+ *     <li>{@code <vid>/<component>/…} — any component, read live; a branch pattern answers each match at its address
+ *     ({@code vid => obj}), as a space's does, which is what {@code @} needs to anchor a value. What the component
+ *     does not hold, the store answers: a write under {@code ~/memory} or {@code ~/instset} that is no part of it
+ *     lands there;</li>
+ *     <li>everything else — {@code <vid>/sys/#} (threads, processors and the log sink: Marko, 2026-10-25, "I would
+ *     have sys/# simply go into MachineSpace"), the machine's data and every query — held in this space's OWN store
+ *     (it is a {@link memSpace} for that), through its q-processors. The machine itself is never stored here.</li>
  * </ul>
- * A covered address this space has no answer for is declined too ({@code noobj} is the decline, by
- * {@link studio.phaseshift.metatron.isa.Addressable}'s convention), so the dispatch goes on to the network and memory —
- * and so is a QUERY on the machine or on a component other than the network ({@code ~/processor?docq}): the
- * q-processors that answer it are memory's, and the component itself is not the answer.
- * <p>
- * The machine's own writes are the network branch's, {@code ~/sys}'s, and the compiler's and the processor's (folded
- * into the component); the machine rec's own writes and the other components' still go through memory, declined here.
  */
 public final class MachineSpace extends memSpace {
 
     private static final String SYS = Machine.Helper.SYS_DIR.toString();
 
     /**
-     * the segments a machine's sphere is made of, below its vid: its components and its system information
+     * the segments a machine is made of, below its vid: its components and its system information
      */
     private static final Set<String> SPHERE = Set.of(INSTSET, COMPILER, MEMORY, NETWORK, PROCESSOR, SYS);
 
     private final Machine owner;
     private final fURI root;
     /**
-     * {@code <vid>/sys}: the store's own reach, which a more specific space in memory beneath it outranks
-     */
-    private final fURI sys;
-    /**
-     * how many segments the machine's vid has: an address's next segment, at this index, names the sphere's part.
+     * how many segments the machine's vid has: an address's next segment, at this index, names the machine's part.
      * The root's resolved vid {@code /} has none, so its depth is 0.
      */
     private final int depth;
 
     /**
-     * The sphere of {@code machine}, which must have a vid: its jurisdiction is the machine's resolved vid
-     * ({@code /.} is {@code /}), and the space is never registered — it is held by the machine, not indexed by memory.
+     * The space of {@code machine}, which must have a vid: its pattern is the machine's resolved vid ({@code /.} is
+     * {@code /}) and everything below it, and it is indexed in the machine's memory as {@code <vid>/space}.
      */
     public MachineSpace(final Machine machine) {
-        super(mutableMap(uri(PATTERN), uri(machine.vid().resolve().extend(ALL))), MEM_SPACE_TID, null, false);
+        super(mutableMap(uri(PATTERN), uri(machine.vid().resolve().extend(ALL))), MEM_SPACE_TID,
+                machine.vid().resolve().extend(SPACE), false);
         this.owner = machine;
         this.root = machine.vid().resolve();
         this.depth = this.root.segments().size();
-        this.sys = this.root.extend(SYS);
-        // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over: a
-        // ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here, and so does a fail's ?incrq on ~/processor/…/fail
+        // the q-processors the machine's addresses speak: a ?docq, ?subq, ?lockq or ?mimeq lands here, and so does an
+        // ?incrq — a fail's on ~/processor/…/fail among them
         this.addQ(QCollection.docQ());
         this.addQ(QCollection.decQ());
         this.addQ(QCollection.subQ());
@@ -116,8 +102,8 @@ public final class MachineSpace extends memSpace {
     }
 
     /**
-     * Is {@code vid} in this machine's sphere — the machine itself, one of its components, or its system information?
-     * The address must already be absolute: {@code ~} is resolved by the caller, against the machine it stands in.
+     * Is {@code vid} one of the machine's own parts — the machine itself, one of its components, or its system
+     * information — rather than its data? The address must already be absolute: memory resolves {@code ~}.
      */
     public boolean covers(final fURI vid) {
         if (null == this.root)
@@ -133,49 +119,24 @@ public final class MachineSpace extends memSpace {
     }
 
     /**
-     * the sphere's part an address it covers names — the segment below the machine's vid — or {@code null} for the
-     * machine itself
+     * the part an address it covers names — the segment below the machine's vid — or {@code null} for the machine itself
      */
     private String part(final fURI vid) {
         final List<String> segments = vid.qLess().resolve().segments();
         return segments.size() > this.depth ? segments.get(this.depth) : null;
     }
 
-    /**
-     * Does a space claim {@code vid} MORE specifically than {@code ~/sys} does — a schema instset at
-     * {@code /sys/space/<name>/instset/#}, a space mounted beneath {@code ~/sys}? Then that space answers it, as it did
-     * while {@code ~/sys} was itself a space in memory and the most specific space won: the sphere's store holds what
-     * nothing more specific claims. (Without this, a tbleSpace's table type, written to its schema instset by address,
-     * landed in the root's {@code ~/sys} store instead: measured in SqliteTbleSpaceTest.)
-     */
-    private boolean yields(final fURI vid) {
-        // memory's lookup names the claimant — a data space, or an instruction set in the machine's vocabulary (a
-        // schema instset is not in memory's index, but the lookup weighs the instset's libraries)
-        return this.beneath(this.owner.memory().findSpace(vid));
-    }
-
-    private boolean beneath(final Space claimant) {
-        if (null == claimant || claimant == this)
-            return false;
-        final fURI base = claimant.pattern().retractPattern();
-        return base.hasPrefix(this.sys) && base.segments().size() > this.depth + 1;
-    }
-
     @Override
     public Obj read(final fURI vid) {
         if (null == this.owner || !this.covers(vid))
-            return noobj();
+            return super.read(vid);
         final String part = this.part(vid);
-        // ~/sys is this space's own store: its q-processors run there, as a space's always do — unless a more specific
-        // space in memory claims the address, which then answers it (declined here)
-        if (SYS.equals(part))
-            return this.yields(vid) ? noobj() : super.read(vid);
         // the network answers its own branch: fields, and members at their keys' paths (and the q-procs it speaks)
         if (NETWORK.equals(part))
             return this.owner.network().read(vid);
-        // a query on the machine or a component is memory's to answer (see the class doc): the component is no doc
-        if (vid.hasQ())
-            return noobj();
+        // ~/sys, and a query on the machine or a component, are the store's: the component itself is no doc
+        if (SYS.equals(part) || vid.hasQ())
+            return super.read(vid);
         if (null == part)
             return this.owner;
         // any other component, read live: the path below the machine walked into the component as it stands (the
@@ -184,83 +145,40 @@ public final class MachineSpace extends memSpace {
         // A BRANCH PATTERN (what @ reads) answers each match at its address, vid => obj, as a space's pattern read
         // does: @ stamps the value with it, so a fail read that way from a stack can be caught out of it
         final Obj component = this.owner.at(uri(segments.get(this.depth)));
-        if (vid.isBranch() && vid.hasPattern() && component.isPoly())
-            return objs(Space.Helper.unrollPoly(this.root.extend(segments.get(this.depth)), component.as(), vid.qLess().resolve().asNode())
-                    .stream()
-                    .filter(id -> !id.obj().isNoObj())
-                    .map(id -> rel(id.furi().toUri(), id.obj())));
-        return this.owner.at(uri(String.join("/", segments.subList(this.depth, segments.size()))));
-    }
-
-    /**
-     * Is a write at {@code vid} this sphere's to make — and therefore final, whatever it answers? A write the sphere
-     * owns is never handed on: a member's deletion answers {@code noobj} (the obj written), and passing that on as a
-     * decline would land a second, stray deletion in memory. The sphere owns the network branch and {@code ~/sys} —
-     * the part of {@code ~/sys} no more specific space in memory claims ({@link #yields}).
-     */
-    public boolean ownsWrite(final fURI vid) {
-        if (null == this.owner || !this.covers(vid))
-            return false;
-        final String part = this.part(vid);
-        return NETWORK.equals(part) || (MEMORY.equals(part) && this.isNameIndex(vid))
-                || (SYS.equals(part) && !this.yields(vid))
-                // THE COMPILER IS THE MACHINE'S, so a write into it is the machine's: the typer's state lives at
-                // <machine>/compiler/typer/check, and `@/compiler/typer/check >>= +[inst_dom => false]` must land
-                // there — not in memory, where the next read would never see it (the sphere answers first).
-                || (COMPILER.equals(part) && !this.yields(vid))
-                // THE PROCESSOR IS THE MACHINE'S TOO: it indexes the computers it mints (~/processor/computer/<n>) and
-                // holds the fail stacks, the machine's (~/processor/fail) and each evaluation's under the computer that
-                // ran it (~/processor/computer/<n>/fail). In memory, a write there walked into whatever copy of the
-                // processor rec memory last stored — its lst index, at the computer's number. A query other than the
-                // stack's ?incrq is memory's, as a query read on a component is.
-                || (PROCESSOR.equals(part) && (!vid.hasQ() || vid.hasQ(QCollection.INCRQ)));
-    }
-
-    /**
-     * Is a read at {@code vid} this sphere's to answer — and therefore final, nothing included? The processor's: what is
-     * written under {@code ~/processor} is folded into the component ({@link #ownsWrite}), so memory holds nothing there
-     * to fall back on. A query on it stays memory's, as {@link #read} declines one.
-     */
-    public boolean ownsRead(final fURI vid) {
-        return null != this.owner && this.covers(vid) && !vid.hasQ() && PROCESSOR.equals(this.part(vid));
-    }
-
-    /**
-     * THE NAME INDEX'S OWN ROWS, and nothing else under {@code /memory}: {@code <...>/memory/redirect/<name>} is a
-     * write the sphere owns so it is final -- memory's ordinary write path only writes keys that already exist, which
-     * is why this address was a silent no-op before.
-     */
-    private boolean isNameIndex(final fURI vid) {
-        return vid.segmentLength() >= 2 && !vid.hasQ() && REDIRECT.equals(vid.retract(1).name());
+        final Obj live = vid.isBranch() && vid.hasPattern() && component.isPoly()
+                ? objs(Space.Helper.unrollPoly(this.root.extend(segments.get(this.depth)), component.as(), vid.qLess().resolve().asNode())
+                        .stream()
+                        .filter(id -> !id.obj().isNoObj())
+                        .map(id -> rel(id.furi().toUri(), id.obj())))
+                : this.owner.at(uri(String.join("/", segments.subList(this.depth, segments.size()))));
+        // what the component does not hold is the store's: a write under ~/memory or ~/instset that is no part of the
+        // component lands there (the compiler's and the processor's fold into theirs, and the network writes its own)
+        return live.isNoObj() ? super.read(vid) : live;
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        if (!this.ownsWrite(vid))
-            return noobj();
-        final String part = this.part(vid);
-        // ~/sys into this space's own store, through its q-processors (an ?incrq mints its key here)
-        if (SYS.equals(part))
-            return super.write(vid, obj);
-        if (MEMORY.equals(part))
-            return this.owner.memory().write(vid, obj);
-        // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which
-        // is the object the machine holds (writing the machine rec itself would re-type the whole machine)
-        if (COMPILER.equals(part) || PROCESSOR.equals(part)) {
-            final List<String> segments = vid.qLess().resolve().segments();
-            final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
-            if (COMPILER.equals(part)) {
-                this.owner.compiler().at(below, obj, MUTABLE);
-                return obj;
-            }
-            // the processor's goes through the q-processors this space speaks, so a fail's ?incrq mints its key in the
-            // stack it is filed in
-            return QProc.Layer.write(this, vid, obj, () -> {
-                this.owner.processor().at(below, obj, MUTABLE);
-                return obj;
-            });
-        }
+        final String part = null == this.owner || !this.covers(vid) ? null : this.part(vid);
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
-        return this.owner.network().write(vid, obj);
+        if (NETWORK.equals(part))
+            return this.owner.network().write(vid, obj);
+        // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which is
+        // the object the machine holds (writing the machine rec itself would re-type the whole machine). The compiler
+        // holds the typer's state; the processor indexes its computers and holds the fail stacks, written through the
+        // q-processors this space speaks so a fail's ?incrq mints its key in the stack it is filed in
+        final boolean folds = (COMPILER.equals(part) && !vid.hasQ())
+                || (PROCESSOR.equals(part) && (!vid.hasQ() || vid.hasQ(QCollection.INCRQ)));
+        if (!folds)
+            return super.write(vid, obj);
+        final List<String> segments = vid.qLess().resolve().segments();
+        final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
+        if (COMPILER.equals(part)) {
+            this.owner.compiler().at(below, obj, MUTABLE);
+            return obj;
+        }
+        return QProc.Layer.write(this, vid, obj, () -> {
+            this.owner.processor().at(below, obj, MUTABLE);
+            return obj;
+        });
     }
 }

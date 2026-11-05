@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.type.Compiler;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.Computer;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
@@ -391,7 +392,7 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     // ======================== bootstrap: the machine's own system state ========================
 
     /**
-     * {@link Machine.Helper#bootstrap(Machine)} seeds the machine's log sink into its OWN sphere's {@code ~/sys} at a resolved address, because it runs before the machine is reachable.
+     * {@link Machine.Helper#bootstrap(Machine)} seeds the machine's log sink into its OWN space's {@code ~/sys} at a resolved address, because it runs before the machine is reachable.
      */
     @Test
     public void testBootstrapSeedsMachineLogSink() {
@@ -407,16 +408,16 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     }
 
     /**
-     * The machine's own level must stay covered: {@code ~/processor/fail} by the machine's sphere, which holds the
-     * processor, and {@code ~/thread} by the infra space in memory — a narrowed pattern or a lost sphere de-homes
-     * either silently.
+     * The machine's own level must stay covered by the machine's space in memory: {@code ~/processor/fail}, which it
+     * holds in the processor, and {@code ~/thread}, which it keeps in its store — a narrowed pattern or a lost mount
+     * de-homes either silently.
      */
     @Test
     public void testBootstrapInfraSpaceCoversTheMachinesOwnLevel() {
-        assertSame(Machine.root().space(), Machine.Helper.sphereOf(Machine.root(), f("/processor/fail/_")),
-                "~/processor/fail must stay covered by the machine's sphere");
-        assertNotNull(Machine.root().memory().findSpace(f("/thread/main")),
-                "~/thread must stay covered by the machine's infra space");
+        assertInstanceOf(MachineSpace.class, Machine.root().memory().findSpace(f("/processor/fail/_")),
+                "~/processor/fail must stay covered by the machine's space");
+        assertInstanceOf(MachineSpace.class, Machine.root().memory().findSpace(f("/thread/main")),
+                "~/thread must stay covered by the machine's space");
         assertInstanceOf(Rec.class, Machine.root().network().roster(),
                 "the roster registers at /network/roster, the network's own branch");
     }

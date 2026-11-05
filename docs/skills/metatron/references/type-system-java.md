@@ -367,7 +367,7 @@ Typer.Helper.level();                    // how many (the console's strictness l
 // the same act, as the canonical nested write
 Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
 
-// and from mtron (the address is part of the machine, so the sphere owns the write)
+// and from mtron (the address is part of the machine, so its space folds the write into the compiler)
 //   @/compiler/typer/check >>= [inst_dom => false]
 ```
 

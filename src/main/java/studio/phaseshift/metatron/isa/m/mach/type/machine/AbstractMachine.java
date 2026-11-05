@@ -60,10 +60,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
     private Memory resolvedMemory = null;
     private Network resolvedNetwork = null;
     private InstSet resolvedInstSet = null;
-    /**
-     * this machine's own sphere, bound by {@code bootstrap} — the machine's, never a clone's (see {@link #clone})
-     */
-    private MachineSpace space = null;
 
     /**
      * Resolve each slot template exactly once. The first resolution happens in the constructor, where the
@@ -131,20 +127,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
         return this;
     }
 
-    @Override
-    public MachineSpace space() {
-        return this.space;
-    }
-
-    /**
-     * FIELD ONLY, as the components' setters: the sphere is the machine's view of itself, not a slot of its rec.
-     */
-    @Override
-    public Machine space(final MachineSpace space) {
-        this.space = space;
-        return this;
-    }
-
     public AbstractMachine(final fURI vid) {
         this(ALL, vid);
     }
@@ -176,8 +158,8 @@ public abstract class AbstractMachine extends MRec implements Machine {
 
     public AbstractMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(withMemory(jvm), tid, vid);
-        // Mount this machine's own infra space (pattern <vid>/#) and embed the machine rec in it. Mounted FIRST so a
-        // fail thrown during component adoption (below) already has a sphere to land in (~/processor/fail).
+        // Mount this machine's own space (pattern <vid>/#) in its memory. Mounted FIRST so a fail thrown during
+        // component adoption (below) already has a space to land in (~/processor/fail).
         Machine.Helper.bootstrap(this);
         // Adopt the components. `at` is what sets a value's parent to the rec holding it, and
         // Component.machine() walks exactly that — seeding through the constructor map alone would leave
@@ -239,13 +221,16 @@ public abstract class AbstractMachine extends MRec implements Machine {
         if (this.memory().machine() != this)
             return;
         // Suppress the logger's "no space embedded logger" fallback while this frame's own log sink is torn down:
-        // the sink lives in the sphere's ~/sys, which closes after the spaces below, so any close-log made once it is
-        // gone would read ~/sys/log back as empty and print the notice once per closed space.
+        // the sink lives in the machine's space (~/sys), one of the spaces removed below, so a close-log made once it
+        // is gone reads ~/sys/log back as empty.
         CLOSING = true;
         try {
             // Snapshot the keys first: removeSpace mutates the index, and removing while iterating the live
             // entry set is a ConcurrentModificationException — which surfaced as a shutdown that reported the
-            // entry set rather than the spaces it had closed.
+            // entry set rather than the spaces it had closed. The machine's own space leaves with the rest,
+            // REMOVED, NEVER CLOSED (removeSpace only logs): its values are not the frame's to close — the system
+            // thread's executor lives in ~/sys, and closing it from one of its own threads waits on itself forever
+            // (measured: every test JVM spun in ExecutorService.close at teardown).
             this.memory().spaces().jvm().keySet().stream()
                     .filter(Obj::isUri)
                     .toList()
@@ -256,11 +241,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
                             LOG.warn(e);
                         }
                     });
-            // THE SPHERE GOES LAST, still inside CLOSING — DROPPED, NEVER CLOSED: ~/sys leaves the address surface the
-            // way the sys space used to leave memory's index (removeSpace only logs; it closes nothing). Its values are
-            // not the frame's to close: the system thread's executor lives in ~/sys, and closing it from one of its own
-            // threads waits on itself forever (measured: every test JVM spun in ExecutorService.close at teardown).
-            this.space = null;
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {
@@ -287,10 +267,6 @@ public abstract class AbstractMachine extends MRec implements Machine {
         // clone can never be answered by a stale component.
         if (copy instanceof AbstractMachine abstractCopy)
             abstractCopy.resolvedInstSet = null;
-        // THE SPHERE IS KEPT: a copy of a machine is that machine — the one read back at its address by move, or carried
-        // through an instruction and popped back to — so it answers the same ~/sys. A pushed CHILD is a copy too, and
-        // its bootstrap binds a sphere of its own over this one. (Clearing it here lost a frame's ~/sys whenever a move
-        // or a pop landed on a copy: measured in SysIsolationScriptTest and MemoryIsolationScriptTest.)
         return copy;
     }
 
