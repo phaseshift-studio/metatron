@@ -1693,7 +1693,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .rng(ALL.maybeSome(), "the obj at the arg uri")
                             .argLst(T(ALL.maybe()), "the uri to dereference")
                             .desc("an auto dereference function: reads the obj at the arg uri upon inst access (sugar'd !*)")
-                            .body((lhs, inst) -> Machine.read(inst.arg(0).uriValue()).autoResolve(lhs).vid(null))
+                            .body((lhs, inst) -> {
+                                final Obj resolved = Machine.read(inst.arg(0).uriValue()).autoResolve(lhs);
+                                // A TYPE IS ITS NAME, so it comes back as itself, as from() hands back a type: a
+                                // dereferenced value is detached, but a type stripped of its vid is a nameless type
+                                // that no slot can be checked against (an auto_from element in a lst type slot NPE'd
+                                // in Type.Helper.typeCheck)
+                                return resolved.isType() ? resolved : resolved.vid(null);
+                            })
                             .create(),
                     InstBuilder.build()
                             .tid(AUTO_AT_INST_TID)

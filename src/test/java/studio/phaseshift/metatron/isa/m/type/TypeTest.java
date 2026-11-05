@@ -825,8 +825,12 @@ public class TypeTest extends AbstractMetatronTest {
             "person   -> being::T[?[{?}name=>str::T]]@person",
             "mortal   -> person::T[?[age=>?<120]]@mortal",
             "immortal -> being::T[?[alias=>str{2,3}::T]]@immoratal",
-            "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]@team"})
+            "team     -> rec::T[?[flag=>?str::T.-<('')>-.count().?=2, member=>being{+}::T]]@team",
+            // a lst slot of auto_from references: the element type is named by address, not embedded
+            "roster   -> rec::T[?[members=>[!*being]]]@roster"})
     @CsvSource(value = {
+            "[members=>[[age=>29]]]                                              % roster::T             % true",
+            "[members=>[[age=>'29']]]                                            % roster::T             % false",
             "[age=>2]                                                            % rec::T                % true",
             "[age=>2]                                                            % lst::T                % false",
             "[age=>2]                                                            % being::T              % true",
