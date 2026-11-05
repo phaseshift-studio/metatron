@@ -217,6 +217,15 @@ public final class MachineSpace extends memSpace {
     }
 
     /**
+     * Is a read at {@code vid} this sphere's to answer — and therefore final, nothing included? The processor's: what is
+     * written under {@code ~/processor} is folded into the component ({@link #ownsWrite}), so memory holds nothing there
+     * to fall back on. A query on it stays memory's, as {@link #read} declines one.
+     */
+    public boolean ownsRead(final fURI vid) {
+        return null != this.owner && this.covers(vid) && !vid.hasQ() && PROCESSOR.equals(this.part(vid));
+    }
+
+    /**
      * THE NAME INDEX'S OWN ROWS, and nothing else under {@code /memory}: {@code <...>/memory/redirect/<name>} is a
      * write the sphere owns so it is final -- memory's ordinary write path only writes keys that already exist, which
      * is why this address was a silent no-op before.

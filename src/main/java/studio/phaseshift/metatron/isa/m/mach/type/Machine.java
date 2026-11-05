@@ -155,9 +155,9 @@ public interface Machine extends Rec, AutoCloseable {
         // THE MACHINE'S OWN SPHERE ANSWERS FIRST (MachineSpace): the machine itself, its components and its system
         // information, from the innermost machine whose sphere covers the address. It is not in memory, and it declines
         // everything else — the machine's data among it — so the network and memory below answer as they always have.
-        final Obj owned = Helper.readSphere(machine, vid);
-        if (!owned.isNoObj())
-            return owned;
+        final Optional<Obj> owned = Helper.readSphere(machine, vid);
+        if (owned.isPresent())
+            return owned.get();
         // THE ROUTER OF ROUTERS ALIGNS THE NAME ONCE. a prefixed spelling (ide:command) names the same
         // resource as its aligned form (/m/ide/inst/command), and each component keys by the canonical
         // form -- network authority, memory's index, the instset tables -- so the gatekeeper aligns HERE,
@@ -770,14 +770,19 @@ public interface Machine extends Rec, AutoCloseable {
         }
 
         /**
-         * The sphere's answer for {@code vid}, read by a thread standing in {@code machine} — or {@code noobj}, the
-         * decline, when no sphere covers the address or the covering one has nothing there. The first step of
-         * {@link Machine#read}, and of {@link #readLocal}.
+         * The sphere's answer for {@code vid}, read by a thread standing in {@code machine} — empty, the decline, when no
+         * sphere covers the address or the covering one has nothing there and does not own the read. An owned read is
+         * final, nothing included, as an owned write is: declined, an empty stack read fell through to memory, whose
+         * machine-key fallback walked the branch pattern into the machine rec and answered every computer. The first
+         * step of {@link Machine#read}, and of {@link #readLocal}.
          */
-        static Obj readSphere(final Machine machine, final fURI vid) {
+        static Optional<Obj> readSphere(final Machine machine, final fURI vid) {
             final fURI here = sphereAddress(machine, vid);
             final MachineSpace sphere = null == here ? null : sphereOf(machine, here);
-            return null == sphere ? noobj() : sphere.read(here);
+            if (null == sphere)
+                return Optional.empty();
+            final Obj answer = sphere.read(here);
+            return answer.isNoObj() && !sphere.ownsRead(here) ? Optional.empty() : Optional.of(answer);
         }
 
         /**
@@ -804,8 +809,7 @@ public interface Machine extends Rec, AutoCloseable {
          * libraries.) A miss costs nothing here, where {@link Machine#read} would go on to scan instruction memory.
          */
         public static Obj readLocal(final Machine machine, final fURI vid) {
-            final Obj owned = readSphere(machine, vid);
-            return owned.isNoObj() ? machine.memory().read(vid) : owned;
+            return readSphere(machine, vid).orElseGet(() -> machine.memory().read(vid));
         }
 
         /**
