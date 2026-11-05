@@ -1296,12 +1296,25 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1.branch(+2,branch(+2,plus{3}(2)))    % start(1).plus{5}(2)  % {5}3",
             // two equal NESTED branches are like terms too, once each is reduced — multiplicity 2 + 2 = 4
             "1.branch(branch(+2,+2),branch(+2,+2))  % start(1).plus{4}(2)  % {4}3",
+            // a lone addressless lane runs where the code stands, so its key drops and it inlines
+            "1.branch(local => plus(2))             % start(1).plus(2)     % 3",
     }, delimiter = '%')
     public void testBranchFixpoint(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
         final Call compilation = FixPointRewriter.single().apply(firstStage).tryToInst();
         assertEquals(ObjmtronSerializer.parse(expected), compilation);
         assertEquals(ObjmtronSerializer.parse(expectedResult), compilation.apply(noobj()));
+    }
+
+    /**
+     * A lane keyed to a remote place is compiled and run where its key points, so the fixpoint leaves a lone remote
+     * lane where it stands: inlining it would drop the place and run the program here. Rewritten only, never run, so
+     * the row needs no dialed peer.
+     */
+    @Test
+    public void testARemoteLaneIsNeverInlined() {
+        final Call compilation = FixPointRewriter.single().apply(ObjmtronSerializer.parse("1.branch(<loop://self> => plus(2))")).tryToInst();
+        assertEquals(ObjmtronSerializer.parse("start(1).branch(<loop://self> => plus(2))"), compilation);
     }
 
     /**
@@ -1320,6 +1333,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "start(1).branch(+2)                                       % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_inline    % true",
             "start(1).branch(+2,+2)                                    % branch_inline    % false",
+            // a lane keyed to a remote place runs THERE, so it is never inlined; a lone addressless lane runs here and
+            // inlines; and a keyed pair never collapses (lanes under different keys run at different places)
+            "start(1).branch(<loop://self> => plus(2))                 % branch_inline    % false",
+            "start(1).branch(local => plus(2))                         % branch_inline    % true",
+            "start(1).branch(<loop://x> => plus(2), <loop://y> => plus(2)) % branch_collapse % false",
             // a chain with no branch carries neither edge
             "start(5).plus(0).neg().neg()                              % branch_collapse  % false",
             "start(5).plus(0).neg().neg()                              % branch_inline    % false",

@@ -1095,7 +1095,8 @@ public final class PlanInterpreter {
         final List<Inst> out = new ArrayList<>(code.insts().size());
         for (final Inst inst : code.insts()) {
             // A REC ARGUMENT LIST IS A ROUTE TABLE: its members are SCHEDULED (each runs at its key's place),
-            // not free additive terms — collapsing two of them would change how many times one runs.
+            // not free additive terms. Equal lanes under ONE key are already summed by the rec itself (a => x,
+            // a => x is a => x{2}), and lanes under different keys run at different places, so they never collapse.
             if (!matches(op, inst, carrier) || inst.args().isRec() || 2 > inst.args().count()) {
                 out.add(inst);
                 continue;
@@ -1141,10 +1142,12 @@ public final class PlanInterpreter {
         boolean changed = false;
         final List<Inst> out = new ArrayList<>(code.insts().size());
         for (final Inst inst : code.insts()) {
-            // A keyed branch is a route table, not a one-term sum: inlining its single route would drop the
-            // place and run the program here instead.
-            if (matches(op, inst, carrier) && !inst.args().isRec() && 1 == inst.args().count()) {
-                final Obj member = absorb(inst.arg(0), inst.c());
+            // A REMOTE LANE IS NOT A ONE-TERM SUM: inlining a lane keyed to another host would drop the place and
+            // run the program here. A lone addressless lane runs here anyway, so it inlines as a positional one does.
+            if (matches(op, inst, carrier) && 1 == inst.args().count() && !Inst.Helper.hasRemoteLane(inst)) {
+                final Obj member = absorb(inst.args().isRec()
+                        ? inst.args().asRec().recValue().values().iterator().next()
+                        : inst.arg(0), inst.c());
                 changed = true;
                 if (member.isCall())
                     out.addAll(member.asCall().insts());

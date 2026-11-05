@@ -610,6 +610,16 @@ public interface Inst extends Call {
             return Optional.ofNullable((inst.tid().basePath().equals(FROM_INST_TID) || inst.tid().basePath().equals(AT_INST_TID)) && inst.arg(0).isUri() ? inst.arg(0).uriValue() : null);
         }
 
+        /**
+         * Whether {@code inst} is a branch with a lane keyed to a remote place (a host-bearing key). That lane is
+         * compiled and run where its key points, so a rewrite here neither inlines it nor looks inside it.
+         */
+        public static boolean hasRemoteLane(final Inst inst) {
+            return BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()
+                    && inst.args().asRec().recValue().keySet().stream()
+                    .anyMatch(key -> key.isUri() && null != key.uriValue().resolve().host());
+        }
+
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
             final AtomicInteger counter = new AtomicInteger(0);
             return recArgs.elements().map(r -> rel(r.first(), lstArgs.at(counter.getAndIncrement()))).collect(new CommonUtil.RecCollector());

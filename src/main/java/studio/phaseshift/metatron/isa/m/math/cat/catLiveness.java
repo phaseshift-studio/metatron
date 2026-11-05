@@ -186,11 +186,13 @@ public class catLiveness {
                     if (null != mapArgument(keyed, carrier))
                         profile.mapWrap = true;
                     // the additive normalizers read the members' count; whether two members are like terms is the
-                    // value residue, so a pair only licenses the collapse while a lone member always inlines
+                    // value residue, so a pair only licenses the collapse while a lone member inlines -- unless it is
+                    // keyed to a remote place, which runs there. A keyed pair never collapses: its rec already summed
+                    // equal lanes under one key, and lanes under different keys run at different places.
                     if (null != additive && additive.basePath().equals(keyed.tid().basePath())) {
-                        if (1 == keyed.args().count())
+                        if (1 == keyed.args().count() && !Inst.Helper.hasRemoteLane(keyed))
                             profile.oneTerm = true;
-                        else if (1 < keyed.args().count())
+                        else if (1 < keyed.args().count() && !keyed.args().isRec())
                             profile.repeatedTerms = true;
                     }
                 }
