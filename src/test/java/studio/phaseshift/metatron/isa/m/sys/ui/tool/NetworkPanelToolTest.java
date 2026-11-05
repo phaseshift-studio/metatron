@@ -126,24 +126,28 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
-     * The frames are OBJS, so each is drawn through the console's own serializer: a uri arrives with its color
-     * and its link, while the panel's chrome (a lane header, the arrows, the timing) never carries either.
+     * The frames are OBJS, so each is drawn through the console's serializer and highlighted as mtron: the frame
+     * carries ANSI color, while the panel's chrome (a lane header, the arrows, the timing) carries only panel
+     * markup.
      */
     @Test
     void shouldDrawTheFramesThroughTheUiSerializer() {
         WireTrace.exchange(PEER_A, null, uri("/a/b"), uri("/c/d"), System.currentTimeMillis(), 4L,
                 WireTrace.Outcome.OK);
         final List<String> lines = lines(false, 12, "", 120);
-        assertTrue(lines.get(2).contains("{{link}}"), "the sent obj is the serializer's rendering: " + lines.get(2));
-        assertTrue(lines.get(3).contains("{{link}}"), "and so is the received obj: " + lines.get(3));
-        assertFalse(lines.get(1).contains("{{link}}"), "a lane header is chrome, not a frame: " + lines.get(1));
+        assertTrue(lines.get(2).contains("\u001B["),
+                "the sent obj is colored: " + lines.get(2).replace("\u001B", "\\e"));
+        assertTrue(plain(lines.get(2)).contains("/a/b"), "and shows the obj itself: " + plain(lines.get(2)));
+        assertTrue(lines.get(3).contains("\u001B["),
+                "the received obj is colored too: " + lines.get(3).replace("\u001B", "\\e"));
+        assertFalse(lines.get(1).contains("\u001B["),
+                "a lane header is chrome, not a frame: " + lines.get(1).replace("\u001B", "\\e"));
     }
 
     /**
      * A row that overflows is CUT, and what survives stays colored: the frame is clipped BEFORE it is colored,
      * so a long request does not come out plain while its short answer is colored — which is exactly how the
-     * `send_recv …` prefix made the sent obj look unhighlighted. A frame that fits keeps the serializer's own
-     * rendering untouched.
+     * `send_recv …` prefix made the sent obj look unhighlighted. A frame that fits keeps its color too.
      */
     @Test
     void shouldKeepTheColorWhenARowIsClipped() {
@@ -153,8 +157,10 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         assertTrue(lines.get(2).contains("\u001B["),
                 "the visible part of a clipped sent obj stays colored: " + lines.get(2).replace("\u001B", "\\e"));
         assertTrue(plain(lines.get(2)).contains("…"), "and the row says it was cut: " + plain(lines.get(2)));
-        assertTrue(lines.get(3).contains("{{link}}"),
-                "a frame that fits keeps the serializer's rendering: " + lines.get(3));
+        assertTrue(lines.get(3).contains("\u001B["),
+                "a frame that fits is colored too: " + lines.get(3).replace("\u001B", "\\e"));
+        assertTrue(plain(lines.get(3)).contains("/m/answer"),
+                "and shows the answer that came back: " + plain(lines.get(3)));
     }
 
     /**
@@ -172,8 +178,8 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         assertFalse(row.contains("timeout"), "a received frame never wears the timeout label: " + row);
         assertFalse(row.contains("✗"), "and never the red cross of a missed deadline: " + row);
         assertEquals(3, lines.size(), "it is a row of its own, with nothing tabbed under it: " + lines);
-        assertTrue(lines.get(2).contains("{{link}}"),
-                "the received frame is drawn by the UI serializer: " + lines.get(2));
+        assertTrue(lines.get(2).contains("\u001B["),
+                "the received frame is colored: " + lines.get(2).replace("\u001B", "\\e"));
     }
 
     /**
@@ -246,9 +252,9 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
      * Empty is a state, and the panel names it rather than drawing a bare box.
      */
     @Test
-    void shouldSayWhenNoPeerHasSpoken() {
+    void shouldSayWhenTheWireIsQuiet() {
         final String all = String.join("\n", lines(false, 12, "", 120).stream().map(NetworkPanelToolTest::plain).toList());
-        assertTrue(all.contains("no peers have spoken"), "an empty wire says so: " + all);
+        assertTrue(all.contains("no network traffic"), "an empty wire says so: " + all);
     }
 
     /**
@@ -287,20 +293,23 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
 
     /**
      * The panel is a foldable accordion: the header's {@code [-]} folds it to just its header, and {@code [+]} (with
-     * the body line count) unfolds it again.
+     * the body line count) unfolds it again. The toggle sits right after the title, and the title carries the
+     * machine's host — so its column is read from the drawn header, not assumed from the title's length.
      */
     @Test
     void shouldFoldAndUnfold() {
         final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
         assertTrue(tool.isExpanded(), "the panel starts expanded");
-        assertTrue(tool.format().contains("[-]"), "the expanded header shows the fold marker: " + tool.format());
-        // the toggle sits right after the title: border cell + space + "net" + space, so its first cell is col 6
-        assertTrue(tool.onClick(0, 6), "clicking the toggle folds the panel");
+        final String header = plain(tool.format()).split("\n")[0];
+        final int toggle = header.indexOf("[-]");
+        assertTrue(toggle > 0, "the expanded header shows the fold marker: " + header);
+        assertTrue(tool.onClick(0, toggle), "clicking the toggle folds the panel");
         assertFalse(tool.isExpanded(), "now folded");
-        final String folded = tool.format();
+        final String folded = plain(tool.format());
         assertTrue(folded.contains("[+]"), "the folded header shows the unfold marker: " + folded);
         assertFalse(folded.contains("▼"), "and draws none of the body: " + folded);
-        assertTrue(tool.onClick(0, 6), "clicking the toggle again unfolds it");
+        final int unfold = folded.split("\n")[0].indexOf("[+]");
+        assertTrue(tool.onClick(0, unfold), "clicking the toggle again unfolds it");
         assertTrue(tool.isExpanded(), "expanded again");
     }
 
