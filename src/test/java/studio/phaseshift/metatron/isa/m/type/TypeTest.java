@@ -717,6 +717,24 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
+     * A TYPE'S VID IS ITS NAME, so it can't be set to null. {@code vid(null)} and {@code selfVID(null)} leave the name
+     * in place, for a registered type, a base type, a refinement and a generic alike: the type nulled is the same type.
+     */
+    @ParameterizedTest
+    @TestData(value = {"rec::T[?[name=>str::T]]@/m/type_test/named"})
+    @CsvSource(value = {
+            "/m/type_test/named::T",
+            "int::T",
+            "int::T[is(gt(0))]",
+            "A::T",
+    }, delimiter = '%')
+    public void testATypeVidCannotBeNulled(final String type) {
+        final Type parsed = ObjmtronSerializer.parse(type);
+        AbstractMetatronTest.checkEquality(LOG, parsed, parsed.vid(null), true);
+        AbstractMetatronTest.checkEquality(LOG, parsed, parsed.clone().selfVID(null), true);
+    }
+
+    /**
      * A NAME-ONLY TYPE REFERENCE IS NOT THE DEFINITION, for types as for instructions. Resolving one used to register
      * what it derived at the stored type's address. {@code posint::T[is(gt(100))]} replaced posint's definition with
      * the call site's predicate, and {@code bigpos::T}, whose value is that posint variant, re-registered the variant

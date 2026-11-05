@@ -243,7 +243,17 @@ public class MType extends MObj implements Type {
         // while it is itself being built
         if (null != NOOBJ_TYPE && null != tid && tid.isZero())
             return NOOBJ_TYPE;
-        return new MType((Tuple.Pair<Call, Call>) jvm, tid, vid, false);
+        return new MType((Tuple.Pair<Call, Call>) jvm, tid, null == vid ? this.vid() : vid, false);
+    }
+
+    /**
+     * A TYPE'S VID IS ITS NAME, so it can't be set to null: a null vid leaves the name in place, as a space's
+     * {@code self} does. {@code vid(null)} and {@code selfVID(null)} answer the type still named, so a detach that strips
+     * a value's address (a deep clone, a poly merge, a space write) hands a type back named.
+     */
+    @Override
+    public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
+        return super.self(jvm, tid, null == vid ? this.vid() : vid);
     }
 
     @Override
