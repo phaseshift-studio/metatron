@@ -190,7 +190,14 @@ public interface Resolver extends Component {
                         final Obj token2 = token;
                         List<Obj> branches = resolvedInst.args().values().filter(b -> !b.isNoObj()).map(branch -> branch.isCode() ? resolver.apply(token2, branch.asCode()) : branch.isInst() ? branch.resolve(token2) : branch).toList();
                         final Type domToken = token2.asType();
-                        final cInt rngC = branches.stream().map(o -> o.isCall() ? o.rng().c() : o.c()).reduce(cInt.ZERO(), cInt::plus);
+                        // a member emits its range times the coefficients of its instructions: plus{2}(2) is two ints,
+                        // not one, and a collapsed code carries its summed coefficient on an inner inst
+                        // (plus{3}(2).plus(2)) -- the multiplicity the evaluated member brings to the branch body
+                        final cInt rngC = branches.stream()
+                                .map(o -> o.isCall()
+                                        ? o.asCall().insts().stream().map(Obj::c).reduce(o.isCode() ? o.rng().c().mult(o.c()) : o.rng().c(), cInt::mult)
+                                        : o.c())
+                                .reduce(cInt.ZERO(), cInt::plus);
                         final Type rngToken = Type.Helper.findLCD(branches.stream().map(Obj::rng).toList()).c(rngC).asType();
                         final Inst branchInst2 = resolvedInst.args(lst(branches)).dom(domToken).rng(rngToken.c(rngC).asType());
                         resolvedCode.add(branchInst2);
