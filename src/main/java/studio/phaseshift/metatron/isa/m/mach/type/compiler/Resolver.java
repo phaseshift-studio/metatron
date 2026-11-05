@@ -189,7 +189,10 @@ public interface Resolver extends Component {
                     if (isBranchInst) {
                         final Obj token2 = token;
                         List<Obj> branches = resolvedInst.args().values().filter(b -> !b.isNoObj()).map(branch -> branch.isCode() ? resolver.apply(token2, branch.asCode()) : branch.isInst() ? branch.resolve(token2) : branch).toList();
-                        final Type domToken = token2.asType();
+                        // A BRANCH APPLIES PER ELEMENT, as its declared dom A says: the stream's coefficient is not its
+                        // dom. Typed int{3} off a {1,2,3} token it read as batching, so the whole stream reached the
+                        // body as ONE lhs and each member's results were stamped with the stream's count
+                        final Type domToken = token2.c().isZero() ? token2.asType() : token2.asType().c(cInt.ONE()).asType();
                         // a member emits its range times the coefficients of its instructions: plus{2}(2) is two ints,
                         // not one, and a collapsed code carries its summed coefficient on an inner inst
                         // (plus{3}(2).plus(2)) -- the multiplicity the evaluated member brings to the branch body
