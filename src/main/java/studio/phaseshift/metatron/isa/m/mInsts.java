@@ -24,12 +24,14 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -49,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -1155,31 +1158,55 @@ public final class mInsts {
                                 an ordered call is the local branch: each member applied at current machine.
                                 a keyed call routes: `place => program` evaluates the lhs through the program at that
                                 place, an addressless key (or `local`) runs it here, and a host-bearing key with no
-                                dialed peer is unreachable. arguments are blocked, so a call is not computed here.
+                                dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
+                                only that verb at its place, so a client that reads and writes but runs no program serves
+                                it. remote places run concurrently. arguments are blocked, so a call is not computed here.
                                 """)
                         .body((lhs, inst) -> {
                             if (!inst.args().isRec())
                                 // the member's own application already carries its multiplicity (an inst's
                                 // coefficient, or a code's head-inst coefficient); the branch contributes its lhs
                                 return objs(inst.args().elements().map(o -> o.apply(lhs).c(c -> lhs.c().mult(c))));
-                            return objs(inst.args().asRec().elements()
+                            // THE REMOTE LANES FAN OUT: each is submitted on its own virtual::T (FutureObj.async, whose
+                            // worker inherits this thread's machine) before any is awaited, so the round trips overlap
+                            // and the branch waits once, for the slowest lane, not for their sum
+                            final Network network = Machine.current().network();
+                            final List<Obj> lanes = inst.args().asRec().elements()
                                     // the args frame carries the lhs under the reserved `lhs` key (Processor)
                                     .filter(kv -> !uri(LHS).equals(kv.first()))
                                     .map(kv -> {
                                         final fURI place = kv.first().uriValue().resolve();
+                                        // an addressless key is a logical place: run the program where the code stands
+                                        if (null == place.host())
+                                            return kv.second().apply(lhs).c(c -> lhs.c().mult(c));
                                         final List<Inst> program = kv.second().isCall()
                                                 ? kv.second().asCall().insts()
                                                 : List.of((Inst) map_(kv.second()).tryToInst());
-                                        final Obj route = null == place.host()
-                                                ? noobj()
-                                                : Machine.current().network().overrideOf(place, EVAL_INST_TID);
-                                        if (route.isObjInst())
-                                            return route.apply(start_(lhs).addInsts(program));
-                                        if (null != place.host())
-                                            throw Network.Helper.unreachable(Machine.current(), EVAL_INST_TID, place);
-                                        // an addressless key is a logical place: run the program where the code stands
-                                        return kv.second().apply(lhs).c(c -> lhs.c().mult(c));
-                                    }));
+                                        // A READ OR A WRITE NEEDS NO EVAL: a lane that is one from(</path>) or one
+                                        // to(</path>) goes through the machine's own door to the place (its client's
+                                        // from/to, else its eval), so a client that reads and writes but runs no program
+                                        // -- http_client::T, GET and POST -- serves the lane
+                                        final Inst only = 1 == program.size() ? program.getFirst() : null;
+                                        final fURI verb = null != only
+                                                && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
+                                                && only.arg(0).isUri() && only.arg(0).uriValue().isAbsolute()
+                                                ? only.tid().basePath()
+                                                : EVAL_INST_TID;
+                                        final Obj eval = network.overrideOf(place, EVAL_INST_TID);
+                                        if (!eval.isObjInst() && (EVAL_INST_TID.equals(verb) || !network.overrideOf(place, verb).isObjInst()))
+                                            throw Network.Helper.unreachable(Machine.current(), verb, place);
+                                        // the lane's own address homed at the place, its query kept (from(</x?docq>))
+                                        final fURI address = EVAL_INST_TID.equals(verb) ? place : only.arg(0).uriValue().origin(place);
+                                        return FutureObj.async(instLambda((l, i) -> FROM_INST_TID.equals(verb)
+                                                ? Machine.read(address)
+                                                : TO_INST_TID.equals(verb)
+                                                ? Machine.write(address, l)
+                                                : eval.apply(start_(l).addInsts(program))), lhs);
+                                    })
+                                    .toList();
+                            return objs(lanes.stream().map(lane -> lane instanceof FutureObj<?> answer
+                                    ? MTronException.wrap(() -> (Obj) answer.get())
+                                    : lane));
                         })
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
