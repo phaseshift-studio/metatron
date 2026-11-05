@@ -252,7 +252,13 @@ public abstract class LawTable {
         final Entry staged = declaredEntry(PendingWrites.find(stagingAddress(instTid)));
         if (null != staged)
             return staged;
-        return declaredEntry(decOf(instTid));
+        // THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
+        // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a row is inherited
+        // through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused
+        final Obj stored = decOf(instTid);
+        final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
+        return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
+                ? null : declaredEntry(stored);
     }
 
     /**
