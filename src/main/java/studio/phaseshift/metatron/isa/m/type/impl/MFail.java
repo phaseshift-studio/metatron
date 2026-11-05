@@ -37,15 +37,20 @@ import static studio.phaseshift.metatron.furi.q.QCollection.INCRQ;
 public class MFail extends MObj implements Fail {
 
     /**
-     * The per-machine fail stack: a fail lands under the machine it executes in.
+     * The per-machine fail stack: a fail raised outside any evaluation lands in the processor of the machine it
+     * executes in ({@code ~/processor/fail}).
      */
     public static fURI failStackPattern() {
-        // ~/sys/fail: resolved to the current machine's vid (<vid>/sys/fail/_) when written.
-        return f("~/processor/fail").extend("_").addQ(INCRQ);
+        // ~ resolves to the current machine's vid (<vid>/processor/fail/_) when written
+        return failStackPattern(f("~/processor"));
     }
 
+    /**
+     * The fail stack of {@code baseVID}: its fails are filed at {@code <baseVID>/fail/_?incrq}. An evaluation's stack
+     * is under the computer that ran it ({@code ~/processor/computer/<n>/fail}).
+     */
     public static fURI failStackPattern(final fURI baseVID) {
-        return baseVID.extend("_").addQ(INCRQ);
+        return baseVID.extend("fail").extend("_").addQ(INCRQ);
     }
 
     /**
@@ -60,7 +65,7 @@ public class MFail extends MObj implements Fail {
 
     /**
      * THE FAIL-STACK ENTRY POINT: address an unaddressed fail at {@code pattern} — the machine's
-     * {@code ~/sys/fail/_?incrq} ({@link #failStackPattern()}) — and answer it with that address. A fail that
+     * {@code ~/processor/fail/_?incrq} ({@link #failStackPattern()}) — and answer it with that address. A fail that
      * already has a vid is answered as it stands (it is already filed).
      */
     public static Fail incrStackWrap(final Fail fail, final fURI pattern) {
@@ -126,7 +131,7 @@ public class MFail extends MObj implements Fail {
      * and back-links — it simply has no address, because an address is what REPORTING gives it ({@code
      * incrStackWrap} at the console, the wire reply, the http/mcp reply). Minting used to file as it minted, so every
      * question the engine asks — a type test applying a predicate, a rewrite matcher trying a rule, a parser probing
-     * text — left a frame in {@code ~/sys/fail} for a failure that never happened to anyone.
+     * text — left a frame in the fail stack for a failure that never happened to anyone.
      */
     public static Fail transientFail(final Throwable t) {
         // NOTHING BUT THE MINT. No filing (see the doc above) and no chain walk: `ensureFailRefs` follows

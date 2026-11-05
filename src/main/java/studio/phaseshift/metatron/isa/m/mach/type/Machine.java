@@ -493,6 +493,12 @@ public interface Machine extends Rec, AutoCloseable {
         // read the child back at its vid, which is what `move(<child>)` resolves.
         CURRENT.set(child);
         Helper.bootstrap(child);
+        // ... and its own PROCESSOR, of this machine's architecture: a processor indexes the computers its machine mints
+        // and holds that machine's fail stacks (~/processor/computer/<n>, ~/processor/fail), so the instance the clone
+        // shares with this machine filed the child's evaluations, and their fails, in this machine's. Minted once the
+        // child's sphere is bound, so its write at <child>/processor is the child's.
+        final Processor processor = this.processor();
+        child.jvm().put(uri(PROCESSOR), processor.clone(new LinkedHashMap<>(), processor.tid(), childVID.extend(PROCESSOR)).parent(child));
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
         Machine.root().memory().write(childVID, child);
@@ -626,8 +632,9 @@ public interface Machine extends Rec, AutoCloseable {
          * Mount this machine's own data level and bind its sphere. The data level is a space with pattern
          * {@code <vid>/#}, so {@code ~/thread} and every other address of the machine's data resolve there as space
          * values, not through any vid intercept. The sphere ({@link MachineSpace}) — which {@link #read}/{@link #write}
-         * ask before the network and memory — answers the machine itself and its components, and holds its system
-         * information ({@code ~/sys/fail}, {@code ~/sys/log}, …) in its own store. Called for the root in
+         * ask before the network and memory — answers the machine itself and its components (a fail stack, such as
+         * {@code ~/processor/fail}, is written into the processor), and holds its system information
+         * ({@code ~/sys/log}, …) in its own store. Called for the root in
          * {@link AbstractMachine}'s constructor and for each child in {@link #push(fURI)}.
          * <p>
          * Everything here goes through {@code machine.memory()} or the sphere itself at a resolved address, because
@@ -646,7 +653,7 @@ public interface Machine extends Rec, AutoCloseable {
                 // each machine its own level: own, no leak up, no leak across — by construction rather than by accident.
                 final memSpace machineSpace = memSpace.unregistered(resolved.extend(ALL), resolved.extend(SPACE));
                 // The machine's own address space carries the same q-processors as the sphere's ~/sys store: an address
-                // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/sys/fail
+                // that lands here (a machine that mints no sphere of its own — a peer machine, say — resolves ~/processor/fail
                 // into this catch-all) must still find the processor its ?q names, or the write is refused as unattached.
                 machineSpace.addQ(QCollection.docQ());
                 machineSpace.addQ(QCollection.decQ());

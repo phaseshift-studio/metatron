@@ -11,7 +11,7 @@ txt = open(log, encoding="utf-8", errors="replace").read().splitlines()
 DOC_MARK  = re.compile(r"\bprocess(?:ing)?[^\w]*(\S+\.(?:adoc|md|MD|AdOc))", re.I)
 DONE_MARK = re.compile(r"processed\s+(\S+\.md)", re.I)
 BUG_MARK  = re.compile(r"no \[ERROR\] modifier in code block \(docs are buggy\): fail::\[(.*)")
-FAILREF   = re.compile(r"@/sys/fail/(\d+)")
+FAILREF   = re.compile(r"@(/processor(?:/computer/\d+)?/fail/\d+)")
 
 def clean(doc: str) -> str:
     return doc.rstrip(".").lower()
@@ -54,7 +54,7 @@ for i, ln in enumerate(txt):
         for j in range(i, min(i + 10, len(txt))):
             fr = FAILREF.search(txt[j])
             if fr:
-                ref = "/sys/fail/" + fr.group(1)
+                ref = fr.group(1)
                 break
         rows.append((cur or "(unknown)", classify(bm.group(1)), ref))
 

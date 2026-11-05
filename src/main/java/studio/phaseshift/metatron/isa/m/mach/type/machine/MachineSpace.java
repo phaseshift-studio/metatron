@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach.type.machine;
 
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -51,8 +52,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *     <li>{@code <vid>/network/…} — the network's own branch: the component answers from its rec as it stands, a field
  *     is written in place, and a member (a peer, a listener) is constructed, never written — {@code -> noobj} retracts
  *     it ({@link studio.phaseshift.metatron.isa.m.mach.type.network.BasicNetwork});</li>
+ *     <li>{@code <vid>/processor/…} — the processor, read live and written in place: the computers it indexes
+ *     ({@code computer/<n>}) and the fail stacks, the machine's ({@code fail}) and each evaluation's under the computer
+ *     that ran it ({@code computer/<n>/fail}), whose {@code ?incrq} keys this space's q-processors mint;</li>
  *     <li>{@code <vid>/<component>/…} — any other component, read live;</li>
- *     <li>{@code <vid>/sys/#} — threads, processors, fails and the log sink, held in this space's OWN store (it is a
+ *     <li>{@code <vid>/sys/#} — threads, processors and the log sink, held in this space's OWN store (it is a
  *     {@link memSpace} for that), with the q-processors {@code ~/sys} speaks: Marko, 2026-10-25, "I would have sys/#
  *     simply go into MachineSpace". {@code ~/sys} is a holding area: its parts are expected to move, over time, into
  *     the components they belong to. A space in memory that claims an address beneath it more specifically (a schema
@@ -64,8 +68,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * and so is a QUERY on the machine or on a component other than the network ({@code ~/processor?docq}): the
  * q-processors that answer it are memory's, and the component itself is not the answer.
  * <p>
- * The machine's own writes are the network branch's and {@code ~/sys}'s; the machine rec's own writes and the other
- * components' still go through memory, declined here.
+ * The machine's own writes are the network branch's, {@code ~/sys}'s, and the compiler's and the processor's (folded
+ * into the component); the machine rec's own writes and the other components' still go through memory, declined here.
  */
 public final class MachineSpace extends memSpace {
 
@@ -98,8 +102,8 @@ public final class MachineSpace extends memSpace {
         this.root = machine.vid().resolve();
         this.depth = this.root.segments().size();
         this.sys = this.root.extend(SYS);
-        // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over:
-        // a fail is minted at ~/sys/fail/_?incrq, and a ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here too
+        // the q-processors ~/sys speaks — the ones the sys space in memory carried before the sphere took it over: a
+        // ?docq, ?subq, ?lockq or ?mimeq on ~/sys/… lands here, and so does a fail's ?incrq on ~/processor/…/fail
         this.addQ(QCollection.docQ());
         this.addQ(QCollection.decQ());
         this.addQ(QCollection.subQ());
@@ -192,7 +196,13 @@ public final class MachineSpace extends memSpace {
                 // THE COMPILER IS THE MACHINE'S, so a write into it is the machine's: the typer's state lives at
                 // <machine>/compiler/typer/check, and `@/compiler/typer/check >>= +[inst_dom => false]` must land
                 // there — not in memory, where the next read would never see it (the sphere answers first).
-                || (COMPILER.equals(part) && !this.yields(vid));
+                || (COMPILER.equals(part) && !this.yields(vid))
+                // THE PROCESSOR IS THE MACHINE'S TOO: it indexes the computers it mints (~/processor/computer/<n>) and
+                // holds the fail stacks, the machine's (~/processor/fail) and each evaluation's under the computer that
+                // ran it (~/processor/computer/<n>/fail). In memory, a write there walked into whatever copy of the
+                // processor rec memory last stored — its lst index, at the computer's number. A query other than the
+                // stack's ?incrq is memory's, as a query read on a component is.
+                || (PROCESSOR.equals(part) && (!vid.hasQ() || vid.hasQ(QCollection.INCRQ)));
     }
 
     /**
@@ -208,18 +218,27 @@ public final class MachineSpace extends memSpace {
     public Obj write(final fURI vid, final Obj obj) {
         if (!this.ownsWrite(vid))
             return noobj();
-        // ~/sys into this space's own store, through its q-processors (a fail's ?incrq mints its key here)
-        if (SYS.equals(this.part(vid)))
+        final String part = this.part(vid);
+        // ~/sys into this space's own store, through its q-processors (an ?incrq mints its key here)
+        if (SYS.equals(part))
             return super.write(vid, obj);
-        if (MEMORY.equals(this.part(vid)))
+        if (MEMORY.equals(part))
             return this.owner.memory().write(vid, obj);
         // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which
         // is the object the machine holds (writing the machine rec itself would re-type the whole machine)
-        if (COMPILER.equals(this.part(vid))) {
+        if (COMPILER.equals(part) || PROCESSOR.equals(part)) {
             final List<String> segments = vid.qLess().resolve().segments();
-            final String below = String.join("/", segments.subList(this.depth + 1, segments.size()));
-            this.owner.compiler().at(uri(below), obj, MUTABLE);
-            return obj;
+            final Obj below = uri(String.join("/", segments.subList(this.depth + 1, segments.size())));
+            if (COMPILER.equals(part)) {
+                this.owner.compiler().at(below, obj, MUTABLE);
+                return obj;
+            }
+            // the processor's goes through the q-processors this space speaks, so a fail's ?incrq mints its key in the
+            // stack it is filed in
+            return QProc.Layer.write(this, vid, obj, () -> {
+                this.owner.processor().at(below, obj, MUTABLE);
+                return obj;
+            });
         }
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
         return this.owner.network().write(vid, obj);

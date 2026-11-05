@@ -414,10 +414,10 @@ public interface WebSocketObj extends Rec, Closeable {
                     // address the transport used to find this slot — and it belongs to the connection, not to the
                     // failure. Handing it to the caller would make a transport tag the fail's identity, so it is
                     // stripped and the fail is thrown into THIS machine's fail stack, which stamps it with the next
-                    // incr id (~/sys/fail/_?incrq, MFail.failStackPattern) — the address a locally raised fail gets.
+                    // incr id (~/processor/fail/_?incrq, MFail.failStackPattern) — the address a locally raised fail gets.
                     if (lhs.isFail() || lhs.isCaughtFail()) {
                         // THE FACTORY IS THE FILER: fail(...) mints an UNCAUGHT fail and writes it at the machine's
-                        // fail stack (~/sys/fail/_?incrq), so the fail the caller receives is addressed where THIS
+                        // fail stack (~/processor/fail/_?incrq), so the fail the caller receives is addressed where THIS
                         // machine raises its fails — never at the tag the connection minted to find the slot, and
                         // never as a caught fail (which is what the wire carries, since an uncaught frame would skip
                         // the handler's function). The peer's message and cause chain ride through unchanged.

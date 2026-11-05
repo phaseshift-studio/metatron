@@ -407,13 +407,14 @@ public abstract class AbstractMachineTest extends AbstractMetatronTest {
     }
 
     /**
-     * The machine's own level must stay covered: {@code ~/sys/fail} by the machine's sphere, which holds {@code ~/sys}, and
-     * {@code ~/thread} by the infra space in memory — a narrowed pattern or a lost sphere de-homes either silently.
+     * The machine's own level must stay covered: {@code ~/processor/fail} by the machine's sphere, which holds the
+     * processor, and {@code ~/thread} by the infra space in memory — a narrowed pattern or a lost sphere de-homes
+     * either silently.
      */
     @Test
     public void testBootstrapInfraSpaceCoversTheMachinesOwnLevel() {
-        assertSame(Machine.root().space(), Machine.Helper.sphereOf(Machine.root(), f("/sys/fail/_")),
-                "~/sys/fail must stay covered by the machine's sphere");
+        assertSame(Machine.root().space(), Machine.Helper.sphereOf(Machine.root(), f("/processor/fail/_")),
+                "~/processor/fail must stay covered by the machine's sphere");
         assertNotNull(Machine.root().memory().findSpace(f("/thread/main")),
                 "~/thread must stay covered by the machine's infra space");
         assertInstanceOf(Rec.class, Machine.root().network().roster(),

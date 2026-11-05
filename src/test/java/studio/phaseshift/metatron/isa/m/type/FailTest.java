@@ -87,10 +87,10 @@ public class FailTest extends AbstractObjTest {
     @Disabled
     @TestData(value = {"1.plus(b)"}, oneTime = true)
     @CsvSource(value = {
-            "*~/sys/fail/+.count().to(xyzabc).gt(0)                                                            % true",
-            "*~/sys/fail/+.count()                                                                             % *xyzabc",
-            "*~/sys/fail/+.catch(_).count().eq(*xyzabc)                                                        % true",
-            //"*~/sys/fail/+.catch(_).count()                                                                    % 0",
+            "*~/processor/computer/+/fail/+.count().to(xyzabc).gt(0)                                           % true",
+            "*~/processor/computer/+/fail/+.count()                                                            % *xyzabc",
+            "*~/processor/computer/+/fail/+.catch(_).count().eq(*xyzabc)                                       % true",
+            //"*~/processor/computer/+/fail/+.catch(_).count()                                                   % 0",
     }, delimiter = '%')
     public void testFailStackAndCatch(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -222,7 +222,7 @@ public class FailTest extends AbstractObjTest {
 
     /**
      * MINTING FILES NOTHING; REPORTING GIVES THE ADDRESS. A fail is a value the moment it is minted — tid, message,
-     * cause chain — but the {@code ~/sys/fail/N} address belongs to the boundary that shows it to someone (the
+     * cause chain — but the {@code ~/processor/fail/N} address belongs to the boundary that shows it to someone (the
      * console result line, a ws/http/mcp reply, the headless {@code -e} output). That is what keeps a PROBE free:
      * a type test or a rewrite matcher asks its question with an application, and "no" must not leave a frame in
      * the machine's ledger.
@@ -248,12 +248,15 @@ public class FailTest extends AbstractObjTest {
     public void testATypeProbeFilesNothing() {
         final long before = failStackDepth();
         assertFalse(Machine.parse("start(1)").apply().test(T(CODE_TID)), "an int is not a code::T");
-        assertEquals(before, failStackDepth(), "a type test must not file into ~/sys/fail");
+        assertEquals(before, failStackDepth(), "a type test must not file into a fail stack");
     }
 
+    /**
+     * every fail filed in this machine: its own stack, and each evaluation's under the computer that ran it
+     */
     private static long failStackDepth() {
-        final Obj stack = Machine.read(f("~/sys/fail/+"));
-        return stack.isNoObj() ? 0 : stack.stream().count();
+        return Machine.read(f("~/processor/fail/+")).stream().count()
+                + Machine.read(f("~/processor/computer/+/fail/+")).stream().count();
     }
 
     @Test
@@ -309,10 +312,10 @@ public class FailTest extends AbstractObjTest {
     @Test
     public void testReadingTheFailStackDoesNotGrowIt() {
         fail("loop probe: reading the stack must not stack");
-        final long before = ObjmtronSerializer.parse("*~/sys/fail/+").apply().stream().count();
+        final long before = ObjmtronSerializer.parse("*~/processor/fail/+").apply().stream().count();
         for (int i = 0; i < 3; i++)
-            ObjmtronSerializer.parse("*~/sys/fail/").apply();
-        assertEquals(before, ObjmtronSerializer.parse("*~/sys/fail/+").apply().stream().count(),
+            ObjmtronSerializer.parse("*~/processor/fail/").apply();
+        assertEquals(before, ObjmtronSerializer.parse("*~/processor/fail/+").apply().stream().count(),
                 "reading the fail stack must not append to it");
     }
 

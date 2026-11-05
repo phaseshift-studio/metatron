@@ -95,8 +95,9 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     // ======================== Constructors & factories ========================
 
     public BasicSwarmComputer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        // ~/processor: machine-agnostic — resolved to the current machine's vid on write (and selfVID-stamped).
-        super(jvm, tid, null == vid ? f("/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
+        // ~/processor/computer/<n>: the computer is written into the processor of the machine it is minted in, which
+        // indexes it by <n> (~ resolves to that machine's vid on write) -- its evaluation's fails are filed beneath it
+        super(jvm, tid, null == vid ? f("~/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())) : vid);
         PROCESSORS.incrementAndGet();
         // Ensure machine state fields exist with defaults
         final Map<Obj, Obj> cache = new LinkedHashMap<>(this.jvm().getOrDefault(uri(CACHE), rec()).recValue());
@@ -114,7 +115,7 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
     public static BasicSwarmComputer of(final Call code) {
         return new BasicSwarmComputer(
                 mutableMap(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID, null))),
-                MACH_SWARM_COMPUTER_TID, f("/processor/computer").extend(String.valueOf(PROCESSOR_COUNTER.incrementAndGet())));
+                MACH_SWARM_COMPUTER_TID, null);
     }
 
     public static BasicSwarmComputer of(final Obj start, final Code code) {
@@ -184,10 +185,8 @@ public class BasicSwarmComputer extends VirtualThread implements Computer {
      * found and mutated in-place.
      */
     private Inst makeOnHalt() {
+        // a halted fail is already filed in this computer's stack by the halt loop, before any hook is invoked
         return MInst.instC(mInstSet.CATCH_INST_TID.dom(ALL_STAR.any()).rng(NOOBJ_TID), lst(), o -> {
-            if (o.isFail()) {
-                MFail.incrStackWrap(o.asFail(), MFail.failStackPattern(this.vid()));
-            }
             final Obj h = this.jvm().getOrDefault(uri(CACHE), rec()).recValue().get(uri(HALTED));
             if (null != h && h.isObjs())
                 ((List<Obj>) h.asObjs().jvm()).add(o);
