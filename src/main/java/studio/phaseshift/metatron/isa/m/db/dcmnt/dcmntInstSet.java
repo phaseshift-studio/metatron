@@ -273,6 +273,10 @@ public class dcmntInstSet extends AbstractInstSet {
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
                                     }
+                                    // MongoDB's limit(0) means "no limit", as readDocumentsAsObjs guards for the
+                                    // unfiltered take(0): the filtered one returned every match
+                                    if (limit == 0)
+                                        return noobj();
                                     final Type collectionType = collectionType(space, collectionName);
                                     return objs(IteratorUtil.stream(collection.find(filter).limit((int) limit).iterator()).map(doc -> {
                                         final Object docId = doc.get(ID_FIELD_STRING);
