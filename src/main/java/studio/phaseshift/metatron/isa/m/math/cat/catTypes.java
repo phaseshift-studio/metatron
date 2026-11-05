@@ -99,12 +99,10 @@ public class catTypes {
                         .isaPredicate(rec(
                                 uri(OBJ), INST_TYPE,
                                 uri(FORM), union_(Arrays.stream(Inst.Form.values()).map(e -> (Obj) uri(e.name())).toList()).tryToInst(),
-                                // THE MORPHISM REACHES ITS OBJECTS BY REFERENCE (auto_from), never by embedding the
-                                // registered object::T: object's predicate embeds morphism::T, so an embedded object here
-                                // closed a cycle, and each boot re-registered the previous boot's staged objects one level
-                                // deeper (x4 rendered size per test class, measured 443 -> 842,361 chars after five). One
-                                // edge by reference breaks the cycle; the list slots keep T(...) because an auto_from in a
-                                // lst slot resolves against the value lst (a vid-less type) and fails the check.
+                                // THE CATEGORY GRAPH IS BY REFERENCE (auto_from): morphism and object name each other
+                                // and never embed the registered type -- an embedded pair closed a cycle, and each boot
+                                // re-registered the previous boot's staged objects one level deeper (x4 rendered size per
+                                // test class, measured 443 -> 842,361 chars after five)
                                 uri(SRC).maybe(), auto_from_(OBJECT_TID).tryToInst(),
                                 uri(TRGT).maybe(), auto_from_(OBJECT_TID).tryToInst(),
                                 uri(ANALYSIS).maybe(), T(REC_TID),
@@ -166,8 +164,8 @@ public class catTypes {
                         .vid(OBJECT_TID, "a type as a categorical object incident to targeting morphisms and sourcing morphisms")
                         .isaPredicate(rec(
                                 uri(OBJ), TYPE_TYPE,
-                                uri(MORPHED_TO).maybe().asUri(), lst(T(MORPHISM_TID)),
-                                uri(MORPHED_FROM).maybe().asUri(), lst(T(MORPHISM_TID)),
+                                uri(MORPHED_TO).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
+                                uri(MORPHED_FROM).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
                                 uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
                                 uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
                                 uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
@@ -246,7 +244,7 @@ public class catTypes {
                         .tid(CATEGORY_TID)
                         .vid(ABSTRACTION_TID, "code lifted pointwise along \\(\\alpha\\) into the classification alphabet — the pure search surface a plan's selector reads")
                         .isaPredicate(rec(
-                                uri(OBJ), lst(T(MORPHISM_TID)),
+                                uri(OBJ), lst(auto_from_(MORPHISM_TID).tryToInst()),
                                 uri(WHERE).maybe(), lst(T(CATEGORY_TID))), Map.of(
                                 uri(OBJ), "the abstract word \\(\\alpha(f_1 \\cdot \\ldots \\cdot f_n) = \\alpha(f_1) \\cdot \\ldots \\cdot \\alpha(f_n)\\): each chain instruction as its \\(\\mathrm{morphism}\\) carrying law, form, class and analysis, with the ORIGINAL inst in \\(\\mathrm{obj}\\) so \\(\\gamma\\) (walk \\(\\mathrm{obj}\\) in order) recovers the exact code",
                                 uri(WHERE).maybe(), "the α place-class word: the located path's places as a list (the α image of \\(\\mathrm{path}.\\mathrm{where}\\) / \\(\\mathrm{path}.\\mathrm{origin}\\)) — the surface a placement guard reads"))

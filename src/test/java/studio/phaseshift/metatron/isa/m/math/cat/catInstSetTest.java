@@ -124,6 +124,22 @@ public class catInstSetTest extends AbstractInstSetTest {
         ends.forEach(end -> assertTrue(Obj.Helper.isAutoPointer(end), "a morphism end is an auto_from reference, not an embedded object::T: " + end));
     }
 
+    /**
+     * ... AND THE OBJECT REACHES ITS MORPHISMS BY REFERENCE: morphed_to and morphed_from are lsts of auto_from
+     * references to morphism::T, so neither type of the category graph embeds the other.
+     */
+    @Test
+    public void testTheObjectReachesItsMorphismsByAddress() {
+        final Rec slots = T(catInstSet.OBJECT_TID).predicate().asInst().arg(0).asRec();
+        final List<Obj> edges = slots.elements()
+                .filter(slot -> slot.firstDirect().isUri() && List.of(MORPHED_TO, MORPHED_FROM).contains(slot.firstDirect().uriValue().name()))
+                .map(Rel::secondDirect)
+                .toList();
+        assertEquals(2, edges.size(), "object::T declares morphed_to and morphed_from: " + slots);
+        edges.forEach(edge -> assertTrue(edge.isLst() && Obj.Helper.isAutoPointer(edge.lstValue().getFirst()),
+                "an object edge is a lst of auto_from references, not of embedded morphism::T: " + edge));
+    }
+
     @Test
     public void testIntFamilyShipsItsAlgebra() {
         // the declarations ship with the Int registrations — read the shipped algebra back through ?catq
