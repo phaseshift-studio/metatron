@@ -471,7 +471,9 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,3,3,4,5}.plus(10).sum().profile()  % start().select().select().merge().profile_collate() % 2",
+            // profile_collate is a PLAN's product, deliberately not an instruction of the ISA, so no short name
+            // resolves to it: the expected form spells the address the plan emits
+            "{1,3,3,4,5}.plus(10).sum().profile()  % start().select().select().merge()./m/inst/profile_collate() % 2",
     }, delimiter = '%')
     void test_U_profiling_index(final String code, final String expectedRewriteForm, final String expectedResult) {
         // COLUMN 2 -- THE REWRITE FORM: the emitted master chain, op by op. A profiling chain must end in
