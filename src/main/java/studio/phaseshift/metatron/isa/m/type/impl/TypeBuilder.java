@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -635,7 +636,8 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
      * <p>
      * THE RETAINED LOG IS WHAT REPLAYS IT: {@code PendingWrites} keeps every staged write, so the set's own
      * {@code drainUnder} at mount publishes the type, its algebra and its documentation again, into whatever fresh
-     * space that mount built. Nothing is replayed here, and no second registry holds it.
+     * space that mount built. The one thing published here is the INSTRUCTIONS the type declared, because a contract
+     * may live at another set's address, beyond that drain.
      *
      * @param type    the type whose declaration is republished by the mount's drain
      * @param instSet the instruction set that registers it (null replays the declaration alone)
@@ -660,6 +662,14 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
         // A DIRECT PUT, NEVER `at(..., MUTABLE)`: Rec.at APPENDS when the entry already holds an Objs,
         // which doubles the coefficients on every registration (the trap BasicInstSet.refer documents).
         instSet.jvm().put(uri(Tokens.INST), lst(new ArrayList<>(rows.values())));
+        // ... AND THE CONTRACTS THEMSELVES. A type may declare a contract at ANOTHER set's address (geo:point's
+        // as(json::T) lives at /m/inst/as?...), outside this set's drainUnder, and the set that owns that address
+        // mounted before this type was built, so nothing else publishes it in this boot. The staged write is
+        // published unless the owning table already holds that exact contract (a re-mount): an address read is no
+        // test of that, since a contract's address also answers the contracts that subsume it.
+        insts.stream().map(Inst::tid).distinct()
+                .filter(tid -> Machine.read(tid.basePath()).stream().noneMatch(live -> tid.equals(live.tid())))
+                .forEach(PendingWrites::publish);
     }
 
     // ============================ the composition rules ============================
