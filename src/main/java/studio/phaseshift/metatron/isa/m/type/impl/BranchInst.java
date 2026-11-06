@@ -19,9 +19,11 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -59,8 +61,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * body runs on the bound call itself ({@link #route}).
  * <ul>
  *     <li>An ORDERED call is the local branch: each member applied where the code stands.</li>
- *     <li>A KEYED call routes: {@code place => program} runs the lhs through the program at that place. The key may
- *     mark itself {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>
+ *     <li>A KEYED call routes: {@code place => program} runs the lhs through the program at that place: a path at that
+ *     local machine ({@code <~>} this one), a host at that peer ({@link #lane}). The key may mark itself
+ *     {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
  *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await), within the key's
  *     {@code ?timeout} ({@link #thread}).</li>
@@ -148,11 +151,18 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * ONE LANE: a {@code virtual::T} running the lane where its key points, submitted and not awaited. An addressless
-     * key is a logical place, so the lane is {@code start(input).program} evaluated here — the lane at distance zero,
-     * the code a remote lane ships. The start streams the input, so a {@code {*}} dom's bag reaches a {@code {1}}
-     * program member by member, and the input's coefficient rides the start. A host-bearing key reaches its place
-     * ({@link #remote}).
+     * ONE LANE: a {@code virtual::T} running the lane where its key points, submitted and not awaited (Marko,
+     * 2026-11-05). The lane is {@code start(input).program}, the code a remote lane ships. The start streams the input,
+     * so a {@code {*}} dom's bag reaches a {@code {1}} program member by member, and the input's coefficient rides the
+     * start.
+     * <ul>
+     *     <li>A PATH is a local MACHINE, resolved as {@code Machine.fetch} resolves it (Marko, 2026-11-05): {@code <~>} and
+     *     {@code <.>} this machine, {@code <..>} its parent, {@code </.>} the root, {@code </abc>} from the root and
+     *     {@code <~/abc>} from this one. The lane's thread is submitted from that machine's perspective, so its compiler
+     *     compiles the lane and its processor runs it. A path that names no machine is refused, and a path ending in
+     *     {@code /} is a branching uri, which reads relations rather than a machine.</li>
+     *     <li>A HOST is a peer ({@link #remote}).</li>
+     * </ul>
      */
     protected Obj lane(final Rel route, final Obj input) {
         final fURI key = route.first().uriValue();
@@ -161,9 +171,11 @@ public class BranchInst extends MInst {
                 : List.of((Inst) map_(route.second()).tryToInst());
         // the key's own query (its split, its timeout) is the branch's to read, not part of the place
         final fURI place = key.resolve().qLess();
-        return null == place.host()
-                ? this.thread(start_(input).addInsts(program), key).apply(noobj())
-                : this.remote(key, place, program, input);
+        if (null != place.host())
+            return this.remote(key, place, program, input);
+        final Code code = start_(input).addInsts(program);
+        return Machine.Helper.evalAt(machInstSet.Helper.machineAt(Machine.current(), key.qLess(), "branch"),
+                () -> this.thread(code, key).apply(noobj()));
     }
 
     /**

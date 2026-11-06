@@ -257,36 +257,35 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A keyed branch call routes by its keys. A host-less key (a relative path, {@code local}) is a logical
-     * place and runs where the code stands, so these rows need no peer; a host-bearing key would ship. A key marked
-     * {@code ?split={w}part} takes its weighted share of the lhs among the marked keys, and an unmarked key (or
-     * {@code ?split=copy}) the whole lhs; any other split is refused. Under a {@code {*}} dom the share is of the
-     * bag, and under a {@code {1}} dom each application holds one member, which the first marked key takes. A split
-     * on the branch itself is every key's default, and a key's own overrides it.
+     * A keyed branch call routes by its keys. A path names a local machine ({@code <~>} and {@code <.>} this one,
+     * {@code </.>} the root, which is this test's own), and a host would ship. A bare key ({@code local}) is a path
+     * relative to this machine, and one that names no machine is refused. A key marked {@code ?split={w}part} takes its
+     * weighted share of the lhs among the marked keys, and an unmarked key (or {@code ?split=copy}) the whole lhs; any
+     * other split is refused. Under a {@code {*}} dom the share is of the bag, and under a {@code {1}} dom each
+     * application holds one member, which the first marked key takes. A query on the branch itself is every key's
+     * default, and a key's own overrides it.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "1.branch(a => plus(2))                            % 3",
-            "1.branch(a => plus(2), b => plus(3))              % {3,4}",
-            "1.branch(local => plus(2))                        % 3",
-            "1.branch(a => 23)                                 % 23",
-            "1.branch(a => plus(2), a => plus(3))              % {3,4}",
-            "1.branch(+2, +4)                                  % {3,5}",
-            "1.branch(+2, +4, +8, +16, +32)                    % {3,5,9,17,33}",
-            "1.map{2}(2).neg()                                 % {2}-2",
-            "1.branch(map{2}(2).neg(), map(4).neg())           % {{2}-2,-4}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count())                 % {2,2}",
-            "{1,2,3,4,5,6,7,8}.branch?<=int{*}(<a?split={3}part> => count(), <b?split=part> => count())      % {6,2}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count(), c => count())   % {2,2,4}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => plus(100), <b?split=part> => plus(200)).sum()       % 610",
-            "{1,2,3,4}.branch?<=int{*}(a => plus(100), b => plus(200)).sum()                                 % 1220",
-            "1.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count())                         % 1",
-            "{1,2,3,4}.branch(<a?split=part> => plus(100), <b?split=part> => plus(200))                      % {101,102,103,104}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=copy> => count())                 % {4,4}",
-            "{1,2}.branch?<=int{*}(<a?split=block> => count())                                               % <ERROR>",
-            "{1,2,3,4}.branch?split=part(<a> => plus(100), <b> => plus(200))                                   % {101,102,103,104}",
-            "{1,2,3,4}.branch?split=part(<a> => plus(100), <b?split=copy> => plus(200))                        % {101,102,103,104,201,202,203,204}",
-            "{1,2,3,4}.branch?dom=int{*}&split=part(<a> => count(), <b> => count())                            % {2,2}",
+            "1.branch(<~> => plus(2))                                                                        % 3",
+            "1.branch(<.> => plus(2))                                                                        % 3",
+            "1.branch(<~> => plus(2), </.> => plus(3))                                                       % {3,4}",
+            "1.branch(local => plus(2))                                                                      % <ERROR>",
+            "1.branch(<~> => 23)                                                                             % 23",
+            "1.branch(<~> => plus(2), <~> => plus(3))                                                        % {3,4}",
+            "1.branch(+2, +4)                                                                                % {3,5}",
+            "1.branch(+2, +4, +8, +16, +32)                                                                  % {3,5,9,17,33}",
+            "1.map{2}(2).neg()                                                                               % {2}-2",
+            "1.branch(map{2}(2).neg(), map(4).neg())                                                         % {{2}-2,-4}",
+            "{1,2,3,4}.branch?dom=int{*}&split=part(<~> => count(), </.> => count())                         % {2,2}",
+            "{1,2,3,4,5,6,7,8}.branch?dom=int{*}&split=part(<~> => count(), </.?split={3}part> => count())   % {2,6}",
+            "{1,2,3,4}.branch?dom=int{*}&split=part(<~> => plus(100), </.> => plus(200)).sum()               % 610",
+            "{1,2,3,4}.branch?<=int{*}(<~> => plus(100), </.> => plus(200)).sum()                            % 1220",
+            "1.branch?dom=int{*}&split=part(<~> => count(), </.> => count())                                 % 1",
+            "{1,2,3,4}.branch?split=part(<~> => plus(100), </.> => plus(200))                                % {101,102,103,104}",
+            "{1,2,3,4}.branch?<=int{*}(</.?split=part> => count(), <~> => count())                           % {4,4}",
+            "{1,2}.branch?<=int{*}(</.?split=block> => count())                                              % <ERROR>",
+            "{1,2,3,4}.branch?split=part(<~> => plus(100), </.?split=copy> => plus(200))                     % {101,102,103,104,201,202,203,204}",
     }, delimiter = '%')
     public void testBranchRoutes(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

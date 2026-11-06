@@ -1296,8 +1296,8 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1.branch(+2,branch(+2,plus{3}(2)))    % start(1).plus{5}(2)  % {5}3",
             // two equal NESTED branches are like terms too, once each is reduced — multiplicity 2 + 2 = 4
             "1.branch(branch(+2,+2),branch(+2,+2))  % start(1).plus{4}(2)  % {4}3",
-            // a lone addressless lane runs where the code stands, so its key drops and it inlines
-            "1.branch(local => plus(2))             % start(1).plus(2)     % 3",
+            // a lone lane keyed to this machine (<~>) runs where the code stands, so its key drops and it inlines
+            "1.branch(<~> => plus(2))               % start(1).plus(2)     % 3",
     }, delimiter = '%')
     public void testBranchFixpoint(final String code, final String expected, final String expectedResult) {
         final Code firstStage = ObjmtronSerializer.parse(code);
@@ -1333,10 +1333,12 @@ public class catInstSetTest extends AbstractInstSetTest {
             "start(1).branch(+2)                                       % branch_collapse  % false",
             "start(1).branch(+2)                                       % branch_inline    % true",
             "start(1).branch(+2,+2)                                    % branch_inline    % false",
-            // a lane keyed to a remote place runs THERE, so it is never inlined; a lone addressless lane runs here and
-            // inlines; and a keyed pair never collapses (lanes under different keys run at different places)
+            // a lane keyed to a peer or to another machine runs THERE, so it is never inlined; a lone lane keyed to this
+            // machine (<~>) runs here and inlines; and a keyed pair never collapses (lanes under different keys run at
+            // different places)
             "start(1).branch(<loop://self> => plus(2))                 % branch_inline    % false",
-            "start(1).branch(local => plus(2))                         % branch_inline    % true",
+            "start(1).branch(</.> => plus(2))                          % branch_inline    % false",
+            "start(1).branch(<~> => plus(2))                           % branch_inline    % true",
             "start(1).branch(<loop://x> => plus(2), <loop://y> => plus(2)) % branch_collapse % false",
             // a chain with no branch carries neither edge
             "start(5).plus(0).neg().neg()                              % branch_collapse  % false",
