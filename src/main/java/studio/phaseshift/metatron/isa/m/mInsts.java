@@ -1161,8 +1161,8 @@ public final class mInsts {
                                 place, an addressless key (or `local`) runs it here, and a host-bearing key with no
                                 dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
                                 only that verb at its place, so a client that reads and writes but runs no program serves
-                                it. remote places run concurrently. a key marked ?split={w}partition takes a share of the
-                                lhs by its weight w among the marked keys, and an unmarked key gets the whole lhs (copy).
+                                it. remote places run concurrently. a key marked ?split={w}part takes a share of the lhs by
+                                its weight w among the marked keys, and an unmarked key (or ?split=copy) gets the whole lhs.
                                 arguments are blocked, so a call is not computed here.
                                 """)
                         .body((lhs, inst) -> {
@@ -1178,17 +1178,25 @@ public final class mInsts {
                             final List<Rel> routes = inst.args().asRec().elements()
                                     .filter(kv -> !uri(LHS).equals(kv.first()))
                                     .toList();
-                            // THE PARTITION GROUP (Marko, 2026-11-05): a key marked ?split={w}partition shares the lhs
+                            // THE PART GROUP (Marko, 2026-11-05): a key marked ?split={w}part shares the lhs
                             // with the other marked keys by its weight w (one when unstated, as the element count is
                             // rarely known): member j of the lhs (a bulked member goes whole) goes to slot j mod W of the
                             // summed weight W, the slots dealt to the marked keys in key order, w apiece. An unmarked key
-                            // gets the whole lhs (copy). Under a {1} dom an application holds one member, always slot 0,
+                            // gets the whole lhs (copy, also ?split=copy). Under a {1} dom an application holds one member, always slot 0,
                             // so the first marked key takes them all: no round-robin state is kept across applications.
                             final long[] weights = routes.stream().mapToLong(kv -> {
-                                // the object grammar reads the leading coefficient, as ?split={2}stream and ?hop={2}4 are
                                 final String split = kv.first().uriValue().q(SPLIT);
-                                final Obj share = null == split ? noobj() : ObjmtronSerializer.parse(split);
-                                return share.isUri() && PARTITION.equals(share.uriValue().name()) ? share.c().min() : 0L;
+                                if (null == split)
+                                    return 0L;
+                                // the object grammar reads the leading coefficient ({4}part), as it reads ?hop={2}4
+                                final Obj share = ObjmtronSerializer.parse(split);
+                                if (share.isUri() && PART.equals(share.uriValue().name()))
+                                    return share.c().min();
+                                if (share.isUri() && COPY.equals(share.uriValue().name()))
+                                    return 0L;
+                                // A BRANCH PERFORMS TWO SPLITS, part and copy: any other value is refused, never read as a
+                                // copy -- a misspelled part would hand every lane the whole lhs and double-count its fold
+                                throw MTronException.of("?%s=%s is not a split a branch performs: %s or %s", SPLIT, split, PART, COPY);
                             }).toArray();
                             final long total = Arrays.stream(weights).sum();
                             final List<ArrayList<Obj>> parts = routes.stream().map(kv -> new ArrayList<Obj>()).toList();

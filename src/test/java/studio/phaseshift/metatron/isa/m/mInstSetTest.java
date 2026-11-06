@@ -259,9 +259,9 @@ public class mInstSetTest extends AbstractInstSetTest {
     /**
      * A keyed branch call routes by its keys. A host-less key (a relative path, {@code local}) is a logical
      * place and runs where the code stands, so these rows need no peer; a host-bearing key would ship. A key marked
-     * {@code ?split={w}partition} takes its weighted share of the lhs among the marked keys, and an unmarked key the
-     * whole lhs: under a {@code {*}} dom the share is of the bag, under a {@code {1}} dom each application holds one
-     * member, which the first marked key takes.
+     * {@code ?split={w}part} takes its weighted share of the lhs among the marked keys, and an unmarked key (or
+     * {@code ?split=copy}) the whole lhs; any other split is refused. Under a {@code {*}} dom the share is of the
+     * bag, and under a {@code {1}} dom each application holds one member, which the first marked key takes.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -274,13 +274,15 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.branch(+2, +4, +8, +16, +32)                    % {3,5,9,17,33}",
             "1.map{2}(2).neg()                                 % {2}-2",
             "1.branch(map{2}(2).neg(), map(4).neg())           % {{2}-2,-4}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=partition> => count(), <b?split=partition> => count())                 % {2,2}",
-            "{1,2,3,4,5,6,7,8}.branch?<=int{*}(<a?split={3}partition> => count(), <b?split=partition> => count())      % {6,2}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=partition> => count(), <b?split=partition> => count(), c => count())   % {2,2,4}",
-            "{1,2,3,4}.branch?<=int{*}(<a?split=partition> => plus(100), <b?split=partition> => plus(200)).sum()       % 610",
-            "{1,2,3,4}.branch?<=int{*}(a => plus(100), b => plus(200)).sum()                                           % 1220",
-            "1.branch?<=int{*}(<a?split=partition> => count(), <b?split=partition> => count())                         % 1",
-            "{1,2,3,4}.branch(<a?split=partition> => plus(100), <b?split=partition> => plus(200))                      % {101,102,103,104}",
+            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count())                 % {2,2}",
+            "{1,2,3,4,5,6,7,8}.branch?<=int{*}(<a?split={3}part> => count(), <b?split=part> => count())      % {6,2}",
+            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count(), c => count())   % {2,2,4}",
+            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => plus(100), <b?split=part> => plus(200)).sum()       % 610",
+            "{1,2,3,4}.branch?<=int{*}(a => plus(100), b => plus(200)).sum()                                 % 1220",
+            "1.branch?<=int{*}(<a?split=part> => count(), <b?split=part> => count())                         % 1",
+            "{1,2,3,4}.branch(<a?split=part> => plus(100), <b?split=part> => plus(200))                      % {101,102,103,104}",
+            "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=copy> => count())                 % {4,4}",
+            "{1,2}.branch?<=int{*}(<a?split=block> => count())                                               % <ERROR>",
     }, delimiter = '%')
     public void testBranchRoutes(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
