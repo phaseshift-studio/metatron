@@ -97,8 +97,8 @@ public class ExplainToolTest extends AbstractMetatronTest {
 
     @Test
     public void testArgsSummaryIsFixedWidth() {
-        final String summary = ProfileTool.argsSummary(lst(jnt(1), jnt(2)));
-        assertEquals(ProfileTool.ARGS_WIDTH, summary.length());
+        final String summary = ProfileTool.argsSummary(lst(jnt(1), jnt(2)), 24);
+        assertEquals(24, summary.length());
         assertEquals(" 1, 2", summary.substring(0, 5));   // leading pointer slot + "1, 2"
     }
 
@@ -115,5 +115,13 @@ public class ExplainToolTest extends AbstractMetatronTest {
         final List<String> tokens = ProfileTool.argTokens(rel(uri("//0"), jnt(1)));
         assertEquals(1, tokens.size());
         assertEquals("//0=>", tokens.get(0).substring(0, 5));
+    }
+
+    @Test
+    public void testArgsWidthScalesWithTerminal() {
+        assertEquals(4, ProfileTool.argsWidth(80, 0, 3));     // tiny args → floor at the min
+        assertEquals(11, ProfileTool.argsWidth(100, 0, 11));  // content-sized: 11 fits, no clip
+        assertEquals(35, ProfileTool.argsWidth(100, 0, 100)); // long args: capped at 100 - 65
+        assertEquals(51, ProfileTool.argsWidth(120, 4, 100)); // nested long: 120 - 4 - 65
     }
 }

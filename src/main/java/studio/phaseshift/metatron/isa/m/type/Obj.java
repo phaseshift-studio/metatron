@@ -1643,9 +1643,9 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .desc("a repetition function: loopback application of the code with escape/exit/emit predicates")
                             .body((lhs, inst) -> {
                                 final Obj escPredicate = inst.arg(f(ESC), 0);
-                                final Obj repeatedApply = inst.arg(f(CODE), 1);
-                                final Obj untilPredicate = inst.arg(f(UNTIL), 2);
-                                final Obj emitPredicate = inst.arg(f(EMIT), 3);
+                                final Obj repeatedApply = Machine.current().compiler().apply(inst.arg(f(CODE), 1));
+                                final Obj untilPredicate = Machine.current().compiler().apply(inst.arg(f(UNTIL), 2));
+                                final Obj emitPredicate = Machine.current().compiler().apply(inst.arg(f(EMIT), 3));
                                 final List<Obj> toEmit = new ArrayList<>();
                                 final StatefulMonad monad = StatefulMonad.of(lhs);
                                 if (escPredicate.apply(monad).booleanCheck()) {
@@ -1658,15 +1658,14 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                         final boolean loopback = monad.isLoopback();
                                         final StatefulMonad m = monad.loopback(false);
                                         final StatefulMonad repeatMonad = loopback ? m : m.pushLoop();
-                                        final Obj emitCode = emitPredicate.isCall() ? emitPredicate.<Call>as().asCode() : emitPredicate;
-                                        final boolean emit = emitCode.apply(repeatMonad).booleanCheck();
+                                        final boolean emit = emitPredicate.isBool() ? emitPredicate.boolValue() : emitPredicate.apply(repeatMonad).booleanCheck();
                                         if (emit)
                                             toEmit.add(repeatMonad.popLoop().nextInst());
                                         // wrap the predicate in code so a single-inst until (is(gt(10))) goes
                                         // through the monad lens like the multi-inst form (loop().is(gt(3))) —
                                         // applied bare, is(gt(10)) receives the whole monad and never terminates.
-                                        final Obj untilCode = untilPredicate.isCall() ? untilPredicate.<Call>as().asCode() : untilPredicate;
-                                        if (untilCode.apply(repeatMonad).booleanCheck()) {
+                                        final boolean until = untilPredicate.isBool() ? untilPredicate.boolValue() : untilPredicate.apply(repeatMonad).booleanCheck();
+                                        if (until) {
                                             if (!emit)
                                                 toEmit.add(repeatMonad.popLoop().nextInst());
                                         } else {

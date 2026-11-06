@@ -85,6 +85,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final TableWidget table;
         final int offsetX;
         final int offsetY;
+        final int argsWidth;     // the args column width for this level (terminal-derived)
         int selectedRow;
         int selectedCol;
         int selectedArg;         // -1 = column mode; >= 0 = the arg under the inline selector
@@ -103,10 +104,10 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         PanelWidget panelPopup;                              // Info panel popup (docs, type, form desc, coeff)
         final Deque<ArgFrame> argFrames = new ArrayDeque<>(); // Poly drill-down stack (args / collection navigation)
 
-        ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol, final int spawnArg) {
+        ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol, final int spawnArg, final int argsWidth) {
             this.code = code;//.resolve(noobj());
             this.rewritten = code.isResolved(false);// false;//code.insts().stream().map(Inst::tid).toList().equals(code.clone().asCode().rewrite().insts().stream().map(Inst::tid).toList());
-            this.profile = new ProfileTool(this.code);
+            this.profile = new ProfileTool(this.code, argsWidth);
             final Border border = Border.continuous.foreground("{{b}}");
             this.profile.instTable.style()
                     .headerDivider("{{[b]}} ")
@@ -117,6 +118,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             this.table = this.profile.instTable;
             this.offsetX = offsetX;
             this.offsetY = offsetY;
+            this.argsWidth = argsWidth;
             this.selectedRow = 0;  // Start at first data row (after header)
             this.selectedCol = 0;
             this.selectedArg = -1; // column mode until the args column is entered
@@ -777,11 +779,11 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final boolean window = level.selectedCol == ARGS_COL && level.selectedArg >= 0;
         final String body;
         if (window && !level.argPath.isEmpty()) {
-            body = argsCellDescended(args, level.selectedArg, level.argPath, ProfileTool.ARGS_WIDTH, base, level.pointer);
+            body = argsCellDescended(args, level.selectedArg, level.argPath, level.argsWidth, base, level.pointer);
         } else if (window) {
-            body = argsCell(ProfileTool.argTokens(args), level.selectedArg, ProfileTool.ARGS_WIDTH, base, level.pointer);
+            body = argsCell(ProfileTool.argTokens(args), level.selectedArg, level.argsWidth, base, level.pointer);
         } else {
-            body = ProfileTool.argsSummary(args);
+            body = ProfileTool.argsSummary(args, level.argsWidth);
         }
         level.table.setCell(row, ARGS_COL, base + body);
         level.windowedRow = window ? row : -1;
@@ -791,7 +793,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final Poly<?, ?> args = getMetadataArgs(level, row);
         if (args == null) return;
         final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
-        level.table.setCell(row, ARGS_COL, base + ProfileTool.argsSummary(args));
+        level.table.setCell(row, ARGS_COL, base + ProfileTool.argsSummary(args, level.argsWidth));
     }
 
     /** Underline the arg that spawned a child window, marking the parent's spawn point. */
@@ -799,7 +801,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final Poly<?, ?> args = getMetadataArgs(level, row);
         if (args == null) return;
         final String base = args.elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}";
-        level.table.setCell(row, ARGS_COL, base + argsCellSpawn(ProfileTool.argTokens(args), arg, ProfileTool.ARGS_WIDTH));
+        level.table.setCell(row, ARGS_COL, base + argsCellSpawn(ProfileTool.argTokens(args), arg, level.argsWidth));
     }
 
     /**
@@ -952,7 +954,12 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     }
 
     private void pushLevel(Code code, int offsetX, int offsetY, int spawnRow, int spawnCol, int spawnArg) {
-        ExplainLevel level = new ExplainLevel(code, offsetX, offsetY, spawnRow, spawnCol, spawnArg);
+        final int termWidth = null == this.terminal ? 0 : this.terminal.getWidth();
+        final int natural = ProfileTool.naturalArgsWidth(code);
+        final int argsWidth = termWidth > 0
+                ? ProfileTool.argsWidth(termWidth, offsetX, natural)
+                : Math.max(ProfileTool.ARGS_MIN_WIDTH, natural);
+        ExplainLevel level = new ExplainLevel(code, offsetX, offsetY, spawnRow, spawnCol, spawnArg, argsWidth);
         stack.push(level);
     }
 

@@ -46,7 +46,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
     protected Call call;
     protected TableWidget instTable;
 
-    public ProfileTool(final Call call) {
+    public ProfileTool(final Call call, final int argsWidth) {
         this.instTable = new TableWidget(List.of("op", "dom", "rng", "args", "f", "desc", "c_dom", "c_rng"));
         cInt dom = cInt.ONE();
         cInt rng = cInt.ONE();
@@ -61,7 +61,7 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
                     (found ? "{{b}}" : "{{r}}") + i.tid().name() + (i.tid().c().isOne() ? "" : ("{" + i.tid().c() + "}")),
                     i.dom().vid().small() + "::T",
                     i.rng().vid().small() + "::T",
-                    (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + argsSummary(i.args()),
+                    (i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{g}}" : "{{y}}") + argsSummary(i.args(), argsWidth),
                     i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
@@ -76,12 +76,31 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
     }
 
 
+    /** The args column is never narrower than this (the "args" header width). */
+    public static final int ARGS_MIN_WIDTH = 4;
+
+    /** The other 7 columns + dividers + padding + border, which the args column leaves room for (plus a 3-col safety margin). */
+    private static final int ARGS_NON_ARGS = 65;
+
     /**
-     * Fixed display width of the {@code args} column. Every args cell is clipped or
-     * padded to exactly this many columns, so the column never reflows while the
-     * inline selector windows across a long argument list.
+     * The args column width: wide enough to show the args without clipping (up to
+     * {@code naturalWidth}), capped at the terminal's room (minus the other columns'
+     * fixed footprint and the level's indent), never narrower than {@link #ARGS_MIN_WIDTH}.
      */
-    public static final int ARGS_WIDTH = 24;
+    public static int argsWidth(final int terminalWidth, final int offsetX, final int naturalWidth) {
+        return Math.max(ARGS_MIN_WIDTH, Math.min(naturalWidth, terminalWidth - offsetX - ARGS_NON_ARGS));
+    }
+
+    /**
+     * The width the args column needs to show every argument without a {@code …} clip —
+     * the widest row's {@code <slot> + tokens joined by ", "}.
+     */
+    public static int naturalArgsWidth(final Call call) {
+        int max = 0;
+        for (final Inst i : call.insts())
+            max = Math.max(max, Highlighter.visualLength(" " + String.join(", ", argTokens(i.args()))));
+        return max;
+    }
 
     /**
      * One display token per argument, in the order the args cell renders them: a call
@@ -102,12 +121,12 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
     }
 
     /**
-     * The args cell as plain text, clipped or padded to exactly {@link #ARGS_WIDTH}
-     * columns. The leading space is the pointer slot: the inline selector replaces it
-     * (or a comma-space) with {@code >}, so the arg text never shifts column.
+     * The args cell as plain text, clipped or padded to exactly {@code width} columns.
+     * The leading space is the pointer slot: the inline selector replaces it (or a
+     * comma-space) with {@code >}, so the arg text never shifts column.
      */
-    public static String argsSummary(final Poly<?, ?> args) {
-        return padToWidth(" " + String.join(", ", argTokens(args)));
+    public static String argsSummary(final Poly<?, ?> args, final int width) {
+        return padToWidth(" " + String.join(", ", argTokens(args)), width);
     }
 
     public static String summarizeArg(final Obj o) {
@@ -116,15 +135,15 @@ public class ProfileTool extends AbstractWidget<ProfileTool> {
                 : o.toShortString();
     }
 
-    private static String padToWidth(final String s) {
+    private static String padToWidth(final String s, final int width) {
         final int len = Highlighter.visualLength(s);
-        if (len == ARGS_WIDTH) return s;
-        if (len > ARGS_WIDTH) return clipToWidth(s);
-        return s + " ".repeat(ARGS_WIDTH - len);
+        if (len == width) return s;
+        if (len > width) return clipToWidth(s, width);
+        return s + " ".repeat(width - len);
     }
 
-    private static String clipToWidth(final String s) {
-        final int keep = Math.max(0, ARGS_WIDTH - 1);
+    private static String clipToWidth(final String s, final int width) {
+        final int keep = Math.max(0, width - 1);
         return s.substring(0, Math.min(s.length(), keep)) + "…";
     }
 
