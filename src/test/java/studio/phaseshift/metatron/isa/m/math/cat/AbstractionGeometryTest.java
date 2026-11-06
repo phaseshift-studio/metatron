@@ -170,7 +170,7 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanRewriter.planOf("law_shard"), code));
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a shipped shard writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
-        assertEquals("[//localhost=>1]", places.toString(),
+        assertEquals("[//localhost:8555=>1]", places.toString(),
                 "the AT span maps to the one place that ran, with the lane it ran: " + lifted);
     }
 
@@ -191,19 +191,19 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
                 java.util.Set.of(f("loop://mantis:8555")));
         final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum()").asCode(), env);
-        assertEquals(f("~"), emitted.insts().get(1).args().asRec().elements().toList().getFirst().first().uriValue(),
+        assertEquals(f("~"), emitted.insts().getFirst().args().asRec().elements().toList().getFirst().first().uriValue(),
                 "the home lane's key is <~>: " + emitted);
         final Obj lifted = catInstSet.realized(emitted);
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a home lane writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
-        assertEquals("[local=>1,//localhost=>1]", places.toString(),
+        assertEquals("[local=>1,//localhost:8555=>1]", places.toString(),
                 "both lanes are realized: the home one as `local`, the shipped one by its authority: " + lifted);
     }
 
     /**
      * THE REALIZED DEMANDS, NOT JUST WHO RAN — {@code ?place=[//ginger,//ginger,//booger]} asks ginger for two shares
      * and booger for one, and the emitted layout runs exactly that (ginger's key weighted {@code {2}part}), so
-     * {@code path.where} records the COUNTS against the designators: {@code [[span=><at]=>[//ginger=>2,//booger=>1]]}.
+     * {@code path.where} records the COUNTS against the designators: {@code [[span=><at]=>[//ginger:8555=>2,//booger:8555=>1]]}.
      * This is the realized share count the emitter clamped to, not the declared band — the rec is the weighted
      * {@code ?place} spelling, so the read-back is a place set again.
      */
@@ -215,19 +215,19 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final Obj lifted = catInstSet.realized(emitted);
         final Obj demands = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
-        assertEquals("[//ginger=>2,//booger=>1]", demands.toString(),
+        assertEquals("[//ginger:8555=>2,//booger:8555=>1]", demands.toString(),
                 "each realized place carries the shares it actually ran: " + lifted);
         assertEquals(2, demands.asRec().jvm().size(), "and only the places that ran are recorded: " + lifted);
     }
 
     /**
-     * An effect stays home: no {@code branch} is emitted, so no realized {@code where} is written — the code stays
-     * un-rec'd.
+     * A lower that ships nothing writes no {@code where}: copy on a fold that is not idempotent declines, so no
+     * {@code branch} is emitted and the code stays un-rec'd.
      */
     @Test
     public void testUnshippedLowerHasNoWhere() {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
-        final Code code = ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).side(plus(1)).sum()").asCode();
+        final Code code = ObjmtronSerializer.parse("start?split=copy({1,2,3,4,5,6}).plus(1).sum()").asCode();
         final Obj lifted = catInstSet.realized(PlanInterpreter.lower(PlanRewriter.planOf("law_shard"), code));
         assertTrue(lifted.isCode(), "an unshipped lower leaves the code as-is (no realized where): " + lifted);
     }

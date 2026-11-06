@@ -22,20 +22,13 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static studio.phaseshift.metatron.Tokens.PART;
 import static studio.phaseshift.metatron.Tokens.SPLIT;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
  * The reduction (master/slave) reading of a {@link DistributedComputation}: one local master whose code carries the
@@ -82,19 +75,17 @@ public final class Reduction {
      * The keyed lanes of the fan-out {@code branch}, {@code place => program} in key order — or empty when the code
      * carries no such branch.
      * <p>
-     * THE MARKER IS THE EMITTER'S OWN PREFIX, not "the first branch anywhere". {@code PlanInterpreter.shard} emits
-     * exactly {@code <seed>.branch(place => program, …).<combiner>…}, so a shard-planned code has its {@code start} at 0
-     * and the keyed branch at 1. A user {@code branch} in a chain the plan declined must NOT read as a fan-out: its
-     * members are not the plan's lanes, so {@link #slaves(Code)}/{@link #routes(Code)} read no lanes rather than misread.
+     * THE FIRST KEYED BRANCH IS THE FAN-OUT. {@code PlanInterpreter.shard} emits exactly one: at the head when the plan
+     * dealt a literal seed into the lanes ({@code branch?<={0}(<p> => start(part)…, …).<combiner>}), after the prefix
+     * that stays home when the bag is computed ({@code <prefix>.branch?<=T{*}&split=part(…).<combiner>}). The plan
+     * never plans around a keyed branch, so a chain it declined holds none it emitted.
      */
     private static List<Rel> lanes(final Code master) {
-        final List<Inst> insts = master.insts();
-        if (2 > insts.size()
-                || !START_INST_TID.equals(insts.getFirst().tid().basePath())
-                || !BRANCH_INST_TID.equals(insts.get(1).tid().basePath())
-                || !insts.get(1).args().isRec())
-            return List.of();
-        return insts.get(1).args().asRec().elements().toList();
+        return master.insts().stream()
+                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
+                .findFirst()
+                .map(inst -> inst.args().asRec().elements().toList())
+                .orElse(List.of());
     }
 
     /**
@@ -103,46 +94,25 @@ public final class Reduction {
      * was not shard-planned.
      */
     public static List<String> splits(final Code master) {
-        final List<Rel> lanes = lanes(master);
-        return lanes.isEmpty() ? List.of() : lanes.stream()
+        final Inst branch = master.insts().stream()
+                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
+                .findFirst().orElse(null);
+        return null == branch ? List.of() : lanes(master).stream()
                 .map(lane -> lane.first().uriValue())
-                .map(key -> key.hasQ(SPLIT) ? key.q(SPLIT) : master.insts().get(1).tid().q(SPLIT))
+                .map(key -> key.hasQ(SPLIT) ? key.q(SPLIT) : branch.tid().q(SPLIT))
                 .toList();
     }
 
     /**
-     * The code each lane RUNS, one per route and in the same order: {@code start(part).program}, exactly as the branch
-     * builds it where the lane's key points ({@code BranchInst#lane}). The part is the one the branch deals the lane at
-     * run time, by its rule ({@code BranchInst#deal}): member {@code j} of the seed goes to slot {@code j mod W} of the
-     * summed weight {@code W}, the slots dealt to the weighted keys in key order, {@code w} apiece ({@code {w}part},
-     * one for a bare {@code part}), while a copy key takes the whole seed. Empty when the code was not shard-planned.
+     * The code each lane RUNS, one per route and in the same order. A lane the plan seeded runs exactly its program,
+     * {@code start(part).<run>.<fold>}: the plan dealt it that part. A lane of a computed bag is dealt its part when the
+     * branch runs, so the plan names none, and its code is its program alone. Empty when the code was not
+     * shard-planned.
      */
     public static List<Code> slaves(final Code master) {
-        final List<Rel> lanes = lanes(master);
-        if (lanes.isEmpty())
-            return List.of();
-        final List<Obj> seed = TransportRewriteHarness.seedOf(master);
-        final long[] weights = splits(master).stream().mapToLong(split -> {
-            final Obj share = ObjmtronSerializer.parse(split);
-            return PART.equals(share.uriValue().name()) ? share.c().min() : 0L;
-        }).toArray();
-        final long total = Arrays.stream(weights).sum();
-        final List<List<Obj>> parts = new ArrayList<>();
-        for (final long weight : weights)
-            parts.add(0 == weight ? new ArrayList<>(seed) : new ArrayList<>());
-        for (int j = 0; 0 < total && j < seed.size(); j++) {
-            int lane = 0;
-            for (long slot = j % total; slot >= weights[lane]; lane++)
-                slot -= weights[lane];
-            parts.get(lane).add(seed.get(j));
-        }
-        final List<Code> slaves = new ArrayList<>();
-        for (int r = 0; r < lanes.size(); r++) {
-            final mFluent<?> slave = start_(objs(parts.get(r)));
-            slave.addInsts(lanes.get(r).second().asCall().insts());
-            slaves.add(slave);
-        }
-        return slaves;
+        return lanes(master).stream()
+                .map(lane -> (Code) code(lane.second().asCall().insts()))
+                .toList();
     }
 
     /**

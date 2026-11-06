@@ -81,7 +81,10 @@ public class GenericBinder extends MRec implements Binder {
         if (null == resolvedArgs)
             return null;
         bound = bound.args(resolvedArgs);
-        bound = bound.isInitial() ? bound.rng(bound.arg(0).type()) : bound;
+        // AN INITIAL INST EMITS ITS ARGUMENT (start(x) answers x), so its range is read off it. A KEYED initial inst
+        // answers what its lanes answer — a branch of seeded lanes, branch?<={0}(<p> => start(…)…) — which no single
+        // argument states, so its declared range stands
+        bound = bound.isInitial() && bound.args().isLst() ? bound.rng(bound.arg(0).type()) : bound;
         bound = bound.c(userInst.c());
         // THE RESOLVED CONTRACT IS THE CALL'S. The candidate's tid states its DECLARED argument types — `args=[#]`
         // for the generic cast, since it admits any target — while the inst now carries the arguments this call

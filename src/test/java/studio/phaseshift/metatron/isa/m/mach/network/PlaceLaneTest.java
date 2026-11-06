@@ -106,7 +106,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     /**
      * S — {@code ?place=[local,peer]}: the master is a place at distance zero. Each row: the fold % its value. The
-     * layout is the same mechanism with one more lane: the master's chain is still {@code start·branch·<combiner>},
+     * layout is the same mechanism with one more lane: the master's chain is still {@code branch·<combiner>},
      * lane 0 is the home key {@code <~>} and lane 1 travels to the dialed peer. The value is the local fold's, because
      * a share is a share wherever it runs.
      */
@@ -122,7 +122,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertEquals(2, layout.lanes().size(), "one lane per share: " + emitted);
         assertTrue(layout.lane(0).local(), "the home place's share comes first: " + emitted);
         assertEquals(PEER, layout.lane(1).authority(), "then the peers in resolution order: " + emitted);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID),
                 layout.ops(), "the master's chain is unchanged by the extra lane: " + emitted);
         assertEquals("0", layout.lane(0).budget(), "every lane is one level down: " + emitted);
         checkEquality(LOG, jnt(expected),
@@ -175,7 +175,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     /**
      * THE DEFAULT — no {@code ?place}: the plan's own distributing set (the dialed peers), one lane per peer, no home
-     * lane, and the master chain every shard emits ({@code start·branch·<combiner>}). This is C0's pin, re-read where
+     * lane, and the master chain every literal seed emits ({@code branch·<combiner>}). This is C0's pin, re-read where
      * the place axis lands, so a change to the default would be a diff here and not only in the suites that pin it too.
      */
     @Test
@@ -185,7 +185,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
                 ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(List.of(PEER), layout.routes(), "the dialed set, and no home lane: " + emitted);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID),
                 layout.ops(), "the default layout is the branch: " + emitted);
         checkEquality(LOG, jnt(27),
                 evaluate(emitted).clone().selfVID(null), true);

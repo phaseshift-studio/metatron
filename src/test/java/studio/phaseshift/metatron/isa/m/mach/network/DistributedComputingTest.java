@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <ol>
  *   <li><b>code</b> — the <em>pre-write motif</em>, the mtron a user writes before any rewrite fires;</li>
  *   <li><b>expectedRewriteForm</b> — the <em>rewrite motif</em>, the layout the plan is expected to emit.
- *       Stated as the master's op sequence ({@code start().branch().sum()}) rather than
+ *       Stated as the master's op sequence ({@code branch().sum()}) rather than
  *       the full chain, because the branch's keys name the forked peers' ports, which no row
  *       could name: {@code checkCodeRewrite} is called with
  *       {@code checkTIDs=true}, which compares the op sequence and the inst count, not the args. The
@@ -176,11 +176,11 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // the canonical row: the seed bulk factors, the floatable run replicates, the fold recombines at home
-            "{1,2,3,4,5,6}.plus(1).sum()       % start().branch().sum() % 27",
+            "{1,2,3,4,5,6}.plus(1).sum()       % branch().sum() % 27",
             // count is DERIVED -- its combiner is sum, so the master's last op is sum, not count
-            "{1,2,3,4}.plus(1).count()         % start().branch().sum() % 4",
+            "{1,2,3,4}.plus(1).count()         % branch().sum() % 4",
             // prod is self-combining: the master re-applies prod
-            "{1,2,3,4}.plus(1).prod()          % start().branch().prod() % 120",
+            "{1,2,3,4}.plus(1).prod()          % branch().prod() % 120",
     }, delimiter = '%')
     void test_A_homomorphism_shard(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -213,7 +213,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.plus(1).sum()       % start().branch().sum() % 27",
+            "{1,2,3,4,5,6}.plus(1).sum()       % branch().sum() % 27",
     }, delimiter = '%')
     void test_D_parallel_fan_out(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -228,9 +228,9 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // height 2, at most 2 children: the master shards to one peer, which shards again
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={2}2()   % start().branch().sum() % 44",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop={2}2()   % branch().sum() % 44",
             // height 1 is the star -- today's default, stated explicitly
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=1()      % start().branch().sum() % 44",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?hop=1()      % branch().sum() % 44",
     }, delimiter = '%')
     void test_E_tree_reduction(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -257,7 +257,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @Disabled("layout unverified: the master's per-key select and the rec key order need pinning before the row is green")
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.group([mod(3)=>sum()])  % start().branch().sum().select() % [0=>9,1=>5,2=>7]",
+            "{1,2,3,4,5,6}.group([mod(3)=>sum()])  % branch().sum().select() % [0=>9,1=>5,2=>7]",
     }, delimiter = '%')
     void test_G_keyed_reduce(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -273,7 +273,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @Disabled("needs an idempotent, commutative fold in the vocabulary to exercise the positive copy case")
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4}.sum?split=copy()   % start().branch().sum() % 10",
+            "{1,2,3,4}.sum?split=copy()   % branch().sum() % 10",
     }, delimiter = '%')
     void test_H_redundant_shards(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -288,7 +288,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6}.plus(10).sum()      % start().branch().sum() % 81",
+            "{1,2,3,4,5,6}.plus(10).sum()      % branch().sum() % 81",
     }, delimiter = '%')
     void test_O_broadcast_constants(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -303,7 +303,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4,5,6,7,8}.plus(1).sum?place=[local,peer]()   % start().branch().sum() % 44",
+            "{1,2,3,4,5,6,7,8}.plus(1).sum?place=[local,peer]()   % branch().sum() % 44",
     }, delimiter = '%')
     void test_S_master_participates(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
@@ -314,7 +314,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     // (the machine the code runs in), it is law-free, and it is realized by extractMove in the compiler,
     // not by a plan -- the chain is cut at the first host-bearing move and the tail is shipped as a
     // PROGRAM (the quine rule), so the receiver re-plans it and the one dumb step propagates fractally.
-    // Its emitted shape is therefore a cut, not start/branch, which is why it gets its own
+    // Its emitted shape is therefore a cut, not a branch, which is why it gets its own
     // assertion rather than a row in the same table.
     // ================================================================================================
 
@@ -422,7 +422,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * report is a commutative monoid and the row is sound for the same reason A is.
      * <p>
      * {@code profile()} already captures the <em>emitted</em> chain — the master's
-     * {@code start/branch/<fold>}, with the branch's wait visible (measured live: 38.5 ms of a
+     * {@code branch/<fold>}, with the branch's wait visible (measured live: 38.5 ms of a
      * 38.8 ms apply, while every other inst is ≈0) — but the far side is one number, because
      * {@code profile_analysis} captures only the machine it runs on. Collation ships each shard's own report
      * home: same {@code profile_analysis} rule applied to the slave code, and the master's combiner swapped
@@ -440,7 +440,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * U -- profile collation: p̂(a ⊎ b) = p̂(a) ⊕ p̂(b), ⊕ = keyed union with per-op times added, so the report
      * is a commutative monoid and the row is sound for the same reason A is.
      * <p>
-     * THE ASSERTION THAT MATTERS IS THE OP SEQUENCE: (start, branch, &lt;collate&gt;) proves profiling saw the
+     * THE ASSERTION THAT MATTERS IS THE OP SEQUENCE: (branch, &lt;collate&gt;) proves profiling saw the
      * SHARDED chain. If {@code profile_analysis} ever runs before {@code law_shard} the fold is gone from the code,
      * the chain stays the original (start, plus, sum), and this row is what notices — {@code profile_analysis}
      * removes what it captures, so the two rules are ordered by registration alone and nothing else pins them.
@@ -460,7 +460,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * profile() end-cap, so the master has partials to fold, not reports to index.
      * <p>
      * The measurement that closes the question "are sum() and profile() fighting over the cut?": no —
-     * {@code per_inst} is [start, branch, sum], i.e. law_shard fired and profile_analysis
+     * {@code per_inst} is [branch, sum], i.e. law_shard fired and profile_analysis
      * captured the SHARD layout. Distribution is not the problem; the missing END CAP is.
      * <p>
      * What must land in PlanInterpreter.shard(): when a chain's tail is profile(), append profile() to every
@@ -472,7 +472,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @CsvSource(value = {
             // profile_collate is a PLAN's product, deliberately not an instruction of the ISA, so no short name
             // resolves to it: the expected form spells the address the plan emits
-            "{1,3,3,4,5}.plus(10).sum().profile()  % start().branch()./m/inst/profile_collate() % 2",
+            "{1,3,3,4,5}.plus(10).sum().profile()  % branch()./m/inst/profile_collate() % 2",
     }, delimiter = '%')
     void test_U_profiling_index(final String code, final String expectedRewriteForm, final String expectedResult) {
         // COLUMN 2 -- THE REWRITE FORM: the emitted master chain, op by op. A profiling chain must end in
@@ -527,7 +527,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // the selector-bearing spelling DOES distribute
-            "{1,2,3,4,5}.plus(10).order(>>)   % start().branch().kmerge() % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order(>>)   % branch().kmerge() % [11,12,13,14,15]",
             // the argless spelling does NOT: it stays whole at home, so its master is the original chain
             "{1,2,3,4,5}.plus(10).order()     % start().plus().order()                    % [11,12,13,14,15]",
     }, delimiter = '%')

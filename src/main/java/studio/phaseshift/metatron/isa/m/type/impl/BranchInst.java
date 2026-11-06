@@ -44,11 +44,13 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -93,7 +95,9 @@ public class BranchInst extends MInst {
 
     /**
      * THE BODY: route the lhs through the branches. Every keyed lane is submitted on its own {@code virtual::T}
-     * before any is awaited, and a marked key dealt nothing runs nothing.
+     * before any is awaited, and a marked key dealt nothing runs nothing. A SEEDED lane — a program that starts from
+     * its own {@code start(...)} — takes none of the lhs: it was dealt its part when it was planned, so its split
+     * records that share rather than asking for one, and a branch of seeded lanes alone needs no lhs at all.
      */
     public Obj route(final Obj lhs) {
         if (!this.args().isRec())
@@ -101,14 +105,25 @@ public class BranchInst extends MInst {
             // head-inst coefficient); the branch contributes its lhs
             return objs(this.args().elements().map(o -> o.apply(lhs).c(c -> lhs.c().mult(c))));
         final List<Rel> routes = this.routes().elements().toList();
-        final long[] weights = routes.stream().mapToLong(route -> this.weight(route.first().uriValue())).toArray();
-        final List<List<Obj>> parts = this.deal(lhs, weights);
+        final long[] weights = routes.stream()
+                .mapToLong(route -> seeded(route) ? 0L : this.weight(route.first().uriValue()))
+                .toArray();
+        final List<List<Obj>> parts = deal(lhs, weights);
         final List<Obj> lanes = IntStream.range(0, routes.size())
                 .mapToObj(r -> 0 == weights[r] ? this.lane(routes.get(r), lhs)
                         : parts.get(r).isEmpty() ? noobj()
                         : this.lane(routes.get(r), objs(parts.get(r))))
                 .toList();
         return objs(lanes.stream().map(lane -> lane.isNoObj() ? lane : lane.asRec().at(uri(RHS))));
+    }
+
+    /**
+     * Whether a lane's program starts from its own seed, a {@code start(...)}, rather than from the part of the lhs
+     * the branch deals it.
+     */
+    private static boolean seeded(final Rel route) {
+        return route.second().isCall() && !route.second().asCall().insts().isEmpty()
+                && START_INST_TID.equals(route.second().asCall().insts().getFirst().tid().basePath());
     }
 
     /**
@@ -134,9 +149,10 @@ public class BranchInst extends MInst {
      * THE PART GROUP: member {@code j} of the lhs (a bulked member goes whole) goes to slot {@code j mod W} of the
      * summed weight {@code W}, the slots dealt to the marked keys in key order, {@code w} apiece; a copy key is dealt
      * nothing. Under a {@code {1}} dom an application holds one member, always slot 0, so the first marked key takes
-     * them all: no round-robin state is kept across applications.
+     * them all: no round-robin state is kept across applications. The plan deals a literal seed by this same rule when
+     * it seeds its lanes ({@code PlanInterpreter}), so a planned part is the part the branch would have dealt.
      */
-    protected List<List<Obj>> deal(final Obj lhs, final long[] weights) {
+    public static List<List<Obj>> deal(final Obj lhs, final long[] weights) {
         final List<List<Obj>> parts = Arrays.stream(weights).mapToObj(w -> (List<Obj>) new ArrayList<Obj>()).toList();
         final long total = Arrays.stream(weights).sum();
         final List<Obj> members = 0 == total ? List.of() : lhs.stream().toList();
@@ -153,7 +169,7 @@ public class BranchInst extends MInst {
      * ONE LANE: a {@code virtual::T} running the lane where its key points, submitted and not awaited (Marko,
      * 2026-11-05). The lane is {@code start(input).program}, the code a remote lane ships. The start streams the input,
      * so a {@code {*}} dom's bag reaches a {@code {1}} program member by member, and the input's coefficient rides the
-     * start.
+     * start. A seeded program already starts from its own part, so it runs as written.
      * <ul>
      *     <li>A PATH is a local MACHINE, resolved as {@code Machine.fetch} resolves it (Marko, 2026-11-05): {@code <~>} and
      *     {@code <.>} this machine, {@code <..>} its parent, {@code </.>} the root, {@code </abc>} from the root and
@@ -170,9 +186,9 @@ public class BranchInst extends MInst {
                 : List.of((Inst) map_(route.second()).tryToInst());
         // the key's own query (its split, its timeout) is the branch's to read, not part of the place
         final fURI place = key.resolve().qLess();
+        final Code code = seeded(route) ? code(program) : start_(input).addInsts(program);
         if (null != place.host())
-            return this.remote(key, place, program, input);
-        final Code code = start_(input).addInsts(program);
+            return this.remote(key, place, program, code, input);
         return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
                 () -> this.thread(code, key).apply(noobj()));
     }
@@ -198,9 +214,9 @@ public class BranchInst extends MInst {
      * verb the lane needs. A lane that is one {@code from(</path>)} or one {@code to(</path>)} goes through the
      * machine's own door to the place (its client's from/to, else its eval), so a client that reads and writes but runs
      * no program — {@code http_client::T}, GET and POST — serves it. Any other program ships to the place's eval as
-     * {@code start(input).program}, uncompiled, to be compiled there. A place that serves neither is unreachable.
+     * the lane's {@code code}, uncompiled, to be compiled there. A place that serves neither is unreachable.
      */
-    protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Obj input) {
+    protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Code code, final Obj input) {
         final Network network = Machine.current().network();
         final Inst only = 1 == program.size() ? program.getFirst() : null;
         final fURI verb = null != only
@@ -212,7 +228,7 @@ public class BranchInst extends MInst {
         if (!eval.isObjInst() && (EVAL_INST_TID.equals(verb) || !network.overrideOf(place, verb).isObjInst()))
             throw Network.Helper.unreachable(Machine.current(), verb, place);
         if (EVAL_INST_TID.equals(verb))
-            return this.thread(eval, key).apply(start_(input).addInsts(program));
+            return this.thread(eval, key).apply(code);
         // the lane's own address homed at the place, its query kept (from(</x?docq>)). The written value rides the
         // lane's code, not the thread's lhs: a thread reads its lhs with at(), which fires an auto or dom-{0} inst
         final fURI address = only.arg(0).uriValue().origin(place);

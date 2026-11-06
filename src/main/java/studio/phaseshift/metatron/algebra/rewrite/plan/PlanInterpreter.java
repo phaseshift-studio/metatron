@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -49,7 +50,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -182,6 +185,11 @@ public final class PlanInterpreter {
      * the machine has live peers to fan out over.
      */
     private static Code shard(final Plan plan, final Code code, final Env env) {
+        // A CHAIN THAT ALREADY BRANCHES BY PLACE IS A LAYOUT, NOT A FOLD TO PLAN: its keyed branch routes its lanes where
+        // its keys point, and planning around it would wrap that branch in another. The fixpoint hands this rule every
+        // layout it emitted, so this is also where the shard's own output stops.
+        if (code.insts().stream().anyMatch(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()))
+            return code;
         // A LONE MACHINE DOES NOT FAN OUT -- unless the decision states its own place set, whose HOME lane is the
         // lanes case (?place=[{4}local]: a peerless machine shards). Read before the hop so the budget's own refusal
         // stays exactly where it was on a machine with nothing dialed.
@@ -215,43 +223,37 @@ public final class PlanInterpreter {
         }
 
         final List<Inst> insts = code.insts();
-        // the shape is [initial, {*}elementwise, reducer] — {*} = ZERO or more, so the minimum is
-        // seed + reducer (2 insts); a bare reduction over the bulk is shardable. THE SEED IS THE INITIAL FORM
-        // (dom {0}), read off the contract the chain's own typing resolved it to — never off its name.
+        // THE SEED IS THE INITIAL FORM (dom {0}) at the head of the chain, read off the contract the chain's own typing
+        // resolved it to — never off its name.
         final Inst initial = 2 > insts.size() ? null : contracts(code).getFirst();
         if (null == initial || !initial.isInitial())
             return code;
 
         final Cut cut = plan.cut();
         final Law[] laws = cut.laws().toArray(Law[]::new);
-        // each body instruction keyed at the carrier flowing into it, not the seed's
+        // each instruction keyed at the carrier flowing into it, not the seed's
         final List<Type> carriers = carriers(code);
-        final List<Inst> typed = IntStream.range(1, insts.size()).mapToObj(i -> retype(insts.get(i), carriers.get(i))).toList();
-
-        // the one-cut shape: [ {*}floatable, blocked (recombined by a fold declaring the cut's laws), {*}tail ]
-        final List<List<Inst>> captures = InstPattern.match(
-                List.of(
-                        InstPattern.law(Law.floatable).star(),
-                        InstPattern.law(Law.blocked).combinedBy(laws),
-                        InstPattern.any().star()),
-                typed);
-        if (null == captures)
+        final List<Inst> typed = IntStream.range(0, insts.size())
+                .mapToObj(i -> 0 == i ? insts.getFirst() : retype(insts.get(i), carriers.get(i)))
+                .toList();
+        // THE CUT is the first fold whose partials recombine through a fold declaring the cut's laws. THE RUN is the
+        // floatable stretch right before it, replicated onto every lane. EVERYTHING BEFORE THE RUN STAYS HOME (Marko,
+        // 2026-11-05: `repeat() [[ plus(10).order ]]`): the seed, and whatever cannot float — a repeat, an effect — run
+        // where the code stands, and their output is the bag the branch deals.
+        final InstPattern recombines = InstPattern.law(Law.blocked).combinedBy(laws);
+        final InstPattern floats = InstPattern.law(Law.floatable);
+        final int cutIndex = IntStream.range(1, insts.size()).filter(i -> recombines.matches(typed.get(i))).findFirst().orElse(-1);
+        if (-1 == cutIndex)
             return code;
-
-        final int cutIndex = 1 + captures.get(0).size();
+        final int runIndex = 1 + IntStream.range(1, cutIndex).map(i -> cutIndex - i)
+                .filter(i -> !floats.matches(typed.get(i)))
+                .findFirst().orElse(0);
         final Inst reducer = insts.get(cutIndex);
-        // a self-combining fold re-applies the chain's own instruction (pre-resolution, exactly as the slaves carry
-        // it); a fold defined by derivation recombines through the fold its definition names; a keyed fold through
-        // the chain its pointwise combiner computes (the rec sum, then a per-key fold)
-        final Inst keyed = typed.get(cutIndex - 1);
+        // a self-combining fold re-applies the chain's own instruction; a fold defined by derivation recombines through
+        // the fold its definition names; a keyed fold through the chain its pointwise combiner computes (the rec sum,
+        // then a per-key fold)
+        final Inst keyed = typed.get(cutIndex);
         final Call combined = LawTable.combiner(keyed, laws);
-        // NO COMBINER, NO FAN-OUT: the combiner is COMPUTED, and the computation may answer null (a fold whose law
-        // row does not resolve, a keyed spec whose per-key fold has none). Null is a DECLINE, not an error: the fold
-        // stays where it stands, the unchanged chain, and the reason is logged rather than thrown.
-        if (null == combined) {
-            log.debug("no combiner for the cut {}: the fold stays where it stands ({})", keyed, code);
-            return code;
-        }
         final List<Inst> combiner = keyed == combined ? List.of(reducer) : combined.insts();
         // COPY'S PREMISE: replicating the seed onto every lane double-counts a fold that is not idempotent, so
         // `?split=copy` is legal only when the cut's COMBINER declares `idempotent`. Unsound is the IDENTITY -- the
@@ -261,9 +263,13 @@ public final class PlanInterpreter {
                     combined, code);
             return code;
         }
-
-        final List<Obj> seed = insts.getFirst().arg(0).stream().toList();
-        if (2 > seed.size())
+        // THE SEED THE PLAN HOLDS: a literal bag at the head, with nothing between it and the run, is dealt HERE into
+        // lanes that carry their own parts, so the listing shows what each place runs. Any other prefix computes its bag
+        // when it runs, and the branch deals what arrives.
+        final Inst head = insts.getFirst();
+        final boolean literal = 1 == runIndex && START_INST_TID.equals(head.tid().basePath()) && !head.arg(0).isCall();
+        final int members = literal ? (int) head.arg(0).stream().count() : Integer.MAX_VALUE;
+        if (2 > members)
             return code;
 
         // the placement that ships — the plan's distributing route — states what its targets must serve
@@ -276,8 +282,8 @@ public final class PlanInterpreter {
         // S order for [local,peer], and the same home-first rule for [peer,local], where the design's does not hold):
         // the resolver keeps the order the designators were written in, which is not the layout's. The arity caps the
         // window: the first `w` lanes in exactly that order, so the selection is the resolution order and nothing is
-        // rotated or sorted per node.
-        final List<ResolvedPlace> shares = shares(resolve(env, route, place(plan, code)), seed.size(), fanout);
+        // rotated or sorted per node. A literal seed clamps the shares; a computed bag's size is the branch's to know.
+        final List<ResolvedPlace> shares = shares(resolve(env, route, place(plan, code)), members, fanout);
         // NOTHING SHIPS: no place answered, or the single home lane — one home share is the code that already stands
         // here. SEVERAL home shares are NOT this: `?place=[{4}local]` is the lanes case, a peerless machine sharding.
         final boolean localOnly = 1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal);
@@ -291,15 +297,11 @@ public final class PlanInterpreter {
         // peer re-plans from its own recombine.
         final Obj budget = 1 == axis.height() ? jnt(0) : Hop.of(axis.height() - 1, axis.arity()).toObj();
 
-        // emit seed·branch(place => run·fold, …)·combiner(r) — BRANCH IS THE ONE DISTRIBUTED PRIMITIVE (Marko,
-        // 2026-11-05): the seed is the branch's lhs, dealt over the lanes by their keys; each lane runs the floatable
-        // run replicated and a local partial reduce where its key points; and the lanes' partials come back as one
-        // bag, which the master recombines at home through the combiner.
-        //
-        // A LANE IS A PROGRAM, NEVER A PART. Nothing pre-splits the seed: under a {*} dom the branch takes the whole
-        // bag in one application and deals it at run time (BranchInst#deal), so each lane runs start(part).program.
-        // A remote lane ships that program uncompiled to its place's eval, and nothing here binds a route: the branch
-        // binds a remote key at run time, through its place's peer.
+        // emit [prefix·]branch(place => [start(part)·]run·fold, …)·combiner(r) — BRANCH IS THE ONE DISTRIBUTED
+        // PRIMITIVE (Marko, 2026-11-05): each lane runs the floatable run replicated and a local partial reduce where
+        // its key points, and the lanes' partials come back as one bag, which the master recombines at home through the
+        // combiner. A remote lane ships its program uncompiled to its place's eval, and nothing here binds a route:
+        // the branch binds a remote key at run time, through its place's peer.
         //
         // THE PEER RE-PLANS ITS PART. Applying a code compiles it (Machine.evaluate), so this rule runs again on the
         // lane where it lands: with budget left and dialed peers of its own, the peer is an interior node of the tree
@@ -314,9 +316,10 @@ public final class PlanInterpreter {
         final boolean profiling = insts.size() > cutIndex + 1
                 && PROFILE_INST_TID.equals(insts.get(cutIndex + 1).tid().basePath());
         // the floatable run replicated, then the FOLD stating the restated form: the copied reducer loses the level
-        // above's budget (whichever spelling), then carries this level's — the same arity, one height down
-        final List<Inst> program = new ArrayList<>(withoutHop(insts.subList(1, cutIndex)));
-        final Inst fold = withoutHop(reducer);
+        // above's budget (whichever spelling), then carries this level's — the same arity, one height down. Every
+        // instruction goes as written (raw), to be compiled where the lane runs.
+        final List<Inst> program = new ArrayList<>(insts.subList(runIndex, cutIndex).stream().map(inst -> raw(withoutHop(inst))).toList());
+        final Inst fold = raw(withoutHop(reducer));
         program.add(fold.tid(fold.tid().q(HOP, budget)));
         // THE LANE'S END CAP: the peer profiles its OWN part. The marker ships, not a minted analysis inst, because
         // the analysis captures the code by closure on the machine that runs it — the peer compiles the lane, so its
@@ -329,15 +332,31 @@ public final class PlanInterpreter {
         final boolean copy = Partition.Kind.COPY == split.kind();
         final Map<fURI, Integer> places = new LinkedHashMap<>();
         shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
+        // A LITERAL SEED IS DEALT BY THE BRANCH'S OWN RULE (BranchInst#deal), so a planned part is the part the branch
+        // would have dealt; under the copy kind every lane holds the whole seed
+        final List<List<Obj>> parts = literal
+                ? BranchInst.deal(head.arg(0), places.values().stream().mapToLong(weight -> copy ? 0L : weight).toArray())
+                : List.of();
+        final List<Map.Entry<fURI, Integer>> keys = List.copyOf(places.entrySet());
         final Map<Obj, Obj> lanes = new LinkedHashMap<>();
-        places.forEach((place, weight) -> lanes.put(
-                uri(copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(new ArrayList<>(program))));
-        // the branch takes the seed's bulk whole (a {*} dom over the seed's carrier) and parts it by the keys — or,
-        // under the copy kind, hands every lane the whole of it
-        final fURI carrier = carriers.get(1).typeId();
+        for (int r = 0; r < keys.size(); r++) {
+            final List<Inst> lane = new ArrayList<>();
+            if (literal)
+                lane.add(instB(START_INST_TID, lst(copy ? head.arg(0) : objs(parts.get(r)))));
+            lane.addAll(program);
+            final fURI place = keys.get(r).getKey();
+            final int weight = keys.get(r).getValue();
+            lanes.put(uri(copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(lane));
+        }
+        // the branch takes the computed bag whole (a {*} dom over the bag's carrier) and parts it by its keys. When
+        // every lane carries its own seed no start stands here, so the branch takes nothing: it is the initial form
+        // (Marko, 2026-11-05: branch?<={0}(start…, start…)), with the dom start itself declares.
+        final fURI carrier = carriers.get(runIndex).typeId();
+        final fURI dom = literal ? fURI.Singleton.NOOBJ : null == carrier ? ALL_STAR : carrier.maybeSome();
         final List<Inst> master = new ArrayList<>();
-        master.add(withoutHop(insts.getFirst()));
-        master.add(instB(BRANCH_INST_TID.dom(null == carrier ? ALL_STAR : carrier.maybeSome()).q(SPLIT, copy ? COPY : PART), rec(lanes)));
+        if (!literal)
+            master.addAll(withoutHop(insts.subList(0, runIndex)));
+        master.add(instB(BRANCH_INST_TID.dom(dom).q(SPLIT, copy ? COPY : PART), rec(lanes)));
         if (profiling)
             master.add(profileCollate());
         else {
@@ -345,6 +364,26 @@ public final class PlanInterpreter {
             master.addAll(withoutHop(insts.subList(cutIndex + 1, insts.size())));
         }
         return code(master);
+    }
+
+    /**
+     * THE INSTRUCTION AS WRITTEN. A lane is compiled where it runs (Marko, 2026-11-05: a host-keyed lane server side,
+     * a machine-keyed lane by that machine's compiler), so the program it carries holds nothing this machine bound: not
+     * the resolved signature ({@code dom}, {@code rng}, {@code args}), not a bound function and not a position vid. What
+     * stays is the op address, the caller's own query, the coefficient and the arguments, a nested call unbound the
+     * same way. The rewriter can be handed a resolved chain: the console resolves a chain before it compiles it.
+     */
+    private static Inst raw(final Inst inst) {
+        final Poly args = inst.args().isRec()
+                ? rec(inst.args().asRec().elements().map(kv -> rel(kv.first(), rawArg(kv.second()))))
+                : lst(inst.args().elements().map(PlanInterpreter::rawArg).toList());
+        return instB(inst.tid().removeQ(DOM).removeQ(RNG).removeQ(ARGS), args);
+    }
+
+    private static Obj rawArg(final Obj arg) {
+        return arg.isObjInst() ? raw(arg.asInst())
+                : arg.isCode() ? code(arg.asCode().insts().stream().map(PlanInterpreter::raw).toList())
+                : arg;
     }
 
     /**
@@ -614,7 +653,11 @@ public final class PlanInterpreter {
     private static int asked(final ResolvedPlace place, final int cap) {
         final cInt demand = place.demand();
         final Long asked = null == demand.max() ? demand.min() : demand.max();
-        return null == asked ? cap : (int) Math.min(asked, cap);
+        // an open demand asks as much as the data allows, and a bag the plan does not hold (a computed prefix) allows
+        // one share: the branch deals whatever arrives when it runs
+        if (null == asked)
+            return Integer.MAX_VALUE == cap ? 1 : cap;
+        return (int) Math.min(asked, cap);
     }
 
     /**

@@ -220,8 +220,9 @@ public class catInstSet extends AbstractInstSet {
     /**
      * The realized placement of an emitted layout — the {@code branch}'s keyed lanes ({@code place => program}),
      * lifted to their place DESIGNATORS and WEIGHTED, keyed by the shard's AT span:
-     * {@code [[span=><at]=>[local=>1,//ginger=>2,//booger=>1]]}. {@code noobj} when the emitter shipped nothing (the
-     * layout has no keyed {@code branch}).
+     * {@code [[span=><at]=>[local=>1,//ginger:8555=>2,//booger:8555=>1]]}. {@code noobj} when the emitter shipped nothing
+     * (the layout has no keyed {@code branch}). A designator keeps its port: {@code ws://localhost:1111} and
+     * {@code ws://localhost:1112} are two places.
      * <p>
      * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's key states the shares its place took,
      * {@code ?split={n}part} (one when the key states no weight of its own) — after the emitter's clamps
@@ -250,8 +251,10 @@ public class catInstSet extends AbstractInstSet {
                     // (BranchInst#routes), and a {n}part share is n of the place's shares (BranchInst#weight)
                     final String split = key.hasQ(SPLIT) ? key.q(SPLIT) : branch.tid().q(SPLIT);
                     final Obj share = null == split ? noobj() : ObjmtronSerializer.parse(split);
-                    // the home key is the LOCAL place; a shipped one is the `//host` its authority names
-                    lanes.merge(null == key.host() ? uri(LOCAL) : uri("//" + key.host()),
+                    // the home key is the LOCAL place; a shipped one is the `//host:port` its authority names. The port
+                    // is the place: two services on one host are two places, not one place twice
+                    lanes.merge(null == key.host() ? uri(LOCAL)
+                                    : uri("//" + key.host() + (key.hasPort() ? ":" + key.port() : "")),
                             share.isUri() && PART.equals(share.uriValue().name()) ? share.c().min() : 1L, Long::sum);
                 }));
         if (lanes.isEmpty())
