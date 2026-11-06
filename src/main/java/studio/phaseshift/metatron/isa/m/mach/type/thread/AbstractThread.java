@@ -140,8 +140,12 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
         }
         // the RESULT hand-off: a lazy auto (not the raw future) so the thread rec stays serializable and type-checkable
         // — reading it dereferences (`>>rhs`) and blocks on the future exactly once, at the gather. Its range is the
-        // code's, any multiplicity: a thread that computes a stream answers the stream, not a range fail
-        jvm.put(uri(RHS), auto_(instLambda("await", ALL.maybe(), ALL.maybeSome(), (_, _) -> this.future.get(FutureObj.DEFAULT_TIMEOUT_MS))).tryToInst());
+        // code's, any multiplicity: a thread that computes a stream answers the stream, not a range fail. The wait is
+        // the thread's own timeout, a time::T read direct so it never fires (a bare number is millis, as loop's is)
+        jvm.put(uri(RHS), auto_(instLambda("await", ALL.maybe(), ALL.maybeSome(), (_, _) -> this.future.get(
+                this.jvm().containsKey(uri(TIMEOUT))
+                        ? this.atDirect(uri(TIMEOUT)).as(MILLIS_TYPE).realValue().longValue()
+                        : FutureObj.DEFAULT_TIMEOUT_MS))).tryToInst());
         if (jvm.containsKey(uri(LHS)))
             this.applyAsync(this.at(uri(LHS)));
 

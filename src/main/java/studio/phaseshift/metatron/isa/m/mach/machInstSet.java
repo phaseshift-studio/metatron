@@ -201,12 +201,14 @@ public class machInstSet extends AbstractInstSet {
                             uri(RUNTIME).maybe(), TIME_TYPE,
                             uri(YIELD).maybe(), T(MACH_THREAD_TID),
                             uri(LOOP).maybe(), TIME_TYPE,
+                            uri(TIMEOUT).maybe(), TIME_TYPE,
                             uri(STATE).maybe().asUri(), union_(uri(STOP), uri(RUN), uri(PAUSE)).tryToInst(),
                             uri(RESULT).maybe(), T(ALL.maybeSome())), Map.of(
                             uri(CODE), "the thread's executing code",
                             uri(TIME).maybe(), "the datetime::T when the thread was started",
                             uri(RUNTIME).maybe(), "computes the thread's current running time::T",
                             uri(LOOP).maybe(), "delay to repeat code evaluation (default is evaluate once)",
+                            uri(TIMEOUT).maybe(), "how long a read of rhs waits for the result (default is 5 seconds)",
                             uri(STATE).maybe(), "current state of the thread",
                             uri(RESULT).maybe(), "the last result produced by the thread"))
             .desc("the thread base type")
