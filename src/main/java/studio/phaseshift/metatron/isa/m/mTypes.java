@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -34,6 +35,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
+import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -43,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -415,13 +418,12 @@ public final class mTypes {
     }
 
     /**
-     * DECLARE one theory's battery — the rec under the {@code law} key. {@code TypeBuilder.declare} takes the
-     * address, not a {@link Type}: a theory type is registered by the (optional) category, and the declaration is
-     * keyed by its vid either way.
+     * DECLARE one theory's battery — {@code decs::[obj=>theory::T, law=>[…]]} at the theory's {@code ?decq}, keyed by
+     * its vid: a theory type is registered by the (optional) category.
      */
     private static void axiom(final fURI theory, final Law... laws) {
-        declare(theory, rec(uri(LAW),
-                lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList())));
+        PendingWrites.write(PendingWrites.decq(theory), rec(mutableMap(uri(OBJ), T(theory),
+                uri(LAW), lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList())), DECS_TID, null));
     }
 
     /**

@@ -551,10 +551,9 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
                 PendingWrites.write(docAddress, doc);
             }
             final Algebra declared = null == this.algebra ? this.composedAlgebra() : this.algebra;
-            if (null != declared) {
-                final fURI decAddress = PendingWrites.decq(this.vid);
-                PendingWrites.write(decAddress, declared);
-            }
+            if (null != declared)
+                PendingWrites.write(PendingWrites.decq(this.vid),
+                        rec(mutableMap(uri(Tokens.OBJ), type, uri(Tokens.THEORY), declared), QCollection.DECS_TID, null));
             // ... AND STAGE WHO DECLARED THE INSTRUCTIONS, for the registering set to record in its own `inst` list
             if (!this.insts.isEmpty())
                 INSTS.computeIfAbsent(this.vid.basePath(), _key -> ConcurrentHashMap.newKeySet())
@@ -563,13 +562,6 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
         for (final Declared declared : this.insts) {
             final Inst inst = declared.inst();
             PendingWrites.write(inst.tid(), inst);
-            // A CLAIM IS DECLARED ONCE: the laws/inverse/derivation an InstBuilder stated for this operation are
-            // replayed beside it here, because an instruction written by a type's create() is not in the set's `inst`
-            // list yet when that list's drain runs, so nothing else would publish its claim. The claim is read from the
-            // retained staging log at the instruction's ?decq, which is where InstBuilder.create() queued it.
-            final Obj staged = PendingWrites.find(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())));
-            if (null != staged && staged.isRec() && declares(staged.asRec()))
-                PendingWrites.write(PendingWrites.decq(Inst.Helper.operationTid(inst.tid())), claimRec(staged.asRec()));
             if (null != declared.desc())
                 PendingWrites.write(PendingWrites.docq(inst.tid()),
                         docRec(inst, inst.tid().dom().toString(), inst.tid().rng().toString(), declared.argDocs(), declared.desc()));
@@ -626,7 +618,8 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
     public static void declare(final fURI vid, final Algebra algebra) {
         if (null == vid || null == algebra)
             return;
-        PendingWrites.write(PendingWrites.decq(vid), algebra);
+        PendingWrites.write(PendingWrites.decq(vid),
+                rec(mutableMap(uri(Tokens.OBJ), T(vid), uri(Tokens.THEORY), algebra), QCollection.DECS_TID, null));
     }
 
     /**
@@ -776,35 +769,5 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
         else
             args.asLst().indexedStream().forEach(entry -> docs.put(entry.first(), entry.second().tid().toString()));
         return docs;
-    }
-
-    /**
-     * Whether a staged claim states anything a type's builder must replay — any facet is a declaration, so an
-     * instruction that declares only its inverse or only its defining equation is as complete as one with laws. A FORM
-     * alone is not replayed: it is not one of these three facets.
-     */
-    private static boolean declares(final Rec claim) {
-        return !claim.atDirect(uri(Tokens.LAW)).isNoObj()
-                || !claim.atDirect(uri(Tokens.INVERSE)).isNoObj()
-                || !claim.atDirect(uri(Tokens.DERIVATION)).isNoObj();
-    }
-
-    /**
-     * THE CLAIM REC a type-declared instruction replays at {@code ?decq} — only its process laws, its inverse and its
-     * defining equation, in the order {@code InstBuilder.create()} composes them, read back out of the staged claim
-     * so the replay cannot drift from the claim the instruction itself made.
-     */
-    private static Rec claimRec(final Rec staged) {
-        final Map<Obj, Obj> facets = new LinkedHashMap<>();
-        final Obj law = staged.atDirect(uri(Tokens.LAW));
-        if (!law.isNoObj())
-            facets.put(uri(Tokens.LAW), law);
-        final Obj inverse = staged.atDirect(uri(Tokens.INVERSE));
-        if (!inverse.isNoObj())
-            facets.put(uri(Tokens.INVERSE), inverse);
-        final Obj derivation = staged.atDirect(uri(Tokens.DERIVATION));
-        if (!derivation.isNoObj())
-            facets.put(uri(Tokens.DERIVATION), derivation);
-        return rec(facets);
     }
 }

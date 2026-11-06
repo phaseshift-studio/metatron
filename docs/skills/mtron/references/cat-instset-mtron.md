@@ -63,10 +63,10 @@ int::T.as(object::T)
 
 ### the algebraic theories
 
-An object can model several algebraic structures. `object::T>>law` is a rec keyed by the name given to each
+An object can model several algebraic structures. `object::T>>theory` is a rec keyed by the name given to each
 instance at declaration, and each role holds a `!*` (`auto_from`) pointer to the *live* operation rather than a copy:
-the graph holds the references, and a role dereferences transparently on `>>` (`...>>law>>ring>>add` yields the
-inst). The first example above is the `int` case in full: its law rec declares a `ring` and the three constituent
+the graph holds the references, and a role dereferences transparently on `>>` (`...>>theory>>ring>>add` yields the
+inst). The first example above is the `int` case in full: its theory rec declares a `ring` and the three constituent
 group/monoid instances. `theory::T` is the nominal super-type grouping them:
 
 | type                 | roles (fields)                     | what it asserts                                                                                                                                                                                  |

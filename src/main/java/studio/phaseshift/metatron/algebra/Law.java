@@ -25,10 +25,12 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.List;
 
 import static studio.phaseshift.metatron.Tokens.INST;
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * The law axis: the process laws a morphism obeys — a property of the operation itself, never the whole
@@ -338,7 +340,7 @@ public enum Law {
      * shape declarations are all in the law's jurisdiction. The log is retained and keyed by address, so a second call
      * (or a re-mount) re-stages the same addresses rather than appending duplicates: registration is IDEMPOTENT.
      * <p>
-     * THE SHAPE DECLARATION is the smallest rec a reader can consume: {@code [inst => lst(<shape uris>)]}. The
+     * THE SHAPE DECLARATION is the smallest rec a reader can consume: {@code decs::[obj => <the law's uri>, inst => lst(<shape uris>)]}. The
      * {@code inst} key is the existing token (no new vocabulary), and the values are the very {@link #shapes()} the
      * analyzer matches against an instruction's contract, so a stored law documents its own admissibility instead of a
      * table restating it.
@@ -353,8 +355,8 @@ public enum Law {
             final fURI address = law.address();
             PendingWrites.write(address, uri(law.name()));
             PendingWrites.write(PendingWrites.docq(address), QCollection.Docs.doc(law.documentation()));
-            PendingWrites.write(PendingWrites.decq(address),
-                    rec(uri(INST), lst(law.shapes().stream().map(shape -> (Obj) uri(shape)).toList())));
+            PendingWrites.write(PendingWrites.decq(address), rec(mutableMap(uri(OBJ), uri(law.name()),
+                    uri(INST), lst(law.shapes().stream().map(shape -> (Obj) uri(shape)).toList())), QCollection.DECS_TID, null));
         }
     }
 }

@@ -52,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * operands, and answered in a {@link Report}; nothing is written back to {@code ?decq}. That is the point: a claim
  * is a hypothesis, and an unverified hypothesis must not become a declaration.
  *
- * <p>WHERE THE ROLES COME FROM — the type's declared algebra ({@code object::T>>law}): instance name → rec of role
+ * <p>WHERE THE ROLES COME FROM — the type's declared algebra ({@code object::T>>theory}): instance name → rec of role
  * → operation. {@link LawTable#typeLawsOf(Type)} serves it, and that
  * served rec is itself the {@code ?decq} declaration the base carriers write at their type; when no law table is
  * mounted (the category is optional) the declaration is read directly, so the tool answers on a plain boot. Role

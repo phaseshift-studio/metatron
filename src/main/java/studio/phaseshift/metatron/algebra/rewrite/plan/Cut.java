@@ -79,7 +79,7 @@ public class Cut extends MRec {
 
     /**
      * An anchor identified by a theory role — {@code id} names the identity element (the unit law's cut). The
-     * role is read off {@code object::T.law}, not declared here; {@code role} names which role to cut on.
+     * role is read off {@code object::T.theory}, not declared here; {@code role} names which role to cut on.
      */
     public static Cut role(final String role) {
         final Map<Obj, Obj> jvm = new LinkedHashMap<>();

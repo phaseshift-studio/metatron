@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -324,7 +325,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         // the instruction the declaration is made about, exactly as docq's obj slot names it — so several contracts
         // that declare the SAME laws stay distinct, and a reader can tell which obj a declaration belongs to
         facets.put(uri(OBJ), inst);
-        return rec(facets);
+        return rec(facets, DECS_TID, null);
     }
 
     /**

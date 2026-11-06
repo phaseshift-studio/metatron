@@ -80,7 +80,7 @@ public class mInstSet extends AbstractInstSet {
     // ---------- the FOUNDATIONAL ALGEBRA VOCABULARY: the theories a type models ----------
     // These live with the instruction set, not with the category: the category is OPTIONAL (mounted only by
     // importing /m/math/cat), while a type's algebra is a fact about the type. The category renders them
-    // (object::T>>law, morphism::T.law); it does not own them.
+    // (object::T>>theory, morphism::T.law); it does not own them.
     public static final fURI THEORY_TID = M_ISA_TID.extend("theory");
     public static final fURI RING_THEORY_TID = THEORY_TID.extend("ring_theory");
     public static final fURI GROUP_THEORY_TID = THEORY_TID.extend("group_theory");
@@ -612,6 +612,7 @@ public class mInstSet extends AbstractInstSet {
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
                         docWrap(DOCS_TYPE, "a documentation structure to attach to objs and access via docq query processor"),
+                        docWrap(DECS_TYPE, "an algebraic declaration to attach to objs and access via decq query processor"),
                         docWrap(DOCQ_TYPE, "addr documentation qproc",
                                 "*docq?docq [-- this documentation --]",
                                 "*int?docq  [-- documentation for int::T --]"),

@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Theory resolution — reading a type's declared algebraic structures (the theory instances under
- * {@code object.law}) in a theory-generic way, instead of hard-coding one type's names.
+ * {@code object.theory}) in a theory-generic way, instead of hard-coding one type's names.
  *
  * <p>A type's law block is a rec of <em>named theory instances</em> (e.g. {@code ring}, {@code add_group},
  * {@code field}, {@code boolean}), each an instance of a theory type ({@code ring_theory :: T},
@@ -134,12 +134,12 @@ public class TheoryHelper extends MRec {
     }
 
     /**
-     * The named theory instances of a type — the {@code object::T.law} rec, keyed by the user's name for
+     * The named theory instances of a type — the {@code object::T.theory} rec, keyed by the user's name for
      * each instance (e.g. {@code ring}, {@code add_group}, {@code boolean}). Empty when the type models no
      * algebraic structure. This is the enumeration a law-driven rewrite walks.
      */
     public static Rec instances(final Type type) {
-        // THE DECLARED ALGEBRA, READ LEANLY: object::T's law field IS LawTable.typeLawsOf(type), so the instances are
+        // THE DECLARED ALGEBRA, READ LEANLY: object::T's theory field IS LawTable.typeLawsOf(type), so the instances are
         // read there directly rather than by minting the categorical lift (an object::T with its lazy incidence) that
         // only the category instset builds. A type with no address, or one that declares nothing, answers the empty
         // algebra — never a fail, so a law query declines rather than crashing.
@@ -202,7 +202,7 @@ public class TheoryHelper extends MRec {
 
     /**
      * The op address of a type's declared additive structure — the law-indexed witness: the first theory
-     * instance of {@code object[T].law} that carries an additive role — the {@code add} role of a ring/field/rig,
+     * instance of {@code object[T].theory} that carries an additive role — the {@code add} role of a ring/field/rig,
      * or the {@code op} role of an {@code add_*} monoid/group. The role is read with {@code atDirect} (no call
      * evaluation; {@code rec.has} reports false on law keys that still resolve, so the noobj answer is the
      * presence test), and the auto pointer is unwrapped with {@code getPointer} without resolving it. For the

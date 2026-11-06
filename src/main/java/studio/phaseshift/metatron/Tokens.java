@@ -432,6 +432,7 @@ public final class Tokens {
     public static final String CONTESTED = "contested";
     public static final String ORBIT = "orbit";
     public static final String LAW = "law";
+    public static final String THEORY = "theory";
     /**
      * THE ALGEBRA REPORT KEYS — the counters an {@code AlgebraTool.Report} carries and {@code Report.toRec()}
      * renders ({@code {type, inst, claimed, holds, failed, unchecked, uncheckable, ok}}). They are {@code fURI} (not

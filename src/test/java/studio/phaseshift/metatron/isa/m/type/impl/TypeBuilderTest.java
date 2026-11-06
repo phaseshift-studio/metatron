@@ -178,7 +178,7 @@ public class TypeBuilderTest extends AbstractMetatronTest {
         assertEquals(vid, read.vid(), "the type landed at the address it was written at, got " + read);
         assertTrue(read.isType(), "a type written at its vid reads back as a type, got " + read);
         final Obj law = Machine.read(PendingWrites.decq(vid));
-        assertTrue(law.isRec() && law.asRec().has(f("ring")),
+        assertTrue(law.isRec() && law.asRec().atDirect(uri(THEORY)).asRec().has(f("ring")),
                 "the algebra is readable beside the type through ?decq, got " + law);
         final Obj doc = Machine.read(PendingWrites.docq(vid));
         assertTrue(doc.isRec(), "the documentation is readable through ?docq, got " + doc);
@@ -199,7 +199,7 @@ public class TypeBuilderTest extends AbstractMetatronTest {
                 "the declaration is queued at " + PendingWrites.decq(vid));
         PendingWrites.drainUnder(TEST_NAMESPACE);
         final Obj law = Machine.read(PendingWrites.decq(vid));
-        assertTrue(law.isRec() && law.asRec().has(f("add_monoid")),
+        assertTrue(law.isRec() && law.asRec().atDirect(uri(THEORY)).asRec().has(f("add_monoid")),
                 "the later declaration reaches ?decq, got " + law);
     }
 
@@ -235,7 +235,7 @@ public class TypeBuilderTest extends AbstractMetatronTest {
                 .filter(candidate -> candidate.address().equals(PendingWrites.decq(vid)))
                 .findFirst().orElse(null);
         assertNotNull(write, "an algebra is queued at " + PendingWrites.decq(vid));
-        return Algebra.of(write.value().asRec());
+        return Algebra.of(write.value().asRec().atDirect(uri(THEORY)).asRec());
     }
 
     /**
