@@ -58,10 +58,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.jline.keymap.KeyMap.*;
-import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
-import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
-import static studio.phaseshift.metatron.Tokens.STATUS;
-import static studio.phaseshift.metatron.Tokens.STYLE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -690,7 +687,7 @@ public final class CommandPalette extends MRec {
      * it is opened on.
      */
     private static final int NETWORK_PANEL_WIDTH = 100;
-    private static final int NETWORK_PANEL_HEIGHT = 15;
+    private static final int NETWORK_PANEL_HEIGHT = 20;
 
     /**
      * Open the network panel as a floating widget — the status bar's wire gauge ({@code ⇄ ↓ ↑}) calls this. The
@@ -716,7 +713,7 @@ public final class CommandPalette extends MRec {
         final Console console = Console.LOCAL_INSTANCE;
         final fURI vid = null == console ? null : console.vid().extend(STATUS);
         final NetworkPanelTool panel = new NetworkPanelTool(
-                mutableMap(uri(STYLE), style), UI_NETWORK_PANEL_TID, vid);
+                mutableMap(uri(MAX), jnt(10), uri(STYLE), style), UI_NETWORK_PANEL_TID, vid);
         // the accordion draws one title row and one bottom border, so its body budget is the interior
         panel.max(Math.max(1, height - 2));
         // one representation per address: drop the instance still floating there before the fresh one takes its
@@ -732,8 +729,8 @@ public final class CommandPalette extends MRec {
     /**
      * The message-history popup's natural size — the status bar's envelope opens it, capped to the terminal.
      */
-    private static final int HISTORY_WIDTH = 60;
-    private static final int HISTORY_HEIGHT = 12;
+    private static final int HISTORY_WIDTH = 80;
+    private static final int HISTORY_HEIGHT = 25;
 
     /**
      * The message-history popup — the status bar's envelope opens it. A {@link PanelWidget} (bordered, and
