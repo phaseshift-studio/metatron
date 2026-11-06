@@ -117,8 +117,8 @@ public class BranchLaneTest extends AbstractMetatronTest {
         dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         dial("loop://right", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
         try {
-            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=partition> => count(), "
-                    + "<loop://right?split={2}partition> => count(), <loop://left> => count())", "{2,4,6}");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=part> => count(), "
+                    + "<loop://right?split={2}part> => count(), <loop://left> => count())", "{2,4,6}");
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
