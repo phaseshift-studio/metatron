@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.zeroturnaround.exec.ProcessExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Addressable;
@@ -1461,6 +1462,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .body((lhs, inst) -> inst.arg(0).isNoObj() ?
                                     lhs.stream().sorted(ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
                                     lhs.stream().sorted(ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
+                            .law(Law.pure)
+                            .derivation(new Derivation(start_(uri(A)).order_(uri(B)), start_(uri(A)).split_(lst(id_().tryToInst())).kmerge_(uri(B))))
                             .create(),
                     InstBuilder.build()
                             .tid(KMERGE_INST_TID)
@@ -1495,6 +1498,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                 }
                                 return lst(collapsed);
                             })
+                            .law(Law.monoidic, Law.commutative, Law.pure)
                             .create(),
                     InstBuilder.build()
                             .tid(M_ISA_INST_TID.extend("via"))
@@ -2099,6 +2103,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .desc("counts the number of objs")
                             .seed(jnt(0))
                             .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/))
+                            .law(Law.pure)
+                            .derivation(new Derivation(start_(uri(A)).count_(), start_(uri(A)).map_(jnt(1)).sum_()))
                             .create(),
                     InstBuilder.build()
                             .tid(SKIP_INST_TID)
@@ -2216,6 +2222,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                 kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                         .collect(new CommonUtil.RecCollector());
                             })
+                            .law(Law.pure)
                             .create(),
                     InstBuilder.build()
                             .tid(EVAL_INST_TID)

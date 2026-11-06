@@ -277,12 +277,12 @@ public final class mTypes {
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                 uri(MUL), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                uri(Tokens.ZERO), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                uri(Tokens.ZERO), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID.zero())).tryToInst(),
                                 uri(Tokens.ONE), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
                         RING_THEORY_TID, null),
                 uri("add_group"), rec(mutableMap(
-                                uri(OP), auto_from_(BRANCH_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
-                                uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
+                                uri(OP), auto_from_(BRANCH_INST_TID).tryToInst(),
+                                uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID.zero())).tryToInst(),
                                 uri(INV), auto_from_(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
                         GROUP_THEORY_TID, null),
                 uri("mult_monoid"), rec(mutableMap(

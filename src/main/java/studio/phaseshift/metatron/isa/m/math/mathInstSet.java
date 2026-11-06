@@ -18,15 +18,21 @@
 
 package studio.phaseshift.metatron.isa.m.math;
 
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.algebra.Algebra;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.time.Instant;
@@ -49,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
@@ -608,7 +615,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final Type NAT_TYPE = TypeBuilder.build()
             .tid(INT_TID)
             .vid(NAT_TID)
-            .predicate(is_(gt_(jnt(0))).tryToInst())
+            .predicate(is_(gte_(jnt(0))).tryToInst())
             .create();
 
     public static final Type CMPLX_TYPE = TypeBuilder.build()
@@ -781,6 +788,54 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     public void setup() {
+        // THE ALGEBRAS THIS SET'S CARRIERS MODEL, declared per boot (their roles name live insts), as mTypes does for /m
+        TypeBuilder.declare(NAT_TYPE, Algebra.of(rec(mutableMap(
+                uri("rig"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                uri(Tokens.ZERO), jnt(0),
+                                uri(Tokens.ONE), jnt(1)),
+                        RIG_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                uri(ID), jnt(0)),
+                        MONOID_THEORY_TID, null),
+                uri("mult_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
+                                uri(ID), jnt(1)),
+                        MONOID_THEORY_TID, null)))));
+        TypeBuilder.declare(CMPLX_TYPE, Algebra.of(rec(mutableMap(
+                uri("field"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(Tokens.ZERO), lst(real(0.0), real(0.0)),
+                                uri(Tokens.ONE), lst(real(1.0), real(0.0)),
+                                uri(INV), auto_from_(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst()),
+                        FIELD_THEORY_TID, null),
+                uri("ring"), rec(mutableMap(
+                                uri(ADD), auto_from_(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(MUL), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(Tokens.ZERO), lst(real(0.0), real(0.0)),
+                                uri(Tokens.ONE), lst(real(1.0), real(0.0))),
+                        RING_THEORY_TID, null),
+                uri("add_group"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(ID), lst(real(0.0), real(0.0)),
+                                uri(INV), auto_from_(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst()),
+                        GROUP_THEORY_TID, null),
+                uri("mult_group"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(ID), lst(real(1.0), real(0.0)),
+                                uri(INV), auto_from_(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst()),
+                        GROUP_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(ID), lst(real(0.0), real(0.0))),
+                        MONOID_THEORY_TID, null),
+                uri("mult_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
+                                uri(ID), lst(real(1.0), real(0.0))),
+                        MONOID_THEORY_TID, null)))));
         // ONE IDENTITY PER ADDRESS FOR THE JVM'S LIFE: a type re-created on every mount gives the
         // same address two objects, and a type that closes over the old one (a rec slot, a role pointer)
         // then disagrees with the space. Create it once; later mounts reuse it and the space keeps it.
@@ -1061,91 +1116,111 @@ public class mathInstSet extends AbstractInstSet {
                                     inst.arg(0).tid(normalizedTID).realValue(), normalizedTID, lhs.vid()).tid(lhs.tid());
                         }), "add two distances of the same imperial unit", "foot::12.0 + foot::36.0   [-- foot::48.0 --]"),
                         docWrap(instC(AS_INST_TID.dom(MATH_TIME_TID).rng(MATH_TIME_TID), lst(TIME_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vid())), "convert a duration to another time unit — the total is preserved, only the unit label changes", "millis::1500.0.as(second::T)   [-- second::1.5 --]", "second::90.0.as(minute::T)   [-- minute::1.5 --]"),
-                        docWrap(instC(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                        InstBuilder.build().tid(PLUS_INST_TID, "complex addition: \\((a+bi)+(c+di)=(a+c)+(b+d)i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex sum \\(z + w\\)")
+                                .argLst(CMPLX_TYPE, "the complex addend \\(w = c + di\\)")
+                                .body((lhs, inst) ->
                                         lhs.jvm(mutableList(
                                                 real(lhs.asLst().at(0).asReal().realValue() + inst.arg(0).asLst().at(0).asReal().realValue()),
-                                                real(lhs.asLst().at(1).asReal().realValue() + inst.arg(0).asLst().at(1).asReal().realValue())))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex sum \\(z + w\\)",
-                                Map.of(CMPLX_TYPE, "the complex addend \\(w = c + di\\)"),
-                                "complex addition: \\((a+bi)+(c+di)=(a+c)+(b+d)i\\)",
-                                "cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]"),
-                        docWrap(instC(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                                                real(lhs.asLst().at(1).asReal().realValue() + inst.arg(0).asLst().at(1).asReal().realValue()))))
+                                .example("cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]")
+                                .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(MULT_INST_TID, "complex multiplication: \\((a+bi)(c+di)=(ac-bd)+(ad+bc)i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex product \\(z \\cdot w\\)")
+                                .argLst(CMPLX_TYPE, "the complex multiplier \\(w = c + di\\)")
+                                .body((lhs, inst) ->
                                         lhs.jvm(mutableList(
                                                 real(lhs.asLst().at(0).asReal().realValue() * inst.arg(0).asLst().at(0).asReal().realValue()
                                                         - lhs.asLst().at(1).asReal().realValue() * inst.arg(0).asLst().at(1).asReal().realValue()),
                                                 real(lhs.asLst().at(0).asReal().realValue() * inst.arg(0).asLst().at(1).asReal().realValue()
-                                                        + lhs.asLst().at(1).asReal().realValue() * inst.arg(0).asLst().at(0).asReal().realValue())))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex product \\(z \\cdot w\\)",
-                                Map.of(CMPLX_TYPE, "the complex multiplier \\(w = c + di\\)"),
-                                "complex multiplication: \\((a+bi)(c+di)=(ac-bd)+(ad+bc)i\\)",
-                                "cmplx::[1.0,2.0] * cmplx::[3.0,4.0]   [-- cmplx::[-5.0,10.0] --]"),
-                        docWrap(instC(MINUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) ->
+                                                        + lhs.asLst().at(1).asReal().realValue() * inst.arg(0).asLst().at(0).asReal().realValue()))))
+                                .example("cmplx::[1.0,2.0] * cmplx::[3.0,4.0]   [-- cmplx::[-5.0,10.0] --]")
+                                .law(Law.commutative, Law.right_distributive, Law.action, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(MINUS_INST_TID, "complex subtraction: \\((a+bi)-(c+di)=(a-c)+(b-d)i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex difference \\(z - w\\)")
+                                .argLst(CMPLX_TYPE, "the complex subtrahend \\(w = c + di\\)")
+                                .body((lhs, inst) ->
                                         lhs.jvm(mutableList(
                                                 real(lhs.asLst().at(0).asReal().realValue() - inst.arg(0).asLst().at(0).asReal().realValue()),
-                                                real(lhs.asLst().at(1).asReal().realValue() - inst.arg(0).asLst().at(1).asReal().realValue())))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex difference \\(z - w\\)",
-                                Map.of(CMPLX_TYPE, "the complex subtrahend \\(w = c + di\\)"),
-                                "complex subtraction: \\((a+bi)-(c+di)=(a-c)+(b-d)i\\)",
-                                "cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]"),
-                        docWrap(instC(CONJUGATE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                                real(lhs.asLst().at(1).asReal().realValue() - inst.arg(0).asLst().at(1).asReal().realValue()))))
+                                .example("cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]")
+                                .derivation(new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())))
+                                .law(Law.action, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(CONJUGATE_INST_TID, "complex conjugation: \\(\\overline{a+bi}=a-bi\\) — negates the imaginary component")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex conjugate \\(\\overline{z}\\)")
+                                .argLst()
+                                .body((lhs, inst) ->
                                         lhs.jvm(mutableList(
                                                 real(lhs.asLst().at(0).asReal().realValue()),
-                                                real(-lhs.asLst().at(1).asReal().realValue())))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex conjugate \\(\\overline{z}\\)",
-                                Map.of(),
-                                "complex conjugation: \\(\\overline{a+bi}=a-bi\\) — negates the imaginary component",
-                                "cmplx::[1.0,2.0].conjugate()   [-- cmplx::[1.0,-2.0] --]"),
-                        docWrap(instC(DIV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(CMPLX_TYPE), (lhs, inst) -> {
+                                                real(-lhs.asLst().at(1).asReal().realValue()))))
+                                .example("cmplx::[1.0,2.0].conjugate()   [-- cmplx::[1.0,-2.0] --]")
+                                .law(Law.involution, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(DIV_INST_TID, "complex division: \\((a+bi)/(c+di)=\\frac{ac+bd}{c^2+d^2}+\\frac{bc-ad}{c^2+d^2}i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex quotient \\(\\frac{z}{w}\\)")
+                                .argLst(CMPLX_TYPE, "the complex divisor \\(w = c + di\\)")
+                                .body((lhs, inst) -> {
                                     final double a = lhs.asLst().at(0).asReal().realValue();
                                     final double b = lhs.asLst().at(1).asReal().realValue();
                                     final double c = inst.arg(0).asLst().at(0).asReal().realValue();
                                     final double d = inst.arg(0).asLst().at(1).asReal().realValue();
                                     final double norm2 = c * c + d * d;
                                     return lhs.jvm(mutableList(real((a * c + b * d) / norm2), real((b * c - a * d) / norm2)));
-                                }),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex quotient \\(\\frac{z}{w}\\)",
-                                Map.of(CMPLX_TYPE, "the complex divisor \\(w = c + di\\)"),
-                                "complex division: \\((a+bi)/(c+di)=\\frac{ac+bd}{c^2+d^2}+\\frac{bc-ad}{c^2+d^2}i\\)",
-                                "cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]"),
-                        docWrap(instC(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
+                                })
+                                .example("cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]")
+                                .derivation(new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())))
+                                .law(Law.right_distributive, Law.action, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(NEG_INST_TID, "complex negation (additive inverse): \\(-(a+bi)=-a-bi\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the negation \\(-z\\)")
+                                .argLst()
+                                .body((lhs, inst) ->
                                         lhs.jvm(mutableList(
                                                 real(-lhs.asLst().at(0).asReal().realValue()),
-                                                real(-lhs.asLst().at(1).asReal().realValue())))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the negation \\(-z\\)",
-                                Map.of(),
-                                "complex negation (additive inverse): \\(-(a+bi)=-a-bi\\)",
-                                "cmplx::[1.0,2.0].neg()   [-- cmplx::[-1.0,-2.0] --]"),
-                        docWrap(instC(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) -> {
+                                                real(-lhs.asLst().at(1).asReal().realValue()))))
+                                .example("cmplx::[1.0,2.0].neg()   [-- cmplx::[-1.0,-2.0] --]")
+                                .law(Law.involution, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(INV_INST_TID, "complex reciprocal: \\(\\frac{1}{a+bi}=\\frac{a-bi}{a^2+b^2}\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the multiplicative inverse \\(z^{-1}\\)")
+                                .argLst()
+                                .body((lhs, inst) -> {
                                     final double a = lhs.asLst().at(0).asReal().realValue();
                                     final double b = lhs.asLst().at(1).asReal().realValue();
                                     final double norm2 = a * a + b * b;
                                     return lhs.jvm(mutableList(real(a / norm2), real(-b / norm2)));
-                                }),
-                                "a complex number \\(z = a + bi\\)",
-                                "the multiplicative inverse \\(z^{-1}\\)",
-                                Map.of(),
-                                "complex reciprocal: \\(\\frac{1}{a+bi}=\\frac{a-bi}{a^2+b^2}\\)",
-                                "cmplx::[1.0,1.0].inv()   [-- cmplx::[0.5,-0.5] --]"),
-                        docWrap(instC(ZERO_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
-                                        lhs.jvm(mutableList(real(0.0), real(0.0)))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex zero \\(0 + 0i\\)",
-                                Map.of(),
-                                "the additive identity: \\(0 = 0 + 0i\\)",
-                                "cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]"),
-                        docWrap(instC(ONE_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID), lst(), (lhs, inst) ->
-                                        lhs.jvm(mutableList(real(1.0), real(0.0)))),
-                                "a complex number \\(z = a + bi\\)",
-                                "the complex one \\(1 + 0i\\)",
-                                Map.of(),
-                                "the multiplicative identity: \\(1 = 1 + 0i\\)",
-                                "cmplx::[1.0,2.0].one()   [-- cmplx::[1.0,0.0] --]"),
+                                })
+                                .example("cmplx::[1.0,1.0].inv()   [-- cmplx::[0.5,-0.5] --]")
+                                .law(Law.involution, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(ZERO_INST_TID, "the additive identity: \\(0 = 0 + 0i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex zero \\(0 + 0i\\)")
+                                .argLst()
+                                .body((lhs, inst) ->
+                                        lhs.jvm(mutableList(real(0.0), real(0.0))))
+                                .example("cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]")
+                                .law(Law.absorbing, Law.idempotent, Law.pure)
+                                .create(),
+                        InstBuilder.build().tid(ONE_INST_TID, "the multiplicative identity: \\(1 = 1 + 0i\\)")
+                                .dom(CMPLX_TID, "a complex number \\(z = a + bi\\)")
+                                .rng(CMPLX_TID, "the complex one \\(1 + 0i\\)")
+                                .argLst()
+                                .body((lhs, inst) ->
+                                        lhs.jvm(mutableList(real(1.0), real(0.0))))
+                                .example("cmplx::[1.0,2.0].one()   [-- cmplx::[1.0,0.0] --]")
+                                .law(Law.idempotent, Law.pure)
+                                .create(),
                         docWrap(instC(MATH_ABS_INST_TID.dom(CMPLX_TID).rng(REAL_TID), lst(), (lhs, inst) -> {
                                     final double a = lhs.asLst().at(0).asReal().realValue();
                                     final double b = lhs.asLst().at(1).asReal().realValue();
