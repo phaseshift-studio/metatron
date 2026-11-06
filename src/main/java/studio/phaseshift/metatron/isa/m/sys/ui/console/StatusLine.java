@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.sys.ui.console;
 
+import org.jline.terminal.Terminal;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
@@ -27,6 +28,8 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
@@ -34,6 +37,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.slf4j.event.Level.ERROR;
@@ -59,9 +63,21 @@ import static studio.phaseshift.metatron.isa.m.type.reflect.TypedRec.typedRec;
 public class StatusLine implements Runnable, AutoCloseable {
 
     /**
-     * How many banner messages are retained; the oldest scroll off the tail.
+     * How many messages are retained — the history popup's window. The marquee draws only the newest
+     * {@link #BANNER_MESSAGES} of them: they are all it can ever show, and building the rest into every repaint is
+     * work the bar cannot display. The oldest scroll off the tail.
      */
-    static final int MESSAGE_HISTORY = 8;
+    static final int MESSAGE_HISTORY = 50;
+    /**
+     * How many of the retained messages the banner's marquee draws. The terminal edge clips whatever does not fit
+     * (a handful of messages), so drawing the whole retained window only spends width the bar cannot show.
+     */
+    static final int BANNER_MESSAGES = 7;
+    /**
+     * The banner's envelope glyph — also the history popup's click target, so the drawn glyph and the hit-test
+     * width are measured from one constant rather than retyped.
+     */
+    private static final String ENVELOPE = "✉️";
     /**
      * Divides one banner message from the next: a bullet rather than the hairline
      * {@code ·}, since a status line is read at a glance.  It wears the color of
@@ -73,7 +89,30 @@ public class StatusLine implements Runnable, AutoCloseable {
      */
     private static final String MESSAGE_DOT = "•";
 
+    /**
+     * The type-check widget's name — both its segment key and, through {@code CommandPalette.cycleTyper}, what a
+     * click on that segment does.
+     */
+    private static final String TYPE_CHECK = "type_check";
+
     private List<AttributedString> line = new ArrayList<>();
+    /**
+     * The segments on the last drawn bar, in draw order. A click maps a terminal column against these; the list
+     * is swapped whole on each repaint, so the pointer thread never walks a half-built one.
+     */
+    private volatile List<SpanUI> segments = List.of();
+    /**
+     * What a click on one segment does. {@code columns} bounds the hot spot to the first N columns of the widget's
+     * label (0 = the whole label), so a glyph can be the affordance while the text behind it stays inert; the
+     * action receives the span it was clicked on, for a popup that must align with the clicked glyph.
+     */
+    private record SegmentAction(Consumer<SpanUI> action, int columns) {
+    }
+
+    /**
+     * The segment keys that answer a click; a widget with no action is drawn, and inert to the pointer.
+     */
+    private final Map<String, SegmentAction> segmentActions = new LinkedHashMap<>();
     private Level state = INFO;
     private long startTime = 0;
     private long lastExecutionTime = 0;
@@ -90,10 +129,14 @@ public class StatusLine implements Runnable, AutoCloseable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        this.addWidget(f("type_check"), () -> "{{w&[%s]}} T {{X}}".formatted(Typer.Helper.colorLevel()));
+        this.addWidget(f(TYPE_CHECK), () -> "{{w&[%s]}} T {{X}}".formatted(Typer.Helper.colorLevel()));
+        // the strictness level is the bar's first segment, and a click on it is the pointer's alt+t
+        this.onSegment(TYPE_CHECK, CommandPalette::cycleTyper);
         // the wire, not the machine's io counters: bytes-in/out mixed LLM tokens, MQTT payloads and database reads
         // (see Stats.IOStats), and the widget froze them at construction besides. see WireStats
         this.addWidget(f("net"), () -> netMarkup(getForegroundColor(), getBackgroundColor()));
+        // the wire is the panel's subject, so the gauge is the pointer's way in
+        this.onSegment("net", CommandPalette::showNetworkPanel);
         // THE TIME THE CURRENT EVALUATION IS TAKING — the stopwatch the console has always shown, not a wall
         // clock: it sits at the last job's duration between jobs and climbs while one runs, and that is the fact
         // this widget exists for (a clock is on the terminal's own status line, or the user's shell).
@@ -105,6 +148,9 @@ public class StatusLine implements Runnable, AutoCloseable {
         this.addWidget(f("machine"), () -> "{{w}}\uD83D\uDDA5️ {{%s}}%s ".formatted(getForegroundColor(),
                 machineText(MachinePerspective.vid())));
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
+        // THE ENVELOPE ALONE IS THE HISTORY'S DOOR: the glyph is the hot spot, the banner text behind it stays
+        // inert, so a click on a message never opens the list by accident.
+        this.onSegment("message", Highlighter.visualLength(ENVELOPE), CommandPalette::showMessageHistory);
         
         /*this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Machine.authority().stats().monadicStats().runningMonads()));
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Machine.authority().stats().monadicStats().haltedMonads()));
@@ -164,7 +210,12 @@ public class StatusLine implements Runnable, AutoCloseable {
     synchronized static String bannerMarkup(final String fore, final String back) {
         final StringBuilder banner = new StringBuilder();
         boolean newest = true;
+        int shown = 0;
         for (final String message : messages) {
+            // THE MARQUEE DRAWS ITS NEWEST WINDOW, not the whole retained history: the terminal clips a handful of
+            // messages at most, and the rest are the history popup's (see history()).
+            if (shown++ >= BANNER_MESSAGES)
+                break;
             if (newest)
                 // the palette spells a bold color as its uppercase letter (y -> Y)
                 banner.append("{{%s&[%s]}}".formatted(fore.toUpperCase(Locale.ROOT), back));
@@ -175,7 +226,17 @@ public class StatusLine implements Runnable, AutoCloseable {
             banner.append(message);
             newest = false;
         }
-        return "{{[%s]}}✉️ {{[%s]}} %s".formatted(StatusLine.lastMessageColor, back, banner);
+        return "{{[%s]}}%s {{[%s]}} %s".formatted(StatusLine.lastMessageColor, ENVELOPE, back, banner);
+    }
+
+    /**
+     * The retained messages, newest first — the history popup's source (the marquee draws its newest
+     * {@link #BANNER_MESSAGES}). A copy, so the caller can render it while the status thread keeps posting.
+     *
+     * @return up to {@link #MESSAGE_HISTORY} messages, newest first
+     */
+    public static synchronized List<String> history() {
+        return List.copyOf(messages);
     }
 
     /**
@@ -229,13 +290,94 @@ public class StatusLine implements Runnable, AutoCloseable {
         this.widgets.at(uri(name.uriValue()), instC(name.uriValue().prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> widgetText.apply()), MUTABLE);
     }
 
-    private void compileWidgets() {
+    /**
+     * Make a bar widget's segment answer a pointer click: clicking its columns runs {@code action}. The bar is
+     * one line (see {@link #compileWidgets()}), so a segment is the widget's LABEL columns on it — the separator
+     * before it is not part of the segment — and a widget with no action stays drawn but inert.
+     *
+     * @param widget the name the widget was added under
+     * @param action what a click on its segment does
+     * @return this status line (fluent)
+     */
+    public StatusLine onSegment(final String widget, final Runnable action) {
+        return this.onSegment(widget, 0, span -> action.run());
+    }
+
+    /**
+     * As {@link #onSegment(String, Runnable)}, but the segment answers only its first {@code columns} columns
+     * ({@code 0} = the whole label): the message segment's envelope is the history popup's target while the
+     * banner text behind it stays inert. The action receives the clicked span, so a popup can line itself up with
+     * it.
+     *
+     * @param widget  the name the widget was added under
+     * @param columns the first columns of the label that answer the click (0 = all of them)
+     * @param action  what a click on those columns does
+     * @return this status line (fluent)
+     */
+    public StatusLine onSegment(final String widget, final int columns, final Consumer<SpanUI> action) {
+        this.segmentActions.put(widget, new SegmentAction(action, columns));
+        return this;
+    }
+
+    /**
+     * The bar's hot spots, in draw order — the geometry {@link #clickAt} maps a terminal column against.
+     *
+     * @return the segments of the last compiled bar
+     */
+    List<SpanUI> segments() {
+        return this.segments;
+    }
+
+    /**
+     * Whether any segment on the bar answers a pointer click. The console arms terminal mouse tracking from
+     * this: the bar is always on screen, and a click on {@code [ T ]} or the wire gauge must work from the first
+     * prompt — not only once some widget has been floated (widgets used to be the only thing that justified
+     * owning the mouse).
+     *
+     * @return true when at least one segment has been given an action
+     */
+    public boolean clickable() {
+        return !this.segmentActions.isEmpty();
+    }
+
+    /**
+     * A pointer click at a terminal cell: a segment answers when the cell is on the status row and that segment
+     * has an action. The bar lives on the terminal's LAST row, and a click's column is 1-based while a segment's
+     * columns are line-relative — hence the row test and the {@code col - 1}.
+     *
+     * @param row 1-based terminal row of the click
+     * @param col 1-based terminal column of the click
+     * @return true when a segment consumed the click
+     */
+    public boolean clickAt(final int row, final int col) {
+        final Terminal terminal = Console.getTerminal();
+        if (null == terminal || row != terminal.getHeight())
+            return false;
+        final java.util.Optional<SpanUI> segment = MiniWidget.at(this.segments, col - 1);
+        if (segment.isEmpty())
+            return false;
+        final SegmentAction action = this.segmentActions.get(segment.get().key());
+        if (null == action)
+            return false;
+        // a prefix-bounded segment answers only its first columns (the envelope, not the banner behind it)
+        if (action.columns() > 0 && col - 1 >= segment.get().start() + action.columns())
+            return false;
+        try {
+            action.action().accept(segment.get());
+        } catch (final Exception e) {
+            message(str("status segment failed: " + e.getMessage()));
+        }
+        return true;
+    }
+
+    synchronized void compileWidgets() {
         final String back = this.getBackgroundColor();
         final String fore = this.getForegroundColor();
         final int width = Console.getTerminal().getWidth();
         if (0 == StatusLine.lastMessageTime || (System.currentTimeMillis() - StatusLine.lastMessageTime) > 5000)
             StatusLine.lastMessageColor = back;
         this.line.clear();
+        final List<SpanUI> spans = new ArrayList<>();
         boolean capped = false;
         int used = 0;   // the display columns already spent on this line
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
@@ -257,10 +399,18 @@ public class StatusLine implements Runnable, AutoCloseable {
             // message scroll off the right.  fromAnsi, rather than the bare AttributedString
             // constructor, is what makes the measurement honest: the constructor keeps the
             // escapes as literal chars and would charge the widget for their columns.
+            final int start = used;
+            // the separator belongs to the bar's chrome, not to the segment: a segment starts at its own label
+            final int labelStart = start + Highlighter.visualLength(cap);
             final AttributedString widget = clip(AttributedString.fromAnsi(Graphitty.string("{{%s&[%s]}}%s%s{{[%s]}}", fore, back, cap, w, back)), width - used);
             used += widget.columnLength();
             this.line.add(widget);
+            // THE BAR'S SEGMENTS: a widget's label columns on the line, keyed by its name so a pointer hit can ask
+            // the host what it means (see clickAt). A widget clipped to nothing has no columns to hit.
+            if (used > labelStart)
+                spans.add(new SpanUI(labelStart, used, ws.getKey().uriValue().name(), noobj()));
         }
+        this.segments = spans;
         // The bar's background has to reach the terminal's edge, and jline will not do it
         // for us: Status.update pads a short line with spaces built from a FRESH builder,
         // so its fill is unstyled (no background), and an over-long line gets an equally

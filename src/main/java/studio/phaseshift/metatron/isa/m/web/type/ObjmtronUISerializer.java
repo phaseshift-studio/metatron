@@ -431,6 +431,10 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return width > 0 ? width : CODE_LINE_WIDTH;
     }
 
+    public String readWrite(final String objString) {
+        return this.write(this.read(objString));
+    }
+
     // ── Top-level write: the pager is this class's, and only when a terminal is here ──
 
     @Override
@@ -741,13 +745,17 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         return scratch.length() < start ? "" : scratch.substring(start);
     }
 
-    /** The columns the first line of {@code text} occupies — what a fit test may count. */
+    /**
+     * The columns the first line of {@code text} occupies — what a fit test may count.
+     */
     private int firstLineWidth(final String text) {
         final int newline = text.indexOf('\n');
         return Graphitty.viewLength(newline < 0 ? text : text.substring(0, newline));
     }
 
-    /** The column {@code text} leaves the line at, when it begins at {@code start}. */
+    /**
+     * The column {@code text} leaves the line at, when it begins at {@code start}.
+     */
     private int endColumn(final String text, final int start) {
         final int newline = text.lastIndexOf('\n');
         // a broken render carries its own absolute indentation on every line after the first

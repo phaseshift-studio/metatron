@@ -204,7 +204,11 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         if (maxWidth > 0) {
             lines = new ArrayList<>();
             for (final String raw : rawLines) {
-                lines.addAll(wrapLine(raw, maxWidth));
+                // WRAP OR ELIDE: with wrapping on, a long line breaks across rows; with it off (wordWrap=>false) a
+                // long line stays one row and its overflow is marked with …, so a list keeps one entry per row.
+                lines.addAll(style.wordWrap()
+                        ? wrapLine(raw, maxWidth)
+                        : List.of(MiniWidget.clip(raw, maxWidth)));
             }
         } else {
             lines = rawLines;

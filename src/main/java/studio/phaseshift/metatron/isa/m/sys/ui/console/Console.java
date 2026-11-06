@@ -1142,20 +1142,24 @@ public class Console extends MRec implements Closeable, Runnable {
 
     /**
      * Who owns the pointer: the widgets while one of them is focused, or while
-     * any widget is on screen and the pointer has not been released.  A wheel
-     * over empty terminal releases the pointer ({@link #releasePointer()}), so
-     * the terminal keeps its own mouse (wheel scrollback, drag-selection) until
-     * the next prompt or a widget is re-focused via {@code alt}+{@code w}.  A
-     * pinned widget otherwise keeps the pointer armed so a click can always
-     * focus (or re-focus) one.  Native text selection is still available via
-     * Shift+drag.
+     * any widget is on screen and the pointer has not been released; and the
+     * status bar while it has a clickable segment — the bar is always on screen,
+     * so its segments must answer from the very first prompt rather than only
+     * once a widget has been minted.  A wheel over empty terminal releases the
+     * pointer ({@link #releasePointer()}), so the terminal keeps its own mouse
+     * (wheel scrollback, drag-selection) until the next prompt or a widget is
+     * re-focused via {@code alt}+{@code w}.  A pinned widget otherwise keeps the
+     * pointer armed so a click can always focus (or re-focus) one.  Native text
+     * selection is still available via Shift+drag.
      *
-     * @param focused  a widget currently holds the focus
-     * @param released the pointer was handed back to the terminal
-     * @param widgets  widgets with a drawn region on screen
+     * @param focused         a widget currently holds the focus
+     * @param released        the pointer was handed back to the terminal
+     * @param widgets         widgets with a drawn region on screen
+     * @param statusClickable the status bar has at least one segment with an action
      */
-    static boolean pointerWanted(final boolean focused, final boolean released, final int widgets) {
-        return !released && (focused || widgets > 0);
+    static boolean pointerWanted(final boolean focused, final boolean released, final int widgets,
+                                 final boolean statusClickable) {
+        return !released && (focused || widgets > 0 || statusClickable);
     }
 
     /**

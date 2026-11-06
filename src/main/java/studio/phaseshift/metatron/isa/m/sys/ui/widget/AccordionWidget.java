@@ -236,13 +236,16 @@ public class AccordionWidget extends SpaceRec<AccordionWidget> implements Widget
     }
 
     /**
-     * Body lines after word-wrap (if floatWidth is set on the style).
+     * Body lines after word-wrap (if floatWidth is set on the style) — or after elision when the style turns
+     * wrapping off, so each body line stays one row and its overflow is marked with ….
      */
     private List<String> displayLines(final List<String> body, final Style<AccordionWidget> style) {
         final int floatW = style.width();
         if (floatW <= 0) return body;
         // the body is inset one column from BOTH borders, so it has floatW - 4 columns (two borders, two insets)
-        return Stylable.Style.wrapLines(body, floatW - 4);
+        return style.wordWrap()
+                ? Stylable.Style.wrapLines(body, floatW - 4)
+                : body.stream().map(line -> MiniWidget.clip(line, floatW - 4)).toList();
     }
 
     /**

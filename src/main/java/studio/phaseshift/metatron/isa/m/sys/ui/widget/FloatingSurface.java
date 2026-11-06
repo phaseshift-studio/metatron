@@ -103,6 +103,12 @@ public class FloatingSurface {
     // body append lands) — so a content-keyed map silently loses track of a
     // widget the moment it draws.  The slot must follow the instance.
     private final Map<Widget<?>, Slot> slots = new java.util.IdentityHashMap<>();
+    /**
+     * The TRANSIENT widgets on the surface — POPUPS. A popup is dismissed by a pointer click outside it; anything
+     * else stays until it is unfloated. Identity-keyed like the slots (a widget's jvm changes as it renders).
+     */
+    private final java.util.Set<Widget<?>> popups =
+            java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
     // ── Render thread + queue ──────────────────────────────────────
     // ALL terminal writes are serialized through this single daemon.
@@ -482,6 +488,7 @@ public class FloatingSurface {
     }
 
     private synchronized Slot takeSlot(final Widget<?> widget) {
+        this.popups.remove(widget);
         return this.slots.remove(widget);
     }
 
@@ -648,6 +655,49 @@ public class FloatingSurface {
         if (slot != null) {
             clearSlot(slot);
         }
+    }
+
+    /**
+     * Mark a floated widget as a POPUP: transient chrome, dismissed by a pointer click outside it (see
+     * {@link #dismissPopupsOutside(int, int)}). Opening another popup should dismiss the previous one first, so a
+     * host never leaves two stacked.
+     *
+     * @param widget the widget that was just floated
+     */
+    public void popup(final Widget<?> widget) {
+        if (null != widget)
+            this.popups.add(widget);
+    }
+
+    /**
+     * Dismiss every open popup, erasing what it drew.
+     *
+     * @return true when a popup was dismissed
+     */
+    public boolean dismissPopups() {
+        if (this.popups.isEmpty())
+            return false;
+        for (final Widget<?> popup : java.util.List.copyOf(this.popups))
+            this.remove(popup);
+        this.popups.clear();
+        return true;
+    }
+
+    /**
+     * Dismiss the open popups unless the click landed on one of them — the pointer's outside-click rule. The click
+     * itself still lands where it was aimed (a status segment, another widget, empty terminal).
+     *
+     * @param row 1-based terminal row of the click
+     * @param col 1-based terminal column of the click
+     * @return true when a popup was dismissed
+     */
+    public boolean dismissPopupsOutside(final int row, final int col) {
+        if (this.popups.isEmpty())
+            return false;
+        final Widget<?> hit = this.widgetAt(row, col);
+        if (null != hit && this.popups.contains(hit))
+            return false;
+        return this.dismissPopups();
     }
 
     /**
@@ -1394,6 +1444,7 @@ public class FloatingSurface {
         }
         synchronized (this) {
             this.slots.clear();
+            this.popups.clear();
         }
     }
 

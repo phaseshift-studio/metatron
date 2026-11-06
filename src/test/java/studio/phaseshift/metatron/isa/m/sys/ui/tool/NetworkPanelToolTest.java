@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_NETWORK_PANEL_TID;
@@ -76,7 +77,12 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     private static List<String> lines(final boolean paused, final int maxRows, final String filter, final int width) {
-        return NetworkPanelTool.panelLines(WireTrace.snapshot(maxRows), paused, maxRows, filter, width);
+        return lines(paused, maxRows, filter, Set.of(), width);
+    }
+
+    private static List<String> lines(final boolean paused, final int maxRows, final String filter,
+                                      final Set<String> folded, final int width) {
+        return NetworkPanelTool.panelLines(WireTrace.snapshot(maxRows), paused, maxRows, filter, folded, width);
     }
 
     /**
@@ -112,6 +118,60 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
     }
 
     /**
+     * A FOLDED LANE IS ITS HEADER AND NOTHING ELSE: the per-peer accordion puts that peer's rows away while the
+     * header still reports its counts and keeps its clear button.
+     */
+    @Test
+    void shouldFoldALaneToItsHeader() {
+        exchange(PEER_A, "sqr(3)", 4L);
+        final List<String> folded = lines(false, 12, "", Set.of(PEER_A), 120);
+        assertEquals(2, folded.size(), "the summary and the lane header, with no rows: " + folded);
+        final String header = plain(folded.get(1));
+        assertTrue(header.contains("▶"), "the header shows the closed marker: " + header);
+        assertTrue(header.contains("⇄1"), "and still counts the lane's exchanges: " + header);
+        assertTrue(header.contains("[x]"), "and keeps its clear button: " + header);
+        assertFalse(String.join("\n", folded.stream().map(NetworkPanelToolTest::plain).toList()).contains("sqr(3)"),
+                "none of the lane's rows are drawn: " + folded);
+    }
+
+    /**
+     * The fold is per peer: the marked lane closes while every other lane keeps its rows in view.
+     */
+    @Test
+    void shouldFoldOnlyTheLaneThatWasMarked() {
+        exchange(PEER_A, "first", 1L);
+        exchange(PEER_B, "second", 1L);
+        final String all = String.join("\n",
+                lines(false, 12, "", Set.of(PEER_A), 120).stream().map(NetworkPanelToolTest::plain).toList());
+        assertFalse(all.contains("first"), "the folded lane's rows are hidden: " + all);
+        assertTrue(all.contains("second"), "the other lane's rows stay in view: " + all);
+    }
+
+    /**
+     * The lane marker is the per-peer accordion: clicking {@code ▼} closes that lane to its header ({@code ▶}),
+     * and clicking it again opens it. The fold is written to the panel's rec, so a re-hydration keeps it.
+     */
+    @Test
+    void shouldFoldALaneByItsMarker() {
+        exchange(PEER_A, "sqr(3)", 4L);
+        final NetworkPanelTool tool = new NetworkPanelTool(mutableMap(), UI_NETWORK_PANEL_TID, null);
+        assertTrue(plain(tool.format()).contains("▼"), "the lane starts open: " + plain(tool.format()));
+        // body row 0 is the summary and body row 1 the lane header, so the header is box row 2; its marker is the
+        // first content column (the box side and its inset take two)
+        assertTrue(tool.onClick(2, 2), "clicking the lane marker folds the lane");
+        assertTrue(tool.foldedPeers().contains(PEER_A), "the peer is folded in the rec: " + tool.foldedPeers());
+        final String folded = plain(tool.format());
+        assertTrue(folded.contains("▶"), "the header now shows the closed marker: " + folded);
+        assertFalse(folded.contains("sqr(3)"), "and the lane's rows are gone: " + folded);
+        final String[] rows = folded.split("\n");
+        for (final String row : rows)
+            assertEquals(rows[0].length(), row.length(), "the folded header keeps the box square: [" + row + "]");
+        assertTrue(tool.onClick(2, 2), "clicking it again unfolds the lane");
+        assertTrue(tool.foldedPeers().isEmpty(), "the peer is no longer folded");
+        assertTrue(plain(tool.format()).contains("sqr(3)"), "its rows are back");
+    }
+
+    /**
      * A SENT MESSAGE AND THE ANSWER IT GOT ARE ONE EXCHANGE, read as one conversation: the reply is tabbed in
      * beneath the request with a down-right arrow, and carries no second time (the round trip is the request's).
      */
@@ -120,7 +180,7 @@ public class NetworkPanelToolTest extends AbstractMetatronTest {
         exchange(PEER_A, "sqr(3)", 4L);
         final List<String> lines = lines(false, 12, "", 120);
         final String reply = plain(lines.get(3));
-        assertTrue(reply.startsWith("    ↳ "), "the reply is tabbed in under the request it answers: " + reply);
+        assertTrue(reply.startsWith("   ↳ "), "the reply is tabbed in under the request it answers: " + reply);
         assertTrue(reply.contains("answer:sqr(3)"), "and shows the answer that came back: " + reply);
         assertFalse(reply.contains("ms"), "the round trip is stated once, on the request line: " + reply);
     }

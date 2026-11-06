@@ -83,6 +83,12 @@ public class GenericBinder extends MRec implements Binder {
         bound = bound.args(resolvedArgs);
         bound = bound.isInitial() ? bound.rng(bound.arg(0).type()) : bound;
         bound = bound.c(userInst.c());
+        // THE RESOLVED CONTRACT IS THE CALL'S. The candidate's tid states its DECLARED argument types — `args=[#]`
+        // for the generic cast, since it admits any target — while the inst now carries the arguments this call
+        // actually resolved (`lst::T`). Complete the signature so the tid agrees with the args poly: the parser
+        // does the same for an unspecialized call (Inst.Helper.fullSignature), and the frame a fail reports is
+        // this tid, so a stale `[#]` names no contract at all.
+        bound = Inst.Helper.fullSignature(bound);
         final long t3 = System.nanoTime();
         ScoringResolver.T_BIND.addAndGet(t2 - t1);
         ScoringResolver.T_COMPOSE.addAndGet(t3 - t2);

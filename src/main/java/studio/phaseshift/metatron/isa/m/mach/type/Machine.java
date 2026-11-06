@@ -592,6 +592,10 @@ public interface Machine extends Rec, AutoCloseable {
         return this.at(uri(PROCESSOR), templateProcessor, MUTABLE).as();
     }
 
+    default Machine fetch(final fURI machineID) {
+        return machInstSet.Helper.machineAt(this, machineID, "fetch");
+    }
+
     class Helper {
 
         /**
