@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -138,8 +139,9 @@ public abstract class AbstractThread extends MRec implements mThread, Closeable 
                 jvm.put(uri(SOURCE), auto_from_(parent.vid()).tryToInst());
         }
         // the RESULT hand-off: a lazy auto (not the raw future) so the thread rec stays serializable and type-checkable
-        // — reading it dereferences (`>>rhs`) and blocks on the future exactly once, at the gather
-        jvm.put(uri(RHS), auto_(instLambda("await", (_, _) -> this.future.get(FutureObj.DEFAULT_TIMEOUT_MS))).tryToInst());
+        // — reading it dereferences (`>>rhs`) and blocks on the future exactly once, at the gather. Its range is the
+        // code's, any multiplicity: a thread that computes a stream answers the stream, not a range fail
+        jvm.put(uri(RHS), auto_(instLambda("await", ALL.maybe(), ALL.maybeSome(), (_, _) -> this.future.get(FutureObj.DEFAULT_TIMEOUT_MS))).tryToInst());
         if (jvm.containsKey(uri(LHS)))
             this.applyAsync(this.at(uri(LHS)));
 

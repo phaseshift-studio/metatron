@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -29,14 +30,17 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -45,8 +49,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * A BRANCH LANE ASKS ITS PLACE FOR THE VERB IT NEEDS. A lane that only reads ({@code from(</path>)}) or only writes
  * ({@code to(</path>)}) is served by a client that declares that verb and runs no program, as {@code http_client::T}
- * answers from with a GET and to with a POST; any other program needs the place's {@code eval}. Remote lanes run
- * concurrently. The clients here are this machine's own (their far side is this JVM), so the rows need no socket.
+ * answers from with a GET and to with a POST; any other program needs the place's {@code eval}. Every lane runs
+ * on its own {@code virtual::T}, so the lanes run concurrently. The clients here are this machine's own (their far side is this JVM), so the rows need no socket.
  */
 public class BranchLaneTest extends AbstractMetatronTest {
 
@@ -122,6 +126,26 @@ public class BranchLaneTest extends AbstractMetatronTest {
         } finally {
             Machine.current().network().drop(f("loop://left"));
             Machine.current().network().drop(f("loop://right"));
+        }
+    }
+
+    @Test
+    public void testEveryLaneIsAVirtualThread() {
+        // the place's eval sees the lane it runs on: a virtual::T (introspectable at ~/sys/thread like any thread),
+        // handed the program to ship as code, never as the value it computes here
+        final AtomicReference<Obj> lane = new AtomicReference<>(noobj());
+        final AtomicReference<Obj> shipped = new AtomicReference<>(noobj());
+        dial("loop://probe", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
+            lane.set(BootLoader.CURRENT_THREAD.get());
+            shipped.set(lhs);
+            return Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        })));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://probe> => plus(1))", "2");
+            AbstractMetatronTest.checkEquality(LOG, uri(MACH_VIRTUAL_THREAD_TID), uri(lane.get().tid().basePath()), true);
+            AbstractMetatronTest.checkEquality(LOG, bool(true), bool(shipped.get().isCode()), true);
+        } finally {
+            Machine.current().network().drop(f("loop://probe"));
         }
     }
 }
