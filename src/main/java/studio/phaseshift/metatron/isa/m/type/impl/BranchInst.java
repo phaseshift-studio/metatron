@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -73,12 +75,17 @@ public class BranchInst extends MInst {
     }
 
     /**
-     * The keyed routes, {@code place => program} — the args of a keyed call without the reserved {@code lhs} key the
-     * args frame carries (Processor). An ordered call has none.
+     * The keyed routes, {@code place => program}, as each lane sees them: the args of a keyed call without the reserved
+     * {@code lhs} key the args frame carries (Processor), each key carrying the branch's own query as its default.
+     * {@code branch?timeout=24(...)} times every lane and {@code branch?split=part(...)} parts the lhs equally, while a
+     * key's own query overrides the branch's (Marko, 2026-11-05). An ordered call has none.
      */
     public Rec routes() {
+        final Map<String, String> defaults = this.tid().qMap();
         return !this.args().isRec() ? rec_noobj() : this.args().asRec().elements()
                 .filter(kv -> !uri(LHS).equals(kv.first()))
+                // the branch's query first, then the key's own on top (addQ puts its map over what is there)
+                .map(kv -> rel(uri(kv.first().uriValue().q(defaults).addQ(kv.first().uriValue().qMap())), kv.second()))
                 .collect(new CommonUtil.RecCollector());
     }
 
