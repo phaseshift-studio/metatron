@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.HOP;
+import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 
 /**
  * AN EMITTED SHARD, READ AS DATA. One value — {@link Layout} — says what a {@code law_shard}/{@code PlanInterpreter}
@@ -42,7 +43,7 @@ import static studio.phaseshift.metatron.Tokens.HOP;
  *
  * <pre>{@code
  * final Layout layout = DistributedSweep.layout(compiled);
- * layout.ops();              // [start, branch, sum]
+ * layout.ops();              // [branch, sum] for a literal seed, [start, …prefix, branch, sum] for a computed one
  * layout.lanes().size();     // one per key: one per distinct place
  * layout.lane(0).split();    // its share: part, {2}part, copy
  * layout.lane(0).part();     // the slice the branch deals that lane
@@ -65,7 +66,8 @@ public final class DistributedSweep {
      *
      * @param authority the key's place, {@code null} for the local place
      * @param split     the key's share as it states it ({@code part}, {@code {2}part}, {@code copy})
-     * @param code      the code that lane runs: {@code start(part)} and the lane's program
+     * @param code      the code that lane runs: {@code start(part)} and its program when the plan seeded it, the
+     *                  program alone when the branch deals it a computed part
      */
     public record Lane(fURI authority, String split, Code code) {
 
@@ -77,10 +79,10 @@ public final class DistributedSweep {
         }
 
         /**
-         * The lane's share of the seed.
+         * The lane's share of the seed, as the plan seeded it; empty for a lane the branch deals at run time.
          */
         public List<Obj> part() {
-            return TransportRewriteHarness.seedOf(this.seed());
+            return START_INST_TID.equals(this.seed().tid().basePath()) ? TransportRewriteHarness.seedOf(this.seed()) : List.of();
         }
 
         /**

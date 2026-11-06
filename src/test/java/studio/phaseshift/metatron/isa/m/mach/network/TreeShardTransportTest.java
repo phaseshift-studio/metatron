@@ -120,7 +120,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         final Code master = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hop=" + hop + "()")).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(master);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID), layout.ops(),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID), layout.ops(),
                 "the root recombines its child's partial: " + master);
         final DistributedSweep.Lane lane = layout.lane(0);
         checkEquality(LOG, uri(String.valueOf(hop - 1)), uri(lane.budget()), true);
@@ -146,7 +146,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     void testKeyedTreeOverTransport(final String source, final String expected) {
         final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(master);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID, SELECT_INST_TID), layout.ops(),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID, SELECT_INST_TID), layout.ops(),
                 "the root merges its child's partial rec by key, then folds each key: " + master);
         checkEquality(LOG, uri("1"), uri(layout.lane(0).budget()), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected),

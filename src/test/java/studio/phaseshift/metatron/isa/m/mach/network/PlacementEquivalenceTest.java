@@ -27,6 +27,9 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.math.cat.CatTheoryCompiler;
 import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -82,9 +85,11 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
-        // the emitter fired the tree layout: the master is start·branch·sum
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+        // the emitter fired the tree layout: the master is branch·sum, the lanes seeded with their parts
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID),
                 DistributedSweep.layout(compiled).ops(), "the master recombines through the combiner: " + compiled);
+        // NO START STANDS HERE: every lane carries its own seed, so the branch takes nothing and is the initial form
+        assertTrue(compiled.insts().getFirst().isInitial(), "the seeded branch is the initial form: " + compiled);
         checkEquality(LOG, jnt(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
     }
@@ -104,11 +109,61 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, KMERGE_INST_TID), layout.ops(),
+        assertEquals(List.of(BRANCH_INST_TID, KMERGE_INST_TID), layout.ops(),
                 "the master k-way merges the lanes' runs: " + compiled);
         assertEquals(2, layout.lanes().size(), "two lanes, two runs: " + compiled);
         checkEquality(LOG, ObjmtronSerializer.parse(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE MID-EXPRESSION CUT (Marko, 2026-11-05: {@code repeat() [[ plus(10).order ]]}): what cannot float stays home —
+     * here the repeat that generates the bag — and its output is the seed the branch deals when it runs. The master
+     * keeps the prefix, the lanes carry the floatable run and the fold, and no lane holds a part of its own. Two loop
+     * peers. Each row: the source % the master's ops % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "0.repeat(code=>+1,until=>loop().?>20,emit=>true).plus(10).order(_) % start,repeat,branch,kmerge % [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]",
+            "0.repeat(code=>+1,until=>loop().?>20,emit=>true).plus(10).sum()    % start,repeat,branch,sum    % 451",
+    }, delimiter = '%')
+    void testAComputedPrefixStaysHomeAndFeedsTheBranch(final String source, final String ops, final String expected) {
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger:8555"));
+        final Code compiled = Machine.current().compiler().rewriter()
+                .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
+        assertEquals(List.of(ops.trim().split(",")), layout.ops().stream().map(op -> op.name()).toList(),
+                "the prefix stays home and the branch takes its bag: " + compiled);
+        assertEquals(2, layout.lanes().size(), "one lane per peer: " + compiled);
+        assertTrue(layout.lanes().stream().allMatch(lane -> lane.part().isEmpty()),
+                "a computed bag is dealt when the branch runs, so no lane holds a part of its own: " + compiled);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+    }
+
+    /**
+     * A LANE IS COMPILED WHERE IT RUNS (Marko, 2026-11-05): compiling the master compiles the master's own chain and
+     * never a lane's program. A host-keyed lane ships raw for its peer's compiler, and a machine-keyed lane is
+     * compiled by that machine's compiler when it runs, so no instruction of a lane may carry a bound function. The
+     * plan's branch and a hand-written one keep their lanes the same way. Each row: the source.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5}.plus(10).sum()",
+            "{1,2,3,4,5}.branch?<=int{*}&split=part(<loop://localhost:8555> => plus(10).sum()).sum()",
+    }, delimiter = '%')
+    void testLanesStayRawWhenTheMasterCompiles(final String source) {
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
+        final Code compiled = Machine.current().compiler().apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        final List<Obj> lanes = compiled.insts().stream()
+                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
+                .flatMap(inst -> inst.args().asRec().elements().map(Rel::second))
+                .toList();
+        assertFalse(lanes.isEmpty(), "the master branches: " + compiled);
+        for (final Obj lane : lanes)
+            assertTrue(lane.asCall().insts().stream().noneMatch(Inst::hasf),
+                    "a lane is compiled where it runs, never by the master: " + lane + " in " + compiled);
     }
 
     /**

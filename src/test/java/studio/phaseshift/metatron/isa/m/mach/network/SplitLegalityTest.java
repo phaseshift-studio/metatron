@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Env;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
@@ -108,6 +109,9 @@ public class SplitLegalityTest extends AbstractMetatronTest {
                 .law(Law.commutative, Law.monoidic, Law.idempotent, Law.pure)
                 .create();
         InstBuilder.drain(disjoin);
+        // A LANE IS COMPILED WHERE IT RUNS, so the fold must resolve by name there: publish the definition at its
+        // contract address, as an instruction set's mount does
+        PendingWrites.publish(disjoin.tid());
     }
 
     @AfterEach
@@ -134,7 +138,7 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         assertEquals(plain.ops(), splitted.ops(), "the master's chain is untouched: " + splitted.emitted());
         assertEquals(parts(plain), parts(splitted), "the same slices, not a second part count: " + splitted.emitted());
         assertEquals(budgets(plain), budgets(splitted), "and the same hop budgets: " + splitted.emitted());
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID),
                 splitted.ops(), "today's layout, pinned: " + splitted.emitted());
         assertEquals(List.of("part", "part"), splitted.lanes().stream().map(DistributedSweep.Lane::split).toList(),
                 "the stream partition is the branch's part: " + splitted.emitted());

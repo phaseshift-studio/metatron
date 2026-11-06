@@ -539,9 +539,9 @@ same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \l
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: one `branch` keyed by place,
-whose lanes carry the floatable run and a fold stating the remaining hop budget (`sum?hop=0` at a leaf — the depth
-rides the fold, never the seed); the branch deals the seed bulk over its keys, runs each lane at its roster member,
-and the lanes' partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+whose lanes carry their part of the seed (`start(part)`), the floatable run and a fold stating the remaining hop budget
+(`sum?hop=0` at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
+partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.

@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.m.mach.network;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.furi.fURI;
@@ -54,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * whose {@code eval} sleeps before it answers makes the serial-vs-parallel difference measurable without the wire: two
  * {@code delayMs} shards dispatched together start within microseconds of each other, while a serial fan-out would
  * separate their start times by a full delay. The fan-out is measured through the emitted layout
- * ({@code start · branch(place => program, …) · combiner}) and through the gap between the two {@code eval} bodies
+ * ({@code branch(place => start(part)·program, …) · combiner}) and through the gap between the two {@code eval} bodies
  * running.
  */
 //@Isolated
@@ -63,6 +65,11 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
 
     private static final fURI SLOW_A = f("loop://slow-a");
     private static final fURI SLOW_B = f("loop://slow-b");
+    /**
+     * Two services on ONE host: the port is what makes them two places.
+     */
+    private static final fURI PORT_A = f("loop://localhost:1111");
+    private static final fURI PORT_B = f("loop://localhost:1112");
 
     @BeforeEach
     void setup() {
@@ -77,6 +84,8 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
     void teardown() {
         Machine.current().network().drop(SLOW_A);
         Machine.current().network().drop(SLOW_B);
+        Machine.current().network().drop(PORT_A);
+        Machine.current().network().drop(PORT_B);
     }
 
     /**
@@ -95,7 +104,7 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
         // the fan-out is one branch, a keyed lane per peer, then the combiner
         final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
-        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(BRANCH_INST_TID, SUM_INST_TID),
                 layout.ops(), "the master fans out then recombines: " + compiled);
         assertEquals(List.of(SLOW_A, SLOW_B), layout.routes(),
                 "one lane per peer, keyed by its place: " + compiled);
@@ -109,6 +118,48 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
         final long gapMs = (ordered.get(1) - ordered.get(0)) / 1_000_000L;
         assertTrue(gapMs < delayMs / 2,
                 "the two shards were dispatched together (gap=" + gapMs + "ms < " + (delayMs / 2) + "ms), not serially: " + starts);
+    }
+
+    /**
+     * EACH PEER RECEIVES ITS OWN PART (Marko, 2026-11-05: two services on one host are two places). Two peers that differ
+     * only by port each get exactly one shipped program. A literal seed is dealt by the plan, so each program starts from
+     * its own part: {1,3,5} to the first peer and {2,4} to the second. A computed prefix is dealt by the branch when it
+     * runs, so each program starts from its share of the 22 the repeat emits. Each row: the source % the parts the peers
+     * receive, in key order, as their sizes % the value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4,5}.plus(10).sum()                                        % 3,2   % 65",
+            "0.repeat(code=>+1,until=>loop().?>20,emit=>true).plus(10).sum()   % 11,11 % 451",
+    }, delimiter = '%')
+    void testEachPeerReceivesItsOwnPart(final String source, final String sizes, final int expected) {
+        final List<Obj> atA = Collections.synchronizedList(new ArrayList<>());
+        final List<Obj> atB = Collections.synchronizedList(new ArrayList<>());
+        Network.Helper.index(recordingPeer(PORT_A, atA));
+        Network.Helper.index(recordingPeer(PORT_B, atB));
+        final Code compiled = Machine.current().compiler().rewriter()
+                .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        assertEquals(List.of(PORT_A, PORT_B), DistributedSweep.layout(compiled).routes(), "one lane per place: " + compiled);
+        checkEquality(LOG, jnt(expected),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+        assertEquals(1, atA.size(), "the first peer receives one program: " + atA);
+        assertEquals(1, atB.size(), "the second peer receives one program: " + atB);
+        assertEquals(List.of(sizes.trim().split(",")),
+                List.of(String.valueOf(TransportRewriteHarness.seedOf(atA.getFirst().asCode()).size()),
+                        String.valueOf(TransportRewriteHarness.seedOf(atB.getFirst().asCode()).size())),
+                "each peer starts from its own part: " + atA + " / " + atB);
+    }
+
+    /**
+     * A loop-style peer whose {@code eval} records the program shipped to it, then evaluates it locally.
+     */
+    private static Obj recordingPeer(final fURI host, final List<Obj> received) {
+        final Rec overrides = rec();
+        overrides.jvm().put(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
+            received.add(lhs);
+            return lhs.apply(noobj());
+        }));
+        return rec(uri(HOST), uri(host), uri(INST), overrides, uri(STATUS), Network.Helper.statusOf(() -> true));
     }
 
     /**

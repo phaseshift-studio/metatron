@@ -379,8 +379,11 @@ public interface Inst extends Call {
                 // A PEER'S INSTRUCTION BINDS HERE, AT COMPILE TIME: a from/to whose address names a dialed peer that
                 // overrides it keeps this resolution's signature and binding, with f() swapped for the peer's body
                 final Inst bound = Network.Helper.atPeer(resolved);
-                // copy over any api query maps not already on the user instruction
-                return bound.selfTID(bound.tid().copyQ(this.tid())).as();
+                // the call's own query rides onto the contract, the contract's keys winning — set on a COPY (tid
+                // clones), never written into the contract: a definition without a vid is bound as itself
+                final Map<String, String> query = new HashMap<>(this.tid().qMap());
+                query.putAll(bound.tid().qMap());
+                return bound.tid(bound.tid().q(query));
             } else {
                 LOG.debug("unable to resolve: %s", this);
             }
@@ -403,8 +406,12 @@ public interface Inst extends Call {
         final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
         resolved2 = domainInst.hasDomOrRng() ? resolved2.tid(domainInst.tid()) : resolved2;
-        // copy over any api query maps not already on the user instruction
-        resolved2 = resolved2.selfTID(resolved2.tid().copyQ(this.tid()));
+        // the call's own query rides onto the definition read here, the definition's keys winning — set on a COPY
+        // (tid clones): unaddressed() hands back a vid-less definition AS ITSELF, so writing the query into it in
+        // place (selfTID) left one call's ?hop on the stored sum, and every later sum resolved to that budget
+        final Map<String, String> query = new HashMap<>(this.tid().qMap());
+        query.putAll(resolved2.tid().qMap());
+        resolved2 = resolved2.tid(resolved2.tid().q(query));
         if (resolved2.isNoObj()) {
             LOG.debug("%s could not be resolved in any space", domainInst);
             return noobj();
