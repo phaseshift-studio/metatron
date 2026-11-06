@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mach.machInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
@@ -174,7 +173,7 @@ public class BranchInst extends MInst {
         if (null != place.host())
             return this.remote(key, place, program, input);
         final Code code = start_(input).addInsts(program);
-        return Machine.Helper.evalAt(machInstSet.Helper.machineAt(Machine.current(), key.qLess(), "branch"),
+        return Machine.Helper.evalAt(Machine.current().fetch(key.qLess()),
                 () -> this.thread(code, key).apply(noobj()));
     }
 
