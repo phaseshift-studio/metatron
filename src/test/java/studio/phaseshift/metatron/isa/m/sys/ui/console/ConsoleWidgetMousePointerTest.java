@@ -142,16 +142,18 @@ public class ConsoleWidgetMousePointerTest extends AbstractMetatronTest {
 
     @ParameterizedTest()
     @CsvSource(value = {
-            "true  % false % 1 % true  % a focused widget owns the pointer",
-            "false % false % 1 % true  % widgets on screen own the pointer",
-            "false % false % 0 % false % nothing on screen: the terminal keeps its mouse",
-            "true  % false % 0 % true  % a focus outranks a widget not yet drawn",
-            "false % true  % 1 % false % a release hands the pointer back to the terminal",
-            "true  % true  % 1 % false % a release outranks even a focused widget",
+            "true  % false % 1 % false % true  % a focused widget owns the pointer",
+            "false % false % 1 % false % true  % widgets on screen own the pointer",
+            "false % false % 0 % false % false % nothing to click: the terminal keeps its mouse",
+            "false % false % 0 % true  % true  % the clickable status bar owns it with no widget on screen",
+            "true  % false % 0 % false % true  % a focus outranks a widget not yet drawn",
+            "false % true  % 1 % false % false % a release hands the pointer back to the terminal",
+            "true  % true  % 1 % false % false % a release outranks even a focused widget",
+            "false % true  % 0 % true  % false % a release outranks the status bar too",
     }, delimiter = '%')
     void testPointerOwnership(final boolean focused, final boolean released, final int widgets,
-                              final boolean wanted, final String description) {
-        assertEquals(wanted, Console.pointerWanted(focused, released, widgets), description);
+                              final boolean statusClickable, final boolean wanted, final String description) {
+        assertEquals(wanted, Console.pointerWanted(focused, released, widgets, statusClickable), description);
     }
 
     @ParameterizedTest()
@@ -179,7 +181,7 @@ public class ConsoleWidgetMousePointerTest extends AbstractMetatronTest {
         assertNull(this.console.getActiveWidget());
         this.console.getFloatingSurface().clear();
         assertEquals(false, this.console.getFloatingSurface().hasPointerTargets(),
-                "with nothing on screen the terminal keeps its own mouse");
+                "with nothing drawn the surface has no pointer targets of its own (the bar still owns the mouse)");
     }
 
     // ── the drag gesture ───────────────────────────────────────────

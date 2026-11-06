@@ -27,6 +27,9 @@ import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.AccordionWidget;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.LineUI;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireTrace;
@@ -34,11 +37,16 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -67,7 +75,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {@code *<net>} shows how it is configured.
  * <p>
  * As a floating widget it inherits the console's gestures (focus, wheel, chevrons, resize), the accordion's header
- * fold, and a per-peer {@code [x]} clear button on every lane header.
+ * fold, and a per-peer fold on every lane header: clicking a lane's {@code ▼} closes that lane to its header
+ * ({@code ▶}), so one busy peer's rows can be put away while the rest of the wire stays in view. A folded lane's
+ * header still carries its counts, and a per-peer {@code [x]} clear button.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -86,9 +96,15 @@ public class NetworkPanelTool extends AccordionWidget {
      */
     private static final long REPAINT_MS = 250L;
     /**
-     * the marker that leads every lane header — a cyan "▼ "
+     * the rec key holding the peers whose rows are folded away. A peer absent from it is open, so a fresh lane is
+     * born open and the fold is a policy the user states, not a state the panel infers.
      */
-    private static final String LANE_MARKER = "{{c}}▼{{w}} ";
+    private static final String FOLDED = "folded";
+    /**
+     * the span keys a lane header carries: the marker folds the lane, the button clears it (see {@link MiniWidget})
+     */
+    private static final String FOLD_KEY = "fold";
+    private static final String CLEAR_KEY = "clear";
     /**
      * the clear button drawn on a lane header — a red "[x]" — followed by the space before the peer's name
      */
@@ -105,7 +121,7 @@ public class NetworkPanelTool extends AccordionWidget {
      * the glyph that tabs an ANSWER in under the request it answers — U+21B3, a down-right arrow (↳), indented to
      * the column the request's kind starts at, so the two lines read as one move
      */
-    private static final String REPLY_TAB = "    {{c}}↳{{X}}";
+    private static final String REPLY_TAB = "   {{c}}↳{{X}}";
     /**
      * the glyph that leads a frame which ARRIVED with no round trip waiting for it
      */
@@ -163,6 +179,38 @@ public class NetworkPanelTool extends AccordionWidget {
         return peer.isNoObj() ? "" : peer.toString();
     }
 
+    /**
+     * The peers whose rows are folded away; a lane absent from this set is open. The fold is the panel's POLICY,
+     * so it lives in the rec (like {@code max}, {@code paused} and {@code peer}) — a Java field would be lost by
+     * the re-hydration every render performs, springing the lane open under the reader.
+     *
+     * @return the folded peers, in the order they were folded
+     */
+    public Set<String> foldedPeers() {
+        final Obj folded = this.at(uri(FOLDED));
+        final Set<String> peers = new LinkedHashSet<>();
+        // an Lst is a CONTAINER, not a multiplicity: stream() yields the list itself, so its slots are read as a
+        // list. (Only an Objs streams its members.) A peer NAME is a str's raw value, never its quoted rendering.
+        if (folded.isLst())
+            folded.lstValue().forEach(peer -> {
+                if (peer.isStr())
+                    peers.add(peer.strValue());
+            });
+        return peers;
+    }
+
+    /**
+     * Fold a lane's rows away, or unfold it — the pointer's per-peer accordion, written through to the rec.
+     *
+     * @param peer the lane whose fold is toggled
+     */
+    void toggleFold(final String peer) {
+        final Set<String> folded = this.foldedPeers();
+        if (!folded.remove(peer))
+            folded.add(peer);
+        this.put(uri(FOLDED), lst(folded.stream().map(name -> str(name)).toArray(Obj[]::new)));
+    }
+
     // ── the live body (the accordion's content, not the rec's) ─────
 
     /**
@@ -173,16 +221,16 @@ public class NetworkPanelTool extends AccordionWidget {
     protected List<String> bodySource(final Map<Obj, Obj> fields) {
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
         return panelLines(WireTrace.snapshot(this.max()), this.paused(), this.max(), this.peerFilter(),
-                Math.max(0, interior - 2));
+                this.foldedPeers(), Math.max(0, interior - 2));
     }
 
     // ── the pointer: fold on the header, clear on a lane header ────
 
     /**
-     * The accordion's {@code [-]} / {@code [+]} fold on the header, then the per-peer {@code [x]} clear button on
-     * a lane header's own body row. The button sits at a fixed content column right after the lane marker
-     * ({@code ▼ }), so the hit test is column arithmetic; only the body row (which peer) needs the live layout,
-     * and that comes from the same {@link #layout} the renderer draws.
+     * The accordion's {@code [-]} / {@code [+]} fold on the header, then the hot spots a lane header carries: its
+     * {@code ▼}/{@code ▶} marker (the per-peer fold) and its {@code [x]} clear button. A span's columns are
+     * line-relative (see {@link MiniWidget}), so the box's content offset is added here; which spans a row carries
+     * comes from the same {@link #layout} the renderer draws.
      */
     @Override
     public boolean onClick(final int row, final int col) {
@@ -193,16 +241,26 @@ public class NetworkPanelTool extends AccordionWidget {
         if (bodyRow < 0)
             return false;
         final int interior = this.getStyle().width() > 0 ? this.getStyle().width() - 2 : DEFAULT_WIDTH - 2;
-        final PanelLayout layout = layout(WireTrace.snapshot(this.max()), this.paused(), this.max(),
-                this.peerFilter(), Math.max(0, interior - 2));
-        final String peer = layout.peer(bodyRow);
-        if (peer.isEmpty())
+        final List<LineUI> layout = layout(WireTrace.snapshot(this.max()), this.paused(), this.max(),
+                this.peerFilter(), this.foldedPeers(), Math.max(0, interior - 2));
+        if (bodyRow >= layout.size())
             return false;
-        final int buttonStart = CONTENT_OFFSET + Highlighter.visualLength(LANE_MARKER);
-        if (col < buttonStart || col >= buttonStart + CLEAR_BUTTON_WIDTH)
+        final Optional<SpanUI> hit = layout.get(bodyRow).at(col - CONTENT_OFFSET);
+        if (hit.isEmpty())
             return false;
-        WireTrace.clear(peer);
-        return true;
+        final SpanUI span = hit.get();
+        return switch (span.key()) {
+            // THE LANE MARKER IS THE PER-PEER ACCORDION: it puts that peer's rows away (or brings them back)
+            case FOLD_KEY -> {
+                this.toggleFold(span.about().strValue());
+                yield true;
+            }
+            case CLEAR_KEY -> {
+                WireTrace.clear(span.about().strValue());
+                yield true;
+            }
+            default -> false;
+        };
     }
 
     // ── traffic nudges a repaint ───────────────────────────────────
@@ -238,22 +296,9 @@ public class NetworkPanelTool extends AccordionWidget {
     // ── rendering ──────────────────────────────────────────────────
 
     /**
-     * The panel's body: its lines and, parallel to them, the peer whose clear button each line carries (empty when
-     * the line has none — a summary, a row, a footer). The renderer and the pointer's hit test both read this, so
-     * they can never disagree about where a clear button sits.
-     */
-    private record PanelLayout(List<String> lines, List<String> clearPeers) {
-        /**
-         * The peer the clear button on body row {@code bodyRow} clears, or "" when that row carries none.
-         */
-        String peer(final int bodyRow) {
-            return bodyRow >= 0 && bodyRow < this.clearPeers.size() ? this.clearPeers.get(bodyRow) : "";
-        }
-    }
-
-    /**
      * The panel's lines: a summary line, then one line per lane and its newest exchanges — each round trip with
-     * its answer tabbed in beneath it, and each unsolicited inbound frame as a received row.
+     * its answer tabbed in beneath it, and each unsolicited inbound frame as a received row. A folded lane draws
+     * its header and nothing else.
      * <p>
      * Pure — the snapshot comes in, markup comes out — so the layout is tested without a terminal.
      *
@@ -261,29 +306,30 @@ public class NetworkPanelTool extends AccordionWidget {
      * @param paused     whether capture is paused (the panel says so; a frozen view must not look like a quiet one)
      * @param maxRows    how many lines the body may hold
      * @param peerFilter a substring a lane must contain, or empty for every lane
+     * @param folded     the peers whose rows are folded away; their header is still drawn
      * @param width      the columns available (a line longer than this is clipped)
      * @return the body lines, never more than {@code maxRows}
      */
     static List<String> panelLines(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
-                                   final String peerFilter, final int width) {
-        return layout(snapshot, paused, maxRows, peerFilter, width).lines();
+                                   final String peerFilter, final Set<String> folded, final int width) {
+        return layout(snapshot, paused, maxRows, peerFilter, folded, width).stream().map(LineUI::markup).toList();
     }
 
     /**
-     * The full body: the lines {@link #panelLines} returns, plus the clear-button owner for each line. One pass
-     * builds both, so a lane header's {@code [x]} target cannot drift from the header the renderer draws.
+     * The full body: the lines {@link #panelLines} returns, each with the hot spots its pointer should honour (a
+     * lane header's marker and clear button; nothing on a summary or a data row). One pass builds both, so a hot
+     * spot cannot drift from the line the renderer draws.
      */
-    private static PanelLayout layout(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
-                                      final String peerFilter, final int width) {
-        final List<String> lines = new ArrayList<>();
-        final List<String> clearPeers = new ArrayList<>();
+    private static List<LineUI> layout(final WireTrace.Snapshot snapshot, final boolean paused, final int maxRows,
+                                       final String peerFilter, final Set<String> folded, final int width) {
+        final List<LineUI> lines = new ArrayList<>();
         // the color LETTER, so it can be dropped into a tag: a timeout tints the trip count and stays quiet otherwise
         final String trouble = snapshot.timeouts() > 0 ? "r" : "y";
         // A CROSS, NOT A TIMEPIECE. This is a count of deadlines that were missed, and an hourglass beside live
         // numbers reads as a clock — which is exactly how it was misread. Drawn only when there is one, so a
         // healthy wire says nothing at all.
         final String alarms = snapshot.timeouts() > 0 ? " {{w}}\u2717 {{r}}%d{{w}}".formatted(snapshot.timeouts()) : "";
-        lines.add(clip("{{c}}⇄{{%s}}%d {{c}}↓{{%s}}%d {{c}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
+        lines.add(new LineUI(MiniWidget.clip("{{c}}⇄{{%s}}%d {{c}}↓{{%s}}%d {{c}}↑{{%s}}%d%s  {{y}}%d peer%s%s"
                         .formatted(trouble, snapshot.roundTrips(),
                                 trouble, snapshot.received(),
                                 trouble, snapshot.sent(),
@@ -291,8 +337,7 @@ public class NetworkPanelTool extends AccordionWidget {
                                 snapshot.lanes().size(),
                                 1 == snapshot.lanes().size() ? "" : "s",
                                 paused ? "  {{r}}PAUSED" : ""),
-                width));
-        clearPeers.add("");
+                width)));
         int remaining = maxRows - 1;
         for (final WireTrace.Lane lane : snapshot.lanes()) {
             if (remaining <= 1)
@@ -301,11 +346,21 @@ public class NetworkPanelTool extends AccordionWidget {
                 continue;
             final String last = lane.lastLatencyMs() < 0 ? "" : "  {{y}}" + lane.lastLatencyMs() + "ms{{X}}";
             final String timeout = lane.timeouts() > 0 ? "  {{r}}\u2717 " + lane.timeouts() : "";
-            // the lane header carries the clear button, right after the marker and before the peer's name
-            lines.add(clip(LANE_MARKER + CLEAR_BUTTON + "%s  {{c}}⇄%d%s%s"
-                    .formatted(lane.peer(), lane.exchanges(), last, timeout), width));
-            clearPeers.add(lane.peer());
+            final boolean laneFolded = folded.contains(lane.peer());
+            // THE LANE MARKER IS THE PER-PEER ACCORDION: ▼ when the lane is open, ▶ when it is closed to its
+            // header. The clear button rides right after the marker either way, so its columns are the same, and
+            // both are hot spots on this line keyed for the pointer's switch in onClick.
+            final String header = MiniWidget.marker(!laneFolded) + CLEAR_BUTTON + "%s  {{c}}⇄{{y}}%d%s%s"
+                    .formatted(ObjmtronUISerializer.unlinked().readWrite(lane.peer()), lane.exchanges(), last, timeout);
+            final Obj peer = str(lane.peer());
+            lines.add(new LineUI(MiniWidget.clip(header, width), List.of(
+                    new SpanUI(0, MiniWidget.MARKER_COLUMNS, FOLD_KEY, peer),
+                    new SpanUI(MiniWidget.MARKER_COLUMNS, MiniWidget.MARKER_COLUMNS + CLEAR_BUTTON_WIDTH,
+                            CLEAR_KEY, peer))));
             remaining--;
+            // a folded lane is its header and nothing else: the header's counts already say what is behind the fold
+            if (laneFolded)
+                continue;
             // how many of the lane's exchanges this lane has actually drawn, so the "older" line counts what is
             // left rather than what the snapshot happened to hold
             int shown = 0;
@@ -322,8 +377,8 @@ public class NetworkPanelTool extends AccordionWidget {
                     // a frame that arrived with no round trip waiting for it is an INBOUND move, not a failure:
                     // it leads with a left arrow and has no round trip to time
                     final String prefix = "{{w}}  " + RECEIVED_MARK + " {{m}}" + row.kind() + "{{w}} ";
-                    lines.add(clip(prefix + frame(row.requestDetail(), row.reply(), prefix, width), width));
-                    clearPeers.add("");
+                    lines.add(new LineUI(MiniWidget.clip(
+                            prefix + frame(row.requestDetail(), row.reply(), prefix, width), width)));
                 } else {
                     final String mark = row.ok() ? "{{c}}→" : "{{r}}✗";
                     final String elapsed = row.ok() ? "{{y}}" + row.elapsedMs() + "ms{{X}}" : "timeout";
@@ -331,31 +386,29 @@ public class NetworkPanelTool extends AccordionWidget {
                     // serializer: the arrow, the kind and the timing keep their panel colors
                     final String prefix = "{{w}}  " + mark + " {{m}}" + row.kind() + "{{w}} " + elapsed + " "
                             + (row.ok() ? "{{w}}" : "{{r}}");
-                    lines.add(clip(prefix + frame(row.requestDetail(),
-                            row.request().isEmpty() ? row.reply() : row.request(), prefix, width), width));
-                    clearPeers.add("");
+                    lines.add(new LineUI(MiniWidget.clip(prefix + frame(row.requestDetail(),
+                            row.request().isEmpty() ? row.reply() : row.request(), prefix, width), width)));
                     if (answered) {
-                        lines.add(clip(REPLY_TAB + frame(row.replyDetail(), row.reply(), REPLY_TAB, width), width));
-                        clearPeers.add("");
+                        lines.add(new LineUI(MiniWidget.clip(
+                                REPLY_TAB + frame(row.replyDetail(), row.reply(), REPLY_TAB, width), width)));
                     }
                 }
                 remaining -= needed;
                 shown++;
             }
             if (remaining > 0 && shown < lane.exchanges()) {
-                lines.add(clip("{{w}}  … %d older".formatted(lane.exchanges() - shown), width));
-                clearPeers.add("");
+                lines.add(new LineUI(MiniWidget.clip(
+                        "{{w}}  … %d older".formatted(lane.exchanges() - shown), width)));
                 remaining--;
             }
         }
         if (snapshot.lanes().isEmpty()) {
-            lines.add(clip("{{k}} no network traffic", width));
-            clearPeers.add("");
+            lines.add(new LineUI(MiniWidget.clip("{{k}} no network traffic", width)));
         } else if (snapshot.dropped() > 0 && remaining > 0) {
-            lines.add(clip("{{w}}  (dropped %d off the window)".formatted(snapshot.dropped()), width));
-            clearPeers.add("");
+            lines.add(new LineUI(MiniWidget.clip(
+                    "{{w}}  (dropped %d off the window)".formatted(snapshot.dropped()), width)));
         }
-        return new PanelLayout(lines, clearPeers);
+        return lines;
     }
 
     /**
@@ -387,21 +440,6 @@ public class NetworkPanelTool extends AccordionWidget {
         // the ellipsis takes a column of its own, so the visible frame is one column narrower
         final int room = Math.max(1, width - Graphitty.viewLength(prefix) - 1);
         return Highlighter.highlightLine(FRAME_SYNTAX, Graphitty.viewPrefix(Graphitty.strip(rendered), room)) + "…";
-    }
-
-    /**
-     * Clip a markup line to {@code width} visible columns, keeping the styling of what survives.
-     */
-    private static String clip(final String markup, final int width) {
-        if (width <= 0)
-            return markup;
-        // measure VISUAL COLUMNS — the true terminal width, markup and ANSI stripped, a wide glyph counted for
-        // its real width — never markup characters, which is exactly the measure the accordion's word-wrap uses
-        if (Graphitty.viewLength(markup) <= width)
-            return markup;
-        // a clipped markup line would end inside a tag, so a line that must be cut is handed back as plain text,
-        // sliced at a column boundary so a wide glyph is never split in half
-        return Graphitty.viewPrefix(Graphitty.strip(Graphitty.string(markup)), Math.max(1, width - 1)) + "…";
     }
 
     @Override

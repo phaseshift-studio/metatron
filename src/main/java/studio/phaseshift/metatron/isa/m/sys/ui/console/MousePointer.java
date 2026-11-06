@@ -134,6 +134,14 @@ public final class MousePointer {
      * As {@link #clickAt(int, int)} with a held control key.
      */
     public boolean clickAt(final int row, final int col, final boolean follow) {
+        // A CLICK OUTSIDE AN OPEN POPUP DISMISSES IT, and still lands where it was aimed — the popup is transient
+        // chrome, not a focus owner.
+        this.console.getFloatingSurface().dismissPopupsOutside(row, col);
+        // THE STATUS BAR IS THE CONSOLE'S OWN ROW, not a floating widget: its segments answer first, so a click on
+        // the typer indicator cycles the typer (the same act as alt+t) before anything else sees the cell.
+        final StatusLine bar = this.console.getStatus();
+        if (null != bar && bar.clickAt(row, col))
+            return true;
         final Widget<?> hit = this.console.getFloatingSurface().widgetAt(row, col);
         if (Boolean.getBoolean("metatron.render.trace"))
             Console.rawErr().println("[click] row=" + row + " col=" + col + " widget=" + (null != hit)
@@ -316,10 +324,11 @@ public final class MousePointer {
     /**
      * Turn terminal mouse tracking on or off to match what is on screen.
      *
-     * <p>The pointer belongs to the widgets while any of them is on screen
-     * (or one is focused): that is what lets a cold click focus a widget,
-     * and a click after unfocusing re-focus one.  Only with nothing pinned
-     * does the terminal get its own mouse back (wheel, drag-selection).
+     * <p>The pointer belongs to the widgets while any of them is on screen (or one is focused), AND to the
+     * status bar while it has a clickable segment: the bar is always drawn, so its segments ({@code [ T ]}, the
+     * wire gauge) must answer from the first prompt — a widget was once the only thing that justified owning
+     * the mouse, which left the bar dead until one was minted.  Only with nothing to click does the terminal get
+     * its own mouse back (wheel, drag-selection).
      *
      * <p>Called only when the prompt owns the terminal (the console's watcher
      * thread, and the console thread itself): while a job holds the console the
@@ -339,10 +348,12 @@ public final class MousePointer {
         final Terminal term = this.console.getTerminal();
         if (null == term || !term.hasMouseSupport()) return;
         final int widgets = this.console.getFloatingSurface().drawnWidgetCount();
+        final StatusLine bar = this.console.getStatus();
         // a drag holds the pointer whatever else changes — the gesture is not over
         // until the button comes up
         final boolean wanted = this.dragging()
-                || Console.pointerWanted(null != this.console.getActiveWidget(), this.pointerReleased, widgets)
+                || Console.pointerWanted(null != this.console.getActiveWidget(), this.pointerReleased, widgets,
+                        null != bar && bar.clickable())
                 // ...and while the transcript holds a link: clicking one is the screen's own
                 // affordance, and a click is only ours while we hold the pointer.  A release the
                 // reader asked for (alt+s) outranks it: the pointer goes back to the terminal so

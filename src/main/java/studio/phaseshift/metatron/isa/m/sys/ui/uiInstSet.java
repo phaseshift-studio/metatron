@@ -166,7 +166,8 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri("zIndex").maybe(), INT_TYPE,
                                                 uri("scroll").maybe(), ALL_TYPE.orElse(id_().tryToInst()),
                                                 uri("scrollX").maybe(), INT_TYPE,
-                                                uri("scrollY").maybe(), INT_TYPE))
+                                                uri("scrollY").maybe(), INT_TYPE,
+                                                uri("wordWrap").maybe(), BOOL_TYPE))
                                         .constructor(arg -> Stylable.Style.from(arg.asRec()))
                                         .refinement("maybe an obj", "a style obj", mutableMap(
                                         uri("border").maybe().asUri(), "the border style of the widget (e.g. border::none, border::simple, etc.)",
@@ -187,7 +188,8 @@ public class uiInstSet extends AbstractInstSet {
                                         uri("zIndex").maybe(), "render order among floating widgets: higher = drawn later (on top); default 0",
                                         uri("scroll").maybe(), "scroll axes: scroll=>union(x,y) (both, the default), union(y) (vertical only), none (off)",
                                         uri("scrollX").maybe(), "initial horizontal scroll offset (column shown at the left edge)",
-                                        uri("scrollY").maybe(), "initial vertical scroll offset (body row shown at the top); 0 = newest content"))
+                                        uri("scrollY").maybe(), "initial vertical scroll offset (body row shown at the top); 0 = newest content",
+                                        uri("wordWrap").maybe(), "wrap long body lines (default true); false keeps one line per entry and elides the overflow with …"))
                                         .desc("a widget style specification")
                                         .create(),
                         UI_WIDGET_TYPE = TypeBuilder.build()

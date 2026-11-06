@@ -106,6 +106,23 @@ public class PanelWidgetTest extends AbstractMetatronTest {
                 "a narrow panel wraps the body over several rows: " + wrapped);
     }
 
+    /**
+     * With wrapping off, a long body line keeps its row and its overflow is marked with … — the shape a list wants
+     * (one entry, one row), where wrapping would push the next entry down and break the one-to-one reading.
+     */
+    @Test
+    public void shouldElideRatherThanWrapWhenWordWrapIsOff() {
+        final PanelWidget p = panel(str("alpha beta gamma delta epsilon"));
+        p.maxWidth(12);
+        p.style().wordWrap(false).applyStyle();
+        final String rendered = p.format();
+        final List<String> body = rendered.lines().filter(line -> line.startsWith("│")).toList();
+        assertEquals(1, body.size(), "the whole body line stays on one row: " + rendered);
+        assertTrue(body.getFirst().contains("…"), "and its overflow is marked as elided: " + rendered);
+        assertTrue(Highlighter.visualLength(body.getFirst()) <= 12 + 2,
+                "the row stays within the declared width plus the two border sides: " + rendered);
+    }
+
     // ── the declared width is the panel's width, title included ────
 
     /**

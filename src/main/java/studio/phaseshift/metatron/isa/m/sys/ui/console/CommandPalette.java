@@ -24,6 +24,7 @@ import org.jline.reader.Buffer;
 import org.jline.reader.LineReader;
 import org.jline.reader.Widget;
 import org.jline.terminal.MouseEvent;
+import org.jline.terminal.Terminal;
 import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
@@ -33,14 +34,17 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
+import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.ui.tmux.Pane;
 import studio.phaseshift.metatron.isa.m.sys.ui.tmux.SplitLayout;
 import studio.phaseshift.metatron.isa.m.sys.ui.tool.ExplainTool;
 import studio.phaseshift.metatron.isa.m.sys.ui.tool.InstSelectorTool;
+import studio.phaseshift.metatron.isa.m.sys.ui.tool.NetworkPanelTool;
 import studio.phaseshift.metatron.isa.m.sys.ui.tool.fURISelectorTool;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.*;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -56,10 +60,13 @@ import java.util.Map;
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
+import static studio.phaseshift.metatron.Tokens.STATUS;
+import static studio.phaseshift.metatron.Tokens.STYLE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_CONSOLE_TID;
+import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_NETWORK_PANEL_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -619,11 +626,7 @@ public final class CommandPalette extends MRec {
 
         // ===== typer-cycle (Ctrl+T) =====
         this.at("typer-cycle", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-            if (Typer.Helper.level() == 0)
-                Typer.Helper.enableAll();
-            else
-                Typer.Helper.enabled().stream().findFirst().ifPresent(flag -> Typer.Helper.set(flag, false));
-            StatusLine.message(str("typer: " + Typer.Helper.enabled()));
+            CommandPalette.cycleTyper();
             return noobj();
         }), MUTABLE);
         bindKey("typer-cycle", alt('t'));
@@ -666,6 +669,111 @@ public final class CommandPalette extends MRec {
      */
     private static String cc(final String text) {
         return "{{m}}" + text + "{{X}}";
+    }
+
+    /**
+     * Cycle the typer's check level — the act behind both the {@code alt+t} binding and the status bar's
+     * {@code [ T ]} segment. From no checks it turns them all on (the start of a debugging session); from anywhere
+     * else the first enabled check drops, so repeats walk the level down one flag at a time. The banner reports
+     * what is left on.
+     */
+    public static void cycleTyper() {
+        if (Typer.Helper.level() == 0)
+            Typer.Helper.enableAll();
+        else
+            Typer.Helper.enabled().stream().findFirst().ifPresent(flag -> Typer.Helper.set(flag, false));
+        StatusLine.message(str("typer: " + Typer.Helper.enabled()));
+    }
+
+    /**
+     * The network panel's natural size — the status bar's wire gauge opens it at this size, capped to the terminal
+     * it is opened on.
+     */
+    private static final int NETWORK_PANEL_WIDTH = 100;
+    private static final int NETWORK_PANEL_HEIGHT = 15;
+
+    /**
+     * Open the network panel as a floating widget — the status bar's wire gauge ({@code ⇄ ↓ ↑}) calls this. The
+     * size is the panel's natural size capped by the terminal, so a small window still gets a panel that fits; its
+     * row budget is the box's interior, so the panel fills the viewport instead of leaving rows unused.
+     * <p>
+     * THE PANEL LIVES AT AN ADDRESS — {@code console.vid()/status} — so a second click is the SAME widget, not a
+     * second one: the fresh instance replaces the previous representation (and the previous rec, being the same
+     * place, is where its geometry and policy persist). That address is also how mtron controls the panel in view:
+     * {@code @<console>/status >>= [paused=>true]} freezes it, {@code >>= [max=>20]} resizes its row budget.
+     */
+    public static void showNetworkPanel() {
+        final Terminal terminal = Console.getTerminal();
+        final int terminalWidth = null == terminal || terminal.getWidth() <= 0
+                ? NETWORK_PANEL_WIDTH + 2 : terminal.getWidth();
+        final int terminalHeight = null == terminal || terminal.getHeight() <= 0
+                ? NETWORK_PANEL_HEIGHT + 3 : terminal.getHeight();
+        final int width = Math.max(20, Math.min(NETWORK_PANEL_WIDTH, terminalWidth - 2));
+        final int height = Math.max(5, Math.min(NETWORK_PANEL_HEIGHT, terminalHeight - 3));
+        final Stylable.Style<AccordionWidget> style = Stylable.Style.empty();
+        style.floatAt(FloatingSurface.Anchor.TOP_RIGHT, width, 0, 0);
+        style.height(height);
+        final Console console = Console.LOCAL_INSTANCE;
+        final fURI vid = null == console ? null : console.vid().extend(STATUS);
+        final NetworkPanelTool panel = new NetworkPanelTool(
+                mutableMap(uri(STYLE), style), UI_NETWORK_PANEL_TID, vid);
+        // the accordion draws one title row and one bottom border, so its body budget is the interior
+        panel.max(Math.max(1, height - 2));
+        // one representation per address: drop the instance still floating there before the fresh one takes its
+        // place (the surface also replaces by anchor, but the ADDRESS is the identity that makes a re-click — and
+        // an mtron write — reach the one panel in view)
+        if (null != console && null != vid)
+            for (final var floating : List.copyOf(console.getFloatingWidgets()))
+                if (floating instanceof Obj obj && vid.equals(obj.vid()))
+                    console.getFloatingSurface().remove(floating);
+        panel.run();
+    }
+
+    /**
+     * The message-history popup's natural size — the status bar's envelope opens it, capped to the terminal.
+     */
+    private static final int HISTORY_WIDTH = 60;
+    private static final int HISTORY_HEIGHT = 12;
+
+    /**
+     * The message-history popup — the status bar's envelope opens it. A {@link PanelWidget} (bordered, and
+     * scrollable by the surface when the list outgrows the viewport) whose bottom border sits one row above the
+     * status line and whose left edge is the clicked envelope; its rows are the retained messages, newest first.
+     * It is a POPUP: any pointer click outside it dismisses it, and opening it again replaces it.
+     *
+     * @param envelope the clicked status-bar segment, whose start column the popup aligns to
+     */
+    public static void showMessageHistory(final SpanUI envelope) {
+        final List<String> history = StatusLine.history();
+        final Terminal terminal = Console.getTerminal();
+        final int terminalWidth = null == terminal || terminal.getWidth() <= 0 ? 80 : terminal.getWidth();
+        final int terminalHeight = null == terminal || terminal.getHeight() <= 0 ? 24 : terminal.getHeight();
+        final int width = Math.max(24, Math.min(HISTORY_WIDTH, terminalWidth - 4));
+        final int height = Math.max(4, Math.min(HISTORY_HEIGHT, history.size() + 2));
+        final StringBuilder body = new StringBuilder();
+        for (int i = 0; i < history.size(); i++) {
+            if (i > 0)
+                body.append('\n');
+            // newest first, in the banner's accent; the rest read as history behind it
+            body.append(i == 0 ? "{{Y}}" : "{{w}}").append("• ").append(history.get(i));
+        }
+        final PanelWidget popup = new PanelWidget("messages (" + history.size() + ")", body.toString());
+        final Stylable.Style<PanelWidget> style = Stylable.Style.empty();
+        // BOTTOM_LEFT with a row offset of one puts the bottom border on the row above the status bar; the left
+        // edge is the envelope's own column, and the surface clamps the box into the terminal when it overflows
+        style.floatAt(FloatingSurface.Anchor.BOTTOM_LEFT, width, 1, envelope.start());
+        style.height(height);
+        // ONE LINE PER MESSAGE: the panel elides an overlong entry with … rather than wrapping it into several
+        // rows, so every sighting stays a row the reader can scan (the popup scrolls when the list outgrows it)
+        style.wordWrap(false);
+        popup.style(style);
+        final Console console = Console.LOCAL_INSTANCE;
+        if (null == console)
+            return;
+        final FloatingSurface surface = console.getFloatingSurface();
+        surface.dismissPopups();   // one popup at a time
+        popup.run();
+        surface.popup(popup);
     }
 
     /**

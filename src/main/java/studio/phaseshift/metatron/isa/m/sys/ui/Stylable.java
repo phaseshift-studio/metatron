@@ -412,6 +412,24 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
         /**
+         * Whether long body lines WRAP (the default) or are elided to one line with {@code …}. A list widget — a
+         * message history, a picker — wants one row per entry and cannot afford a wrapped entry pushing its
+         * neighbours down, so it turns wrapping off and lets the overflow be marked instead. Only the widgets that
+         * lay out text (a panel, an accordion) read this.
+         */
+        public boolean wordWrap() {
+            return this.at("wordWrap").isBool() ? this.at("wordWrap").asBool().jvm() : true;
+        }
+
+        /**
+         * @param wrap false keeps each body line on one row and elides what does not fit (see {@link #wordWrap()})
+         */
+        public Style<T> wordWrap(final boolean wrap) {
+            this.jvm().put(uri("wordWrap"), studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(wrap));
+            return this;
+        }
+
+        /**
          * Initial {@code x} (column) scroll offset — the column of the widget's
          * content shown in the leftmost visible cell.  0 = content flush left.
          *
