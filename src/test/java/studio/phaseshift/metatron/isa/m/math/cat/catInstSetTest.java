@@ -366,8 +366,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .create();
         assertEquals(f("/m/inst/built_test").dom(INT_TID).rng(INT_TID), Inst.Helper.operationTid(built.tid()),
                 "the builder stamps the declared contract");
-        InstBuilder.drain(built);
-        final Obj laws = QCollection.decOf(built);
+        final Obj laws = Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ));
         assertTrue(laws.isRec() && laws.asRec().at(uri(LAW)).isLst(),
                 "the builder's laws reach ?decq, got " + laws);
         assertEquals(2, laws.asRec().at(uri(LAW)).asLst().count(), "both laws are declared");
@@ -393,13 +392,12 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhs, inst) -> lhs)
                 .inverse(opposing)
                 .create();
-        InstBuilder.drain(built);
         final LawTable.Entry served = LawTable.lawsOf(built.tid());
         assertNotNull(served, "an inst declaring only an inverse is served without a table row");
         assertEquals(opposing, served.inverse(), "the declared inverse answers the lookup");
         assertEquals(0, served.laws().count(), "no law was declared, so the served list is empty");
         // the address is stored AS an address, and a facet that was never declared is omitted
-        final Rec declaration = QCollection.decOf(built).asRec();
+        final Rec declaration = Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec();
         assertEquals(opposing, declaration.atDirect(uri(INVERSE)).uriValue(), "the inverse is stored as an address");
         assertTrue(declaration.atDirect(uri(LAW)).isNoObj(), "an undeclared law list is omitted, not written empty");
     }
@@ -421,14 +419,13 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhsObj, inst) -> lhsObj)
                 .derivation(new Derivation(lhs, rhs))
                 .create();
-        InstBuilder.drain(built);
         final LawTable.Entry served = LawTable.lawsOf(built.tid());
         assertNotNull(served, "an inst declaring only a derivation is served without a table row");
         assertNotNull(served.derivation(), "the declared derivation answers the lookup");
         assertEquals(lhs.toString(), served.derivation().lhs().toString(), "the lhs round-trips through ?decq");
         assertEquals(rhs.toString(), served.derivation().rhs().toString(), "the rhs round-trips through ?decq");
         // only the declared facets are written: the equation is a rec of code::T values, and no inverse key exists
-        final Rec declaration = QCollection.decOf(built).asRec();
+        final Rec declaration = Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec();
         assertEquals(rhs.toString(), declaration.atDirect(uri(DERIVATION)).asRec().atDirect(uri(RHS)).toString(),
                 "the equation is stored as its lhs/rhs code values");
         assertTrue(declaration.atDirect(uri(INVERSE)).isNoObj(), "an undeclared facet is omitted, not written");
@@ -467,8 +464,9 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .law(modLaws)
                 .derivation(new Derivation(lhs, rhs))
                 .create();
-        InstBuilder.drain(built);
-        assertTrue(QCollection.decOf(built).asRec().atDirect(uri(DERIVATION)).isRec(),
+        // an override is declared noobj first: the next read misses and publishes the re-declared claim
+        Machine.write(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ), noobj());
+        assertTrue(Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec().atDirect(uri(DERIVATION)).isRec(),
                 "the definition reaches ?decq beside the registered inst");
         assertTrue(LawTable.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
                 "a declared definition feeds the rewrite list, got " + LawTable.derivations());
@@ -482,14 +480,14 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
         final long before = LawTable.derivations().stream()
                 .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
-        InstBuilder.drain(InstBuilder.build()
+        InstBuilder.build()
                 .tid(MINUS_INST_TID)
                 .dom(INT_TID).rng(INT_TID)
                 .argLst(INT_TYPE)
                 .body((lhsObj, inst) -> lhsObj)
                 .law(minusLaws)
                 .derivation(rowed)
-                .create());
+                .create();
         assertEquals(before, LawTable.derivations().stream()
                         .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
                 "the declared copy of a row's equation is deduped, not added");
@@ -500,7 +498,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      * at {@code ?decq}, and the owning instset publishes the queue when its space is mounted (a type is built before
      * that, which is why the write cannot happen at {@code create()} time). The mount's
      * {@code PendingWrites.drainUnder(vid)} is replayed here directly, since {@code /m} mounted at boot. Read back
-     * through {@code decOf}.
+     * through {@code ?decq}.
      */
     @Test
     void testTypeBuilderDeclaresItsAlgebra() {
@@ -510,7 +508,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .law(rec(uri("ring"), rec(uri("zero"), jnt(0))))
                 .create();
         PendingWrites.drainUnder(f("/m"));
-        final Obj read = QCollection.decOf(lawful);
+        final Obj read = Machine.read(lawful.vid().addQ(QCollection.DECQ));
         assertTrue(read.isRec() && read.asRec().has(uri("ring")),
                 "the builder's declaration must reach ?decq, got " + read);
     }
@@ -550,9 +548,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     void testDecQLivesBesideItsType() {
         final Rec ring = rec(uri("ring"), rec(uri("zero"), jnt(0), uri("one"), jnt(1)));
-        QCollection.decWrap(mInstSet.INT_TYPE, ring);
+        Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ), ring);
         final Obj read = Machine.read(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ));
-        assertEquals(read, QCollection.decOf(mInstSet.INT_TYPE), "the reader and the ?decq read agree");
         assertTrue(read.isRec(), "int::T's algebra must be readable through ?decq, got " + read);
         assertTrue(read.asRec().has(uri("ring")), "the ring instance survives the round trip, got " + read);
         assertEquals(jnt(0), read.asRec().at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");

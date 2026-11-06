@@ -29,12 +29,11 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
+import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -347,8 +346,7 @@ public final class mTypes {
      * </ul>
      * <p>
      * STAGED ONLY, like {@link #declareAlgebras()}: this is a method for the same class-initialisation reason — the
-     * recs name the theory tids and {@code TypeBuilder.declare} writes the staged map the drain reads. The category
-     * is optional, so {@link #axiomsOf(fURI)} also answers from the staged map when no {@code ?decq} exists.
+     * recs name the theory tids and {@code TypeBuilder.declare} writes the staged map the drain reads.
      */
     public static void declareAxioms() {
         // monoid: an associative operation with an identity
@@ -380,21 +378,13 @@ public final class mTypes {
     }
 
     /**
-     * The batteries as declared — the reader half of {@link #declareAxioms()}, for the staged (no category) case.
-     */
-    private static final Map<fURI, List<Law>> AXIOMS = new ConcurrentHashMap<>();
-
-    /**
-     * THE LAWS A THEORY ENTAILS, keyed by the theory's address. The {@code ?decq} declaration is read first (a
-     * theory type is a registered type once the category mounts, so its battery is persisted beside it); the staged
-     * declaration is the answer when the optional category is absent — the same staged/declared precedence
-     * {@code AlgebraTool} uses for a carrier. Empty when the theory declares no battery.
+     * THE LAWS A THEORY ENTAILS — the battery its {@code ?decq} declares. Empty when the theory declares none.
      */
     public static List<Law> axiomsOf(final fURI theory) {
         if (null == theory)
             return List.of();
         final fURI address = null == theory.basePath() ? theory : theory.basePath();
-        final Obj declared = decOf(address);
+        final Obj declared = Machine.read(address.addQ(DECQ));
         if (declared.isRec()) {
             final Obj battery = declared.asRec().atDirect(uri(LAW));
             // A TYPE-VALUED SLOT MEANS "ANY LAW": a battery may state law => uri(Law.LAW_TID) (law::T) instead of a
@@ -411,7 +401,7 @@ public final class mTypes {
                     return laws;
             }
         }
-        return AXIOMS.getOrDefault(address, List.of());
+        return List.of();
     }
 
     /**
@@ -425,12 +415,11 @@ public final class mTypes {
     }
 
     /**
-     * DECLARE one theory's battery — the rec under the {@code law} key, and the staged copy {@link #axiomsOf} falls
-     * back to. {@code TypeBuilder.declare} takes the address, not a {@link Type}: a theory type is registered by the
-     * (optional) category, and the declaration is keyed by its vid either way.
+     * DECLARE one theory's battery — the rec under the {@code law} key. {@code TypeBuilder.declare} takes the
+     * address, not a {@link Type}: a theory type is registered by the (optional) category, and the declaration is
+     * keyed by its vid either way.
      */
     private static void axiom(final fURI theory, final Law... laws) {
-        AXIOMS.put(theory, List.of(laws));
         declare(theory, rec(uri(LAW),
                 lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList())));
     }

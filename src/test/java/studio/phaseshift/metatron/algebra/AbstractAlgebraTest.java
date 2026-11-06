@@ -39,9 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 
 /**
  * THE TYPE-AGNOSTIC ALGEBRA VALIDATOR — what a carrier's own declaration says about it, tested.
@@ -86,7 +84,7 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
     @Test
     public void declaredInstancesEntailTheirLaws() {
         final Type carrier = this.carrier();
-        final Rec instances = instances(carrier);
+        final Rec instances = LawTable.typeLawsOf(carrier);
         assumeTrue(!instances.jvm().isEmpty(),
                 () -> "carrier " + carrier.namedType() + " declares no theory instance in ?decq — nothing to validate");
 
@@ -114,19 +112,6 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
         final AlgebraTool.Report report = AlgebraTool.analyzeType(carrier, claims);
         assertTrue(report.ok(),
                 () -> "carrier " + carrier.namedType() + " FAILS its own declared algebra " + claims + " — report " + report.toRec());
-    }
-
-    /**
-     * THE CARRIER'S DECLARED ALGEBRA — instance name => theory instance rec. {@code LawTable.typeLawsOf} is the
-     * serving read (what the category renders); the {@code ?decq} declaration it serves is the fallback when no law
-     * table is mounted — the same read {@code AlgebraTool} makes.
-     */
-    protected static Rec instances(final Type type) {
-        final Rec declared = LawTable.typeLawsOf(type);
-        if (!declared.jvm().isEmpty())
-            return declared;
-        final Obj declaration = decOf(type);
-        return declaration.isRec() ? declaration.asRec() : rec0();
     }
 
     /**

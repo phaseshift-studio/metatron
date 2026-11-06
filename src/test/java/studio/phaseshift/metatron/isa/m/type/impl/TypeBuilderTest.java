@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -178,7 +177,7 @@ public class TypeBuilderTest extends AbstractMetatronTest {
         final Obj read = Machine.read(vid);
         assertEquals(vid, read.vid(), "the type landed at the address it was written at, got " + read);
         assertTrue(read.isType(), "a type written at its vid reads back as a type, got " + read);
-        final Obj law = QCollection.decOf(lawful);
+        final Obj law = Machine.read(PendingWrites.decq(vid));
         assertTrue(law.isRec() && law.asRec().has(f("ring")),
                 "the algebra is readable beside the type through ?decq, got " + law);
         final Obj doc = Machine.read(PendingWrites.docq(vid));
@@ -199,7 +198,7 @@ public class TypeBuilderTest extends AbstractMetatronTest {
         assertTrue(PendingWrites.has(PendingWrites.decq(vid)),
                 "the declaration is queued at " + PendingWrites.decq(vid));
         PendingWrites.drainUnder(TEST_NAMESPACE);
-        final Obj law = QCollection.decOf(later);
+        final Obj law = Machine.read(PendingWrites.decq(vid));
         assertTrue(law.isRec() && law.asRec().has(f("add_monoid")),
                 "the later declaration reaches ?decq, got " + law);
     }

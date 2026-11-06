@@ -37,7 +37,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.LAW;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
+import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.isa.m.mTypes.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
@@ -189,7 +189,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final List<String> exempt = new ArrayList<>();
         final List<String> unbattered = new ArrayList<>();
         for (final Type carrier : carriers()) {
-            final Rec algebra = algebra(carrier);
+            final Rec algebra = LawTable.typeLawsOf(carrier);
             if (algebra.jvm().isEmpty()) {
                 empty.add(carrier.namedType());
                 continue;
@@ -241,7 +241,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final List<String> dangling = new ArrayList<>();
         int checked = 0;
         for (final Type carrier : carriers()) {
-            final Rec algebra = algebra(carrier);
+            final Rec algebra = LawTable.typeLawsOf(carrier);
             for (final Map.Entry<Obj, Obj> instance : algebra.jvm().entrySet()) {
                 if (!instance.getKey().isUri() || !instance.getValue().isRec())
                     continue;
@@ -349,18 +349,6 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * The type's declared algebra — the same read {@link AlgebraTool} makes: the law table's served
-     * {@code ?decq} declaration first, the direct declaration when no table answers for the type.
-     */
-    private static Rec algebra(final Type type) {
-        final Rec declared = LawTable.typeLawsOf(type);
-        if (!declared.jvm().isEmpty())
-            return declared;
-        final Obj declaration = decOf(type);
-        return declaration.isRec() ? declaration.asRec() : rec0();
-    }
-
-    /**
      * The row key IS a registered instruction's tid: the declaration addresses a live implementation.
      */
     private static boolean live(final List<Inst> insts, final fURI address) {
@@ -418,14 +406,14 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE LAWS AN INSTRUCTION DECLARES — its {@code ?decq} rec (where {@code InstBuilder.drain} persists the claims
+     * THE LAWS AN INSTRUCTION DECLARES — its {@code ?decq} rec (where {@code InstBuilder.create} stages the claims
      * an instruction makes about itself) and the law-table row the table serves for it, unioned in declaration order
      * and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: a row and a {@code ?decq} rec may
      * state the same law, and the census must report each claim once.
      */
     private static List<Law> declaredLaws(final Inst inst) {
         final List<Law> laws = new ArrayList<>();
-        final Obj fromDecq = decOf(inst.tid());
+        final Obj fromDecq = Machine.read(Inst.Helper.operationTid(inst.tid()).addQ(DECQ));
         if (fromDecq.isRec())
             addLaws(laws, fromDecq.asRec().atDirect(uri(LAW)));
         final LawTable.Entry served = LawTable.lawsOf(inst.tid());

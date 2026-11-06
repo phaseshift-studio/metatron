@@ -301,10 +301,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         // declaration list is what attributes a contract to the set that provided it, which its ADDRESS cannot
         // (memory routes a cross-set declaration into another set's table).
         this.types().forEach(type -> TypeBuilder.drain(type, this));
-        // NO PER-INSTRUCTION DRAIN HERE. `drain(inst)` re-queues the claim its `create()` already staged AND
-        // publishes it immediately through QCollection -- a space write, per instruction, per mount. The queue
-        // below publishes the same claim once, from the prefix index; `drain(inst)` remains for a caller that
-        // must read `?decq` without a mount (the tests).
         // THE SET'S OWN JURISDICTION IS ITS ADDRESS: publish every write still queued under it — a type, an
         // instruction or a declaration staged at (or below) this level, including the ones no `types()`/`insts()`
         // list names yet, since the queued write is what puts them in those lists.

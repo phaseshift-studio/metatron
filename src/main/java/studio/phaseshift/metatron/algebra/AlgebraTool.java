@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -442,18 +441,11 @@ public final class AlgebraTool {
     /* ------------------------------------------------------------------ the algebra */
 
     /**
-     * The type's declared algebra — the theory instances it models. {@code LawTable.typeLawsOf} is the serving
-     * read; the {@code ?decq} declaration it serves first is the fallback when no law table is mounted, and it is
-     * where the base carriers write their algebra ({@code mTypes.declareAlgebras}).
+     * The type's declared algebra — the theory instances it models, as {@code LawTable.typeLawsOf} serves them off
+     * the type's {@code ?decq}.
      */
     private static Rec algebra(final Type type) {
-        if (null == type || !Machine.loaded())
-            return MRec.rec0();
-        final Rec declared = LawTable.typeLawsOf(type);
-        if (!declared.jvm().isEmpty())
-            return declared;
-        final Obj declaration = decOf(type);
-        return declaration.isRec() ? declaration.asRec() : MRec.rec0();
+        return null == type || !Machine.loaded() ? MRec.rec0() : LawTable.typeLawsOf(type);
     }
 
     /**

@@ -40,7 +40,6 @@ import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
-import static studio.phaseshift.metatron.furi.q.QCollection.decWrap;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -90,7 +89,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * THE DECLARED FORMS, IN MEMORY, keyed by the OPERATION's base path. A form is a fact about the operation, not
      * about one registration: every dom/rng specialization of {@code as} is the same typer, and a rewrite reads a
      * form off an instruction whose tid has been RETYPED to its declared contract, so a map keyed by the full n-tid
-     * would miss exactly the reads that matter. {@link #drain} records the facet beside the instruction in
+     * would miss exactly the reads that matter. {@link #create()} stages the facet beside the instruction in
      * {@code ?decq}, as it does the laws, inverse and derivation.
      */
     private static final Map<fURI, Inst.Form> DECLARED_FORMS = new ConcurrentHashMap<>();
@@ -229,7 +228,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * opaque to a wrapper's {@code {self} ∪ components} fan-out — {@code as} decides what the value IS, so it
      * cannot be distributed over the old basis — and the rewriter neither floats it across a coefficient change nor
      * merges two of them ({@link Inst.Form#isFloatable()} and {@link Inst.Form#isBlocked()} are both false).
-     * Queued with the other declaration facets and published to {@code ?decq} by {@link #drain}.
+     * Queued with the other declaration facets at {@code ?decq}.
      */
     public InstBuilder form(final Inst.Form form) {
         this.form = form;
@@ -301,47 +300,6 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         else
             DECLARED_FORMS.put(keyed.basePath(), Inst.Form.of(inst));
         return inst;
-    }
-
-    /**
-     * PERSIST an inst's staged declaration to {@code ?decq} — the call an instset makes once its space is mounted,
-     * and the call a caller makes when it wants the store to answer now.
-     *
-     * <p>THE CLAIM IS READ FROM THE RETAINED STAGING LOG, not recomposed from a registry: {@code create()} queued the
-     * exact rec (laws, inverse, derivation, form) at {@code ?decq}, and that write stays staged, so the claim published
-     * here is the claim the instruction made. The FORM facet is the one kept out of the log's key — it is declared per
-     * OPERATION ({@link #DECLARED_FORMS}) — so it is appended when the staged rec does not already carry it.
-     * {@link studio.phaseshift.metatron.furi.q.QCollection#decWrap} publishes the same rec immediately, so a rewrite
-     * that drains an instruction and then consults the store does not see a hole; both writes land at the same address
-     * with the same value, so the replay is a no-op rather than a second claim.
-     */
-    public static void drain(final Inst inst) {
-        if (null == inst || null == inst.tid())
-            return;
-        final fURI claimAddress = PendingWrites.decq(Inst.Helper.operationTid(inst.tid()));
-        final Obj staged = PendingWrites.find(claimAddress);
-        final Inst.Form form = DECLARED_FORMS.get(inst.tid().basePath());
-        if (null == staged && null == form)
-            return;
-        final Map<Obj, Obj> facets = new LinkedHashMap<>();
-        facets.put(uri(OBJ), inst);
-        if (null != staged && staged.isRec()) {
-            final Rec declared = staged.asRec();
-            final Obj laws = declared.atDirect(uri(LAW));
-            if (!laws.isNoObj())
-                facets.put(uri(LAW), laws);
-            final Obj inverse = declared.atDirect(uri(INVERSE));
-            if (!inverse.isNoObj())
-                facets.put(uri(INVERSE), inverse);
-            final Obj derivation = declared.atDirect(uri(DERIVATION));
-            if (!derivation.isNoObj())
-                facets.put(uri(DERIVATION), derivation);
-        }
-        if (null != form)
-            facets.put(uri(FORM), uri(form.name()));
-        final Rec claim = facets.isEmpty() ? rec0() : rec(facets);
-        PendingWrites.write(claimAddress, claim);
-        decWrap(inst, claim);
     }
 
     /**
