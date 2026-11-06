@@ -39,6 +39,8 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_SECOND_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.TO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.map_;
@@ -46,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.rec_noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -57,7 +60,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *     <li>A KEYED call routes: {@code place => program} runs the lhs through the program at that place. The key may
  *     mark itself {@code ?split={w}part} to take a weighted share of the lhs ({@link #weight}, {@link #deal}).</li>
  *     <li>EVERY LANE IS A {@code virtual::T}, submitted before any is awaited, so the lanes overlap and the branch
- *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await).</li>
+ *     waits once, for the slowest; each answers through its {@code rhs} (the {@code >>rhs} await), within the key's
+ *     {@code ?timeout} ({@link #thread}).</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -144,14 +148,31 @@ public class BranchInst extends MInst {
      * ({@link #remote}).
      */
     protected Obj lane(final Rel route, final Obj input) {
+        final fURI key = route.first().uriValue();
         final List<Inst> program = route.second().isCall()
                 ? route.second().asCall().insts()
                 : List.of((Inst) map_(route.second()).tryToInst());
-        // the key's own query (its split) is the branch's to read, not part of the place
-        final fURI place = route.first().uriValue().resolve().qLess();
+        // the key's own query (its split, its timeout) is the branch's to read, not part of the place
+        final fURI place = key.resolve().qLess();
         return null == place.host()
-                ? VirtualThread.virtual(start_(input).addInsts(program)).apply(noobj())
-                : this.remote(place, program, input);
+                ? this.thread(start_(input).addInsts(program), key).apply(noobj())
+                : this.remote(key, place, program, input);
+    }
+
+    /**
+     * A LANE'S THREAD: a {@code virtual::T} running {@code code}. The key's {@code ?timeout} bounds the wait for its
+     * result in whole seconds, as a q value cannot carry a typed time yet (Marko, 2026-11-05); the thread holds it as the
+     * time it is ({@code second::n}). Without one, the thread's own default applies.
+     */
+    protected VirtualThread thread(final Obj code, final fURI key) {
+        final String timeout = key.q(TIMEOUT);
+        if (null == timeout)
+            return VirtualThread.virtual(code);
+        final Obj seconds = ObjmtronSerializer.parse(timeout);
+        if (!seconds.isInt())
+            throw MTronException.of("?%s=%s is not a whole number of seconds", TIMEOUT, timeout);
+        return new VirtualThread(CommonUtil.mutableMap(uri(CODE), code, uri(TIMEOUT),
+                real(seconds.intValue().doubleValue(), MATH_SECOND_TID, null)), MACH_VIRTUAL_THREAD_TID, null);
     }
 
     /**
@@ -161,7 +182,7 @@ public class BranchInst extends MInst {
      * no program — {@code http_client::T}, GET and POST — serves it. Any other program ships to the place's eval as
      * {@code start(input).program}, uncompiled, to be compiled there. A place that serves neither is unreachable.
      */
-    protected Obj remote(final fURI place, final List<Inst> program, final Obj input) {
+    protected Obj remote(final fURI key, final fURI place, final List<Inst> program, final Obj input) {
         final Network network = Machine.current().network();
         final Inst only = 1 == program.size() ? program.getFirst() : null;
         final fURI verb = null != only
@@ -173,13 +194,13 @@ public class BranchInst extends MInst {
         if (!eval.isObjInst() && (EVAL_INST_TID.equals(verb) || !network.overrideOf(place, verb).isObjInst()))
             throw Network.Helper.unreachable(Machine.current(), verb, place);
         if (EVAL_INST_TID.equals(verb))
-            return VirtualThread.virtual(eval).apply(start_(input).addInsts(program));
+            return this.thread(eval, key).apply(start_(input).addInsts(program));
         // the lane's own address homed at the place, its query kept (from(</x?docq>)). The written value rides the
         // lane's code, not the thread's lhs: a thread reads its lhs with at(), which fires an auto or dom-{0} inst
         final fURI address = only.arg(0).uriValue().origin(place);
-        return VirtualThread.virtual(instLambda((l, i) -> FROM_INST_TID.equals(verb)
+        return this.thread(instLambda((l, i) -> FROM_INST_TID.equals(verb)
                         ? Machine.read(address)
-                        : Machine.write(address, input)))
+                        : Machine.write(address, input)), key)
                 .apply(noobj());
     }
 }

@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.concurrent.CountDownLatch;
@@ -146,6 +147,23 @@ public class BranchLaneTest extends AbstractMetatronTest {
             AbstractMetatronTest.checkEquality(LOG, bool(true), bool(shipped.get().isCode()), true);
         } finally {
             Machine.current().network().drop(f("loop://probe"));
+        }
+    }
+
+    @Test
+    public void testAKeyTimesItsLane() {
+        // the place answers after a little over a second: a key that waits one second gives up, a key that waits two
+        // answers, and a timeout that is not a whole number of seconds is refused before anything ships
+        dial("loop://slow", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, (lhs, inst) -> {
+            CommonUtil.sleepThread(1200);
+            return Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        })));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=1> => plus(1))", "<ERROR>");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=2> => plus(1))", "2");
+            AbstractMetatronTest.checkCodeParseApply(LOG, "1.branch(<loop://slow?timeout=soon> => plus(1))", "<ERROR>");
+        } finally {
+            Machine.current().network().drop(f("loop://slow"));
         }
     }
 }
