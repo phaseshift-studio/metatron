@@ -140,15 +140,11 @@ public class ShardTargetSelectionTest extends AbstractMetatronTest {
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
         assertEquals(List.of(SERVANT, EVALER), DistributedSweep.layout(compiled).routes(),
                 "the shard fans out over the peers that serve eval, and only those: " + compiled);
-        // and the route is BOUND in the compiled code — the target peer's own eval, not a bare eval(<target>) left for
-        // select to resolve when it runs
-        final Inst to = compiled.insts().stream()
-                .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
-                .map(select -> (Obj) select.arg(0).asLst().elements().findFirst().orElseThrow())
-                .map(Reduction::ship)
-                .findFirst().orElseThrow();
-        assertTrue(to.hasf(), "the emitted route carries its function: " + to);
-        assertTrue(to.functionClassName().endsWith("Network$Helper$AtPeer"), "the target peer's own eval: " + to.functionClassName());
+        // and NO route is bound in the compiled code: a lane is keyed by its place, and the branch binds that place's
+        // own eval when the lane runs (BranchInst#remote), so a lane ships its program and carries no eval of its own
+        assertTrue(DistributedSweep.layout(compiled).lanes().stream()
+                        .noneMatch(lane -> lane.code().insts().stream().anyMatch(inst -> EVAL_INST_TID.equals(inst.tid().basePath()))),
+                "a lane is a program keyed by its place, never a bound route: " + compiled);
     }
 
     @Test

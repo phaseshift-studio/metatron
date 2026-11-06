@@ -53,12 +53,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 /**
  * {@code ?place} AT THE EMITTER (C5 of {@code distributed-qparams-implementation.md}): the place set a fold states —
  * the plan's distributing set, overridden by a {@code ?place} on any instruction of the chain — resolved into
- * <em>lanes</em>, one per share, the home place's shares first.
+ * <em>lanes</em> of one branch, one per distinct place, the home place first.
  *
  * <p><b>The oracle is the law, not the layout.</b> Every row that emits also asserts the value, because a place axis
  * is result-preserving (Thm 19): {@code distribute(c) ≡ c}. The lane <em>structure</em> is the other half — the home
- * place's route is the addressless {@code eval()} (lane at distance zero), a peer's is {@code eval(<authority>)}, and
- * a place with demand n takes n consecutive lanes.
+ * place's key is {@code <~>} (the lane at distance zero), a peer's is its authority, and a place with demand n is one
+ * key weighted {@code ?split={n}part}.
  *
  * <p><b>Hermetic where it can be.</b> The {@code local} rows resolve against a synthetic {@link Env} — the seam C4
  * opened — because a test VM has no listening authority, so {@code Places.self()} is {@code noobj} unless the env
@@ -66,8 +66,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  * {@link PlacementEquivalenceTest} pattern: no forked process, no new cluster) and take the live peer map into the
  * same synthetic env.
  *
- * <p>The counts are the design's: a share is a lane, so {@code [local,peer]} is two lanes and
- * {@code [local,local,local,local]} is four home lanes — the lanes case, a peerless machine sharding.
+ * <p>The counts are the design's: a share is a weight, so {@code [local,peer]} is two lanes and
+ * {@code [local,local,local,local]} is ONE home lane weighted four — the lanes case, a peerless machine sharding,
+ * keyed by the one place it has.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -105,9 +106,9 @@ public class PlaceLaneTest extends AbstractMetatronTest {
 
     /**
      * S — {@code ?place=[local,peer]}: the master is a place at distance zero. Each row: the fold % its value. The
-     * layout is the same mechanism with one more lane: the master's chain is still
-     * {@code start·select·select·merge·<combiner>}, lane 0 is the addressless {@code eval()} (the home lane) and lane 1
-     * travels to the dialed peer. The value is the local fold's, because a share is a share wherever it runs.
+     * layout is the same mechanism with one more lane: the master's chain is still {@code start·branch·<combiner>},
+     * lane 0 is the home key {@code <~>} and lane 1 travels to the dialed peer. The value is the local fold's, because
+     * a share is a share wherever it runs.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -121,7 +122,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertEquals(2, layout.lanes().size(), "one lane per share: " + emitted);
         assertTrue(layout.lane(0).local(), "the home place's share comes first: " + emitted);
         assertEquals(PEER, layout.lane(1).authority(), "then the peers in resolution order: " + emitted);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
                 layout.ops(), "the master's chain is unchanged by the extra lane: " + emitted);
         assertEquals("0", layout.lane(0).budget(), "every lane is one level down: " + emitted);
         checkEquality(LOG, jnt(expected),
@@ -129,9 +130,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE LANES — {@code ?place=[local,local,local,local]} on a <b>peerless</b> machine: four home lanes, each with its
-     * own share of the seed, recombined at home through the same combiner. A peerless machine shards because the place
-     * set says it does; the value is the local fold's. Each row: the fold % its value.
+     * THE LANES — {@code ?place=[local,local,local,local]} on a <b>peerless</b> machine: four home shares, keyed by the
+     * one place they share, so ONE home lane weighted {@code {4}part} takes every member of the seed, recombined at home
+     * through the same combiner. The four shares no longer run as four concurrent lanes: a branch has one lane per key,
+     * and a place is one key. The value is the local fold's. Each row: the fold % its value.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -141,18 +143,17 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     void testFourHomeLanesOnAPeerlessMachine(final String tail, final int expected) {
         final Code emitted = lower(alone(), "start?place=[local,local,local,local]({1,2,3,4,5,6,7,8})." + tail);
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
-        assertEquals(4, layout.lanes().size(), "a place with demand four takes four lanes: " + emitted);
-        assertTrue(layout.lanes().stream().allMatch(DistributedSweep.Lane::local),
-                "a peerless machine's lanes all stay home: " + emitted);
-        assertEquals(List.of(2, 2, 2, 2), layout.lanes().stream().map(lane -> lane.part().size()).toList(),
-                "the seed strides over the four shares: " + emitted);
+        assertEquals(1, layout.lanes().size(), "a place with demand four is one key: " + emitted);
+        assertTrue(layout.lane(0).local(), "a peerless machine's lane stays home: " + emitted);
+        assertEquals("{4}part", layout.lane(0).split(), "the key is weighted by its four shares: " + emitted);
+        assertEquals(8, layout.lane(0).part().size(), "the one weighted key is dealt the whole seed: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
     }
 
     /**
-     * DUPLICATES SUM — {@code ?place=[//ginger,//ginger,//booger]} over two loop peers: three lanes, two of them
-     * ginger's. The brace-free spelling of the same 2:1 weight {@code [{2}//ginger,//booger]} states, so the second
+     * DUPLICATES SUM — {@code ?place=[//ginger,//ginger,//booger]} over two loop peers: two lanes, ginger's weighted
+     * two shares. The brace-free spelling of the same 2:1 weight {@code [{2}//ginger,//booger]} states, so the second
      * ginger is a share, not a starved duplicate. Each row: the fold % its value.
      */
     @ParameterizedTest
@@ -165,16 +166,17 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         final Code emitted = PlanInterpreter.lower(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[//ginger,//ginger,//booger]({1,2,3,4,5,6})." + tail).asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
-        assertEquals(List.of(GINGER, GINGER, BOOGER), layout.routes(),
-                "ginger takes two consecutive lanes and booger one: " + emitted);
+        assertEquals(List.of(GINGER, BOOGER), layout.routes(), "one lane per place: " + emitted);
+        assertEquals(List.of("{2}part", "part"), layout.lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "ginger takes two shares and booger one: " + emitted);
         checkEquality(LOG, jnt(expected),
                 evaluate(emitted).clone().selfVID(null), true);
     }
 
     /**
-     * THE DEFAULT IS UNCHANGED — no {@code ?place}: the plan's own distributing set (the dialed peers), one lane per
-     * peer, no home lane, and the same master chain the pre-C5 emitter emitted. This is C0's pin, re-read where the
-     * place axis lands, so a change to the default would be a diff here and not only in the suites that pin it too.
+     * THE DEFAULT — no {@code ?place}: the plan's own distributing set (the dialed peers), one lane per peer, no home
+     * lane, and the master chain every shard emits ({@code start·branch·<combiner>}). This is C0's pin, re-read where
+     * the place axis lands, so a change to the default would be a diff here and not only in the suites that pin it too.
      */
     @Test
     void testTheDefaultEmitsTheLayoutItAlwaysDid() {
@@ -183,8 +185,8 @@ public class PlaceLaneTest extends AbstractMetatronTest {
                 ObjmtronSerializer.parse("start({1,2,3,4,5,6}).plus(1).sum()").asCode());
         final DistributedSweep.Layout layout = DistributedSweep.layout(emitted);
         assertEquals(List.of(PEER), layout.routes(), "the dialed set, and no home lane: " + emitted);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                layout.ops(), "the default layout is the one it always was: " + emitted);
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+                layout.ops(), "the default layout is the branch: " + emitted);
         checkEquality(LOG, jnt(27),
                 evaluate(emitted).clone().selfVID(null), true);
     }
@@ -255,9 +257,10 @@ public class PlaceLaneTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE BUDGET RIDES THE FOLD — the seed of an emitted lane states its part and nothing else, the fold (the reducer
+     * THE BUDGET RIDES THE FOLD — the seed of a lane's code states its part and nothing else, the fold (the reducer
      * the lane recombines through) states the restated form, and no COPIED instruction carries the level above's
-     * budget. The master, which gathers and recombines at home, carries none at all.
+     * budget. The master, which deals the seed and recombines at home, carries none at all: not on its seed, whose
+     * budget the plan consumed, and not on its branch or combiner.
      */
     @Test
     void testTheBudgetRidesTheFoldAndNoCopiedInstructionCarriesIt() {
@@ -269,7 +272,7 @@ public class PlaceLaneTest extends AbstractMetatronTest {
         assertFalse(lane.code().insts().subList(1, lane.code().insts().size() - 1).stream()
                         .anyMatch(inst -> inst.tid().hasQ(HOP)),
                 "no copied instruction carries the level above's budget: " + lane.code());
-        assertFalse(emitted.insts().stream().skip(3).anyMatch(inst -> inst.tid().hasQ(HOP)),
+        assertFalse(emitted.insts().stream().anyMatch(inst -> inst.tid().hasQ(HOP)),
                 "the master recombines with no budget of its own: " + emitted);
     }
 

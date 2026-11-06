@@ -134,8 +134,10 @@ public class SplitLegalityTest extends AbstractMetatronTest {
         assertEquals(plain.ops(), splitted.ops(), "the master's chain is untouched: " + splitted.emitted());
         assertEquals(parts(plain), parts(splitted), "the same slices, not a second part count: " + splitted.emitted());
         assertEquals(budgets(plain), budgets(splitted), "and the same hop budgets: " + splitted.emitted());
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
                 splitted.ops(), "today's layout, pinned: " + splitted.emitted());
+        assertEquals(List.of("part", "part"), splitted.lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "the stream partition is the branch's part: " + splitted.emitted());
         assertEquals(List.of(3, 3), parts(splitted), "the stride partition divides the seed exactly: " + splitted.emitted());
         checkEquality(LOG, jnt(27), evaluate(splitted.emitted()), true);
     }
@@ -149,6 +151,8 @@ public class SplitLegalityTest extends AbstractMetatronTest {
     void testCopyOnAnIdempotentFoldReplicatesTheSeed() {
         final DistributedSweep.Layout copied = DistributedSweep.layout(lower(disjunction("copy")));
         assertEquals(2, copied.lanes().size(), "copy keeps one lane per place: " + copied.emitted());
+        assertEquals(List.of("copy", "copy"), copied.lanes().stream().map(DistributedSweep.Lane::split).toList(),
+                "the copy partition is the branch's copy: " + copied.emitted());
         assertEquals(List.of(2, 2), parts(copied),
                 "every lane carries the whole seed (both members, no slice): " + copied.emitted());
         checkEquality(LOG, bool(true), evaluate(copied.emitted()), true);

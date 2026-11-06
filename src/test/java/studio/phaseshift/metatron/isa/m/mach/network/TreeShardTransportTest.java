@@ -36,10 +36,10 @@ import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE TREE — {@code law_shard} planned at every level its hop budget allows. This machine dials ONE peer, and that
- * peer dials the other two, so a budget of two makes the middle peer an INTERIOR node: applying the slave it is
+ * peer dials the other two, so a budget of two makes the middle peer an INTERIOR node: applying the lane it is
  * handed compiles it, the rule fires again there, and the peer re-plans its part over its own dialed peers and
  * recombines their partials through the same combiner.
  */
@@ -120,7 +120,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         final Code master = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6,7,8}.plus(1).sum?hop=" + hop + "()")).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(master);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID), layout.ops(),
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID), layout.ops(),
                 "the root recombines its child's partial: " + master);
         final DistributedSweep.Lane lane = layout.lane(0);
         checkEquality(LOG, uri(String.valueOf(hop - 1)), uri(lane.budget()), true);
@@ -146,7 +146,7 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     void testKeyedTreeOverTransport(final String source, final String expected) {
         final Code master = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source)).asCode();
         final DistributedSweep.Layout layout = DistributedSweep.layout(master);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID, SELECT_INST_TID), layout.ops(),
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID, SELECT_INST_TID), layout.ops(),
                 "the root merges its child's partial rec by key, then folds each key: " + master);
         checkEquality(LOG, uri("1"), uri(layout.lane(0).budget()), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected),
@@ -154,19 +154,19 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE INTERIOR NODE: peer 1, handed a slave with budget left, plans it over its own dialed peers — its compiled
-     * code states its one remaining level on each part's FOLD ({@code sum?hop=0()}), routed to peers 2 and 3, and
-     * recombines through {@code sum}. Asked of peer 1 itself, so it is that machine's compiler, roster and rule set
-     * that decide.
+     * THE INTERIOR NODE: peer 1, handed a lane with budget left, plans it over its own dialed peers — its compiled
+     * code is one branch keyed by peers 2 and 3, each lane stating its one remaining level on its FOLD
+     * ({@code sum?hop=0()}), and recombines through {@code sum}. The parts are the branch's to deal when it runs, so the
+     * plan names no slice. Asked of peer 1 itself, so it is that machine's compiler, roster and rule set that decide.
      */
     @Test
     void testInteriorNodeReplans() {
         final String explain = cluster.transport(1)
                 .apply(ObjmtronSerializer.parse("start?hop=1({1,2,3,4,5,6,7,8}).plus(1).sum().explain()>>format")).toString();
         LOG.debug("interior node plan: %s", explain);
-        assertEquals(2, Arrays.stream(explain.split("start")).count());
-        checkEquality(LOG, bool(true), bool(explain.contains("start({1,3,5,7})") && explain.contains("start({2,4,6,8})")), true);
-        checkEquality(LOG, bool(true), bool(explain.contains("?hop=0")), true);
-        checkEquality(LOG, bool(true), bool(explain.contains(":" + cluster.port(2) + ")") && explain.contains(":" + cluster.port(3) + ")")), true);
+        assertTrue(explain.contains("branch"), "the interior node plans one branch: " + explain);
+        assertTrue(explain.contains("?hop=0"), "each lane's fold states the last level: " + explain);
+        assertTrue(explain.contains(":" + cluster.port(2)) && explain.contains(":" + cluster.port(3)),
+                "keyed by peers 2 and 3: " + explain);
     }
 }

@@ -49,13 +49,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * PARALLEL FAN-OUT (Thm 5, entry D). The shard's fan-out submits every round trip at once — one virtual thread per
- * route — and the gather ({@code >>rhs}) awaits them all, so latency is the slowest shard, not the sum. A loop peer
+ * PARALLEL FAN-OUT (Thm 5, entry D). The shard's branch submits every round trip at once — each keyed lane is a
+ * virtual thread — and awaits them all through their {@code rhs}, so latency is the slowest shard, not the sum. A loop peer
  * whose {@code eval} sleeps before it answers makes the serial-vs-parallel difference measurable without the wire: two
  * {@code delayMs} shards dispatched together start within microseconds of each other, while a serial fan-out would
  * separate their start times by a full delay. The fan-out is measured through the emitted layout
- * ({@code start · select(virtual routes) · select(>>rhs) · merge · combiner}) and through the gap between the two
- * {@code eval} bodies running.
+ * ({@code start · branch(place => program, …) · combiner}) and through the gap between the two {@code eval} bodies
+ * running.
  */
 //@Isolated
 //@Execution(ExecutionMode.SAME_THREAD)
@@ -80,9 +80,9 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
     }
 
     /**
-     * Two slow peers, two shards. The layout fans out through a virtual-threaded select and gathers through a second
-     * select of {@code >>rhs}; the two {@code eval} bodies start together (their gap is a scheduling epsilon, far under
-     * one delay), never one delay apart. The recombined value is the value the undistributed fold answers.
+     * Two slow peers, two shards. The layout fans out through one branch, a lane per peer, each lane its own virtual
+     * thread; the two {@code eval} bodies start together (their gap is a scheduling epsilon, far under one delay),
+     * never one delay apart. The recombined value is the value the undistributed fold answers.
      */
     @Test
     void testFanOutDispatchesConcurrently() {
@@ -93,12 +93,12 @@ public class ParallelFanOutTest extends AbstractMetatronTest {
 
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse("{1,2,3,4,5,6}.plus(1).sum()").asCode()).asCode();
-        // the fan-out is a virtual-threaded select, then a gather select of >>rhs, then merge + combiner
+        // the fan-out is one branch, a keyed lane per peer, then the combiner
         final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                layout.ops(), "the master fans out then gathers: " + compiled);
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+                layout.ops(), "the master fans out then recombines: " + compiled);
         assertEquals(List.of(SLOW_A, SLOW_B), layout.routes(),
-                "one route per peer, peeled off the virtual threads: " + compiled);
+                "one lane per peer, keyed by its place: " + compiled);
 
         checkEquality(LOG, jnt(27),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
