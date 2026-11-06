@@ -528,16 +528,18 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A UNIVERSAL ROW ANSWERS FOR EVERY CARRIER — {@code order?dom=A{*}} is one declaration for all types, and the
-     * lookup must consult it when the queried address has no row of its own. Without that fallback the row existed
-     * and the lift served no law for {@code order} at all.
+     * THE DECLARATION OF THE OBJ DISPATCH SELECTS ANSWERS — a generic's laws hold for every instantiation that runs its
+     * body, and a specialization declares its own. {@code str} has no {@code order}, so the generic {@code order?A{*}}
+     * runs and its {@code pure} answers; {@code int} registers its own {@code order} (its body casts to ints), whose own
+     * declaration answers.
      */
     @Test
-    void testUniversalRowReachesEveryCarrier() {
-        final LawTable.Entry order = LawTable.lawsOf(ORDER_INST_TID.dom(INT_TID));
-        assertNotNull(order, "order?dom=A{*} must answer for an int carrier");
-        assertTrue(order.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.pure.name())),
-                "the universal fold is declared pure, got " + order.laws());
+    void testDispatchSelectsTheDeclaration() {
+        for (final fURI carrier : List.of(STR_TID, INT_TID)) {
+            final LawTable.Declared order = LawTable.declared(ORDER_INST_TID.basePath(), T(carrier));
+            assertNotNull(order, "order answers for a " + carrier + " carrier");
+            assertTrue(LawTable.declares(order, Law.pure), carrier + "'s order is declared pure, got " + order.entry().laws());
+        }
     }
 
     /**

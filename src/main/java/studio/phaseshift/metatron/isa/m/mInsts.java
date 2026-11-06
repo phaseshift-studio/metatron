@@ -171,6 +171,7 @@ public final class mInsts {
                         .dom(INT_TID.maybeSome(), "a stream of ints")
                         .rng(LST_TID.poly(INT_TID.maybeSome()), "the sorted lst of ints").argLst()
                         .body((lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
+                        .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(SUM_INST_TID, "add the lhs int stream into a single int")
                         .dom(INT_TID.maybeSome(), "zero or more ints").rng(INT_TID, "a single plus reduced int")
@@ -911,8 +912,8 @@ public final class mInsts {
                         .create(),
                 // rec<->lst IS NOT PRESERVING IN EITHER DIRECTION (the round trip re-keys and reorders), and
                 // rec->uri is LOSSY TOO (only the component entries a uri can hold survive; any other rec does not
-                // read back). Both declare NO inverse. uri->rec, the sound side of the uri pair, keeps its row
-                // until its body can leave Uri.UriType (it calls Uri.Helper.parseQ, package-private there).
+                // read back). Both declare NO inverse. uri->rec, the sound side of the uri pair,
+                // declares its claim beside its body in Uri.UriType (it calls Uri.Helper.parseQ, package-private there).
                 InstBuilder.build().tid(AS_INST_TID, "convert the lhs rec into the lst the argument lst type constructs")
                         .dom(REC_TID, "the rec to convert").rng(LST_TID, "the lhs rec as the argument's lst type")
                         .argLst(LST_TYPE, "the lst type whose constructor is applied to the lhs")
@@ -1103,7 +1104,7 @@ public final class mInsts {
                 InstBuilder.build().tid(NEG_INST_TID, "the negation of code inverts its coefficient")
                         .dom(CODE_TID, "the lhs code").rng(CODE_TID)
                         .body((lhs, _) -> lhs.c(cInt::neg))
-                        .law(Law.involution, Law.pure, Law.unit)
+                        .law(Law.involution, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "branch two codes in parallel, the results as their coefficient sum")
                         .dom(CODE_TID, "the lhs code").rng(CODE_TID, "the branch of the two codes")

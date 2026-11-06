@@ -567,7 +567,7 @@ public abstract class LawTable {
             if (e.getKey().dom().basePath().toString().equals(type) || e.getKey().rng().basePath().toString().equals(type))
                 return new Declared(e.getKey(), entry);
         }
-        return universal;
+        return null != universal ? universal : universalDeclared(base);
     }
 
     /**
@@ -580,6 +580,22 @@ public abstract class LawTable {
                 if (null != entry)
                     return new Declared(e.getKey(), entry);
             }
+        return universalDeclared(base);
+    }
+
+    /**
+     * THE GENERIC'S DECLARATION — the op's {@code ?decq} claim whose contract ranges over every carrier (a {@code #}
+     * or type-variable dom), the answer when dispatch names no contract: a generic's laws hold at every instantiation
+     * of its body. Dispatch misses {@code count?dom=#{*}} because {@link Type#isRootType()} compares the vid with its
+     * coefficient; {@link #isUniversal} compares base paths.
+     */
+    private static Declared universalDeclared(final fURI base) {
+        for (final Obj claim : Machine.read(base.addQ(QCollection.DECQ)).stream().toList()) {
+            final Obj obj = claim.isRec() ? claim.asRec().atDirect(uri(OBJ)) : noobj();
+            final Entry entry = obj.isInst() && isUniversal(obj.tid().dom()) ? declaredEntry(claim) : null;
+            if (null != entry)
+                return new Declared(obj.tid(), entry);
+        }
         return null;
     }
 
