@@ -61,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.CMPLX_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.NAT_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -509,7 +510,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .create();
         PendingWrites.drainUnder(f("/m"));
         final Obj read = Machine.read(lawful.vid().addQ(QCollection.DECQ));
-        assertTrue(read.isRec() && read.asRec().has(uri("ring")),
+        assertTrue(read.isRec() && read.asRec().atDirect(uri(THEORY)).asRec().has(uri("ring")),
                 "the builder's declaration must reach ?decq, got " + read);
     }
 
@@ -548,11 +549,13 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     void testDecQLivesBesideItsType() {
         final Rec ring = rec(uri("ring"), rec(uri("zero"), jnt(0), uri("one"), jnt(1)));
-        Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ), ring);
+        Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ),
+                rec(mutableMap(uri(OBJ), mInstSet.INT_TYPE, uri(THEORY), ring), QCollection.DECS_TID, null));
         final Obj read = Machine.read(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ));
         assertTrue(read.isRec(), "int::T's algebra must be readable through ?decq, got " + read);
-        assertTrue(read.asRec().has(uri("ring")), "the ring instance survives the round trip, got " + read);
-        assertEquals(jnt(0), read.asRec().at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");
+        final Rec theory = read.asRec().atDirect(uri(THEORY)).asRec();
+        assertTrue(theory.has(uri("ring")), "the ring instance survives the round trip, got " + read);
+        assertEquals(jnt(0), theory.at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");
     }
 
     /**
@@ -672,8 +675,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "int::T.as(object::T)>>law>>mult_group   % noobj",
-            "int::T.as(object::T)>>law>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
+            "int::T.as(object::T)>>theory>>mult_group   % noobj",
+            "int::T.as(object::T)>>theory>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
     }, delimiter = '%')
     void testObjectLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
@@ -687,12 +690,12 @@ public class catInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             // the theory roles hold !* (auto_from) pointers to the live operations — the graph is the refs, not a copy
-            "nat::T.as(object::T)>>law>>rig         % /m/theory/rig_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
-            "nat::T.as(object::T)>>law>>add_monoid  % /m/theory/monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0]",
-            // "nat::T.as(object::T)>>law>>add_group   % noobj",
-            //  "nat::T.as(object::T)>>law>>ring        % noobj",
-            "int::T.as(object::T)>>law>>ring        % /m/theory/ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
-            "int::T.as(object::T)>>law>>add_group   % /m/theory/group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0,inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int]",
+            "nat::T.as(object::T)>>theory>>rig         % /m/theory/rig_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "nat::T.as(object::T)>>theory>>add_monoid  % /m/theory/monoid_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0]",
+            // "nat::T.as(object::T)>>theory>>add_group   % noobj",
+            //  "nat::T.as(object::T)>>theory>>ring        % noobj",
+            "int::T.as(object::T)>>theory>>ring        % /m/theory/ring_theory::[add=>!*/m/inst/plus?rng=/m/int&dom=/m/int,mul=>!*/m/inst/mult?rng=/m/int&dom=/m/int,zero=>0,one=>1]",
+            "int::T.as(object::T)>>theory>>add_group   % /m/theory/group_theory::[op=>!*/m/inst/plus?rng=/m/int&dom=/m/int,id=>0,inv=>!*/m/inst/neg?rng=/m/int&dom=/m/int]",
     }, delimiter = '%')
     void testNatVsInt(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);

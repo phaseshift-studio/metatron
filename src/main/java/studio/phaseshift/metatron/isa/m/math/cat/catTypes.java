@@ -166,10 +166,10 @@ public class catTypes {
                                 uri(OBJ), TYPE_TYPE,
                                 uri(MORPHED_TO).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
                                 uri(MORPHED_FROM).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
-                                uri(LAW).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
+                                uri(THEORY).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
                                 uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
                                 uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
-                                uri(LAW), "the structural theories \\(\\mathcal{T}\\) the object models"))
+                                uri(THEORY), "the structural theories \\(\\mathcal{T}\\) the object models"))
                         .constructor(arg -> {
                             final Rec object = arg.isRec() && arg.asRec().has(uri(OBJ)) ? arg.asRec() : rec(uri(OBJ), arg);
                             final Obj obj = object.at(OBJ);
@@ -178,7 +178,7 @@ public class catTypes {
                             // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
                             if (!obj.isType() || null == obj.vid())
                                 return noobj();
-                            object.at(LAW, LawTable.typeLawsOf(obj.asType()), MUTABLE);
+                            object.at(THEORY, LawTable.typeLawsOf(obj.asType()), MUTABLE);
                             object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
                                 final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));

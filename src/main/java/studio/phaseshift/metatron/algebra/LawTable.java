@@ -846,7 +846,8 @@ public abstract class LawTable {
         // never re-derived at the memo.
         final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
         final boolean spaceAnswered = declared.isRec();
-        final Rec laws = spaceAnswered && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
+        final Obj theory = spaceAnswered ? declared.asRec().atDirect(uri(THEORY)) : noobj();
+        final Rec laws = theory.isRec() && !theory.asRec().isEmpty() ? theory.asRec() : this.typeLawsUncached(type);
         // the view COPIES the block (see Algebra.of), so the memo is a value no caller can write back through
         final Algebra algebra = Algebra.of(laws);
         if (memoizable(laws, spaceAnswered))
@@ -899,7 +900,8 @@ public abstract class LawTable {
             return owner.typeLaws(type);
         // NO TABLE OWNS THE ADDRESS: the declaration beside the type is the only source, read once and not kept
         final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
-        return declared.isRec() ? Algebra.of(declared.asRec()) : Algebra.empty();
+        final Obj theory = declared.isRec() ? declared.asRec().atDirect(uri(THEORY)) : noobj();
+        return theory.isRec() ? Algebra.of(theory.asRec()) : Algebra.empty();
     }
 
     /**

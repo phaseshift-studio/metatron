@@ -663,7 +663,7 @@ public final class PlanInterpreter {
     /**
      * The unit law (local, no distribution): an operation applied to its own theory identity drops out, and a
      * bare identity operation is the identity morphism — remove every such instruction. The theory roles are
-     * read from {@code object::T.law}, so the one rule covers every declared monoid/group/ring/…
+     * read from {@code object::T.theory}, so the one rule covers every declared monoid/group/ring/…
      */
     private static Code unitRemoval(final Code code) {
         final List<Inst> insts = code.insts();
@@ -1083,7 +1083,7 @@ public final class PlanInterpreter {
     /**
      * The additive like-term law (local): equal members of any occurrence of the algebra's additive op collapse
      * to the member that first appeared, carrying the summed multiplicities — {@code S(x,x,…,x) ↦ S(x{n})}. The
-     * witness is read off object[code].law at rewrite time (for the code ring: branch).
+     * witness is read off object[code].theory at rewrite time (for the code ring: branch).
      */
     private static Code branchCollapse(final Code code) {
         return repeatedTerms(TheoryHelper.additiveWitness(T(CODE_TID)), T(CODE_TID), code);

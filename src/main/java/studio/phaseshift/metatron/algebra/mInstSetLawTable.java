@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <p>An instruction's declared laws are a fact about the instruction, and each family keeps its process rows here
  * ({@code declared ∩ process}, served to {@code morphism::T>>law}). The base types' STRUCTURAL laws — the theory
- * instances a carrier models, served to {@code object::T>>law} — are not here: a carrier declares its algebra at
+ * instances a carrier models, served to {@code object::T>>theory} — are not here: a carrier declares its algebra at
  * the type itself ({@code mTypes.declareAlgebras()}), which is what makes a type definition an algebraic
  * specification. {@link #typeLawsUncached(Type)} therefore used to hold one branch per carrier and now returns the
  * empty rec: {@code LawTable.typeLaws(Type)} serves the {@code ?decq} declaration, and this table is no longer its

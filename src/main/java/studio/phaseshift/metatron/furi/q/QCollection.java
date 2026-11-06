@@ -616,6 +616,23 @@ public final class QCollection {
     public static final fURI DECQ_PATTERN = f(DECQ);
     public static final fURI DECQ_TID = QPROC_TID.extend(DECQ_PATTERN);
     /**
+     * the declaration record a {@code ?decq} holds — {@code decs::T}, as {@code docs::T} is to {@code ?docq}: the obj the
+     * declaration is about (required) and the facets it declares. The slots are {@code #::T} for now.
+     */
+    public static final fURI DECS_TID = DECQ_TID.extend("decs");
+    public static final Type DECS_TYPE = TypeBuilder.build()
+            .tid(REC_TID)
+            .vid(DECS_TID)
+            .isaPredicate(rec(
+                    uri(OBJ), ALL_TYPE,
+                    uri(THEORY).maybe(), ALL_TYPE,
+                    uri(LAW).maybe(), ALL_TYPE,
+                    uri(INVERSE).maybe(), ALL_TYPE,
+                    uri(DERIVATION).maybe(), ALL_TYPE,
+                    uri(FORM).maybe(), ALL_TYPE,
+                    uri(INST).maybe(), ALL_TYPE))
+            .create();
+    /**
      * the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}).
      */
     public static final fURI LAWS = f("laws");
@@ -637,6 +654,9 @@ public final class QCollection {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
                         return Machine.write(vidBig, obj);
+                    // a declaration is about an obj: only a decs::T is stored (noobj, the override, clears it)
+                    if (!obj.isNoObj() && !obj.test(DECS_TYPE))
+                        return fail(MTronException.of("%s is not a decs::T declaration", obj));
                     declarations.write(vidBig.removeQ(DECQ), obj);
                     return obj;
                 })

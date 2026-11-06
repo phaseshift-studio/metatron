@@ -36,11 +36,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.Tokens.LAW;
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE PENDING-WRITE LOG'S CONTRACT — what a builder may stage before a machine or a space exists, what a reader is
@@ -240,7 +244,8 @@ public class PendingWritesTest extends AbstractMetatronTest {
     void drainRestPublishesTheDeclarationResidue() {
         final fURI plain = f("/pendingwrites/plain");
         final Obj third = rec(uri("count"), jnt(3));
-        PendingWrites.write(f("/pendingwrites/one?decq"), rec(uri("count"), jnt(1)));
+        final Obj declaration = rec(mutableMap(uri(OBJ), str("one"), uri(LAW), lst(uri("pure"))), QCollection.DECS_TID, null);
+        PendingWrites.write(f("/pendingwrites/one?decq"), declaration);
         PendingWrites.write(f("/elsewhere/two?docq"), rec(uri("count"), jnt(2)));
         PendingWrites.write(f("/pendingwrites/three?docq"), third);
         PendingWrites.write(plain, third);              // an OBJECT write: the sweep must leave it alone
@@ -249,7 +254,7 @@ public class PendingWritesTest extends AbstractMetatronTest {
         // that misses them, not by the boot sweep (which would repay every declaration on every mount). The sweep
         // publishes the OBJECT residue alone.
         assertEquals(1, PendingWrites.drainRest(), "the sweep publishes the object residue, whatever its prefix");
-        assertEquals(rec(uri("count"), jnt(1)), Machine.read(f("/pendingwrites/one?decq")),
+        assertEquals(declaration, Machine.read(f("/pendingwrites/one?decq")),
                 "a declaration is staged, not swept: the first READER publishes it, and the read answers it");
         assertEquals(4, PendingWrites.size(), "the log is retained, so no address left the stage");
         assertEquals(4, PendingWrites.writes().size(), "the ordered snapshot agrees with the count");

@@ -40,9 +40,12 @@ import static studio.phaseshift.metatron.Tokens.REAL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ_PATTERN;
+import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -88,7 +91,7 @@ public interface DecQTest extends QProcTest {
     default void testDecqRoundTrip() {
         final Space space = this.decqSpace();
         final fURI base = this.decqBaseURI();
-        final Obj declaration = rec(uri(LAW), lst(uri("pure"), uri("commutative")));
+        final Obj declaration = rec(mutableMap(uri(OBJ), str("vellum"), uri(LAW), lst(uri("pure"), uri("commutative"))), DECS_TID, null);
         space.write(base.addQ(DECQ), declaration);
         assertEquals(declaration, space.read(base.addQ(DECQ)),
                 "a declaration round-trips through ?decq");
@@ -117,10 +120,25 @@ public interface DecQTest extends QProcTest {
         final Space space = this.decqSpace();
         final fURI op = this.decqBaseURI().dom(INT_TID).rng(INT_TID);
         final fURI full = op.args(List.of(INT_TID));
-        final Obj declaration = rec(uri(LAW), lst(uri("pure")));
+        final Obj declaration = rec(mutableMap(uri(OBJ), str("vellum"), uri(LAW), lst(uri("pure"))), DECS_TID, null);
         space.write(full.addQ(DECQ), declaration);
         assertEquals(declaration, space.read(op.addQ(DECQ)),
                 "the operation address is the declaration's key, args stripped");
+    }
+
+    /**
+     * A DECLARATION IS ABOUT AN OBJ. A rec that names none is not a {@code decs::T}, so the q-proc refuses the write and
+     * stores nothing.
+     */
+    @TestCategory.Write
+    @TestCategory.Read
+    @Test
+    default void testDecqRefusesADeclarationWithoutAnObj() {
+        final Space space = this.decqSpace();
+        final fURI base = this.decqBaseURI().extend("objless");
+        assertTrue(space.write(base.addQ(DECQ), rec(uri(LAW), lst(uri("pure")))).isFail(),
+                "a declaration without an obj is refused");
+        assertTrue(space.read(base.addQ(DECQ)).isNoObj(), "the refused declaration is not stored");
     }
 
     /**
