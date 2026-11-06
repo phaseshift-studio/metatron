@@ -1159,7 +1159,9 @@ public final class mInsts {
                                 only that verb at its place, so a client that reads and writes but runs no program serves
                                 it. every lane runs on its own virtual::T, so the lanes run concurrently. a key marked
                                 ?split={w}part takes a share of the lhs by its weight w among the marked keys, and an
-                                unmarked key (or ?split=copy) gets the whole lhs.
+                                unmarked key (or ?split=copy) gets the whole lhs. a key's ?timeout=n waits n seconds for
+                                its lane. a query on the branch itself (branch?timeout=24) is every key's default, and a
+                                key's own overrides it.
                                 arguments are blocked, so a call is not computed here.
                                 """)
                         // THE BODY LIVES ON ITS CLASS: the definition is minted a BranchInst, and a call bound from it is

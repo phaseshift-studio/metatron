@@ -261,7 +261,8 @@ public class mInstSetTest extends AbstractInstSetTest {
      * place and runs where the code stands, so these rows need no peer; a host-bearing key would ship. A key marked
      * {@code ?split={w}part} takes its weighted share of the lhs among the marked keys, and an unmarked key (or
      * {@code ?split=copy}) the whole lhs; any other split is refused. Under a {@code {*}} dom the share is of the
-     * bag, and under a {@code {1}} dom each application holds one member, which the first marked key takes.
+     * bag, and under a {@code {1}} dom each application holds one member, which the first marked key takes. A split
+     * on the branch itself is every key's default, and a key's own overrides it.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -283,6 +284,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4}.branch(<a?split=part> => plus(100), <b?split=part> => plus(200))                      % {101,102,103,104}",
             "{1,2,3,4}.branch?<=int{*}(<a?split=part> => count(), <b?split=copy> => count())                 % {4,4}",
             "{1,2}.branch?<=int{*}(<a?split=block> => count())                                               % <ERROR>",
+            "{1,2,3,4}.branch?split=part(<a> => plus(100), <b> => plus(200))                                   % {101,102,103,104}",
+            "{1,2,3,4}.branch?split=part(<a> => plus(100), <b?split=copy> => plus(200))                        % {101,102,103,104,201,202,203,204}",
+            "{1,2,3,4}.branch?dom=int{*}&split=part(<a> => count(), <b> => count())                            % {2,2}",
     }, delimiter = '%')
     public void testBranchRoutes(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
