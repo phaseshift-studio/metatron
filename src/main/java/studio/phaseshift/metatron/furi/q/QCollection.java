@@ -659,69 +659,6 @@ public final class QCollection {
         return decq;
     }
 
-    /**
-     * READ the declaration written beside a type or inst — the reader half of {@link #decWrap}: the owning space's
-     * {@code ?decq} region, looked up by the obj's own id. {@code noobj} when nothing was declared, which is what
-     * lets a caller fall back to its in-code declaration.
-     */
-    public static Obj decOf(final Obj obj) {
-        return decOf(obj.isInst() ? null == obj.tid() || !obj.tid().hasQ(ARGS) ? obj.tid() : obj.tid().removeQ(ARGS) : obj.vid());
-    }
-    
-    /**
-     * {@link #decOf(Obj)} by address — what a declaration lookup has in hand ({@code plus?rng=/m/int&dom=/m/int}).
-     */
-    public static Obj decOf(final fURI objIDUnstripped) {
-        final fURI objID = null == objIDUnstripped || !objIDUnstripped.hasQ(ARGS) ? objIDUnstripped : objIDUnstripped.removeQ(ARGS);
-        if (null == objID)
-            return noobj();
-        final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
-                Machine.current().memory().getSpaceFor(objID) : null;
-        if (null == objSpace)
-            return noobj();
-        final Obj read = objSpace.qs().jvm().stream()
-                .filter(q -> q.tid().basePath().equals(DECQ_TID))
-                .map(Obj::<QProc>as)
-                .findAny()
-                .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
-                .orElse(noobj());
-        // LAZY: the declaration is staged by its writer and published by the first reader that asks. This door
-        // reads the q-proc's own space directly, so it must make the same ask the q-proc's preRead does.
-        if (read.isNoObj() && LAZY_PUBLISH.test(objID.addQ(DECQ)))
-            return objSpace.qs().jvm().stream()
-                    .filter(q -> q.tid().basePath().equals(DECQ_TID))
-                    .map(Obj::<QProc>as)
-                    .findAny()
-                    .map(decq -> decq.at(f(OBJ)).<Space>as().read(objID))
-                    .orElse(noobj());
-        return read;
-    }
-
-    /**
-     * DECLARE a type's algebra, or an instruction's claim, in the owning space's {@code ?decq} region — the docq
-     * pattern: {@code decWrap(INT_TYPE, rec(uri("ring"), rec(...)))} stores the block beside {@code int::T} and
-     * {@code *int::T?decq} reads it back, whether or not the category is mounted.
-     * <p>
-     * Soft-fails, like {@link #docWrap}: an id with no owning space (a type built during an ISA's own setup,
-     * before its instset is mounted) stores nothing and returns the obj — so the declaration must be written
-     * again once the set is mounted, which is what the builder's setup does.
-     */
-    public static <OBJ extends Obj> OBJ decWrap(final OBJ obj, final Rec declaration) {
-        final fURI objID = obj.isInst() ? !obj.tid().hasQ(ARGS) ? obj.tid() : obj.tid().removeQ(ARGS) : obj.vid();
-        if (null == objID || null == declaration)
-            return obj;
-        final Space objSpace = Machine.current().memory().hasSpaceFor(objID) ?
-                Machine.current().memory().getSpaceFor(objID) : null;
-        if (null == objSpace)
-            return obj;
-        objSpace.qs().jvm().stream()
-                .filter(q -> q.tid().basePath().equals(DECQ_TID))
-                .map(Obj::<QProc>as)
-                .findAny()
-                .ifPresent(decq -> decq.at(f(OBJ)).<Space>as().write(objID, declaration));
-        return obj;
-    }
-
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.q.QCollection.decOf;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
@@ -234,28 +233,17 @@ public abstract class LawTable {
     }
 
     /**
-     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF — the RETAINED STAGING LOG first, then THE STORE.
-     * <p>
-     * THE LOG IS THE FAST PATH: {@link InstBuilder#create()} queues the claim at
-     * {@code PendingWrites.decq(operationTid)} and the log is retained, so a declaration is answerable from memory the
-     * moment the instruction is created and stays answerable for the life of the JVM. The rec is parsed by
-     * {@link #declaredEntry(Obj)} — the same reader the store's answer goes through — so there is one parser, not two.
-     * It costs a hash read: it never walks the registered instructions and never touches a space.
-     * <p>
-     * THE STORE IS THE FALLBACK, for the one answer memory cannot give: a declaration {@code ?decq} holds that the log
-     * does not. That is the cold-boot ordering where a law table is consulted before the set that declares the inst
-     * is built, and any writer that is not {@link InstBuilder} (the store is the durable record, so it is also the
-     * foreign writer's). The fallback is ONE read of the QUERIED address — never a walk of every instruction, which
-     * is what made a lookup a per-evaluation cost.
+     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} of its {@code ?decq} address. A claim
+     * {@link InstBuilder#create()} staged and nothing has published yet is published by that read (the q-proc's lazy
+     * hook), so the store is the only source.
      */
     private static Entry declaredRow(final fURI instTid) {
-        final Entry staged = declaredEntry(PendingWrites.find(stagingAddress(instTid)));
-        if (null != staged)
-            return staged;
+        if (null == instTid)
+            return null;
         // THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
         // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a row is inherited
         // through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused
-        final Obj stored = decOf(instTid);
+        final Obj stored = Machine.read(stagingAddress(instTid));
         final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
         return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
                 ? null : declaredEntry(stored);
@@ -271,8 +259,8 @@ public abstract class LawTable {
     }
 
     /**
-     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?decq}, written by
-     * {@code InstBuilder.drain}): its process laws, its inverse and its defining equation, each read only when the
+     * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?decq}, staged by
+     * {@code InstBuilder.create}): its process laws, its inverse and its defining equation, each read only when the
      * rec carries it. An undeclared facet is null (an absent laws list is the empty list, since a row with no laws
      * still declares its relations), and a rec declaring nothing is null rather than an empty claim — the table's
      * row is then the only source.
@@ -855,8 +843,8 @@ public abstract class LawTable {
         // THE DECLARATION BESIDE THE TYPE WINS: an algebra written through `?decq` (the builder's job, at
         // registration, before any lift) is the source; the in-code table is the fallback until every type
         // declares its own. WHETHER THE SPACE ANSWERED is observed here, on the read that produced the block --
-        // never re-derived at the memo, where a second copy of `decOf`'s own gate would drift from it.
-        final Obj declared = declaredAlgebra(type);
+        // never re-derived at the memo.
+        final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
         final boolean spaceAnswered = declared.isRec();
         final Rec laws = spaceAnswered && !declared.asRec().isEmpty() ? declared.asRec() : this.typeLawsUncached(type);
         // the view COPIES the block (see Algebra.of), so the memo is a value no caller can write back through
@@ -864,36 +852,6 @@ public abstract class LawTable {
         if (memoizable(laws, spaceAnswered))
             this.typeLawsCache.putIfAbsent(type.vid().basePath(), algebra);
         return algebra;
-    }
-
-    /**
-     * THE TYPE'S DECLARED ALGEBRA — THE STORE'S {@code ?decq} first, THE RETAINED STAGING LOG second.
-     * <p>
-     * THE STORE IS AUTHORITATIVE because it can be written directly ({@code QCollection.decWrap}), and a live space
-     * answers what is on it; a staged rec must never shadow that. THE LOG IS THE FALLBACK for the one window in which
-     * the store cannot answer: a remounting instruction set publishes its declarations into a FRESH space, so
-     * {@code ?decq} is briefly empty while the log still holds the block the builder staged. Without the fallback a
-     * reader racing that mount sees "declares no algebra" (measured: {@code LawCensusTest}'s role census reading
-     * empty algebras while a peer class imported an ISA); with it the same declaration is answered from the log, which
-     * is where it was staged in the first place.
-     */
-    private static Obj declaredAlgebra(final Type type) {
-        if (null == type.vid())
-            return noobj();
-        final Obj stored = decOf(type);
-        if (stored.isRec() && !stored.asRec().isEmpty())
-            return stored;
-        // THE FIRST READ OF A BOOT IS THE ONE THE STORE CANNOT ANSWER: the algebra is staged by class
-        // initialisation, which may run AFTER the boot's publication window, so ?decq is empty the first time a
-        // reader asks. Publish from the retained log HERE, on the read, and re-read -- the store is still
-        // authoritative, it is simply empty until this write.
-        if (PendingWrites.publish(PendingWrites.decq(type.vid()))) {
-            final Obj published = decOf(type);
-            if (published.isRec() && !published.asRec().isEmpty())
-                return published;
-        }
-        final Obj staged = PendingWrites.find(PendingWrites.decq(type.vid()));
-        return null != staged && staged.isRec() && !staged.asRec().isEmpty() ? staged : stored;
     }
 
     /**
@@ -939,9 +897,8 @@ public abstract class LawTable {
         }
         if (null != owner)
             return owner.typeLaws(type);
-        // NO TABLE OWNS THE ADDRESS: the declaration beside the type is the only source, read once and not kept —
-        // through the same store-then-log read {@link #declaredAlgebra} uses, so a mount in flight cannot blind it
-        final Obj declared = declaredAlgebra(type);
+        // NO TABLE OWNS THE ADDRESS: the declaration beside the type is the only source, read once and not kept
+        final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
         return declared.isRec() ? Algebra.of(declared.asRec()) : Algebra.empty();
     }
 
@@ -1030,7 +987,7 @@ public abstract class LawTable {
      * walk per rewrite pass, and never a walk at all on a machine whose boot has settled.
      * <p>
      * The walk is why this is a snapshot and not a read: {@code instset().insts()} materializes every registered
-     * instruction and each {@code decOf} is a space lookup — 283 of each per call is the regression this file fixes.
+     * instruction and each {@code ?decq} read is a space lookup — 283 of each per call is the regression this file fixes.
      *
      * @param staged the number of declaration recs the retained log holds, the count this snapshot is stale against
      */
@@ -1042,7 +999,7 @@ public abstract class LawTable {
             for (final Inst inst : instset.insts()) {
                 if (null == inst.tid() || null != declaredEntry(PendingWrites.find(stagingAddress(inst.tid()))))
                     continue;                       // the retained log already answers for this instruction
-                final Obj fromDecq = decOf(inst.tid());
+                final Obj fromDecq = Machine.read(stagingAddress(inst.tid()));
                 final Derivation declared = fromDecq.isRec() ? declaredDerivation(fromDecq.asRec()) : null;
                 if (null != declared)
                     snapshot.put(inst.tid(), declared);

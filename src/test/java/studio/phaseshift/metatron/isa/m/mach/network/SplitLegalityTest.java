@@ -68,7 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p><b>Why a fold is built here.</b> The shipped law table declares no idempotent REDUCER: {@code or}/{@code and}
  * on a {@code bool} declare {@code idempotent} but are mappers ({@code bool⇒bool}), so they never reach the cut, and
  * every shardable fold ({@code sum}, {@code count}, the keyed folds) is non-idempotent. The legal-copy row therefore
- * declares one beside its body ({@link InstBuilder#drain}), which is the table's own {@code ?decq} route — the
+ * declares one beside its body ({@link InstBuilder#create()}), which is the table's own {@code ?decq} route — the
  * production gate is exercised for real, with the one fold the tree does not ship.
  *
  * <p><b>Hermetic.</b> {@code loop://} peers only (the {@link PlacementEquivalenceTest} pattern): no forked process and
@@ -108,7 +108,6 @@ public class SplitLegalityTest extends AbstractMetatronTest {
                 .body((lhs, inst) -> bool(lhs.stream().anyMatch(Obj::boolValue)))
                 .law(Law.commutative, Law.monoidic, Law.idempotent, Law.pure)
                 .create();
-        InstBuilder.drain(disjoin);
         // A LANE IS COMPILED WHERE IT RUNS, so the fold must resolve by name there: publish the definition at its
         // contract address, as an instruction set's mount does
         PendingWrites.publish(disjoin.tid());
