@@ -28,10 +28,11 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.ARGS;
-import static studio.phaseshift.metatron.Tokens.DOM;
-import static studio.phaseshift.metatron.Tokens.RNG;
-import static studio.phaseshift.metatron.furi.fURI.Component.*;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Component.HOST;
+import static studio.phaseshift.metatron.furi.fURI.Component.PORT;
+import static studio.phaseshift.metatron.furi.fURI.Component.QUERY;
+import static studio.phaseshift.metatron.furi.fURI.Component.SCHEME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -462,6 +463,19 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean test(final fURI rhs) {
+        if (null == rhs)
+            return false;
+        if (rhs.hasBranches()) {
+            if (this.hasBranches())
+                return this.branches().anyMatch(b -> rhs.branches().anyMatch(c -> ((AbstractfURI) b).testHarness(c)));
+            return rhs.branches().anyMatch(this::testHarness);
+        } else if (this.hasBranches()) {
+            return this.branches().anyMatch(b -> ((AbstractfURI) b).testHarness(rhs));
+        } else
+            return this.testHarness(rhs);
+    }
+
+    private boolean testHarness(final fURI rhs) {
         if (null == rhs)
             return false;
         final cInt c = this.c();

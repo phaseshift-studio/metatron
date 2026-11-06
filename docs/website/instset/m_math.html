@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,102 +499,102 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/math/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[
-           int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
-           int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat,
-           lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
-           real::T@/m/math/datasize,
-           uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
-           datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
-           datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
-           datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
-           datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
-           datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
-           datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
-           real::T@/m/math/currency,
-           currency::T@/m/math/currency/usd,
-           currency::T@/m/math/currency/euro,
-           real::T@/m/math/time,
-           time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
-           time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
-           time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
-           time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
-           time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
-           time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
-           time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
-           real::T@/m/math/metric,
-           metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
-           metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
-           metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
-           metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
-           metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
-           real::T@/m/math/imperial,
-           imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
-           imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
-           imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
-           imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
-          inst=&gt;[
-           datetime_now?datetime&lt;=(){&lt;j&gt;},
-           plus?time&lt;=time(time::T){&lt;j&gt;},
-           plus?metric&lt;=metric(metric::T){&lt;j&gt;},
-           plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
-           as?time&lt;=time(time::T){&lt;j&gt;},
-           plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-           mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-           minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-           conjugate?cmplx&lt;=cmplx(){&lt;j&gt;},
-           div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-           neg?cmplx&lt;=cmplx(){&lt;j&gt;},
-           inv?cmplx&lt;=cmplx(){&lt;j&gt;},
-           zero?cmplx&lt;=cmplx(){&lt;j&gt;},
-           one?cmplx&lt;=cmplx(){&lt;j&gt;},
-           abs?real&lt;=cmplx(){&lt;j&gt;},
-           arg?real&lt;=cmplx(){&lt;j&gt;},
-           plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
-           minus?datetime&lt;=datetime(time::T){&lt;j&gt;},
-           minus?time&lt;=datetime(datetime::T){&lt;j&gt;},
-           as?datetime&lt;=uri(uri::T){&lt;j&gt;},
-           as?int&lt;=datetime(int::T){&lt;j&gt;},
-           as?str&lt;=datetime(str::T){&lt;j&gt;},
-           as?datetime&lt;=str(datetime::T){&lt;j&gt;},
-           normalize?time&lt;=time(){&lt;j&gt;},
-           normalize?datasize&lt;=datasize(){&lt;j&gt;},
-           normalize?metric&lt;=metric(){&lt;j&gt;},
-           normalize?imperial&lt;=imperial(){&lt;j&gt;},
-           as?metric&lt;=metric(metric::T){&lt;j&gt;},
-           as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
-           as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
-           as?metric&lt;=imperial(metric::T){&lt;j&gt;},
-           cos?real&lt;=(as(real::T)){&lt;j&gt;},
-           sin?real&lt;=(real::T){&lt;j&gt;},
-           tan?real&lt;=(real::T){&lt;j&gt;},
-           sqrt?real&lt;=(real::T){&lt;j&gt;},
-           atan?real&lt;=(real::T){&lt;j&gt;},
-           atan2?real&lt;=(real::T){&lt;j&gt;},
-           log?real&lt;=(real::T){&lt;j&gt;},
-           log10?real&lt;=(real::T){&lt;j&gt;},
-           exp?real&lt;=(real::T){&lt;j&gt;},
-           abs?real&lt;=(real::T){&lt;j&gt;},
-           ceil?real&lt;=(real::T){&lt;j&gt;},
-           floor?real&lt;=(real::T){&lt;j&gt;},
-           round?int&lt;=(real::T){&lt;j&gt;},
-           as?percent&lt;=real(){&lt;j&gt;}],
-          const=&gt;[
-           2.7182@/m/math/e?constq,
-           3.1415@/m/math/pi?constq]]@/m/math</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/math/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             type=&gt;[
+              int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
+              int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat,
+              lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
+              real::T@/m/math/datasize,
+              uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
+              datasize::T[][ctor?bB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/bB,
+              datasize::T[][ctor?kB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/kB,
+              datasize::T[][ctor?mB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/mB,
+              datasize::T[][ctor?gB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/gB,
+              datasize::T[][ctor?tB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/tB,
+              datasize::T[][ctor?pB&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/datasize/pB,
+              real::T@/m/math/currency,
+              currency::T@/m/math/currency/usd,
+              currency::T@/m/math/currency/euro,
+              real::T@/m/math/time,
+              time::T[][ctor?nanos&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/nanos,
+              time::T[][ctor?micros&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/micros,
+              time::T[][ctor?millis&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/millis,
+              time::T[][ctor?second&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/second,
+              time::T[][ctor?minute&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/minute,
+              time::T[][ctor?hour&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/hour,
+              time::T[][ctor?day&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/time/day,
+              real::T@/m/math/metric,
+              metric::T[][ctor?mm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/mm,
+              metric::T[][ctor?cm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/cm,
+              metric::T[][ctor?dm&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/dm,
+              metric::T[][ctor?meter&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/meter,
+              metric::T[][ctor?km&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/metric/km,
+              real::T@/m/math/imperial,
+              imperial::T[][ctor?inch&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/inch,
+              imperial::T[][ctor?foot&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/foot,
+              imperial::T[][ctor?yard&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/yard,
+              imperial::T[][ctor?mile&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/imperial/mile],
+             inst=&gt;[
+              datetime_now?datetime&lt;=(){&lt;j&gt;},
+              plus?time&lt;=time(time::T){&lt;j&gt;},
+              plus?metric&lt;=metric(metric::T){&lt;j&gt;},
+              plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
+              as?time&lt;=time(time::T){&lt;j&gt;},
+              plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+              mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+              minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+              conjugate?cmplx&lt;=cmplx(){&lt;j&gt;},
+              div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
+              neg?cmplx&lt;=cmplx(){&lt;j&gt;},
+              inv?cmplx&lt;=cmplx(){&lt;j&gt;},
+              zero?cmplx&lt;=cmplx(){&lt;j&gt;},
+              one?cmplx&lt;=cmplx(){&lt;j&gt;},
+              abs?real&lt;=cmplx(){&lt;j&gt;},
+              arg?real&lt;=cmplx(){&lt;j&gt;},
+              plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
+              minus?datetime&lt;=datetime(time::T){&lt;j&gt;},
+              minus?time&lt;=datetime(datetime::T){&lt;j&gt;},
+              as?datetime&lt;=uri(uri::T){&lt;j&gt;},
+              as?int&lt;=datetime(int::T){&lt;j&gt;},
+              as?str&lt;=datetime(str::T){&lt;j&gt;},
+              as?datetime&lt;=str(datetime::T){&lt;j&gt;},
+              normalize?time&lt;=time(){&lt;j&gt;},
+              normalize?datasize&lt;=datasize(){&lt;j&gt;},
+              normalize?metric&lt;=metric(){&lt;j&gt;},
+              normalize?imperial&lt;=imperial(){&lt;j&gt;},
+              as?metric&lt;=metric(metric::T){&lt;j&gt;},
+              as?imperial&lt;=imperial(imperial::T){&lt;j&gt;},
+              as?imperial&lt;=metric(imperial::T){&lt;j&gt;},
+              as?metric&lt;=imperial(metric::T){&lt;j&gt;},
+              cos?real&lt;=(as(real::T)){&lt;j&gt;},
+              sin?real&lt;=(real::T){&lt;j&gt;},
+              tan?real&lt;=(real::T){&lt;j&gt;},
+              sqrt?real&lt;=(real::T){&lt;j&gt;},
+              atan?real&lt;=(real::T){&lt;j&gt;},
+              atan2?real&lt;=(real::T){&lt;j&gt;},
+              log?real&lt;=(real::T){&lt;j&gt;},
+              log10?real&lt;=(real::T){&lt;j&gt;},
+              exp?real&lt;=(real::T){&lt;j&gt;},
+              abs?real&lt;=(real::T){&lt;j&gt;},
+              ceil?real&lt;=(real::T){&lt;j&gt;},
+              floor?real&lt;=(real::T){&lt;j&gt;},
+              round?int&lt;=(real::T){&lt;j&gt;},
+              as?percent&lt;=real(){&lt;j&gt;}],
+             const=&gt;[
+              2.7182@/m/math/e?constq,
+              3.1415@/m/math/pi?constq]]@/m/math</code></pre>
                     </div>
                 </div>
             </div>
@@ -594,7 +602,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">33</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">21</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">24</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">2</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">33</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">21</span></a><a href="#defined" class="btn btn-outline-primary">external definition <span class="pill-label badge bg-info">24</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -765,7 +773,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <h6 class="text-primary mb-2">external definition</h6>
     <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-info ms-2">D</span>
@@ -841,13 +849,13 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a centimeter of distance (10 millimeters)</p>
+    <p class="mb-0 text-light"> a centimeter of distance (10 millimeters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cmplx">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">cmplx::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst[/m/real,/m/real]::T</code></pre></a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span><span class="chip-tip-roles">add = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, mul = {mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</span><span class="chip-tip-roles">add = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, mul = {mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
+            <span class="ms-2">refines <a href="m.html#__m__lst[__m__real,__m__real]" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/lst[/m/real,/m/real]::T</code></pre></a></span><span class="theory-chip theory-field">field<span class="chip-tip"><span class="chip-tip-name">field</span><span class="chip-tip-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span><span class="chip-tip-roles">add = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, mul = {mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0), inv = inv</span></span></span><span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0), inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, id = (0.0, 0.0)</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span><span class="chip-tip-roles">add = {plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}, mul = {mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}, zero = (0.0, 0.0), one = (1.0, 0.0)</span></span></span>
         </span>
         <small class="text-muted code">/m/math/cmplx</small>
     </div>
@@ -870,7 +878,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__math__cmplx-theories" role="tabpanel" aria-labelledby="algebra-__m__math__cmplx-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__field_theory"><span class="theory-chip theory-field">field</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__field_theory">field_theory</a><span class="algebra-theory-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, and \(a \cdot (b + c) = a \cdot b + a \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-mult_group">mult_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div></div></div>
+        <div class="tab-pane fade show active" id="algebra-__m__math__cmplx-theories" role="tabpanel" aria-labelledby="algebra-__m__math__cmplx-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__field_theory"><span class="theory-chip theory-field">field</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__field_theory">field_theory</a><span class="algebra-theory-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-mult_group">mult_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__math__cmplx-mtron" role="tabpanel" aria-labelledby="algebra-__m__math__cmplx-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[cmplx]::[obj=&gt;lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
                 law=&gt;[
                  field=&gt;/m/theory/field_theory::[
@@ -947,7 +955,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
+    <p class="mb-0 text-light"> a datetime as uri: &lt;//yyyy.MM:dd/HH/mm/ss/SSS?tz=+-HHmm&gt;</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__day">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -975,7 +983,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a decimeter of distance (10 centimeters)</p>
+    <p class="mb-0 text-light"> a decimeter of distance (10 centimeters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__currency__euro">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -989,7 +997,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> european union currency</p>
+    <p class="mb-0 text-light"> european union currency</p>
 </div>
 </div><div class="card mb-3" id="__m__math__imperial__foot">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1003,7 +1011,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a foot of distance (12 inches)</p>
+    <p class="mb-0 text-light"> a foot of distance (12 inches)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__datasize__gB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1044,9 +1052,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/imperial</code></pre></div>
     
     
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the nominal base type of imperial distance</p>
-</div>
+    
 </div><div class="card mb-3" id="__m__math__imperial__inch">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1059,7 +1065,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inch of distance (25.4 millimeters)</p>
+    <p class="mb-0 text-light"> an inch of distance (25.4 millimeters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__datasize__kB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1087,7 +1093,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a kilometer of distance (1000 meters)</p>
+    <p class="mb-0 text-light"> a kilometer of distance (1000 meters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__datasize__mB">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1115,7 +1121,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a meter of distance (100 centimeters)</p>
+    <p class="mb-0 text-light"> a meter of distance (100 centimeters)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__metric">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1128,9 +1134,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">real::T@/m/math/metric</code></pre></div>
     
     
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> the nominal base type of metric distance</p>
-</div>
+    
 </div><div class="card mb-3" id="__m__math__time__micros">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1157,7 +1161,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a mile of distance (1760 yards)</p>
+    <p class="mb-0 text-light"> a mile of distance (1760 yards)</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__millis">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1199,7 +1203,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a millimeter of distance</p>
+    <p class="mb-0 text-light"> a millimeter of distance</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__nanos">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1291,7 +1295,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100</p>
+    <p class="mb-0 text-light"> a percentage; ctor on a real between 0.0 and 1.0 is remapped between 0 and 100</p>
 </div>
 </div><div class="card mb-3" id="__m__math__time__second">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1347,7 +1351,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-nominal">nominal</span> united states currency</p>
+    <p class="mb-0 text-light"> united states currency</p>
 </div>
 </div><div class="card mb-3" id="__m__math__imperial__yard">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1361,7 +1365,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a yard of distance (3 feet)</p>
+    <p class="mb-0 text-light"> a yard of distance (3 feet)</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
@@ -1910,655 +1914,16 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="defined">
-    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">24</span></h3>
+    <h3 class="text-primary mb-3">external definition <span class="pill-label badge bg-info">24</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        contracts declared HERE whose address belongs to another instruction set — so they are
-        documented there too. Declared by
-        <span class="code text-info">/m/math</span>, for use with the types it introduces.
+        inst definitions that override an external instruction set's definition
+        are stored in the corresponding instruction set.
     </p>
-    <div class="card mb-3" id="defined-__m__inst__as">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">as</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/as</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?int&lt;=datetime(int::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=str(datetime::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-2-tab').click();document.getElementById('defined-__m__inst__as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?datetime&lt;=uri(uri::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-3-tab').click();document.getElementById('defined-__m__inst__as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=imperial(imperial::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-4-tab').click();document.getElementById('defined-__m__inst__as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?imperial&lt;=metric(imperial::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-5-tab').click();document.getElementById('defined-__m__inst__as-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=imperial(metric::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-6-tab').click();document.getElementById('defined-__m__inst__as-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?metric&lt;=metric(metric::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?percent&lt;=real(){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-7-tab').click();document.getElementById('defined-__m__inst__as-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?time&lt;=time(time::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-8-tab').click();document.getElementById('defined-__m__inst__as-doc-8').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?str&lt;=datetime(str::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__datetime" class="code text-primary">datetime::T</a>, <a href="#__m__math__imperial" class="code text-primary">imperial::T</a>, <a href="#__m__math__metric" class="code text-primary">metric::T</a>, <a href="#__m__math__percent" class="code text-primary">percent::T</a>, <a href="#__m__math__time" class="code text-primary">time::T</a></small>
-</div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-2"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-3-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-3"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-4-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-4"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-5-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-5"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-6-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-6"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-7-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-7"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 8
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-8-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-8"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 9
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="defined-__m__inst__as-content">
-        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> a datetime to epoch millis
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__int" class="text-success">int</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__int'" class="text-info">int&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(int::T)   [-- the epoch millis of that moment --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> parse an ISO-8601 or docker-style timestamp str into a datetime
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__str" class="text-info">str</a> <span class="text-light">=&gt;</span> <a href="#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&#39;2026-08-07T19:48:02Z&#39;.as(datetime::T)   [-- &lt;//2026.08.07/19/48/02/000?tz=+0000&gt; --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-2-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> cast a uri to a datetime — the datetime predicate validates the uri structure first
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.09/14/30/52/123?tz=+0000&gt;.as(datetime::T)   [-- //2026.08.09/14/30/52/123?tz=+0000 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-3" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-3-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert an imperial distance to another imperial unit
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="#__m__math__imperial" class="text-success">imperial</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">inch::144.0.as(yard::T)   [-- yard::4.0 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-4" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-4-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a metric distance to an imperial one — bridged through the exact 25.4 millimeters per inch
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="#__m__math__imperial" class="text-success">imperial</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1.0.as(inch::T)   [-- inch::39.37007874015748 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-5" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-5-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert an imperial distance to a metric one — bridged through the exact 25.4 millimeters per inch
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::1.0.as(cm::T)   [-- cm::30.48 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-6" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-6-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a metric distance to another metric unit
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1500.0.as(km::T)   [-- km::1.5 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-7" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-7-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> convert a duration to another time unit — the total is preserved, only the unit label changes
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__time" class="text-info">time</a> <span class="text-light">=&gt;</span> <a href="#__m__math__time" class="text-success">time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::1500.0.as(second::T)   [-- second::1.5 --]
-second::90.0.as(minute::T)   [-- minute::1.5 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-8" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-8-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> a datetime to a human readable str
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__str" class="text-success">str</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__str'" class="text-info">str&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08.07/19/48/02/251?tz=+0000&gt;.as(str::T)   [-- Friday, August 7, 2026 07:48:02 PM +00:00 --]</code></pre>
-</div>
-</div>
-    </div>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__div">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">div</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/div</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__div-doc-0-tab').click();document.getElementById('defined-__m__inst__div-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__div" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex division: \((a+bi)/(c+di)=\frac{ac+bd}{c^2+d^2}+\frac{bc-ad}{c^2+d^2}i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex quotient \(z __ w\)" class="text-success"> w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex divisor \(w = c + di\)'" class="text-info">&#39;the complex divisor \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]</code></pre>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__inv">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">inv</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/inv</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__inv-doc-0-tab').click();document.getElementById('defined-__m__inst__inv-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inv?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m.html#__m__inst__inv" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex reciprocal: \(\frac{1}{a+bi}=\frac{a-bi}{a^2+b^2}\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the multiplicative inverse \(z^{-1}\)" class="text-success">the multiplicative inverse \(z^{-1}\)</a></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,1.0].inv()   [-- cmplx::[0.5,-0.5] --]</code></pre>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__minus">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">minus</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/minus</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__minus-doc-0-tab').click();document.getElementById('defined-__m__inst__minus-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__minus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__minus-doc-1-tab').click();document.getElementById('defined-__m__inst__minus-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?datetime&lt;=datetime(time::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__minus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__minus-doc-2-tab').click();document.getElementById('defined-__m__inst__minus-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?time&lt;=datetime(datetime::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__minus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a>, <a href="#__m__math__datetime" class="code text-primary">datetime::T</a>, <a href="#__m__math__time" class="code text-primary">time::T</a></small>
-</div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__minus-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="defined-__m__inst__minus-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__minus-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__minus-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__minus-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__minus-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__minus-doc-2"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="defined-__m__inst__minus-content">
-        <div class="tab-pane fade show active" id="defined-__m__inst__minus-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__minus-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex subtraction: \((a+bi)-(c+di)=(a-c)+(b-d)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex difference \(z - w\)" class="text-success">the complex difference \(z - w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex subtrahend \(w = c + di\)'" class="text-info">&#39;the complex subtrahend \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__minus-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__minus-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> shift a datetime backward by a duration
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08:09/14/30/30/000?tz=+0000&gt; - second::30.0   [-- &lt;//2026.08:09/14/30/00/000?tz=+0000&gt; --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__minus-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__minus-doc-2-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the elapsed duration between two datetimes (in millis — normalize it for a readable unit)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__math__time" class="text-success">time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08:09/14/31/00/000?tz=+0000&gt; - &lt;//2026.08:09/14/30/00/000?tz=+0000&gt;   [-- millis::60000.0 --]</code></pre>
-</div>
-</div>
-    </div>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__mult">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">mult</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/mult</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__mult-doc-0-tab').click();document.getElementById('defined-__m__inst__mult-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__mult" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex multiplication: \((a+bi)(c+di)=(ac-bd)+(ad+bc)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex product \(z \cdot w\)" class="text-success">the complex product \(z \cdot w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex multiplier \(w = c + di\)'" class="text-info">&#39;the complex multiplier \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] * cmplx::[3.0,4.0]   [-- cmplx::[-5.0,10.0] --]</code></pre>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__neg">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">neg</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/neg</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__neg-doc-0-tab').click();document.getElementById('defined-__m__inst__neg-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m.html#__m__inst__neg" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex negation (additive inverse): \(-(a+bi)=-a-bi\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the negation \(-z\)" class="text-success">the negation \(-z\)</a></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].neg()   [-- cmplx::[-1.0,-2.0] --]</code></pre>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__one">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">one</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/one</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__one-doc-0-tab').click();document.getElementById('defined-__m__inst__one-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">one?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m.html#__m__inst__one" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the multiplicative identity: \(1 = 1 + 0i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex one \(1 + 0i\)" class="text-success">the complex one \(1 + 0i\)</a></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].one()   [-- cmplx::[1.0,0.0] --]</code></pre>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__plus">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">plus</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/plus</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__plus-doc-0-tab').click();document.getElementById('defined-__m__inst__plus-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__plus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__plus-doc-1-tab').click();document.getElementById('defined-__m__inst__plus-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?datetime&lt;=datetime(time::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__plus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__plus-doc-2-tab').click();document.getElementById('defined-__m__inst__plus-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?imperial&lt;=imperial(imperial::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__plus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__plus-doc-3-tab').click();document.getElementById('defined-__m__inst__plus-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?metric&lt;=metric(metric::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__plus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__plus-doc-4-tab').click();document.getElementById('defined-__m__inst__plus-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?time&lt;=time(time::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__plus" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a>, <a href="#__m__math__datetime" class="code text-primary">datetime::T</a>, <a href="#__m__math__time" class="code text-primary">time::T</a>, <a href="#__m__math__imperial" class="code text-primary">imperial::T</a>, <a href="#__m__math__metric" class="code text-primary">metric::T</a></small>
-</div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__plus-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="defined-__m__inst__plus-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__plus-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__plus-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__plus-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__plus-doc-2-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__plus-doc-2"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__plus-doc-3-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__plus-doc-3"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__plus-doc-4-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__plus-doc-4"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="defined-__m__inst__plus-content">
-        <div class="tab-pane fade show active" id="defined-__m__inst__plus-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__plus-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex addition: \((a+bi)+(c+di)=(a+c)+(b+d)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex sum \(z + w\)" class="text-success">the complex sum \(z + w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex addend \(w = c + di\)'" class="text-info">&#39;the complex addend \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__plus-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__plus-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> shift a datetime forward by a duration
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__datetime" class="text-info">datetime</a> <span class="text-light">=&gt;</span> <a href="#__m__math__datetime" class="text-success">datetime</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;//2026.08:09/14/30/00/000?tz=+0000&gt; + second::30.0   [-- &lt;//2026.08:09/14/30/30/000?tz=+0000&gt; --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__plus-doc-2" role="tabpanel" aria-labelledby="defined-__m__inst__plus-doc-2-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> add two distances of the same imperial unit
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__imperial" class="text-info">imperial</a> <span class="text-light">=&gt;</span> <a href="#__m__math__imperial" class="text-success">imperial</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::12.0 + foot::36.0   [-- foot::48.0 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__plus-doc-3" role="tabpanel" aria-labelledby="defined-__m__inst__plus-doc-3-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> add two distances of the same metric unit
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__metric" class="text-info">metric</a> <span class="text-light">=&gt;</span> <a href="#__m__math__metric" class="text-success">metric</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">meter::1500.0 + meter::500.0   [-- meter::2000.0 --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__plus-doc-4" role="tabpanel" aria-labelledby="defined-__m__inst__plus-doc-4-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> add two durations of the same time unit
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#__m__math__time" class="text-info">time</a> <span class="text-light">=&gt;</span> <a href="#__m__math__time" class="text-success">time</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__real'" class="text-info">real&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">millis::1500.0 + millis::500.0   [-- millis::2000.0 --]</code></pre>
-</div>
-</div>
-    </div>
-</div>
-</div><div class="card mb-3" id="defined-__m__inst__zero">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">zero</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/zero</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__zero-doc-0-tab').click();document.getElementById('defined-__m__inst__zero-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">zero?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m.html#__m__inst__zero" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cmplx" class="code text-primary">cmplx::T</a></small>
-</div>
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the additive identity: \(0 = 0 + 0i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
-</div><div class="card-body py-2">
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex zero \(0 + 0i\)" class="text-success">the complex zero \(0 + 0i\)</a></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]</code></pre>
-</div>
-</div>
+    /m/math
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

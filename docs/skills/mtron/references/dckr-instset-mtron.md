@@ -1,12 +1,12 @@
 ---
-name: dckrspace
+name: dckr instruction set
 description: |
   manipulating docker's graph of images, containers, volumes, networks, and the lifecycle of what it creates
 ---
 
 # dckrspace
 
-## Architecture
+## architecture
 
 `dckrspace::T` bridges a docker daemon into metatron's uri space. Every docker resource (container, image, volume,
 network) is a first-class uri-addressable `obj`. Writes trigger docker cli operations; reads refresh state from the
@@ -33,7 +33,7 @@ links back to its containers.
 └───────────────────────────────────────────────────────────────┘
 ```
 
-## Space Configuration
+## space configuration
 
 ```mtron_pre
 dckrspace::T
@@ -55,16 +55,16 @@ dckrspace::[pattern   => docker:#,/
             progress  => progress_table::[=>]]@/sys/space/docker
 ```
 
-| Field     | Required | Description                                                                                        |
-|-----------|----------|----------------------------------------------------------------------------------------------------|
-| `pattern` | yes      | URI prefix for this space                                                                          |
-| `route`   | yes      | Maps pattern prefix into space                                                                     |
-| `host`    | no       | Remote Docker daemon (`tcp://`, `unix://`, `ssh://`). Omit for the local socket.                   |
-| `owner`   | no       | The scope that owns what this space creates — the docker label plus the `owner` field (see below). |
-| `on_close`| no       | An instruction applied when the space closes (see Ownership & Reaping).                            |
-| `progress`| no       | `progress_table::T` for live pull progress — **console only**; omit it headless (see Gotchas).     |
+| Field      | Required | Description                                                                                        |
+|------------|----------|----------------------------------------------------------------------------------------------------|
+| `pattern`  | yes      | URI prefix for this space                                                                          |
+| `route`    | yes      | Maps pattern prefix into space                                                                     |
+| `host`     | no       | Remote Docker daemon (`tcp://`, `unix://`, `ssh://`). Omit for the local socket.                   |
+| `owner`    | no       | The scope that owns what this space creates — the docker label plus the `owner` field (see below). |
+| `on_close` | no       | An instruction applied when the space closes (see Ownership & Reaping).                            |
+| `progress` | no       | `progress_table::T` for live pull progress — **console only**; omit it headless (see Gotchas).     |
 
-## Ownership & Reaping
+## ownership & reaping
 
 `dckrspace::T` provisions on demand — `from(docker:container/x).else(… up …)` — which raises a question the daemon can
 answer but the VM's cache cannot: **what did this space create, and is its creator still alive?**
@@ -116,8 +116,7 @@ The owner query is for the general case: select what the label marks, then force
 (`x -> noobj` is the write that stops and removes a container). Note that a failing `on_close` should be treated as a
 warning, not a reason to abandon the rest of a shutdown.
 
-
-## URI Address Space
+## uri address space
 
 ```
 docker:image/<repository:tag>        -- image by repo:tag
@@ -134,9 +133,9 @@ docs environment, because none of them touches a daemon: `dckrspace::T` is lazy,
 therefore *shown* (a plain `mtron` block) rather than run, and the end-to-end section marks which of its steps the
 headless loop executes.
 
-## Writing — Containers
+## writing — containers
 
-### Run a container
+### run a container
 
 ```mtron
 [-- runs against a live daemon --]
@@ -160,9 +159,9 @@ configured (**console only** — see Gotchas). When the space declares an `owner
 | `volumes`     | lst of str     | `-v` each      | `['data:/data']` |
 | `network`     | str            | `--network`    | `mynet`          |
 
-## Reading Summary
+## reading summary
 
-### List all resources
+### list all resources
 
 ```mtron
 *docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
@@ -171,7 +170,7 @@ configured (**console only** — see Gotchas). When the space declares an `owner
 *docker:network/+                    [-- all networks                             --]
 ```
 
-### Inspect a resource
+### inspect a resource
 
 ```mtron
 *docker:image/nginx:alpine           [-- full image rec --]
@@ -180,7 +179,7 @@ configured (**console only** — see Gotchas). When the space declares an `owner
 *docker:container/web/state          [-- container state (running, exited, ...) --]
 ```
 
-### Graph navigation
+### graph navigation
 
 ```mtron
 *docker:container/web/image           [-- uri ref to the container's image             --]
@@ -196,13 +195,13 @@ field on images/networks/volumes is a **lst of uri refs**. This allows for graph
 node in the graph and pulling the entire uri space into the result. uri auto-refs are lazy links that are resolved to
 their referent upon access.
 
-### Stop and remove a container
+### stop and remove a container
 
 ```mtron
 docker:container/web -> noobj       [-- stops and removes the container --]
 ```
 
-## Reading — Images
+## reading — images
 
 Images are read-only from Docker Hub. The space auto-discovers images from
 `docker image ls` and from containers' image references:
@@ -214,37 +213,37 @@ Images are read-only from Docker Hub. The space auto-discovers images from
 *docker:image/nginx:alpine/tag         [-- the tag --]
 ```
 
-## Writing — Volumes
+## writing — volumes
 
-### Create a volume
+### create a volume
 
 ```mtron
 docker:volume/myvol -> [driver => local]
 ```
 
-### Remove a volume
+### remove a volume
 
 ```mtron
 docker:volume/myvol -> noobj
 ```
 
-## Writing — Networks
+## writing — networks
 
-### Create a network
+### create a network
 
 ```mtron
 docker:network/mynet -> [driver => bridge]
 ```
 
-### Remove a network
+### remove a network
 
 ```mtron
 docker:network/mynet -> noobj
 ```
 
-## Docker Compose
+## docker compose
 
-### Start a stack
+### start a stack
 
 ```mtron
 docker:compose/my-stack -> [/
@@ -284,20 +283,20 @@ Two things about that file and those names are worth knowing before you guard a 
 Each service takes docker compose's own fields — `labels` (a map), `healthcheck`, `restart`, `volumes`, `command`, …
 — and when the space declares an `owner` its label is added to every service's `labels`.
 
-### Stop a stack
+### stop a stack
 
 ```mtron
 docker:compose/my-stack -> noobj     [-- compose down if the file is there, label sweep if it is not --]
 ```
 
-### Read compose config
+### read compose config
 
 ```mtron
 *docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
 *docker:compose/my-stack/services              [-- all services --]
 ```
 
-## Remote Docker Hosts
+## remote docker hosts
 
 Connect to a remote Docker daemon by specifying `host` in the space config:
 
@@ -307,7 +306,7 @@ dckrspace::[host => <tcp://192.168.1.100:2375>, ...]@/sys/space/remote
 
 All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix://`, and `ssh://` schemes.
 
-## Gotchas
+## gotchas
 
 * **Reads are read-through.** A read refreshes from the daemon before it answers — images, networks, volumes and
   containers, up to four `docker … ls --format json` calls. That is what keeps `*docker:container/+` honest with no
@@ -328,7 +327,7 @@ All Docker CLI commands are prefixed with `-H <host>`. Supports `tcp://`, `unix:
   `readOutput(true)` and `redirectError(…)` so both streams are always consumed, and it touches no UI — a hand-rolled
   `ProcessBuilder` drain thread, or rendering a widget from one, reintroduces that deadlock.
 
-## End-to-End: SQLite Container + tbleSpace
+## end-to-end: SQLite container + tbleSpace
 
 This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
 `tblespace::T` — all from mtron. The daemon-facing steps (1 and 6) are *shown*; the data steps (2 through 4) run in
@@ -351,7 +350,7 @@ every docs build, and they run identically against a local socket — the tble h
 └────────────────────────────────────────┘
 ```
 
-### Step 1: Pull + run the SQLite container
+### step 1: pull + run the SQLite container
 
 ```mtron
 [-- runs against a live daemon; the bind mount is what creates the host directory the steps below use --]
@@ -366,7 +365,7 @@ docker:container/sqlite -> [/
 The bind mount `'/tmp/mtron-dbs:/data'` maps the host directory into the container. The user `root` is necessary for
 command permissions.
 
-### Step 2: Mount the database via tbleSpace
+### step 2: mount the database via tbleSpace
 
 ```mtron_pre
 [-- on a live daemon step 1 created this directory; here the loop creates the same scratch path itself --]
@@ -378,7 +377,7 @@ tblespace::[pattern => mydb:#,/
             driver  => <org.sqlite.JDBC>]@/sys/space/mydb
 ```
 
-### Step 3: Create tables and insert data
+### step 3: create tables and insert data
 
 ```mtron_pre
 [-- insert tble rows --]
@@ -387,7 +386,7 @@ mydb:people/2 -> [name=>'stynx',role=>developer]
 mydb:people/3 -> [name=>'metis',role=>oracle]
 ```
 
-### Step 4: Query from mtron
+### step 4: query from mtron
 
 ```mtron_pre
 *mydb:people/+                                           [-- all rows              --]
@@ -399,13 +398,13 @@ mydb:people/3 -> [name=>'metis',role=>oracle]
 *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
 ```
 
-### Step 5: The container sees the same data
+### step 5: The container sees the same data
 
 The Docker container has the database mounted at `/data/mydb.sqlite`. Any process inside the container can read and
 write the same file. mtron-backed writes go through tbleSpace → JDBC → the file → visible inside the container.
 Container writes go to the file → visible to tbleSpace on next read.
 
-### Step 6: Tear down
+### step 6: tear down
 
 ```mtron
 [-- runs against a live daemon --]
@@ -415,7 +414,7 @@ docker:container/sqlite -> noobj     [-- stop + remove the container --]
 The database file persists at `/tmp/mtron-dbs/mydb.sqlite`. Re-mount `tblespace::T` later to pick up where the database
 state was left off.
 
-### How it works
+### how it works
 
 | Layer          | Technology   | Role                                                                              |
 |----------------|--------------|-----------------------------------------------------------------------------------|
@@ -428,36 +427,36 @@ The key insight: **`dckrspace::T` manages the container lifecycle; `tblespace::T
 bind-mounted directory. No `docker exec`, no separate SQL client, no out-of-band setup — the database is born from a
 mtron write.
 
-## Quick Reference
+## quick reference
 
-| Task                  | Expression                                                                 |
-|-----------------------|----------------------------------------------------------------------------|
-| Mount space           | `dckrspace::[pattern=>docker:#,route=>[docker:=>...]]@/sys/space/docker` |
-| Run container         | `docker:container/<name> -> [image => 'img:tag']`                          |
-| Run with ports        | `docker:container/<name> -> [image => 'img', ports => [<8080:80>]]`        |
-| Run with env          | `[image => 'img', environment => [KEY => val]]`                            |
-| Run with volume       | `[image => 'img', volumes => ['vol:/path']]`                               |
-| Run with network      | `[image => 'img', network => netname]`                                     |
+| Task                  | Expression                                                                             |
+|-----------------------|----------------------------------------------------------------------------------------|
+| Mount space           | `dckrspace::[pattern=>docker:#,route=>[docker:=>...]]@/sys/space/docker`               |
+| Run container         | `docker:container/<name> -> [image => 'img:tag']`                                      |
+| Run with ports        | `docker:container/<name> -> [image => 'img', ports => [<8080:80>]]`                    |
+| Run with env          | `[image => 'img', environment => [KEY => val]]`                                        |
+| Run with volume       | `[image => 'img', volumes => ['vol:/path']]`                                           |
+| Run with network      | `[image => 'img', network => netname]`                                                 |
 | Own what you create   | Add `owner => /usr/avatar` to the space config (label `com.phaseshift.metatron.owner`) |
-| What an owner created | `*docker:container/+.?[owner=></usr/avatar>]`                              |
-| Reap on close         | Add `on_close => docker:compose/<name> -> noobj` to the space config       |
-| Stop container        | `docker:container/<name> -> noobj`                                       |
-| List images           | `*docker:image/+`                                                          |
-| List containers       | `*docker:container/+`                                                      |
-| Inspect image         | `*docker:image/repo:tag`                                                   |
-| Inspect container     | `*docker:container/<name>`                                                 |
-| Container's image ref | `*docker:container/<name>/image`                                           |
-| Image's containers    | `*docker:image/repo:tag/containers`                                        |
-| Container's network   | `*docker:container/<name>/networks`                                        |
-| Network's containers  | `*docker:network/<name>/containers`                                        |
-| Container's volumes   | `*docker:container/<name>/mounts`                                          |
-| Volume's containers   | `*docker:volume/<name>/containers`                                         |
-| Create volume         | `docker:volume/<name> -> [driver => local]`                                |
-| Remove volume         | `docker:volume/<name> -> noobj`                                          |
-| Create network        | `docker:network/<name> -> [driver => bridge]`                              |
-| Remove network        | `docker:network/<name> -> noobj`                                         |
-| Start compose stack   | `docker:compose/<name> -> [services => [...]]`                             |
-| Stop compose stack    | `docker:compose/<name> -> noobj`                                         |
-| Stack container name  | `<name>` for a single-service stack, so its own guard can adopt it         |
-| Teardown without yaml | Automatic: the sweep by `com.docker.compose.project` label                |
-| Remote host           | Add `host => <tcp://host:port>` to space config                            |
+| What an owner created | `*docker:container/+.?[owner=></usr/avatar>]`                                          |
+| Reap on close         | Add `on_close => docker:compose/<name> -> noobj` to the space config                   |
+| Stop container        | `docker:container/<name> -> noobj`                                                     |
+| List images           | `*docker:image/+`                                                                      |
+| List containers       | `*docker:container/+`                                                                  |
+| Inspect image         | `*docker:image/repo:tag`                                                               |
+| Inspect container     | `*docker:container/<name>`                                                             |
+| Container's image ref | `*docker:container/<name>/image`                                                       |
+| Image's containers    | `*docker:image/repo:tag/containers`                                                    |
+| Container's network   | `*docker:container/<name>/networks`                                                    |
+| Network's containers  | `*docker:network/<name>/containers`                                                    |
+| Container's volumes   | `*docker:container/<name>/mounts`                                                      |
+| Volume's containers   | `*docker:volume/<name>/containers`                                                     |
+| Create volume         | `docker:volume/<name> -> [driver => local]`                                            |
+| Remove volume         | `docker:volume/<name> -> noobj`                                                        |
+| Create network        | `docker:network/<name> -> [driver => bridge]`                                          |
+| Remove network        | `docker:network/<name> -> noobj`                                                       |
+| Start compose stack   | `docker:compose/<name> -> [services => [...]]`                                         |
+| Stop compose stack    | `docker:compose/<name> -> noobj`                                                       |
+| Stack container name  | `<name>` for a single-service stack, so its own guard can adopt it                     |
+| Teardown without yaml | Automatic: the sweep by `com.docker.compose.project` label                             |
+| Remote host           | Add `host => <tcp://host:port>` to space config                                        |

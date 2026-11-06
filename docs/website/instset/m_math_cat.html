@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,67 +499,24 @@ categorical realization of types and insts as objects and morphisms</p>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/cat::[pattern=&gt;/m/math/cat/#,
-              q=&gt;[
+                        <pre><code>/m/math/cat::[q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+                inst=&gt;/m/instset::[=&gt;]],
                /m/qproc/decq::[
                 pattern=&gt;decq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-                obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-              rewrite=&gt;[
-               /m/math/cat/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/theory_involution?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_idempotent?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_absorbing?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_monoidic?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_poset?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/form_map_unwrap?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
-              inst=&gt;[
-               lower?path&lt;=path(plan::T){&lt;j&gt;},
-               bind?path&lt;=path(plan::T){&lt;j&gt;},
-               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
-               as?object&lt;=#(object::T){&lt;j&gt;},
-               as?path&lt;=#(path::T){&lt;j&gt;},
-               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
-               as?place&lt;=#(place::T){&lt;j&gt;}],
+                obj=&gt;/m/instset::[=&gt;]]],
+              pattern=&gt;/m/math/cat/#,
               type=&gt;[
                rec[obj]::T[?[
                 obj=&gt;&lt;#&gt;::T,
                 {?}instset=&gt;[uri::T],
                 {?}orbit=&gt;category::T]]@/m/math/cat/category,
-               uri::T[?union(absorbing,
-                             kleene,
-                             partial,
-                             floatable,
-                             blocked,
-                             pure,
-                             action,
-                             prime,
-                             left_distributive,
-                             right_distributive,
-                             semi_right_distributive,
-                             magmadic,
-                             monoidic,
-                             commutative,
-                             poset,
-                             unit,
-                             involution,
-                             complement,
-                             idempotent,
-                             nilpotent,
-                             zero_divisor,
-                             cyclic)]@/m/math/cat/law,
                rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class,
                category::T[?[
                 obj=&gt;inst::T,
@@ -568,213 +533,42 @@ categorical realization of types and insts as objects and morphisms</p>
                             flatmapper,
                             typer,
                             standard),
-                {?}src=&gt;object::T,
-                {?}trgt=&gt;object::T,
+                {?}src=&gt;!*/m/math/cat/category/object,
+                {?}trgt=&gt;!*/m/math/cat/category/object,
                 {?}analysis=&gt;rec::T,
-                {?}law=&gt;[uri::T[?union(absorbing,
-                                       kleene,
-                                       partial,
-                                       floatable,
-                                       blocked,
-                                       pure,
-                                       action,
-                                       prime,
-                                       left_distributive,
-                                       right_distributive,
-                                       semi_right_distributive,
-                                       magmadic,
-                                       monoidic,
-                                       commutative,
-                                       poset,
-                                       unit,
-                                       involution,
-                                       complement,
-                                       idempotent,
-                                       nilpotent,
-                                       zero_divisor,
-                                       cyclic)]@/m/math/cat/law],
+                {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
                 {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
                 {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism,
                category::T[?[
                 obj=&gt;&lt;T&gt;::T,
-                {?}morphed_to=&gt;[category::T[?[
-                 obj=&gt;inst::T,
-                 form=&gt;union(initial,
-                             terminal,
-                             fork,
-                             join,
-                             reducer,
-                             gather,
-                             scatter,
-                             catcher,
-                             filter,
-                             mapper,
-                             flatmapper,
-                             typer,
-                             standard),
-                 {?}src=&gt;object::T,
-                 {?}trgt=&gt;object::T,
-                 {?}analysis=&gt;rec::T,
-                 {?}law=&gt;[uri::T[?union(absorbing,
-                                        kleene,
-                                        partial,
-                                        floatable,
-                                        blocked,
-                                        pure,
-                                        action,
-                                        prime,
-                                        left_distributive,
-                                        right_distributive,
-                                        semi_right_distributive,
-                                        magmadic,
-                                        monoidic,
-                                        commutative,
-                                        poset,
-                                        unit,
-                                        involution,
-                                        complement,
-                                        idempotent,
-                                        nilpotent,
-                                        zero_divisor,
-                                        cyclic)]@/m/math/cat/law],
-                 {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                 {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
-                {?}morphed_from=&gt;[category::T[?[
-                 obj=&gt;inst::T,
-                 form=&gt;union(initial,
-                             terminal,
-                             fork,
-                             join,
-                             reducer,
-                             gather,
-                             scatter,
-                             catcher,
-                             filter,
-                             mapper,
-                             flatmapper,
-                             typer,
-                             standard),
-                 {?}src=&gt;object::T,
-                 {?}trgt=&gt;object::T,
-                 {?}analysis=&gt;rec::T,
-                 {?}law=&gt;[uri::T[?union(absorbing,
-                                        kleene,
-                                        partial,
-                                        floatable,
-                                        blocked,
-                                        pure,
-                                        action,
-                                        prime,
-                                        left_distributive,
-                                        right_distributive,
-                                        semi_right_distributive,
-                                        magmadic,
-                                        monoidic,
-                                        commutative,
-                                        poset,
-                                        unit,
-                                        involution,
-                                        complement,
-                                        idempotent,
-                                        nilpotent,
-                                        zero_divisor,
-                                        cyclic)]@/m/math/cat/law],
-                 {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                 {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+                {?}morphed_to=&gt;[!*/m/math/cat/category/morphism],
+                {?}morphed_from=&gt;[!*/m/math/cat/category/morphism],
                 {?}law=&gt;[=&gt;]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object,
                category::T[?[
                 obj=&gt;code::T,
                 {?}origin=&gt;place::T,
                 {?}where=&gt;rec::T,
                 {?}peer=&gt;[rec::T],
-                uri::T=&gt;plan::T]][ctor?path&lt;=(#{*}::T){&lt;j&gt;}]@/m/inst/path,
+                uri::T=&gt;rec::T[?[
+                 name=&gt;uri::T,
+                 {?}result=&gt;&lt;#&gt;::T,
+                 {?}cut=&gt;[
+                  {?}form=&gt;uri::T,
+                  {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                  {?}role=&gt;uri::T],
+                 {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
+                                {?}target=&gt;&lt;#&gt;::T,
+                                {?}place=&gt;&lt;#&gt;::T,
+                                {?}hop=&gt;&lt;#&gt;::T,
+                                {?}split=&gt;&lt;#&gt;::T,
+                                {?}inst=&gt;[uri::T],
+                                span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/plan]][ctor?path&lt;=(#{*}::T){&lt;j&gt;}]@/m/inst/path,
                category::T[?[
-                obj=&gt;[category::T[?[obj=&gt;inst::T,
-                                    form=&gt;union(initial,
-                                                terminal,
-                                                fork,
-                                                join,
-                                                reducer,
-                                                gather,
-                                                scatter,
-                                                catcher,
-                                                filter,
-                                                mapper,
-                                                flatmapper,
-                                                typer,
-                                                standard),
-                                    {?}src=&gt;object::T,
-                                    {?}trgt=&gt;object::T,
-                                    {?}analysis=&gt;rec::T,
-                                    {?}law=&gt;[uri::T[?union(absorbing,
-                                                           kleene,
-                                                           partial,
-                                                           floatable,
-                                                           blocked,
-                                                           pure,
-                                                           action,
-                                                           prime,
-                                                           left_distributive,
-                                                           right_distributive,
-                                                           semi_right_distributive,
-                                                           magmadic,
-                                                           monoidic,
-                                                           commutative,
-                                                           poset,
-                                                           unit,
-                                                           involution,
-                                                           complement,
-                                                           idempotent,
-                                                           nilpotent,
-                                                           zero_divisor,
-                                                           cyclic)]@/m/math/cat/law],
-                                    {?}class=&gt;[rec::T[?union(endo,
-                                                             auto,
-                                                             iso,
-                                                             mono,
-                                                             epi,
-                                                             section,
-                                                             retraction)]@/m/math/cat/class],
-                                    {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+                obj=&gt;[!*/m/math/cat/category/morphism],
                 {?}where=&gt;[rec[obj]::T[?[
                  obj=&gt;&lt;#&gt;::T,
                  {?}instset=&gt;[uri::T],
                  {?}orbit=&gt;category::T]]@/m/math/cat/category]]][ctor?abstraction&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/abstraction,
-               rec::T[?[
-                name=&gt;uri::T,
-                {?}result=&gt;&lt;#&gt;::T,
-                {?}cut=&gt;[
-                 {?}form=&gt;uri::T,
-                 {?}law=&gt;[uri::T[?union(absorbing,
-                                        kleene,
-                                        partial,
-                                        floatable,
-                                        blocked,
-                                        pure,
-                                        action,
-                                        prime,
-                                        left_distributive,
-                                        right_distributive,
-                                        semi_right_distributive,
-                                        magmadic,
-                                        monoidic,
-                                        commutative,
-                                        poset,
-                                        unit,
-                                        involution,
-                                        complement,
-                                        idempotent,
-                                        nilpotent,
-                                        zero_divisor,
-                                        cyclic)]@/m/math/cat/law],
-                 {?}role=&gt;uri::T],
-                {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
-                               {?}target=&gt;&lt;#&gt;::T,
-                               {?}place=&gt;&lt;#&gt;::T,
-                               {?}hop=&gt;&lt;#&gt;::T,
-                               {?}split=&gt;&lt;#&gt;::T,
-                               {?}inst=&gt;[uri::T],
-                               span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/plan,
                category::T[?[
                 obj=&gt;uri::T,
                 authority=&gt;[uri::T],
@@ -814,7 +608,28 @@ categorical realization of types and insts as objects and morphisms</p>
                 bottom=&gt;&lt;#&gt;::T,
                 top=&gt;&lt;#&gt;::T]]@/m/theory/lattice_theory,
                /m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/theory/semilattice_theory,
-               /m/theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/theory/near_ring_theory]]@/m/math/cat</code></pre>
+               /m/theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/theory/near_ring_theory],
+              inst=&gt;[
+               lower?path&lt;=path(plan::T){&lt;j&gt;},
+               bind?path&lt;=path(plan::T){&lt;j&gt;},
+               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
+               as?object&lt;=#(object::T){&lt;j&gt;},
+               as?path&lt;=#(path::T){&lt;j&gt;},
+               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
+               as?place&lt;=#(place::T){&lt;j&gt;}],
+              rewrite=&gt;[
+               /m/math/cat/inst/rewrite/theory_unit_removal?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/branch_inline?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/theory_involution?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_idempotent?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_absorbing?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_monoidic?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_poset?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/form_map_unwrap?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
+               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -822,7 +637,7 @@ categorical realization of types and insts as objects and morphisms</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">9</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">5</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">12</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><a href="#defined" class="btn btn-outline-primary">external definition <span class="pill-label badge bg-info">5</span></a><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">12</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -834,9 +649,6 @@ categorical realization of types and insts as objects and morphisms</p>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__math__cat__class" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">class</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__cat__law" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">law</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">category</small></div><div class="d-flex flex-wrap"><a href="#__m__math__cat__category__abstraction" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">abstraction</span>
@@ -853,9 +665,6 @@ categorical realization of types and insts as objects and morphisms</p>
 </a><a href="#__m__math__cat__category__place" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">place</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
-</a><a href="#__m__math__cat__category__plan" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">plan</span>
-    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div>
 </div><div class="mb-3">
     <h6 class="text-primary mb-2">insts</h6>
@@ -867,7 +676,7 @@ categorical realization of types and insts as objects and morphisms</p>
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <h6 class="text-primary mb-2">external definition</h6>
     <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-info ms-2">D</span>
@@ -914,7 +723,7 @@ categorical realization of types and insts as objects and morphisms</p>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">9</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">7</span></h3>
     <div class="card mb-3" id="__m__math__cat__category__abstraction">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -923,53 +732,7 @@ categorical realization of types and insts as objects and morphisms</p>
         </span>
         <small class="text-muted code">/m/math/cat/category/abstraction</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[obj=&gt;[category::T[?[obj=&gt;inst::T,
-                                  form=&gt;union(initial,
-                                              terminal,
-                                              fork,
-                                              join,
-                                              reducer,
-                                              gather,
-                                              scatter,
-                                              catcher,
-                                              filter,
-                                              mapper,
-                                              flatmapper,
-                                              typer,
-                                              standard),
-                                  {?}src=&gt;object::T,
-                                  {?}trgt=&gt;object::T,
-                                  {?}analysis=&gt;rec::T,
-                                  {?}law=&gt;[uri::T[?union(absorbing,
-                                                         kleene,
-                                                         partial,
-                                                         floatable,
-                                                         blocked,
-                                                         pure,
-                                                         action,
-                                                         prime,
-                                                         left_distributive,
-                                                         right_distributive,
-                                                         semi_right_distributive,
-                                                         magmadic,
-                                                         monoidic,
-                                                         commutative,
-                                                         poset,
-                                                         unit,
-                                                         involution,
-                                                         complement,
-                                                         idempotent,
-                                                         nilpotent,
-                                                         zero_divisor,
-                                                         cyclic)]@/m/math/cat/law],
-                                  {?}class=&gt;[rec::T[?union(endo,
-                                                           auto,
-                                                           iso,
-                                                           mono,
-                                                           epi,
-                                                           section,
-                                                           retraction)]@/m/math/cat/class],
-                                  {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[obj=&gt;[!*/m/math/cat/category/morphism],
               {?}where=&gt;[rec[obj]::T[?[obj=&gt;&lt;#&gt;::T,
                                        {?}instset=&gt;[uri::T],
                                        {?}orbit=&gt;category::T]]@/m/math/cat/category]]][ctor?abstraction&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/abstraction</code></pre></div>
@@ -978,11 +741,11 @@ categorical realization of types and insts as objects and morphisms</p>
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> code lifted pointwise along \(\alpha\) into the classification alphabet — the pure search surface a plan&#39;s selector reads</p>
+    <p class="mb-0 text-light"> code lifted pointwise along \(\alpha\) into the classification alphabet — the pure search surface a plan&#39;s selector reads</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code'" class="text-info">&#39;the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code&#39;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the α place-class word: the located path's places as a list (the α image of \(\mathrm{path}.where\) __ \(\mathrm{path}.origin\)) — the surface a placement guard reads"" class="text-info"> \(\mathrm{path}.origin\)) — the surface a placement guard reads&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the α place-class word: the located path's places as a list (the α image of \(\mathrm{path}.\mathrm{where}\) __ \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads"" class="text-info"> \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads&quot;</a>
+  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code'" class="text-info">&#39;the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category">
@@ -998,15 +761,7 @@ categorical realization of types and insts as objects and morphisms</p>
               {?}orbit=&gt;category::T]]@/m/math/cat/category</code></pre></div>
     
     
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a categorical structure to be refined into an object or morphism</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)'" class="text-info">&#39;the type \(X\) lifted to a vertex: \(\mathrm{obj} = X\)&#39;</a>
-  <a href="#{?}orbit" class="text-light">{?}orbit</a> <span class="text-light">=&gt;</span> <a href="#'the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)'" class="text-info">&#39;the reversible-core component: \(\mathrm{orbit}(X) = {Y : X \sim^{*} Y}\), where \(X \sim Y \iff X 	o Y \wedge Y 	o X\)&#39;</a>
-  <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#"uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category's morphisms are generated"" class="text-info">&quot;uri patterns \(P\) selecting the instsets \(\mathcal{S}\) from which the category&#39;s morphisms are generated&quot;</a>
-</pre>
-</div>
+    
 </div><div class="card mb-3" id="__m__math__cat__class">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1019,42 +774,7 @@ categorical realization of types and insts as objects and morphisms</p>
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the set-theoretic class of a morphism — the union of the class labels</p>
-</div>
-</div><div class="card mb-3" id="__m__math__cat__law">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">law::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__uri" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/uri::T</code></pre></a></span>
-        </span>
-        <small class="text-muted code">/m/math/cat/law</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(absorbing,
-              kleene,
-              partial,
-              floatable,
-              blocked,
-              pure,
-              action,
-              prime,
-              left_distributive,
-              right_distributive,
-              semi_right_distributive,
-              magmadic,
-              monoidic,
-              commutative,
-              poset,
-              unit,
-              involution,
-              complement,
-              idempotent,
-              nilpotent,
-              zero_divisor,
-              cyclic)]@/m/math/cat/law</code></pre></div>
-    
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the process laws a morphism obeys — the union of the process-law labels</p>
+    <p class="mb-0 text-light"> the set-theoretic class of a morphism — the union of the class labels</p>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__morphism">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1078,31 +798,10 @@ categorical realization of types and insts as objects and morphisms</p>
                           flatmapper,
                           typer,
                           standard),
-              {?}src=&gt;object::T,
-              {?}trgt=&gt;object::T,
+              {?}src=&gt;!*/m/math/cat/category/object,
+              {?}trgt=&gt;!*/m/math/cat/category/object,
               {?}analysis=&gt;rec::T,
-              {?}law=&gt;[uri::T[?union(absorbing,
-                                     kleene,
-                                     partial,
-                                     floatable,
-                                     blocked,
-                                     pure,
-                                     action,
-                                     prime,
-                                     left_distributive,
-                                     right_distributive,
-                                     semi_right_distributive,
-                                     magmadic,
-                                     monoidic,
-                                     commutative,
-                                     poset,
-                                     unit,
-                                     involution,
-                                     complement,
-                                     idempotent,
-                                     nilpotent,
-                                     zero_divisor,
-                                     cyclic)]@/m/math/cat/law],
+              {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
               {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
               {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism</code></pre></div>
     
@@ -1110,21 +809,21 @@ categorical realization of types and insts as objects and morphisms</p>
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
+    <p class="mb-0 text-light"> an inst as a categorical morphism incident to a source object (dom) and a target object (rng)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (^{\ast}, 1),\; \mathrm{flatmapper} = (1, ^{+}),\; \ldots\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#form" class="text-light">form</a> <span class="text-light">=&gt;</span> <a href="#'the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (\ast, 1),\; \mathrm{flatmapper} = (1, +),\; \ldots\)'" class="text-info">&#39;the n-tid coefficient shape \((c_{\mathrm{dom}}, c_{\mathrm{rng}})\) in regex notation: \(\mathrm{mapper} = (1,1),\; \mathrm{filter} = (1, ?),\; \mathrm{reducer} = (\ast, 1),\; \mathrm{flatmapper} = (1, +),\; \ldots\)&#39;</a>
   <a href="#src" class="text-light">src</a> <span class="text-light">=&gt;</span> <a href="#'the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)'" class="text-info">&#39;the source object the morphism leaves: \(\mathrm{src}(f) = \mathrm{dom}(f)\)&#39;</a>
   <a href="#trgt" class="text-light">trgt</a> <span class="text-light">=&gt;</span> <a href="#'the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)'" class="text-info">&#39;the target object the morphism enters: \(\mathrm{trgt}(f) = \mathrm{rng}(f)\)&#39;</a>
   <a href="#{?}analysis__position" class="text-light">position</a> <span class="text-light">=&gt;</span> <a href="#"the edge's place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)"" class="text-info">&quot;the edge&#39;s place among its siblings: \(\mathrm{position}(f) \subseteq {\mathrm{duplicate}, \mathrm{ambiguous}, \mathrm{incomparable}, \mathrm{coupling}, \mathrm{isochain}, \mathrm{retract}}\)&quot;</a>
-  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \perp \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \perp \mathrm{trgt}(f)}\)&#39;</a>
+  <a href="#{?}analysis__contested" class="text-light">contested</a> <span class="text-light">=&gt;</span> <a href="#'the witness edges behind the ambiguous__incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \parallel \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \parallel \mathrm{trgt}(f)}\)'" class="text-info">incomparable labels: \(\mathrm{contested}(f) = {g : \mathrm{trgt}(g) = \mathrm{trgt}(f) \wedge \mathrm{src}(g) \parallel \mathrm{src}(f)} \cup {g : \mathrm{src}(g) = \mathrm{src}(f) \wedge \mathrm{trgt}(g) \parallel \mathrm{trgt}(f)}\)&#39;</a>
   <a href="#{?}analysis__orbit" class="text-light">orbit</a> <span class="text-light">=&gt;</span> <a href="#"the reversible-core component of the morphism's dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)"" class="text-info">&quot;the reversible-core component of the morphism&#39;s dom: \(\mathrm{orbit}(f) = {X : \mathrm{dom}(f) \sim^{*} X}\)&quot;</a>
   <a href="#{?}analysis__family" class="text-light">family</a> <span class="text-light">=&gt;</span> <a href="#'the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)'" class="text-info">&#39;the same-name siblings: \(\mathrm{family}(f) = {g : \mathrm{op}(g) = \mathrm{op}(f)}\)&#39;</a>
   <a href="#{?}analysis__inverse" class="text-light">inverse</a> <span class="text-light">=&gt;</span> <a href="#'the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)'" class="text-info">&#39;the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\)&#39;</a>
   <a href="#{?}analysis__combiner" class="text-light">combiner</a> <span class="text-light">=&gt;</span> <a href="#'the fold the partials of a reducer recombine through, computed from its laws and derivation: \((a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)\)'" class="text-info">&#39;the fold the partials of a reducer recombine through, computed from its laws and derivation: \((a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)\)&#39;</a>
   <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)'" class="text-info">&#39;the declared process laws \(\mathcal{L}\) the morphism obeys, e.g. \(\mathrm{commutative}: f(x,y) = f(y,x)\)&#39;</a>
   <a href="#class" class="text-light">class</a> <span class="text-light">=&gt;</span> <a href="#'the set-theoretic class of the morphism: \(\mathrm{class}(f) \subseteq {\mathrm{endo}, \mathrm{iso}, \mathrm{auto}, \mathrm{mono}, \mathrm{epi}, \mathrm{section}, \mathrm{retraction}}\)'" class="text-info">&#39;the set-theoretic class of the morphism: \(\mathrm{class}(f) \subseteq {\mathrm{endo}, \mathrm{iso}, \mathrm{auto}, \mathrm{mono}, \mathrm{epi}, \mathrm{section}, \mathrm{retraction}}\)&#39;</a>
-  <a href="#derivation" class="text-light">derivation</a> <span class="text-light">=&gt;</span> <a href="#'the declared derivation of the morphism: \(\mathrm{lhs}\) the derived instruction and \(\mathrm{rhs}\) its primitive composition, e.g. \(a __ b \mapsto a \cdot b^{-1}\)'" class="text-info"> b \mapsto a \cdot b^{-1}\)&#39;</a>
+  <a href="#derivation" class="text-light">derivation</a> <span class="text-light">=&gt;</span> <a href="#'the declared derivation of the morphism: \(\mathrm{lhs}\) the derived instruction and \(\mathrm{rhs}\) its primitive composition, e.g. \(a \div b \mapsto a \cdot b^{-1}\)'" class="text-info">&#39;the declared derivation of the morphism: \(\mathrm{lhs}\) the derived instruction and \(\mathrm{rhs}\) its primitive composition, e.g. \(a \div b \mapsto a \cdot b^{-1}\)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__object">
@@ -1136,102 +835,20 @@ categorical realization of types and insts as objects and morphisms</p>
         <small class="text-muted code">/m/math/cat/category/object</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[obj=&gt;&lt;T&gt;::T,
-              {?}morphed_to=&gt;[category::T[?[
-               obj=&gt;inst::T,
-               form=&gt;union(initial,
-                           terminal,
-                           fork,
-                           join,
-                           reducer,
-                           gather,
-                           scatter,
-                           catcher,
-                           filter,
-                           mapper,
-                           flatmapper,
-                           typer,
-                           standard),
-               {?}src=&gt;object::T,
-               {?}trgt=&gt;object::T,
-               {?}analysis=&gt;rec::T,
-               {?}law=&gt;[uri::T[?union(absorbing,
-                                      kleene,
-                                      partial,
-                                      floatable,
-                                      blocked,
-                                      pure,
-                                      action,
-                                      prime,
-                                      left_distributive,
-                                      right_distributive,
-                                      semi_right_distributive,
-                                      magmadic,
-                                      monoidic,
-                                      commutative,
-                                      poset,
-                                      unit,
-                                      involution,
-                                      complement,
-                                      idempotent,
-                                      nilpotent,
-                                      zero_divisor,
-                                      cyclic)]@/m/math/cat/law],
-               {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-               {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
-              {?}morphed_from=&gt;[category::T[?[
-               obj=&gt;inst::T,
-               form=&gt;union(initial,
-                           terminal,
-                           fork,
-                           join,
-                           reducer,
-                           gather,
-                           scatter,
-                           catcher,
-                           filter,
-                           mapper,
-                           flatmapper,
-                           typer,
-                           standard),
-               {?}src=&gt;object::T,
-               {?}trgt=&gt;object::T,
-               {?}analysis=&gt;rec::T,
-               {?}law=&gt;[uri::T[?union(absorbing,
-                                      kleene,
-                                      partial,
-                                      floatable,
-                                      blocked,
-                                      pure,
-                                      action,
-                                      prime,
-                                      left_distributive,
-                                      right_distributive,
-                                      semi_right_distributive,
-                                      magmadic,
-                                      monoidic,
-                                      commutative,
-                                      poset,
-                                      unit,
-                                      involution,
-                                      complement,
-                                      idempotent,
-                                      nilpotent,
-                                      zero_divisor,
-                                      cyclic)]@/m/math/cat/law],
-               {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-               {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism],
+              {?}morphed_to=&gt;[!*/m/math/cat/category/morphism],
+              {?}morphed_from=&gt;[!*/m/math/cat/category/morphism],
               {?}law=&gt;[=&gt;]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__category" class="code inherited-link">category::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[obj=&gt;&lt;#&gt;::T,
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
+    <p class="mb-0 text-light"> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
   <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
-  <a href="#law" class="text-light">law</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
+  <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__path">
@@ -1246,20 +863,33 @@ categorical realization of types and insts as objects and morphisms</p>
               {?}origin=&gt;place::T,
               {?}where=&gt;rec::T,
               {?}peer=&gt;[rec::T],
-              uri::T=&gt;plan::T]][ctor?path&lt;=(#{*}::T){&lt;j&gt;}]@/m/inst/path</code></pre></div>
+              uri::T=&gt;rec::T[?[
+               name=&gt;uri::T,
+               {?}result=&gt;&lt;#&gt;::T,
+               {?}cut=&gt;[
+                {?}form=&gt;uri::T,
+                {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                {?}role=&gt;uri::T],
+               {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
+                              {?}target=&gt;&lt;#&gt;::T,
+                              {?}place=&gt;&lt;#&gt;::T,
+                              {?}hop=&gt;&lt;#&gt;::T,
+                              {?}split=&gt;&lt;#&gt;::T,
+                              {?}inst=&gt;[uri::T],
+                              span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/plan]][ctor?path&lt;=(#{*}::T){&lt;j&gt;}]@/m/inst/path</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__category" class="code inherited-link">category::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[obj=&gt;&lt;#&gt;::T,
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> code as a categorical path incident to iso-semantic rewritten forms</p>
+    <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
-  <a href="#uri::T" class="text-light">uri::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\), keyed by the rule's name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none"" class="text-info">&quot;one out-edge per live rewrite \(r\), keyed by the rule&#39;s name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none&quot;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
   <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
-  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
+  <a href="#uri::T" class="text-light">uri::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\), keyed by the rule's name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none"" class="text-info">&quot;one out-edge per live rewrite \(r\), keyed by the rule&#39;s name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none&quot;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
+  <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">
@@ -1282,70 +912,16 @@ categorical realization of types and insts as objects and morphisms</p>
  {?}instset=&gt;[uri::T],
  {?}orbit=&gt;category::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a machine as the location coordinate — where code runs, the vertex beside path::T</p>
+    <p class="mb-0 text-light"> a machine as the location coordinate — where code runs, the vertex beside path::T</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the machine address ____host[__path] — who evaluates: \(host()\) is the roster key, \(path()\) the frame vid (empty = the root machine)'" class="text-info">path] — who evaluates: \(host()\) is the roster key, \(path()\) the frame vid (empty = the root machine)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the machine address ____host[__path] — who evaluates: \(\mathrm{host}()\) is the roster key, \(\mathrm{path}()\) the frame vid (empty = the root machine)'" class="text-info">path] — who evaluates: \(\mathrm{host}()\) is the roster key, \(\mathrm{path}()\) the frame vid (empty = the root machine)&#39;</a>
   <a href="#authority" class="text-light">authority</a> <span class="text-light">=&gt;</span> <a href="#'the transports that reach the machine scheme:____host:port; two aliases of one machine are values, never two places'" class="text-info">host:port; two aliases of one machine are values, never two places&#39;</a>
   <a href="#{?}instset" class="text-light">{?}instset</a> <span class="text-light">=&gt;</span> <a href="#'ISAs resolvable here (the vocabulary coordinate)'" class="text-info">&#39;ISAs resolvable here (the vocabulary coordinate)&#39;</a>
   <a href="#{?}source" class="text-light">{?}source</a> <span class="text-light">=&gt;</span> <a href="#'who declared it (mdns, boot profile, a dial)'" class="text-info">&#39;who declared it (mdns, boot profile, a dial)&#39;</a>
   <a href="#{?}linked_to" class="text-light">{?}linked_to</a> <span class="text-light">=&gt;</span> <a href="#'outbound peers whose service is this place'" class="text-info">&#39;outbound peers whose service is this place&#39;</a>
   <a href="#{?}linked_from" class="text-light">{?}linked_from</a> <span class="text-light">=&gt;</span> <a href="#'inbound peers from this place'" class="text-info">&#39;inbound peers from this place&#39;</a>
   <a href="#{?}status" class="text-light">{?}status</a> <span class="text-light">=&gt;</span> <a href="#'up__down__known, derived over the dials'" class="text-info">known, derived over the dials&#39;</a>
-</pre>
-</div>
-</div><div class="card mb-3" id="__m__math__cat__category__plan">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">plan::T</span>
-            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
-        </span>
-        <small class="text-muted code">/m/math/cat/category/plan</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[name=&gt;uri::T,
-         {?}result=&gt;&lt;#&gt;::T,
-         {?}cut=&gt;[
-          {?}form=&gt;uri::T,
-          {?}law=&gt;[uri::T[?union(absorbing,
-                                 kleene,
-                                 partial,
-                                 floatable,
-                                 blocked,
-                                 pure,
-                                 action,
-                                 prime,
-                                 left_distributive,
-                                 right_distributive,
-                                 semi_right_distributive,
-                                 magmadic,
-                                 monoidic,
-                                 commutative,
-                                 poset,
-                                 unit,
-                                 involution,
-                                 complement,
-                                 idempotent,
-                                 nilpotent,
-                                 zero_divisor,
-                                 cyclic)]@/m/math/cat/law],
-          {?}role=&gt;uri::T],
-         {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
-                        {?}target=&gt;&lt;#&gt;::T,
-                        {?}place=&gt;&lt;#&gt;::T,
-                        {?}hop=&gt;&lt;#&gt;::T,
-                        {?}split=&gt;&lt;#&gt;::T,
-                        {?}inst=&gt;[uri::T],
-                        span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/plan</code></pre></div>
-    
-    
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
-  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
 </pre>
 </div>
 </div>
@@ -1387,46 +963,12 @@ categorical realization of types and insts as objects and morphisms</p>
     
 </div>
 </div><div class="container-xxl mb-4" id="defined">
-    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">5</span></h3>
+    <h3 class="text-primary mb-3">external definition <span class="pill-label badge bg-info">5</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        contracts declared HERE whose address belongs to another instruction set — so they are
-        documented there too. Declared by
-        <span class="code text-info">/m/math/cat</span>, for use with the types it introduces.
+        inst definitions that override an external instruction set's definition
+        are stored in the corresponding instruction set.
     </p>
-    <div class="card mb-3" id="defined-__m__inst__as">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">as</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/as</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?abstraction&lt;=#(abstraction::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?morphism&lt;=#(morphism::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?object&lt;=#(object::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?path&lt;=#(path::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?place&lt;=#(place::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__math__cat__category__abstraction" class="code text-primary">abstraction::T</a>, <a href="#__m__math__cat__category__morphism" class="code text-primary">morphism::T</a>, <a href="#__m__math__cat__category__object" class="code text-primary">object::T</a>, <a href="#__m__math__cat__category__path" class="code text-primary">path::T</a>, <a href="#__m__math__cat__category__place" class="code text-primary">place::T</a></small>
-</div>
-    
-</div>
+    /m/math/cat
 </div><div class="container-xxl mb-4" id="rewrites">
     <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">12</span></h3>
     <div class="card mb-3" id="__m__math__cat__inst__rewrite__branch_collapse">
@@ -1439,7 +981,7 @@ categorical realization of types and insts as objects and morphisms</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/branch_collapse?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the additive like-term law, law-indexed: equal members of any occurrence of the algebra&#39;s additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \(\mathrm{object}[code].law\), \(S = branch\)) \(\mathrm{branch}(+2, +4, +2) \leadsto \mathrm{branch}(+2\{2\}, +4)\) -- the additive normal form the code ring&#39;s distributivity law consumes
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the additive like-term law, law-indexed: equal members of any occurrence of the algebra&#39;s additive op collapse to the single member with the summed coefficients -- on the code ring (S read from \(\mathrm{object}[\mathrm{code}].\mathrm{law}\), \(S = \mathrm{branch}\)) \(\mathrm{branch}(+2, +4, +2) \leadsto \mathrm{branch}(+2\{2\}, +4)\) -- the additive normal form the code ring&#39;s distributivity law consumes
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
@@ -1514,7 +1056,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_absorbing?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the absorbing law \(f \circ g = f\): an operation whose declared process laws include \(\mathrm{absorbing}\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber&#39;s dom is non-strict, and any pure operation when the absorber answers noobj -- \(\ldots \cdot g \cdot \mathrm{zero} \leadsto \ldots \cdot \mathrm{zero}\), \(x + 3 \cdot \mathrm{zero} \leadsto x \cdot \mathrm{zero}\), while \(\{1,2,3\}.\mathrm{is}(\mathrm{gt}(1)).\mathrm{zero}\) keeps its filter
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the absorbing law \(g \cdot f = f\): an operation whose declared process laws include \(\mathrm{absorbing}\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber&#39;s dom is non-strict, and any pure operation when the absorber answers noobj -- \(\ldots \cdot g \cdot \mathrm{zero} \leadsto \ldots \cdot \mathrm{zero}\), \((x + 3) \cdot \mathrm{zero} \leadsto x \cdot \mathrm{zero}\), while \(\{1,2,3\}.\mathrm{is}(\mathrm{gt}(1)).\mathrm{zero}\) keeps its filter
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
@@ -1574,7 +1116,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the distribution kernel \((a+b) \cdot r = (a \cdot r + b \cdot r) \cdot \mathrm{combiner}(r)\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer&#39;s combiner -- computed, never declared: \(\Sigma\) and \(\Pi\) recombine through themselves, \(\mathrm{count}\) through \(\Sigma\), \(\mathrm{order}(s)\) through \(\mathrm{kmerge}(s)\), \(\mathrm{group}([k \Rightarrow h])\) pointwise through \(\Sigma\) then \(\mathrm{combiner}(h)\) per key -- \(\{1,2,3\}.f.\mathrm{count} \leadsto [\{1,3\}.f.\mathrm{count},\ \{2\}.f.\mathrm{count}] == [\mathrm{to}(a),\ \mathrm{to}(b)].\Sigma\)
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the distribution kernel \((a+b) \cdot r = (a \cdot r + b \cdot r) \cdot \mathrm{combiner}(r)\) (Thm 19): factor the seed bulk over the roster, replicate the floatable run per factor with a local partial reduce, recombine the partials behind a barrier through the reducer&#39;s combiner -- computed, never declared: \(\Sigma\) and \(\Pi\) recombine through themselves, \(\mathrm{count}\) through \(\Sigma\), \(\mathrm{order}(s)\) through \(\mathrm{kmerge}(s)\), \(\mathrm{group}([k \Rightarrow h])\) pointwise through \(\Sigma\) then \(\mathrm{combiner}(h)\) per key -- \(\{1,2,3\}.f.\mathrm{count} \leadsto \mathrm{branch}(a \Rightarrow \{1,3\}.f.\mathrm{count},\ b \Rightarrow \{2\}.f.\mathrm{count}).\Sigma\)
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__code{?}" class="text-success">code{?}</a></pre>
@@ -1613,7 +1155,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

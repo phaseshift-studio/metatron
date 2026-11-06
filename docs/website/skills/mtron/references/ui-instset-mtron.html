@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -540,52 +548,9 @@ the same declarations the type checker uses:</p>
                                            {?}headerDivider=&gt;str::T,
                                            {?}pointer=&gt;str::T,
                                            {?}leftMargin=&gt;int::T,
-                                           ...(12 more)]][ctor?style&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/style]]@/m/sys/ui/widget,
+                                           ...(13 more)]][ctor?style&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/style]]@/m/sys/ui/widget,
           args=&gt;[{?}style=&gt;'the style specification for the wi...'],
-          desc=&gt;'[structural] the base widget type',
-          accordion_widget=&gt;docs::[
-           obj=&gt;widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/accordion_widget,
-           dom=&gt;'maybe an obj',
-           rng=&gt;'an accordion obj',
-           args=&gt;[
-            {?}title=&gt;'the title of the accordion',
-            {?}body=&gt;'the body content of the accordion'],
-           desc=&gt;'[structural] an expandable/collaps...'],
-          progress_table_widget=&gt;docs::[
-           obj=&gt;widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/progress_table_widget,
-           desc=&gt;'[structural] a table of progress b...',
-           example=&gt;[&quot;progress_table::[row=&gt;[[text=&gt;'lay...&quot;]],
-          table_widget=&gt;docs::[
-           obj=&gt;widget::T[?[
-            {?}header=&gt;lst::T,
-            {?}row=&gt;lst::T,
-            {?}metadata=&gt;lst::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/table_widget,
-           dom=&gt;'maybe an obj',
-           rng=&gt;'a table widget',
-           args=&gt;[
-            {?}metadata=&gt;'a lst of rows of data behind the d...',
-            {?}row=&gt;'a lst of poly table rows',
-            {?}header=&gt;'a lst of obj table headers'],
-           desc=&gt;'[structural] a tabular data widget'],
-          tree_widget=&gt;docs::[
-           obj=&gt;widget::T[?[
-            root=&gt;uri::T,
-            max=&gt;int::T,
-            {?}code=&gt;&lt;#&gt;::T,
-            {?}flatten=&gt;bool::T,
-            {?}xref=&gt;rec::T,
-            {?}expand=&gt;uri::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_widget,
-           dom=&gt;'maybe an obj',
-           rng=&gt;'a tree widget',
-           args=&gt;[
-            root=&gt;'the root uri to traverse from',
-            {?}flatten=&gt;'fold single-folder chains into one...',
-            max=&gt;'the max depth to traverse',
-            {?}xref=&gt;'xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross...',
-            {?}expand=&gt;'branch uris whose children are rea...',
-            {?}code=&gt;'transform obj prior to insertion i...'],
-           desc=&gt;'[structural] the root uri space is...'],
-          ...(11 more)]
+          desc=&gt;'the base widget type']
 </code></pre>
 <table>
 <thead>
@@ -812,11 +777,11 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      predicate apply failed on execution (at /m/inst/ctor)&quot;&quot;&quot;]
    	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T]][ctor?rng=style&amp;dom=#{?}(&lt;#{*}&gt;::T)]@style]]@widget [display?rng=noobj{0}&amp;dom=widget()@&lt;1&gt;]]
+==&gt;fail::[inst apply failure: Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null (at /m/sys/ui/inst/display@1) [Widget&lt;102&gt;]][Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null [Widget&lt;102&gt;]]
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]
-==&gt;{10}''
+==&gt;{2}''
 </code></pre>
 <p>The referent must be an <strong>absolute</strong> uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,

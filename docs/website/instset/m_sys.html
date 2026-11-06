@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,48 +499,48 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/sys/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[
-           space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
-           space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
-           rec::T[?[
-            level=&gt;union(info,trace,warn,error,debug),
-            source=&gt;&lt;#&gt;::T,
-            message=&gt;str::T]]@/m/sys/log_entry,
-           uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
-           uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
-           file::T@/m/dev/dckr/image],
-          inst=&gt;[
-           as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
-           as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;},
-           close?{0}&lt;=(){&lt;j&gt;},
-           redirect?rec&lt;=(uri::T){&lt;j&gt;},
-           sys_stat?rec&lt;=(){&lt;j&gt;},
-           find_file?lst&lt;=(name=&gt;str::T,
-                           {?}root=&gt;uri::T,
-                           pattern=&gt;bool::T,
-                           {?}max=&gt;int::T,
-                           {?}depth=&gt;int::T){&lt;j&gt;},
-           read_file?lst&lt;=(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
-           edit_file?rec&lt;=(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
-           bash?lst[str]&lt;=(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
-           sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
-           stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
-           stdin?str&lt;=(){&lt;j&gt;}],
-          const=&gt;[thread_executor::[stop=&gt;[,],
-                                    run=&gt;[!*/sys/thread/main]]@/sys/thread/executor]]@/m/sys</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/sys/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             const=&gt;[thread_executor::[stop=&gt;[,],
+                                       run=&gt;[!*/sys/thread/main]]@/sys/thread/executor],
+             inst=&gt;[
+              as?bytes&lt;=uri(bytes::T){&lt;j&gt;},
+              as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;},
+              close?{0}&lt;=(){&lt;j&gt;},
+              redirect?rec&lt;=(uri::T){&lt;j&gt;},
+              sys_stat?rec&lt;=(){&lt;j&gt;},
+              find_file?lst&lt;=(name=&gt;str::T,
+                              {?}root=&gt;uri::T,
+                              pattern=&gt;bool::T,
+                              {?}max=&gt;int::T,
+                              {?}depth=&gt;int::T){&lt;j&gt;},
+              read_file?lst&lt;=(file=&gt;uri::T,{?}min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
+              edit_file?rec&lt;=(file=&gt;uri::T,text=&gt;str::T,min=&gt;int::T,{?}max=&gt;int::T){&lt;j&gt;},
+              bash?lst[str]&lt;=(cmd=&gt;str::T,{?}timeout=&gt;union(time::T,int::T)){&lt;j&gt;},
+              sleep?A{?}&lt;=A{?}(time::T){&lt;j&gt;},
+              stdout?#{?}&lt;=(#{?}::T){&lt;j&gt;},
+              stdin?str&lt;=(){&lt;j&gt;}],
+             type=&gt;[
+              /m/space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace,
+              /m/space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace,
+              rec::T[?[
+               level=&gt;union(info,trace,warn,error,debug),
+               source=&gt;&lt;#&gt;::T,
+               message=&gt;str::T]]@/m/sys/log_entry,
+              uri::T[][ctor?dir&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/dir,
+              uri::T[][ctor?file&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/file,
+              file::T@/m/dev/dckr/image]]@/m/sys</code></pre>
                     </div>
                 </div>
             </div>
@@ -540,7 +548,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">2</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">10</span></a><a href="#defined" class="btn btn-outline-primary">external definition <span class="pill-label badge bg-info">2</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -603,7 +611,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <h6 class="text-primary mb-2">external definition</h6>
     <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-info ms-2">D</span>
@@ -678,7 +686,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         <a href="m_sys_space_fsspace.html" class="code text-primary fw-bold text-decoration-none">fsspace</a>
         <small class="text-muted code">/m/sys/space/fsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[?[{?}script=&gt;[uri::T=&gt;uri::T]]][ctor?fsspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/fsspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -687,7 +695,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                  {?}pre_read=&gt;inst::T,
                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T,
+ {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the fsspace — a java file system (default: the local disk) exposed as a metatron space</p>
@@ -697,7 +705,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
         <a href="m_sys_space_serialspace.html" class="code text-primary fw-bold text-decoration-none">serialspace</a>
         <small class="text-muted code">/m/sys/space/serialspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[][ctor?serialspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/space/serialspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -706,7 +714,7 @@ the machine bridge of metatron — terminal i/o, process execution, and raw file
                  {?}pre_read=&gt;inst::T,
                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T,
+ {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> the serial space — serial port / terminal i/o exposed as a metatron space</p>
@@ -793,10 +801,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a status report on the write" class="text-success">a status report on the write</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
   <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the location to stop overwriting'" class="text-info">&#39;the location to stop overwriting&#39;</a>
-  <a href="#min" class="text-light">min</a> <span class="text-light">=&gt;</span> <a href="#'the location to insert (or start to overwrite)'" class="text-info">&#39;the location to insert (or start to overwrite)&#39;</a>
+  <a href="#text" class="text-light">text</a> <span class="text-light">=&gt;</span> <a href="#'the text to add to the file'" class="text-info">&#39;the text to add to the file&#39;</a>
+  <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__find_file">
@@ -818,10 +826,10 @@ if both min and max are provided, then those lines are removed and the text is i
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#a lst of all files whose path matches str regex" class="text-success">a lst of all files whose path matches str regex</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
-  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#'a regex or plain string to match file paths against'" class="text-info">&#39;a regex or plain string to match file paths against&#39;</a>
-  <a href="#{?}pattern" class="text-light">{?}pattern</a> <span class="text-light">=&gt;</span> <a href="#'if the search string should be treated as a regex pattern (default: false)'" class="text-info">&#39;if the search string should be treated as a regex pattern (default: false)&#39;</a>
+  <a href="#{?}depth" class="text-light">{?}depth</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to search directories (default: 50)'" class="text-info">&#39;the max depth to search directories (default: 50)&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the max number of results to return (default: 50)'" class="text-info">&#39;the max number of results to return (default: 50)&#39;</a>
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
 </pre>
 </div>
@@ -847,9 +855,9 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj (optional)" class="text-info">maybe an obj (optional)</a> <span class="text-light">=&gt;</span> <a href="#read file indexed lines" class="text-success">read file indexed lines</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
-  <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
+  <a href="#{?}max" class="text-light">{?}max</a> <span class="text-light">=&gt;</span> <a href="#'the end line to read'" class="text-info">&#39;the end line to read&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__inst__redirect">
@@ -955,89 +963,16 @@ if only a min is provided, then the file is read from that line till the end.
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="defined">
-    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">2</span></h3>
+    <h3 class="text-primary mb-3">external definition <span class="pill-label badge bg-info">2</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        contracts declared HERE whose address belongs to another instruction set — so they are
-        documented there too. Declared by
-        <span class="code text-info">/m/sys</span>, for use with the types it introduces.
+        inst definitions that override an external instruction set's definition
+        are stored in the corresponding instruction set.
     </p>
-    <div class="card mb-3" id="defined-__m__inst__as">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">as</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/as</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?bytes&lt;=uri(bytes::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?image&lt;=bytes(image::T,else(1.0)){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__sys__file__image" class="code text-primary">image::T</a></small>
-</div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="defined-__m__inst__as-content">
-        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> read a file uri to its raw bytes — the file must resolve to an fsspace
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__uri" class="text-info">uri</a> <span class="text-light">=&gt;</span> <a href="m.html#__m__bytes" class="text-success">bytes</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__bytes'" class="text-info">bytes&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/README.md.as(bytes::T)   [-- the file&#39;s raw bytes --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> render an image&#39;s bytes as ascii art — the second arg scales the rendering (default 1.0)
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="m.html#__m__bytes" class="text-info">bytes</a> <span class="text-light">=&gt;</span> <a href="#__m__sys__file__image" class="text-success">image</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'__m__code'" class="text-info">code&#39;</a>
-  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__sys__file'" class="text-info">file&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&lt;mfs:.&gt;/photo.png.as(image::T, 0.5)   [-- the image as a multi-line ascii str --]</code></pre>
-</div>
-</div>
-    </div>
-</div>
-</div>
+    /m/sys
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

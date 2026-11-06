@@ -84,52 +84,9 @@ mtron> */m/sys/ui/widget?docq
                                            {?}headerDivider=>str::T,
                                            {?}pointer=>str::T,
                                            {?}leftMargin=>int::T,
-                                           ...(12 more)]][ctor?style<=(#{*}::T){<j>}]@/m/sys/ui/style]]@/m/sys/ui/widget,
+                                           ...(13 more)]][ctor?style<=(#{*}::T){<j>}]@/m/sys/ui/style]]@/m/sys/ui/widget,
           args=>[{?}style=>'the style specification for the wi...'],
-          desc=>'[structural] the base widget type',
-          accordion_widget=>docs::[
-           obj=>widget::T[?[{?}title=>str::T,{?}body=>str::T]][ctor?accordion_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/accordion_widget,
-           dom=>'maybe an obj',
-           rng=>'an accordion obj',
-           args=>[
-            {?}title=>'the title of the accordion',
-            {?}body=>'the body content of the accordion'],
-           desc=>'[structural] an expandable/collaps...'],
-          progress_table_widget=>docs::[
-           obj=>widget::T[?[{?}header=>lst::T,{?}row=>lst::T]][ctor?progress_table_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/progress_table_widget,
-           desc=>'[structural] a table of progress b...',
-           example=>["progress_table::[row=>[[text=>'lay..."]],
-          table_widget=>docs::[
-           obj=>widget::T[?[
-            {?}header=>lst::T,
-            {?}row=>lst::T,
-            {?}metadata=>lst::T]][ctor?table_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/table_widget,
-           dom=>'maybe an obj',
-           rng=>'a table widget',
-           args=>[
-            {?}metadata=>'a lst of rows of data behind the d...',
-            {?}row=>'a lst of poly table rows',
-            {?}header=>'a lst of obj table headers'],
-           desc=>'[structural] a tabular data widget'],
-          tree_widget=>docs::[
-           obj=>widget::T[?[
-            root=>uri::T,
-            max=>int::T,
-            {?}code=><#>::T,
-            {?}flatten=>bool::T,
-            {?}xref=>rec::T,
-            {?}expand=>uri::T]][ctor?tree_widget<=(#{*}::T){<j>}]@/m/sys/ui/widget/tree_widget,
-           dom=>'maybe an obj',
-           rng=>'a tree widget',
-           args=>[
-            root=>'the root uri to traverse from',
-            {?}flatten=>'fold single-folder chains into one...',
-            max=>'the max depth to traverse',
-            {?}xref=>'xref=>[max=>N, code=><call>] cross...',
-            {?}expand=>'branch uris whose children are rea...',
-            {?}code=>'transform obj prior to insertion i...'],
-           desc=>'[structural] the root uri space is...'],
-          ...(11 more)]
+          desc=>'the base widget type']
 ```
 | widget type                | keys it reads                                                 |
 |----------------------------|---------------------------------------------------------------|
@@ -371,11 +328,11 @@ mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_righ
      predicate apply failed on execution (at /m/inst/ctor)"""]
    	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]
 mtron> @/usr/uidoc/board.display()             [-- pin it once --]
-==>fail::[lhs range does not match inst domain: rec::T => rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T]][ctor?rng=style&dom=#{?}(<#{*}>::T)]@style]]@widget [display?rng=noobj{0}&dom=widget()@<1>]]
+==>fail::[inst apply failure: Cannot invoke "org.jline.terminal.Terminal.output()" because the return value of "studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()" is null (at /m/sys/ui/inst/display@1) [Widget<102>]][Cannot invoke "org.jline.terminal.Terminal.output()" because the return value of "studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()" is null [Widget<102>]]
 mtron> @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
 ==>'@'
 mtron> @/usr/uidoc/g10/+/0 >>= ''             [-- every row's column 0 --]
-==>{10}''
+==>{2}''
 ```
 The referent must be an **absolute** uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,

@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -478,10 +486,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 <p>A <strong>Machine</strong> is a <em>space of spaces</em> — the container in which address resolution happens. The interface is
 <code>Machine extends Rec, AutoCloseable</code> and the concrete body is <code>AbstractMachine extends MRec</code>. Its five members
 (<code>instset</code>, <code>memory</code>, <code>network</code>, <code>compiler</code>, <code>processor</code>) are rec entries shaped as <code>machine::T</code>. Its own address
-surface is its <strong>sphere</strong> — <code>MachineSpace</code>, a <code>memSpace</code> the machine holds and memory never indexes (2026-10-25):
-<code>Machine.read</code>/<code>write</code> ask the innermost machine whose sphere covers an address FIRST (the machine itself at its vid,
-its components, its <code>sys</code>), then the network, then memory, then instruction memory. <code>~/sys</code> lives in the sphere's own
-store; the sphere declines everything else under the vid, so the machine's data stays memory's. Of the five:</p>
+surface is its <strong>space</strong> — <code>MachineSpace</code>, a <code>memSpace</code> mounted in its memory at <code>&lt;vid&gt;/#</code> (2026-11-05: the
+machine's sphere and its data level are one space). <code>Machine.read</code>/<code>write</code> ask the network (host addresses only), then
+memory, then instruction memory, and memory's ordinary routing reaches the machine's space: it answers the machine
+itself and its components live, and keeps <code>~/sys</code> and the machine's data in its own store. Of the five:</p>
 <ul>
 <li><strong>Memory</strong> is the facade over the world of spaces — the single read/write surface.</li>
 <li><strong>Compiler</strong> lowers code; <strong>Processor</strong> runs it; neither is an address space.</li>
@@ -503,10 +511,10 @@ isa/mach/type/memory/MemoryUnion.java ← the ONE read-through union today: fram
 isa/mach/type/machine/AbstractMachine.java  ← the concrete body: routes, authority guard, read/write
 isa/mach/type/machine/BasicMachine.java     ← concrete machine; cached compiler/processor; slot templates
 isa/mach/type/machine/BasicMemory.java      ← one level of memory (no Java fields)
-isa/mach/type/machine/MachineSpace.java     ← the machine's own sphere: the machine, its components and ~/sys — asked
-                                        first by Machine.read/write, held by the machine, never in memory
+isa/mach/type/machine/MachineSpace.java     ← the machine's own space, mounted in its memory at &lt;vid&gt;/#: the machine
+                                        and its components live; ~/sys and its data in its store
 isa/mach/type/network/BasicNetwork.java     ← one level of network (the peer map is the rec); answers its branch
-                                        &lt;vid&gt;/network/# when the machine's sphere hands it an address there
+                                        &lt;vid&gt;/network/# when the machine's space hands it an address there
 isa/mach/type/network/NetworkUnion.java     ← a pushed frame's own level: reach is never inherited
 isa/mach/type/network/PeerSupervisor.java   ← per-level supervision of Network.Link members: redial failures, drop hang-ups
 isa/mach/type/machine/BasicInstSet.java     ← one machine's ISA LEVEL: own structure over its imports, over the
@@ -765,21 +773,31 @@ fallback must be lazy — <code>orElse</code> evaluates the parent unconditional
 no-op, so writes there are silently dropped. The roster lives at <code>/network/roster</code>.</li>
 <li><strong><code>push()</code> must mint a child, not the parent.</strong> Use the 3-arg <code>clone</code> — <code>selfVID</code> <em>pins</em> an already-set vid, so a
 2-arg clone would silently keep the parent's address.</li>
-<li><strong>A machine's own addresses are its sphere's</strong> (<code>MachineSpace</code>, asked before the network and memory, never in
-memory): the machine at its vid, a component below it, <code>~/sys</code>. A covered address the sphere has no answer for is
-declined, as is everything else under the vid. Address <em>resolution</em> of all the rest belongs to memory:
-<code>BasicMemory.read</code>/<code>write</code> route an address to the space that covers it (<code>readAbsolute</code>/<code>writeAbsolute</code>) — which is
-why a bulk wildcard write reaches the space it names rather than the argument stack.</li>
-<li><strong><code>~/sys</code> is the sphere's own store, not memory's</strong> (Marko, 2026-10-25: &quot;sys/# simply go into MachineSpace&quot;). It
-carries the q-procs <code>~/sys</code> speaks (docq, subq, incrq, mimeq, lockq), so a fail still mints at <code>~/sys/fail/_?incrq</code>.
-A closing machine DROPS its sphere after memory's spaces and never closes its values: the system thread's executor
-lives in <code>~/sys</code>, and closing it from one of its own threads waits on itself forever (memory's <code>removeSpace</code> only
-logs &quot;closed space&quot; — it never closed the old sys space either). Code that re-reads an obj at its own vid goes through
-<code>Machine.Helper.readLocal</code>/<code>writeLocal</code> (sphere, then memory), <strong>never <code>memory()</code> directly</strong>: memory holds no
-<code>~/sys</code>, and <code>Machine.read</code> would scan instruction memory on a miss. The sphere owns writes to the network branch
-and <code>~/sys</code>; the machine rec's and the other components' writes still go to memory. An address with a scheme or a
-host is no sphere's (<code>ws://peer/sys/…</code> is the peer's), and a query on the machine or a component (<code>~/processor?docq</code>)
-is declined to memory's q-procs. <code>~/sys</code> is a holding area: its parts are expected to move into the components.</li>
+<li><strong>A machine's own addresses are its space's</strong> (<code>MachineSpace</code>, mounted in its memory at <code>&lt;vid&gt;/#</code>; Marko,
+2026-11-05: &quot;necessary and sufficient&quot;): the machine at its vid, a component below it, <code>~/sys</code> and the machine's data.
+There is no lookup beside memory's: <code>BasicMemory.read</code>/<code>write</code> route an address to the most specific space that
+covers it (<code>readAbsolute</code>/<code>writeAbsolute</code>) — which is why a bulk wildcard write reaches the space it names rather
+than the argument stack — and a covering space's answer is final, empty or not. The machine-key fallback
+(<code>machine.at(…)</code>) answers only where no space covers, a machine with no vid. A more specific space (a schema instset
+at <code>/sys/space/&lt;name&gt;/instset/#</code>) still gains its own addresses.</li>
+<li><strong><code>~/sys</code> is in the machine's space's own store</strong> (Marko, 2026-10-25: &quot;sys/# simply go into MachineSpace&quot;), with
+the q-procs the machine's addresses speak (docq, decq, subq, incrq, mimeq, lockq). A closing root REMOVES its space
+with memory's other spaces and never closes its values: the system thread's executor lives in <code>~/sys</code>, and closing
+it from one of its own threads waits on itself forever (memory's <code>removeSpace</code> only logs &quot;closed space&quot;). Code that
+re-reads an obj at its own vid reads <code>Machine.current().memory()</code> directly: <code>Machine.read</code> would ask the network and
+scan instruction memory on a miss. The space folds writes to the network branch, the compiler and the processor into
+those components and stores the rest; a component's address reads live, and what the component does not hold, the
+store answers. The machine itself answers live at its vid and is never stored in its own space: a stored copy goes
+stale (a pushed child's kept its parent's processor). <code>push</code> still registers each child in the root's store, which
+is what <code>move</code> reads. An address with a scheme or a host is no machine's part (<code>ws://peer/sys/…</code> is the peer's), and a
+query on the machine or a component (<code>~/processor?docq</code>) is answered by the space's q-procs. <code>~/sys</code> is a holding
+area: its parts are expected to move into the components.</li>
+<li><strong>Fails are filed in the processor</strong> (Marko, 2026-11-04), through the machine's space's <code>incrq</code>: a fail raised outside any
+evaluation at <code>~/processor/fail/_?incrq</code>, and an evaluation's at <code>~/processor/computer/&lt;n&gt;/fail/_?incrq</code>, under the
+computer that ran it. The processor indexes its computers by number (<code>computer =&gt; [&lt;n&gt; =&gt; computer::[…]]</code>): a
+computer is written at <code>~/processor/computer/&lt;n&gt;</code> when it is minted, and that write is the indexing. So the
+processor is per machine: <code>push()</code> mints the child's own, of its parent's architecture, beside its memory, ISA and
+network levels.</li>
 </ul>
 <h3>Migration state (why it reads as two systems at once)</h3>
 <p>The Router→Machine migration is <strong>not finished</strong>. <code>Router.java</code> is deleted, but its scaffolding remains:</p>

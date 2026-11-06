@@ -769,7 +769,7 @@ public static final fURI UI_MYWIDGET_TID = UI_ISA_TID.extend("mywidget");
 public static Type UI_MYWIDGET_TYPE;
 
 // In setup():
-UI_MYWIDGET_TYPE =Type.Builder.
+UI_MYWIDGET_TYPE =TypeBuilder.
 
 build()
     .
@@ -862,7 +862,7 @@ noobj();
 
 ```java
 // For closed-set URI values (like Anchor) — derived from the enum so they stay in sync:
-UI_ANCHOR_TYPE =Type.Builder.
+UI_ANCHOR_TYPE =TypeBuilder.
 
 build()
     .

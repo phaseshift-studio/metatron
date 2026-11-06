@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -38,6 +39,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -992,7 +994,22 @@ public class mInstSet extends AbstractInstSet {
                                         }
                                     }
                                     return code.jvm(bundledCode);
-                                }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — \\(\\mathrm{explain} \\leadsto \\mathrm{explain\\_analysis}(\\ldots)\\), mirror of profile_analysis"))
+                                }), "rewrites a().b().c().explain() to explain_analysis(a().b().c()), carrying trailing insts (e.g. >>format) — \\(\\mathrm{explain} \\leadsto \\mathrm{explain\\_analysis}(\\ldots)\\), mirror of profile_analysis"),
+                        InstBuilder.build()
+                                .tid(M_ISA_REWRITE_TID.extend("pred_extract"))
+                                .body((code, inst) -> {
+                                    if (code.asCode().insts().stream().noneMatch(i -> i.tid().basePath().equals(REPEAT_INST_TID)))
+                                        return code;
+                                    return code.selfJVM(code.asCode().insts().stream().map(i -> {
+                                        if (!i.tid().basePath().equals(REPEAT_INST_TID))
+                                            return i;
+                                        Inst out = i;
+                                        out = extractIntComparison(out, EMIT);
+                                        out = extractIntComparison(out, UNTIL);
+                                        return out;
+                                    }).collect(CommonUtil.ListCollector.single()));
+                                })
+                                .create())
 
                 /*uri(SUGAR), lst(sugars().stream()
                         .map(s -> rec(
@@ -1061,6 +1078,32 @@ public class mInstSet extends AbstractInstSet {
     private static Obj domRngValue(final Type t) {
         if (0L == t.c().min()) return noobj();
         return uri(f(t.vid().small().pathString()));
+    }
+
+    /**
+     * The int-comparison tids a repeat's until/emit predicate may fold to, as a superposition (branch) so one
+     * {@code test()} matches {@code gt}/{@code lt}/{@code gte}/{@code lte}/{@code eq}/{@code neq} alike.
+     */
+    private static final fURI INT_CMP_TID = GT_INST_TID.plus(LT_INST_TID).plus(GTE_INST_TID)
+            .plus(LTE_INST_TID).plus(EQ_INST_TID).plus(NEQ_INST_TID);
+
+    /**
+     * Lift a repeat's until/emit predicate out of its filter wrapper when it is {@code is(cmp(int))} (or
+     * {@code filter(cmp(int))}): {@link PlanInterpreter#comparisonOf} answers {@code cmp}, and the repeat body's
+     * single-inst apply then runs the native {@code intValue() OP arg(0).intValue()} directly — no monadic walk,
+     * no nested processor, no per-iteration re-resolve. A predicate that is not that shape leaves the inst unchanged.
+     */
+    private static Inst extractIntComparison(final Inst repeat, final String key) {
+        final Obj predicate = repeat.arg(key, 0);
+        if (predicate.isNoObj() || !predicate.isInst())
+            return repeat;
+        final Inst comparison = PlanInterpreter.comparisonOf(predicate.asInst());
+        if (null == comparison || !comparison.test(instB(INT_CMP_TID, lst(INT_TYPE))))
+            return repeat;
+        // resolve to the native int overload so the repeat body's apply runs intValue() OP arg(0).intValue()
+        // directly — a resolved inst carries its f, so resolve() short-circuits and no processor is spawned.
+        final Inst nativeComparison = comparison.resolve(jnt(0));
+        return repeat.args(repeat.args().asRec().at(uri(key), nativeComparison));
     }
 
     /**
@@ -1453,6 +1496,7 @@ public class mInstSet extends AbstractInstSet {
                 Sugar.prefix(">-", List.of(MERGE_INST_TID), 0),
                 Sugar.prefix("-<|", List.of(CHOOSE_INST_TID), 1),
                 Sugar.prefix("-<", List.of(SPLIT_INST_TID), 1),
+                Sugar.prefix("-<", List.of(SPLIT_INST_TID), 0),
                 Sugar.prefix("->", List.of(REF_INST_TID), 1),
                 Sugar.prefix(">>=", List.of(UPDATE_INST_TID), 1),
                 Sugar.prefix(">>", List.of(RSHIFT_INST_TID), 1),

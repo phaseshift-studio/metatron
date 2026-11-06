@@ -338,57 +338,6 @@ the default values are `#{?}` and `#{*}`, respectively.
 
 ```mtron
 mtron> *plus?docq
-==>docs::[obj=>plus?real<=real(real::T){<j>},
-          dom=>'a real',
-          rng=>'the sum',
-          args=>[real::T=>'the rhs real'],
-          desc=>'[mapper] a sum function \(f(x, y) ...']
-==>docs::[obj=>plus?bool<=bool(bool::T){<j>},
-          dom=>'the lhs bool',
-          rng=>'whether either bool is true',
-          args=>[bool::T=>'the bool to or with the lhs'],
-          desc=>'[mapper] the disjunction (or) of t...']
-==>docs::[obj=>plus?bytes<=bytes(bytes::T){<j>},
-          dom=>'the lhs bytes',
-          rng=>'the concatenated bytes',
-          args=>[bytes::T=>'the bytes to append to the lhs'],
-          desc=>'[mapper] append the argument bytes...']
-==>docs::[obj=>plus?str<=str(str::T){<j>},
-          dom=>'a prefix str',
-          rng=>'the concatenated str',
-          args=>[0=>'a postfix str'],
-          desc=>'[mapper] concatenate two str::T va...',
-          example=>['"a" + "b" [-- "ab" --]']]
-==>docs::[obj=>plus?uri{?}<=uri(uri{?}::T){<j>},
-          dom=>'a uri',
-          rng=>'the branch union',
-          args=>[uri::T=>'the rhs uri'],
-          desc=>'[filter] a branch function \(f(x, ...']
-==>docs::[obj=>plus?lst<=lst(lst::T){<j>},
-          dom=>'the lhs lst',
-          rng=>'the concatenated lst',
-          args=>[lst::T=>'the lst to append'],
-          desc=>'[mapper] append the slots of the a...']
-==>docs::[obj=>plus?rec<=rec(rec{??}::T){<j>},
-          dom=>'the lhs rec',
-          rng=>'the deep merge of the two recs',
-          args=>[rec::T=>'the rec to merge into the lhs'],
-          desc=>'[mapper] deep merge the argument r...']
-==>docs::[obj=>plus?code<=code(code::T){<j>},
-          dom=>'the lhs code',
-          rng=>'the branch of the two codes',
-          args=>[code::T=>'the code branched alongside the lhs'],
-          desc=>'[mapper] branch two codes in paral...']
-==>docs::[obj=>plus?int<=int(int::T){<j>},
-          dom=>'the lhs int',
-          rng=>'the result of the addition',
-          args=>[int::T=>'the int to add to the lhs'],
-          desc=>'[mapper] add the argument int to t...',
-          example=>[
-           '1.plus(2)          [-- 3          ...',
-           "1+2                [-- 3 sugar'd f...",
-           '1.plus(plus(1))    [-- 3 nested ap...',
-           '1+(+1)             [-- 3 sugar nes...']]
 ==>docs::[obj=>plus?time<=time(time::T){<j>},
           dom=>'/m/math/time',
           rng=>'/m/math/time',
@@ -420,29 +369,18 @@ mtron> *plus?docq
           desc=>'[mapper] shift a datetime forward ...',
           example=>['<//2026.08:09/14/30/00/000?tz=+000...']]
 mtron> *plus?str<=str&docq
-==>docs::[obj=>plus?str<=str(str::T){<j>},
-          dom=>'a prefix str',
-          rng=>'the concatenated str',
-          args=>[0=>'a postfix str'],
-          desc=>'[mapper] concatenate two str::T va...',
-          example=>['"a" + "b" [-- "ab" --]']]
+==>docs::[desc=>'no documentation available',
+          obj=>plus?str<=str(str::T){<j>}]
 mtron> *select?<=str&docq
-==>docs::[obj=>select?lst<=str(str::T){<j>},
-          dom=>'a str to split by regex',
-          rng=>'the regex capture groups (or full ...',
-          args=>[0=>'regex'],
-          desc=>'[mapper] split the lhs str by rege...',
-          example=>[
-           "'abc.cde'.regex('[^.]+') [-- ['abc...",
-           "'abc.cde'.regex('.\..') [-- ['c.c'...",
-           "'241G'.regex('(\d+)([KMGT])') [-- ..."]]
+==>docs::[desc=>'no documentation available',
+          obj=>select?lst<=str(str::T){<j>}]
 ```
 ## references
 
 The entry doc above is deliberately brief. These are the deep dives, keyed by task. Point: every one of them begins with
 `?docq` of the things they cover -- start there before re-reading the prose.
 
-**Language & types**
+### language & types
 
 * [mtron language reference](references/language-reference-mtron.md) -- the whole surface in 23 sections: mono/poly/call
   types, coefficients, arithmetic and strings, `*` dereference, `.as(type::T)` casting, map/filter/group, merge/split,
@@ -452,7 +390,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
   readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.
 
-**Execution & the machine**
+### execution & the machine
 
 * [mach instruction set](references/mach-instset-mtron.md) -- `/m/mach`: the machine (`machine::T` and its five slots,
   and how a machine nests as a frame of reference) and, at its centre, the compiler as four atomic stages --
@@ -461,12 +399,13 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   with a default, so `compiler::[=>]` is the default compiler and naming one entry overrides that stage. Then the
   processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
   language.
-* [distributed computing](references/distributed-computing-mtron.md) -- the pattern menu (A–S): distribution is a theorem,
+* [distributed computing](references/distributed-computing-mtron.md) -- the pattern menu (A–S): distribution is a
+  theorem,
   not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write *before* the rewrite,
   and the sharded layout the rewrite emits — grounded in the machine nest, `Network`, the `rewriter::T` stage, and the
   `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable`-combiner machinery. ✅ marks what is implemented today.
 
-**Spaces & data sources**
+### spaces & data sources
 
 * [sys instruction set + fsSpace](references/sys-instset-mtron.md) -- one file, two docs: `/m/sys` (the guarded `bash`
   and its security modulators, `sleep`/`stdout`/`stdin`, mounted state) and the full `fsspace::T` tour (configuration,
@@ -490,20 +429,21 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [web instruction set](references/web-instset-mtron.md) -- `/m/web`: the protocol surfaces and MIME document types,
   `route::T` mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server->client
   notifications over a `?subq` envelope, tool registration, and what is not available yet.
-* [tble instruction set](references/tble-instset-mtron.md) -- `/m/db/tble` and `tblespace::T`: a JDBC database as a space
+* [tble instruction set](references/tble-instset-mtron.md) -- `/m/db/tble` and `tblespace::T`: a JDBC database as a
+  space
   -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
   backend, the key/value fall-through, `!*` foreign keys, and native `sql()`.
 * [ui instruction set](references/ui-instset-mtron.md) -- `/m/sys/ui`: a widget as a rec whose state is its own
   map, `as?str<=widget(str::T)` to render one inline anywhere a str fits, the `style::T` keys (border, width,
   anchor, `top`/`left`, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
   marker to reshape), and the three insts `display`/`nano`/`less`.
-* [dckrSpace](references/dckrspace-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
+* [dckrSpace](references/dckr-instset-mtron.md) -- Docker as a space: containers, images, volumes, networks, compose,
   remote hosts, `owner`-labelled ownership with `on_close` reaping, and an end-to-end SQLite container + tbleSpace
   walkthrough.
 * [Connecting Data Sources](references/connecting-datasources.md) -- the pattern + route model, discovering a space's
   prefixes from `*/sys/space/...`, `!*` lazy references, validation, and common failures.
 
-**Protocol & services**
+### protocol & services
 
 * [llm instruction set](references/llm-instset-mtron.md) -- `/m/ai/llm`: agents, models, features, skills and tools, and
   the Model Context Protocol on both sides -- `mcp_client::T` over streamable-http + sse, websockets or stdio, and
@@ -511,7 +451,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 * [DSH Memory Bus](references/dsh-mtron.md) -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
   becomes typed message recs, loaded and written into a native metatron agent memory tree.
 
-**Practice**
+### practice
 
 * [Unsloth Training](references/unsloth-training-mtron.md) -- fine-tuning an LLM on mtron: dataset extraction via
   `@Training`, model selection, training, GGUF export, and Ollama/HuggingFace deployment.

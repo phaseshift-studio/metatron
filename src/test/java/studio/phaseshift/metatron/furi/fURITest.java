@@ -37,9 +37,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.ARGS;
-import static studio.phaseshift.metatron.Tokens.DOM;
-import static studio.phaseshift.metatron.Tokens.RNG;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.parseQuery;
 import static studio.phaseshift.metatron.furi.fURI.validatefURI;
@@ -126,6 +124,39 @@ public class fURITest extends AbstractMetatronTest {
         LOG.debug("testing %s compared to %s is %s", fa, fb, lessThan);
         assertEquals(fa.compareTo(fb) < 0, lessThan);
         assertEquals(fb.compareTo(fa) > 0, !lessThan);
+
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                             | b             | false  | {a,b}",
+            "{a,b}                         | b             | true   | {a,b,b}",
+            "a/{b,c}/d                     | a             | false  | a/{{b,c}/d,}",
+            "a/{b,c}/d                     | a/b/d         | true   | a/{b,b,c}/{2}d",
+            "a/{b,c}/d                     | a/c/d         | true   | a/{b,c,c}/{2}d",
+            "a/{b,c}/d                     | a/{b,c}/d     | true   | a/{b,c}/d{2}",
+            "a/{b,c}/d                     | a             | false  | x",
+            "a/{b,c}/d                     | a/{c,b}/d     | true   | a/{b,b,c,c}/{2}d",
+            "a/{b,c}/d                     | a/{c,b,e}/d   | true   | x",
+            "a/{b,c}/d                     | a/{x,b,e}/d   | true   | x",
+            "a/{b,c}/d                     | a/e/d         | false  | x",
+            "a/{b,c}/{d,e/f}               | a/b/e/f       | true   | x",
+            "a/{b,c}/{d,e/f}               | a/c/d         | true   | x",
+            "a/{b,c}/{d,e/f}               | a/c/          | false  | x",
+            "a/{b,c}/{d,e/f}               | a/c/#         | true   | x",
+            "a/{b,c}/{+,e/f}               | a/c/z         | false  | x"
+    }, delimiter = '|', nullValues = "null")
+    public void testBranchTest(final String furiA, final String furiB, final boolean matches, final String summed) {
+        final fURI fa = f(furiA);
+        final fURI fb = f(furiB);
+        final fURI sum = f(summed);
+        LOG.debug("testing %s equal to %s is %s", fa, fb, matches);
+        if (matches)
+            assertTrue(fa.test(fb));
+        else
+            assertFalse(fa.test(fb));
+        if (!sum.equals(f("x")))
+            assertEquals(sum, fa.plus(fb));
 
     }
 

@@ -45,7 +45,7 @@ is what makes a `_?incrq` write assign its own key (see *keys the database assig
 
 ```mtron
 mtron> *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==>docs::[obj=>space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace,
+==>docs::[obj=>/m/space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace,
           desc=>'[structural] a metatron realizatio...',
           example=>['*<http://metatron.phaseshift.studi...']]
 mtron> *</m/db/tble/helper>    [-- the instset's helper rec: the llm chat schema, as a str --]
@@ -107,7 +107,7 @@ mtron> */sys/space/tbledoc.sql('SELECT table_name, column_name, base_vid, obj_ti
 ==>[table_name=>'award',
     column_name=>'recipient',
     base_vid=>'/m/inst',
-    obj_tid=>'/m/inst/auto_from',
+    obj_tid=>'/m/inst/auto_from?args=[/m/uri]',
     ref_table=>'person']
 ==>[table_name=>'note',
     column_name=>'$table',
@@ -298,7 +298,7 @@ The instset prints that list itself, and each rewrite documents its own before/a
 
 ```mtron
 mtron> */m/db/tble?docq
-==>docs::[obj=>instset::[
+==>docs::[obj=>/m/instset::[
            pattern=>/m/db/tble/#,
            q=>[
             docq::[
@@ -306,14 +306,14 @@ mtron> */m/db/tble?docq
              pre_read=>inst(uri::T){<j>},
              pre_write=>inst(uri::T,#::T){<j>},
              obj=>memspace::[pattern=><#>],
-             inst=>instset::[pattern=><#>]],
-            /m/qproc/lawq::[
-             pattern=>lawq,
+             inst=>/m/instset::[=>]],
+            /m/qproc/decq::[
+             pattern=>decq,
              pre_read=>inst(uri::T){<j>},
              pre_write=>inst(uri::T,#::T){<j>},
-             obj=>memspace::[pattern=><#>]]],
+             obj=>/m/instset::[=>]]],
            const=>[[llm_chat_schema=>inst?<=#{*}(){<j>}]@/m/web/helper],
-           type=>[space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace],
+           type=>[/m/space::T[?[host=>uri::T,driver=>uri::T]][ctor?tblespace<=(rec::T){<j>}]@/m/db/tble/space/tblespace],
            inst=>[sql?rec{*}<=tblespace(str::T){<j>}],
            rewrite=>[
             /m/db/tble/inst/rewrite/sql_count?code{?}<=code(){<j>},
@@ -327,6 +327,25 @@ mtron> */m/db/tble?docq
           desc=>'relational tables, typed rows, and...',
           example=>['*acme:customer.where[person=>[name...']]
 ```
+### when a read stays in mtron
+
+The match is structural and it DECLINES rather than guesses, so a read that names a table can still run in the VM. Each
+of these is a deliberate fall-back, not a silent downgrade — `explain()` shows which one happened:
+
+* **the predicate does not fit the formatter** — a non-`rec` predicate, a wildcard field (`_`, `+`), or a value that is
+  not a uri/int/real/str/bool/comparison (a call, a variable, a nested rec). The `where` rewrite leaves the pair alone
+  and the rows are filtered in mtron.
+* **the collection is not a real table** — a `kv_store` path (see `kv_count`/`kv_limit` above) or a wildcard collection.
+  `where`/`count`/`take` match only a collection that the discovered schema actually holds, so the key/value rules
+  handle the kv form and nothing else pushes down.
+* **the read is not a plain row multiplicity** — `count()` after a field or an extension (e.g. `*db:table/+/name.count()`
+  is a count of *distinct names*, i.e. `SELECT COUNT(name)`) does not match the row-count rule; it is a different
+  question, not a missed optimization.
+
+A fused op is only fused because the space could be resolved from it: `sql_where` stores the address as the `from`
+instruction wrote it (`db:table/+`), and every `sql_where_*` rule resolves the space from that address before it agrees
+to fuse. An arg that no longer names a space is a rule that declines, quietly.
+
 ## native sql
 
 When the vocabulary is not enough, go to the backend. `sql` takes a `str` — templates included — and yields `rec{*}`,
@@ -440,42 +459,18 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/31
+==>[body=>'a note with a database-assigned key']@tbledoc:note/7
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/32
+==>[body=>'another one']@tbledoc:note/8
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>12
-==>17
-==>21
-==>26
-==>11
-==>27
-==>4
-==>6
-==>31
-==>16
-==>3
-==>24
-==>28
-==>20
-==>7
-==>32
-==>29
-==>15
-==>19
-==>23
-==>2
-==>8
 ==>1
-==>13
-==>22
-==>25
-==>10
-==>14
-==>18
+==>3
+==>2
+==>4
 ==>5
-==>9
-==>30
+==>6
+==>7
+==>8
 ```
 ## taking the space down
 

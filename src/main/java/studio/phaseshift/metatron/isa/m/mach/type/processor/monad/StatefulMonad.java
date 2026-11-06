@@ -56,6 +56,17 @@ public interface StatefulMonad extends Monad<Lst> {
     AtomicLong MONADS = new AtomicLong(0);
     AtomicLong COEFF_SUM = new AtomicLong(0);
 
+    // repeat() phase timing (read by RepeatInstTest): the escape/emit/until predicate applies and the repeated
+    // code apply inside the loop body, plus the loop-frame bookkeeping (loopback/pushLoop/incrLoop/popLoop) and
+    // a count of the number of times the repeat body ran. The esc phase is the escape-predicate check; emit/until
+    // are the two exit predicates; code is the actual repeated application; book is the monad state churn.
+    AtomicLong T_REPEAT_ESC = new AtomicLong(0);
+    AtomicLong T_REPEAT_EMIT = new AtomicLong(0);
+    AtomicLong T_REPEAT_UNTIL = new AtomicLong(0);
+    AtomicLong T_REPEAT_CODE = new AtomicLong(0);
+    AtomicLong T_REPEAT_BOOK = new AtomicLong(0);
+    AtomicLong REPEAT_ITERS = new AtomicLong(0);
+
     // per-instruction stats, keyed by the resolved inst's vid (its index in the code sequence)
     ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_IN = new ConcurrentHashMap<>();
     ConcurrentHashMap<fURI, AtomicLong> INST_MONAD_OUT = new ConcurrentHashMap<>();
@@ -63,12 +74,18 @@ public interface StatefulMonad extends Monad<Lst> {
     ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_IN = new ConcurrentHashMap<>();
     ConcurrentHashMap<fURI, AtomicLong> INST_COEFF_OUT = new ConcurrentHashMap<>();
 
-    static void resetTimings() {
+    public static void resetTimings() {
         T_SPLIT.set(0);
         T_APPLY.set(0);
         T_NEXT.set(0);
         MONADS.set(0);
         COEFF_SUM.set(0);
+        T_REPEAT_ESC.set(0);
+        T_REPEAT_EMIT.set(0);
+        T_REPEAT_UNTIL.set(0);
+        T_REPEAT_CODE.set(0);
+        T_REPEAT_BOOK.set(0);
+        REPEAT_ITERS.set(0);
         INST_MONAD_IN.clear();
         INST_MONAD_OUT.clear();
         INST_TIME.clear();
