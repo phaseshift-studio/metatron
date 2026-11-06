@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.TriFunction;
+import studio.phaseshift.metatron.util.Tuple.Triplet;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -117,6 +119,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     private final Map<Obj, String> keyedArgDocs = new LinkedHashMap<>();
     private Obj seed;
     private Inst.Form form;
+    private TriFunction<Triplet<Poly, Inst.f, Obj>, fURI, fURI, Inst> constructor;
 
     private InstBuilder() {
     }
@@ -209,6 +212,17 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
     }
 
     /**
+     * THE CLASS THE INSTRUCTION IS MINTED AS, when its body lives on a class rather than in a lambda
+     * ({@link BranchInst}): the constructor takes the inst's own triplet -- args, f(), seed -- exactly as
+     * {@link MInst#instC} builds it. A call bound from the definition is a clone of it ({@code args(...)},
+     * {@code f(...)}), so every bound call is that class too.
+     */
+    public InstBuilder inst(final TriFunction<Triplet<Poly, Inst.f, Obj>, fURI, fURI, Inst> constructor) {
+        this.constructor = constructor;
+        return this;
+    }
+
+    /**
      * Declare the instruction's {@link Inst.Form FORM} — the one facet an n-tid coefficient shape cannot derive.
      * Today the declarable form is {@code typer}: an instruction whose subject is the OBJECT'S TYPE/IDENTITY rather
      * than its value ({@code as}, {@code ::}, {@code type()}, {@code vid()}, {@code tid()}). Such an instruction is
@@ -265,9 +279,11 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         // the declared ARGUMENT types complete the contract (A x B -> C) in the tid's `args` component — a no-op
         // unless MInst.ARGS_IN_TID says a tid is where the contract is carried
         final fURI keyed = MInst.keyed(composed, this.args);
-        final Inst inst = null == this.seed ?
-                MInst.instC(keyed, this.args, this.body) :
-                MInst.instC(keyed, this.args, this.body, this.seed);
+        final Inst inst = null != this.constructor ?
+                this.constructor.apply(Triplet.with(this.args, Inst.f.of(this.body), null == this.seed ? noobj() : this.seed), keyed, null) :
+                null == this.seed ?
+                        MInst.instC(keyed, this.args, this.body) :
+                        MInst.instC(keyed, this.args, this.body, this.seed);
         PendingWrites.write(inst.tid(), inst);
         final Rec doc = this.docRec(inst);
         if (!doc.isEmpty())

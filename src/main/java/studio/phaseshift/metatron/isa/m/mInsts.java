@@ -23,22 +23,19 @@ import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Network;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -52,7 +49,6 @@ import static studio.phaseshift.metatron.isa.m.type.Str.Helper.REGEX_CACHE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -1161,98 +1157,15 @@ public final class mInsts {
                                 place, an addressless key (or `local`) runs it here, and a host-bearing key with no
                                 dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
                                 only that verb at its place, so a client that reads and writes but runs no program serves
-                                it. remote places run concurrently. a key marked ?split={w}part takes a share of the lhs by
-                                its weight w among the marked keys, and an unmarked key (or ?split=copy) gets the whole lhs.
+                                it. every lane runs on its own virtual::T, so the lanes run concurrently. a key marked
+                                ?split={w}part takes a share of the lhs by its weight w among the marked keys, and an
+                                unmarked key (or ?split=copy) gets the whole lhs.
                                 arguments are blocked, so a call is not computed here.
                                 """)
-                        .body((lhs, inst) -> {
-                            if (!inst.args().isRec())
-                                // the member's own application already carries its multiplicity (an inst's
-                                // coefficient, or a code's head-inst coefficient); the branch contributes its lhs
-                                return objs(inst.args().elements().map(o -> o.apply(lhs).c(c -> lhs.c().mult(c))));
-                            // THE REMOTE LANES FAN OUT: each is submitted on its own virtual::T (FutureObj.async, whose
-                            // worker inherits this thread's machine) before any is awaited, so the round trips overlap
-                            // and the branch waits once, for the slowest lane, not for their sum
-                            final Network network = Machine.current().network();
-                            // the args frame carries the lhs under the reserved `lhs` key (Processor)
-                            final List<Rel> routes = inst.args().asRec().elements()
-                                    .filter(kv -> !uri(LHS).equals(kv.first()))
-                                    .toList();
-                            // THE PART GROUP (Marko, 2026-11-05): a key marked ?split={w}part shares the lhs
-                            // with the other marked keys by its weight w (one when unstated, as the element count is
-                            // rarely known): member j of the lhs (a bulked member goes whole) goes to slot j mod W of the
-                            // summed weight W, the slots dealt to the marked keys in key order, w apiece. An unmarked key
-                            // gets the whole lhs (copy, also ?split=copy). Under a {1} dom an application holds one member, always slot 0,
-                            // so the first marked key takes them all: no round-robin state is kept across applications.
-                            final long[] weights = routes.stream().mapToLong(kv -> {
-                                final String split = kv.first().uriValue().q(SPLIT);
-                                if (null == split)
-                                    return 0L;
-                                // the object grammar reads the leading coefficient ({4}part), as it reads ?hop={2}4
-                                final Obj share = ObjmtronSerializer.parse(split);
-                                if (share.isUri() && PART.equals(share.uriValue().name()))
-                                    return share.c().min();
-                                if (share.isUri() && COPY.equals(share.uriValue().name()))
-                                    return 0L;
-                                // A BRANCH PERFORMS TWO SPLITS, part and copy: any other value is refused, never read as a
-                                // copy -- a misspelled part would hand every lane the whole lhs and double-count its fold
-                                throw MTronException.of("?%s=%s is not a split a branch performs: %s or %s", SPLIT, split, PART, COPY);
-                            }).toArray();
-                            final long total = Arrays.stream(weights).sum();
-                            final List<ArrayList<Obj>> parts = routes.stream().map(kv -> new ArrayList<Obj>()).toList();
-                            final List<Obj> elements = 0 == total ? List.of() : lhs.stream().toList();
-                            for (int j = 0; j < elements.size(); j++) {
-                                int lane = 0;
-                                for (long slot = j % total; slot >= weights[lane]; lane++)
-                                    slot -= weights[lane];
-                                parts.get(lane).add(elements.get(j));
-                            }
-                            final List<Obj> lanes = IntStream.range(0, routes.size())
-                                    .mapToObj(r -> {
-                                        final Rel kv = routes.get(r);
-                                        // a marked key computes on its part (none dealt, it runs nothing), an unmarked
-                                        // one on the whole lhs
-                                        if (0 != weights[r] && parts.get(r).isEmpty())
-                                            return noobj();
-                                        final Obj input = 0 == weights[r] ? lhs : objs(parts.get(r));
-                                        final List<Inst> program = kv.second().isCall()
-                                                ? kv.second().asCall().insts()
-                                                : List.of((Inst) map_(kv.second()).tryToInst());
-                                        // the key's own query (its split) is the branch's to read, not part of the place
-                                        final fURI place = kv.first().uriValue().resolve().qLess();
-                                        // THE LANE IS ONE CODE, start(input).program, wherever it runs: an addressless
-                                        // key (a logical place) evaluates it here, the lane at distance zero, and a
-                                        // host-bearing key ships it. The start streams the input, so a {*} dom's bag
-                                        // reaches a {1} program member by member, and the input's coefficient rides the
-                                        // start (the processor restores a compressed lhs's own after the body)
-                                        if (null == place.host())
-                                            return Machine.evaluate(start_(input).addInsts(program));
-                                        // A READ OR A WRITE NEEDS NO EVAL: a lane that is one from(</path>) or one
-                                        // to(</path>) goes through the machine's own door to the place (its client's
-                                        // from/to, else its eval), so a client that reads and writes but runs no program
-                                        // -- http_client::T, GET and POST -- serves the lane
-                                        final Inst only = 1 == program.size() ? program.getFirst() : null;
-                                        final fURI verb = null != only
-                                                && (FROM_INST_TID.equals(only.tid().basePath()) || TO_INST_TID.equals(only.tid().basePath()))
-                                                && only.arg(0).isUri() && only.arg(0).uriValue().isAbsolute()
-                                                ? only.tid().basePath()
-                                                : EVAL_INST_TID;
-                                        final Obj eval = network.overrideOf(place, EVAL_INST_TID);
-                                        if (!eval.isObjInst() && (EVAL_INST_TID.equals(verb) || !network.overrideOf(place, verb).isObjInst()))
-                                            throw Network.Helper.unreachable(Machine.current(), verb, place);
-                                        // the lane's own address homed at the place, its query kept (from(</x?docq>))
-                                        final fURI address = EVAL_INST_TID.equals(verb) ? place : only.arg(0).uriValue().origin(place);
-                                        return FutureObj.async(instLambda((l, i) -> FROM_INST_TID.equals(verb)
-                                                ? Machine.read(address)
-                                                : TO_INST_TID.equals(verb)
-                                                ? Machine.write(address, l)
-                                                : eval.apply(start_(l).addInsts(program))), input);
-                                    })
-                                    .toList();
-                            return objs(lanes.stream().map(lane -> lane instanceof FutureObj<?> answer
-                                    ? MTronException.wrap(() -> (Obj) answer.get())
-                                    : lane));
-                        })
+                        // THE BODY LIVES ON ITS CLASS: the definition is minted a BranchInst, and a call bound from it is
+                        // a clone of it, so the bound call routes its own lhs
+                        .inst(BranchInst::new)
+                        .body((lhs, inst) -> ((BranchInst) inst).route(lhs))
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)
