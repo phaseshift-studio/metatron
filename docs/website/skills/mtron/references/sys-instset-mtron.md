@@ -51,34 +51,33 @@ The signature is not a memory exercise; the inst carries its own doc:
 
 ```mtron
 mtron> *bash?docq
-==>docs::[obj=>bash?lst[str]<=(cmd=>str::T,
-                               {?}timeout=>union(time::T,int::T)){<j>},
+==>docs::[obj=>bash?lst[str]<=(cmd=>str::T,{?}timeout=>union(time::T,int::T)){<j>},
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
 ```mtron
 mtron> bash('ls')
 ==>['AGENTS.md',
+    'AGENTSWARM.md',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    'docs',
-    ...(15 more)]
+    ...(17 more)]
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.6M ...',
+    'tmpfs                  6.1G  6.4M ...',
     'efivarfs               128K   42K ...',
-    '/dev/nvme1n1p2         916G  562G ...',
-    'tmpfs                   31G  1.1M ...',
+    '/dev/nvme0n1p2         916G  572G ...',
+    'tmpfs                   31G  155M ...',
     'tmpfs                  5.0M   20K ...',
     'tmpfs                   31G     0 ...',
     ...(4 more)]
@@ -89,10 +88,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 13ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 13ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -105,39 +104,39 @@ the same `==` projection:
 ```mtron
 mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of result lsts --]
 ==>['ls'=>['AGENTS.md',
+           'AGENTSWARM.md',
            'bin',
            'boot',
            'conf',
            'CONTRIBUTING.md',
            'dist',
-           'docs',
-           ...(15 more)]]
+           ...(17 more)]]
 ==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
+    'AGENTSWARM.md',
     'bin',
     'boot',
     'conf',
     'CONTRIBUTING.md',
     'dist',
-    'docs',
-    ...(16 more)]
+    ...(18 more)]
 ```
 `==` is a **select** — one branch per slot of the poly, the rec's value the projection
 applied to each. The glyphs are the actions, and the sugar says so in plain sight:
 
 ```mtron
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()
-==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[
-                  rng=><#>,
-                  insts=>4,
-                  rewrite=>explanation::[
-                   format=>!λ?str<=(){<j>},
-                   desc=>[rng=><#>,insts=>4],
-                   per_inst=>[
-                    [
-                     op=>start,
+==>/m/inst/explain/explanation::[
+    format=>!λ?str<=(){<j>},
+    desc=>[
+     rng=><#>,
+     insts=>4,
+     rewrite=>/m/inst/explain/explanation::[
+      format=>!λ?str<=(){<j>},
+      desc=>[rng=><#>,insts=>4],
+      per_inst=>[
+       [
    ...
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum().explain()>>format
 ==>"""
@@ -156,19 +155,19 @@ The projection can do the work: first stat line of each entry, nothing else:
 ```mtron
 mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `File:` line --]
 ==>['  File: AGENTS.md',
+    '  File: AGENTSWARM.md',
     '  File: bin',
     '  File: boot',
     '  File: conf',
     '  File: CONTRIBUTING.md',
     '  File: dist',
-    '  File: docs',
-    ...(15 more)]
+    ...(17 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 24586     	Blocks: 56     ...',
-    'Device: 259,5	Inode: 22926470    L...',
+    '  Size: 27203     	Blocks: 56     ...',
+    'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-10-31 06:11:42.782633...',
+    'Access: 2026-11-05 16:03:56.066165...',
    ...
 ```
 ### a shape of its own
@@ -179,14 +178,14 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::24586.0,
+==>[bB::27203.0,
+    bB::11430.0,
     bB::4096.0,
     bB::4096.0,
     bB::4096.0,
     bB::6984.0,
     bB::4096.0,
-    bB::4096.0,
-    ...(15 more)]
+    ...(17 more)]
 ```
 Unit values test against each other's units:
 
@@ -255,14 +254,14 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>63
+==>191
 mtron> sys_stat()
-==>[total_mem_jvm=>gB::14.1406,
-    free_mem_jvm=>mB::1241.7100,
+==>[total_mem_jvm=>mB::480.0,
+    free_mem_jvm=>mB::132.2763,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>gB::12.9280,
-    jvm=>'OpenJDK 64-Bit Server VM 25.0.3',
-    os=>'Linux 7.0.0-38-generic',
+    used_mem_jvm=>mB::347.7236,
+    jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
+    os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',
     ...(4 more)]
 ```
@@ -418,7 +417,7 @@ the shape; it is read here, never run:
 mtron> *<mfs:bin/metatron>
 ...
 mtron> *<mfs:bin/metatron>.tid()
-==>/sys/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}
+==>/sys/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}&args=[#{*}]
 ```
 ## taking the mounts down
 

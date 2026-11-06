@@ -14,7 +14,7 @@ column is where to look when a byte moves.
 isa/mach/type/Machine.java                    ← the dispatch chokepoint (read / write)
 isa/mach/type/Network.java                    ← the network component: peer roster, listeners, authority dispatch
 isa/mach/type/Memory.java                     ← data memory + the space index (findSpace)
-isa/mach/type/machine/MachineSpace.java       ← the machine's own sphere (routes ~/network to Network)
+isa/mach/type/machine/MachineSpace.java       ← the machine's own space, in memory (routes ~/network to Network)
 furi/fURI.java                                ← origin(), authority(), localize()
 isa/m/mInstSet.java                           ← from / to / ref — the language's own deref+ref primitives
 isa/web/space/ws/wsServer.java                ← ws_server::T (a machine's ws presence: a Listener on a socket)

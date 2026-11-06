@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -489,35 +497,35 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/db/vec/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          const=&gt;[imaginary::NaN@/m/db/vec/imaginary],
-          inst=&gt;[
-           sqrt?real&lt;=real(){&lt;j&gt;},
-           dot?#&lt;=vec(vec::T){&lt;j&gt;}],
-          type=&gt;[
-           rec::T[?[
-            obj=&gt;&lt;#&gt;::T,
-            embed=&gt;lst::T,
-            {?}meta=&gt;rec::T]]@/m/db/vec/embedding,
-           lst::T@/m/db/vec/vec,
-           lst::T[?[real::T,real::T]]@/m/math/cmplx,
-           lst::T@/m/db/vec/mtrx,
-           space::T[?[
-            host=&gt;uri::T,
-            driver=&gt;uri::T,
-            config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace]]@/m/db/vec</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/db/vec/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             const=&gt;[imaginary::NaN@/m/db/vec/imaginary],
+             inst=&gt;[
+              sqrt?real&lt;=real(){&lt;j&gt;},
+              dot?#&lt;=vec(vec::T){&lt;j&gt;}],
+             type=&gt;[
+              rec::T[?[
+               obj=&gt;&lt;#&gt;::T,
+               embed=&gt;lst::T,
+               {?}meta=&gt;rec::T]]@/m/db/vec/embedding,
+              lst::T@/m/db/vec/vec,
+              lst::T[?[real::T,real::T]]@/m/math/cmplx,
+              lst::T@/m/db/vec/mtrx,
+              /m/space::T[?[
+               host=&gt;uri::T,
+               driver=&gt;uri::T,
+               config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace]]@/m/db/vec</code></pre>
                     </div>
                 </div>
             </div>
@@ -525,7 +533,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -638,9 +646,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <a href="m_db_vec_space_vecspace.html" class="code text-primary fw-bold text-decoration-none">vecspace</a>
         <small class="text-muted code">/m/db/vec/space/vecspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[host=&gt;uri::T,
-           driver=&gt;uri::T,
-           config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[?[host=&gt;uri::T,
+              driver=&gt;uri::T,
+              config=&gt;[embed=&gt;[uri::T=&gt;&lt;#&gt;::T]]]][ctor?vecspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/vec/space/vecspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -649,7 +657,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                  {?}pre_read=&gt;inst::T,
                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T,
+ {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     
 </div>
@@ -693,7 +701,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

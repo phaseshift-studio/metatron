@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,54 +499,54 @@ the agent ide — project::T definition, build result::T and the links between t
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/dev/ide/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[
-           /m/dev/ide/serializer::T[][ctor?obj_ide_java&lt;=(#{*}::T){&lt;j&gt;}]@/m/dev/ide/serializer/obj_ide_java,
-           rec::T[?[
-            classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
-            {?}package=&gt;str::T,
-            {?}imports=&gt;lst::T,
-            {?}preamble=&gt;str::T,
-            {?}postscript=&gt;str::T]]@/m/dev/ide/java,
-           rec::T[?[
-            status=&gt;union(success,error,halted),
-            runtime=&gt;!*/m/math/time,
-            {?}command=&gt;str::T,
-            {?}project=&gt;project::T,
-            {?}result=&gt;str::T,
-            {?}error=&gt;{?}[fail::T]]]@/m/dev/ide/result,
-           rec::T[?[
-            root=&gt;uri::T,
-            {?}name=&gt;str::T,
-            {?}desc=&gt;str::T,
-            {?}command=&gt;[uri::T=&gt;rec::T[?[
-             status=&gt;union(success,error,halted),
-             runtime=&gt;!*/m/math/time,
-             {?}command=&gt;str::T,
-             {?}project=&gt;project::T,
-             {?}result=&gt;str::T,
-             {?}error=&gt;{?}[fail::T]]]@/m/dev/ide/result],
-            {?}code=&gt;&lt;#&gt;::T]]@/m/dev/ide/project],
-          inst=&gt;[
-           as?project&lt;=uri(project::T){&lt;j&gt;},
-           as?skill&lt;=project(#::T){&lt;j&gt;},
-           as?java&lt;=java(java::T){&lt;j&gt;},
-           as?java&lt;=java(java::T){&lt;j&gt;},
-           find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},
-           search?uri{*}&lt;=uri(str::T){&lt;j&gt;},
-           command?inst&lt;=(command=&gt;str::T){&lt;j&gt;}]]@/m/dev/ide</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/dev/ide/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             type=&gt;[
+              /m/dev/ide/serializer::T[][ctor?obj_ide_java&lt;=(#{*}::T){&lt;j&gt;}]@/m/dev/ide/serializer/obj_ide_java,
+              rec::T[?[
+               classes=&gt;[&lt;#&gt;::T=&gt;lst::T],
+               {?}package=&gt;str::T,
+               {?}imports=&gt;lst::T,
+               {?}preamble=&gt;str::T,
+               {?}postscript=&gt;str::T]]@/m/dev/ide/java,
+              rec::T[?[
+               status=&gt;union(success,error,halted),
+               runtime=&gt;!*/m/math/time,
+               {?}command=&gt;str::T,
+               {?}project=&gt;project::T,
+               {?}result=&gt;str::T,
+               {?}error=&gt;{?}[fail::T]]]@/m/dev/ide/result,
+              rec::T[?[
+               root=&gt;uri::T,
+               {?}name=&gt;str::T,
+               {?}desc=&gt;str::T,
+               {?}command=&gt;[uri::T=&gt;rec::T[?[
+                status=&gt;union(success,error,halted),
+                runtime=&gt;!*/m/math/time,
+                {?}command=&gt;str::T,
+                {?}project=&gt;project::T,
+                {?}result=&gt;str::T,
+                {?}error=&gt;{?}[fail::T]]]@/m/dev/ide/result],
+               {?}code=&gt;&lt;#&gt;::T]]@/m/dev/ide/project],
+             inst=&gt;[
+              as?project&lt;=uri(project::T){&lt;j&gt;},
+              as?skill&lt;=project(#::T){&lt;j&gt;},
+              as?java&lt;=java(java::T){&lt;j&gt;},
+              as?java&lt;=java(java::T){&lt;j&gt;},
+              find?uri{*}&lt;=uri(class=&gt;uri::T,member=&gt;str{?}::T,text=&gt;str{?}::T){&lt;j&gt;},
+              search?uri{*}&lt;=uri(str::T){&lt;j&gt;},
+              command?inst&lt;=(command=&gt;str::T){&lt;j&gt;}]]@/m/dev/ide</code></pre>
                     </div>
                 </div>
             </div>
@@ -546,7 +554,7 @@ the agent ide — project::T definition, build result::T and the links between t
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><a href="#defined" class="btn btn-outline-primary">defined elsewhere <span class="pill-label badge bg-info">4</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">4</span></a><button class="btn btn-outline-secondary" disabled>spaces <span class="pill-label badge bg-dark">0</span></button><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">3</span></a><a href="#defined" class="btn btn-outline-primary">external definition <span class="pill-label badge bg-info">4</span></a><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -579,7 +587,7 @@ the agent ide — project::T definition, build result::T and the links between t
     <span class="pill-label badge bg-success ms-2">I</span>
 </a></div>
 </div><div class="mb-3">
-    <h6 class="text-primary mb-2">defined elsewhere</h6>
+    <h6 class="text-primary mb-2">external definition</h6>
     <div class="d-flex flex-wrap"><a href="#defined-__m__inst__as" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">as</span>
     <span class="pill-label badge bg-info ms-2">D</span>
@@ -756,102 +764,16 @@ maps an obj to objs (rng_c = {0,})</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="defined">
-    <h3 class="text-primary mb-3">defined elsewhere <span class="pill-label badge bg-info">4</span></h3>
+    <h3 class="text-primary mb-3">external definition <span class="pill-label badge bg-info">4</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        contracts declared HERE whose address belongs to another instruction set — so they are
-        documented there too. Declared by
-        <span class="code text-info">/m/dev/ide</span>, for use with the types it introduces.
+        inst definitions that override an external instruction set's definition
+        are stored in the corresponding instruction set.
     </p>
-    <div class="card mb-3" id="defined-__m__inst__as">
-    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
-        <span>
-            <span class="code text-primary fw-bold">as</span>
-            
-        </span>
-        <small class="text-muted code">/m/inst/as</small>
-    </div>
-    <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?skill&lt;=project(#::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=java(java::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-1-tab').click();document.getElementById('defined-__m__inst__as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?project&lt;=uri(project::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('defined-__m__inst__as-doc-0-tab').click();document.getElementById('defined-__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?java&lt;=java(java::T){&lt;j&gt;}</code> <a href="m.html#__m__inst__as" class="badge bg-secondary text-decoration-none ms-1" title="this operation's address belongs to /m">address: <span class="text-danger">/m</span></a></pre>
-
-</div>
-</div>
-    <div class="card-body border-top py-2">
-    <small class="text-muted">for use with <a href="#__m__dev__ide__project" class="code text-primary">project::T</a>, <a href="#__m__dev__ide__java" class="code text-primary">java::T</a></small>
-</div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="defined-__m__inst__as-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="defined-__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="defined-__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#defined-__m__inst__as-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="defined-__m__inst__as-content">
-        <div class="tab-pane fade show active" id="defined-__m__inst__as-doc-0" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> as engineering becomes agent-dependent, the workspace manifest is no longer &quot;how to build&quot; but &quot;how to work here&quot; — and &quot;how to work here&quot; is the skill shape; what stays distinct is the lifecycle, which is precisely why the bridge is an as-view and not a refinement.
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project" class="text-info">a project</a> <span class="text-light">=&gt;</span> <a href="#the skill view of the project" class="text-success">the skill view of the project</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'the skill::T target of the view'" class="text-info">&#39;the skill::T target of the view&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*scratch.as(skill::T)   [-- the project, viewed as a skill --]</code></pre>
-</div>
-</div><div class="tab-pane fade " id="defined-__m__inst__as-doc-1" role="tabpanel" aria-labelledby="defined-__m__inst__as-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-typer">typer</span> generate an project obj used to orient monads through project source
-retypes the obj&#39;s type/identity, not its value</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a project source root" class="text-info">a project source root</a> <span class="text-light">=&gt;</span> <a href="#a project obj" class="text-success">a project obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#rec::T[?[root=>uri::T,
-         {?}name=>str::T,
-         {?}desc=>str::T,
-         {?}command=>[uri::T=>rec::T[?[status=>union(success,error,halted),
-                                       runtime=>!*__m__math__time,
-                                       {?}command=>str::T,
-                                       {?}project=>project::T,
-                                       {?}result=>str::T,
-                                       {?}error=>{?}[fail::T]]]@__m__dev__ide__result],
-         {?}code=><#>::T]]@__m__dev__ide__project" class="text-light">project</a> <span class="text-light">=&gt;</span> <a href="#'the project type'" class="text-info">&#39;the project type&#39;</a>
-</pre>
-</div>
-</div>
-    </div>
-</div>
-</div>
+    /m/dev/ide
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

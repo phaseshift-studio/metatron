@@ -537,6 +537,10 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         return Helper.branchedPaths(this.path());
     }
 
+    default Stream<fURI> branches() {
+        return Helper.branchedPaths(this.path()).stream().map(this::path);
+    }
+
     /**
      * Flattens this uri into the stream of paths its branch structure denotes. A non-branching uri is its own single
      * element; a branching uri yields one fURI per path — {@code a/{b,c}/d/{e,f}} → {@code a/b/d/e, a/b/d/f, a/c/d/e,
@@ -560,6 +564,12 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     default fURI extend(final fURI segments) {
         // return this.extend(null == segments ? null : segments.toString());
         return this.extend(segments.pathString()).addQ(segments.qMap());
+    }
+
+    default fURI extendBranch(final String... siblings) {
+        if (siblings.length < 2)
+            return this.extend(siblings[0]);
+        return this.extend("{" + String.join(",", siblings) + "}");
     }
 
     fURI head(final int steps);

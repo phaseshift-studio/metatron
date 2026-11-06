@@ -24,10 +24,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
-import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
-import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -559,6 +556,13 @@ public final class mInsts {
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single merged uri")
                         .argLst(T(URI_TID), "the uri placed between each merge")
                         .body((lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj"))))
+                        .law(Law.pure)
+                        .create(),
+                InstBuilder.build().tid(SPLIT_INST_TID, "split a uri into its component branches")
+                        .dom(URI_TID, "a uri with one or more branches")
+                        .rng(URI_TID.maybeSome(), "the individual branches of the uri")
+                        .argLst()
+                        .body((lhs, inst) -> objs(lhs.uriValue().branches().map(MUri::uri)))
                         .law(Law.pure)
                         .create(),
                 InstBuilder.build().tid(NAME_INST_TID, "the name of the lhs uri")

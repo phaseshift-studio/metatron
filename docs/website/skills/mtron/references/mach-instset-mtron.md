@@ -59,8 +59,8 @@ mtron> */m/instset?docq
      {?}inst=>{?}[inst::T],
      {?}rewrite=>{?}[inst::T],
      {?}sugar=>{?}[lst::T],
-     {?}reference=>{?}[uri::T],
-     ...(1 more)]][ctor?instset<=(#{*}::T){<j>}]@/m/instset,
+     {?}reference=>uri::T,
+     ...(1 more)]][ctor?/m/instset<=(#{*}::T){<j>}]@/m/instset,
           dom=>'an extension of space with structu...',
           rng=>'creates the instset and registers ...',
           args=>[
@@ -69,7 +69,7 @@ mtron> */m/instset?docq
            {?}inst=>'instructions associated with the t...',
            {?}rewrite=>'code<=code instructions that captu...',
            {?}sugar=>'custom instruction syntax sugars g...'],
-          desc=>'[structural] an aggregate of const...']
+          desc=>'an aggregate of consts, types, ins...']
 ```
 `instset` is the frame's **visible vocabulary**: the types, instructions, rewrites and sugars a program compiled here
 can see. It is a union in two directions — this frame's own structure over its **imported** sets, and that whole stack
@@ -232,14 +232,16 @@ The rewrite stage runs **before resolution**, so the rules see generic dom/rng r
 the shape of the compiled chain is decided: a rule-driven collapse, a native pushdown, and a distributed reduce's
 gather point all enter the compiled form here.
 
-| rewriter               | the rule                                                                                                                                                                                                                            |
-|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `fixpoint_rewriter::T` | apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for `max` consecutive passes (default `2`) — so a rule re-runs on every pass and must be idempotent |
-| `identity_rewriter::T` | return the code unchanged — for a compiler whose rewriting happens elsewhere                                                                                                                                                        |
+| rewriter               | the rule                                                                                                                                                                                                                                                                                                                                                                              |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fixpoint_rewriter::T` | apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for `max` consecutive passes (default `2`) — so a rule re-runs on every pass and must be idempotent                                                                                                                                                   |
+| `identity_rewriter::T` | return the code unchanged — for a compiler whose rewriting happens elsewhere                                                                                                                                                                                                                                                                                                          |
+| `plan_rewriter::T`     | a `fixpoint_rewriter::T` whose rules are the law-driven plans (`plan::T`) rather than every instset's rewrites: each reads the algebra the instructions and types declare (`?decq`) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (`law_shard`), with no rule naming an instruction |
 
 ```mtron
 mtron> fixpoint_rewriter::[=>]
 mtron> fixpoint_rewriter::[max=>3]
+mtron> plan_rewriter::[=>]
 ```
 ### resolve — the walk and its two strategies
 
@@ -321,6 +323,12 @@ axes of a machine.
 | `monad_processor::T` | a processor that carries monadic state                                                                                                                                |
 | `swarm_processor::T` | the default: it schedules independently executing monads across the code's inst chain; barriers synchronize them, and the objects of the halted monads are the result |
 
+Each evaluation runs in a **computer** the processor mints, indexed by number at `~/processor/computer/<n>`. The
+processor also holds the machine's **fail stacks**: an evaluation's uncaught fail is filed under the computer that ran
+it (`~/processor/computer/<n>/fail/<k>`), and a fail raised outside any evaluation at `~/processor/fail/<k>`. A fail
+read back from a stack is still uncaught, so `catch(_)` it to use it as a value. Read the stack with `@` to clear it:
+`@` keeps each fail's address, so catching it removes it, while `*` hands back a detached copy.
+
 ### threads
 
 ```mtron
@@ -329,26 +337,20 @@ mtron> */m/mach/thread?docq
      code=><#>::T,
      {?}source=>uri::T,
      {?}runtime=>real::T@/m/math/time,
-     {?}yield=>thread::T,
+     {?}yield=>/m/mach/thread::T,
      {?}loop=>real::T@/m/math/time,
+     {?}timeout=>real::T@/m/math/time,
      {?}state=>union(stop,run,pause),
-     {?}result=><#>::T]]@/m/mach/thread,
+     ...(1 more)]]@/m/mach/thread,
           args=>[
            {?}result=>'the last result produced by the th...',
-           {?}runtime=>"computes the thread's current runn...",
-           code=>"the thread's executing code",
-           {?}state=>'current state of the thread',
            {?}time=>'the datetime::T when the thread wa...',
+           code=>"the thread's executing code",
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}state=>'current state of the thread',
+           {?}runtime=>"computes the thread's current runn...",
            {?}loop=>'delay to repeat code evaluation (d...'],
-          desc=>'[structural] the thread base type',
-          core=>docs::[
-           obj=>thread::T[][ctor?core<=(#{*}::T){<j>}]@/m/mach/thread/core,
-           desc=>'[structural] run a concurrent core...',
-           example=>['core::[code=>ping(<phaseshift.stud...']],
-          virtual=>docs::[
-           obj=>thread::T[][ctor?virtual<=(#{*}::T){<j>}]@/m/mach/thread/virtual,
-           desc=>'[structural] run a concurrent virt...',
-           example=>['virtual::[code=>ping(<phaseshift.s...']]]
+          desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
 
@@ -412,11 +414,11 @@ mtron> */m/mach/component/network?docq
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
            {?}roster=>'known machines, connectionless: <h...',
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
+           {?}listener=>'the sockets this machine serves th...',
            {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...'],
-          desc=>"[structural] a machine's network: ...",
+           {?}peer=>"machine's own connections, one per...",
+           {?}pattern=>'the branch this network answers as...'],
+          desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
            'network::[peer=>[<ws/localhost/391...']]
@@ -525,17 +527,17 @@ a background behavior of a valid construction.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>[pattern=>ws://localhost:8555/mtron,
-    host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    ...(1 more)]
+==>ws_client::[pattern=>ws://localhost:8555/mtron,
+               host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               ...(1 more)]
 ```
 The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as `memspace::[pattern=>xyz/#]` indexes into memory. The lifecycle is one adjoint pair on the
@@ -578,7 +580,7 @@ up, and an address no client was constructed for falls through to memory.
 mtron> */m/mach/network_supervisor?docq
 ==>docs::[obj=>rec::T[?[status=>union(supervising,closed)]][ctor?network_supervisor<=(#{*}::T){<j>}]@/m/mach/network_supervisor,
           args=>[status=>'supervising / closed — the livenes...'],
-          desc=>'[structural] the per-level reconci...',
+          desc=>'the per-level reconciler that keep...',
           example=>['network_supervisor::[=>] [-- start...']]
 ```
 Between the index that granted a peer and the drop that retracts it, the network watches every peer whose client holds
@@ -690,19 +692,14 @@ mtron> *~.vid()
 mtron> /.>>
 ==>/xyz/
 mtron> /xyz.>>
-==>/xyz/pattern
-==>/xyz/q
-==>/xyz/memory
-==>/xyz/network
-==>/xyz/instset
-==>/xyz/compiler
-==>/xyz/processor
+==>/xyz/sys
 mtron> pop()
 mtron> *~.vid()
 ==></.>
 ```
-Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set and network — so it is a
-clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts
+Every pushed frame is a fresh **level** over its parent's — its own memory, instruction set, network and processor —
+so it is a clean scope: what it writes, imports and dials, and the fails its evaluations file, are its own, and a pop
+retracts exactly that. Reach in particular starts
 empty: a pushed frame holds **no peers** until it dials one, which makes a frame the natural scope of a mini-cluster.
 
 **The authority boundary.** A frame lives in this process. `push(<ws://localhost:8555/worker>)` names another process,
@@ -847,13 +844,13 @@ Peers forked on one host share it; telling them apart takes their service author
 Everything above is a subtype of `component::T` at `/m/mach/component` — except `machine::T` itself and the
 non-component families, which hang directly off `/m/mach`:
 
-| family   | types (`::T`)                                                                                                                                                                                                                                                        |
-|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer` |
-| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                    |
-| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                        |
-| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                         |
-| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares                                             |
+| family   | types (`::T`)                                                                                                                                                                                                                                                                                   |
+|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| compiler | `compiler`, `parser`, `mtron_parser`, `rewriter`, `fixpoint_rewriter`, `identity_rewriter`, `plan_rewriter`, `resolver`, `scoring_resolver`, `firstfind_resolver`, `identity_resolver`, `selector`, `specificity_selector`, `firstfind_selector`, `binder`, `generic_binder`, `typer`           |
+| process  | `processor`, `monad_processor`, `swarm_processor`                                                                                                                                                                                                                                               |
+| state    | `memory`, `network`, `instset` — the three prefixed components (*components*)                                                                                                                                                                                                                   |
+| machine  | `machine` (at `/m/mach/machine`, a `rec::T`)                                                                                                                                                                                                                                                    |
+| the rest | `thread` / `virtual` / `core`, `peer`, `listener`, `id_client`, `cluster`, `monad`, `plan` (a rewrite rule as a value — `plan_rewriter::T`'s rule format), `component` (`/m/mach/component`, the root of every row above), and the URI refinements `origin` / `path_encoding` this set declares |
 
 ## appendix — writing another language
 

@@ -38,7 +38,7 @@ links back to its containers.
 ```mtron
 mtron> dckrspace::T
 mtron> !*dckrspace?docq
-==>docs::[obj=>space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dev/dckr/space/dckrspace,
+==>docs::[obj=>/m/space::T[?[{?}host=>uri::T,{?}progress=>rec::T]][ctor?dckrspace<=(dckrspace::T){<j>}]@/m/dev/dckr/space/dckrspace,
           desc=>'[structural] a docker daemon space',
           example=>[
            'docker:compose/my-stack -> [servic...',
@@ -411,69 +411,71 @@ mtron> *mydb:people/+/name                                      [-- all names   
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]
-==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[
-                  rng=><#>,
-                  insts=>2,
-                  rewrite=>explanation::[
-                   format=>!λ?str<=(){<j>},
-                   desc=>[rng=><#>,insts=>2],
-                   per_inst=>[
-                    [
-                     op=>sql_where,
-                     args=>[people/+,"role = 'developer'"],
-                     f=>'<j>',
-                     form=>standard,
-                     c_dom=>0,
-                     c_rng=>0],
-                    [
-                     op=>select,
-                     dom=><#>,
-                     rng=><#>,
-                     args=>[[name=>id()]],
-                     form=>mapper,
-                     c_dom=>1,
-                     c_rng=>1]]]],
-                 per_inst=>[
-                  [
-                   op=>sql_where,
-                   args=>[people/+,"role = 'developer'"],
-                   f=>'<j>',
-                   form=>standard,
-                   c_dom=>0,
-                   c_rng=>0],
-                  [
-                   op=>select,
-                   dom=><#>,
-                   rng=><#>,
-                   args=>[[name=>id()]],
-                   form=>mapper,
-                   c_dom=>1,
-                   c_rng=>1]]]
+==>/m/inst/explain/explanation::[
+    format=>!λ?str<=(){<j>},
+    desc=>[
+     rng=><#>,
+     insts=>2,
+     rewrite=>/m/inst/explain/explanation::[
+      format=>!λ?str<=(){<j>},
+      desc=>[rng=><#>,insts=>2],
+      per_inst=>[
+       [
+        op=>sql_where,
+        args=>[mydb:people/+,"role = 'developer'"],
+        f=>'<j>',
+        form=>standard,
+        c_dom=>0,
+        c_rng=>0],
+       [
+        op=>select,
+        dom=><#>,
+        rng=><#>,
+        args=>[[name=>id()]],
+        form=>mapper,
+        c_dom=>1,
+        c_rng=>1]]]],
+    per_inst=>[
+     [
+      op=>sql_where,
+      args=>[mydb:people/+,"role = 'developer'"],
+      f=>'<j>',
+      form=>standard,
+      c_dom=>0,
+      c_rng=>0],
+     [
+      op=>select,
+      dom=><#>,
+      rng=><#>,
+      args=>[[name=>id()]],
+      form=>mapper,
+      c_dom=>1,
+      c_rng=>1]]]
 mtron> *mydb:people/+.count()                                   [-- number of rows        --]
 ==>3
 mtron> *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
-==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[
+==>/m/inst/explain/explanation::[
+    format=>!λ?str<=(){<j>},
+    desc=>[
+     rng=>int,
+     insts=>1,
+     rewrite=>/m/inst/explain/explanation::[
+      format=>!λ?str<=(){<j>},
+      desc=>[rng=>int,insts=>1],
+      per_inst=>[[op=>sql_count,
                   rng=>int,
-                  insts=>1,
-                  rewrite=>explanation::[
-                   format=>!λ?str<=(){<j>},
-                   desc=>[rng=>int,insts=>1],
-                   per_inst=>[[op=>sql_count,
-                               rng=>int,
-                               args=>[people/+],
-                               f=>'<j>',
-                               form=>initial,
-                               c_dom=>0,
-                               c_rng=>1]]]],
-                 per_inst=>[[op=>sql_count,
-                             rng=>int,
-                             args=>[people/+],
-                             f=>'<j>',
-                             form=>initial,
-                             c_dom=>0,
-                             c_rng=>1]]]
+                  args=>[people/+],
+                  f=>'<j>',
+                  form=>initial,
+                  c_dom=>0,
+                  c_rng=>1]]]],
+    per_inst=>[[op=>sql_count,
+                rng=>int,
+                args=>[people/+],
+                f=>'<j>',
+                form=>initial,
+                c_dom=>0,
+                c_rng=>1]]]
 ```
 ### Step 5: The container sees the same data
 

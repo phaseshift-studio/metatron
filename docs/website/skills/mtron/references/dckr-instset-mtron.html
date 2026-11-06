@@ -1,0 +1,1151 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>dckr instruction set · PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron programming data graph database llm">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../../../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../../../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../../css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            type="text/javascript"></script>
+    <script src="../../../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/java.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
+    <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../../../css/metatron.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .switch {
+            border-width: 1px 1px 0 1px;
+            border-style: solid;
+            border-color: #7a2518;
+            display: inline-block;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .switch--item {
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            background-color: #ffffff;
+            color: #7a2518;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .switch--item:first-child {
+            border-radius: 3px 0 0 0;
+        }
+
+        .switch--item:last-child {
+            border-radius: 0 3px 0 0;
+        }
+
+        .switch--item.selected {
+            background-color: #7a2519;
+            color: #ffffff;
+        }
+
+        /* click-to-copy download commands: the whole block is the copy target */
+        .click-to-copy {
+            cursor: pointer;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .click-to-copy:active {
+            background-color: var(--mred);
+        }
+    </style>
+    <script src="../../../js/metatron.js" type="text/javascript"></script>
+    
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
+        <a href="../../../index.html" title="metatron"><img src="../../../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
+        <a href="http://phaseshift.studio">PhaseShift Studio</a>
+    </h2>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code class="language-bash">curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- dckrspace (the VM orchestrating containers on the host) needs the socket
+                             mounted AND the socket's gid granted. The two travel together: the image
+                             runs as uid 10001, which belongs to no host group, so the mount alone is
+                             denied (docker: permission denied on /var/run/docker.sock). Both are
+                             per-host facts, hence the `stat`. Without them the VM still boots and
+                             serves 8555/8777 (boot/space/dckr/socket.mtron degrades with a log, it
+                             does not fail the boot) but it is blind to every container it was meant
+                             to manage. Keep them; a tidier line is not worth losing dckrspace. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker</span>
+                            <pre><code class="language-bash">docker run -d --name metatron -p 8555:8555 -p 8777:8777 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --group-add $(stat -c '%g' /var/run/docker.sock) \
+  ghcr.io/phaseshift-studio/metatron:latest</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <!-- The distribution's compose file: one service (the VM), which pulls whatever
+                             the rest of a deployment needs itself.  METATRON_DOCKER_GID is not optional in
+                             practice -- without it dckrspace cannot open the socket, so the VM boots
+                             healthy but blind to every container it was supposed to manage. -->
+                        <div class="click-to-copy" title="click to copy">
+                            <span class="badge bg-primary">docker compose</span>
+                            <pre><code class="language-bash">curl -fsSLO https://metatron.phaseshift.studio/compose.yaml
+METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="../../../start.html">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <!-- INSTSET-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
+                                src="../../../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                                alt="llm"/>/m/ai/llm</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/llm-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/db</li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_dcmnt.html"><img
+                            src="../../../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2"
+                            alt="dcmnt"/>/m/db/dcmnt</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_grph.html"><img
+                            src="../../../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2"
+                            alt="grph"/>/m/db/grph</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_db_tble.html"><img
+                                src="../../../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2"
+                                alt="tble"/>/m/db/tble</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/tble-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_db_vec.html"><img
+                            src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/db/vec</a></li>
+                    <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
+                            src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
+                            alt="iot"/>/m/iot</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_mach.html"><img
+                                src="../../../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2"
+                                alt="mach"/>/m/mach</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/mach-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_math.html"><img
+                                src="../../../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                                alt="math"/>/m/math</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/math-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_cat.html"><img
+                                src="../../../images/icons/space/cat-icon.svg" class="isa-row icon-color me-2"
+                                alt="cat"/>/m/math/cat</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/cat-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_math_geo.html"><img
+                                src="../../../images/icons/space/geo-icon.svg" class="isa-row icon-color me-2"
+                                alt="geo"/>/m/math/geo</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/geo-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_sys.html"><img
+                                src="../../../images/icons/space/sys-icon.svg" class="isa-row icon-color me-2"
+                                alt="sys"/>/m/sys</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/sys-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_sys_ui.html"><img
+                                src="../../../images/icons/space/ui-icon.svg" class="isa-row icon-color me-2"
+                                alt="ui"/>/m/sys/ui</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ui-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-1" href="../../../instset/m_web.html"><img
+                                src="../../../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                                alt="web"/>/m/web</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/web-instset-mtron.html">doc</a></span>
+                    </li>
+                </ul>
+            </li>
+            <!-- INSTSET-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="../../../tractatus.html">the
+                    tractatus</a>
+            </li>
+            <!-- SKILLS-MENU:START -->
+            <li class="nav-item dropdown">
+                <a id="skills_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    agent skills
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" id="skills-accordion" aria-labelledby="skills_dropdown">
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/drstynx/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>drstynx</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-drstynx" aria-expanded="false" aria-label="drstynx resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-drstynx" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/drstynx/assets/drstynx.boot.mtron">drstynx.boot.mtron</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="../../../skills/ide/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>ide</a></li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/metatron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>metatron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-metatron" aria-expanded="false" aria-label="metatron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-metatron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/distributed-metatron.html">distributed-metatron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/machine-architecture-java.html">machine-architecture-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/mcp-mtron.html">mcp-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/rewrite-system-java.html">rewrite-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/tble-space-java.html">tble-space-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/type-system-java.html">type-system-java</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/references/ui-instset-java.html">ui-instset-java</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/metatron/scripts/wsplus">wsplus</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="skill-group">
+                        <div class="d-flex align-items-center">
+                            <a class="code dropdown-item skill-link d-flex align-items-center flex-grow-1" href="../../../skills/mtron/SKILL.html"><i class="bi bi-robot icon-color me-2 isa-row"></i>mtron</a>
+                            <button class="skill-chevron" type="button" data-bs-toggle="collapse" data-bs-target="#skill-mtron" aria-expanded="false" aria-label="mtron resources"><i class="bi bi-chevron-down"></i></button>
+                        </div>
+                        <div id="skill-mtron" class="collapse" data-bs-parent="#skills-accordion">
+                            <div class="skill-resources">
+                                <div class="skill-resource-group">references</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/tble-instset-mtron.html">tble-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/type-system-mtron.html">type-system-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ui-instset-mtron.html">ui-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/unsloth-training-mtron.html">unsloth-training-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/web-instset-mtron.html">web-instset-mtron</a>
+                                <div class="skill-resource-group">scripts</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/export_gguf.py">export_gguf.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/unsloth_studio.py">unsloth_studio.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/scripts/wsplus">wsplus</a>
+                                <div class="skill-resource-group">assets</div>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!-- SKILLS-MENU:END -->
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <!--<li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/geometry-is-the-program.html"><i
+                                class="bi bi-diagram-3 icon-color me-2 isa-row"></i>The Geometry of Data Is the Program</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.html">html</a>
+                            <a class="article-format" href="../../../articles/geometry-is-the-program.md">md</a>
+                        </span>
+                    </li>-->
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/stream-ring-theory.html"><i
+                                class="bi bi-gem icon-color me-2 isa-row"></i>Stream Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/stream-ring-theory.pdf">pdf</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.html">html</a>
+                            <a class="article-format" href="../../../articles/stream-ring-theory.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/parametric-identities-in-ring-theory.html">
+                            <i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>Parametric Identities in Ring Theory</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/parametric-identities-in-ring-theory.html">html</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/mm-adt.pdf"><i
+                                class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/mm-adt.pdf">pdf</a>
+                        </span>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://opencollective.com/metatron">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://github.com/phaseshift-studio/metatron">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://huggingface.co/phaseshift-studio">
+                        <i class="bi bi-emoji-laughing icon-color me-2 isa-row"></i>hugging face</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="https://groups.google.com/u/1/g/metatron-phaseshift">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="../../../index.html">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="../../../console/index.html">
+                <i class="bi bi-terminal text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<script>
+    // Click-to-copy for the download dropdown bash commands: the whole block is
+    // the copy target. The :active CSS turns the block red while pressed; this
+    // copies the command on click release.
+    (function () {
+        function fallbackCopy(text) {
+            var tmp = document.createElement('input');
+            tmp.value = text;
+            document.body.appendChild(tmp);
+            tmp.select();
+            document.execCommand('copy');
+            document.body.removeChild(tmp);
+        }
+
+        document.querySelectorAll('.click-to-copy').forEach(function (box) {
+            box.addEventListener('click', function () {
+                var code = box.querySelector('code');
+                if (!code) return;
+                var text = code.textContent.trim();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(function () {
+                        fallbackCopy(text);
+                    });
+                } else {
+                    fallbackCopy(text);
+                }
+            });
+        });
+    })();
+</script>
+<main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
+        <h1 class="skill-title mb-1">dckr instruction set</h1>
+        <small>manipulating docker's graph of images, containers, volumes, networks, and the lifecycle of what it creates</small><br/>
+        <a href="dckr-instset-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>dckr-instset-mtron.md</a>
+    </div>
+    <div class="markdown-body">
+<h2>dckrspace</h2>
+<h3>architecture</h3>
+<p><code>dckrspace::T</code> bridges a docker daemon into metatron's uri space. Every docker resource (container, image, volume,
+network) is a first-class uri-addressable <code>obj</code>. Writes trigger docker cli operations; reads refresh state from the
+daemon.</p>
+<p>The space maintains a bidirectional graph: containers link to their images, networks, and volumes, and each resource
+links back to its containers.</p>
+<pre><code>┌───────────────────────────────────────────────────────────────┐
+│                         dckrspace::T                          │
+│                                                               │
+│  docker:image/nginx:alpine ──── containers ──► [ref]          │
+│       ▲                                          │            │
+│       │ image                                    │            │
+│       │                                          ▼            │
+│  docker:container/web ──── networks ──► docker:network/bridge │
+│       │                                       ▲               │
+│       │ mounts                                │               │
+│       ▼                                       │               │
+│  docker:volume/data ───── containers ─────► [ref]             │
+│                                                               │
+│  docker:compose/stack ─── docker-compose.yml                  │
+└───────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>space configuration</h3>
+<pre><code class="language-mtron">mtron&gt; dckrspace::T
+mtron&gt; !*dckrspace?docq
+==&gt;docs::[obj=&gt;/m/space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace,
+          desc=&gt;'[structural] a docker daemon space',
+          example=&gt;[
+           'docker:compose/my-stack -&gt; [servic...',
+           '*docker:container/+',
+           '*docker:image/nginx/&lt;nginx:latest&gt;']]
+</code></pre>
+<pre><code class="language-mtron">dckrspace::[pattern   =&gt; docker:#,
+            route     =&gt; [docker: =&gt; &lt;&gt;],
+            host      =&gt; &lt;tcp://192.168.1.100:2375&gt;,          [-- optional remote host --]
+            owner     =&gt; /usr/avatar,                          [-- optional: who owns what this space creates --]
+            on_close  =&gt; docker:compose/session-db -&gt; noobj,   [-- optional: run when the space closes --]
+            progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker   [-- console only: see Gotchas --]
+</code></pre>
+<pre><code class="language-mtron">mtron&gt; dckrspace::[pattern   =&gt; docker:#,
+                   route     =&gt; [docker: =&gt; &lt;&gt;],
+                   progress  =&gt; progress_table::[=&gt;]]@/sys/space/docker
+</code></pre>
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pattern</code></td><td>yes</td><td>URI prefix for this space</td></tr>
+<tr><td><code>route</code></td><td>yes</td><td>Maps pattern prefix into space</td></tr>
+<tr><td><code>host</code></td><td>no</td><td>Remote Docker daemon (<code>tcp://</code>, <code>unix://</code>, <code>ssh://</code>). Omit for the local socket.</td></tr>
+<tr><td><code>owner</code></td><td>no</td><td>The scope that owns what this space creates — the docker label plus the <code>owner</code> field (see below).</td></tr>
+<tr><td><code>on_close</code></td><td>no</td><td>An instruction applied when the space closes (see Ownership &amp; Reaping).</td></tr>
+<tr><td><code>progress</code></td><td>no</td><td><code>progress_table::T</code> for live pull progress — <strong>console only</strong>; omit it headless (see Gotchas).</td></tr>
+</tbody>
+</table>
+<h3>ownership &amp; reaping</h3>
+<p><code>dckrspace::T</code> provisions on demand — <code>from(docker:container/x).else(… up …)</code> — which raises a question the daemon can
+answer but the VM's cache cannot: <strong>what did this space create, and is its creator still alive?</strong></p>
+<p>Two config fields answer it.</p>
+<p><code>owner</code> names the scope that owns everything this space creates. It is stamped on the objects themselves as the docker
+label <code>com.phaseshift.metatron.owner=&lt;owner&gt;</code>:</p>
+<ul>
+<li>a container run (<code>docker:container/&lt;name&gt; -&gt; […]</code>) gets <code>--label com.phaseshift.metatron.owner=&lt;owner&gt;</code>;</li>
+<li>a compose stack (<code>docker:compose/&lt;stack&gt; -&gt; [services =&gt; […]]</code>) gets it in the <code>labels:</code> of <strong>every</strong> service, in a
+copy of the config — the rec you wrote is never mutated.</li>
+</ul>
+<p>The label then travels with the objects (it outlives the VM), and every container rec carries it as a first-class
+<code>owner</code> field, so &quot;what belongs to me?&quot; is a read:</p>
+<pre><code class="language-mtron">*docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;]      [-- everything this owner created --]
+</code></pre>
+<p><code>on_close</code> is the other half: an instruction applied when the space closes. The web handlers already take
+lifecycle hooks this way (<code>on_open</code>, <code>on_message</code>, <code>on_error</code>); <code>on_close</code> gives <em>any</em> space an mtron-controllable
+shutdown hook, which is what makes reaping declarative rather than hard-coded in Java.</p>
+<pre><code class="language-mtron">[-- a space that reaps what it owns when it goes away --]
+dckrspace::[pattern  =&gt; docker:#,
+            route    =&gt; [docker: =&gt; &lt;&gt;],
+            owner    =&gt; /usr/avatar,
+            on_close =&gt; *docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;] -&gt; noobj]@/sys/space/docker
+</code></pre>
+<p><strong>When it runs.</strong> <code>close()</code> is the space's farewell, and it is called wherever a space is released:
+<code>Machine.close()</code> closes a level's memory (so a frame's spaces go with it), <code>Machine.pop()</code> gives a frame back, and the
+shutdown hook closes the root. That is exactly the scoping a reaper wants — <em>what a frame created, that frame's close
+collects</em> — and it is the same lifetime model as a forked peer (<code>PeerSpawn</code>), applied to containers.</p>
+<p><strong>Order.</strong> <code>on_close</code> is applied <em>before</em> the space is released, so the instruction can still route through the space
+it is closing (<code>sjvm</code> is closed after it, and unregistration after that).</p>
+<p><strong>Reap by name, or by owner.</strong> A stack the boot knows by name is the simplest — and this is the form the test suite
+exercises against a live daemon:</p>
+<pre><code class="language-mtron">on_close =&gt; docker:compose/session-db -&gt; noobj
+</code></pre>
+<p>The owner query is for the general case: select what the label marks, then force each match to <code>noobj</code>
+(<code>x -&gt; noobj</code> is the write that stops and removes a container). Note that a failing <code>on_close</code> should be treated as a
+warning, not a reason to abandon the rest of a shutdown.</p>
+<h3>uri address space</h3>
+<pre><code>docker:image/&lt;repository:tag&gt;        -- image by repo:tag
+docker:image/&lt;hash&gt;                  -- image by Docker hash (if available)
+docker:container/&lt;name&gt;              -- container by name
+docker:volume/&lt;name&gt;                 -- volume by name
+docker:network/&lt;name&gt;                -- network by name
+docker:compose/&lt;stack-name&gt;          -- compose config/stack
+</code></pre>
+<p><strong>A note on what runs here.</strong> Every block this far — the type, its doc, the space configuration — evaluates in the
+docs environment, because none of them touches a daemon: <code>dckrspace::T</code> is lazy, and it reports
+<code>docker cli not found</code> the moment a command would actually go out. Everything below that speaks to a daemon is
+therefore <em>shown</em> (a plain <code>mtron</code> block) rather than run, and the end-to-end section marks which of its steps the
+headless loop executes.</p>
+<h3>writing — containers</h3>
+<h4>run a container</h4>
+<pre><code class="language-mtron">[-- runs against a live daemon --]
+docker:container/web -&gt; [/
+  image       =&gt; 'nginx:alpine',/
+  ports       =&gt; [&lt;8080:80&gt;, &lt;443:443&gt;],/
+  environment =&gt; [NGINX_HOST =&gt; localhost],/
+  volumes     =&gt; ['myvol:/usr/share/nginx/html'],/
+  network     =&gt; mynet]
+</code></pre>
+<p>Image pull happens automatically via <code>docker run</code>. Pull progress streams through the <code>progress_table::T</code> widget if
+configured (<strong>console only</strong> — see Gotchas). When the space declares an <code>owner</code>, the container is also labelled
+<code>com.phaseshift.metatron.owner=&lt;owner&gt;</code> on the way up, which is what makes it reapable later (see Ownership &amp; Reaping).</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Type</th><th>Docker flag</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><code>image</code></td><td>str (required)</td><td>positional</td><td><code>'nginx:alpine'</code></td></tr>
+<tr><td><code>ports</code></td><td>lst of str</td><td><code>-p</code> each</td><td><code>[&lt;8080:80&gt;]</code></td></tr>
+<tr><td><code>environment</code></td><td>rec</td><td><code>-e KEY=VALUE</code></td><td><code>[FOO =&gt; bar]</code></td></tr>
+<tr><td><code>volumes</code></td><td>lst of str</td><td><code>-v</code> each</td><td><code>['data:/data']</code></td></tr>
+<tr><td><code>network</code></td><td>str</td><td><code>--network</code></td><td><code>mynet</code></td></tr>
+</tbody>
+</table>
+<h3>reading summary</h3>
+<h4>list all resources</h4>
+<pre><code class="language-mtron">*docker:image/+.take(5)              [-- first 5 images (keyed by repository:tag) --]
+*docker:container/+                  [-- all containers                           --]
+*docker:volume/+                     [-- all volumes                              --]
+*docker:network/+                    [-- all networks                             --]
+</code></pre>
+<h4>inspect a resource</h4>
+<pre><code class="language-mtron">*docker:image/nginx:alpine           [-- full image rec --]
+*docker:container/web                [-- full container rec --]
+*docker:image/nginx:alpine/size      [-- specific field --]
+*docker:container/web/state          [-- container state (running, exited, ...) --]
+</code></pre>
+<h4>graph navigation</h4>
+<pre><code class="language-mtron">*docker:container/web/image           [-- uri ref to the container's image             --]
+*docker:image/nginx:alpine/containers [-- list of container refs using this image      --]
+*docker:container/web/networks        [-- uri ref to the container's network           --]
+*docker:network/bridge/containers     [-- list of container refs on this network       --]
+*docker:container/web/mounts          [-- list of volume refs mounted on the container --]
+*docker:volume/data/containers        [-- list of container refs using this volume     --]
+</code></pre>
+<p>The <code>image</code>, <code>networks</code>, and <code>mounts</code> fields on containers are <strong>uri refs</strong>. The <code>containers</code>
+field on images/networks/volumes is a <strong>lst of uri refs</strong>. This allows for graph navigation without accessing a single
+node in the graph and pulling the entire uri space into the result. uri auto-refs are lazy links that are resolved to
+their referent upon access.</p>
+<h4>stop and remove a container</h4>
+<pre><code class="language-mtron">docker:container/web -&gt; noobj       [-- stops and removes the container --]
+</code></pre>
+<h3>reading — images</h3>
+<p>Images are read-only from Docker Hub. The space auto-discovers images from
+<code>docker image ls</code> and from containers' image references:</p>
+<pre><code class="language-mtron">*docker:image/nginx:alpine/id          [-- the Docker hash --]
+*docker:image/nginx:alpine/size        [-- the size, in a unit type --]
+*docker:image/nginx:alpine/repository  [-- the repository name --]
+*docker:image/nginx:alpine/tag         [-- the tag --]
+</code></pre>
+<h3>writing — volumes</h3>
+<h4>create a volume</h4>
+<pre><code class="language-mtron">docker:volume/myvol -&gt; [driver =&gt; local]
+</code></pre>
+<h4>remove a volume</h4>
+<pre><code class="language-mtron">docker:volume/myvol -&gt; noobj
+</code></pre>
+<h3>writing — networks</h3>
+<h4>create a network</h4>
+<pre><code class="language-mtron">docker:network/mynet -&gt; [driver =&gt; bridge]
+</code></pre>
+<h4>remove a network</h4>
+<pre><code class="language-mtron">docker:network/mynet -&gt; noobj
+</code></pre>
+<h3>docker compose</h3>
+<h4>start a stack</h4>
+<pre><code class="language-mtron">docker:compose/my-stack -&gt; [/
+  services =&gt; [/
+    web =&gt; [/
+      image =&gt; 'nginx:alpine',/
+      ports =&gt; [&lt;8080:80&gt;]/
+    ],/
+    db =&gt; [/
+      image =&gt; 'postgres:16',/
+      environment =&gt; [POSTGRES_PASSWORD =&gt; secret]/
+    ]/
+  ]/
+]
+</code></pre>
+<p>Compose YAML is generated to <code>/tmp/metatron-docker/&lt;name&gt;/docker-compose.yml</code> and
+<code>docker compose up -d --wait --timeout 600</code> is executed, so the write returns once the stack reports healthy (per
+service healthchecks) — a boot can therefore bind a space that must be accepting connections immediately after the
+<code>up</code> returns. Progress streams through the widget when there is a console.</p>
+<p>Two things about that file and those names are worth knowing before you guard a stack with <code>from(…).else(…)</code>:</p>
+<ul>
+<li><strong>The file is ephemeral.</strong> It lives in <code>/tmp/metatron-docker</code>, which does not survive a VM restart — nor a container
+recreate, where <code>/tmp</code> belongs to the container. <code>-&gt; noobj</code> therefore tears a stack down in two ways: <code>docker compose -p &lt;name&gt; down</code> when the file is still there, and otherwise a sweep of the objects compose labelled
+<code>com.docker.compose.project=&lt;name&gt;</code> (containers removed, then the network). Volumes are kept either way, matching
+<code>down</code> without <code>-v</code> — a stack's data outlives its containers.</li>
+<li><strong>Naming, and why it matters for a guard.</strong> A <strong>single-service</strong> stack's container is named exactly the stack
+(<code>container_name: &lt;stack&gt;</code>), so a guard written as <code>from(docker:container/&lt;stack&gt;).else(… up …)</code> adopts it on the
+next boot instead of re-running the <code>up</code>. A multi-service stack keeps compose's default naming
+(<code>&lt;stack&gt;-&lt;service&gt;-1</code>) — there is no single name for the guard to ask for — and a <code>container_name</code> you set in the
+config yourself wins either way. Without that parity the guard never matches the stack it just created: <strong>every</strong>
+boot re-runs the <code>up</code>, and once the config hash drifts that becomes a <strong>Recreate</strong> — the slow path, and the one a
+second concurrent compose run on the same project will deadlock against.</li>
+</ul>
+<p>Each service takes docker compose's own fields — <code>labels</code> (a map), <code>healthcheck</code>, <code>restart</code>, <code>volumes</code>, <code>command</code>, …
+— and when the space declares an <code>owner</code> its label is added to every service's <code>labels</code>.</p>
+<h4>stop a stack</h4>
+<pre><code class="language-mtron">docker:compose/my-stack -&gt; noobj     [-- compose down if the file is there, label sweep if it is not --]
+</code></pre>
+<h4>read compose config</h4>
+<pre><code class="language-mtron">*docker:compose/my-stack/services/web/image    [-- nginx:alpine --]
+*docker:compose/my-stack/services              [-- all services --]
+</code></pre>
+<h3>remote docker hosts</h3>
+<p>Connect to a remote Docker daemon by specifying <code>host</code> in the space config:</p>
+<pre><code class="language-mtron">dckrspace::[host =&gt; &lt;tcp://192.168.1.100:2375&gt;, ...]@/sys/space/remote
+</code></pre>
+<p>All Docker CLI commands are prefixed with <code>-H &lt;host&gt;</code>. Supports <code>tcp://</code>, <code>unix://</code>, and <code>ssh://</code> schemes.</p>
+<h3>gotchas</h3>
+<ul>
+<li><strong>Reads are read-through.</strong> A read refreshes from the daemon before it answers — images, networks, volumes and
+containers, up to four <code>docker … ls --format json</code> calls. That is what keeps <code>*docker:container/+</code> honest with no
+watcher, and it is also why a read is not free (a remote <code>host</code> pays for the round trip each time).</li>
+<li><strong>Reading over a console needs the mtron mime type.</strong> The <code>/mtron</code> websocket defaults to JSON out, which cannot
+represent the richer objs here (<code>datetime::</code>, unit types like <code>bB::0.0</code>, uri-valued keys, <code>!*</code> auto-refs) and answers
+them blank. Use <code>ws://&lt;host&gt;:8555/mtron?out=application/x-mtron</code> (or the MCP eval tool's native flag) before
+concluding that a read found nothing.</li>
+<li><strong>A path handed to the daemon is a HOST path.</strong> <code>volumes =&gt; ['/data:/db']</code> is resolved by the daemon, not by the VM;
+when the VM itself runs in a container (docker-outside-of-docker) it will not see <code>/data</code> unless the same absolute
+path is mounted into it too.</li>
+<li><strong><code>progress</code> wants a terminal.</strong> A <code>progress_table::T</code> in the config of a space with no console was observed to leave
+its reads returning <code>noobj</code>; omit <code>progress</code> on a headless server.</li>
+<li><strong>Ordering and teardown.</strong> A container rec's <code>image</code>, <code>networks</code> and <code>mounts</code> are lazy <code>!*</code> refs (resolve on access);
+<code>labels</code> is a rec keyed by label name; and a stack's teardown depends on a file under <code>/tmp</code> (see Docker Compose).</li>
+<li><strong>Implementation note (maintainers).</strong> A docker command is a child process, and a child whose stderr stops being
+read blocks on a full pipe with the caller waiting forever. <code>exec</code> drives zt-exec's <code>ProcessExecutor</code> with
+<code>readOutput(true)</code> and <code>redirectError(…)</code> so both streams are always consumed, and it touches no UI — a hand-rolled
+<code>ProcessBuilder</code> drain thread, or rendering a widget from one, reintroduces that deadlock.</li>
+</ul>
+<h3>end-to-end: SQLite container + tbleSpace</h3>
+<p>This example pulls a SQLite Docker image, runs it with a bind-mounted data directory, and exposes the database through
+<code>tblespace::T</code> — all from mtron. The daemon-facing steps (1 and 6) are <em>shown</em>; the data steps (2 through 4) run in
+every docs build, and they run identically against a local socket — the tble half needs only the file.</p>
+<pre><code>┌────────────────────────────────────────┐
+│  Host filesystem                       │
+│  /tmp/mtron-dbs/                       │
+│  └── mydb.sqlite ◄── tbleSpace (JDBC)  │
+│       ▲                                │
+│       │ bind mount                     │
+│       │                                │
+│  ┌────┴───────────────┐                │
+│  │  Docker container  │                │
+│  │  keinos/sqlite3    │                │
+│  │  /data/            │                │
+│  │  └── mydb.sqlite   │                │
+│  └────────────────────┘                │
+└────────────────────────────────────────┘
+</code></pre>
+<h4>step 1: pull + run the SQLite container</h4>
+<pre><code class="language-mtron">[-- runs against a live daemon; the bind mount is what creates the host directory the steps below use --]
+docker:container/sqlite -&gt; [/
+  user    =&gt; root,/
+  image   =&gt; 'keinos/sqlite3:latest',/
+  command =&gt; ['sh', '-c', 'sqlite3 /data/mydb.sqlite &quot;.databases&quot; &amp;&amp; chmod 777 /data /data/mydb.sqlite'],/
+  volumes =&gt; ['/tmp/mtron-dbs:/data']/
+]
+</code></pre>
+<p>The bind mount <code>'/tmp/mtron-dbs:/data'</code> maps the host directory into the container. The user <code>root</code> is necessary for
+command permissions.</p>
+<h4>step 2: mount the database via tbleSpace</h4>
+<pre><code class="language-mtron">mtron&gt; [-- on a live daemon step 1 created this directory; here the loop creates the same scratch path itself --]
+mtron&gt; bash('mkdir -p /tmp/mtron-dbs')
+==&gt;['']
+mtron&gt; tblespace::[pattern =&gt; mydb:#,
+                   host    =&gt; &lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
+                   table   =&gt; [,],
+                   route   =&gt; [mydb: =&gt; &lt;&gt;],
+                   driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
+</code></pre>
+<h4>step 3: create tables and insert data</h4>
+<pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
+mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'marko',role=&gt;architect]
+mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; mydb:people/3 -&gt; [name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+</code></pre>
+<h4>step 4: query from mtron</h4>
+<pre><code class="language-mtron">mtron&gt; *mydb:people/+                                           [-- all rows              --]
+==&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; *mydb:people/+/                                          [-- all rows keyed by uri --]
+==&gt;mydb:people/1=&gt;[name=&gt;'marko',role=&gt;architect]
+==&gt;mydb:people/3=&gt;[name=&gt;'metis',role=&gt;oracle]
+==&gt;mydb:people/2=&gt;[name=&gt;'stynx',role=&gt;developer]
+mtron&gt; *mydb:people/+/name                                      [-- all names             --]
+==&gt;'stynx'
+==&gt;'marko'
+==&gt;'metis'
+mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_]           [-- all developer names   --]
+==&gt;[name=&gt;'stynx']
+mtron&gt; *mydb:people/+.?[role=&gt;developer]==[name=&gt;_].explain() [-- sql rewrite usage     --]
+==&gt;/m/inst/explain/explanation::[
+    format=&gt;!λ?str&lt;=(){&lt;j&gt;},
+    desc=&gt;[
+     rng=&gt;&lt;#&gt;,
+     insts=&gt;2,
+     rewrite=&gt;/m/inst/explain/explanation::[
+      format=&gt;!λ?str&lt;=(){&lt;j&gt;},
+      desc=&gt;[rng=&gt;&lt;#&gt;,insts=&gt;2],
+      per_inst=&gt;[
+       [
+        op=&gt;sql_where,
+        args=&gt;[mydb:people/+,&quot;role = 'developer'&quot;],
+        f=&gt;'&lt;j&gt;',
+        form=&gt;standard,
+        c_dom=&gt;0,
+        c_rng=&gt;0],
+       [
+        op=&gt;select,
+        dom=&gt;&lt;#&gt;,
+        rng=&gt;&lt;#&gt;,
+        args=&gt;[[name=&gt;id()]],
+        form=&gt;mapper,
+        c_dom=&gt;1,
+        c_rng=&gt;1]]]],
+    per_inst=&gt;[
+     [
+      op=&gt;sql_where,
+      args=&gt;[mydb:people/+,&quot;role = 'developer'&quot;],
+      f=&gt;'&lt;j&gt;',
+      form=&gt;standard,
+      c_dom=&gt;0,
+      c_rng=&gt;0],
+     [
+      op=&gt;select,
+      dom=&gt;&lt;#&gt;,
+      rng=&gt;&lt;#&gt;,
+      args=&gt;[[name=&gt;id()]],
+      form=&gt;mapper,
+      c_dom=&gt;1,
+      c_rng=&gt;1]]]
+mtron&gt; *mydb:people/+.count()                                   [-- number of rows        --]
+==&gt;3
+mtron&gt; *mydb:people/+.count().explain()                         [-- sql rewrite usage     --]
+==&gt;/m/inst/explain/explanation::[
+    format=&gt;!λ?str&lt;=(){&lt;j&gt;},
+    desc=&gt;[
+     rng=&gt;int,
+     insts=&gt;1,
+     rewrite=&gt;/m/inst/explain/explanation::[
+      format=&gt;!λ?str&lt;=(){&lt;j&gt;},
+      desc=&gt;[rng=&gt;int,insts=&gt;1],
+      per_inst=&gt;[[op=&gt;sql_count,
+                  rng=&gt;int,
+                  args=&gt;[people/+],
+                  f=&gt;'&lt;j&gt;',
+                  form=&gt;initial,
+                  c_dom=&gt;0,
+                  c_rng=&gt;1]]]],
+    per_inst=&gt;[[op=&gt;sql_count,
+                rng=&gt;int,
+                args=&gt;[people/+],
+                f=&gt;'&lt;j&gt;',
+                form=&gt;initial,
+                c_dom=&gt;0,
+                c_rng=&gt;1]]]
+</code></pre>
+<h4>step 5: The container sees the same data</h4>
+<p>The Docker container has the database mounted at <code>/data/mydb.sqlite</code>. Any process inside the container can read and
+write the same file. mtron-backed writes go through tbleSpace → JDBC → the file → visible inside the container.
+Container writes go to the file → visible to tbleSpace on next read.</p>
+<h4>step 6: tear down</h4>
+<pre><code class="language-mtron">[-- runs against a live daemon --]
+docker:container/sqlite -&gt; noobj     [-- stop + remove the container --]
+</code></pre>
+<p>The database file persists at <code>/tmp/mtron-dbs/mydb.sqlite</code>. Re-mount <code>tblespace::T</code> later to pick up where the database
+state was left off.</p>
+<h4>how it works</h4>
+<table>
+<thead>
+<tr><th>Layer</th><th>Technology</th><th>Role</th></tr>
+</thead>
+<tbody>
+<tr><td><code>dckrspace::T</code></td><td>Docker CLI</td><td>Pulls image, runs container, bind-mounts volume</td></tr>
+<tr><td><code>tblespace::T</code></td><td>SQLite JDBC</td><td>Auto-creates <code>.sqlite</code> file, creates tables from record schemas, executes queries</td></tr>
+<tr><td>bind mount</td><td>Linux kernel</td><td>Shares filesystem between host and container</td></tr>
+<tr><td>mtron</td><td>URI graph</td><td>Uniform <code>mydb:people -&gt; [...]</code> write / <code>*mydb:people/+</code> read across both spaces</td></tr>
+</tbody>
+</table>
+<p>The key insight: <strong><code>dckrspace::T</code> manages the container lifecycle; <code>tblespace::T</code> manages the data</strong>. They meet at the
+bind-mounted directory. No <code>docker exec</code>, no separate SQL client, no out-of-band setup — the database is born from a
+mtron write.</p>
+<h3>quick reference</h3>
+<table>
+<thead>
+<tr><th>Task</th><th>Expression</th></tr>
+</thead>
+<tbody>
+<tr><td>Mount space</td><td><code>dckrspace::[pattern=&gt;docker:#,route=&gt;[docker:=&gt;...]]@/sys/space/docker</code></td></tr>
+<tr><td>Run container</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img:tag']</code></td></tr>
+<tr><td>Run with ports</td><td><code>docker:container/&lt;name&gt; -&gt; [image =&gt; 'img', ports =&gt; [&lt;8080:80&gt;]]</code></td></tr>
+<tr><td>Run with env</td><td><code>[image =&gt; 'img', environment =&gt; [KEY =&gt; val]]</code></td></tr>
+<tr><td>Run with volume</td><td><code>[image =&gt; 'img', volumes =&gt; ['vol:/path']]</code></td></tr>
+<tr><td>Run with network</td><td><code>[image =&gt; 'img', network =&gt; netname]</code></td></tr>
+<tr><td>Own what you create</td><td>Add <code>owner =&gt; /usr/avatar</code> to the space config (label <code>com.phaseshift.metatron.owner</code>)</td></tr>
+<tr><td>What an owner created</td><td><code>*docker:container/+.?[owner=&gt;&lt;/usr/avatar&gt;]</code></td></tr>
+<tr><td>Reap on close</td><td>Add <code>on_close =&gt; docker:compose/&lt;name&gt; -&gt; noobj</code> to the space config</td></tr>
+<tr><td>Stop container</td><td><code>docker:container/&lt;name&gt; -&gt; noobj</code></td></tr>
+<tr><td>List images</td><td><code>*docker:image/+</code></td></tr>
+<tr><td>List containers</td><td><code>*docker:container/+</code></td></tr>
+<tr><td>Inspect image</td><td><code>*docker:image/repo:tag</code></td></tr>
+<tr><td>Inspect container</td><td><code>*docker:container/&lt;name&gt;</code></td></tr>
+<tr><td>Container's image ref</td><td><code>*docker:container/&lt;name&gt;/image</code></td></tr>
+<tr><td>Image's containers</td><td><code>*docker:image/repo:tag/containers</code></td></tr>
+<tr><td>Container's network</td><td><code>*docker:container/&lt;name&gt;/networks</code></td></tr>
+<tr><td>Network's containers</td><td><code>*docker:network/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Container's volumes</td><td><code>*docker:container/&lt;name&gt;/mounts</code></td></tr>
+<tr><td>Volume's containers</td><td><code>*docker:volume/&lt;name&gt;/containers</code></td></tr>
+<tr><td>Create volume</td><td><code>docker:volume/&lt;name&gt; -&gt; [driver =&gt; local]</code></td></tr>
+<tr><td>Remove volume</td><td><code>docker:volume/&lt;name&gt; -&gt; noobj</code></td></tr>
+<tr><td>Create network</td><td><code>docker:network/&lt;name&gt; -&gt; [driver =&gt; bridge]</code></td></tr>
+<tr><td>Remove network</td><td><code>docker:network/&lt;name&gt; -&gt; noobj</code></td></tr>
+<tr><td>Start compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; [services =&gt; [...]]</code></td></tr>
+<tr><td>Stop compose stack</td><td><code>docker:compose/&lt;name&gt; -&gt; noobj</code></td></tr>
+<tr><td>Stack container name</td><td><code>&lt;name&gt;</code> for a single-service stack, so its own guard can adopt it</td></tr>
+<tr><td>Teardown without yaml</td><td>Automatic: the sweep by <code>com.docker.compose.project</code> label</td></tr>
+<tr><td>Remote host</td><td>Add <code>host =&gt; &lt;tcp://host:port&gt;</code> to space config</td></tr>
+</tbody>
+</table>
+
+    </div>
+</main>
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    // Languages are loaded via <script src> tags in header.html (they self-register
+    // against the global hljs).  ES module `import` statements are a SyntaxError in
+    // this classic script — they killed the whole block, including the CopyButtonPlugin
+    // [copy] rollover and hljs.highlightAll().
+    hljs.configure({
+        ignoreUnescapedHTML: true,
+        languages: ['mtron','java','bash','sql','json']
+    });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            var inResult = false;
+            return text.split('\n')
+                .map(function(line) {
+                    // mtron> prompt — exit result mode, include the input
+                    if (/^\s*mtron>/.test(line)) {
+                        inResult = false;
+                        line = line.replace(/^\s*mtron>\s*/, '');
+                        line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                        return line.trim();
+                    }
+                    // ==> result prefix — enter result mode, skip this line
+                    if (/^\s*==>/.test(line)) {
+                        inResult = true;
+                        return null;
+                    }
+                    // Inside a multi-line result block — skip
+                    if (inResult) return null;
+                    // Regular line (continuation of input)
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    hljs.highlightAll();
+    /*document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });*/
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.querySelectorAll(':scope > .content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.querySelectorAll(':scope > .content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
+    });
+
+    // ── Hash navigation into collapsed cards ─────────────────────
+    (function() {
+        function navigateToHash() {
+            var hash = window.location.hash;
+            if (!hash) return;
+            var target = document.querySelector(hash);
+            if (!target) return;
+            var card = target.closest('.collapse');
+            if (card && !card.classList.contains('show')) {
+                card.addEventListener('shown.bs.collapse', function scrollAfter() {
+                    card.removeEventListener('shown.bs.collapse', scrollAfter);
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                var inst = bootstrap.Collapse.getInstance(card)
+                        || new bootstrap.Collapse(card, { toggle: false });
+                inst.show();
+            } else {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.addEventListener('hashchange', navigateToHash);
+        window.addEventListener('load', function() {
+            setTimeout(navigateToHash, 80);
+        });
+    })();
+
+    // ── Section heading anchor links + copy-to-clipboard ──────────
+    (function() {
+        var toast = document.createElement('div');
+        toast.className = 'heading-toast';
+        toast.textContent = 'Link copied to clipboard';
+        document.body.appendChild(toast);
+
+        var toastTimer = null;
+        function showToast() {
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+        }
+
+        document.querySelectorAll('h2[id]:not(.accordion-header), h3[id], h4[id], h5[id], h6[id]').forEach(function(heading) {
+            var anchor = document.createElement('a');
+            anchor.className = 'heading-anchor bi bi-link-45deg';
+            anchor.href = '#' + heading.id;
+            anchor.title = 'Copy link to this section';
+            anchor.setAttribute('aria-label', 'Copy link to section');
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                var url = window.location.origin + window.location.pathname + '#' + heading.id;
+                navigator.clipboard.writeText(url).then(function() {
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    var tmp = document.createElement('input');
+                    tmp.value = url;
+                    document.body.appendChild(tmp);
+                    tmp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tmp);
+                    anchor.classList.add('copied');
+                    showToast();
+                    setTimeout(function() { anchor.classList.remove('copied'); }, 1500);
+                });
+            });
+            heading.appendChild(anchor);
+        });
+    })();
+</script>
+
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"></div>
+<!------------------------------------------>
+
+</body>
+</html>

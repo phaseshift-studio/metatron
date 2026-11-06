@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -484,11 +492,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <p class="text-muted splash-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">47</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">48</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">3</span></div>
-                    <div><span class="stat-label">insts</span><span class="stat-val">339</span></div>
+                    <div><span class="stat-label">insts</span><span class="stat-val">353</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">rewrites</span><span class="stat-val">8</span></div>
+                    <div><span class="stat-label">rewrites</span><span class="stat-val">9</span></div>
                 </div>
             </div>
         </div>
@@ -526,7 +534,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <p class="text-muted splash-desc">an instruction set to manipulate docker and docker compose</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">7</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">8</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">0</span></div>
@@ -547,7 +555,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <p class="text-muted splash-desc">the machine instruction set for nesting machines and their components instset, compiler, memory, network, processor</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">34</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">36</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">10</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">0</span></div>
@@ -589,7 +597,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <p class="text-muted splash-desc">categorical realization of types and insts as objects and morphisms</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">0</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">9</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">7</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">2</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">5</span></div>
@@ -715,7 +723,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <p class="text-muted splash-desc">relational tables, typed rows, and SQL rewrites within the metatron</p>
                 <div class="splash-stats">
                     <div><span class="stat-label">consts</span><span class="stat-val">1</span></div>
-                    <div><span class="stat-label">types</span><span class="stat-val">1</span></div>
+                    <div><span class="stat-label">types</span><span class="stat-val">0</span></div>
                     <div><span class="stat-label">spaces</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">insts</span><span class="stat-val">1</span></div>
                     <div><span class="stat-label">defined&nbsp;elsewhere</span><span class="stat-val">0</span></div>
@@ -812,7 +820,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="py-3 text-center mt-4">
         <hr class="border-secondary">
         <small class="text-muted">
-            metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+            metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
             &copy; PhaseShift Studio, LLC
         </small>
     </div>

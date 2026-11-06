@@ -10,12 +10,13 @@ description: Java-side type system API — Type interface, MType factory, Fluent
 ```
 furi/c/cInt.java               ← coefficient type [min,max]
 furi/C.java                    ← coefficient interface (span, within, plus, mult)
-isa/m/type/Type.java           ← Type interface + Type.Helper + Type.Builder
+isa/m/type/Type.java           ← Type interface + Type.Helper
 isa/m/type/Obj.java            ← Obj interface (base of all metatron objects)
 isa/m/type/Call.java           ← Call interface (instruction chain, Ring<Call>)
 isa/m/type/Inst.java           ← Inst interface (single instruction)
 isa/m/type/Code.java           ← Code interface (multi-inst Call)
 isa/m/type/impl/MType.java     ← MType: concrete Type implementation
+isa/m/type/impl/TypeBuilder.java ← TypeBuilder: the fluent type builder (top-level, beside InstBuilder)
 isa/m/type/impl/MObj.java      ← MObj: concrete Obj implementation
 isa/m/type/impl/MCode.java     ← MCode: concrete Code / mFluent base
 isa/m/type/impl/MInst.java     ← MInst: concrete Inst + factory methods
@@ -53,10 +54,10 @@ Router.writeToSpace(myVID, noobj());   // clear existing
 T(..., myVID, ...);                    // create fresh
 ```
 
-### The `Type.Builder` API
+### The `TypeBuilder` API
 
 ```java
-Type myType = Type.Builder.build()
+Type myType = TypeBuilder.build()
     .tid(REC_TID)
     .vid(f("myType"))
     .isaPredicate(rec(
@@ -366,7 +367,7 @@ Typer.Helper.level();                    // how many (the console's strictness l
 // the same act, as the canonical nested write
 Machine.current().compiler().typer().at("check/inst_dom", BOOL_TRUE, Poly.MUTABLE);
 
-// and from mtron (the address is part of the machine, so the sphere owns the write)
+// and from mtron (the address is part of the machine, so its space folds the write into the compiler)
 //   @/compiler/typer/check >>= [inst_dom => false]
 ```
 

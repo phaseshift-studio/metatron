@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -508,7 +516,7 @@ is what makes a <code>_?incrq</code> write assign its own key (see <em>keys the 
 </tbody>
 </table>
 <pre><code class="language-mtron">mtron&gt; *tblespace?docq      [-- the type, its ctor, and the space's own summary --]
-==&gt;docs::[obj=&gt;space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace,
+==&gt;docs::[obj=&gt;/m/space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace,
           desc=&gt;'[structural] a metatron realizatio...',
           example=&gt;['*&lt;http://metatron.phaseshift.studi...']]
 mtron&gt; *&lt;/m/db/tble/helper&gt;    [-- the instset's helper rec: the llm chat schema, as a str --]
@@ -567,7 +575,7 @@ keeps what SQL cannot say:</p>
 ==&gt;[table_name=&gt;'award',
     column_name=&gt;'recipient',
     base_vid=&gt;'/m/inst',
-    obj_tid=&gt;'/m/inst/auto_from',
+    obj_tid=&gt;'/m/inst/auto_from?args=[/m/uri]',
     ref_table=&gt;'person']
 ==&gt;[table_name=&gt;'note',
     column_name=&gt;'$table',
@@ -748,7 +756,7 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
 </table>
 <p>The instset prints that list itself, and each rewrite documents its own before/after code:</p>
 <pre><code class="language-mtron">mtron&gt; */m/db/tble?docq
-==&gt;docs::[obj=&gt;instset::[
+==&gt;docs::[obj=&gt;/m/instset::[
            pattern=&gt;/m/db/tble/#,
            q=&gt;[
             docq::[
@@ -756,14 +764,14 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
              pre_read=&gt;inst(uri::T){&lt;j&gt;},
              pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
              obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-             inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-            /m/qproc/lawq::[
-             pattern=&gt;lawq,
+             inst=&gt;/m/instset::[=&gt;]],
+            /m/qproc/decq::[
+             pattern=&gt;decq,
              pre_read=&gt;inst(uri::T){&lt;j&gt;},
              pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-             obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
+             obj=&gt;/m/instset::[=&gt;]]],
            const=&gt;[[llm_chat_schema=&gt;inst?&lt;=#{*}(){&lt;j&gt;}]@/m/web/helper],
-           type=&gt;[space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace],
+           type=&gt;[/m/space::T[?[host=&gt;uri::T,driver=&gt;uri::T]][ctor?tblespace&lt;=(rec::T){&lt;j&gt;}]@/m/db/tble/space/tblespace],
            inst=&gt;[sql?rec{*}&lt;=tblespace(str::T){&lt;j&gt;}],
            rewrite=&gt;[
             /m/db/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;},
@@ -777,6 +785,23 @@ mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
           desc=&gt;'relational tables, typed rows, and...',
           example=&gt;['*acme:customer.where[person=&gt;[name...']]
 </code></pre>
+<h4>when a read stays in mtron</h4>
+<p>The match is structural and it DECLINES rather than guesses, so a read that names a table can still run in the VM. Each
+of these is a deliberate fall-back, not a silent downgrade — <code>explain()</code> shows which one happened:</p>
+<ul>
+<li><strong>the predicate does not fit the formatter</strong> — a non-<code>rec</code> predicate, a wildcard field (<code>_</code>, <code>+</code>), or a value that is
+not a uri/int/real/str/bool/comparison (a call, a variable, a nested rec). The <code>where</code> rewrite leaves the pair alone
+and the rows are filtered in mtron.</li>
+<li><strong>the collection is not a real table</strong> — a <code>kv_store</code> path (see <code>kv_count</code>/<code>kv_limit</code> above) or a wildcard collection.
+<code>where</code>/<code>count</code>/<code>take</code> match only a collection that the discovered schema actually holds, so the key/value rules
+handle the kv form and nothing else pushes down.</li>
+<li><strong>the read is not a plain row multiplicity</strong> — <code>count()</code> after a field or an extension (e.g. <code>*db:table/+/name.count()</code>
+is a count of <em>distinct names</em>, i.e. <code>SELECT COUNT(name)</code>) does not match the row-count rule; it is a different
+question, not a missed optimization.</li>
+</ul>
+<p>A fused op is only fused because the space could be resolved from it: <code>sql_where</code> stores the address as the <code>from</code>
+instruction wrote it (<code>db:table/+</code>), and every <code>sql_where_*</code> rule resolves the space from that address before it agrees
+to fuse. An arg that no longer names a space is a rule that declines, quietly.</p>
 <h3>native sql</h3>
 <p>When the vocabulary is not enough, go to the backend. <code>sql</code> takes a <code>str</code> — templates included — and yields <code>rec{*}</code>,
 which mtron then treats like any other objs.</p>
@@ -867,42 +892,18 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/31
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/7
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/32
+==&gt;[body=&gt;'another one']@tbledoc:note/8
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==&gt;12
-==&gt;17
-==&gt;21
-==&gt;26
-==&gt;11
-==&gt;27
-==&gt;4
-==&gt;6
-==&gt;31
-==&gt;16
-==&gt;3
-==&gt;24
-==&gt;28
-==&gt;20
-==&gt;7
-==&gt;32
-==&gt;29
-==&gt;15
-==&gt;19
-==&gt;23
-==&gt;2
-==&gt;8
 ==&gt;1
-==&gt;13
-==&gt;22
-==&gt;25
-==&gt;10
-==&gt;14
-==&gt;18
+==&gt;3
+==&gt;2
+==&gt;4
 ==&gt;5
-==&gt;9
-==&gt;30
+==&gt;6
+==&gt;7
+==&gt;8
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC

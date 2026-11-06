@@ -107,17 +107,17 @@ the graph holds the references, and a role dereferences transparently on `>>` (`
 inst). The first example above is the `int` case in full: its law rec declares a `ring` and the three constituent
 group/monoid instances. `theory::T` is the nominal super-type grouping them:
 
-| type                 | roles (fields)                     | what it asserts                                                                                                                                 |
-|----------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ring_theory`        | `add`, `mul`, `zero`, `one`        | $\langle R, +, \cdot, 0, 1 \rangle$: $+$ an abelian group, $\cdot$ a monoid, $a \cdot (b + c) = a \cdot b + a \cdot c$                          |
-| `field_theory`       | `add`, `mul`, `zero`, `one`, `inv` | $\langle F, +, \cdot, 0, 1, {}^{-1} \rangle$: a commutative ring where every non-$0$ element has a multiplicative inverse, $x \cdot x^{-1} = 1$ |
-| `rig_theory`         | `add`, `mul`, `zero`, `one`        | $\langle S, +, \cdot, 0, 1 \rangle$: additive and multiplicative monoids, $\cdot$ distributive over $+$, no additive inverses                   |
-| `group_theory`       | `op`, `id`, `inv`                  | $\langle G, \cdot, 1, {}^{-1} \rangle$: $g \cdot g^{-1} = g^{-1} \cdot g = 1$                                                                   |
-| `monoid_theory`      | `op`, `id`                         | $\langle M, \cdot, 1 \rangle$: $m \cdot 1 = 1 \cdot m = m$ and $(m \cdot n) \cdot p = m \cdot (n \cdot p)$                                      |
-| `boolean_theory`     | `or`, `and`, `not`, `zero`, `one`  | $\langle B, \lor, \land, \lnot, 0, 1 \rangle$: a complemented distributive lattice, $b \lor \lnot b = 1$ and $b \land \lnot b = 0$              |
-| `lattice_theory`     | `meet`, `join`, `bottom`, `top`    | $\langle L, \sqcap, \sqcup, \bot, \top \rangle$: every pair of elements has a meet and a join, bounded by $\bot$ and $\top$                     |
-| `semilattice_theory` | `op`, `id`                         | $\langle S, \sqcup, 0 \rangle$: an idempotent commutative monoid (one side of a lattice)                                                        |
-| `near_ring_theory`   | `add`, `mul`, `zero`               | $\langle N, +, \cdot, 0 \rangle$: $+$ a group, $\cdot$ a monoid, one-sided distributivity, no multiplicative $1$                                |
+| type                 | roles (fields)                     | what it asserts                                                                                                                                                                                  |
+|----------------------|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ring_theory`        | `add`, `mul`, `zero`, `one`        | $\langle R, +, \cdot, 0, 1 \rangle$: $+$ an abelian group, $\cdot$ a monoid, distributive on both sides: $a \cdot (b + c) = a \cdot b + a \cdot c$ and $(a + b) \cdot c = a \cdot c + b \cdot c$ |
+| `field_theory`       | `add`, `mul`, `zero`, `one`, `inv` | $\langle F, +, \cdot, 0, 1, {}^{-1} \rangle$: a commutative ring where every non-$0$ element has a multiplicative inverse, $x \cdot x^{-1} = 1$                                                  |
+| `rig_theory`         | `add`, `mul`, `zero`, `one`        | $\langle S, +, \cdot, 0, 1 \rangle$: additive and multiplicative monoids, $\cdot$ distributive over $+$, no additive inverses                                                                    |
+| `group_theory`       | `op`, `id`, `inv`                  | $\langle G, \cdot, 1, {}^{-1} \rangle$: $g \cdot g^{-1} = g^{-1} \cdot g = 1$                                                                                                                    |
+| `monoid_theory`      | `op`, `id`                         | $\langle M, \cdot, 1 \rangle$: $m \cdot 1 = 1 \cdot m = m$ and $(m \cdot n) \cdot p = m \cdot (n \cdot p)$                                                                                       |
+| `boolean_theory`     | `or`, `and`, `not`, `zero`, `one`  | $\langle B, \lor, \land, \lnot, 0, 1 \rangle$: a complemented distributive lattice, $b \lor \lnot b = 1$ and $b \land \lnot b = 0$                                                               |
+| `lattice_theory`     | `meet`, `join`, `bottom`, `top`    | $\langle L, \sqcap, \sqcup, \bot, \top \rangle$: every pair of elements has a meet and a join, bounded by $\bot$ and $\top$                                                                      |
+| `semilattice_theory` | `op`, `id`                         | $\langle S, \sqcup, 0 \rangle$: an idempotent commutative monoid (one side of a lattice)                                                                                                         |
+| `near_ring_theory`   | `add`, `mul`, `zero`               | $\langle N, +, \cdot, 0 \rangle$: $+$ a group, $\cdot$ a semigroup, one-sided distributivity, no multiplicative $1$                                                                              |
 
 ## the second lift — insts as morphisms (`morphism::T`)
 
@@ -380,6 +380,8 @@ mtron> 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()>>for
     op     dom          rng     args  f    desc     c_dom  c_rng 
     start  noobj{0}::T  int::T  6     <j>  initial  {0}    {1}   
     minus  int::T       int::T  3     <j>  mapper   {1}    {1}   
+    mult   int::T       int::T  2     <j>  mapper   {1}    {1}   
+    div    int::T       int::T  2     <j>  mapper   {1}    {1}   
    """
 ```
 Only two instructions remain in the explain table: the seed and the one operation that survives. The other
@@ -578,7 +580,7 @@ mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T
                     trgt=>!λ#(){<j>},
                     analysis=>!λ(){<j>},
                     obj=>start(5)],
-                   morphism[plus?rng=int&dom=int]::[
+                   morphism[plus?rng=int&dom=int&args=[/m/int]]::[
                     name=>plus,
                     form=>mapper,
                     class=>[endo],
@@ -664,16 +666,16 @@ self-registers a `peer::T` into the network; that registration is the condition 
 
 ```mtron
 mtron> ws_client::[host=>ws://localhost:8555/mtron]
-==>[host=>ws://localhost:8555/mtron,
-    send=>λ(){<j>},
-    send_recv=>λ(){<j>},
-    inst=>[
-     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-     /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-    status=>!λstatus?bool<=(){<j>},
-    close=>λ(){<j>},
-    on_message=>print('received ${_}')]
+==>ws_client::[host=>ws://localhost:8555/mtron,
+               send=>λ(){<j>},
+               send_recv=>λ(){<j>},
+               inst=>[
+                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+                /m/inst/from=>*uri::T,
+                /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+               status=>!λstatus?bool<=(){<j>},
+               close=>λ(){<j>},
+               on_message=>print('received ${_}')]
 mtron> */network
 ```
 `*~/network` reads back the current machine's network block — the dialed `peer::T` at the named host. With the
@@ -723,76 +725,68 @@ same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \l
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
-`>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-shards whose fold carries the remaining hop budget (`sum?hop=0` at a leaf — the depth rides the fold, never the
-seed), each shard shipped by a `select([to(peer)])` to its roster member, merged, and recombined at home through the
-reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+`>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: one `branch` keyed by place,
+whose lanes carry their part of the seed (`start(part)`), the floatable run and a fold stating the remaining hop budget
+(`sum?hop=0` at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
+partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
+           where=>[[span=>at]=>[//localhost:8555=>1]],
            theory_unit_removal=>plan::[
             name=>theory_unit_removal,
             cut=>[role=>id],
             where=>[[shape=>none,span=>[[span=>at]]]]],
-           derivation_contraction=>plan::[
-            name=>derivation_contraction,
-            cut=>[role=>derivation],
+           branch_collapse=>plan::[
+            name=>branch_collapse,
+            cut=>[role=>add],
             where=>[[shape=>local,span=>[[span=>at]]]]],
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              place=>[local],
-              hop=>0,
-              split=>stream,
-              span=>[[span=>at],[span=>post]]],
-             [
-              place=>[peer],
-              hop=>1,
-              split=>stream,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+           branch_inline=>plan::[
+            name=>branch_inline,
+            cut=>[role=>zero],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           theory_involution=>plan::[
+            name=>theory_involution,
+            cut=>[law=>[involution]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_idempotent=>plan::[
+            name=>law_idempotent,
+            cut=>[law=>[idempotent]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           ...(7 more)]]
 ```
-A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
+A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
+==>[path::[obj=>branch?<={0}&split=part(ws://localhost:8555=>/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=>/m/inst/sum()])).sum().select([id()=>sum()]),
+           where=>[[span=>at]=>[//localhost:8555=>1]],
            theory_unit_removal=>plan::[
             name=>theory_unit_removal,
             cut=>[role=>id],
             where=>[[shape=>none,span=>[[span=>at]]]]],
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              place=>[local],
-              hop=>0,
-              split=>stream,
-              span=>[[span=>at],[span=>post]]],
-             [
-              place=>[peer],
-              hop=>1,
-              split=>stream,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+           branch_collapse=>plan::[
+            name=>branch_collapse,
+            cut=>[role=>add],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           branch_inline=>plan::[
+            name=>branch_inline,
+            cut=>[role=>zero],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           theory_involution=>plan::[
+            name=>theory_involution,
+            cut=>[law=>[involution]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_idempotent=>plan::[
+            name=>law_idempotent,
+            cut=>[law=>[idempotent]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           ...(7 more)]]
 ```
 ### may / must — the fiber modality
 
@@ -829,7 +823,9 @@ map** (who is dialed) — and is not a rewrite projection at all: a place is a m
 ```mtron
 mtron> <//localhost>.as(place::T)
 ==>place::[obj=>//localhost,
-           authority=>[ws://localhost:8555],
+           authority=>[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=>!λ(){<j>},
            linked_from=>!λ(){<j>},
            status=>!λ(){<j>}]
@@ -897,7 +893,7 @@ Distribution liveness has the same declared/realized split as a-priori pruning, 
 candidate (**declared**) when some authority's scheme has a dialer in the ISA — `Signatures.resolves(scheme)`, the
 `ws → ws_client`, `http`/`https → http_client`, `loop → id_client` table, read with no dial attempted. A dialed peer
 can *take* a placement (**realized**) when its client **overrides every instruction the placement requires** and is
-`online` — `Places.serves(peer, placement)`. A distributing placement ships through `to` + `eval`, so an `http_client`
+`online` — `PlaceResolver.serves(peer, placement)`. A distributing placement ships through `to` + `eval`, so an `http_client`
 (no `eval`) is not a shard target; an offline peer is not a target either, so an outage *shrinks* the fan-out rather
 than poisoning the reduction.
 
@@ -913,7 +909,7 @@ Three location fields, three questions — easy to conflate because two share th
 | field    | on               | computed by                                                                                    | the question it answers                                                                           |
 |----------|------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable        |
-| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `select([to(…)])` hosts |
+| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `branch`'s keys   |
 | `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                              |
 
 `Places.reachable()` deliberately excludes the origin — it is where the code starts, not where it can go. The

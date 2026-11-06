@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_dev_dckr.html"><img
-                            src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../instset/m_dev_ide.html"><img
-                            src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_dev_dckr.html"><img
+                                src="../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_dev_ide.html"><img
+                                src="../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../instset/m_iot.html"><img
                             src="../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -771,57 +779,6 @@ processor. <strong>Read the documentation of the code you are about to execute.<
 provided,
 the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p>
 <pre><code class="language-mtron">mtron&gt; *plus?docq
-==&gt;docs::[obj=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
-          dom=&gt;'a real',
-          rng=&gt;'the sum',
-          args=&gt;[real::T=&gt;'the rhs real'],
-          desc=&gt;'[mapper] a sum function \(f(x, y) ...']
-==&gt;docs::[obj=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
-          dom=&gt;'the lhs bool',
-          rng=&gt;'whether either bool is true',
-          args=&gt;[bool::T=&gt;'the bool to or with the lhs'],
-          desc=&gt;'[mapper] the disjunction (or) of t...']
-==&gt;docs::[obj=&gt;plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
-          dom=&gt;'the lhs bytes',
-          rng=&gt;'the concatenated bytes',
-          args=&gt;[bytes::T=&gt;'the bytes to append to the lhs'],
-          desc=&gt;'[mapper] append the argument bytes...']
-==&gt;docs::[obj=&gt;plus?str&lt;=str(str::T){&lt;j&gt;},
-          dom=&gt;'a prefix str',
-          rng=&gt;'the concatenated str',
-          args=&gt;[0=&gt;'a postfix str'],
-          desc=&gt;'[mapper] concatenate two str::T va...',
-          example=&gt;['&quot;a&quot; + &quot;b&quot; [-- &quot;ab&quot; --]']]
-==&gt;docs::[obj=&gt;plus?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
-          dom=&gt;'a uri',
-          rng=&gt;'the branch union',
-          args=&gt;[uri::T=&gt;'the rhs uri'],
-          desc=&gt;'[filter] a branch function \(f(x, ...']
-==&gt;docs::[obj=&gt;plus?lst&lt;=lst(lst::T){&lt;j&gt;},
-          dom=&gt;'the lhs lst',
-          rng=&gt;'the concatenated lst',
-          args=&gt;[lst::T=&gt;'the lst to append'],
-          desc=&gt;'[mapper] append the slots of the a...']
-==&gt;docs::[obj=&gt;plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
-          dom=&gt;'the lhs rec',
-          rng=&gt;'the deep merge of the two recs',
-          args=&gt;[rec::T=&gt;'the rec to merge into the lhs'],
-          desc=&gt;'[mapper] deep merge the argument r...']
-==&gt;docs::[obj=&gt;plus?code&lt;=code(code::T){&lt;j&gt;},
-          dom=&gt;'the lhs code',
-          rng=&gt;'the branch of the two codes',
-          args=&gt;[code::T=&gt;'the code branched alongside the lhs'],
-          desc=&gt;'[mapper] branch two codes in paral...']
-==&gt;docs::[obj=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
-          dom=&gt;'the lhs int',
-          rng=&gt;'the result of the addition',
-          args=&gt;[int::T=&gt;'the int to add to the lhs'],
-          desc=&gt;'[mapper] add the argument int to t...',
-          example=&gt;[
-           '1.plus(2)          [-- 3          ...',
-           &quot;1+2                [-- 3 sugar'd f...&quot;,
-           '1.plus(plus(1))    [-- 3 nested ap...',
-           '1+(+1)             [-- 3 sugar nes...']]
 ==&gt;docs::[obj=&gt;plus?time&lt;=time(time::T){&lt;j&gt;},
           dom=&gt;'/m/math/time',
           rng=&gt;'/m/math/time',
@@ -853,27 +810,16 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
           desc=&gt;'[mapper] shift a datetime forward ...',
           example=&gt;['&lt;//2026.08:09/14/30/00/000?tz=+000...']]
 mtron&gt; *plus?str&lt;=str&amp;docq
-==&gt;docs::[obj=&gt;plus?str&lt;=str(str::T){&lt;j&gt;},
-          dom=&gt;'a prefix str',
-          rng=&gt;'the concatenated str',
-          args=&gt;[0=&gt;'a postfix str'],
-          desc=&gt;'[mapper] concatenate two str::T va...',
-          example=&gt;['&quot;a&quot; + &quot;b&quot; [-- &quot;ab&quot; --]']]
+==&gt;docs::[desc=&gt;'no documentation available',
+          obj=&gt;plus?str&lt;=str(str::T){&lt;j&gt;}]
 mtron&gt; *select?&lt;=str&amp;docq
-==&gt;docs::[obj=&gt;select?lst&lt;=str(str::T){&lt;j&gt;},
-          dom=&gt;'a str to split by regex',
-          rng=&gt;'the regex capture groups (or full ...',
-          args=&gt;[0=&gt;'regex'],
-          desc=&gt;'[mapper] split the lhs str by rege...',
-          example=&gt;[
-           &quot;'abc.cde'.regex('[^.]+') [-- ['abc...&quot;,
-           &quot;'abc.cde'.regex('.\..') [-- ['c.c'...&quot;,
-           &quot;'241G'.regex('(\d+)([KMGT])') [-- ...&quot;]]
+==&gt;docs::[desc=&gt;'no documentation available',
+          obj=&gt;select?lst&lt;=str(str::T){&lt;j&gt;}]
 </code></pre>
 <h3>references</h3>
 <p>The entry doc above is deliberately brief. These are the deep dives, keyed by task. Point: every one of them begins with
 <code>?docq</code> of the things they cover -- start there before re-reading the prose.</p>
-<p><strong>Language &amp; types</strong></p>
+<h4>language &amp; types</h4>
 <ul>
 <li><a href="references/language-reference-mtron.html">mtron language reference</a> -- the whole surface in 23 sections: mono/poly/call
 types, coefficients, arithmetic and strings, <code>*</code> dereference, <code>.as(type::T)</code> casting, map/filter/group, merge/split,
@@ -883,7 +829,7 @@ evaluation model.</li>
 predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
 readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.</li>
 </ul>
-<p><strong>Execution &amp; the machine</strong></p>
+<h4>execution &amp; the machine</h4>
 <ul>
 <li><a href="references/mach-instset-mtron.html">mach instruction set</a> -- <code>/m/mach</code>: the machine (<code>machine::T</code> and its five slots,
 and how a machine nests as a frame of reference) and, at its centre, the compiler as four atomic stages --
@@ -892,12 +838,13 @@ and how a machine nests as a frame of reference) and, at its centre, the compile
 with a default, so <code>compiler::[=&gt;]</code> is the default compiler and naming one entry overrides that stage. Then the
 processor that runs what the compiler produced, the other slots, threads, and the recipe for hosting another
 language.</li>
-<li><a href="references/distributed-computing-mtron.html">distributed computing</a> -- the pattern menu (A–S): distribution is a theorem,
+<li><a href="references/distributed-computing-mtron.html">distributed computing</a> -- the pattern menu (A–S): distribution is a
+theorem,
 not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write <em>before</em> the rewrite,
 and the sharded layout the rewrite emits — grounded in the machine nest, <code>Network</code>, the <code>rewriter::T</code> stage, and the
 <code>plan::T</code> / <code>PlanBuilder</code> / <code>PlanInterpreter</code> / <code>LawTable</code>-combiner machinery. ✅ marks what is implemented today.</li>
 </ul>
-<p><strong>Spaces &amp; data sources</strong></p>
+<h4>spaces &amp; data sources</h4>
 <ul>
 <li><a href="references/sys-instset-mtron.html">sys instruction set + fsSpace</a> -- one file, two docs: <code>/m/sys</code> (the guarded <code>bash</code>
 and its security modulators, <code>sleep</code>/<code>stdout</code>/<code>stdin</code>, mounted state) and the full <code>fsspace::T</code> tour (configuration,
@@ -921,20 +868,21 @@ implicit ancestor casts.</li>
 <li><a href="references/web-instset-mtron.html">web instruction set</a> -- <code>/m/web</code>: the protocol surfaces and MIME document types,
 <code>route::T</code> mount tables and the literal-prefix rule, templated route values, mounting an obj, MCP server-&gt;client
 notifications over a <code>?subq</code> envelope, tool registration, and what is not available yet.</li>
-<li><a href="references/tble-instset-mtron.html">tble instruction set</a> -- <code>/m/db/tble</code> and <code>tblespace::T</code>: a JDBC database as a space
+<li><a href="references/tble-instset-mtron.html">tble instruction set</a> -- <code>/m/db/tble</code> and <code>tblespace::T</code>: a JDBC database as a
+space
 -- tables that appear from the first rec write, typed rows, the SQL rewrite family that pushes reads down into the
 backend, the key/value fall-through, <code>!*</code> foreign keys, and native <code>sql()</code>.</li>
 <li><a href="references/ui-instset-mtron.html">ui instruction set</a> -- <code>/m/sys/ui</code>: a widget as a rec whose state is its own
 map, <code>as?str&lt;=widget(str::T)</code> to render one inline anywhere a str fits, the <code>style::T</code> keys (border, width,
 anchor, <code>top</code>/<code>left</code>, the viewport), the anchor arithmetic and the pointer vocabulary (chevron to move, corner
 marker to reshape), and the three insts <code>display</code>/<code>nano</code>/<code>less</code>.</li>
-<li><a href="references/dckrspace-mtron.html">dckrSpace</a> -- Docker as a space: containers, images, volumes, networks, compose,
+<li><a href="references/dckr-instset-mtron.html">dckrSpace</a> -- Docker as a space: containers, images, volumes, networks, compose,
 remote hosts, <code>owner</code>-labelled ownership with <code>on_close</code> reaping, and an end-to-end SQLite container + tbleSpace
 walkthrough.</li>
 <li><a href="references/connecting-datasources.html">Connecting Data Sources</a> -- the pattern + route model, discovering a space's
 prefixes from <code>*/sys/space/...</code>, <code>!*</code> lazy references, validation, and common failures.</li>
 </ul>
-<p><strong>Protocol &amp; services</strong></p>
+<h4>protocol &amp; services</h4>
 <ul>
 <li><a href="references/llm-instset-mtron.html">llm instruction set</a> -- <code>/m/ai/llm</code>: agents, models, features, skills and tools, and
 the Model Context Protocol on both sides -- <code>mcp_client::T</code> over streamable-http + sse, websockets or stdio, and
@@ -942,7 +890,7 @@ the Model Context Protocol on both sides -- <code>mcp_client::T</code> over stre
 <li><a href="references/dsh-mtron.html">DSH Memory Bus</a> -- the first inter-harness memory adapter: a DSH zstd JSONL transcript
 becomes typed message recs, loaded and written into a native metatron agent memory tree.</li>
 </ul>
-<p><strong>Practice</strong></p>
+<h4>practice</h4>
 <ul>
 <li><a href="references/unsloth-training-mtron.html">Unsloth Training</a> -- fine-tuning an LLM on mtron: dataset extraction via
 <code>@Training</code>, model selection, training, GGUF export, and Ollama/HuggingFace deployment.</li>

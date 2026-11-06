@@ -1,5 +1,5 @@
 ---
-name: ide
+name: ide instruction set
 description: metatron agent coding harness ide
 ---
 
@@ -263,7 +263,8 @@ The dwe `sub::T` is:
 
 ## running as a container app
 
-The agent ide ships as a metatron app: `boot/agent-ide.boot.mtron` builds the workspace (home memspace, scratch
+The agent ide ships as a metatron app: `../../../../boot/agent-ide.boot.mtron` builds the workspace (home memspace,
+scratch
 project at `/dev/scratch`, write-back subscription, command palette) and the launcher runs it in a container with the
 repo mounted at `/work` (= the `mfs:` root).
 

@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,45 +499,51 @@ an instruction set to manipulate docker and docker compose</p>
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/dev/dckr/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          type=&gt;[
-           space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace,
-           rec::T[?[
-            id=&gt;uri::T,
-            {?}created=&gt;uri::T,
-            {?}labels=&gt;[uri::T=&gt;str::T]]]@/m/dev/dckr/resource,
-           resource::T[?[
-            {?}repo_tags=&gt;[uri::T],
-            {?}size=&gt;real::T@/m/math/datasize,
-            {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/image,
-           uri::T[?union(created,running,paused,restarting,exited,dead)]@/m/dev/dckr/container_state,
-           resource::T[?[
-            image=&gt;&lt;#&gt;::T,
-            {?}state=&gt;uri::T[?union(created,running,paused,restarting,exited,dead)]@/m/dev/dckr/container_state,
-            {?}ports=&gt;[uri::T],
-            {?}network=&gt;&lt;#&gt;::T,
-            {?}mount=&gt;&lt;#&gt;::T]]@/m/dev/dckr/container,
-           resource::T[?[
-            {?}driver=&gt;uri::T,
-            {?}mountpoint=&gt;uri::T,
-            {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/volume,
-           resource::T[?[
-            {?}driver=&gt;uri::T,
-            {?}scope=&gt;uri::T,
-            {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/networks,
-           rec::T[?[services=&gt;[=&gt;]]]@/m/inst/compose]]@/m/dev/dckr</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/dev/dckr/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             type=&gt;[
+              /m/space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace,
+              rec::T[?[
+               id=&gt;uri::T,
+               {?}created=&gt;uri::T,
+               {?}labels=&gt;[uri::T=&gt;str::T]]]@/m/dev/dckr/resource,
+              resource::T[?[
+               {?}repo_tags=&gt;[uri::T],
+               {?}size=&gt;real::T@/m/math/datasize,
+               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/image,
+              uri::T[?union(created,running,paused,restarting,exited,dead)]@/m/dev/dckr/container_state,
+              resource::T[?[
+               image=&gt;&lt;#&gt;::T,
+               {?}state=&gt;uri::T[?union(created,running,paused,restarting,exited,dead)]@/m/dev/dckr/container_state,
+               {?}ports=&gt;[uri::T],
+               {?}network=&gt;&lt;#&gt;::T,
+               {?}mount=&gt;&lt;#&gt;::T]]@/m/dev/dckr/container,
+              resource::T[?[
+               {?}driver=&gt;uri::T,
+               {?}mountpoint=&gt;uri::T,
+               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/volume,
+              resource::T[?[
+               {?}driver=&gt;uri::T,
+               {?}scope=&gt;uri::T,
+               {?}container=&gt;&lt;#&gt;::T]]@/m/dev/dckr/networks,
+              rec::T[?[services=&gt;[=&gt;]]]@/m/inst/compose,
+              rec::T[?[
+               {?}type=&gt;uri::T,
+               {?}action=&gt;str::T,
+               {?}exit=&gt;int::T,
+               {?}time=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
+               {?}obj=&gt;&lt;#&gt;::T]]@/m/dev/dckr/event]]@/m/dev/dckr</code></pre>
                     </div>
                 </div>
             </div>
@@ -537,7 +551,7 @@ an instruction set to manipulate docker and docker compose</p>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">7</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">8</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><button class="btn btn-outline-secondary" disabled>insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -558,6 +572,9 @@ an instruction set to manipulate docker and docker compose</p>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__dev__dckr__container_state" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">container_state</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__dev__dckr__event" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">event</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#__m__dev__dckr__image" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">image</span>
@@ -591,7 +608,7 @@ an instruction set to manipulate docker and docker compose</p>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">7</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">8</span></h3>
     <div class="card mb-3" id="__m__dev__dckr__compose">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -604,7 +621,7 @@ an instruction set to manipulate docker and docker compose</p>
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker compose stack — refines rec::T</p>
+    <p class="mb-0 text-light"> a docker compose stack — refines rec::T</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[services =&gt; [web =&gt; [image =&gt; &quot;nginx&quot;]]]
@@ -628,7 +645,7 @@ matches docker_compose::T</code></pre>
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker container — refines docker_resource::T</p>
+    <p class="mb-0 text-light"> a docker container — refines docker_resource::T</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[id =&gt; &lt;a1b2c3&gt;, image =&gt; &lt;nginx:latest&gt;, state =&gt; running, ports =&gt; [&lt;8080:80&gt;]]
@@ -646,11 +663,33 @@ matches docker_container::T</code></pre>
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> docker container state — union of created|running|paused|restarting|exited|dead</p>
+    <p class="mb-0 text-light"> docker container state — union of created|running|paused|restarting|exited|dead</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">running.matches(docker_container_state::T)     [-- true --]
 stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
+</div>
+</div><div class="card mb-3" id="__m__dev__dckr__event">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">event::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/dev/dckr/event</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}type=&gt;uri::T,
+         {?}action=&gt;str::T,
+         {?}exit=&gt;int::T,
+         {?}time=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
+         {?}obj=&gt;&lt;#&gt;::T]]@/m/dev/dckr/event</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> a docker daemon event — one NDJSON line from `docker events --format json`</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[type =&gt; container, action =&gt; &#39;die&#39;, exit =&gt; 137, time =&gt; &lt;//2026.11:3/14/36/38/596?tz=-0700&gt;, obj =&gt; !*&lt;docker:container/web-server&gt;]
+matches dckrevent::T</code></pre>
 </div>
 </div><div class="card mb-3" id="__m__dev__dckr__image">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -668,7 +707,7 @@ stopped.matches(docker_container_state::T)     [-- false --]</code></pre>
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker image — refines docker_resource::T</p>
+    <p class="mb-0 text-light"> a docker image — refines docker_resource::T</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[id =&gt; &lt;sha256:abc123&gt;, repo_tags =&gt; [&lt;nginx:latest&gt;], size =&gt; mB::142.0]
@@ -690,7 +729,7 @@ matches docker_image::T</code></pre>
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker network — refines docker_resource::T</p>
+    <p class="mb-0 text-light"> a docker network — refines docker_resource::T</p>
 </div>
 </div><div class="card mb-3" id="__m__dev__dckr__resource">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -706,7 +745,7 @@ matches docker_image::T</code></pre>
     
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> base type for docker resources — id + created + labels (label name =&gt; str)</p>
+    <p class="mb-0 text-light"> base type for docker resources — id + created + labels (label name =&gt; str)</p>
 </div>
 </div><div class="card mb-3" id="__m__dev__dckr__volume">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -724,7 +763,7 @@ matches docker_image::T</code></pre>
  {?}created=&gt;uri::T,
  {?}labels=&gt;[uri::T=&gt;str::T]]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker volume — refines docker_resource::T</p>
+    <p class="mb-0 text-light"> a docker volume — refines docker_resource::T</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="spaces">
@@ -734,7 +773,7 @@ matches docker_image::T</code></pre>
         <a href="m_dev_dckr_space_dckrspace.html" class="code text-primary fw-bold text-decoration-none">dckrspace</a>
         <small class="text-muted code">/m/dev/dckr/space/dckrspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[?[{?}host=&gt;uri::T,{?}progress=&gt;rec::T]][ctor?dckrspace&lt;=(dckrspace::T){&lt;j&gt;}]@/m/dev/dckr/space/dckrspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -743,7 +782,7 @@ matches docker_image::T</code></pre>
                  {?}pre_read=&gt;inst::T,
                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T,
+ {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> a docker daemon space</p>
@@ -757,7 +796,7 @@ matches docker_image::T</code></pre>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -523,8 +531,8 @@ is unobservable.</p>
      {?}inst=&gt;{?}[inst::T],
      {?}rewrite=&gt;{?}[inst::T],
      {?}sugar=&gt;{?}[lst::T],
-     {?}reference=&gt;{?}[uri::T],
-     ...(1 more)]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
+     {?}reference=&gt;uri::T,
+     ...(1 more)]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
           dom=&gt;'an extension of space with structu...',
           rng=&gt;'creates the instset and registers ...',
           args=&gt;[
@@ -533,7 +541,7 @@ is unobservable.</p>
            {?}inst=&gt;'instructions associated with the t...',
            {?}rewrite=&gt;'code&lt;=code instructions that captu...',
            {?}sugar=&gt;'custom instruction syntax sugars g...'],
-          desc=&gt;'[structural] an aggregate of const...']
+          desc=&gt;'an aggregate of consts, types, ins...']
 </code></pre>
 <p><code>instset</code> is the frame's <strong>visible vocabulary</strong>: the types, instructions, rewrites and sugars a program compiled here
 can see. It is a union in two directions — this frame's own structure over its <strong>imported</strong> sets, and that whole stack
@@ -687,10 +695,12 @@ gather point all enter the compiled form here.</p>
 <tbody>
 <tr><td><code>fixpoint_rewriter::T</code></td><td>apply every rewrite rule registered by every instset, in turn, over the whole code, and repeat until the code hash is unchanged for <code>max</code> consecutive passes (default <code>2</code>) — so a rule re-runs on every pass and must be idempotent</td></tr>
 <tr><td><code>identity_rewriter::T</code></td><td>return the code unchanged — for a compiler whose rewriting happens elsewhere</td></tr>
+<tr><td><code>plan_rewriter::T</code></td><td>a <code>fixpoint_rewriter::T</code> whose rules are the law-driven plans (<code>plan::T</code>) rather than every instset's rewrites: each reads the algebra the instructions and types declare (<code>?decq</code>) — a theory role, a process law, or a form and the laws its combiner needs — so a declared algebra is optimized, and over live peers distributed (<code>law_shard</code>), with no rule naming an instruction</td></tr>
 </tbody>
 </table>
 <pre><code class="language-mtron">mtron&gt; fixpoint_rewriter::[=&gt;]
 mtron&gt; fixpoint_rewriter::[max=&gt;3]
+mtron&gt; plan_rewriter::[=&gt;]
 </code></pre>
 <h4>resolve — the walk and its two strategies</h4>
 <p>Resolution is the compiler's widest-reaching stage: it turns a generic instruction chain into a typed one by threading
@@ -770,32 +780,31 @@ axes of a machine.</p>
 <tr><td><code>swarm_processor::T</code></td><td>the default: it schedules independently executing monads across the code's inst chain; barriers synchronize them, and the objects of the halted monads are the result</td></tr>
 </tbody>
 </table>
+<p>Each evaluation runs in a <strong>computer</strong> the processor mints, indexed by number at <code>~/processor/computer/&lt;n&gt;</code>. The
+processor also holds the machine's <strong>fail stacks</strong>: an evaluation's uncaught fail is filed under the computer that ran
+it (<code>~/processor/computer/&lt;n&gt;/fail/&lt;k&gt;</code>), and a fail raised outside any evaluation at <code>~/processor/fail/&lt;k&gt;</code>. A fail
+read back from a stack is still uncaught, so <code>catch(_)</code> it to use it as a value. Read the stack with <code>@</code> to clear it:
+<code>@</code> keeps each fail's address, so catching it removes it, while <code>*</code> hands back a detached copy.</p>
 <h4>threads</h4>
 <pre><code class="language-mtron">mtron&gt; */m/mach/thread?docq
 ==&gt;docs::[obj=&gt;rec::T[?[
      code=&gt;&lt;#&gt;::T,
      {?}source=&gt;uri::T,
      {?}runtime=&gt;real::T@/m/math/time,
-     {?}yield=&gt;thread::T,
+     {?}yield=&gt;/m/mach/thread::T,
      {?}loop=&gt;real::T@/m/math/time,
+     {?}timeout=&gt;real::T@/m/math/time,
      {?}state=&gt;union(stop,run,pause),
-     {?}result=&gt;&lt;#&gt;::T]]@/m/mach/thread,
+     ...(1 more)]]@/m/mach/thread,
           args=&gt;[
            {?}result=&gt;'the last result produced by the th...',
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}state=&gt;'current state of the thread',
            {?}time=&gt;'the datetime::T when the thread wa...',
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}state=&gt;'current state of the thread',
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            {?}loop=&gt;'delay to repeat code evaluation (d...'],
-          desc=&gt;'[structural] the thread base type',
-          core=&gt;docs::[
-           obj=&gt;thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
-           desc=&gt;'[structural] run a concurrent core...',
-           example=&gt;['core::[code=&gt;ping(&lt;phaseshift.stud...']],
-          virtual=&gt;docs::[
-           obj=&gt;thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual,
-           desc=&gt;'[structural] run a concurrent virt...',
-           example=&gt;['virtual::[code=&gt;ping(&lt;phaseshift.s...']]]
+          desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
 <table>
@@ -854,11 +863,11 @@ itself a read — so instruction memory is not re-entered from there.</p>
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
            {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}pattern=&gt;'the branch this network answers as...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}listener=&gt;'the sockets this machine serves th...',
            {?}status=&gt;'the health method — an auto inst c...',
-           {?}listener=&gt;'the sockets this machine serves th...'],
-          desc=&gt;&quot;[structural] a machine's network: ...&quot;,
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}pattern=&gt;'the branch this network answers as...'],
+          desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
            'network::[peer=&gt;[&lt;ws/localhost/391...']]
@@ -969,17 +978,17 @@ Dropping a non-owner's key withdraws that level's rows and leaves the owner's so
 <p>There is no connect inst, as there is no add-space inst: constructing a protocol client <em>is</em> the dial, and indexing is
 a background behavior of a valid construction.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;[pattern=&gt;ws://localhost:8555/mtron,
-    host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    ...(1 more)]
+==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
+               host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               ...(1 more)]
 </code></pre>
 <p>The claim (<code>pattern</code>, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory. The lifecycle is one adjoint pair on the
@@ -1014,7 +1023,7 @@ up, and an address no client was constructed for falls through to memory.</p>
 <pre><code class="language-mtron">mtron&gt; */m/mach/network_supervisor?docq
 ==&gt;docs::[obj=&gt;rec::T[?[status=&gt;union(supervising,closed)]][ctor?network_supervisor&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/network_supervisor,
           args=&gt;[status=&gt;'supervising / closed — the livenes...'],
-          desc=&gt;'[structural] the per-level reconci...',
+          desc=&gt;'the per-level reconciler that keep...',
           example=&gt;['network_supervisor::[=&gt;] [-- start...']]
 </code></pre>
 <p>Between the index that granted a peer and the drop that retracts it, the network watches every peer whose client holds
@@ -1112,19 +1121,14 @@ mtron&gt; *~.vid()
 mtron&gt; /.&gt;&gt;
 ==&gt;/xyz/
 mtron&gt; /xyz.&gt;&gt;
-==&gt;/xyz/pattern
-==&gt;/xyz/q
-==&gt;/xyz/memory
-==&gt;/xyz/network
-==&gt;/xyz/instset
-==&gt;/xyz/compiler
-==&gt;/xyz/processor
+==&gt;/xyz/sys
 mtron&gt; pop()
 mtron&gt; *~.vid()
 ==&gt;&lt;/.&gt;
 </code></pre>
-<p>Every pushed frame is a fresh <strong>level</strong> over its parent's — its own memory, instruction set and network — so it is a
-clean scope: what it writes, imports and dials is its own, and a pop retracts exactly that. Reach in particular starts
+<p>Every pushed frame is a fresh <strong>level</strong> over its parent's — its own memory, instruction set, network and processor —
+so it is a clean scope: what it writes, imports and dials, and the fails its evaluations file, are its own, and a pop
+retracts exactly that. Reach in particular starts
 empty: a pushed frame holds <strong>no peers</strong> until it dials one, which makes a frame the natural scope of a mini-cluster.</p>
 <p><strong>The authority boundary.</strong> A frame lives in this process. <code>push(&lt;ws://localhost:8555/worker&gt;)</code> names another process,
 and is refused: code reaches a machine in another process by being <em>shipped</em> there (see <em>distribution</em>), never through
@@ -1243,11 +1247,11 @@ non-component families, which hang directly off <code>/m/mach</code>:</p>
 <tr><th>family</th><th>types (<code>::T</code>)</th></tr>
 </thead>
 <tbody>
-<tr><td>compiler</td><td><code>compiler</code>, <code>parser</code>, <code>mtron_parser</code>, <code>rewriter</code>, <code>fixpoint_rewriter</code>, <code>identity_rewriter</code>, <code>resolver</code>, <code>scoring_resolver</code>, <code>firstfind_resolver</code>, <code>identity_resolver</code>, <code>selector</code>, <code>specificity_selector</code>, <code>firstfind_selector</code>, <code>binder</code>, <code>generic_binder</code>, <code>typer</code></td></tr>
+<tr><td>compiler</td><td><code>compiler</code>, <code>parser</code>, <code>mtron_parser</code>, <code>rewriter</code>, <code>fixpoint_rewriter</code>, <code>identity_rewriter</code>, <code>plan_rewriter</code>, <code>resolver</code>, <code>scoring_resolver</code>, <code>firstfind_resolver</code>, <code>identity_resolver</code>, <code>selector</code>, <code>specificity_selector</code>, <code>firstfind_selector</code>, <code>binder</code>, <code>generic_binder</code>, <code>typer</code></td></tr>
 <tr><td>process</td><td><code>processor</code>, <code>monad_processor</code>, <code>swarm_processor</code></td></tr>
 <tr><td>state</td><td><code>memory</code>, <code>network</code>, <code>instset</code> — the three prefixed components (<em>components</em>)</td></tr>
 <tr><td>machine</td><td><code>machine</code> (at <code>/m/mach/machine</code>, a <code>rec::T</code>)</td></tr>
-<tr><td>the rest</td><td><code>thread</code> / <code>virtual</code> / <code>core</code>, <code>peer</code>, <code>listener</code>, <code>id_client</code>, <code>cluster</code>, <code>monad</code>, <code>component</code> (<code>/m/mach/component</code>, the root of every row above), and the URI refinements <code>origin</code> / <code>path_encoding</code> this set declares</td></tr>
+<tr><td>the rest</td><td><code>thread</code> / <code>virtual</code> / <code>core</code>, <code>peer</code>, <code>listener</code>, <code>id_client</code>, <code>cluster</code>, <code>monad</code>, <code>plan</code> (a rewrite rule as a value — <code>plan_rewriter::T</code>'s rule format), <code>component</code> (<code>/m/mach/component</code>, the root of every row above), and the URI refinements <code>origin</code> / <code>path_encoding</code> this set declares</td></tr>
 </tbody>
 </table>
 <h3>appendix — writing another language</h3>

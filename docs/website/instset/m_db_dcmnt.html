@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
-                            src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
-                            src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_dckr.html"><img
+                                src="../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_dev_ide.html"><img
+                                src="../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../instset/m_iot.html"><img
                             src="../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -491,56 +499,56 @@ nested documents, typed collections, and schema-enforced writes — all within m
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>instset::[pattern=&gt;/m/db/dcmnt/#,
-          q=&gt;[
-           docq::[
-            pattern=&gt;docq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
-            inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
-           /m/qproc/decq::[
-            pattern=&gt;decq,
-            pre_read=&gt;inst(uri::T){&lt;j&gt;},
-            pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
-            obj=&gt;memspace::[pattern=&gt;&lt;#&gt;]]],
-          constq=&gt;[
-           obj_json::[
-            density=&gt;OPAQUE,
-            wrap_uri=&gt;true,
-            bias_towards_uri=&gt;true,
-            bias_towards_objs=&gt;false]@/m/web/serializer/obj_json,
-           _id@/m/db/dcmnt/_id],
-          type=&gt;[
-           uri::T@/m/db/dcmnt/collection,
-           space::T[?[
-            pattern=&gt;uri::T,
-            host=&gt;uri::T,
-            {?}serializer=&gt;uri::T,
-            route=&gt;[uri::T=&gt;uri::T],
-            {?}root=&gt;/m/type::T,
-            {?}schema=&gt;rec::T[?[
-             {?}pattern=&gt;uri::T,
-             {?}const=&gt;[&lt;#&gt;::T],
-             {?}type=&gt;{?}[&lt;#&gt;::T],
-             {?}inst=&gt;{?}[inst::T],
-             {?}rewrite=&gt;{?}[inst::T],
-             {?}sugar=&gt;{?}[lst::T],
-             {?}reference=&gt;{?}[uri::T],
-             {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace],
-          inst=&gt;[
-           mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;},
-           mql?rec{*}&lt;=collection(rec::T){&lt;j&gt;}],
-          rewrite=&gt;[
-           /m/db/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(){&lt;j&gt;},
-           /m/db/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code(){&lt;j&gt;}]]@/m/db/dcmnt</code></pre>
+                        <pre><code>/m/instset::[pattern=&gt;/m/db/dcmnt/#,
+             q=&gt;[
+              docq::[
+               pattern=&gt;docq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+               inst=&gt;/m/instset::[=&gt;]],
+              /m/qproc/decq::[
+               pattern=&gt;decq,
+               pre_read=&gt;inst(uri::T){&lt;j&gt;},
+               pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
+               obj=&gt;/m/instset::[=&gt;]]],
+             constq=&gt;[
+              obj_json::[
+               density=&gt;OPAQUE,
+               wrap_uri=&gt;true,
+               bias_towards_uri=&gt;true,
+               bias_towards_objs=&gt;false]@/m/web/serializer/obj_json,
+              _id@/m/db/dcmnt/_id],
+             type=&gt;[
+              uri::T@/m/db/dcmnt/collection,
+              /m/space::T[?[
+               pattern=&gt;uri::T,
+               host=&gt;uri::T,
+               {?}serializer=&gt;uri::T,
+               route=&gt;[uri::T=&gt;uri::T],
+               {?}root=&gt;/m/type::T,
+               {?}schema=&gt;rec::T[?[
+                {?}pattern=&gt;uri::T,
+                {?}const=&gt;[&lt;#&gt;::T],
+                {?}type=&gt;{?}[&lt;#&gt;::T],
+                {?}inst=&gt;{?}[inst::T],
+                {?}rewrite=&gt;{?}[inst::T],
+                {?}sugar=&gt;{?}[lst::T],
+                {?}reference=&gt;uri::T,
+                {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace],
+             inst=&gt;[
+              mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;},
+              mql?rec{*}&lt;=collection(rec::T){&lt;j&gt;}],
+             rewrite=&gt;[
+              /m/db/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_sum_column?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_where_limit?code{?}&lt;=code(){&lt;j&gt;},
+              /m/db/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code(){&lt;j&gt;}]]@/m/db/dcmnt</code></pre>
                     </div>
                 </div>
             </div>
@@ -548,7 +556,7 @@ nested documents, typed collections, and schema-enforced writes — all within m
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>defined elsewhere <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
+        <a href="#consts" class="btn btn-outline-primary">consts <span class="pill-label badge bg-secondary">1</span></a><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">1</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">1</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">2</span></a><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -641,20 +649,20 @@ nested documents, typed collections, and schema-enforced writes — all within m
         <a href="m_db_dcmnt_space_dcmntspace.html" class="code text-primary fw-bold text-decoration-none">dcmntspace</a>
         <small class="text-muted code">/m/db/dcmnt/space/dcmntspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[pattern=&gt;uri::T,
-           host=&gt;uri::T,
-           {?}serializer=&gt;uri::T,
-           route=&gt;[uri::T=&gt;uri::T],
-           {?}root=&gt;/m/type::T,
-           {?}schema=&gt;rec::T[?[
-            {?}pattern=&gt;uri::T,
-            {?}const=&gt;[&lt;#&gt;::T],
-            {?}type=&gt;{?}[&lt;#&gt;::T],
-            {?}inst=&gt;{?}[inst::T],
-            {?}rewrite=&gt;{?}[inst::T],
-            {?}sugar=&gt;{?}[lst::T],
-            {?}reference=&gt;{?}[uri::T],
-            {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace</code></pre></div>
+    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[?[pattern=&gt;uri::T,
+              host=&gt;uri::T,
+              {?}serializer=&gt;uri::T,
+              route=&gt;[uri::T=&gt;uri::T],
+              {?}root=&gt;/m/type::T,
+              {?}schema=&gt;rec::T[?[
+               {?}pattern=&gt;uri::T,
+               {?}const=&gt;[&lt;#&gt;::T],
+               {?}type=&gt;{?}[&lt;#&gt;::T],
+               {?}inst=&gt;{?}[inst::T],
+               {?}rewrite=&gt;{?}[inst::T],
+               {?}sugar=&gt;{?}[lst::T],
+               {?}reference=&gt;uri::T,
+               {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
  {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
                  {?}pre_write=&gt;inst::T,
@@ -663,19 +671,19 @@ nested documents, typed collections, and schema-enforced writes — all within m
                  {?}pre_read=&gt;inst::T,
                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
  {?}route=&gt;[uri::T=&gt;uri::T],
- {?}schema=&gt;instset::T,
+ {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an interface to document-oriented databases (MongoDB wire protocol)</p>
+    <p class="mb-0 text-light"> an interface to document-oriented databases (MongoDB wire protocol)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
-  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
-  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
-  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
-  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
+  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
+  <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
+  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -823,7 +831,7 @@ maps an obj to objs (rng_c = {0,})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 2, 2026 00:57MST<br>
+        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

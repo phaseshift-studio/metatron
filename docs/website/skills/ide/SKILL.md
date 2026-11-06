@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
      mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>second::2.994,
+            runtime=>millis::980.0,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/3e4844f3]
+            output=>!*/sys/tmp/8a163796]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -358,49 +358,50 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
          [?>2.?<4 => 'return "marko";'])>>.
          >-?str<=str{*}('
 ')].explain()
-==>explanation::[format=>!λ?str<=(){<j>},
-                 desc=>[
-                  rng=><#>,
-                  insts=>2,
-                  rewrite=>explanation::[
-                   format=>!λ?str<=(){<j>},
-                   desc=>[rng=><#>,insts=>2],
-                   per_inst=>[
-                    [
-                     op=>at,
-                     args=>[/dev/scratch/idx/Echo/method/speak],
-                     f=>'<j>',
-                     form=>standard,
-                     c_dom=>0,
-                     c_rng=>0],
-                    [
-                     op=>update,
-                     dom=><#>,
-                     rng=><#>,
-                     args=>[[body=>split('
+==>/m/inst/explain/explanation::[
+    format=>!λ?str<=(){<j>},
+    desc=>[
+     rng=><#>,
+     insts=>2,
+     rewrite=>/m/inst/explain/explanation::[
+      format=>!λ?str<=(){<j>},
+      desc=>[rng=><#>,insts=>2],
+      per_inst=>[
+       [
+        op=>at,
+        args=>[/dev/scratch/idx/Echo/method/speak],
+        f=>'<j>',
+        form=>standard,
+        c_dom=>0,
+        c_rng=>0],
+       [
+        op=>update,
+        dom=><#>,
+        rng=><#>,
+        args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-                     form=>mapper,
-                     c_dom=>1,
-                     c_rng=>1]]]],
-                 per_inst=>[
-                  [
-                   op=>at,
-                   args=>[/dev/scratch/idx/Echo/method/speak],
-                   f=>'<j>',
-                   form=>standard,
-                   c_dom=>0,
-                   c_rng=>0],
-                  [
-                   op=>update,
-                   dom=><#>,
-                   rng=><#>,
-                   args=>[[body=>split('
+        form=>scatter,
+        c_dom=>1,
+        c_rng=>1]]]],
+    per_inst=>[
+     [
+      op=>at,
+      args=>[/dev/scratch/idx/Echo/method/speak],
+      f=>'<j>',
+      form=>standard,
+      c_dom=>0,
+      c_rng=>0],
+     [
+      op=>update,
+      dom=><#>,
+      rng=><#>,
+      args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-                   form=>mapper,
-                   c_dom=>1,
-                   c_rng=>1]]]
+      form=>scatter,
+      c_dom=>1,
+      c_rng=>1]]]
 ```
 **NOTE**: when working in the `console::T`, the the interactive `explain_tool::T` provides a much richer analysis of an
 expression with pre- and post- compilation switching, drill down into nested code structures, and access reified

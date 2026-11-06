@@ -216,12 +216,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             src="../../../images/icons/space/vec-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/db/vec</a></li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/dev</li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
-                            src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
-                            alt="dckr"/>/m/dev/dckr</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
-                            src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
-                            alt="ide"/>/m/dev/ide</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_dckr.html"><img
+                                src="../../../images/icons/space/dckr-icon.svg" class="isa-row icon-color me-2"
+                                alt="dckr"/>/m/dev/dckr</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/dckr-instset-mtron.html">doc</a></span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_dev_ide.html"><img
+                                src="../../../images/icons/space/ide-icon.svg" class="isa-row icon-color me-2"
+                                alt="ide"/>/m/dev/ide</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/ide-instset-mtron.html">doc</a></span>
+                    </li>
                     <li><a class="code dropdown-item d-flex align-items-center isa-depth-1" href="../../../instset/m_iot.html"><img
                             src="../../../images/icons/space/iot-icon.svg" class="isa-row icon-color me-2"
                             alt="iot"/>/m/iot</a></li>
@@ -326,10 +332,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                             <div class="skill-resources">
                                 <div class="skill-resource-group">references</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/cat-instset-mtron.html">cat-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckr-instset-mtron.html">dckr-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
@@ -560,7 +568,7 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
 <tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
 </thead>
 <tbody>
-<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, \(a \cdot (b + c) = a \cdot b + a \cdot c\)</td></tr>
+<tr><td><code>ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</td></tr>
 <tr><td><code>field_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code>, <code>inv</code></td><td>\(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</td></tr>
 <tr><td><code>rig_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle S, +, \cdot, 0, 1 \rangle\): additive and multiplicative monoids, \(\cdot\) distributive over \(+\), no additive inverses</td></tr>
 <tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td>\(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</td></tr>
@@ -568,7 +576,7 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
 <tr><td><code>boolean_theory</code></td><td><code>or</code>, <code>and</code>, <code>not</code>, <code>zero</code>, <code>one</code></td><td>\(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</td></tr>
 <tr><td><code>lattice_theory</code></td><td><code>meet</code>, <code>join</code>, <code>bottom</code>, <code>top</code></td><td>\(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</td></tr>
 <tr><td><code>semilattice_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (one side of a lattice)</td></tr>
-<tr><td><code>near_ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code></td><td>\(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a monoid, one-sided distributivity, no multiplicative \(1\)</td></tr>
+<tr><td><code>near_ring_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code></td><td>\(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a semigroup, one-sided distributivity, no multiplicative \(1\)</td></tr>
 </tbody>
 </table>
 <h3>the second lift — insts as morphisms (<code>morphism::T</code>)</h3>
@@ -829,6 +837,8 @@ mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&g
     op     dom          rng     args  f    desc     c_dom  c_rng 
     start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
     minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
+    mult   int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
+    div    int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
    &quot;&quot;&quot;
 </code></pre>
 <p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other
@@ -1014,7 +1024,7 @@ and computes its cut/span/where without consulting the code below; the descent (
                     trgt=&gt;!λ#(){&lt;j&gt;},
                     analysis=&gt;!λ(){&lt;j&gt;},
                     obj=&gt;start(5)],
-                   morphism[plus?rng=int&amp;dom=int]::[
+                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
                     name=&gt;plus,
                     form=&gt;mapper,
                     class=&gt;[endo],
@@ -1097,16 +1107,16 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    on_message=&gt;print('received ${_}')]
+==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
@@ -1153,72 +1163,64 @@ object fans out across branches and merges back, and Thm 19 is the one reduce la
 same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r \leadsto (a\cdot r + b\cdot r)\cdot r\)
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.</p>
 <p>Finally, the inst <code>lower?path&lt;=path(plan)</code> applies a plan read off the path's out-edge — the examples read
-<code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: the seed bulk partitioned into
-shards whose fold carries the remaining hop budget (<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the
-seed), each shard shipped by a <code>select([to(peer)])</code> to its roster member, merged, and recombined at home through the
-reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+<code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: one <code>branch</code> keyed by place,
+whose lanes carry their part of the seed (<code>start(part)</code>), the floatable run and a fold stating the remaining hop budget
+(<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
+partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]],
            theory_unit_removal=&gt;plan::[
             name=&gt;theory_unit_removal,
             cut=&gt;[role=&gt;id],
             where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[
-            name=&gt;derivation_contraction,
-            cut=&gt;[role=&gt;derivation],
+           branch_collapse=&gt;plan::[
+            name=&gt;branch_collapse,
+            cut=&gt;[role=&gt;add],
             where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              place=&gt;[local],
-              hop=&gt;0,
-              split=&gt;stream,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              place=&gt;[peer],
-              hop=&gt;1,
-              split=&gt;stream,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+           branch_inline=&gt;plan::[
+            name=&gt;branch_inline,
+            cut=&gt;[role=&gt;zero],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           theory_involution=&gt;plan::[
+            name=&gt;theory_involution,
+            cut=&gt;[law=&gt;[involution]],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_idempotent=&gt;plan::[
+            name=&gt;law_idempotent,
+            cut=&gt;[law=&gt;[idempotent]],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           ...(7 more)]]
 </code></pre>
-<p>A keyed fold lowers the same way, its master recombining pointwise: <code>merge().sum()</code> deep-merges the partial recs and
+<p>A keyed fold lowers the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the partial recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=&gt;/m/inst/sum()])).sum().select([id()=&gt;sum()]),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]],
            theory_unit_removal=&gt;plan::[
             name=&gt;theory_unit_removal,
             cut=&gt;[role=&gt;id],
             where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              place=&gt;[local],
-              hop=&gt;0,
-              split=&gt;stream,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              place=&gt;[peer],
-              hop=&gt;1,
-              split=&gt;stream,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+           branch_collapse=&gt;plan::[
+            name=&gt;branch_collapse,
+            cut=&gt;[role=&gt;add],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           branch_inline=&gt;plan::[
+            name=&gt;branch_inline,
+            cut=&gt;[role=&gt;zero],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           theory_involution=&gt;plan::[
+            name=&gt;theory_involution,
+            cut=&gt;[law=&gt;[involution]],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           law_idempotent=&gt;plan::[
+            name=&gt;law_idempotent,
+            cut=&gt;[law=&gt;[idempotent]],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
+           ...(7 more)]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1252,7 +1254,9 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[ws://localhost:8555],
+           authority=&gt;[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]
@@ -1319,7 +1323,7 @@ reaches the peer through the run-time dispatch.</p>
 candidate (<strong>declared</strong>) when some authority's scheme has a dialer in the ISA — <code>Signatures.resolves(scheme)</code>, the
 <code>ws → ws_client</code>, <code>http</code>/<code>https → http_client</code>, <code>loop → id_client</code> table, read with no dial attempted. A dialed peer
 can <em>take</em> a placement (<strong>realized</strong>) when its client <strong>overrides every instruction the placement requires</strong> and is
-<code>online</code> — <code>Places.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an <code>http_client</code>
+<code>online</code> — <code>PlaceResolver.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an <code>http_client</code>
 (no <code>eval</code>) is not a shard target; an offline peer is not a target either, so an outage <em>shrinks</em> the fan-out rather
 than poisoning the reduction.</p>
 <p><code>law_shard</code> fans out over the surviving set: <code>shardTargets</code> keeps only <strong>dialed</strong> peers (they carry a <code>host</code> — the
@@ -1334,7 +1338,7 @@ so nothing is dropped and nothing is computed twice.</p>
 </thead>
 <tbody>
 <tr><td><code>origin</code></td><td><code>path::T</code></td><td><code>Places.self()</code> at lift</td><td>where the code <strong>starts</strong> — this machine's listeners (<code>//0.0.0.0</code>); absent → not placeable</td></tr>
-<tr><td><code>where</code></td><td><code>path::T</code></td><td><code>realizedWhere()</code> after a distribution</td><td>where it <strong>went</strong> — <code>{[span=&gt;at] =&gt; [place…]}</code>, read back off the emitted <code>select([to(…)])</code> hosts</td></tr>
+<tr><td><code>where</code></td><td><code>path::T</code></td><td><code>realizedWhere()</code> after a distribution</td><td>where it <strong>went</strong> — <code>{[span=&gt;at] =&gt; [place…]}</code>, read back off the emitted <code>branch</code>'s keys</td></tr>
 <tr><td><code>where</code></td><td><code>abstraction::T</code></td><td><code>placeWord()</code> — <code>Places.reachable()</code>, or the realized <code>path.where</code> places after a distribution</td><td>where it <strong>can go</strong> — roster ∪ dialed peers (the α place-class word)</td></tr>
 </tbody>
 </table>
