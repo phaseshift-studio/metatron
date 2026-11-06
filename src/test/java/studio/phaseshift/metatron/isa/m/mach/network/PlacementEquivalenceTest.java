@@ -66,6 +66,7 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
     @AfterEach
     void teardown() {
         Machine.current().network().drop(f("loop://localhost:8555"));
+        Machine.current().network().drop(f("loop://ginger:8555"));
     }
 
     /**
@@ -81,10 +82,32 @@ public class PlacementEquivalenceTest extends AbstractMetatronTest {
         Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
         final Code compiled = Machine.current().compiler().rewriter()
                 .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
-        // the emitter fired the tree layout: the master leads start·select·select·merge·sum
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
+        // the emitter fired the tree layout: the master is start·branch·sum
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
                 DistributedSweep.layout(compiled).ops(), "the master recombines through the combiner: " + compiled);
         checkEquality(LOG, jnt(expected),
+                TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
+    }
+
+    /**
+     * THE ORDERED SHARD: each lane sorts its part and the master k-way merges the runs. A lane answers its run as ONE
+     * lst, so the branch's bag of lanes keeps every run whole and {@code kmerge} reads runs, never their slots. Two loop
+     * peers, so there are two runs to merge. Each row: the fold % its value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{5,3,1,4,2}.plus(10).order(_) % [11,12,13,14,15]",
+    }, delimiter = '%')
+    void testOrderedShardMergesWholeRuns(final String source, final String expected) {
+        Network.Helper.connect(Machine.current().network(), f("loop://localhost:8555"));
+        Network.Helper.connect(Machine.current().network(), f("loop://ginger:8555"));
+        final Code compiled = Machine.current().compiler().rewriter()
+                .apply(ObjmtronSerializer.parse(source).asCode()).asCode();
+        final DistributedSweep.Layout layout = DistributedSweep.layout(compiled);
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, KMERGE_INST_TID), layout.ops(),
+                "the master k-way merges the lanes' runs: " + compiled);
+        assertEquals(2, layout.lanes().size(), "two lanes, two runs: " + compiled);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected),
                 TransportRewriteHarness.single(TransportRewriteHarness.evaluate(compiled)).clone().selfVID(null), true);
     }
 

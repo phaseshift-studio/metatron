@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TID;
@@ -87,9 +87,9 @@ public class LawShardOfflinePeerTest extends AbstractMetatronTest {
             assertEquals(1L, Machine.current().network().peers().elements().count(),
                     "the offline peer is still listed: it is being redialed");
             final DistributedSweep.Layout home = this.planned();
-            // BOTH halves of "planned at home": no lane shipped AND no fan-out select in the chain. Zero lanes alone is
-            // weaker — a select over an empty route list also reads as zero lanes, and that is still a fan-out.
-            assertTrue(home.lanes().isEmpty() && !home.ops().contains(SELECT_INST_TID),
+            // BOTH halves of "planned at home": no lane shipped AND no fan-out branch in the chain. Zero lanes alone is
+            // weaker — a branch with no keyed lanes also reads as zero lanes, and that is still a fan-out.
+            assertTrue(home.lanes().isEmpty() && !home.ops().contains(BRANCH_INST_TID),
                     "an offline peer is no target, so the fold is planned at home: " + home.emitted());
             checkCodeParseApply(LOG, FOLD, "14");
         } finally {

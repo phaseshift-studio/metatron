@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Arrays;
@@ -38,7 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_PLAN_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -217,40 +218,42 @@ public class catInstSet extends AbstractInstSet {
     }
 
     /**
-     * The realized placement of an emitted layout — the fan-out {@code select}'s routes
-     * ({@code virtual::[code=>eval(<uri>)]}), lifted to their place DESIGNATORS and COUNTED, keyed by the shard's AT
-     * span: {@code [[span=><at]=>[local=>1,//ginger=>2,//booger=>1]]}. {@code noobj} when the emitter shipped nothing
-     * (the layout has no {@code select}).
+     * The realized placement of an emitted layout — the {@code branch}'s keyed lanes ({@code place => program}),
+     * lifted to their place DESIGNATORS and WEIGHTED, keyed by the shard's AT span:
+     * {@code [[span=><at]=>[local=>1,//ginger=>2,//booger=>1]]}. {@code noobj} when the emitter shipped nothing (the
+     * layout has no keyed {@code branch}).
      * <p>
-     * THE DEMAND IS THE REALIZED LANE COUNT, NOT THE DECLARED BAND: one route is one lane and one share, so counting
-     * the routes that name a place answers how many shares that place actually ran — after the emitter's clamps
+     * THE DEMAND IS THE REALIZED SHARE COUNT, NOT THE DECLARED BAND: a lane's key states the shares its place took,
+     * {@code ?split={n}part} (one when the key states no weight of its own) — after the emitter's clamps
      * ({@code k = min(Σ demands, seed)} and the hop arity), not what the plan asked for. A band {@code //ginger{2,5}}
-     * that could only fill three lanes records {@code //ginger=>3}. The rec is the weighted {@code ?place} spelling, so
-     * a realized {@code where} can be read back as a place set directly.
+     * that could only fill three shares records {@code //ginger=>3}. The rec is the weighted {@code ?place} spelling,
+     * so a realized {@code where} can be read back as a place set directly.
      * <p>
-     * AN ADDRESSLESS ROUTE IS THE LOCAL PLACE ({@code eval()} with no {@code arg(0)}, the lane at distance zero): it
-     * ran part of the fold where the code already stands, so it is recorded as the {@code local} designator — the same
+     * THE HOME KEY IS THE LOCAL PLACE ({@code <~>}, a path rather than a host, the lane at distance zero): it ran part
+     * of the fold where the code already stands, so it is recorded as the {@code local} designator — the same
      * designator {@code ?place} uses, and the honest answer even when this machine has no listening authority to name
      * ({@link Places#self()} would answer {@code noobj} there, and dropping the lane would report a place set that ran
      * only its shipped half).
      * <p>
-     * MOVE LANDMINE: a {@code move} relocation emits a bare terminal {@code to(<target>)} — no {@code select} — so
+     * MOVE LANDMINE: a {@code move} relocation emits a bare terminal {@code to(<target>)} — no {@code branch} — so
      * this read-back would report no realized place for a moved program. When {@code move} ships, it needs its own
      * realized-placement read-back (recognize the terminal {@code to} route), or this must.
      */
     static Obj realizedWhere(final Code emitted) {
         final Map<Obj, Long> lanes = new LinkedHashMap<>();
         emitted.insts().stream()
-                .filter(inst -> SELECT_INST_TID.equals(inst.tid().basePath()))
+                .filter(inst -> BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec())
                 .findFirst()
-                .ifPresent(select -> select.arg(0).asLst().lstValue().stream()
-                        .map(route -> route.asRec().at(uri(CODE)).asInst())
-                        // the addressless route is the LOCAL place; a shipped one is the `//host` its authority names
-                        .map(eval -> eval.args().isEmpty()
-                                ? uri(LOCAL)
-                                : uri("//" + eval.arg(0).uriValue().host()))
-                        .filter(designator -> !designator.isNoObj() && !designator.isFail())
-                        .forEach(designator -> lanes.merge(designator, 1L, Long::sum)));
+                .ifPresent(branch -> branch.args().asRec().elements().forEach(lane -> {
+                    final fURI key = lane.first().uriValue();
+                    // the key's own weight, else the branch's: the branch's query is every key's default
+                    // (BranchInst#routes), and a {n}part share is n of the place's shares (BranchInst#weight)
+                    final String split = key.hasQ(SPLIT) ? key.q(SPLIT) : branch.tid().q(SPLIT);
+                    final Obj share = null == split ? noobj() : ObjmtronSerializer.parse(split);
+                    // the home key is the LOCAL place; a shipped one is the `//host` its authority names
+                    lanes.merge(null == key.host() ? uri(LOCAL) : uri("//" + key.host()),
+                            share.isUri() && PART.equals(share.uriValue().name()) ? share.c().min() : 1L, Long::sum);
+                }));
         if (lanes.isEmpty())
             return noobj();
         final Map<Obj, Obj> demands = new LinkedHashMap<>();

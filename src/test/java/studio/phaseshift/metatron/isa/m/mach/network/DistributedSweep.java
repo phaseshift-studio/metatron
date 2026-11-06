@@ -31,20 +31,21 @@ import static studio.phaseshift.metatron.Tokens.HOP;
 
 /**
  * AN EMITTED SHARD, READ AS DATA. One value — {@link Layout} — says what a {@code law_shard}/{@code PlanInterpreter}
- * lowering actually emitted: the lanes it fanned out to, each lane's part and hop budget, the route each lane travels
- * by, and the op chain the master runs. A test asserts the layout through this reader instead of peeling the code
+ * lowering actually emitted: the lanes its branch fans out to, each lane's split, part and hop budget, the place each
+ * lane's key names, and the op chain the master runs. A test asserts the layout through this reader instead of peeling the code
  * itself, so a change in the emitted form is one diff in one place rather than a re-derivation per suite.
  * <p>
- * ONE PEEL, ONE PLACE. This reader reuses the peels that already exist — {@link Reduction#slaves} (the summands, and
- * their {@code block} un-quoting), {@link Reduction#routes} (the fan-out routes) and
- * {@link TransportRewriteHarness#ops}/{@link TransportRewriteHarness#seedOf} (the op chain and a seed) — and adds no
- * fourth reading of "lane", "route" or "summand".
+ * ONE PEEL, ONE PLACE. This reader reuses the peels that already exist — {@link Reduction#slaves} (the code each lane
+ * runs, its dealt part included), {@link Reduction#routes} (the places the keys name), {@link Reduction#splits} (each
+ * key's share) and {@link TransportRewriteHarness#ops}/{@link TransportRewriteHarness#seedOf} (the op chain and a
+ * seed) — and adds no fourth reading of "lane", "route" or "summand".
  *
  * <pre>{@code
  * final Layout layout = DistributedSweep.layout(compiled);
- * layout.ops();              // [start, select, select, merge, sum]
- * layout.lanes().size();     // one per route
- * layout.lane(0).part();     // the slice that lane runs
+ * layout.ops();              // [start, branch, sum]
+ * layout.lanes().size();     // one per key: one per distinct place
+ * layout.lane(0).split();    // its share: part, {2}part, copy
+ * layout.lane(0).part();     // the slice the branch deals that lane
  * layout.lane(0).budget();   // its ?hop, as the lane states it
  * }</pre>
  *
@@ -57,18 +58,19 @@ public final class DistributedSweep {
     }
 
     /**
-     * ONE PLACE THE SHARD WAS EMITTED FOR: the authority its route answers at, and the code it runs. The authority is
-     * {@code null} for the addressless {@code eval()} — that lane is the local place (a place at distance zero), not a
+     * ONE PLACE THE SHARD WAS EMITTED FOR: the authority its key names, its share, and the code it runs. The authority
+     * is {@code null} for the home key {@code <~>} — that lane is the local place (a place at distance zero), not a
      * shipped one. The emitter emits one whenever the place set names the home place ({@code ?place=[local,peer]}, or
      * the lanes case {@code ?place=[{4}local]} on a peerless machine), so a test asks this rather than inspects.
      *
-     * @param authority the route's target, {@code null} for the local place
-     * @param code      the code that lane runs
+     * @param authority the key's place, {@code null} for the local place
+     * @param split     the key's share as it states it ({@code part}, {@code {2}part}, {@code copy})
+     * @param code      the code that lane runs: {@code start(part)} and the lane's program
      */
-    public record Lane(fURI authority, Code code) {
+    public record Lane(fURI authority, String split, Code code) {
 
         /**
-         * Whether this lane runs where the shard was planned (the addressless route) rather than on a peer.
+         * Whether this lane runs where the shard was planned (the home key) rather than on a peer.
          */
         public boolean local() {
             return null == this.authority;
@@ -112,7 +114,7 @@ public final class DistributedSweep {
     }
 
     /**
-     * THE WHOLE LAYOUT: the lanes in route order, the route authorities (positionally aligned with the lanes,
+     * THE WHOLE LAYOUT: the lanes in key order, the key authorities (positionally aligned with the lanes,
      * {@code null} = the local place), and the code it was read from.
      * <p>
      * {@code routes} MIRRORS THE LANES' AUTHORITIES DELIBERATELY: {@code routes.get(i)} is {@code lanes.get(i).authority()}
@@ -151,13 +153,14 @@ public final class DistributedSweep {
     public static Layout layout(final Code emitted) {
         final List<Code> slaves = Reduction.slaves(emitted);
         final List<fURI> routes = Reduction.routes(emitted);
+        final List<String> splits = Reduction.splits(emitted);
         // a lane is one slave AND its route: a layout where the emitter disagrees with itself must not be read as a
         // shorter, quietly-consistent one
-        if (slaves.size() != routes.size())
+        if (slaves.size() != routes.size() || slaves.size() != splits.size())
             throw MTronException.of("a lane is one slave and one route: %s slaves, %s routes in %s", slaves.size(), routes.size(), emitted);
         return new Layout(
                 IntStream.range(0, slaves.size())
-                        .mapToObj(i -> new Lane(routes.get(i), slaves.get(i)))
+                        .mapToObj(i -> new Lane(routes.get(i), splits.get(i), slaves.get(i)))
                         .toList(),
                 routes,
                 emitted);

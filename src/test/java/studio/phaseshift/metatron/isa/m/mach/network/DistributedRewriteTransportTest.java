@@ -52,8 +52,7 @@ import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.IN;
 import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.Tokens.OUT;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MERGE_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SUM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -133,8 +132,8 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
         // the reduction reading: master (fold) + slaves (slice + reducer)
         final Reduction r = Reduction.of(c);
         final DistributedSweep.Layout layout = DistributedSweep.layout(r.masterCode());
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, SUM_INST_TID),
-                layout.ops(), "the master runs start·select·select·merge·sum");
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, SUM_INST_TID),
+                layout.ops(), "the master runs start·branch·sum");
         assertEquals(2, layout.lanes().size(), "two slaves");
         assertEquals(List.of(1L, 3L, 5L), layout.lane(0).part().stream().map(Obj::intValue).toList(), "slave 1's slice");
         assertEquals(List.of(2L, 4L, 6L), layout.lane(1).part().stream().map(Obj::intValue).toList(), "slave 2's slice");
@@ -158,7 +157,7 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
      * ONE PLAN, EVERY FOLD WHOSE PARTIALS RECOMBINE. {@code law_shard} shards the fold and the master recombines the
      * peers' partials through its COMBINER, computed rather than named: {@code sum}/{@code prod} through themselves,
      * {@code count} through {@code sum}, {@code order(s)} through {@code kmerge(s)}. The fold runs for real across the
-     * forked peers — the master's chain leads {@code start·select·merge·<combiner>} — and the recombined value is the
+     * forked peers — the master's chain leads {@code start·branch·<combiner>} — and the recombined value is the
      * value the undistributed fold answers. Each row: the fold % its combiner's op % the recombined value.
      */
     @Training.SkipTraining(reason = "the rows run over forked peers; the distributed layout is the subject, not the value alone")
@@ -187,8 +186,8 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     void testCombinerShardsOverTransport(final String source, final String combiner, final String expected) {
         final DistributedComputation c = DistributedComputation.of(source);
         final List<fURI> ops = DistributedSweep.layout(Reduction.of(c).masterCode()).ops();
-        assertEquals(List.of(START_INST_TID, SELECT_INST_TID, SELECT_INST_TID, MERGE_INST_TID, M_ISA_INST_TID.extend(combiner)),
-                ops.subList(0, Math.min(5, ops.size())), "the master recombines the partials through the combiner: " + ops);
+        assertEquals(List.of(START_INST_TID, BRANCH_INST_TID, M_ISA_INST_TID.extend(combiner)),
+                ops.subList(0, Math.min(3, ops.size())), "the master recombines the partials through the combiner: " + ops);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), c.result(), true);
     }
 
@@ -196,7 +195,7 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
      * AN EFFECT STAYS HOME. The floatable run is replicated into every peer, so only a declared-{@code pure}
      * instruction floats: {@code side} is a mapper by its form but declares nothing, so a fold behind it is not
      * sharded, anywhere in the run, while the same fold behind a pure mapper is. Each row: the fold % whether the
-     * master ships it to the peers (a select) % its value.
+     * master ships it to the peers (a branch) % its value.
      */
     @Training.SkipTraining(reason = "the rows run over forked peers; whether the layout ships is the subject, not the value alone")
     @ParameterizedTest
@@ -207,7 +206,7 @@ public class DistributedRewriteTransportTest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testOnlyPureRunsFloat(final String source, final boolean shipped, final String expected) {
         final Code rewritten = Machine.current().compiler().rewriter().apply(ObjmtronSerializer.parse(source).asCode()).asCode();
-        checkEquality(LOG, bool(shipped), bool(TransportRewriteHarness.ops(rewritten).contains(SELECT_INST_TID)), true);
+        checkEquality(LOG, bool(shipped), bool(TransportRewriteHarness.ops(rewritten).contains(BRANCH_INST_TID)), true);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), TransportRewriteHarness.single(TransportRewriteHarness.evaluate(rewritten)), true);
     }
 }

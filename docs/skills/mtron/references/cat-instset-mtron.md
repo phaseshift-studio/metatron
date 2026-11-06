@@ -538,10 +538,10 @@ same algebra that says $x + 0 \leadsto x$ (a time rewrite) says $(a+b)\cdot r \l
 (a space rewrite) — the location model is the algebra's parallel-execution laws, surfaced as rules.
 
 Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's out-edge — the examples read
-`>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: the seed bulk partitioned into
-shards whose fold carries the remaining hop budget (`sum?hop=0` at a leaf — the depth rides the fold, never the
-seed), each shard shipped by a `select([to(peer)])` to its roster member, merged, and recombined at home through the
-reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+`>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: one `branch` keyed by place,
+whose lanes carry the floatable run and a fold stating the remaining hop budget (`sum?hop=0` at a leaf — the depth
+rides the fold, never the seed); the branch deals the seed bulk over its keys, runs each lane at its roster member,
+and the lanes' partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
@@ -550,7 +550,7 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
-A keyed fold lowers the same way, its master recombining pointwise: `merge().sum()` deep-merges the partial recs and
+A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron_pre
@@ -672,7 +672,7 @@ Three location fields, three questions — easy to conflate because two share th
 | field    | on               | computed by                                                                                    | the question it answers                                                                           |
 |----------|------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable        |
-| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `select([to(…)])` hosts |
+| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `branch`'s keys   |
 | `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                              |
 
 `Places.reachable()` deliberately excludes the origin — it is where the code starts, not where it can go. The

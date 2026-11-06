@@ -22,19 +22,24 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import static studio.phaseshift.metatron.Tokens.CODE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BLOCK_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.SELECT_INST_TID;
+import static studio.phaseshift.metatron.Tokens.PART;
+import static studio.phaseshift.metatron.Tokens.SPLIT;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /**
  * The reduction (master/slave) reading of a {@link DistributedComputation}: one local master whose code carries the
- * fold, and 1..N remote slaves whose code carries a round-robin slice and the reducer. This is the first topology
+ * fold, and 1..N slaves — the branch's lanes — each running its dealt slice through the floatable run and the reducer. This is the first topology
  * interpretation — the {@code law_shard}/{@code PlanInterpreter} peel. The general shape it reads stays topology-free,
  * so peer-to-peer and embarrassingly parallel will be their own readings of the same {@code peers()} list.
  *
@@ -74,72 +79,81 @@ public final class Reduction {
     }
 
     /**
-     * The shipped members of the fan-out {@code select}: one virtual route per lane, in lane order — or empty when the
-     * code carries no such {@code select}.
+     * The keyed lanes of the fan-out {@code branch}, {@code place => program} in key order — or empty when the code
+     * carries no such branch.
      * <p>
-     * THE MARKER IS THE EMITTER'S OWN PREFIX, not "the first select anywhere". {@code PlanInterpreter.shard} emits
-     * exactly {@code start([…]).select(fan-out).select(>>rhs).merge.…}, so a shard-planned code has {@code start} at 0
-     * and the fan-out {@code select} at 1, and the gather select below ships nothing. A user {@code select} in a chain
-     * the plan declined must NOT read as a fan-out: its members are not routes, and {@link #slaves(Code)} would then
-     * walk the start seed and fail to answer a code. That is what tells {@code slaves}/{@code routes} to read no lanes
-     * rather than throw.
+     * THE MARKER IS THE EMITTER'S OWN PREFIX, not "the first branch anywhere". {@code PlanInterpreter.shard} emits
+     * exactly {@code <seed>.branch(place => program, …).<combiner>…}, so a shard-planned code has its {@code start} at 0
+     * and the keyed branch at 1. A user {@code branch} in a chain the plan declined must NOT read as a fan-out: its
+     * members are not the plan's lanes, so {@link #slaves(Code)}/{@link #routes(Code)} read no lanes rather than misread.
      */
-    private static List<Obj> shipped(final Code master) {
+    private static List<Rel> lanes(final Code master) {
         final List<Inst> insts = master.insts();
         if (2 > insts.size()
                 || !START_INST_TID.equals(insts.getFirst().tid().basePath())
-                || !SELECT_INST_TID.equals(insts.get(1).tid().basePath()))
+                || !BRANCH_INST_TID.equals(insts.get(1).tid().basePath())
+                || !insts.get(1).args().isRec())
             return List.of();
-        return insts.get(1).arg(0).asLst().lstValue();
+        return insts.get(1).args().asRec().elements().toList();
     }
 
     /**
-     * Peel the slave codes out of a {@code law_shard} master: one per route, un-quoted from whatever
-     * {@code block(...)} nesting there is (a law_shard slave ships bare, so usually none). The order matches
-     * {@link #routes(Code)}. Empty when the code was not shard-planned.
+     * Each lane's split as its key states it, in key order — the key's own {@code ?split}, else the branch's, which is
+     * every key's default ({@code BranchInst#routes}): {@code part}, {@code {2}part}, {@code copy}. Empty when the code
+     * was not shard-planned.
+     */
+    public static List<String> splits(final Code master) {
+        final List<Rel> lanes = lanes(master);
+        return lanes.isEmpty() ? List.of() : lanes.stream()
+                .map(lane -> lane.first().uriValue())
+                .map(key -> key.hasQ(SPLIT) ? key.q(SPLIT) : master.insts().get(1).tid().q(SPLIT))
+                .toList();
+    }
+
+    /**
+     * The code each lane RUNS, one per route and in the same order: {@code start(part).program}, exactly as the branch
+     * builds it where the lane's key points ({@code BranchInst#lane}). The part is the one the branch deals the lane at
+     * run time, by its rule ({@code BranchInst#deal}): member {@code j} of the seed goes to slot {@code j mod W} of the
+     * summed weight {@code W}, the slots dealt to the weighted keys in key order, {@code w} apiece ({@code {w}part},
+     * one for a bare {@code part}), while a copy key takes the whole seed. Empty when the code was not shard-planned.
      */
     public static List<Code> slaves(final Code master) {
-        if (shipped(master).isEmpty())
+        final List<Rel> lanes = lanes(master);
+        if (lanes.isEmpty())
             return List.of();
+        final List<Obj> seed = TransportRewriteHarness.seedOf(master);
+        final long[] weights = splits(master).stream().mapToLong(split -> {
+            final Obj share = ObjmtronSerializer.parse(split);
+            return PART.equals(share.uriValue().name()) ? share.c().min() : 0L;
+        }).toArray();
+        final long total = Arrays.stream(weights).sum();
+        final List<List<Obj>> parts = new ArrayList<>();
+        for (final long weight : weights)
+            parts.add(0 == weight ? new ArrayList<>(seed) : new ArrayList<>());
+        for (int j = 0; 0 < total && j < seed.size(); j++) {
+            int lane = 0;
+            for (long slot = j % total; slot >= weights[lane]; lane++)
+                slot -= weights[lane];
+            parts.get(lane).add(seed.get(j));
+        }
         final List<Code> slaves = new ArrayList<>();
-        for (final Obj summand : master.insts().getFirst().arg(0).asLst().lstValue()) {
-            Obj inner = summand;
-            while (true) {
-                if (inner.isCode()) {
-                    final Code code = inner.asCode();
-                    if (1 != code.insts().size() || !BLOCK_INST_TID.equals(code.insts().getFirst().tid().basePath()))
-                        break;
-                    inner = code.insts().getFirst().arg(0);
-                } else if (inner.isInst() && BLOCK_INST_TID.equals(inner.asInst().tid().basePath())) {
-                    inner = inner.asInst().arg(0);
-                } else {
-                    break;
-                }
-            }
-            slaves.add(inner.asCode());
+        for (int r = 0; r < lanes.size(); r++) {
+            final mFluent<?> slave = start_(objs(parts.get(r)));
+            slave.addInsts(lanes.get(r).second().asCall().insts());
+            slaves.add(slave);
         }
         return slaves;
     }
 
     /**
-     * One shipped route's {@code eval}: a fan-out route is {@code virtual::[code=>eval(<target>)]}, so the ship is the
-     * thread's {@code code} slot, peeled off that rather than off the select member itself (a route that never wrapped
-     * is a bare inst, and answers as itself).
-     */
-    public static Inst ship(final Obj route) {
-        final Obj eval = route.isRec() && !route.asRec().at(uri(CODE)).isNoObj() ? route.asRec().at(uri(CODE)) : route;
-        return eval.isObjCall() ? eval.asCall().insts().getFirst() : eval.asInst();
-    }
-
-    /**
-     * Peel the routing targets in peer order out of a {@code law_shard} master's fan-out {@code select}. A target is
-     * the addressless {@code eval()}'s absent argument — {@code null} — which makes that lane the local place; every
-     * other lane answers at its target's authority. Empty when the code was not shard-planned.
+     * The routing targets in lane order: a lane's key, its query (the weight) aside. The home key {@code <~>} is a path,
+     * not a host — {@code null}, which makes that lane the local place; every other lane answers at its key's
+     * authority. Empty when the code was not shard-planned.
      */
     public static List<fURI> routes(final Code master) {
-        return shipped(master).stream()
-                .map(Reduction::ship)
-                .map(eval -> eval.args().isEmpty() ? null : eval.arg(0).uriValue())
+        return lanes(master).stream()
+                .map(lane -> lane.first().uriValue())
+                .map(key -> null == key.host() ? null : key.qLess())
                 .toList();
     }
 

@@ -27,11 +27,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
-import studio.phaseshift.metatron.isa.m.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
-import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -51,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -61,7 +59,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <p>The one-cut distribution milestone (Thm 19, {@code (a+b)·c = (a·c+b·c)·c}): guard on the live peer
  * roster, match the chain shape {@code [seed, {*}floatable, blocked cut, {*}tail]}, locate the cut, then
- * emit the {@code start([slave...]).select([to(peer)...]).merge().<combiner>.<tail>} layout the processor runs.
+ * emit the {@code <seed>.branch?dom=T{*}&split=part(<place> => <run>.<fold>, …).<combiner>.<tail>} layout the processor
+ * runs.
  * The cut's law obligations
  * ({@code monoidic} + {@code commutative}) ride on the {@code blocked} slot's COMBINER — the fold the partials
  * recombine through, computed by {@link LawTable#combiner} — so {@link PlanBuilder#create()}'s shape-derived
@@ -271,8 +270,9 @@ public final class PlanInterpreter {
         final Placement route = plan.where().stream().filter(placement -> placement.shape().distributes()).findFirst().orElse(null);
         if (null == route)
             return code;
-        // THE LANES: the place set — the route's own, overridden by a ?place on the chain — resolved against the
-        // snapshot, one lane per share, the HOME place's shares first. The lane order is the emitter's (the design's
+        // THE SHARES: the place set — the route's own, overridden by a ?place on the chain — resolved against the
+        // snapshot, one entry per share, the HOME place's shares first (the branch below keys them one lane per
+        // place, the place's shares its weight). The lane order is the emitter's (the design's
         // S order for [local,peer], and the same home-first rule for [peer,local], where the design's does not hold):
         // the resolver keeps the order the designators were written in, which is not the layout's. The arity caps the
         // window: the first `w` lanes in exactly that order, so the selection is the resolution order and nothing is
@@ -283,86 +283,68 @@ public final class PlanInterpreter {
         final boolean localOnly = 1 >= shares.size() && shares.stream().allMatch(ResolvedPlace::isLocal);
         if (localOnly)
             return code;
-        final int k = shares.size();
-        // THE FORM IS RESTATED, NEVER THE NUMBER: the slave's budget is the same arity with the height decremented
+        // THE FORM IS RESTATED, NEVER THE NUMBER: the lane's budget is the same arity with the height decremented
         // ({2}3 ⇒ {2}2 ⇒ {2}1, a band {2,4}3 ⇒ {2,4}2, the chain [n,1] ⇒ [n-1,1]), rendered through the one reader's
         // own writer so the pair form and the unstated arity keep their spellings. The reaching of the point is the one
         // place the arity drops out: below a height of zero nothing fans out, so the leaf states the bare point the
-        // schedule has always emitted. The budget rides the slave's FOLD (the reducer), not its seed: the depth is the
-        // fold's, and a peer re-plans from its own recombine.
+        // schedule has always emitted. The budget rides the lane's FOLD (the reducer): the depth is the fold's, and a
+        // peer re-plans from its own recombine.
         final Obj budget = 1 == axis.height() ? jnt(0) : Hop.of(axis.height() - 1, axis.arity()).toObj();
 
-        // emit (a·r + b·r)·combiner(r) — the master gathers partials and recombines them at home; each slave
-        // carries one factor of the bulk, the floatable run replicated, and a local partial reduce.
+        // emit seed·branch(place => run·fold, …)·combiner(r) — BRANCH IS THE ONE DISTRIBUTED PRIMITIVE (Marko,
+        // 2026-11-05): the seed is the branch's lhs, dealt over the lanes by their keys; each lane runs the floatable
+        // run replicated and a local partial reduce where its key points; and the lanes' partials come back as one
+        // bag, which the master recombines at home through the combiner.
         //
-        // A SLAVE SHIPS UNQUOTED. Nothing on this machine evaluates it: a multi-instruction chain is Code, never
-        // an Inst, so neither the lst nor select's at() auto-resolves it; to(<peer>) takes it as its lhs, raw; and
-        // the target's own to -- bound into the route below -- ships it as start(slave).to(<>) without computing it
-        // here. The peer's evaluation of that start(...) is the one that runs the slave,
-        // so what comes back is its value, 12@<tag>. A quote would now be peeled on the far side instead, and
-        // whether the code it uncovers still runs is left to the peer's processor -- so there is none.
+        // A LANE IS A PROGRAM, NEVER A PART. Nothing pre-splits the seed: under a {*} dom the branch takes the whole
+        // bag in one application and deals it at run time (BranchInst#deal), so each lane runs start(part).program.
+        // A remote lane ships that program uncompiled to its place's eval, and nothing here binds a route: the branch
+        // binds a remote key at run time, through its place's peer.
         //
         // THE PEER RE-PLANS ITS PART. Applying a code compiles it (Machine.evaluate), so this rule runs again on the
-        // slave where it lands: with budget left and dialed peers of its own, the peer is an interior node of the tree
+        // lane where it lands: with budget left and dialed peers of its own, the peer is an interior node of the tree
         // -- it shards its part and recombines through the same combiner -- and at a height of zero it is a leaf. Every
         // level partitions its part exactly, so a cycle in the dial graph only bounces work, never duplicates or drops
         // it, and the budget bounds the bounce.
-        final List<Obj> summands = new ArrayList<>();
-        final List<Obj> routes = new ArrayList<>();
-        final List<Obj> gathers = new ArrayList<>();
-        // PROFILING IS AN END CAP, NOT A TAIL. When the chain's instruction after the cut is profile(), the
-        // fold's partials are not what comes back — each slave answers a profiling::T — so there is nothing
-        // to recombine: the master's merge() is followed by COLLATION, which indexes the reports by the
-        // machine each was made on. `merge().sum()` would try to add two reports together.
+        //
+        // PROFILING IS AN END CAP, NOT A TAIL. When the chain's instruction after the cut is profile(), the fold's
+        // partials are not what comes back — each lane answers a profiling::T — so there is nothing to recombine:
+        // the branch is followed by COLLATION, which indexes the reports by the machine each was made on. A sum()
+        // would try to add two reports together.
         final boolean profiling = insts.size() > cutIndex + 1
                 && PROFILE_INST_TID.equals(insts.get(cutIndex + 1).tid().basePath());
-        final mFluent<?> master = profiling
-                ? merge_().addInst(profileCollate())
-                : merge_().addInsts(withoutHop(combiner)).addInsts(withoutHop(insts.subList(cutIndex + 1, insts.size())));
-        for (int s = 0; s < k; s++) {
-            final List<Obj> part = new ArrayList<>();
-            if (Partition.Kind.COPY == split.kind())
-                part.addAll(seed);                    // one part, and it is the whole seed: the replicas are the lanes
-            else
-                for (int j = s; j < seed.size(); j += k)  // stride: the default stream partition, any exact division
-                    part.add(seed.get(j));
-            // the seed states the PART, never a budget: the depth rides the fold below
-            final mFluent<?> slave = start_(objs(part));
-            slave.addInsts(withoutHop(insts.subList(1, cutIndex)));
-            // THE FOLD STATES THE RESTATED FORM: the copied reducer loses the level above's budget (whichever
-            // spelling), then carries this level's — the same arity, one height down.
-            final Inst fold = withoutHop(reducer);
-            slave.addInst(fold.tid(fold.tid().q(HOP, budget)));
-            // THE SLAVE'S END CAP: the peer profiles its OWN part. The marker ships, not a minted analysis
-            // inst, because the analysis captures the code by closure on the machine that runs it — the peer
-            // compiles the slave, so its profile_analysis sees the peer's chain and answers a profiling::T.
-            if (profiling)
-                slave.addInst(instB(PROFILE_INST_TID, lst()));
-            summands.add(slave);
-            // THE ROUTE IS BOUND HERE, at plan time (Marko, 2026-10-24: the compiled code has the bindings): resolved
-            // against the slave it will carry, so the emitted select holds the native eval with the target peer's own
-            // body (Network.Helper.atPeer) — what runs where is in the listing, not decided when select applies it
-            // (select keeps its projections raw, so nothing later would bind it). A route that does not resolve stays
-            // the bare eval(<target>), resolved at run time as before.
-            // THE HOME LANE'S ROUTE IS THE ADDRESSLESS ONE: the same eval with its target elided, so the share is
-            // applied where the code already stands -- the lane at distance zero, not a second mechanism. It is left
-            // UNRESOLVED: there is no target body to bind (and binding would fill the declaration's arg types into a
-            // route that must stay bare), and the bare eval() resolves where it runs, exactly as an unresolved peer
-            // route does.
-            final ResolvedPlace share = shares.get(s);
-            final boolean home = share.isLocal();
-            final Inst ship = home ? instB(EVAL_INST_TID, lst()) : eval_(share.authority()).tryToInst().asInst();
-            final Inst bound = home ? ship : ship.resolve(slave);
-            final Inst boundRoute = null != bound && bound.hasf() ? bound : ship;
-            // THE PARALLEL FAN-OUT (Thm 5, entry D): wrap each ship in a virtual thread, so the first select submits
-            // every round trip at once — none blocks the next, and each waits on its own thread. The gather select
-            // below (>>rhs) reads each thread's future off its rhs slot; the deref's FutureObj passes back through
-            // the processor's own FutureObj.resolveFuture, so the await boundary is the gather, not the fan-out.
-            routes.add(VirtualThread.virtual(boundRoute));
-            gathers.add(rshift_(uri(RHS)).tryToInst().asInst());
+        // the floatable run replicated, then the FOLD stating the restated form: the copied reducer loses the level
+        // above's budget (whichever spelling), then carries this level's — the same arity, one height down
+        final List<Inst> program = new ArrayList<>(withoutHop(insts.subList(1, cutIndex)));
+        final Inst fold = withoutHop(reducer);
+        program.add(fold.tid(fold.tid().q(HOP, budget)));
+        // THE LANE'S END CAP: the peer profiles its OWN part. The marker ships, not a minted analysis inst, because
+        // the analysis captures the code by closure on the machine that runs it — the peer compiles the lane, so its
+        // profile_analysis sees the peer's chain and answers a profiling::T.
+        if (profiling)
+            program.add(instB(PROFILE_INST_TID, lst()));
+        // ONE KEY PER DISTINCT PLACE, in the lane order: the home place is <~> (this machine, as Machine.fetch reads
+        // it), a peer is its authority, and the n shares one place takes are one key weighted ?split={n}part. Under
+        // the copy kind a place is one replica, whatever its shares: the combiner is idempotent, so x ⊕ x = x.
+        final boolean copy = Partition.Kind.COPY == split.kind();
+        final Map<fURI, Integer> places = new LinkedHashMap<>();
+        shares.forEach(share -> places.merge(share.isLocal() ? fURI.Singleton.f("~") : share.authority(), 1, Integer::sum));
+        final Map<Obj, Obj> lanes = new LinkedHashMap<>();
+        places.forEach((place, weight) -> lanes.put(
+                uri(copy || 1 == weight ? place : place.q(SPLIT, "{" + weight + "}" + PART)), code(new ArrayList<>(program))));
+        // the branch takes the seed's bulk whole (a {*} dom over the seed's carrier) and parts it by the keys — or,
+        // under the copy kind, hands every lane the whole of it
+        final fURI carrier = carriers.get(1).typeId();
+        final List<Inst> master = new ArrayList<>();
+        master.add(withoutHop(insts.getFirst()));
+        master.add(instB(BRANCH_INST_TID.dom(null == carrier ? ALL_STAR : carrier.maybeSome()).q(SPLIT, copy ? COPY : PART), rec(lanes)));
+        if (profiling)
+            master.add(profileCollate());
+        else {
+            master.addAll(withoutHop(combiner));
+            master.addAll(withoutHop(insts.subList(cutIndex + 1, insts.size())));
         }
-        final Code emitted = start_(lst(summands)).select_(lst(routes)).select_(lst(gathers)).addInsts(master.insts());
-        return emitted;
+        return code(master);
     }
 
     /**
@@ -428,7 +410,9 @@ public final class PlanInterpreter {
      */
     private static Partition split(final Plan plan, final Code code) {
         for (final Inst inst : code.insts())
-            if (inst.tid().hasQ(SPLIT))
+            // A BRANCH'S SPLIT IS ITS OWN: ?split=part|copy is how its keys share its lhs (BranchInst#weight), not a
+            // partition of this fold — and the layout this plan emits states one, which a re-plan must not misread
+            if (inst.tid().hasQ(SPLIT) && !BRANCH_INST_TID.equals(inst.tid().basePath()))
                 return split(inst.tid(), SPLIT);
         return plan.where().stream()
                 .filter(placement -> placement.shape().distributes())
@@ -588,8 +572,8 @@ public final class PlanInterpreter {
      * A TARGET IS ONLINE AND SERVES THE ROUTE ({@link PlaceResolver#serves}). AN OFFLINE PEER IS NO TARGET: a dialed peer
      * whose link is down stays in the map (it is being redialed), but a shard shipped down it answers {@code not
      * connected} and that fail poisons the reduction — so an outage SHRINKS the fan-out instead, and the fold
-     * completes on the peers that answer. A PEER THAT CANNOT {@code eval} IS NO TARGET EITHER: the route ships each
-     * slave as {@code eval(<target>)}, and {@code eval} is exactly "apply this program and answer its value". The
+     * completes on the peers that answer. A PEER THAT CANNOT {@code eval} IS NO TARGET EITHER: a lane keyed by the
+     * peer ships its program to the peer's {@code eval}, and {@code eval} is exactly "apply this program and answer its value". The
      * seed bulk is factored over whatever is left, so nothing is dropped and nothing is computed twice.
      */
     private static List<ResolvedPlace> resolve(final Env env, final Placement route, final PlaceSet places) {
@@ -601,7 +585,7 @@ public final class PlanInterpreter {
     }
 
     /**
-     * ONE LANE PER SHARE, in the layout's own order: the home place's shares FIRST (the emitter canonicalises the
+     * ONE ENTRY PER SHARE, in the layout's own order: the home place's shares FIRST (the emitter canonicalises the
      * lane order — the design's S order for {@code [local,peer]}, and the same home-first rule for {@code [peer,local]},
      * where the design's does not hold), then the peers in resolution order; a place with demand {@code n} takes
      * {@code n} consecutive lanes, and each place asks for at most as many lanes as the seed has parts.

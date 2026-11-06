@@ -250,7 +250,7 @@ public class DecisionModelTest extends AbstractInstSetTest {
 
     /**
      * THE LOCAL WARNING — {@code local} has two meanings and they stay apart. As the <em>whole</em> place set it is the
-     * origin's tail decision: {@code merge().<combiner>.<tail>} runs at home, nothing is shipped, and the cut is
+     * origin's tail decision: {@code <combiner>.<tail>} runs at home, nothing is shipped, and the cut is
      * re-applied in place, so the decision demands no law. As <em>one designator of a fan-out</em> it is the master
      * taking a share, and the decision still ships — it demands the off-machine merge's laws. Collapsing the two would
      * silently turn the plan's gather into a lane.

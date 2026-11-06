@@ -175,11 +175,11 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     }
 
     /**
-     * A HOME LANE'S ROUTE IS READ, NOT SKIPPED BY FAILURE — {@code ?place=[local,peer]} emits one addressless
-     * {@code eval()} (the lane at distance zero) beside the shipped {@code eval(<peer>)}. The realized read-back must
-     * walk the addressless route as the local place, so no {@code arg(0)} is ever asked of it. The local place is
-     * {@link Places#self()}, which a listener-less test VM does not have: the peer is what this row can pin, and the
-     * home lane's own capture is the route's shape, asserted first.
+     * A HOME LANE'S KEY IS READ, NOT SKIPPED BY FAILURE — {@code ?place=[local,peer]} emits the home key {@code <~>}
+     * (the lane at distance zero) beside the peer's. The realized read-back must walk the home key as the local place,
+     * a path rather than a host, so no authority is ever asked of it. The local place is {@link Places#self()}, which a
+     * listener-less test VM does not have: the peer is what this row can pin, and the home lane's own key is the
+     * branch's first, asserted first.
      */
     @Test
     public void testLoweredShardWithAHomeLaneReadsTheAddresslessRoute() {
@@ -191,8 +191,8 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
                 java.util.Set.of(f("loop://mantis:8555")));
         final Code emitted = PlanInterpreter.apply(PlanRewriter.planOf("law_shard"),
                 ObjmtronSerializer.parse("start?place=[local,peer]({1,2,3,4,5,6}).plus(1).sum()").asCode(), env);
-        assertTrue(emitted.insts().get(1).arg(0).asLst().lstValue().getFirst().asRec().at(uri(CODE)).asInst().args().isEmpty(),
-                "the home lane's route is the addressless eval: " + emitted);
+        assertEquals(f("~"), emitted.insts().get(1).args().asRec().elements().toList().getFirst().first().uriValue(),
+                "the home lane's key is <~>: " + emitted);
         final Obj lifted = catInstSet.realized(emitted);
         assertTrue(lifted.isRec() && lifted.asRec().has(uri(WHERE)), "a home lane writes a realized where: " + lifted);
         final Obj places = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
@@ -201,11 +201,11 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
     }
 
     /**
-     * THE REALIZED DEMANDS, NOT JUST WHO RAN — {@code ?place=[//ginger,//ginger,//booger]} asks ginger for two lanes and
-     * booger for one, and the emitted layout runs exactly that, so {@code path.where} records the COUNTS against the
-     * designators: {@code [[span=><at]=>[//ginger=>2,//booger=>1]]}. This is the realized lane count the emitter
-     * clamped to, not the declared band — the rec is the weighted {@code ?place} spelling, so the read-back is a place
-     * set again.
+     * THE REALIZED DEMANDS, NOT JUST WHO RAN — {@code ?place=[//ginger,//ginger,//booger]} asks ginger for two shares
+     * and booger for one, and the emitted layout runs exactly that (ginger's key weighted {@code {2}part}), so
+     * {@code path.where} records the COUNTS against the designators: {@code [[span=><at]=>[//ginger=>2,//booger=>1]]}.
+     * This is the realized share count the emitter clamped to, not the declared band — the rec is the weighted
+     * {@code ?place} spelling, so the read-back is a place set again.
      */
     @Test
     public void testRealizedWhereRecordsTheRealizedDemands() {
@@ -216,12 +216,12 @@ public class AbstractionGeometryTest extends AbstractInstSetTest {
         final Obj lifted = catInstSet.realized(emitted);
         final Obj demands = lifted.asRec().at(uri(WHERE)).asRec().values().findFirst().orElse(noobj());
         assertEquals("[//ginger=>2,//booger=>1]", demands.toString(),
-                "each realized place carries the lanes it actually ran: " + lifted);
+                "each realized place carries the shares it actually ran: " + lifted);
         assertEquals(2, demands.asRec().jvm().size(), "and only the places that ran are recorded: " + lifted);
     }
 
     /**
-     * An effect stays home: no {@code select} is emitted, so no realized {@code where} is written — the code stays
+     * An effect stays home: no {@code branch} is emitted, so no realized {@code where} is written — the code stays
      * un-rec'd.
      */
     @Test

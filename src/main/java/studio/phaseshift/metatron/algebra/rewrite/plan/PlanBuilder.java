@@ -46,8 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * final Plan shard = PlanBuilder.plan("law_shard")
  *         .cut(cut)
- *         .where(Placement.local(at, post))                                  // home: merge().<combiner>.<tail>
- *         .where(Placement.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // [to(a), to(b), ...]
+ *         .where(Placement.local(at, post))                                  // home: <combiner>.<tail>
+ *         .where(Placement.tree(1, Span.seed().partition(), pre.withoutSeed(), at))  // branch(<a> => …, <b> => …)
  *         .create();
  * }</pre>
  *

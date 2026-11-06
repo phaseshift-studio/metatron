@@ -71,8 +71,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       same place as {@code //host}, and the port is not a selector either ({@code //host:9999} resolves through the
  *       host's transports — {@code Places.place}'s own reading).</li>
  *   <li><b>Liveness</b> — {@link #dialed}: a place is a candidate only when {@link PlaceResolver#serves} says so — the client
- *       is <em>online</em> ∧ declares the instructions the route requires (a shipped shard travels as
- *       {@code eval(<authority>)}, so {@code eval}). An offline peer is dropped (a shard shipped down it answers
+ *       is <em>online</em> ∧ declares the instructions the route requires (a shipped shard travels to its place's
+ *       {@code eval}, so {@code eval}). An offline peer is dropped (a shard shipped down it answers
  *       {@code not connected} and poisons the reduction) and so is a client that cannot {@code eval}. A {@code //host}
  *       row the machine only <em>knows</em> is admitted by {@link Signatures#resolves} instead — the declared half of
  *       the liveness test — because there is no dialed client to ask.</li>
@@ -108,8 +108,8 @@ public final class PlaceResolver {
     /**
      * ONE PLACE A DECISION MAY LAND ON: the wire {@code authority} the share travels to, and the {@code demand} the
      * designator stated for it. A {@code null} authority is the <em>local</em> place — the one that ships nothing,
-     * because the code already stands there (the addressless {@code eval()} the layout reads as a lane at distance
-     * zero, {@code DistributedSweep.Lane}).
+     * because the code already stands there (the home key {@code <~>} the layout reads as a lane at distance zero,
+     * {@code DistributedSweep.Lane}).
      *
      * @param authority where the share travels, or {@code null} for the local place
      * @param demand    the shares this place is asked for

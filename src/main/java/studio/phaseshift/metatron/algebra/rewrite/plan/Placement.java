@@ -63,7 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * {@link Shape#SPACE}, a <em>landing</em> rather than a fan-out, which the axes do not encode yet.
  *
  * <p>{@code local} means two things and they stay apart: the origin's <em>tail</em> decision ({@code local} as the
- * whole place set, spans AT/POST — {@code merge().<combiner>.<tail>} runs at home) regroups nothing, so it demands
+ * whole place set, spans AT/POST — {@code <combiner>.<tail>} runs at home) regroups nothing, so it demands
  * nothing; {@code local} as <em>one designator of a fan-out</em> ({@code [local, peer]}) is the master taking a share,
  * and the decision still ships. {@link PlaceSet#regroups()} is the predicate that separates them, and
  * {@link PlanBuilder#where} refuses to bind a regrouping place set to a placement with no seed span — the tail can
@@ -150,8 +150,8 @@ public class Placement extends MRec {
 
         /**
          * The instructions a target of this shape must SERVE — the second axis beside {@link #obligations()}: what the
-         * shape demands of the place it ships to, not of the cut. Every distributing shape ships its chain through
-         * {@code eval(<target>)} (each route contributes one chain and an {@code eval()}), so its target's client must
+         * shape demands of the place it ships to, not of the cut. Every distributing shape ships its chain through its
+         * target's {@code eval} (each branch lane keyed by a host ships its program there), so its target's client must
          * declare {@code eval} in its {@code inst} — the route carries a PROGRAM the target must apply, and {@code eval}
          * is exactly "apply this program and answer its value". An http POST that only writes (no eval) runs nothing,
          * so a peer that cannot evaluate is no place to ship code. A shape that stays home demands nothing.
