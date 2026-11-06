@@ -108,4 +108,20 @@ public class BranchLaneTest extends AbstractMetatronTest {
             Machine.current().network().drop(f("loop://right"));
         }
     }
+
+    @Test
+    public void testMarkedLanesShipOnlyTheirShare() {
+        // each place counts what reached it: the marked keys split the six by weight (one and two), the unmarked key
+        // gets all six, and a key's split is not part of its place (both left keys reach the one left client)
+        final BiFunction<Obj, Inst, Obj> run = (lhs, inst) -> Network.Helper.boundary(Machine.root(), () -> lhs.apply(noobj()));
+        dial("loop://left", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        dial("loop://right", rec(uri(EVAL_INST_TID), Network.Helper.override(EVAL_INST_TID, run)));
+        try {
+            AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?<=int{*}(<loop://left?split=partition> => count(), "
+                    + "<loop://right?split={2}partition> => count(), <loop://left> => count())", "{2,4,6}");
+        } finally {
+            Machine.current().network().drop(f("loop://left"));
+            Machine.current().network().drop(f("loop://right"));
+        }
+    }
 }

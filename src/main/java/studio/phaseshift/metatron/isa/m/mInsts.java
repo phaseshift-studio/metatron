@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -1160,7 +1161,9 @@ public final class mInsts {
                                 place, an addressless key (or `local`) runs it here, and a host-bearing key with no
                                 dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
                                 only that verb at its place, so a client that reads and writes but runs no program serves
-                                it. remote places run concurrently. arguments are blocked, so a call is not computed here.
+                                it. remote places run concurrently. a key marked ?split={w}partition takes a share of the
+                                lhs by its weight w among the marked keys, and an unmarked key gets the whole lhs (copy).
+                                arguments are blocked, so a call is not computed here.
                                 """)
                         .body((lhs, inst) -> {
                             if (!inst.args().isRec())
@@ -1171,17 +1174,51 @@ public final class mInsts {
                             // worker inherits this thread's machine) before any is awaited, so the round trips overlap
                             // and the branch waits once, for the slowest lane, not for their sum
                             final Network network = Machine.current().network();
-                            final List<Obj> lanes = inst.args().asRec().elements()
-                                    // the args frame carries the lhs under the reserved `lhs` key (Processor)
+                            // the args frame carries the lhs under the reserved `lhs` key (Processor)
+                            final List<Rel> routes = inst.args().asRec().elements()
                                     .filter(kv -> !uri(LHS).equals(kv.first()))
-                                    .map(kv -> {
-                                        final fURI place = kv.first().uriValue().resolve();
-                                        // an addressless key is a logical place: run the program where the code stands
-                                        if (null == place.host())
-                                            return kv.second().apply(lhs).c(c -> lhs.c().mult(c));
+                                    .toList();
+                            // THE PARTITION GROUP (Marko, 2026-11-05): a key marked ?split={w}partition shares the lhs
+                            // with the other marked keys by its weight w (one when unstated, as the element count is
+                            // rarely known): member j of the lhs (a bulked member goes whole) goes to slot j mod W of the
+                            // summed weight W, the slots dealt to the marked keys in key order, w apiece. An unmarked key
+                            // gets the whole lhs (copy). Under a {1} dom an application holds one member, always slot 0,
+                            // so the first marked key takes them all: no round-robin state is kept across applications.
+                            final long[] weights = routes.stream().mapToLong(kv -> {
+                                // the object grammar reads the leading coefficient, as ?split={2}stream and ?hop={2}4 are
+                                final String split = kv.first().uriValue().q(SPLIT);
+                                final Obj share = null == split ? noobj() : ObjmtronSerializer.parse(split);
+                                return share.isUri() && PARTITION.equals(share.uriValue().name()) ? share.c().min() : 0L;
+                            }).toArray();
+                            final long total = Arrays.stream(weights).sum();
+                            final List<ArrayList<Obj>> parts = routes.stream().map(kv -> new ArrayList<Obj>()).toList();
+                            final List<Obj> elements = 0 == total ? List.of() : lhs.stream().toList();
+                            for (int j = 0; j < elements.size(); j++) {
+                                int lane = 0;
+                                for (long slot = j % total; slot >= weights[lane]; lane++)
+                                    slot -= weights[lane];
+                                parts.get(lane).add(elements.get(j));
+                            }
+                            final List<Obj> lanes = IntStream.range(0, routes.size())
+                                    .mapToObj(r -> {
+                                        final Rel kv = routes.get(r);
+                                        // a marked key computes on its part (none dealt, it runs nothing), an unmarked
+                                        // one on the whole lhs
+                                        if (0 != weights[r] && parts.get(r).isEmpty())
+                                            return noobj();
+                                        final Obj input = 0 == weights[r] ? lhs : objs(parts.get(r));
                                         final List<Inst> program = kv.second().isCall()
                                                 ? kv.second().asCall().insts()
                                                 : List.of((Inst) map_(kv.second()).tryToInst());
+                                        // the key's own query (its split) is the branch's to read, not part of the place
+                                        final fURI place = kv.first().uriValue().resolve().qLess();
+                                        // THE LANE IS ONE CODE, start(input).program, wherever it runs: an addressless
+                                        // key (a logical place) evaluates it here, the lane at distance zero, and a
+                                        // host-bearing key ships it. The start streams the input, so a {*} dom's bag
+                                        // reaches a {1} program member by member, and the input's coefficient rides the
+                                        // start (the processor restores a compressed lhs's own after the body)
+                                        if (null == place.host())
+                                            return Machine.evaluate(start_(input).addInsts(program));
                                         // A READ OR A WRITE NEEDS NO EVAL: a lane that is one from(</path>) or one
                                         // to(</path>) goes through the machine's own door to the place (its client's
                                         // from/to, else its eval), so a client that reads and writes but runs no program
@@ -1201,7 +1238,7 @@ public final class mInsts {
                                                 ? Machine.read(address)
                                                 : TO_INST_TID.equals(verb)
                                                 ? Machine.write(address, l)
-                                                : eval.apply(start_(l).addInsts(program))), lhs);
+                                                : eval.apply(start_(l).addInsts(program))), input);
                                     })
                                     .toList();
                             return objs(lanes.stream().map(lane -> lane instanceof FutureObj<?> answer

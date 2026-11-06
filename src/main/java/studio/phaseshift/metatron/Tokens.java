@@ -480,6 +480,8 @@ public final class Tokens {
     public static final String RESOLVE = "resolve";
     public static final String APPLY = "apply";
     public static final String SPLIT = "split";
+    // a ?split value: the keyed branch's weighted share of its lhs among the marked keys (Marko, 2026-11-05)
+    public static final String PARTITION = "partition";
     public static final String FLOW = "flow";
     public static final String RULES = "rules";
     public static final String INSTS = "insts";
