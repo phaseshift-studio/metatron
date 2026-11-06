@@ -1154,8 +1154,9 @@ public final class mInsts {
                                 a branching function: the lhs applied to each argument.
                                 an ordered call is the local branch: each member applied at current machine.
                                 a keyed call routes: `place => program` evaluates the lhs through the program at that
-                                place, an addressless key (or `local`) runs it here, and a host-bearing key with no
-                                dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
+                                place. a path names a local machine (<~> or <.> this one, <..> its parent, </.> the root,
+                                </abc>, <~/abc>), whose compiler compiles the lane and whose processor runs it; a
+                                host-bearing key with no dialed peer is unreachable. a program that is one from(</path>) or one to(</path>) needs
                                 only that verb at its place, so a client that reads and writes but runs no program serves
                                 it. every lane runs on its own virtual::T, so the lanes run concurrently. a key marked
                                 ?split={w}part takes a share of the lhs by its weight w among the marked keys, and an

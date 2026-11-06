@@ -169,4 +169,39 @@ public class BranchLaneTest extends AbstractMetatronTest {
             Machine.current().network().drop(f("loop://slow"));
         }
     }
+
+    @Test
+    public void testAPathLaneRunsAtItsMachine() {
+        // a path names a local machine: its lane is compiled and run there, so the lane's ~ is that machine's own. This
+        // machine (<~>), a pushed machine and the root (</.>) are three lanes that share the parts; a path naming no
+        // machine is refused, and so is a bare key, a path relative to this machine
+        final Machine root = Machine.current();
+        final Machine machine = root.push(f("branch_m"));
+        try {
+            Machine.Helper.evalAt(root, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(</branch_m> => to(<~/branch/lane>))", "7");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "{1,2,3,4,5,6}.branch?dom=int{*}&split=part(<~> => count(), "
+                        + "</branch_m> => count(), </.?split=copy> => count())", "{3,3,6}");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(</branch_none> => plus(1))", "<ERROR>");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "7.branch(a => plus(1))", "<ERROR>");
+                return noobj();
+            });
+            Machine.Helper.evalAt(machine, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/lane>", "7");
+                // <~> is this machine wherever it stands: from the pushed machine its lane writes the machine's own ~;
+                // <..> is the parent, so that lane writes the root's
+                AbstractMetatronTest.checkCodeParseApply(LOG, "8.branch(<~> => to(<~/branch/here>))", "8");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*<~/branch/here>", "8");
+                AbstractMetatronTest.checkCodeParseApply(LOG, "9.branch(<..> => to(<~/branch/up>))", "9");
+                return noobj();
+            });
+            Machine.Helper.evalAt(root, () -> {
+                AbstractMetatronTest.checkCodeParseApply(LOG, "*</branch/up>", "9");
+                return noobj();
+            });
+        } finally {
+            machine.pop();
+            Machine.write(f("/branch/up"), noobj());
+        }
+    }
 }

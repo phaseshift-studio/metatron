@@ -611,13 +611,16 @@ public interface Inst extends Call {
         }
 
         /**
-         * Whether {@code inst} is a branch with a lane keyed to a remote place (a host-bearing key). That lane is
-         * compiled and run where its key points, so a rewrite here neither inlines it nor looks inside it.
+         * Whether {@code inst} is a branch with a lane keyed anywhere but this machine: a peer (a host) or another local
+         * machine (a path, {@code </abc>}); only {@code <~>} and {@code <.>} name the machine the code runs on. That lane
+         * is compiled and run where its key points, so a rewrite here neither inlines it nor looks inside it.
          */
         public static boolean hasRemoteLane(final Inst inst) {
             return BRANCH_INST_TID.equals(inst.tid().basePath()) && inst.args().isRec()
                     && inst.args().asRec().recValue().keySet().stream()
-                    .anyMatch(key -> key.isUri() && null != key.uriValue().resolve().host());
+                    .filter(Obj::isUri)
+                    .map(key -> key.uriValue().qLess())
+                    .anyMatch(path -> !fURI.Singleton.f("~").equals(path) && !fURI.Singleton.f(".").equals(path));
         }
 
         public static Rec rectifyLstArgs(final Lst lstArgs, final Rec recArgs) {
