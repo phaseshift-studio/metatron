@@ -149,7 +149,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}&decq>>form", "reducer");
         checkCodeParseApply(LOG, "*/m/inst/sum?int<=int{*}&decq>>law", "[monoidic,commutative,semi_right_distributive,pure]");
         checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int&decq>>form", "mapper");
-        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int&decq>>law", "[poset,pure]");   // right_distributive commented out in the table
+        checkCodeParseApply(LOG, "*/m/inst/gt?bool<=int&decq>>law", "[poset,pure]");   // right_distributive undeclared
         //checkCodeParseApply(LOG, "*/m/inst/minus?int<=int&decq>>analysis>>inverse", "/m/inst/plus?rng=/m/int&dom=/m/int");
         checkCodeParseApply(LOG, "*/m/inst/neg?int<=int&decq>>law", "[involution,pure]");
         //checkCodeParseApply(LOG, "*/m/inst/neg?int<=int&decq>>analysis>>inverse", "/m/inst/neg?rng=/m/int&dom=/m/int");
@@ -313,7 +313,7 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * The INVERSE — the opposing edge {@code f⁻¹} with {@code f·f⁻¹ = 1} — computed from the carrier's declared
-     * algebra wherever the algebra states one, and declared only where it states none ({@link Law.Helper#lookup}).
+     * algebra wherever the algebra states one, and declared only where it states none ({@link Law.Helper#lawsOf}).
      * A group states cancellation: its operation's inverse is the instruction DEFINED as it applied to the inverted
      * argument ({@code div ≡ mult ∘ inv}, {@code minus ≡ plus ∘ neg}), and that instruction's inverse is the operation.
      * A monoid states nothing of the sort, so int's {@code mult}→{@code div} is declared — a truncating retraction,
@@ -350,8 +350,8 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * THE INST BUILDER — one chain states the contract, the body, the docs ({@code ?docq}) and the process laws
-     * ({@code ?decq}), replacing the separate {@code instC} + {@code docWrap} + law-table-row declarations. The
-     * laws are staged and persisted by the instset's drain once its space exists.
+     * ({@code ?decq}), replacing the separate {@code instC} + {@code docWrap} + {@code ?decq} declarations. The
+     * laws are staged by the builder and published on first read.
      */
     @Test
     void testInstBuilder() {
@@ -375,8 +375,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * AN INVERSE IS A ROW OF ITS OWN — the declared opposing edge is a relation beside the process laws, not a law,
-     * so an instruction stating only an inverse must still be staged and drained (the builder used to drop a
+     * AN INVERSE IS A CLAIM OF ITS OWN — the declared opposing edge is a relation beside the process laws, not a law,
+     * so an instruction stating only an inverse must still be staged and published (the builder used to drop a
      * declaration whose law list was empty). The carrier's algebra states no inverse of this instruction, so the
      * declared edge is the one served.
      */
@@ -401,8 +401,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A DEFINITION IS A ROW OF ITS OWN — the defining equation is likewise a relation beside the process laws, so an
-     * instruction stating only a derivation must be staged, drained and served. The pair here defines a FOLD
+     * A DEFINITION IS A CLAIM OF ITS OWN — the defining equation is likewise a relation beside the process laws, so an
+     * instruction stating only a derivation must be staged, published and served. The pair here defines a FOLD
      * ({@code count ↦ map(1)·sum}), which is the harmless case: no group operation of the carrier appears in it, so
      * the carrier's algebra states nothing over the equation and the served derivation is exactly the one written.
      */
@@ -436,20 +436,20 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A DECLARED DEFINITION IS A REWRITE RULE — {@link Law.Helper#derivations()} (the list {@code derivation_contraction}
-     * applies) must union the in-code rows with the equations instructions declare beside themselves, or a row
-     * migrated to the builder would silently stop contracting. The definition declared here is deliberately INERT:
-     * its rhs names instructions no chain contains, so the rule can never fire on another test's code and this test
-     * is about the list, not the rewrite.
+     * A DECLARED DEFINITION IS A REWRITE RULE — {@link Law.Helper#derivations()} (the list
+     * {@code derivation_contraction} applies) must hold the equations instructions declare beside themselves
+     * ({@code ?decq}), or a definition declared through the builder would silently stop contracting. The definition
+     * declared here is deliberately INERT: its rhs names instructions no chain contains, so the rule can never fire on
+     * another test's code and this test is about the list, not the rewrite.
      * <p>
-     * The second half is the migration window — the same equation written in a row AND beside the instruction. That
-     * is one rule, not two, which is why the identity is the address the definition is declared at.
+     * The second half declares an equation int's {@code minus} already declares, again at the same address. That is
+     * one rule, not two, which is why the identity is the address the definition is declared at.
      */
     @Test
     void testDeclaredDerivationReachesTheDerivationsList() {
         // a synthetic declaration DUPLICATES THE WHOLE SERVED ENTRY, not only the facet under test: the ?decq rec
-        // it writes REPLACES the inst's real declaration, so a partial copy would silently change the served row —
-        // and the migrated rows (mod, int's minus) now get their laws from ?decq alone, with no row restating them
+        // it writes REPLACES the inst's real declaration, so a partial copy would silently change the served claim —
+        // and mod's laws, like int's minus's, come from ?decq alone
         final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
         final Code rhs = ObjmtronSerializer.parse("start(A).siftveil(B).quarrymark()");
         final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
@@ -469,7 +469,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 "the definition reaches ?decq beside the registered inst");
         assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
                 "a declared definition feeds the rewrite list, got " + Law.Helper.derivations());
-        // the SAME equation lives in a row (int's minus) and now also beside the instruction: it must count once
+        // the SAME equation int's minus already declares, declared again at the same address: it must count once
         final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
         final Rec minusEntry = Law.Helper.lawsOf(minus);
         assertFalse(minusEntry.isNoObj(), "int's minus carries its declaration");
@@ -514,9 +514,10 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A ROW BELONGS TO ITS CARRIER'S INTSET, not to the instset that registers the op: {@code neg?dom=cmplx} lives
-     * in {@code /m/math}'s table although {@code neg} itself is an {@code /m/inst} instruction, so the op's own
-     * longest-prefix owner can never find it. Before the carrier dispatch these cmplx rows were served to nobody.
+     * A CLAIM LIVES BESIDE ITS INSTRUCTION, whichever set declares it: {@code neg?dom=cmplx} is declared by
+     * {@code /m/math} although {@code neg} itself is an {@code /m/inst} instruction, and its {@code ?decq} claim is
+     * read at the contract's own address. (The retired LawTable kept such rows in {@code /m/math}'s table, which the
+     * op's own longest-prefix owner could never find.)
      */
     @Test
     void testProcessRowIsOwnedByItsCarrier() {
@@ -543,8 +544,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     /**
      * ?DECQ — a type's algebra declaration lives BESIDE the type, in the owning space's decq region (the docq
      * pattern): written as data, read back by address, with no side table and no dependency on the category
-     * being mounted. This is the storage the type/inst builders write through; {@code typeLaws} will read it
-     * before its in-code fallback.
+     * being mounted. This is the storage the type/inst builders write through, and {@code TheoryHelper.instances}
+     * reads it.
      */
     @Test
     void testDecQLivesBesideItsType() {
@@ -560,7 +561,7 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * THE CLASS READS THE COMPUTED INVERSE — an involution is its own inverse, so {@code iso} (and with it
-     * {@code auto}, {@code section}, {@code retraction}) follows from the law table, stated once in
+     * {@code auto}, {@code section}, {@code retraction}) follows from the declared {@code involution}, stated once in
      * {@code Law.Helper#derivedInverse} and read here; a group operation like {@code plus} is not self-inverse and
      * stays a bare {@code endo}.
      */
@@ -576,18 +577,19 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * STRICT LAW RESOLUTION — an instruction's ROW follows the type path, a type's ALGEBRA does not.
-     * {@code nat} runs int's {@code plus} (so the row, its process laws and its derivation are inherited), but nat
+     * STRICT LAW RESOLUTION — an instruction's CLAIM follows the type path, a type's ALGEBRA does not.
+     * {@code nat} runs int's {@code plus} (so its claim, process laws and derivation included, is inherited), but nat
      * declares a {@code rig}, so no additive inverse is derived there and nothing may cancel; int's multiplicative
      * side is a monoid, so no multiplicative inverse is declared either — the relation between {@code div} and
      * {@code mult} is div's own derivation (the division algorithm), a fact about truncating division rather than
-     * about the algebra. A type that declares no algebra ({@code imperial}) gets no law row at
+     * about the algebra. A type that declares no algebra ({@code imperial}) gets no claim at
      * all — it computes through its implementation and licenses no rewrite. This is the switch
-     * {@link Law.Helper#declared(fURI, Type)} makes, and what lets this table shrink to declarations.
+     * {@link Law.Helper#declared(fURI, Type)} makes.
      * <p>
-     * THIS TEST PINS THE STRICT POLICY. {@code Law.Helper.algebraFor} keeps the inheriting body commented beside the
-     * strict one; if you flip that switch, flip these assertions with it (nat's plus then inherits int's inverse,
-     * and imperial's plus inherits real's) — the failure is the signal that the policy changed, not a bug.
+     * THIS TEST PINS THE STRICT POLICY. {@code Law.Helper.algebraFor} keeps the inheriting body ({@code inherit})
+     * compiled beside the strict one; if you flip that switch, flip these assertions with it (nat's plus then
+     * inherits int's inverse, and imperial's plus inherits real's) — the failure is the signal that the policy
+     * changed, not a bug.
      */
     @Test
     void testStrictLawResolution() {
@@ -609,7 +611,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertFalse(divOnNat.isNoObj(), "nat's div lands on the int contract");
         assertNull(TheoryHelper.roleAddress(divOnNat, INVERSE), "truncating division is nobody's inverse");
 
-        // no algebra declared, no row to license a rewrite: imperial has its own plus contract but no laws declared
+        // no algebra declared, no claim to license a rewrite: imperial has its own plus contract but no laws declared
         assertTrue(Law.Helper.declared(PLUS_INST_TID.basePath(), T(f("imperial"))).isNoObj(),
                 "imperial declares no algebra, so its plus has no row and licenses nothing");
         assertTrue(TheoryHelper.instances(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
@@ -620,11 +622,10 @@ public class catInstSetTest extends AbstractInstSetTest {
      * EVERY CARRIER SHIPS ITS ALGEBRA — the guard that a carrier cannot quietly lose it.
      * <p>
      * The base carriers declare their theory instances at the TYPE ({@code mTypes.declareAlgebras()}), staged
-     * through {@code TypeBuilder.declare} and persisted to {@code ?decq} by the drain that runs when {@code /m}
-     * mounts; {@link TheoryHelper#instances(Type)} serves the declaration. The law tables were the old
-     * source and are gone, so a declaration that
-     * stops being staged, or stops being drained, leaves the carrier with NO algebra — which is exactly what these
-     * assertions read. The instance keys are the ones the moved declarations write; asserting a name per carrier is
+     * through {@code TypeBuilder.declare} and published to {@code ?decq} on first read;
+     * {@link TheoryHelper#instances(Type)} serves the declaration. It is the only source, so a declaration that
+     * stops being staged, or stops being published, leaves the carrier with NO algebra — which is exactly what these
+     * assertions read. The instance keys are the ones the declarations write; asserting a name per carrier is
      * what makes a field renamed or an {@code auto_from_} pointer that no longer resolves a failure here rather
      * than a silently weaker rewrite policy elsewhere.
      * <p>
@@ -706,7 +707,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             //"|mult?int<=int(int::T).as(morphism::T)>>law     % [commutative,right_distributive,action,pure]",
             "|minus?int<=int(int::T).as(morphism::T)>>law    % [action,pure]",
             // right_distributive on a filter is TRUE in the stream ring (a filter applies pointwise) but is
-            // commented out in the table pending a theory that licenses it -- so the served list loses it
+            // not declared, pending a theory that licenses it -- so the served list lacks it
             "|gt?bool<=int(int::T).as(morphism::T)>>law      % [poset,pure]",
             "|div?int<=int(int::T).as(morphism::T)>>law      % [partial,pure]",
             "|sum?int<=int{*}().as(morphism::T)>>law         % [monoidic,commutative,semi_right_distributive,pure]",
@@ -964,11 +965,11 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * An abstraction's morphisms carry each instruction's own form and class. An op the law table declares is keyed by
-     * its entry. One it does not is keyed by the contract the resolver picks, so the seed reads initial ({@code start}
-     * is registered {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper and endomorphism, and the
-     * maybe-dom {@code is} reads standard. Each row: the chain % each morphism's form, seed first % each morphism's
-     * class labels ({@code -} for none).
+     * An abstraction's morphisms carry each instruction's own form and class. An op a {@code ?decq} claim declares is
+     * keyed by that claim. One no claim declares is keyed by the contract the resolver picks, so the seed reads
+     * initial ({@code start} is registered {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper
+     * and endomorphism, and the maybe-dom {@code is} reads standard. Each row: the chain % each morphism's form, seed
+     * first % each morphism's class labels ({@code -} for none).
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -985,7 +986,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A bare instruction lifted on its own has no chain to resolve it in, so an op the law table does not declare
+     * A bare instruction lifted on its own has no chain to resolve it in, so an op no {@code ?decq} claim declares
      * gleans its form and class from the dom/rng its registrations agree on: the seed's one contract is initial, and
      * {@code is}'s maybe-dom generic is standard. Each row: the instruction % its form % its class labels
      * ({@code -} for none).

@@ -842,12 +842,11 @@ public class InstSetDocGenerator {
      * THE TYPE'S ALGEBRA, resolved once: the {@code law} block — {@code ring => /m/theory/ring_theory::[…]},
      * {@code add_group => …} — that says which algebraic structures the type models.
      * <p>
-     * Read through {@link TheoryHelper#instances(Type)}, the CONSOLIDATED door: the algebra a type declares
-     * beside itself (the {@code ?decq} block a builder stages) is resolved first, the instruction set's in-code
-     * law table second, and the longest matching table owns the answer. Reading the builder's staging map
-     * directly would answer {@code rec0()} for every type whose algebra lives in its set's table, i.e. for
-     * most of them, and reading the {@code as(object::T)} lift directly would resolve the same block a second
-     * way — so this asks the one place both of those drain into.
+     * Read through {@link TheoryHelper#instances(Type)}, the ONE door: the theory block of the declaration the type
+     * makes beside itself ({@code ?decq}), read through {@code Machine.read} — a claim a builder staged is published
+     * by the first such read. Reading the builder's staging log directly would bypass the store of record, and reading
+     * the {@code as(object::T)} lift directly would resolve the same block a second way (the lift fills its
+     * {@code theory} from this same door) — so this asks the door itself.
      */
     private static Algebra typeAlgebra(final Type t) {
         final Algebra laws = TheoryHelper.instances(t);
@@ -1310,12 +1309,10 @@ public class InstSetDocGenerator {
      * AN INSTRUCTION'S DECLARED FACETS — the process {@link Law}s it obeys, its {@code inverse}, and its
      * {@code derivation} — as the badges and lines under its signature.
      * <p>
-     * Read through {@link Law.Helper#lawsOf(fURI)}, the CONSOLIDATED door: an instruction's laws may be declared
-     * in code by the instruction set's law table, OR beside the instruction by
-     * {@code InstBuilder}/{@code TypeBuilder} (persisted to {@code ?decq}), and the lookup answers BOTH —
-     * the in-code row, the declaration registry, the store, and the inverse the carrier's algebra derives.
-     * Reading one source directly would silently miss the other, which is how half the instructions would
-     * have rendered without badges.
+     * Read through {@link Law.Helper#lawsOf(fURI)}: the {@code decs::T} claim the instruction declares beside
+     * itself ({@code ?decq}, staged by {@code InstBuilder} and published on first read), with its inverse replaced
+     * when the carrier's algebra derives one. Reading the {@code ?decq} claim directly would silently miss that
+     * derived inverse.
      * <p>
      * The declarations are PER CONTRACT (the entry is keyed by the contract's tid), so two specializations of
      * one operation can declare different laws — which is why these belong on the variant's own row and not

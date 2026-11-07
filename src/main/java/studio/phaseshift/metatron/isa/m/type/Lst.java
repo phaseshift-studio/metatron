@@ -205,10 +205,10 @@ public interface Lst extends Poly<Lst, List<Obj>> {
     public static final class LstType {
 
         /*
-         * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions (lst->uri/lst/code). None of them carries a
-         * law-table row, so none carries a claim or an inverse -- nothing retires here. THE ROWED PAIR IS GONE:
-         * lst<->rec preserves nothing in EITHER direction (the round trip re-keys and reorders what it carries), so
-         * both directions declare NO inverse, and lst->rec moved to mInsts.lsts() beside the lst operations.
+         * WHAT REMAINS HERE, and why: the `as` conversions that declare nothing (lst->uri/lst/code). They are
+         * registered with instC, so none stages a `?decq` claim -- no law, no inverse. lst<->rec preserves nothing in
+         * EITHER direction (the round trip re-keys and reorders what it carries), so both directions declare NO
+         * inverse, and lst->rec lives in mInsts.lsts_insts() beside the lst operations.
          */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

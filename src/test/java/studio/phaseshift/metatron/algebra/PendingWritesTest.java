@@ -175,9 +175,9 @@ public class PendingWritesTest extends AbstractMetatronTest {
     }
 
     /**
-     * A STAGED VALUE IS READABLE AT ITS ADDRESS BEFORE ANY DRAIN — the hash read a law table makes of a declaration a
-     * builder queued. The answer is the LAST value staged at that address, and null where nothing is staged, so a
-     * reader can tell "not declared" from "declared empty".
+     * A STAGED VALUE IS READABLE AT ITS ADDRESS BEFORE ANY DRAIN — a plain hash read of the log, answered before a
+     * declaration a builder queued has a space of its own. The answer is the LAST value staged at that address, and
+     * null where nothing is staged, so a reader can tell "not declared" from "declared empty".
      */
     @Test
     void findAnswersTheValueStagedAtAnAddress() {

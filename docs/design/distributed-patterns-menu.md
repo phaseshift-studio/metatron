@@ -76,7 +76,7 @@ to a commutative monoid `(M, ⊕, e)`: `r(a ⊎ b) = r(a) ⊕ r(b)`. By the univ
 `map(g)` followed by the fold of `M`, and the partials recombine through that fold: the **combiner**. Thm 19 is the
 case where `r` is its own combiner.
 
-**Realized.** One `law_shard` plan. The combiner is computed, never declared (`LawTable.combiner`). A fold that
+**Realized.** One `law_shard` plan. The combiner is computed, never declared (`Law.Helper.combiner`). A fold that
 declares `monoidic` + `commutative` is its own combiner. A fold defined by its cat-graph `derivation` as a pointwise
 map into such a fold recombines through that fold, looked up on its target object.
 
@@ -216,7 +216,7 @@ priority.
 **Law.** Thm 19 per key. `group([k ⇒ h])` is a homomorphism from the bag into the recs of `h`'s monoid, keyed by
 `k`: the partials merge by key, and each key's partials fold through `h`'s combiner.
 
-**Realized (v1).** The combiner is POINTWISE, computed from `h`'s and never named (`LawTable.pointwise`):
+**Realized (v1).** The combiner is POINTWISE, computed from `h`'s and never named (`Law.Helper.pointwise`):
 
 ```
 combiner(group([k⇒h])) = sum()==[_=>combiner(h)]
@@ -226,8 +226,8 @@ master:   start([s_1,s_2]).select([to(p_1),to(p_2)]).merge().sum()==[_=>sum()]  
 
 The rec `sum` is the deep merge: colliding partials append into a bag, and a bulked partial (`merge()` bulks equal
 ones) reads as its copies — `Rec.plus` now reads coefficients through the merge (`Poly.Helper.distributed`). `==[_=>C]`
-is `select`, the per-key fold. `LawTable.keyed` types a group's spec folds with the carrier, so the combiner is legible
-before resolution. A nested `group` shards (its combiner is a chain, recursively), and E applies unchanged
+is `select`, the per-key fold. `Law.Helper.keyed` types a group's spec folds with the carrier, so the combiner is
+legible before resolution. A nested `group` shards (its combiner is a chain, recursively), and E applies unchanged
 (`group?hop=2(…)`). Witnessed by `DistributedRewriteTransportTest` (scalar, uri- and lst-keyed, nested) and
 `TreeShardTransportTest` (`testKeyedTreeOverTransport`); `catInstSetTest#testAprioriPruning` pins what is declined.
 `group` itself now keys a bulked member by the member, not its multiplicity (`{1,1,2}.group([_=>count()])` is
@@ -389,7 +389,7 @@ a concurrent partial gathered after the fact (`distributed-computing-qparams.md`
    plans written at an address. The expression (`?hop` on any instruction) and the plan's route are the other two
    layers, nearest first.
 3. **E's visited set.** Carried authorities, the origin only, or the dial graph's own direction.
-4. **G's parametric combiner.** Settled (v1): computed from the value inst directly (`LawTable.pointwise`); a `lst` is
+4. **G's parametric combiner.** Settled (v1): computed from the value inst directly (`Law.Helper.pointwise`); a `lst` is
    an atom of the deep merge, so `lst`-valued partials bag whole (a bag of runs) and recombine too.
 5. **J's spelling.** How mtron writes several folds over one stream.
 6. **Exact-tid lookups.** `morphism::T` reads laws by exact tid, so poly-registered ops (`order`, `kmerge`) need their

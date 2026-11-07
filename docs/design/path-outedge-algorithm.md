@@ -88,7 +88,7 @@ is pure data; `lower` has all the state it needs in the plan (cut/route) and the
 ## Open decisions
 
 1. **Match site.** The selector should match the morphism recs' fields, but the current `InstPattern` matches
-   against `Inst` (re-deriving `Form.of` / `LawTable.declares`). Either adapt `InstPattern` to match morphism
+   against `Inst` (re-deriving `Form.of` / `Law.Helper.declares`). Either adapt `InstPattern` to match morphism
    recs, or add a morphism-selector that reads `form`/`law` directly.
 2. **Double match.** Out-edge generation (liveness) and `lower` both need the selector match. Cache the cut
    index from the liveness pass into the plan rec, or accept the re-match inside `lower`.

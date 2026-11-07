@@ -373,15 +373,14 @@ public interface Str extends Mono {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: the entries whose law-table row carries no relation the builder could state and
-     * whose bodies need something this slice cannot import. `select` and `has` need CommonUtil, Str.Helper's
-     * REGEX_CACHE and MStr (and `has`'s rec form and `update` run arbitrary rule mtron), and `within` applies an
-     * arbitrary argument inst, so it declares no law of its own. THE ROWED PAIRS ARE GONE, all of them: str->bytes
-     * is the SOUND direction (the bytes of a str are that str again) and is declared WITH its inverse in
-     * mInsts.strs(); str->int/real/bool/uri are LOSSY (only SOME strs are the type, and "007" -> 7 -> "7"), so
-     * they declare NO inverse anywhere. `split` and `merge` preserve nothing in either direction (an empty segment
-     * does not survive the round trip), so neither declares an inverse -- each keeps the laws its row carried
-     * (split pure, merge monoidic and pure) and moved beside str's other operations in mInsts.strs().
+     * WHAT REMAINS HERE, and why: the entries that declare no law, inverse or derivation and whose bodies need
+     * something this slice cannot import. `select` and `has` need CommonUtil, Str.Helper's REGEX_CACHE and MStr (and
+     * `has`'s rec form and `update` run arbitrary rule mtron). str->bytes is the SOUND direction (the bytes of a str
+     * are that str again) and is declared WITH its inverse in mInsts.str_insts(); str->int/real/bool/uri are LOSSY
+     * (only SOME strs are the type, and "007" -> 7 -> "7"), so they declare NO inverse anywhere. `split` and `merge`
+     * preserve nothing in either direction (an empty segment does not survive the round trip), so neither declares
+     * an inverse -- each declares its laws (split pure, merge monoidic and pure) beside str's other operations in
+     * mInsts.str_insts().
      */
     class StrType {
 

@@ -216,11 +216,10 @@ public final class PendingWrites {
     }
 
     /**
-     * THE WRITE STAGED AT AN EXACT ADDRESS, or null when nothing was staged there — the read a law table makes of a
-     * declaration a builder queued ({@link #decq(fURI)} of the instruction's operation address), and the read a drain
-     * makes to re-publish the claim an instruction stated. It is a plain hash read, which is what a per-evaluation
-     * law question needs: {@code ?decq} answers the same claim from a space, but only a walk could find it before the
-     * claim has a space of its own.
+     * THE WRITE STAGED AT AN EXACT ADDRESS, or null when nothing was staged there — for a declaration, the claim a
+     * builder queued ({@link #decq(fURI)} of the instruction's operation address). It is a plain hash read of the log,
+     * answered before the claim has a space of its own: once the claim is published on first read, {@code ?decq}
+     * answers the same claim from a space.
      *
      * @param address the exact address to read
      * @return the value staged at that address, or null when nothing is staged there
@@ -246,9 +245,8 @@ public final class PendingWrites {
     /**
      * PUBLISH every write the prefix owns, answering how many were published, and KEEP them staged. A write belongs to
      * the prefix when it is AT the prefix or UNDER it — {@code address.equals(prefix)} or {@code
-     * address.toString().startsWith(prefix + "/")} — which is the jurisdiction rule the law tables use, so an
-     * instruction set that owns {@code /m} never publishes a declaration staged at {@code /m2/...} merely because the
-     * text starts the same way.
+     * address.toString().startsWith(prefix + "/")} — which is the jurisdiction rule, so an instruction set that owns
+     * {@code /m} never publishes a declaration staged at {@code /m2/...} merely because the text starts the same way.
      * <p>
      * A drain is a REPLAY, not a translation: for each admitted write it calls {@code Machine.write(address, value)},
      * in arrival order. Nothing is removed — see the class javadoc: a re-mounted set mounts a fresh space and must be
@@ -428,7 +426,7 @@ public final class PendingWrites {
     /**
      * THE JURISDICTION RULE, in one place: a write belongs to a prefix when it is AT it or UNDER it. The trailing
      * separator is what makes {@code /m} and {@code /m2} different jurisdictions rather than one a text prefix of the
-     * other — the same test the law tables use to pick an address's owning table.
+     * other.
      */
     private static boolean under(final fURI address, final fURI prefix) {
         return address.equals(prefix) || address.toString().startsWith(prefix + "/");

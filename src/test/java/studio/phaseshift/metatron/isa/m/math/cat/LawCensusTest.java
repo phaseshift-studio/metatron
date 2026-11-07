@@ -46,19 +46,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * THE LAW CENSUS — four facts about the algebra declarations, machine-checked, because each has silently broken
- * this week: a row whose address stopped being an instruction ({@code order?int}), an algebra whose role pointers
- * name instructions that are no longer registered (code's {@code neg}/{@code end}/{@code id}), identities that
- * stopped naming anything (bool's {@code zero}/{@code one}), and a claim that was never about its instruction at all
- * (a law whose subject SHAPE the instruction's contract does not have). None of them produced an error: a row
- * nothing consults, a role that resolves to {@code noobj}, and a category error are all silent, so the failure mode
- * is a law that quietly stops holding. This class is the census that turns each into a checked fact.
+ * this week: a row of the retired LawTable whose address stopped being an instruction ({@code order?int}), an
+ * algebra whose role pointers name instructions that are no longer registered (code's
+ * {@code neg}/{@code end}/{@code id}), identities that stopped naming anything (bool's {@code zero}/{@code one}), and
+ * a claim that was never about its instruction at all (a law whose subject SHAPE the instruction's contract does not
+ * have). None of them produced an error: a row nothing consults, a role that resolves to {@code noobj}, and a
+ * category error are all silent, so the failure mode is a law that quietly stops holding. This class is the census
+ * that turns each into a checked fact.
  *
  * <p>THE FOUR FACTS
  * <ol>
- *   <li><b>every law-table row is reachable</b> — the row's address is either a registered instruction
- *       ({@code live}), or an operation the lift still admits over that carrier ({@code view}: the implementation
- *       lives elsewhere but {@link Typer.Helper#deduceTypeInst} resolves it, or a registration shares the row's
- *       op family), or it is an {@code orphan} — a declaration about an address nothing answers for;</li>
+ *   <li><b>every row of the retired LawTable was reachable</b> — a row's address was a registered instruction
+ *       ({@code live}), an operation the lift still admitted over that carrier ({@code view}), or an
+ *       {@code orphan}. The table is gone, and no test in this class checks this fact today;</li>
  *   <li><b>every declared algebra validates</b> — a carrier's declared theory instances are turned into the law
  *       claims their theories entail ({@code mTypes.axiomsOf}), and
  *       {@link AlgebraTool#analyzeType(Type, List)} must accept every claim for every operation the carrier binds.
@@ -68,7 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *       path, or one the lift admits. This is the assertion that catches code's {@code neg}/{@code end}/{@code id},
  *       bool's {@code zero}/{@code one} and an {@code order?int} that lost its registration;</li>
  *   <li><b>every declared law matches its instruction's contract</b> — an instruction that declares a process law
- *       in {@code ?decq} (or through its served law-table row) must be the KIND of thing the law is about:
+ *       in {@code ?decq} must be the KIND of thing the law is about:
  *       {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's own dom/rng and,
  *       only when the signature carries {@code args}, its arity. A law about a binary relation declared on an endo
  *       op is a category error, and the census names it as one — it never silently stops applying.</li>
@@ -84,8 +84,8 @@ public class LawCensusTest extends AbstractMetatronTest {
     /**
      * KNOWN EXCEPTIONS — EACH ONE NAMES AN ADDRESS AND THE ISSUE THAT JUSTIFIES TOLERATING IT, written as
      * {@code "<address> — <issue>"}. An entry is a public apology, not a switch: it stays visible in this source
-     * file, so every reader sees why the algebra, the row or the role is exempt, and removing an entry is the day
-     * the underlying issue got fixed. The first two entries are ANALYZER limits rather than lost registrations,
+     * file, so every reader sees why the algebra, the declared law or the role is exempt, and removing an entry is the
+     * day the underlying issue got fixed. The first two entries are ANALYZER limits rather than lost registrations,
      * and neither may be "fixed" by renaming a declaration —
      * naming the registered addresses for code's additive group instead breaks 48 cases of
      * {@code catInstSetTest} (measured), because those addresses are deliberate declaration-level aliases
@@ -222,7 +222,7 @@ public class LawCensusTest extends AbstractMetatronTest {
 
     /**
      * ASSERTION 4 — EVERY DECLARED LAW IS ABOUT ITS INSTRUCTION'S CONTRACT. An instruction's declared process laws
-     * ({@code ?decq}, plus the served law-table row) are claims about the KIND of operation it is, so every one of
+     * (its {@code ?decq} claim) are claims about the KIND of operation it is, so every one of
      * them must pass the same signature match the analyzer applies before it renders an equation:
      * {@link AlgebraTool#matches(Law, Inst)} compares {@link Law#wrt()} with the instruction's {@code dom}/{@code rng}
      * — one poly variable {@code A}, so every occurrence must land on the same carrier — and its arity, but ONLY
@@ -271,9 +271,9 @@ public class LawCensusTest extends AbstractMetatronTest {
      * here rather than through a boot/close integration test (which would have to tear the shared VM down inside a
      * test method). A non-empty block is always safe to memoize. An empty one is safe only when a {@code ?decq} rec
      * actually came back; a BLIND read — the owning space was not reachable, or held no declaration yet — must
-     * answer its caller and never enter the table, because the tables are static singletons that outlive every
-     * boot, and memoizing it would answer "this type declares no algebra" for the rest of the JVM's life. Each row:
-     * the block the read produced % how the read went % whether it is memoizable.
+     * answer its caller and never enter the memo, because {@code TheoryHelper}'s memo is static and only a boot
+     * clears it ({@code BootLoader.resetMemos}), so memoizing it would answer "this type declares no algebra" for the
+     * rest of that boot. Each row: the block the read produced % how the read went % whether it is memoizable.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -301,7 +301,7 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * The row key IS a registered instruction's tid: the declaration addresses a live implementation.
+     * The address IS a registered instruction's tid: the declaration addresses a live implementation.
      */
     private static boolean live(final List<Inst> insts, final fURI address) {
         return null != address && insts.stream().anyMatch(inst -> address.equals(inst.tid()));
@@ -327,7 +327,7 @@ public class LawCensusTest extends AbstractMetatronTest {
 
     /**
      * Does an instruction registration answer this address? Asked over the ADDRESS'S OWN carrier (its {@code dom}),
-     * because a row or a role names one operation's contract over one carrier: {@code int}'s {@code plus} row is
+     * because a role names one operation's contract over one carrier: a role naming {@code int}'s {@code plus} is
      * answered by the int contract even when it is asked of a {@code nat}, and the machine's groupoid role names a
      * {@code uri} operation the {@code machine} type's own path never includes.
      */
@@ -344,9 +344,9 @@ public class LawCensusTest extends AbstractMetatronTest {
 
     /**
      * THE LAWS AN INSTRUCTION DECLARES — its {@code ?decq} rec (where {@code InstBuilder.create} stages the claims
-     * an instruction makes about itself) and the law-table row the table serves for it, unioned in declaration order
-     * and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: a row and a {@code ?decq} rec may
-     * state the same law, and the census must report each claim once.
+     * an instruction makes about itself), read raw and as {@link Law.Helper#lawsOf(fURI)} answers it, unioned in
+     * declaration order and deduplicated. Both are reads of a DECLARATION, never of a tentative claim: the two reads
+     * may state the same law, and the census must report each claim once.
      */
     private static List<Law> declaredLaws(final Inst inst) {
         final List<Law> laws = new ArrayList<>();

@@ -264,7 +264,7 @@ public enum Law {
                     + "obey right_distributive: (a+b)c merges the branches and reduces once, while ac+bc yields two reduced "
                     + "objects (Lemma 1, so ⟨F_r, +, ·⟩ is a near-ring, left distributive only — Thm 18). The inner "
                     + "re-application is what makes a shard sound rather than merely partitioned: the partials recombine "
-                    + "through the fold (Thm 19), which law_shard realizes via the law table's combiner";
+                    + "through the fold (Thm 19), which law_shard realizes through the fold's computed combiner";
             case magmadic -> "a bare binary op — a magma: closure only, neither associativity nor an identity demanded (as "
                     + "monoidic is a monoid). mean is the witness: commutative, but neither associative nor unital";
             case monoidic -> "an associative binary op with an identity element";
@@ -454,16 +454,17 @@ public enum Law {
         private static final ThreadLocal<Boolean> DERIVING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
         /**
-         * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} of its {@code ?decq} address. A claim
-         * {@link InstBuilder#create()} staged and nothing has published yet is published by that read (the q-proc's lazy
-         * hook), so the store is the only source.
+         * THE CLAIM AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} of its {@code ?decq} address. A
+         * claim {@link InstBuilder#create()} staged and nothing has published yet is published by that read (the
+         * q-proc's lazy hook), so the store is the only source.
          */
         private static Rec declaredRow(final fURI instTid) {
             if (null == instTid)
                 return noobjRec();
             // THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
-            // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a row is inherited
-            // through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused
+            // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a claim is
+            // inherited through the contract deduce() lands the operand on, never through the store: an ancestor's
+            // claim is refused
             final Obj stored = Machine.read(stagingAddress(instTid));
             final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
             return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
@@ -480,7 +481,7 @@ public enum Law {
         }
 
         /**
-         * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?decq}, staged by
+         * THE CLAIM AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?decq}, staged by
          * {@code InstBuilder.create}): the {@code decs::T} itself, answered only when it declares a process law, an
          * inverse or a defining equation — a claim of nothing else (a form alone) is {@code noobjRec}.
          */
@@ -596,11 +597,10 @@ public enum Law {
          * The instruction over {@code tid}'s carrier that is DEFINED as {@code op} applied to its inverted argument —
          * the instruction whose inverse is {@code op}. Null when nothing declares one.
          * <p>
-         * BOTH PLACES A DEFINITION CAN LIVE ARE READ — the in-code rows and the equations instructions declare beside
-         * themselves ({@link #declaredDerivations}). A sibling that migrated to {@code ?decq} is still the SAME claim
-         * about the same instruction, so a carrier that names the defining composition must find it there too: without
-         * this, migrating {@code div}'s row would silently strip {@code mult}'s inverse ({@code mult}→{@code div} is a
-         * consequence of {@code mult_group} plus {@code div ≡ mult ∘ inv}, and the equation is the half that migrated).
+         * THE DEFINITION IS READ WHEREVER IT IS DECLARED — among the equations every registered instruction declares
+         * beside itself in {@code ?decq} ({@link #declaredDerivations}). The equation lives with the SIBLING it
+         * defines, not with {@code tid}: {@code mult}→{@code div} is a consequence of {@code mult_group} plus
+         * {@code div ≡ mult ∘ inv}, and the equation is {@code div}'s claim, not {@code mult}'s.
          */
         private static fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {
             for (final Map.Entry<fURI, Derivation> entry : declaredDerivations().entrySet())
@@ -675,16 +675,17 @@ public enum Law {
          * alternative is type-checked on every build no matter which one the switch selects.
          * <p>
          * WHAT THE CHOICE MOVES, measured 2026-10-27 with the suite under both live bodies: the observable answers of
-         * {@code strict} and {@code inherit} are identical on today's table (162 tests green either way), because a
-         * type that declares a block ({@code nat}'s {@code rig}) is answered by its own block in both policies, and a
-         * type that declares none ({@code imperial}) is stopped earlier, at the ROW — its {@code plus?imperial} contract
-         * has no row in any law table, so {@link #declared(fURI, Type)} answers noobjRec before an algebra is ever read. The
-         * policy becomes load-bearing when a type has rows but no block: once delegation ({@code law => int}) lands, or
-         * the row read learns to fall back to an ancestor's row. {@link #byContract} is the loosest body and the only one
-         * that differs today: it hands {@code nat} int's ring, which {@code catInstSetTest#testStrictLawResolution} flags.
+         * {@code strict} and {@code inherit} were identical (162 tests green either way), because a type that declares
+         * a block ({@code nat}'s {@code rig}) is answered by its own block in both policies, and a type that declares
+         * none ({@code imperial}) is stopped earlier, at the CLAIM — its {@code plus?imperial} contract declares no
+         * {@code ?decq} claim, so {@link #declared(fURI, Type)} answers noobjRec before an algebra is ever read. The
+         * policy becomes load-bearing when a type has claims but no block: once delegation ({@code law => int}) lands,
+         * or the claim read learns to fall back to an ancestor's claim. {@link #byContract} is the loosest body and the
+         * only one that differs today: it hands {@code nat} int's ring, which
+         * {@code catInstSetTest#testStrictLawResolution} flags.
          *
          * @param operand  the type being operated on
-         * @param contract the n-tid of the row being answered, whose dom is the implementation's carrier
+         * @param contract the n-tid of the claim being answered, whose dom is the implementation's carrier
          * @return the type whose algebra answers for it
          */
         private static Type algebraFor(final Type operand, final fURI contract) {
@@ -726,9 +727,10 @@ public enum Law {
         }
 
         /**
-         * PRE-SWITCH (non-strict) — exactly the read this table made before the strict switch: the CONTRACT's own
-         * carrier answers, so {@code plus?dom=/m/int} is read out of int's algebra whatever the operand is and a nat
-         * operand inherits int's ring. Kept for comparison; it is the one body that changes today's answers.
+         * PRE-SWITCH (non-strict) — exactly the read the retired LawTable made before the strict switch: the
+         * CONTRACT's own carrier answers, so {@code plus?dom=/m/int} is read out of int's algebra whatever the
+         * operand is and a nat operand inherits int's ring. Kept for comparison; it is the one body that changes
+         * today's answers.
          */
         private static Type byContract(final fURI contract) {
             return null == contract ? null : algebraOf(contract.dom());
@@ -894,8 +896,8 @@ public enum Law {
         }
 
         /**
-         * ALL DERIVATIONS A REWRITE CAN APPLY — the values of {@link #declaredDerivations}, in declaration order (the
-         * in-code rows first, then the equations instructions declare beside themselves).
+         * ALL DERIVATIONS A REWRITE CAN APPLY — the values of {@link #declaredDerivations}: the equations instructions
+         * declare beside themselves ({@code ?decq}), one per address, in the order the machine's instset lists them.
          */
         public static List<Derivation> derivations() {
             return new ArrayList<>(declaredDerivations().values());

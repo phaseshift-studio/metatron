@@ -182,10 +182,9 @@ public interface Code extends Call {
 
 
     /*
-     * WHAT REMAINS HERE, and why: NOTHING. Every code::T operation carries a LAWS-ONLY row (plus, compose) or
-     * attributes no row at all (the two `as` conversions), so all four moved to mInsts.codes(), docs and laws
-     * colocated with the bodies they describe. The class stays only because mInstSet streams it
-     * (`Code.CodeType.insts()`); dropping that stream and this class is a follow-up.
+     * WHAT REMAINS HERE, and why: NOTHING. Every code::T operation is built through InstBuilder in
+     * mInsts.code_insts(), docs and laws colocated with the bodies they describe. The class stays only because
+     * mInstSet streams it (`Code.CodeType.insts()`); dropping that stream and this class is a follow-up.
      */
     public static class CodeType {
 
@@ -194,7 +193,7 @@ public interface Code extends Call {
         }
 
         public static Set<Inst> insts() {
-            // every code::T operation now lives in mInsts.codes(): nothing is left to declare here
+            // every code::T operation now lives in mInsts.code_insts(): nothing is left to declare here
             return new LinkedHashSet<>();
         }
 

@@ -65,11 +65,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * (order, a key, an addressed seed, a generator) are not held here and a different-but-plausible layout would compute
  * an answer the listing does not say.
  *
- * <p><b>Why a fold is built here.</b> The shipped law table declares no idempotent REDUCER: {@code or}/{@code and}
+ * <p><b>Why a fold is built here.</b> No shipped instruction declares an idempotent REDUCER: {@code or}/{@code and}
  * on a {@code bool} declare {@code idempotent} but are mappers ({@code bool⇒bool}), so they never reach the cut, and
  * every shardable fold ({@code sum}, {@code count}, the keyed folds) is non-idempotent. The legal-copy row therefore
- * declares one beside its body ({@link InstBuilder#create()}), which is the table's own {@code ?decq} route — the
- * production gate is exercised for real, with the one fold the tree does not ship.
+ * declares one beside its body ({@link InstBuilder#create()}), the same {@code ?decq} route every shipped claim
+ * takes — the production gate is exercised for real, with the one fold the tree does not ship.
  *
  * <p><b>Hermetic.</b> {@code loop://} peers only (the {@link PlacementEquivalenceTest} pattern): no forked process and
  * no cluster, and the emitter is lowered as the function of {@code (plan, code, env)} it is (C4's seam).
@@ -89,7 +89,8 @@ public class SplitLegalityTest extends AbstractMetatronTest {
     private static final fURI MINE = f("loop://mantis:8555");
 
     /**
-     * The whole fold that is OR: idempotent, so replicating its seed onto every lane is sound. Not in the table.
+     * The whole fold that is OR: idempotent, so replicating its seed onto every lane is sound. No shipped set declares
+     * it.
      */
     private static Inst disjoin;
 

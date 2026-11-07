@@ -198,7 +198,8 @@ public class LatticeReadTest extends AbstractInstSetTest {
      * continues up its path to the root until it lands on one: {@code nat::T}'s {@code plus} is the {@code int}-dom
      * contract ({@code nat -> int -> #}), while {@code imperial}'s is its own (its path is
      * {@code imperial -> real -> #}, {@code real}'s the next admission, and never the sibling). The rule lives on
-     * {@link Typer.Helper}; this pins it, since the law table reads the same answer to decide what can cancel.
+     * {@link Typer.Helper}; this pins it, since {@code Law.Helper.declared} reads the same answer to decide what can
+     * cancel.
      */
     @Test
     public void deduceTypeInstLandsOnThePathContract() {

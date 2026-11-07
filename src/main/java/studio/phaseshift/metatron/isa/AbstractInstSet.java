@@ -432,8 +432,8 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
      * the insts of this set matching the pattern's family, admitted on the
      * dom axis per {@link Type#pathIncludes(Type)}, ranked closest-to-the-token
      * first (a no-dom pattern returns them all, unranked). The rule itself lives on
-     * {@link Typer.Helper#admitted} — one implementation, shared with the deduction the law table reads — and this
-     * method supplies only the family, looked up in this set's own index.
+     * {@link Typer.Helper#admitted} — one implementation, shared with the deduction {@code Law.Helper.declared}
+     * reads — and this method supplies only the family, looked up in this set's own index.
      */
     private Stream<Obj> admitted(final fURI pattern, final Type queriedDom, final Type queriedRng) {
         // dom admission is a PATH relation, not a name match: a contract on nat's path

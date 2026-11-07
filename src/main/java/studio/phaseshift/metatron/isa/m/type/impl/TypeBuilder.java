@@ -392,7 +392,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
 
     /**
      * {@link #algebra(Algebra)} for a caller holding the algebra as the rec it already is — the shape
-     * {@code mTypes} and the law tables spell ({@code Algebra.of} is the identity on an algebra).
+     * {@code mTypes} spells ({@code Algebra.of} is the identity on an algebra).
      */
     public TypeBuilder law(final Rec law) {
         return this.algebra(Algebra.of(law));

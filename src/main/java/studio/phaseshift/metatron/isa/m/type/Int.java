@@ -108,14 +108,13 @@ public interface Int extends Mono {
     Int self(final Long jvm, final fURI tid, final fURI vid);
 
     /*
-     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions. int->bool, int->bytes, int->real and int->uri
-     * carry no law-table row -- hence no claim and no inverse -- so there is nothing for a slice to preserve yet;
-     * they move to mInsts.ints() when their bodies' imports travel with them. THE ROWED PAIR IS GONE: int->str is
-     * the SOUND direction (print an int, read the printed str back, and the value returns) and is declared WITH
-     * its inverse beside the other int operations in mInsts.ints(), while str->int is LOSSY ("007" -> 7 -> "7")
-     * and declares no inverse anywhere. `plus` below states its own contract and laws through InstBuilder; the
-     * rest of int's operations live in mInsts.ints(), `mult` and `minus` included (their `inverse` and
-     * `derivation` are what let the rows retire).
+     * WHAT REMAINS HERE, and why: the `as` conversions that declare nothing. int->bool, int->bytes, int->real and
+     * int->uri are registered with instC, so none stages a `?decq` claim -- no law, no inverse -- and there is
+     * nothing for a slice to preserve yet; they move to mInsts.int_insts() when their bodies' imports travel with
+     * them. int->str is the SOUND direction (print an int, read the printed str back, and the value returns) and is
+     * declared WITH its inverse beside the other int operations in mInsts.int_insts(), while str->int is LOSSY
+     * ("007" -> 7 -> "7") and declares no inverse anywhere. The rest of int's operations, `plus`, `mult` and
+     * `minus` included, live in mInsts.int_insts().
      */
     final class IntType {
 

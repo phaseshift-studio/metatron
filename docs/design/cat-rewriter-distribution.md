@@ -17,7 +17,7 @@ Distribution is a theorem, not a feature. The implementation sites:
 | theorem (Stream Ring Theory) | statement | implementation site |
 |---|---|---|
 | Thm 5 | streams are atemporal: no required order of apply/merge/bulk | the Network wire — remote placement adds latency and interleaving, which the semantics never depended on |
-| Thm 6 | coefficients float through non-reduce chains: $ca \cdot 1b = 1a \cdot 1b \cdot c1$ | the `floatable` process law (cat LawTable) |
+| Thm 6 | coefficients float through non-reduce chains: $ca \cdot 1b = 1a \cdot 1b \cdot c1$ | the `floatable` process law (read off `Inst.Form`) |
 | Thm 16 | reducers are temporal: all prior applies/merges complete first | `processor.barrier[?syncq=k]` — the one synchronization point |
 | Thm 17 | floating stops at a reducer: $c1 \cdot 1a \neq 1a \cdot c1,\ a \in \mathcal{F}_r$ | the `blocked` process law — the shard cut |
 | Thm 19 | monoidic reducers are semi-right-distributive: $(a+b)\,c = (ac+bc)\,c$ | `law_shard` itself, read left-to-right |
@@ -43,7 +43,7 @@ the first `blocked` morphism is the anchor. The laws are executed, not pattern-m
 
 The combiner is never guessed: the anchor's op resolves against the operand object's declared
 theory roles (`int::T.as(object::T)>>law>>add_monoid` = `[op=>!*plus, id=>0]`) through
-`LawTable.declared(op, operand)` — pre-resolution safe, answers nothing rather than guessing.
+`Law.Helper.declared(op, operand)` — pre-resolution safe, answers nothing rather than guessing.
 
 ## 3. Patterns are code: the mtron surface
 

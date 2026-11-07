@@ -100,11 +100,11 @@ public interface Bytes extends Mono {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: two ROW-LESS entries. The `as` conversion to bool carries no law-table row (no
-     * claim, no inverse), and `within` applies an arbitrary argument inst, so no law of its own can be asserted.
-     * THE ROWED PAIR IS GONE: bytes->str is LOSSY (arbitrary bytes need not be UTF-8 text), so it declares NO
-     * inverse anywhere; str->bytes is the SOUND direction (the bytes of a str are that str again) and is declared
-     * WITH its inverse beside str's other operations in mInsts.strs().
+     * WHAT REMAINS HERE, and why: the `as` conversion to bool, registered with instC, so it stages no `?decq` claim
+     * (no law, no inverse); `within`, commented out below, applies an arbitrary argument inst, so no law of its own
+     * could be asserted. bytes->str is LOSSY (arbitrary bytes need not be UTF-8 text), so it declares NO inverse
+     * anywhere; str->bytes is the SOUND direction (the bytes of a str are that str again) and is declared WITH its
+     * inverse beside str's other operations in mInsts.str_insts().
      */
     final class BytesType {
 

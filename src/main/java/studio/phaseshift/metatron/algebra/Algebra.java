@@ -45,8 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * cached, and the view can be handed to any door a rec can.
  *
  * <p>THE VIEW NEVER ALIASES THE STORE. {@link #of(Rec)} copies the law block's map, so mutating the view (or one of
- * its {@link #with} children) can never write back into the block a law table answered, which other types, other
- * threads and the table's own cache are reading. The class is read-only by design — no setter, no
+ * its {@link #with} children) can never write back into the theory block of the type's {@code ?decq} declaration,
+ * which every other reader and other threads are reading. The class is read-only by design — no setter, no
  * {@code this.at(key, value, MUTABLE)}; a change is a copy.
  *
  * <p>NOTE: the structural laws are theory instances on {@code object::T}, not {@link Law process laws}; the two axes
