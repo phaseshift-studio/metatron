@@ -30,8 +30,16 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.CLOSE;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.INST;
 import static studio.phaseshift.metatron.Tokens.PROCESSOR;
+import static studio.phaseshift.metatron.Tokens.SEND;
+import static studio.phaseshift.metatron.Tokens.SEND_RECV;
+import static studio.phaseshift.metatron.Tokens.STATUS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
@@ -44,6 +52,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * The contract of the pure mtron serializer: every {@code write(obj)} is legal, complete
  * mtron, and {@code read} brings it back equal to what was written.  This is what makes the
  * output travelable — a database row, an http body, a message between spaces — without loss.
+ * A BUILT obj is the one exception: what its constructor derived in Java is left out, and the read
+ * builds it again from its data ({@link #testABuiltObjTravelsAsItsData}).
  * The display side (clipping, indentation, links) is asserted in ObjmtronUISerializerTest.
  */
 public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
@@ -251,5 +261,26 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         assertFalse(readBack.isFail(), String.format("read-back failed: %s", written));
         assertEquals(obj, readBack, String.format("round-trip lost the value: %s", written));
         assertEquals(obj.vid(), readBack.vid(), String.format("round-trip lost the vid: %s", written));
+    }
+
+    /**
+     * A BUILT OBJ TRAVELS AS ITS DATA. {@code ws_handler}'s constructor derives Java bodies — send, send_recv, the
+     * eval/from/to overrides, status, close — that text can name but not carry. The writer leaves them out, and reading
+     * the text back re-runs the constructor, which derives them again on whichever machine reads it: a client shipped
+     * to a peer is rebuilt there instead of arriving with bodies it cannot run.
+     */
+    @Test
+    public void testABuiltObjTravelsAsItsData() {
+        final Rec built = ObjmtronSerializer.parse("ws_handler::[host=><ws://localhost:8555/mtron>]");
+        assertTrue(built.atDirect(uri(STATUS)).isObjInst(), String.format("the constructor derives a status: %s", built));
+        final String written = ObjmtronSerializer.single().write(built);
+        LOG.debug("built => %s", written);
+        for (final String derived : List.of(SEND, SEND_RECV, INST, STATUS, CLOSE))
+            assertFalse(written.contains(derived + "=>"), String.format("%s is derived, not data: %s", derived, written));
+        final Rec rebuilt = ObjmtronSerializer.single().read(written).asRec();
+        assertEquals(built.tid(), rebuilt.tid(), String.format("the read builds the same type: %s", written));
+        assertEquals((Obj) built.atDirect(uri(HOST)), rebuilt.atDirect(uri(HOST)), String.format("the data travels: %s", written));
+        assertTrue(rebuilt.atDirect(uri(STATUS)).isObjInst() && rebuilt.atDirect(uri(SEND)).isObjInst(),
+                String.format("the read derives them again: %s", rebuilt));
     }
 }

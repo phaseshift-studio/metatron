@@ -98,6 +98,14 @@ public interface Call extends Obj {
         }
     }
 
+    /**
+     * Whether a Java lambda, rather than mtron code, runs anywhere in this call: for a code, in any of its
+     * instructions. An instruction answers for itself and its arguments ({@link Inst#containsJavaFunction()}).
+     */
+    default boolean containsJavaFunction() {
+        return this.isCode() && this.codeValue().stream().anyMatch(Inst::containsJavaFunction);
+    }
+
     default boolean isPredicate(final Obj lhs) {
         return !this.isNoObj() && this.resolve(lhs).insts().getLast().rng().c().equals(cInt.MAYBE());
     }

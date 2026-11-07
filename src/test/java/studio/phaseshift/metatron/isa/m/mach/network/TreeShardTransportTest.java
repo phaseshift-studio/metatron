@@ -70,8 +70,9 @@ public class TreeShardTransportTest extends AbstractMetatronTest {
         // the state belongs to the compiler stage, so it is set AFTER the compiler is installed
         // every peer mounts the category, so law_shard can fire wherever a part lands
         cluster = PeerCluster.of(3).seed(PeerCluster.DEFAULT_SEED_MATRIX, "import(/m/math)", "import(/m/math/cat)").start();
-        // THE MIDDLE OF THE TREE: peer 1 dials peers 2 and 3. A dial is construction, so it has to happen THERE: the
-        // ws_client literal is parsed here (a parse constructs nothing) and evaluated on peer 1, which constructs it.
+        // THE MIDDLE OF THE TREE: peer 1 dials peers 2 and 3. A dial is construction, so it has to happen THERE. The
+        // literal is parsed here, and this VM imports /m/web, so the parse builds (and dials) a client here too; what
+        // ships is its data, ws_client::[host=>…], and peer 1 builds and dials its own from it.
         for (int i = 2; i <= cluster.size(); i++)
             cluster.transport(1).apply(ObjmtronSerializer.parse("ws_client::[host=><" + endpoint(i) + ">]"));
         // the construction registers its peer asynchronously -- wait (bounded) until peer 1 holds both

@@ -633,4 +633,32 @@ public class InstTest extends AbstractObjTest {
     public void testNamedArgsAcceptAnOrderedCall(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    /**
+     * A JAVA FUNCTION, HELD OR CONTAINED — {@code isJavaFunction()} asks about the instruction's own function,
+     * {@code containsJavaFunction()} about it and every instruction in its arguments. A chain-built {@code auto} has no
+     * function of its own (the fluent builders mint with none), so only containment sees the lambda it wraps. An mtron
+     * body and a chain-built call contain no Java function at all.
+     */
+    @Test
+    public void testAJavaFunctionIsHeldOrContained() {
+        final Inst lambda = MInst.instLambda((lhs, inst) -> lhs);
+        assertTrue(lambda.isJavaFunction() && lambda.containsJavaFunction(), "a lambda holds its Java function");
+        final Inst wrapped = auto_(lambda).tryToInst().asInst();
+        assertFalse(wrapped.isJavaFunction(), "a chain-built auto has no function of its own: " + wrapped);
+        assertTrue(wrapped.containsJavaFunction(), "but it contains the lambda it wraps: " + wrapped);
+        final Inst mtron = instC(f("tally").dom(Tokens.INT_TID).rng(Tokens.INT_TID), lst(), "plus(1)");
+        assertFalse(mtron.containsJavaFunction(), "an mtron body contains no Java function: " + mtron);
+        final Inst call = plus_(jnt(1)).tryToInst().asInst();
+        assertFalse(call.containsJavaFunction(), "a chain-built call contains none: " + call);
+        // a lambda is Java whatever it answers, and a code finds one however deep its arguments nest it
+        final Inst lambda1 = MInst.instLambda((lhs, inst) -> plus_(jnt(5)));
+        assertTrue(lambda1.containsJavaFunction(), "a lambda that answers a chain holds its Java function");
+        final Inst lambda2 = MInst.instLambda((lhs, inst) -> plus_(lambda1));
+        assertTrue(lambda2.containsJavaFunction(), "so does a lambda that answers a chain over a lambda");
+        final Code chain = start_(jnt(1)).plus_(plus_(mult_(lambda2))).mult_(jnt(24));
+        assertTrue(chain.containsJavaFunction(), "a code contains the lambda three codes deep: " + chain);
+        final Code plain = start_(jnt(1)).plus_(plus_(mult_(jnt(2)))).mult_(jnt(24));
+        assertFalse(plain.containsJavaFunction(), "the same chain over an int contains none: " + plain);
+    }
 }
