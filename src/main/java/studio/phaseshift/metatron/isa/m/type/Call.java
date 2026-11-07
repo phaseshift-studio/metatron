@@ -23,10 +23,13 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 
+import studio.phaseshift.metatron.util.MTronException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
@@ -168,6 +171,45 @@ public interface Call extends Obj {
             if (!unresolved.isEmpty())
                 consumer.accept(unresolved);
             return resolvedCall;
+        }
+
+        /**
+         * THE CODE UPDATE, {@code str::T}'s update over instructions instead of characters ({@link Str.Helper#project}):
+         * each rule {@code pattern => change} matches its pattern against every run of consecutive instructions, left
+         * to right and never overlapping. An instruction matches when it tests the pattern's instruction, as a value
+         * tests a type ({@link Inst#test}): its name against a uri pattern ({@code </m/inst/{plus,mult}>}) and each
+         * argument against the type it must be ({@code int::T} one int, {@code int{*}::T} a bag of them). A matched run becomes the rule's change:
+         * a code (or an inst) replaces it, and a rec applies its own rules inside the run. The rules run in order, each
+         * over the code the last one left, and a replacement is not matched again.
+         */
+        public static List<Inst> update(final List<Inst> insts, final Obj rules) {
+            if (rules.isCall())
+                return rules.asCall().insts();
+            if (!rules.isRec())
+                throw MTronException.of("a matched run of code changes into a code or a rec of rules, not %s", rules);
+            List<Inst> current = insts;
+            // the rules walked as the rec's own rels (elements()), never through at(): a rule's key and value are code
+            // held in a poly, and at() would fire an initial or an auto among them
+            for (final Rel rule : rules.asRec().elements().toList()) {
+                if (!rule.first().isCall())
+                    throw MTronException.of("a code update matches a code pattern, not %s", rule.first());
+                final List<Inst> pattern = rule.first().asCall().insts();
+                final List<Inst> scanned = current;
+                final List<Inst> next = new ArrayList<>(scanned.size());
+                int i = 0;
+                while (i < scanned.size()) {
+                    final int at = i;
+                    if (!pattern.isEmpty() && at + pattern.size() <= scanned.size()
+                            // the code tests the pattern, as a value tests a type (1.test(int::T)), never the reverse
+                            && IntStream.range(0, pattern.size()).allMatch(k -> scanned.get(at + k).test(pattern.get(k)))) {
+                        next.addAll(update(scanned.subList(at, at + pattern.size()), rule.second()));
+                        i += pattern.size();
+                    } else
+                        next.add(scanned.get(i++));
+                }
+                current = next;
+            }
+            return current;
         }
     }
 }

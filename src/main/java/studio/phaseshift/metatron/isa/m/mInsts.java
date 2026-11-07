@@ -1082,6 +1082,14 @@ public final class mInsts {
                         })
                         .law(Law.monoidic, Law.pure)
                         .create(),
+                // str::T's update over instructions (Call.Helper.update): a rule's key is a code pattern, its value what
+                // each run the pattern matches becomes
+                InstBuilder.build().tid(UPDATE_INST_TID, "change the runs of the lhs code that the rules' patterns match")
+                        .dom(CODE_TID, "the code to update").rng(CODE_TID, "the code with each matched run changed")
+                        .argLst(REC_TYPE, "the rules, pattern => change: a code pattern (inst names as uri patterns, args as the types they must be) => the code that replaces each run it matches, or a rec of rules applied inside the run")
+                        .body((lhs, inst) -> lhs.jvm(Call.Helper.update(lhs.asCode().insts(), inst.arg(0))))
+                        .law(Law.pure)
+                        .create(),
                 InstBuilder.build().tid(END_INST_TID, "the terminal instruction yielding noobj")
                         .dom(CODE_TID, "the lhs code").rng(CODE_TID.zero())
                         .body((lhs, inst) -> {

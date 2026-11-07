@@ -1247,6 +1247,32 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // a one-inst pattern changes every inst it matches
+            "[plus(1).mult(2).plus(3)]==[update([plus(int::T)=>mult(5)])]                              % [mult(5).mult(2).mult(5)]",
+            // a run of insts matches as a whole
+            "[plus(1).plus(2).mult(3)]==[update([plus(int::T).plus(int::T)=>plus(3)])]                 % [plus(3).mult(3)]",
+            // left to right and never overlapping, and the change is not matched again
+            "[plus(1).plus(1).plus(1)]==[update([plus(int::T).plus(int::T)=>plus(2)])]                 % [plus(2).plus(1)]",
+            // the name is a uri pattern
+            "[plus(1).mult(2).plus(3)]==[update([</m/inst/{plus,mult}>(int::T)=>id()])]                % [id().id().id()]",
+            // the arg is the type it must be: a bag is no int, and int{*} takes a bag
+            "[start({1,2}).plus(1)]==[update([start(int::T)=>start(0)])]                               % [start({1,2}).plus(1)]",
+            "[start({1,2}).plus(1)]==[update([start(int{*}::T)=>start(0)])]                            % [start(0).plus(1)]",
+            // a value is itself
+            "[plus(1).plus(2)]==[update([plus(2)=>mult(2)])]                                           % [plus(1).mult(2)]",
+            // the rules run in order, each over what the last one left
+            "[plus(1).mult(2)]==[update([plus(int::T)=>mult(3),mult(int::T)=>plus(4)])]                % [plus(4).plus(4)]",
+            // a rec changes the matched run by its own rules: only a mult that follows a plus
+            "[mult(1).plus(2).mult(3)]==[update([plus(int::T).mult(int::T)=>[mult(int::T)=>mult(7)]])] % [mult(1).plus(2).mult(7)]",
+            // a key that is no code pattern is refused
+            "[plus(1).mult(2)]==[update(['plus'=>mult(3)])]>-                                          % <ERROR>",
+    }, delimiter = '%')
+    public void testCodeUpdate(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             ">|[1,+2,+3]                                  % 6",
             "[1,+2,+3].>|                                 % 6",
             "1.>|[+2,+3]                                  % 6",
