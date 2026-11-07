@@ -285,8 +285,9 @@ public final class PendingWrites {
             return false;
         // A DECLARATION PUBLISHES WITH ITS SIBLINGS: a read at ANY address of an operation (bare, subsumed, or a
         // contract's own) publishes every contract the log stages under the operation's base path. The store answers a
-        // contract it holds no claim for by subsumption, so a sibling left staged would be pre-empted for good: once
-        // int's order is published, it answers order?A{*}'s own address, and the generic's claim never lands.
+        // contract it holds no claim for by subsumption, so a sibling left staged would be pre-empted for good: once a
+        // specialization is published, it answers its generic's own address, and the generic's claim never lands (a
+        // since-removed int order did this to order?A{*}).
         if (address.hasQ(QCollection.DECQ)) {
             final fURI base = address.removeQ(QCollection.DECQ).basePath();
             boolean published = false;

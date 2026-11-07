@@ -527,9 +527,9 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * THE DECLARATION OF THE OBJ DISPATCH SELECTS ANSWERS — a generic's laws hold for every instantiation that runs its
-     * body, and a specialization declares its own. {@code str} has no {@code order}, so the generic {@code order?A{*}}
-     * runs and its {@code pure} answers; {@code int} registers its own {@code order} (its body casts to ints), whose own
-     * declaration answers.
+     * body. Neither {@code str} nor {@code int} registers its own {@code order}, so the generic {@code order?A{*}} runs
+     * at both and its {@code pure} answers. {@code int} once registered a zero-arg {@code order} (pure, no derivation):
+     * dispatch selected it, and a {@code group} over an {@code order} stopped sharding at int carriers.
      */
     @Test
     void testDispatchSelectsTheDeclaration() {
