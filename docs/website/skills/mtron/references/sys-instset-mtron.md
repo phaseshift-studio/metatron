@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -74,10 +74,10 @@ mtron> bash(cmd=>'whoami')
 ==>['ubuntu']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'overlay         916G  576G  294G  ...',
+    'overlay         916G  577G  293G  ...',
     'tmpfs            64M     0   64M  ...',
     'shm              64M     0   64M  ...',
-    '/dev/nvme1n1p2  916G  576G  294G  ...',
+    '/dev/nvme1n1p2  916G  577G  293G  ...',
     'tmpfs           6.1G  6.5M  6.1G  ...',
     'tmpfs            31G     0   31G  ...',
     ...(4 more)]
@@ -88,10 +88,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 6ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 6ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -256,10 +256,10 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>21
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::616.0,
-    free_mem_jvm=>mB::475.3446,
+==>[total_mem_jvm=>mB::536.0,
+    free_mem_jvm=>mB::131.0808,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::140.6553,
+    used_mem_jvm=>mB::404.9191,
     jvm=>'OpenJDK 64-Bit Server VM 25.0.4.1',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',

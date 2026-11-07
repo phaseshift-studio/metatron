@@ -50,7 +50,6 @@
     <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -585,9 +584,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::791.0,
+            runtime=&gt;millis::828.0,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/79d7443c]
+            output=&gt;!*/sys/tmp/25b7853a]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>

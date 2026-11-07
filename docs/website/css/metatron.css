@@ -573,8 +573,12 @@ em {
 .navbar {
     min-height: 50px;
     max-height: 50px;
-    padding: 2rem 2rem;
-    padding-bottom: 1rem;
+    /* The bar is 50px; vertical padding here used to exceed it, leaving a 0-height
+       content box, while the nav links' 40px padding made their boxes ~106px tall.
+       Those boxes overflowed ~27px BELOW the bar and, once the section sub-nav stuck
+       under the navbar, silently swallowed clicks on its upper half. Keep the padding
+       inside the 50px and let the links fill it, so nothing overflows. */
+    padding: 0 2rem;
     background: linear-gradient(to bottom, #040404, #000000 85%);
     border-bottom: 1px solid rgba(122, 37, 24, 0.28);
     box-shadow: 0 1px 18px rgba(151, 2, 7, 0.06);
@@ -599,7 +603,8 @@ em {
 
 .navbar .navbar-nav .nav-link {
     margin-right: 16px;
-    padding: 40px 0;
+    /* fill the 50px bar (line-height ~28.8px + 2×10px) without overflowing it */
+    padding: 10px 0;
     color: var(--light);
     font-family: 'Oswald', sans-serif;
     font-size: 18px;

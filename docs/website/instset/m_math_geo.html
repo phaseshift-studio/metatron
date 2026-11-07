@@ -50,7 +50,6 @@
     <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -795,7 +794,18 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
         every contract whose ADDRESS this set holds. A row contributed by another instruction set is
         labelled with the set that declared it, and documented on that set's page as well.
     </p>
-    <div class="card mb-3" id="__m__math__geo__inst__area">
+    <div class="instset-inst-filter" role="search">
+    <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
+    <div class="d-flex align-items-center gap-2">
+        <input type="search" id="instset-inst-filter"
+            class="form-control form-control-sm instset-inst-filter-input"
+            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            aria-controls="instructions" aria-describedby="instset-inst-filter-count">
+        <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
+            aria-live="polite" aria-atomic="true">showing 6 of 6</span>
+    </div>
+</div>
+    <div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__area">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">area</span>
@@ -817,7 +827,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:area()   [-- about 5.3e8 --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__coordinates">
+</div><div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__coordinates">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">coordinates</span>
@@ -839,7 +849,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:coordinates()   [-- [geo:point::[-123.13,44.47],geo:point::[-121.18,45.61]] --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__distance">
+</div><div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__distance">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">distance</span>
@@ -861,7 +871,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].geo:distance(geo:point::[-122.68,45.52])   [-- meter::121998.59… (the Columbia gorge, about 122 km) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__inside">
+</div><div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__inside">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inside</span>
@@ -883,7 +893,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__length">
+</div><div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__length">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">length</span>
@@ -905,7 +915,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:line::[[-123.13,44.47],[-121.18,45.61]].geo:length()   [-- meter::198845.05… (Portland to The Dalles) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__math__geo__inst__wkt">
+</div><div class="card mb-3 instset-inst-card" id="__m__math__geo__inst__wkt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">wkt</span>
@@ -966,6 +976,39 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', update);
     update();
+
+    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+    // (rather than removing it) keeps every anchor and tab handler working while leaving
+    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+    // card can hold several polymorphic variants, and that is the number the badge states.
+    var filter = document.getElementById('instset-inst-filter');
+    var count = document.getElementById('instset-inst-filter-count');
+    var cards = Array.prototype.slice.call(
+        document.querySelectorAll('#instructions .instset-inst-card'));
+    if (filter && cards.length) {
+        var total = cards.reduce(function (n, card) {
+            return n + card.querySelectorAll('.clickable-signature').length;
+        }, 0);
+        var apply = function () {
+            var query = filter.value.trim().toLowerCase();
+            var shown = 0;
+            cards.forEach(function (card) {
+                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                card.hidden = !hit;
+                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+            });
+            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+        };
+        filter.addEventListener('input', apply);
+        filter.addEventListener('search', apply);
+        filter.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                filter.value = '';
+                apply();
+            }
+        });
+        apply();
+    }
 })();
 </script></main>
 <footer class="container-fluid fixed-bottom text-light footer">

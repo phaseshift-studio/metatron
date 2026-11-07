@@ -197,7 +197,10 @@ not an assistant (see §1).
   "model_snapshot_path": "/workspace/work/.hf/hub/models--Qwen--Qwen3.8-27B/snapshots/<hash>",
   "training_type": "LoRA/QLoRA",
   "load_in_4bit": true,
-  "gpu_ids": [0, 1],
+  "gpu_ids": [
+    0,
+    1
+  ],
   "max_seq_length": 2048,
   "format_type": "alpaca",
   "learning_rate": "5e-5",
@@ -412,3 +415,67 @@ ssh ginger.local "docker cp unsloth:/workspace/studio/exports/mtron-gguf/<file>.
 sudo systemctl start ollama
 ollama create mtron -f Modelfile
 ```
+
+## Qwen3 Fine-Tuning for Custom Programming Languages (advice from Brave agent)
+
+### Symptoms & Root Causes
+
+| Symptom                                | Likely Cause                                             |
+|----------------------------------------|----------------------------------------------------------|
+| Outputs pure garbage / random tokens   | LR too high, or `embed_tokens` not in `modules_to_save`  |
+| Repeats the same phrase endlessly      | LR too high (model forgot EOS), or too many epochs       |
+| Can generate but ignores your language | LR too low, or LoRA rank too low                         |
+| Works for 2–3 lines then degrades      | Context length too short during training, or overfitting |
+
+### Hyperparameter Recommendations
+
+| Parameter          | Value                                                           | Notes                                                                       |
+|--------------------|-----------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `learning_rate`    | `2e-5` (or `1e-5`)                                              | **Critical.** Unsloth default `2e-4` is too aggressive for new token spaces |
+| `num_train_epochs` | `1` (max `3`)                                                   | More than 3 = overfitting = loops                                           |
+| `lora_r`           | `16`                                                            | Rank 8 works for 8B; 16 for 14B                                             |
+| `lora_alpha`       | `16`                                                            | Must equal `lora_r`                                                         |
+| `lora_dropout`     | `0`                                                             | —                                                                           |
+| `target_modules`   | `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj` | —                                                                           |
+| `modules_to_save`  | `["lm_head", "embed_tokens"]`                                   | **Mandatory** when extending vocab                                          |
+| General data mix   | `10–20%` of training set                                        | English prose / general code as regularizer                                 |
+
+### Vocabulary Extension Procedure
+
+Qwen uses byte-level BPE (151,669 tokens). You **cannot** just append tokens to the vocab file.
+
+1. Prepare a plain-text file: one token per line as `<token>\t<frequency>`
+2. Run Qwen's `add_merges.py` script with the base `qwen.tiktoken` + your extra vocab file
+3. New tokens get indices starting at **151,851** by default
+4. **Resize the embedding layer** in the model to match the new vocab size
+5. Fine-tune — new embedding rows start random; the model learns their meaning during training
+
+> ⚠️ **Known bug:** `Qwen3-8B`'s `config.json` reports `vocab_size: 151936` but the tokenizer reports `151669`. Fix
+> before resizing embeddings or you'll hit shape mismatch errors.
+
+### Recommended Stack
+
+- **Framework:** Unsloth (cuts VRAM ~50% vs vanilla Transformers + PEFT)
+- **Base model:** Use the **base** (non-instruct) checkpoint
+- **Quantization:** 4-bit QLoRA for 8B/14B; BF16 only if you have ≥70 GB VRAM
+
+### VRAM Budget (2× RTX 3090, 48 GB total)
+
+| Model       | Precision   | VRAM @ batch 4 / 2048 ctx                   | Fits?                |
+|-------------|-------------|---------------------------------------------|----------------------|
+| Qwen3-8B    | 4-bit QLoRA | ~16 GB                                      | Single 3090          |
+| Qwen3-14B   | 4-bit QLoRA | ~24 GB                                      | Single 3090          |
+| Qwen3-8B    | BF16 LoRA   | ~20 GB                                      | Single 3090          |
+| Qwen3.8-27B | 4-bit QLoRA | **Broken** (DeltaNet `in_proj_z` shape bug) | ❌                   |
+| Qwen3.8-27B | BF16        | ~70 GB                                      | ❌ (needs H100 80GB) |
+
+### Debugging Checklist
+
+When a trained model "can't talk" or "goes in loops":
+
+1. Open the training script — check `learning_rate`, `num_train_epochs`, `modules_to_save`, `lora_r` / `lora_alpha`
+2. Verify `embed_tokens` and `lm_head` are in `modules_to_save`
+3. Confirm `lora_alpha == lora_r`
+4. Check whether general data was mixed in
+5. Re-run with: `lr=2e-5`, `epochs=1`, `r=16`, `alpha=16`, `modules_to_save=["lm_head", "embed_tokens"]`, 15% general
+   data   

@@ -50,7 +50,6 @@
     <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -814,13 +813,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}result=&gt;'the last result produced by the th...',
            {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            {?}state=&gt;'current state of the thread',
            {?}timeout=&gt;'how long a read of rhs waits for t...',
-           code=&gt;&quot;the thread's executing code&quot;],
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}time=&gt;'the datetime::T when the thread wa...',
+           {?}result=&gt;'the last result produced by the th...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -879,11 +878,11 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}roster=&gt;'known machines, connectionless: &lt;h...',
            {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}status=&gt;'the health method — an auto inst c...',
-           {?}listener=&gt;'the sockets this machine serves th...'],
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}roster=&gt;'known machines, connectionless: &lt;h...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -1253,7 +1252,7 @@ sum of the round trips. The direction is a virtual thread per route,
 <p><strong>Where am I.</strong> <code>*~/network/host</code> answers the host the current machine runs on — for a result that says where it was
 computed:</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host       [-- localhost --]
-==&gt;&lt;2f3107c2c04b&gt;
+==&gt;daa865e8c730
 </code></pre>
 <p>Peers forked on one host share it; telling them apart takes their service authority.</p>
 <h3>appendix — the registered types</h3>

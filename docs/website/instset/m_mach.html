@@ -50,7 +50,6 @@
     <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -1671,7 +1670,18 @@ remove stages accordingly for increased performance.
         every contract whose ADDRESS this set holds. A row contributed by another instruction set is
         labelled with the set that declared it, and documented on that set's page as well.
     </p>
-    <div class="card mb-3" id="__m__mach__inst__cut">
+    <div class="instset-inst-filter" role="search">
+    <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
+    <div class="d-flex align-items-center gap-2">
+        <input type="search" id="instset-inst-filter"
+            class="form-control form-control-sm instset-inst-filter-input"
+            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            aria-controls="instructions" aria-describedby="instset-inst-filter-count">
+        <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
+            aria-live="polite" aria-atomic="true">showing 10 of 10</span>
+    </div>
+</div>
+    <div class="card mb-3 instset-inst-card" id="__m__mach__inst__cut">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">cut</span>
@@ -1700,7 +1710,7 @@ peer dialed is a failure.</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">5.move(&lt;//worker&gt;).plus(1)    [-- compiles to 5.cut(&lt;//worker&gt;, |plus(1)) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__move">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__move">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">move</span>
@@ -1729,7 +1739,7 @@ move(&lt;a/c&gt;)         [-- down a composed path in one step --]
 move(&lt;~/..&gt;)        [-- ~ is the current machine, consumed before the fold: the parent --]
 move(&lt;../../..&gt;)    [-- past the root: saturates at the root --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__pause">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__pause">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">pause</span>
@@ -1755,7 +1765,7 @@ between.</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;~/thread/ping&gt;.pause()   [-- hold the loop between cycles, result intact --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__pop">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__pop">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">pop</span>
@@ -1789,7 +1799,7 @@ pop(_)              [-- and the same again with the lhs as the argument --]
 pop(&lt;../b&gt;)         [-- refused: b is not the current machine --]
 pop()               [-- at the root: refused, reset metatron instead --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__push">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__push">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">push</span>
@@ -1819,7 +1829,7 @@ push()                                 [-- an anonymous child, c = mintShortUUID
 push(&lt;ws://localhost:8555/worker&gt;)     [-- refused: a peer, not a machine in this tree --]
 move(//remote).push(a/b)               [-- create a machine at a remote location by moving to that location first --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__reply">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__reply">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">reply</span>
@@ -1848,7 +1858,7 @@ travels as the absent-answer mark instead, and the client reads it as noobj.</p>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">reply(3.plus(1), &lt;a1f30b7c&gt;)       [-- the far side answers 4@a1f30b7c --]
 reply(noobj, &lt;a1f30b7c&gt;)           [-- the far side answers /wire/noobj@a1f30b7c: nothing, addressed --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__resume">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__resume">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">resume</span>
@@ -1873,7 +1883,7 @@ ends a thread, so there is nothing left for a resume to restart.</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;~/thread/ping&gt;.resume()  [-- wake the loop: the next cycle follows --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__spawn">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__spawn">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">spawn</span>
@@ -1904,7 +1914,7 @@ emergent.</p>
 spawn(&lt;//localhost/worker&gt;, &lt;//worker&gt;)  [-- and call it //worker: move(&lt;//worker/a&gt;) now reaches that node --]
 spawn(&lt;ws://worker:8555/worker&gt;)         [-- a remote authority: declared in the roster, nothing forked --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__stay">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__stay">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stay</span>
@@ -1930,7 +1940,7 @@ than a noop. `stay()` is `move(&lt;~&gt;)`.</p>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">stay()              [-- stand in place: the machine pointer re-binds to itself --]
 stay() = move(&lt;~&gt;)  [-- the identity move: ~ is the current machine --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__mach__inst__stop">
+</div><div class="card mb-3 instset-inst-card" id="__m__mach__inst__stop">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stop</span>
@@ -2006,6 +2016,39 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', update);
     update();
+
+    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+    // (rather than removing it) keeps every anchor and tab handler working while leaving
+    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+    // card can hold several polymorphic variants, and that is the number the badge states.
+    var filter = document.getElementById('instset-inst-filter');
+    var count = document.getElementById('instset-inst-filter-count');
+    var cards = Array.prototype.slice.call(
+        document.querySelectorAll('#instructions .instset-inst-card'));
+    if (filter && cards.length) {
+        var total = cards.reduce(function (n, card) {
+            return n + card.querySelectorAll('.clickable-signature').length;
+        }, 0);
+        var apply = function () {
+            var query = filter.value.trim().toLowerCase();
+            var shown = 0;
+            cards.forEach(function (card) {
+                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                card.hidden = !hit;
+                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+            });
+            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+        };
+        filter.addEventListener('input', apply);
+        filter.addEventListener('search', apply);
+        filter.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                filter.value = '';
+                apply();
+            }
+        });
+        apply();
+    }
 })();
 </script></main>
 <footer class="container-fluid fixed-bottom text-light footer">

@@ -50,7 +50,6 @@
     <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -537,8 +536,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           cmd=&gt;'the terminal command to evaluate (...',
-           {?}timeout=&gt;'a real number denoting timeout of ...'],
+           {?}timeout=&gt;'a real number denoting timeout of ...',
+           cmd=&gt;'the terminal command to evaluate (...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -555,10 +554,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['ubuntu']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'overlay         916G  576G  294G  ...',
+    'overlay         916G  577G  293G  ...',
     'tmpfs            64M     0   64M  ...',
     'shm              64M     0   64M  ...',
-    '/dev/nvme1n1p2  916G  576G  294G  ...',
+    '/dev/nvme1n1p2  916G  577G  293G  ...',
     'tmpfs           6.1G  6.5M  6.1G  ...',
     'tmpfs            31G     0   31G  ...',
     ...(4 more)]
@@ -567,10 +566,10 @@ mtron&gt; bash('df -h')
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
 ==&gt;fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc&lt;155&gt;]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc&lt;155&gt;]]
 mtron&gt; bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 6ms:
+==&gt;fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 6ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder&lt;228&gt;]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder&lt;228&gt;]]
@@ -710,10 +709,10 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;21
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::616.0,
-    free_mem_jvm=&gt;mB::475.3446,
+==&gt;[total_mem_jvm=&gt;mB::536.0,
+    free_mem_jvm=&gt;mB::131.0808,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::140.6553,
+    used_mem_jvm=&gt;mB::404.9191,
     jvm=&gt;'OpenJDK 64-Bit Server VM 25.0.4.1',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',
