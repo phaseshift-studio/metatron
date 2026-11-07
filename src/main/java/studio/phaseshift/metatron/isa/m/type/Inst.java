@@ -1003,7 +1003,11 @@ public interface Inst extends Call {
             Inst apiInstTemp = apiInst;
             if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj()
                     && (lhs.type().c().within(apiInstTemp.dom().c()) || Helper.appliesPerObject(lhs.type(), apiInstTemp.dom()))) {
-                generics.put(apiInstTemp.dom().typeId().one(), lhs.type().typeId().one());
+                // A GENERIC IS PINNED for the length of its binding: a dom naming one already bound (by this signature's
+                // other slots, or by an earlier candidate of a sequence) must be what it bound
+                final fURI prior = generics.putIfAbsent(apiInstTemp.dom().typeId().one(), lhs.type().typeId().one());
+                if (null != prior && !lhs.type().typeId().one().test(prior))
+                    return null;
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
             if (apiInstTemp.rng().typeId().one().isGeneric() && generics.containsKey(apiInstTemp.rng().typeId().one())) {
@@ -1042,10 +1046,20 @@ public interface Inst extends Call {
                                 generics.computeIfAbsent(apiArg.typeId().one(), k -> userArg.typeId().one()); // beware of int[0] yielding noobj across all bindings
                         }
                         if (apiArg.isObjInst()) { // todo: isCall()?
-                            apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg);
+                            // a nested instruction is part of the same signature, so its generics are the same variables
+                            apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg, generics);
                         } else {
-                            if (apiArg.typeId().one().isGeneric())
+                            if (apiArg.typeId().one().isGeneric()) {
+                                // A BOUND GENERIC IS ENFORCED. Its binding is written into the argument as the declaration
+                                // int::T@A ("A is int"), but the generic NAME still matches anything, so the user's argument
+                                // is tested against what the binding names. A call is exempt (resolveArgs compiles it later,
+                                // so its result is not known here), and a type argument binds by its name, compared below.
+                                final fURI binding = generics.get(apiArg.typeId().one());
+                                if (null != binding && !userArg.isObjCall() && !userArg.isType()
+                                        && !userArg.typeId().one().isGeneric() && !userArg.test(T(binding.c(apiArg.c()))))
+                                    return null;
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.typeId().one(), userArg.typeId())).c(apiArg.c());
+                            }
                             // A TYPE-NAMED ARGUMENT IS COMPARED AS A TYPE: when both the declared argument and the
                             // caller's argument are TYPES (`as(rec::T)`), the same type NAME is the same request —
                             // object identity is too strict, since an instset constructed a second time re-registers
