@@ -37,7 +37,6 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
@@ -52,7 +51,21 @@
     <script src="highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="highlight/languages/json.min.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
     <!-- <script src="data/console.txt"></script>-->
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="css/metatron.css" rel="stylesheet">
@@ -115,8 +128,7 @@
     </div>
 </div>
 <!-- NAVIGATION BAR -->
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
-     data-wow-delay="0.1s">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
     <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
         <a href="index.html" title="metatron"><img src="images/favicon-32x32.png" alt="PhaseShift Studio"></a>
         <a href="http://phaseshift.studio">PhaseShift Studio</a>
@@ -579,7 +591,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div>
 <div class="collapse position-relative" id="card-0">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-0" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-a-universal-theory-of-reference" class="discrete">A Universal Theory of Reference</h2>
 <div class="legend-index">
 <ul>
@@ -766,7 +778,7 @@ Which is precisely why the old texts suddenly make sense to you now, and why the
 </div>
 <div class="collapse position-relative" id="card-1">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-1" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-instructions" class="discrete">Instructions</h2>
 <div class="legend-index">
 <ul>
@@ -908,16 +920,11 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |&lt;1&gt;?int&lt;=#{?}(){1}@&lt;1&gt;   [-- 1 --]
 ==&gt;1
 mtron&gt; &lt;1&gt;()                     [-- 2 --]
+==&gt;1
 mtron&gt; 10.&lt;1&gt;()                  [-- 3 --]
-==&gt;fail::[unable to determine inst function:
-   	10          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()@&lt;1&gt;   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]
+==&gt;1
 mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
-==&gt;fail::[unable to determine inst function:
-   	12          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]</code></pre>
+==&gt;13</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -955,38 +962,30 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
+==&gt;&lt;#&gt;=&gt;animal::T@chicken
 ==&gt;&lt;#&gt;=&gt;[args=&gt;[
      log=&gt;info,
      boot=&gt;&lt;boot/docs.mtron&gt;,
-     local=&gt;booger],
+     local=&gt;&lt;0a510641812c&gt;],
     file=&gt;&lt;boot/docs.mtron&gt;@boot/file]
-==&gt;&lt;#&gt;=&gt;plus?int&lt;=int(fail::[unable to determine inst function:
-   	12          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()   | [inst]
-   	int::T      =&gt; int::T   |  \_dom
-   	int::T     ==&gt; [,]   |  \_args]){&lt;j&gt;}
-==&gt;&lt;#&gt;=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
-==&gt;&lt;#&gt;=&gt;animal::T@chicken
-==&gt;&lt;#&gt;=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
-==&gt;&lt;#&gt;=&gt;rec::T[?[__mtron_tid=&gt;str::T,
-            name=&gt;str::T,
-            age=&gt;int::T,
-            {?}shelter=&gt;rec::T]]@animals
-==&gt;&lt;#&gt;=&gt;as?&lt;=bytes(str::T){&lt;j&gt;}
 ==&gt;&lt;#&gt;=&gt;rec::T[?[age=&gt;int::T,name=&gt;str::T,city=&gt;str::T]]@person
-==&gt;&lt;#&gt;=&gt;[name=&gt;'marko',
-    age=&gt;29,
-    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
-    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
-==&gt;&lt;#&gt;=&gt;[name=&gt;'vadas']
-==&gt;&lt;#&gt;=&gt;[name=&gt;'josh']
+==&gt;&lt;#&gt;=&gt;out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
+     rshift(outE_).rshift(*label).
+     rshift(inV_) }
+==&gt;&lt;#&gt;=&gt;rec::T[?[name=&gt;str::T,age=&gt;int::T]]@animal
 ==&gt;&lt;#&gt;=&gt;[name=&gt;'lop']
-==&gt;&lt;#&gt;=&gt;[name=&gt;'ripple',lang=&gt;java]
+==&gt;&lt;#&gt;=&gt;[name=&gt;'josh']
 ==&gt;&lt;#&gt;=&gt;[name=&gt;'peter',
     age=&gt;35,
     out_=&gt;[created=&gt;!*v4]]
-==&gt;&lt;#&gt;=&gt;out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
-     rshift(outE_).rshift(*label).
-     rshift(inV_) }</code></pre>
+==&gt;&lt;#&gt;=&gt;[name=&gt;'ripple',lang=&gt;java]
+==&gt;&lt;#&gt;=&gt;rec::T[?[model=&gt;uri::T,year=&gt;int::T]]@equipment
+==&gt;&lt;#&gt;=&gt;[name=&gt;'vadas']
+==&gt;&lt;#&gt;=&gt;plus?int&lt;=int(1){&lt;j&gt;}
+==&gt;&lt;#&gt;=&gt;[name=&gt;'marko',
+    age=&gt;29,
+    outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],
+    created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]</code></pre>
 </div>
 </div>
 </div>
@@ -1224,7 +1223,7 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/processor/fail/4
+==&gt;fail::[noobj]@/processor/fail/3
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15
@@ -1489,7 +1488,7 @@ mtron&gt; {1,2,3,4,5,6}.trpl()
 </div>
 <div class="collapse position-relative" id="card-2">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-2" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-control-structures" class="discrete">Control Structures</h2>
 <div class="legend-index">
 <ul>
@@ -1751,7 +1750,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </div>
 <div class="collapse position-relative" id="card-3">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-3" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-large-language-models" class="discrete">Large Language Models</h2>
 <div class="legend-index">
 <ul>
@@ -1876,24 +1875,22 @@ Two example models are provided below.</p>
                protocol =&gt; ollama,
                host     =&gt; http://localhost:11434,
                llm      =&gt; &lt;qwen3.5:4b&gt;]
-==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
-           size=&gt;gB::3.1571,
-           context=&gt;262144,
-           provider=&gt;ollama,
-           protocol=&gt;ollama,
-           host=&gt;http://localhost:11434,
-           llm=&gt;&lt;qwen3.5:4b&gt;]
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
+   	while parsing: model::[provider =&gt; ollama,
+                  protocol =&gt; ollama,
+                  host     =&gt; http://localhost:11434,
+                  llm      =&gt; &lt;qwen3.5:4b&gt;]]
 mtron&gt; model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
                api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
                provider =&gt; deepseek,
                protocol =&gt; openai,
                llm      =&gt; &lt;deepseek-v4-pro&gt;]
-==&gt;model::[name=&gt;deepseek-v4-pro,
-           host=&gt;&lt;https://api.deepseek.com/v1&gt;,
-           api_key=&gt;!*/sys/env/DEEPSEEK_API_KEY,
-           provider=&gt;deepseek,
-           protocol=&gt;openai,
-           llm=&gt;deepseek-v4-pro]</code></pre>
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: Authentication Fails (auth header format should be Bearer sk-...) (at /m/inst/ctor) [JdkHttpClient&lt;77&gt;]']['Authentication Fails (auth header format should be Bearer sk-...) [JdkHttpClient&lt;77&gt;]']
+   	while parsing: model::[host     =&gt; &lt;https://api.deepseek.com/v1&gt;,
+                  api_key  =&gt; !*&lt;/sys/env/DEEPSEEK_API_KEY&gt;,
+                  provider =&gt; deepseek,
+                  protocol =&gt; openai,
+                  llm      =&gt; &lt;deepseek-v4-pro&gt;]]</code></pre>
 </div>
 </div>
 <!--
@@ -2606,7 +2603,7 @@ Note the use of the tools provided to the agent.
 </div>
 <div class="collapse position-relative" id="card-4">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-4" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-instruction-sets" class="discrete">Instruction Sets</h2>
 <div class="legend-index">
 <ul>
@@ -2635,7 +2632,7 @@ Note the use of the tools provided to the agent.
 </div>
 <div class="collapse position-relative" id="card-5">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-5" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-fail-and-catch" class="discrete">Fail and Catch</h2>
 <div class="legend-index">
 <ul>
@@ -2794,7 +2791,7 @@ mtron&gt; throw('bad').catch(cause())     ​3​</code></pre>
 </div>
 <div class="collapse position-relative" id="card-6">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-6" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-a-hybrid-structuralnominal-type-system" class="discrete">A Hybrid Structural/Nominal Type System</h2>
 <div class="legend-index">
 <ul>
@@ -3273,7 +3270,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{y}}E{{g}}t{{b}}A{{r}}t{{c}}r{{m}}o{{c}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}M{{b}}e{{y}}T{{y}}a{{c}}t{{g}}r{{r}}o{{y}}N{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -4179,7 +4176,7 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 <div class="collapse position-relative" id="card-7">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-7" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-console" class="discrete">Console</h2>
 <div class="legend-index">
 <ul>
@@ -4326,7 +4323,7 @@ mtron&gt; /usr/ui/console/pane/0/out -&gt; 'printed at xyz'     ​3​
 </div>
 <div class="collapse position-relative" id="card-8">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-8" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-polynomial-data-structures" class="discrete">Polynomial Data Structures</h2>
 <div class="legend-index">
 <ul>
@@ -4507,7 +4504,7 @@ mtron&gt; **a
 </div>
 <div class="collapse position-relative" id="card-9">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-9" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-uniform-resource-identifiers" class="discrete">Uniform Resource Identifiers</h2>
 <div class="legend-index">
 <ul>
@@ -5375,7 +5372,7 @@ See <code>docs/design/ring-uri.md</code> for the full theory.</p>
 </div>
 <div class="collapse position-relative" id="card-10">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-q-processors" class="discrete">Q Processors</h2>
 <div class="legend-index">
 <ul>
@@ -5574,7 +5571,7 @@ mtron&gt; */usr/notes/#?subq
 </div>
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-internet-of-things-with-mqtt" class="discrete">Internet of Things with MQTT</h2>
 <div class="legend-index">
 <ul>
@@ -5686,7 +5683,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 </div>
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-the-file-system" class="discrete">The File System</h2>
 <div class="legend-index">
 <ul>
@@ -5740,9 +5737,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     ​4​</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; *fs:software/metatron     ​2​
-==&gt;fs:m
-mtron&gt; *fs:m     ​3​
-==&gt;fs:m</code></pre>
+mtron&gt; *fs:m     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5766,7 +5761,6 @@ mtron&gt; *fs:m     ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     ​1​
 mtron&gt; */sys/space/localfs/script     ​2​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;     ​3​
-==&gt;null
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     ​4​
 mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code></pre>
 </div>
@@ -5813,15 +5807,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      6436   6349416   1% /run'
-==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 603505884 307451940  67% /'
-==&gt;'tmpfs           31779244    199836  31579408   1% /dev/shm'
-==&gt;'tmpfs               5120        20      5100   1% /run/lock'
-==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
-==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       264   6355584   1% /run/user/1000'
-==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
+==&gt;'overlay        959786032 603338132 307619692  67% /'
+==&gt;'tmpfs              65536         0     65536   0% /dev'
+==&gt;'shm                65536         0     65536   0% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 603338132 307619692  67% /work'
+==&gt;'tmpfs            6355852      6596   6349256   1% /run/docker.sock'
+==&gt;'tmpfs           31779244         0  31779244   0% /proc/acpi'
+==&gt;'tmpfs           31779244         0  31779244   0% /proc/asound'
+==&gt;'tmpfs           31779244         0  31779244   0% /proc/scsi'
+==&gt;'tmpfs           31779244         0  31779244   0% /sys/devices/virtual/powercap'
+==&gt;'tmpfs           31779244         0  31779244   0% /sys/firmware'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;'AGENTSWARM.md'
@@ -5877,24 +5872,10 @@ the location of the respective script engine. If found, then what were originall
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;fs:m/src&gt;     ​1​
-==&gt;fs:m/src
 mtron&gt; *&lt;fs:m/src&gt; &gt;&gt; main &gt;&gt; java     ​2​
-==&gt;fs:m/src/main/java
 mtron&gt; fs:m/src &gt;&gt;     ​3​
-==&gt;fs:m/src/main
-==&gt;fs:m/src/test
 mtron&gt; fs:m/src &gt;&gt; 2     ​4​
-==&gt;fs:m/src/main/python
-==&gt;fs:m/src/main/js
-==&gt;fs:m/src/main/assembly
-==&gt;fs:m/src/main/java
-==&gt;fs:m/src/main/resources
-==&gt;fs:m/src/main/mpython
-==&gt;fs:m/src/test/python
-==&gt;fs:m/src/test/java
-==&gt;fs:m/src/test/resources
-mtron&gt; *&lt;fs:m/src/main/java&gt;     ​5​
-==&gt;fs:m/src/main/java</code></pre>
+mtron&gt; *&lt;fs:m/src/main/java&gt;     ​5​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5927,7 +5908,7 @@ mtron&gt; *&lt;fs:m/src/main/java&gt;     ​5​
 </div>
 <div class="collapse position-relative" id="card-13">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-13" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-math-instruction-set" class="discrete">Math Instruction Set</h2>
 <div class="legend-index">
 <ul>
@@ -6036,7 +6017,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:700/43/42/756?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:719/47/43/933?tz=Z&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -6135,7 +6116,7 @@ mtron&gt; '2024-12-25T09:00:00Z'.as(datetime::T)&gt;&gt;{year,month,day}     ​
 </div>
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-graph-computing" class="discrete">Graph Computing</h2>
 <div class="legend-index">
 <ul>
@@ -7482,7 +7463,7 @@ The vertex&#8217;s <code>OUT</code> traversal remains a single expression regard
 </div>
 <div class="collapse position-relative" id="card-15">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-15" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-coefficients" class="discrete">Coefficients</h2>
 <div class="legend-index">
 <ul>
@@ -7622,7 +7603,7 @@ The vertex&#8217;s <code>OUT</code> traversal remains a single expression regard
 </div>
 <div class="collapse position-relative" id="card-16">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-16" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-machines" class="discrete">Machines</h2>
 <div class="legend-index">
 <ul>
@@ -7670,7 +7651,7 @@ mtron&gt; *machine</code></pre>
 </div>
 <div class="collapse position-relative" id="card-17">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-17" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-threads-and-coroutines" class="discrete">Threads and Coroutines</h2>
 <div class="legend-index">
 <ul>
@@ -7877,7 +7858,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:700/43/45/446?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:719/47/46/795?tz=Z&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7896,7 +7877,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:700/43/45/446?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:719/47/46/795?tz=Z&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -7923,7 +7904,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABAB'</code></pre>
+==&gt;'BABABABABA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7988,7 +7969,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:700/43/28/143?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:719/47/03/871?tz=Z&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -7996,7 +7977,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:700/43/28/143?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:719/47/03/871?tz=Z&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8005,7 +7986,7 @@ mtron&gt; */sys/thread/main?docq
 </div>
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-web-technologies" class="discrete">Web Technologies</h2>
 <div class="legend-index">
 <ul>
@@ -8314,7 +8295,7 @@ This triggers Predicate validation (e.g., <code>html::T</code> validates the str
 </div>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-document-databases" class="discrete">Document Databases</h2>
 <div class="legend-index">
 <ul>
@@ -8460,7 +8441,14 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/db/dcmnt/sc
                     schema      =&gt; !*farmset,
                     root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
                                             equipment =&gt; equipment{*}::T]],
-                    route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm</code></pre>
+                    route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm
+==&gt;fail::[parse error at line 1, col 1: unable to construct dcmntspace::T: fail::['inst apply failure: Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused (connect failed)}}] (at /m/inst) [BaseCluster&lt;430&gt;]']['Timed out while waiting for a server that matches ReadPreferenceServerSelector{readPreference=primary}. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused (connect failed)}}] [BaseCluster&lt;430&gt;]']
+   	while parsing: dcmntspace::[pattern     =&gt; farm:#,
+                       host        =&gt; mongodb://localhost:27017/farm,
+                       schema      =&gt; !*farmset,
+                       root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
+                                               equipment =&gt; equipment{*}::T]],
+                       route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8474,11 +8462,10 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/db/dcmnt/sc
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;rec::T[?[__mtron_tid=&gt;str::T,name=&gt;str::T,age=&gt;int::T,{?}shelter=&gt;rec::T]]@animals]] at root; got str::T]@/processor/fail/1
+==&gt;'a chicken named trill'
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1     ​3​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]</code></pre>
+mtron&gt; *farm:animals/1     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8508,9 +8495,7 @@ identity. metatron preserves type information transparently on the way in and re
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     ​1​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     ​2​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1/name     ​3​
-==&gt;'trill'</code></pre>
+mtron&gt; *farm:animals/1/name     ​3​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8555,18 +8540,13 @@ mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     ​2�
 mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     ​3​
 ==&gt;[shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/1     ​4​
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/shelter     ​5​
 mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     ​6​
 ==&gt;chicken::[name=&gt;'cluck',
              age=&gt;3,
              shelter=&gt;!*loc:barns/1]
 mtron&gt; *farm:animals/2     ​7​
-==&gt;chicken::[name=&gt;'cluck',
-             age=&gt;3,
-             shelter=&gt;!*loc:barns/1]
-mtron&gt; *farm:animals/2/shelter     ​8​
-==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
+mtron&gt; *farm:animals/2/shelter     ​8​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8660,7 +8640,7 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
 </div>
 <div class="collapse position-relative" id="card-21">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-21" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-relational-databases" class="discrete">Relational Databases</h2>
 <div class="legend-index">
 <ul>
@@ -9345,7 +9325,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 </div>
 <div class="collapse position-relative" id="card-22">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-22" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-the-boot-loader" class="discrete">The Boot Loader</h2>
 <div class="legend-index">
 <ul>
@@ -9398,7 +9378,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
     &lt;3rd_place_medal&gt;=&gt;'🥉',
     ...(1848 more)]
 ==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
-==&gt;/m/mach/component/tracer::[stack=&gt;[mtron_stack=&gt;false,java_stack=&gt;false]]
+==&gt;tracer::[stack=&gt;[mtron_stack=&gt;false,java_stack=&gt;false]]
 ==&gt;"""
    use /sys/tmp as a temporary location for objs.
    note that /sys/tmp can be automatically garbage collected at any time.
@@ -9467,16 +9447,16 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/PATH=&gt;'/home/killswitch/.local/bin:/home/killswitch/.bun/bin:/home/killswitch/.npm-global/bin:/usr:/opt/rocm-6.4.0/bin:/opt/rocm/bin:/home/killswitch/.opencode/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/software/miniconda3/bin:/home/killswitch/.sdkman/candidates/tornadovm/current/bin:/home/killswitch/.sdkman/candidates/maven/current/bin:/home/killswitch/.sdkman/candidates/jbang/current/bin:/home/killswitch/.sdkman/candidates/java/current/bin:/home/killswitch/.local/bin:/home/killswitch/.elan/bin:/home/killswitch/.cargo/bin:/home/killswitch/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/killswitch/.lmstudio/bin:/home/killswitch/software/ijhttp:/home/killswitch/.surrealdb:/home/killswitch/.lmstudio/bin:/home/killswitch/go/bin:/home/killswitch/.local/bin'
-==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
-==&gt;/sys/env/BUN_INSTALL=&gt;'/home/killswitch/.bun'
-==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
-==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
-==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
+==&gt;/sys/env/LANGUAGE=&gt;'en_US:en'
+==&gt;/sys/env/MAVEN_CMD_LINE_ARGS=&gt;'/root/.m2 -B -Dmaven.repo.local=/work/.build/m2/repository -DskipTests site'
+==&gt;/sys/env/HOME=&gt;'/work'
+==&gt;/sys/env/MAVEN_CONFIG=&gt;'/root/.m2'
+==&gt;/sys/env/LC_ALL=&gt;'en_US.UTF-8'
+==&gt;/sys/env/JAVA_TOOL_OPTIONS=&gt;'-Djava.io.tmpdir=/work/.build/m2/tmp -Djna.tmpdir=/work/.build/m2/jna -Dorg.sqlite.tmpdir=/work/.build/m2/sqlite'
+==&gt;/sys/env/TESTCONTAINERS_HOST_OVERRIDE=&gt;'192.168.1.61'
+==&gt;/sys/env/MAVEN_OPTS=&gt;'--enable-native-access=ALL-UNNAMED   -Dmaven.repo.local=/work/.build/m2/repository -Djansi.tmpdir=/work/.build/m2/jansi'
+==&gt;/sys/env/MAVEN_PROJECTBASEDIR=&gt;'/work'
+==&gt;/sys/env/PATH=&gt;'/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'</code></pre>
 </div>
 </div>
 <h3 id="sec-boot-loader" class="discrete">Boot Loader</h3>
@@ -9608,7 +9588,7 @@ console::[        =&gt; ]@/sys/console;
 </div>
 <div class="collapse position-relative" id="card-23">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-23" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="bi bi-link-45deg"></i></button>
 <h2 id="sec-resource-description-framework" class="discrete">Resource Description Framework</h2>
 <div class="legend-index">
 <ul>
@@ -9619,10 +9599,10 @@ console::[        =&gt; ]@/sys/console;
 </div>
 </div>
 </div></main>
-<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+<footer class="container-fluid fixed-bottom text-light footer">
     <div class="d-flex pt-1 mb-0">
         <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
-                class="fa fa-envelope-open text-primary"></i></a>
+                class="bi bi-envelope text-primary"></i></a>
         <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
     </div>
 </footer>

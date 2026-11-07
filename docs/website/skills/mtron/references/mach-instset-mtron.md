@@ -193,33 +193,7 @@ when the compiler is first used:
 
 ```mtron
 mtron> compiler::[parser=>mtron_parser::[=>]]
-==>fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::["""inst apply failure: obj does not match /m/mach/component/typer::T
-     [[=>]
-         X=>
-     component::T[?[check=>[inst_dom=>bool::T,
-                            inst_rng=>bool::T,
-                            type_pred=>bool::T,
-                            code_resolve=>bool::T,
-                            obj_write=>bool::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer
-     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [noobj=>(X=>check)=>noobj=>X=>[inst_dom=>bool::T,inst_rng=>bool::T,type_pred=>bool::T,code_resolve=>bool::T,obj_write=>bool::T],
-      noobj=>(==>{?}machine)=>noobj=>/=>machine::T]]
-     predicate apply failed on execution (at /m/inst/ctor)"""]
-   	while parsing: compiler::[parser=>mtron_parser::[=>]]]
 mtron> compiler::[rewriter=>fixpoint_rewriter::[max=>3]]
-==>fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::["""inst apply failure: obj does not match /m/mach/component/typer::T
-     [[=>]
-         X=>
-     component::T[?[check=>[inst_dom=>bool::T,
-                            inst_rng=>bool::T,
-                            type_pred=>bool::T,
-                            code_resolve=>bool::T,
-                            obj_write=>bool::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer
-     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [noobj=>(X=>check)=>noobj=>X=>[inst_dom=>bool::T,inst_rng=>bool::T,type_pred=>bool::T,code_resolve=>bool::T,obj_write=>bool::T],
-      noobj=>(==>{?}machine)=>noobj=>/=>machine::T]]
-     predicate apply failed on execution (at /m/inst/ctor)"""]
-   	while parsing: compiler::[rewriter=>fixpoint_rewriter::[max=>3]]]
 ```
 ### parse — where a language is hosted
 
@@ -369,13 +343,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}result=>'the last result produced by the th...',
            {?}time=>'the datetime::T when the thread wa...',
-           code=>"the thread's executing code",
-           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}result=>'the last result produced by the th...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}runtime=>"computes the thread's current runn...",
            {?}state=>'current state of the thread',
-           {?}runtime=>"computes the thread's current runn..."],
+           {?}timeout=>'how long a read of rhs waits for t...',
+           code=>"the thread's executing code"],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -440,10 +414,10 @@ mtron> */m/mach/component/network?docq
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
            {?}roster=>'known machines, connectionless: <h...',
-           {?}listener=>'the sockets this machine serves th...',
-           {?}status=>'the health method — an auto inst c...',
+           {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
-           {?}pattern=>'the branch this network answers as...'],
+           {?}status=>'the health method — an auto inst c...',
+           {?}listener=>'the sockets this machine serves th...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -861,7 +835,7 @@ computed:
 
 ```mtron
 mtron> *~/network/host       [-- localhost --]
-==>booger
+==><2f3107c2c04b>
 ```
 Peers forked on one host share it; telling them apart takes their service authority.
 

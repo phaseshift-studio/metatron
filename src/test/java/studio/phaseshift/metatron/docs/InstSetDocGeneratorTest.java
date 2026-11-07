@@ -163,12 +163,12 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
                 "the fragment is text: `<` must be escaped or the highlighter sees markup");
     }
 
-    /** "last built November 12, 2026 10:34MST" — the building machine's own zone, minute precision. */
+    /** "November 12, 2026" — the building machine's date, no minute. */
     @Test
     public void testTheFooterStatesWhenThePageWasBuilt() {
         final String built = InstSetDocGenerator.lastBuilt();
-        assertTrue(built.matches("[A-Z][a-z]+ \\d{1,2}, \\d{4} \\d{2}:\\d{2}[A-Za-z]{3,5}"),
-                "expected a month-name, day, year, minute, and zone: " + built);
+        assertTrue(built.matches("[A-Z][a-z]+ \\d{1,2}, \\d{4}"),
+                "expected a month-name, day, and year (no time): " + built);
     }
 
     /**
@@ -260,5 +260,76 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
                 "a theory chip is wrapped in a link when its type is documented: " + html);
         assertTrue(html.contains("theory-chip theory-theory_of_rings\">theory_of_rings</span></a>"),
                 "the link wraps the chip itself, not just its label: " + html);
+    }
+
+    /**
+     * THE SET LINKS ITS OWN SKILLS DOCUMENT — the hand-written instruction-set reference exists in two
+     * renditions beside the markdown, and the page that documents the set should say so: the same
+     * {@code .article-format} chips the header's dropdowns use, in the masthead's meta column.
+     * The render is driven by the source markdown's presence, so a set without a skills document gets no chip
+     * rather than a link to a page the site never publishes.
+     */
+    @Test
+    public void testTheReferencePageLinksBothSkillDocRenditions() {
+        final String html = InstSetDocGenerator.skillDocLinks(M, "..");
+        assertTrue(html.contains("href=\"../skills/mtron/references/m-instset-mtron.html\">html</a>"),
+                "the rendered reference is one click away: " + html);
+        assertTrue(html.contains("href=\"../skills/mtron/references/m-instset-mtron.md\">md</a>"),
+                "and so is the markdown the site serves: " + html);
+        assertTrue(html.contains("class=\"article-format\""),
+                "the chips reuse the nav dropdown's format style: " + html);
+        assertTrue(html.contains(">skill:</span>"),
+                "the chips say WHOSE html/md they are: " + html);
+        assertTrue(html.indexOf(">skill:</span>") < html.indexOf(">html</a>"),
+                "the label precedes the chips: " + html);
+        assertEquals("", InstSetDocGenerator.skillDocLinks("/m/db/dcmnt", ".."),
+                "dcmnt has no skills reference — no chip may point at a page that was never written");
+    }
+
+    /**
+     * THE MASTHEAD AND THE SECTION BAR ONLY STATE WHAT THIS PAGE HOLDS — a zero is noise, not a fact, and a
+     * section link that points at an id the page never renders is a dead click. Both are driven by the same
+     * counts, so they can never disagree about which sections exist.
+     */
+    @Test
+    public void testTheMastheadAndSectionBarOmitWhatThePageDoesNotHave() {
+        final String stats = InstSetDocGenerator.statTiles(0, 49, 2, 354, 7, 0);
+        assertTrue(stats.contains(">49<") && stats.contains(">types<"), "the set's size is stated: " + stats);
+        assertTrue(stats.contains(">354<") && stats.contains(">insts<"), stats);
+        assertFalse(stats.contains(">0<"), "a zero-count tile is noise: " + stats);
+        assertFalse(stats.contains("defined elsewhere"), stats);
+
+        final String links = InstSetDocGenerator.subnavLinks(0, 49, 2, 354, 0, 7);
+        assertTrue(links.contains("href=\"#types\""), links);
+        assertTrue(links.contains("href=\"#instructions\""), links);
+        assertFalse(links.contains("href=\"#consts\""), "an empty section gets no link: " + links);
+        assertFalse(links.contains("href=\"#defined\""), "no external definitions, no link: " + links);
+
+        final String both = InstSetDocGenerator.subnavLinks(1, 0, 0, 0, 2, 0);
+        assertTrue(both.contains("href=\"#consts\"") && both.contains("href=\"#defined\""), both);
+
+        final String script = InstSetDocGenerator.sectionScript();
+        assertTrue(script.contains("instset-subnav") && script.contains("scrollY > 300"),
+                "the bar tracks the same 300px navbar threshold: " + script);
+    }
+
+    /**
+     * THE BREADCRUMB WALKS THE SET'S OWN PATH — {@code instruction sets: / m / math / geo} — and only the
+     * ancestors that were part of this build are links. A folder with no page of its own ({@code /m/db})
+     * and the leaf (the page the reader is on) are plain text, so a crumb never points at a 404.
+     */
+    @Test
+    public void testTheBreadcrumbWalksTheHierarchyAndLinksOnlyRealPages() {
+        final String crumb = InstSetDocGenerator.breadcrumb("/m/math/geo",
+                Set.of("/m", "/m/math", "/m/math/geo"), "..");
+        assertTrue(crumb.contains("href=\"../instset/index.html\">instruction sets</a>"), crumb);
+        assertTrue(crumb.contains("href=\"../instset/m.html\">m</a>"), crumb);
+        assertTrue(crumb.contains("href=\"../instset/m_math.html\">math</a>"), crumb);
+        assertTrue(crumb.contains(">geo</span>"), "the leaf is the current page, not a link: " + crumb);
+
+        final String folderOnly = InstSetDocGenerator.breadcrumb("/m/db/tble", Set.of("/m", "/m/db/tble"), "..");
+        assertFalse(folderOnly.contains("href=\"../instset/m_db.html\""),
+                "no page exists for /m/db, so it is not a link: " + folderOnly);
+        assertTrue(folderOnly.contains(">db</span>"), folderOnly);
     }
 }

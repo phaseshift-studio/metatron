@@ -526,146 +526,31 @@ three steps below are the same vertex after each application — the path shrink
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(0),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(0)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
-      law=>(==>{?}law)=>[commutative,right_distributive,action,pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      class=>(==>{?}class)=>[endo]=>==>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start(5).plus(0).neg().neg(),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           theory_involution=>plan::[
+            name=>theory_involution,
+            cut=>[law=>[involution]],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(0),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(0)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
-      law=>(==>{?}law)=>[commutative,right_distributive,action,pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      class=>(==>{?}class)=>[endo]=>==>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start(5).plus(0),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(0),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(0)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
-      law=>(==>{?}law)=>[commutative,right_distributive,action,pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      class=>(==>{?}class)=>[endo]=>==>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start(5)]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
@@ -690,46 +575,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(0),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(0)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
+==>[abstraction::[obj=>[morphism[start?args=[/m/int]]::[
+                         name=>start,
+                         form=>initial,
+                         src=>!λ#(){<j>},
+                         trgt=>!λ#(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>start(5)],
+                        morphism[plus?rng=int&dom=int&args=[/m/int]]::[
+                         name=>plus,
+                         form=>mapper,
+                         class=>[endo],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>plus(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
+                          retraction,
+                          mono,
+                          epi],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>neg(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -802,52 +687,35 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(10),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(10)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
-      law=>(==>{?}law)=>[commutative,right_distributive,action,pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      class=>(==>{?}class)=>[endo]=>==>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              place=>[local],
+              hop=>0,
+              split=>stream,
+              span=>[[span=>at],[span=>post]]],
+             [
+              place=>[peer],
+              hop=>1,
+              split=>stream,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -871,52 +739,35 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]::T
-     [[name=>plus,
-      form=>mapper,
-      class=>[endo],
-      src=>!λint(){<j>},
-      trgt=>!λint(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>plus(10),
-      law=>[
-       commutative,
-       right_distributive,
-       action,
-       pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&dom=/m/int&args=[/m/int]]
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>plus(10)=>==>#::T,
-      form=>(==>form)=>mapper=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λint()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λint()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ(),inverse=>/m/inst/minus?rng=/m/int&dom=/m/int]=>==>rec::T,
-      law=>(==>{?}law)=>[commutative,right_distributive,action,pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      class=>(==>{?}class)=>[endo]=>==>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           derivation_contraction=>plan::[
+            name=>derivation_contraction,
+            cut=>[role=>derivation],
+            where=>[[shape=>local,span=>[[span=>at]]]]],
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              place=>[local],
+              hop=>0,
+              split=>stream,
+              span=>[[span=>at],[span=>post]]],
+             [
+              place=>[peer],
+              hop=>1,
+              split=>stream,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial
 recs and
@@ -924,47 +775,31 @@ recs and
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/group?rng=/m/rec&dom=A{*}&args=[/m/rec]]::T
-     [[name=>group,
-      form=>reducer,
-      src=>!λA(){<j>},
-      trgt=>!λrec(){<j>},
-      analysis=>!λ(){<j>},
-      obj=>group([mod(3)=>sum()]),
-      law=>[pure]]
-         X=>
-     category::T[?[obj=>inst::T,
-                   form=>union(initial,
-                               terminal,
-                               fork,
-                               join,
-                               reducer,
-                               gather,
-                               scatter,
-                               catcher,
-                               filter,
-                               mapper,
-                               flatmapper,
-                               typer,
-                               standard),
-                   {?}src=>!*/m/math/cat/category/object,
-                   {?}trgt=>!*/m/math/cat/category/object,
-                   {?}analysis=>rec::T,
-                   {?}law=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/law],
-                   {?}class=>[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
-                   {?}derivation=>[lhs=>code::T,rhs=>code::T]]][ctor?morphism<=(#{*}::T){<j>}]@/m/math/cat/category/morphism[/m/inst/group?rng=/m/rec&dom=A{*}&args=[/m/rec]]
-     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     [obj=>(==>obj)=>group([/m/inst/mod(3)=>/m/inst/sum()])=>==>#::T,
-      form=>(==>form)=>reducer=>==>union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
-      src=>(==>{?}src)=>!λA()=>==>object::T,
-      trgt=>(==>{?}trgt)=>!λrec()=>==>object::T,
-      analysis=>(==>{?}analysis)=>[family=>!λ(),contested=>!λ(),orbit=>!λ(),position=>!λ()]=>==>rec::T,
-      law=>(==>{?}law)=>[pure]=>==>[uri{+}::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@law],
-      noobj=>(==>{?}class)=>noobj=>/=>[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
-      noobj=>(==>{?}derivation)=>noobj=>/=>[lhs=>code::T,rhs=>code::T],
-      noobj=>(==>{?}instset)=>noobj=>/=>[uri::T],
-      noobj=>(==>{?}orbit)=>noobj=>/=>category::T]]
-     predicate apply failed on execution (at /m/inst/ctor)]]
+==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           law_shard=>plan::[
+            name=>law_shard,
+            cut=>[
+             form=>reducer,
+             law=>[monoidic,commutative]],
+            where=>[
+             [
+              place=>[local],
+              hop=>0,
+              split=>stream,
+              span=>[[span=>at],[span=>post]]],
+             [
+              place=>[peer],
+              hop=>1,
+              split=>stream,
+              span=>[
+               [span=>seed,flags=>[partition]],
+               [span=>pre,flags=>[floatable,no_seed]],
+               [span=>at]],
+              inst=>[/m/inst/eval]]]]]]
 ```
 ### may / must — the fiber modality
 

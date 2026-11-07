@@ -267,11 +267,6 @@ table {
     padding-bottom: 0.5rem !important;
 }
 
-/* unified red-leather glow bridging title through grid */
-.container-fluid.wow.fadeIn {
-    background: radial-gradient(ellipse at 50% 38%, transparent 23%, rgba(160, 60, 30, 0.038) 43%, rgba(180, 75, 45, 0.075) 63%, transparent 88%);
-}
-
 /* bridge the title glow and parchment */
 .glow-text + hr {
     border: none;
@@ -590,10 +585,14 @@ em {
 }
 
 .navbar .dropdown-toggle::after {
+    display: inline-block;
+    width: 0.42em;
+    height: 0.42em;
     border: none;
-    content: "\f107";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    content: "";
+    transform: rotate(45deg) translateY(-2px);
     vertical-align: middle;
     margin-left: 8px;
 }
@@ -853,30 +852,13 @@ footer {
 
 /*** Footer ***/
 
-.footer .btn.btn-link {
-    display: block;
-    margin-bottom: 5px;
-    padding: 0;
-    text-align: left;
-    color: var(--light);
-    font-size: 15px;
-    font-weight: normal;
-    text-transform: capitalize;
-    transition: .3s;
-}
-
-.footer .btn.btn-link::before {
-    position: relative;
-    content: "\f105";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    margin-right: 10px;
-}
-
-.footer .btn.btn-link:hover {
-    color: var(--primary);
-    letter-spacing: 1px;
-    box-shadow: none;
+/* The footer is pinned to the viewport bottom (Bootstrap's .fixed-bottom in
+   includes/footer.html), so it takes no part in the page flow and would overlay
+   the last line of every page. Reserve its rendered height at the end of the
+   document once, here, instead of adding a spacer to each generated page.
+   4rem = the footer's ~49px bar + breathing room for the back-to-top button. */
+body {
+    padding-bottom: 4rem;
 }
 
 .footer {
@@ -1518,12 +1500,23 @@ details[open] summary::before {
     line-height: 1.45;
 }
 
-.admonitionblock .icon .fa.icon-note::before {
-    content: "\f05a";
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
+/* Asciidoctor emits <i class="fa icon-note"> for admonitions. Font Awesome is gone, so the
+   label is rendered as text here — no icon font involved. */
+.admonitionblock .icon .fa::before {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--mred);
 }
+
+.admonitionblock .icon .icon-note::before { content: "Note"; }
+.admonitionblock .icon .icon-tip::before { content: "Tip"; }
+.admonitionblock .icon .icon-important::before { content: "Important"; }
+.admonitionblock .icon .icon-warning::before { content: "Warning"; }
+.admonitionblock .icon .icon-caution::before { content: "Caution"; }
 
 .admonitionblock .icon .title {
     color: var(--mred);

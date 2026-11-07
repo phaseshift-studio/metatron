@@ -823,6 +823,217 @@ pre code.hljs {
     background-color: var(--mred);
 }
 
+/* The "skill: [html] [md]" chips. The chips themselves are .article-format
+   (metatron.css), the same style the header's dropdown rows use; only their
+   placement and the label are decided here. */
+.instset-formats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+
+.instset-formats-label {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.66rem;
+    color: var(--mlightgray);
+    opacity: 0.85;
+}
+
+/* ── Reference page masthead ─────────────────────────────────────────
+   Identity left, facts right — the reference's name, size and provenance
+   readable at a glance, with the documentation starting above the fold. */
+.instset-masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.4rem 0 1rem;
+    border-bottom: 1px solid rgba(108, 114, 147, 0.22);
+}
+
+.instset-masthead-id {
+    min-width: 0;
+}
+
+.instset-breadcrumb {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--white);
+}
+
+.instset-breadcrumb a {
+    color: var(--mheading);
+    text-decoration: underline;
+    text-decoration-color: rgba(232, 232, 232, 0.4);
+    text-underline-offset: 2px;
+}
+
+.instset-breadcrumb a:hover {
+    color: var(--primary);
+    text-decoration-color: var(--primary);
+}
+
+.instset-breadcrumb-sep {
+    margin: 0 0.45rem;
+    opacity: 0.5;
+}
+
+/* "instruction sets:" — the colon hugs the label (no margin on its left) and the path's slashes
+   follow it as separators. */
+.instset-breadcrumb-colon {
+    margin: 0 0.35rem 0 0;
+}
+
+.instset-title {
+    margin: 0.35rem 0 0;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 500;
+    line-height: 1.05;
+    color: var(--primary);
+}
+
+.instset-title-slash {
+    color: var(--light);
+}
+
+.instset-desc {
+    max-width: 70ch;
+    margin: 0.45rem 0 0;
+    color: var(--light);
+    font-size: 1rem;
+    line-height: 1.55;
+}
+
+.instset-masthead-meta {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.55rem;
+    padding-bottom: 0.2rem;
+}
+
+.instset-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.instset-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.instset-stat-n {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 1.15rem;
+    line-height: 1.1;
+    color: var(--white);
+}
+
+.instset-stat-l {
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mlightgray);
+    white-space: nowrap;
+}
+
+.instset-meta-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.instset-meta-foot .instset-formats {
+    margin-top: 0;
+    justify-content: flex-end;
+}
+
+.instset-built {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.66rem;
+    color: var(--mlightgray);
+    opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+    .instset-masthead {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.1rem;
+    }
+
+    .instset-masthead-meta {
+        align-items: flex-start;
+    }
+
+    .instset-stat {
+        align-items: flex-start;
+    }
+
+    .instset-meta-foot {
+        flex-wrap: wrap;
+    }
+}
+
+/* ── Sticky section bar ─────────────────────────────────────────────
+   Sticks directly under the site navbar (the script in the page sets the
+   offset, because the navbar hides near the top and reveals itself past
+   300px) and marks the section currently in view. */
+.instset-subnav {
+    position: sticky;
+    top: 0;
+    z-index: 1010;
+    background: rgba(4, 4, 4, 0.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(108, 114, 147, 0.22);
+}
+
+.instset-subnav-inner {
+    display: flex;
+    gap: 0.1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.instset-subnav-inner::-webkit-scrollbar {
+    display: none;
+}
+
+.instset-subnav-link {
+    padding: 0.7rem 0.85rem;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--mlightgray);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+}
+
+.instset-subnav-link:hover {
+    color: var(--white);
+}
+
+.instset-subnav-link.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* both bars are sticky; keep anchor jumps clear of them */
+#consts,
+#types,
+#spaces,
+#instructions,
+#defined,
+#rewrites {
+    scroll-margin-top: 118px;
+}
+
 
 
 
