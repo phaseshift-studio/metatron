@@ -91,6 +91,14 @@ public class InstSetDocGenerator {
     private static final Path CSS_PATH = Path.of("docs/website/css/instset_doc.css");
 
     /**
+     * THE HAND-WRITTEN SKILLS REFERENCES, one {@code <leaf>-instset-mtron.md} per documented set — the SOURCE
+     * the markdown pass renders into the served {@code docs/website/skills} tree. The source is what the page
+     * tests for (not the rendered {@code .html}): the instset pass runs BEFORE the markdown pass in the same
+     * build. Relative to the project root, like {@link #CSS_PATH}, because the docs runners are launched there.
+     */
+    private static final Path SKILL_REFERENCES_PATH = Path.of("docs/skills/mtron/references");
+
+    /**
      * Known instset VIDs, set before processing. Used by {@link #extractInstset(String)}.
      */
     private static Set<String> ALL_INSTSET_VIDS;
@@ -503,7 +511,7 @@ public class InstSetDocGenerator {
                     "    <link rel=\"stylesheet\" href=\"" + depth + "/css/instset_doc.css\">");
             final String footer = SiteChrome.footer(depth);
             if (!header.isEmpty() && !footer.isEmpty()) {
-                return header + bodyContent(page, declaring, built, buildNumber) + footer;
+                return header + bodyContent(page, declaring, built, buildNumber, depth) + footer;
             }
         }
         return """
@@ -526,17 +534,17 @@ public class InstSetDocGenerator {
                 </body>
                 </html>
                 """.formatted(DocsUtil.esc(page.meta().name()), depth, depth,
-                bodyContent(page, declaring, built, buildNumber), depth, depth);
+                bodyContent(page, declaring, built, buildNumber, depth), depth, depth);
     }
 
     private static String bodyContent(final Page page,
                                       final Map<String, String> declaring, final Set<String> built,
-                                      final int buildNumber) {
+                                      final int buildNumber, final String depth) {
         final String instsetVid = page.meta().vid();
         final StringBuilder sb = new StringBuilder();
-        sb.append(sectionHeader(page.meta()));
-        sb.append(sectionNav(page.consts().size(), page.types().size(), page.insts().size(),
-                page.spaces().size(), page.rewrites().size(), page.contributed().size()));
+        sb.append(sectionHeader(page, built, depth));
+        sb.append(sectionNav(page));
+        sb.append(sectionRaw(page.meta()));
         sb.append(sectionToc(page));
         sb.append(sectionConsts(instsetVid, page.consts()));
         sb.append(sectionTypes(instsetVid, page.types(), built));
@@ -545,30 +553,80 @@ public class InstSetDocGenerator {
         sb.append(sectionContributed(instsetVid, page.contributed(), declaring, built));
         sb.append(sectionRewrites(instsetVid, page.rewrites()));
         sb.append(sectionFooter());
+        sb.append(sectionScript());
         return sb.toString();
     }
 
-    // ── Section: Header ────────────────────────────────────────────────
+    // ── Section: Masthead ─────────────────────────────────────────────
 
-    private static String sectionHeader(final Meta meta) {
+    /**
+     * THE PAGE'S MASTHEAD — identity on the left, facts on the right. The old header centred a glowing title, an
+     * uppercase eyebrow and the format chips on one axis, which read as a document cover; a reference page wants
+     * its name, its size and its provenance readable at a glance, with content starting above the fold. Every
+     * number here is the page's own (nothing is counted by hand).
+     */
+    private static String sectionHeader(final Page page, final Set<String> built, final String depth) {
+        final Meta meta = page.meta();
         final String parentPath = meta.vid().substring(0, meta.vid().lastIndexOf('/'));
         final String descText = meta.desc() != null && !meta.desc().isEmpty() && !"null".equals(meta.desc())
                 ? meta.desc().replace("\n", " ").strip() : "";
-        final String descHtml = descText.isEmpty() ? "" : """
-                <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
-                %s</p>
-                """.formatted(DocsUtil.esc(descText));
-
+        final String descHtml = descText.isEmpty() ? ""
+                : "<p class=\"instset-desc\">" + DocsUtil.esc(descText) + "</p>";
         return """
-                <div class="container-xxl py-4">
-                    <div class="text-center mb-2">
-                        <h1 class="text-primary glow-text mb-1">
-                            <span class="text-light">%1$s/</span>%2$s
-                        </h1>
-                        %3$s
-                        <p class="subtitle text-muted"
-                           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
+                <header class="instset-masthead container-xxl">
+                    <div class="instset-masthead-id">
+                        %1$s
+                        <h1 class="instset-title"><span class="instset-title-slash">%2$s/</span>%3$s</h1>
+                        %4$s
                     </div>
+                    <div class="instset-masthead-meta">
+                        <div class="instset-stats">%5$s</div>
+                        <div class="instset-meta-foot">
+                            %6$s
+                            <span class="instset-built">built %7$s</span>
+                        </div>
+                    </div>
+                </header>""".formatted(
+                breadcrumb(meta.vid(), built, depth), DocsUtil.esc(parentPath), DocsUtil.esc(meta.name()),
+                descHtml, statTiles(page), skillDocLinks(meta.vid(), depth), DocsUtil.esc(lastBuilt()));
+    }
+
+    /**
+     * THE PATH TO THIS SET — {@code instruction sets: / m / sys}. Every ancestor that has a page of
+     * its own is a link (the {@code built} set is the page build's own list, so a folder with no page,
+     * e.g. {@code /m/db}, is plain text); the leaf is the page the reader is already on and is never a
+     * link.
+     */
+    static String breadcrumb(final String instsetVid, final Set<String> built, final String depth) {
+        final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
+        final StringBuilder sb = new StringBuilder("<nav class=\"instset-breadcrumb\" aria-label=\"breadcrumb\">")
+                .append("<a href=\"").append(DocsUtil.esc(pre)).append("instset/index.html\">instruction sets</a>")
+                .append("<span class=\"instset-breadcrumb-sep instset-breadcrumb-colon\">:</span>");
+        final String[] segments = instsetVid.replaceFirst("^/", "").split("/");
+        final StringBuilder path = new StringBuilder();
+        for (int i = 0; i < segments.length; i++) {
+            path.append('/').append(segments[i]);
+            sb.append("<span class=\"instset-breadcrumb-sep\">/</span>");
+            final String label = DocsUtil.esc(segments[i]);
+            if (i < segments.length - 1 && built.contains(path.toString())) {
+                sb.append("<a href=\"")
+                        .append(DocsUtil.esc(pre + "instset/" + vidToFilename(path.toString())))
+                        .append("\">").append(label).append("</a>");
+            } else {
+                sb.append("<span>").append(label).append("</span>");
+            }
+        }
+        return sb.append("</nav>").toString();
+    }
+
+    /**
+     * THE SET'S OWN REC — the serialized {@code instset} object, kept as a collapsible payload below the
+     * masthead: provenance for the curious, not the first thing a reader needs.
+     */
+    private static String sectionRaw(final Meta meta) {
+        final String parentPath = meta.vid().substring(0, meta.vid().lastIndexOf('/'));
+        return """
+                <div class="container-xxl">
                     <div class="instset-accordion-wrapper">
                         <div class="accordion accordion-flush" id="accordionInstSet">
                             <div class="accordion-item">
@@ -582,41 +640,97 @@ public class InstSetDocGenerator {
                                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                                     <div class="accordion-body">
-                                        <pre><code>%4$s</code></pre>
+                                        <pre><code>%3$s</code></pre>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>"""
-                .formatted(DocsUtil.esc(parentPath), DocsUtil.esc(meta.name()), descHtml.toString(), DocsUtil.esc(meta.full()));
+                </div>""".formatted(DocsUtil.esc(parentPath), DocsUtil.esc(meta.name()), DocsUtil.esc(meta.full()));
     }
 
-    // ── Section: Navigation pills ──────────────────────────────────────
+    /**
+     * THE MASTHEAD'S STAT TILES — only what this page actually holds; a zero is noise. Package-private so the
+     * omission rule can be asserted without building a page.
+     */
+    static String statTiles(final Page page) {
+        return statTiles(page.consts().size(), page.types().size(), page.spaces().size(),
+                page.insts().size(), page.rewrites().size(), page.contributed().size());
+    }
 
-    private static String sectionNav(final int consts, final int types, final int insts,
-                                     final int spaces, final int rewrites, final int contributed) {
+    static String statTiles(final int consts, final int types, final int spaces, final int insts,
+                            final int rewrites, final int contributed) {
+        final StringBuilder sb = new StringBuilder();
+        statTile(sb, types, "types");
+        statTile(sb, insts, "insts");
+        statTile(sb, spaces, "spaces");
+        statTile(sb, consts, "consts");
+        statTile(sb, rewrites, "rewrites");
+        statTile(sb, contributed, "defined elsewhere");
+        return sb.toString();
+    }
+
+    private static void statTile(final StringBuilder sb, final int count, final String label) {
+        if (count <= 0) return;
+        sb.append("<div class=\"instset-stat\"><span class=\"instset-stat-n\">").append(count)
+                .append("</span><span class=\"instset-stat-l\">").append(label).append("</span></div>");
+    }
+
+    /**
+     * THE TWO SKILLS RENDITIONS OF THIS SET — the processed markdown the site serves and the HTML the markdown
+     * pass renders beside it — as the same {@code .article-format} chips the header's dropdowns use, in the
+     * masthead's meta column.
+     *
+     * <p>Empty when the set has no skills document: not every set has one ({@code dcmnt}, {@code grph},
+     * {@code vec} and {@code iot} do not), and a chip pointing at a page that was never written is worse than
+     * no chip at all.
+     */
+    static String skillDocLinks(final String instsetVid, final String depth) {
+        final String docName = DocsUtil.leafName(instsetVid) + "-instset-mtron";
+        if (!Files.isRegularFile(SKILL_REFERENCES_PATH.resolve(docName + ".md")))
+            return "";
+        final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
+        final String href = DocsUtil.esc(pre + "skills/mtron/references/" + docName);
+        return "<div class=\"instset-formats\">"
+                + "<span class=\"instset-formats-label\">skill:</span>"
+                + "<a class=\"article-format\" href=\"" + href + ".html\">html</a>"
+                + "<a class=\"article-format\" href=\"" + href + ".md\">md</a>"
+                + "</div>";
+    }
+
+    // ── Section: Sticky section bar ────────────────────────────────────
+
+    /**
+     * THE STICKY SECTION BAR — the sections this page actually has, one link each. It stays under the site
+     * navbar (see {@link #sectionScript()}) and marks the current section as the reader scrolls; the counts stay
+     * in the masthead, where they are read once, not repeated on every scroll.
+     */
+    private static String sectionNav(final Page page) {
         return """
-                <div class="container-xxl mb-4">
-                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-                        %s
+                <div class="instset-subnav" id="instset-subnav">
+                    <div class="container-xxl">
+                        <nav class="instset-subnav-inner" aria-label="sections">%s</nav>
                     </div>
-                </div>""".formatted(
-                navBtn("consts", "consts", consts, "bg-secondary") +
-                        navBtn("types", "types", types, "bg-primary") +
-                        navBtn("spaces", "spaces", spaces, "bg-info") +
-                        navBtn("instructions", "insts", insts, "bg-success") +
-                        navBtn("defined", "external definition", contributed, "bg-info") +
-                        navBtn("rewrites", "rewrites", rewrites, "bg-warning"));
+                </div>""".formatted(subnavLinks(page.consts().size(), page.types().size(),
+                page.spaces().size(), page.insts().size(), page.contributed().size(), page.rewrites().size()));
     }
 
-    private static String navBtn(final String href, final String label, final int count, final String badgeClass) {
-        if (count > 0) {
-            return "<a href=\"#" + href + "\" class=\"btn btn-outline-primary\">"
-                    + label + " <span class=\"pill-label badge " + badgeClass + "\">" + count + "</span></a>";
-        }
-        return "<button class=\"btn btn-outline-secondary\" disabled>"
-                + label + " <span class=\"pill-label badge bg-dark\">0</span></button>";
+    static String subnavLinks(final int consts, final int types, final int spaces, final int insts,
+                              final int contributed, final int rewrites) {
+        final StringBuilder sb = new StringBuilder();
+        subnavLink(sb, "consts", "consts", consts);
+        subnavLink(sb, "types", "types", types);
+        subnavLink(sb, "spaces", "spaces", spaces);
+        subnavLink(sb, "instructions", "insts", insts);
+        subnavLink(sb, "defined", "external definition", contributed);
+        subnavLink(sb, "rewrites", "rewrites", rewrites);
+        return sb.toString();
+    }
+
+    private static void subnavLink(final StringBuilder sb, final String anchor, final String label, final int count) {
+        if (count <= 0) return;
+        sb.append("<a class=\"instset-subnav-link\" href=\"#").append(anchor)
+                .append("\" data-target=\"").append(anchor).append("\">").append(label).append("</a>");
     }
 
     // ── Section: Table of Contents ─────────────────────────────────────
@@ -1689,19 +1803,55 @@ public class InstSetDocGenerator {
                 <div class="container-xxl py-3 text-center">
                     <hr class="border-secondary">
                     <small class="text-muted">
-                        generated by metatron instset doc generator &mdash; last built %s<br>
+                        generated by metatron instset doc generator<br>
                         &copy; PhaseShift Studio, LLC
                     </small>
-                </div>""".formatted(DocsUtil.esc(lastBuilt()));
+                </div>""";
     }
 
     /**
-     * WHEN THIS PAGE WAS WRITTEN — "last built November 12, 2026 10:34MST". The zone is the BUILDING MACHINE's,
-     * because that is the fact a reader wants when a page looks stale: not the UTC instant, but when the build
-     * ran where it ran (a 10:34 build is the morning's, not "17:34").
+     * THE PAGE'S OWN SCROLL BEHAVIOUR — the section bar sticks directly under the site navbar (which reveals
+     * itself past 300px of scroll) and marks the section the reader is in. It lives in the generated page, not
+     * the shared footer, so the reference pages own the behaviour and every other page is untouched.
+     */
+    static String sectionScript() {
+        return """
+                <script>
+                (function () {
+                    var bar = document.getElementById('instset-subnav');
+                    if (!bar) return;
+                    var navbar = document.querySelector('nav.navbar.sticky-top');
+                    var links = Array.prototype.slice.call(bar.querySelectorAll('.instset-subnav-link'));
+                    var sections = links.map(function (a) {
+                        return {link: a, section: document.getElementById(a.getAttribute('data-target'))};
+                    }).filter(function (s) { return !!s.section; });
+                    function offset() {
+                        var navH = navbar ? navbar.offsetHeight : 0;
+                        bar.style.top = (window.scrollY > 300 ? navH : 0) + 'px';
+                    }
+                    function spy() {
+                        var active = null;
+                        for (var i = 0; i < sections.length; i++) {
+                            if (sections[i].section.getBoundingClientRect().top <= 120) active = sections[i].link;
+                        }
+                        for (var j = 0; j < links.length; j++) links[j].classList.remove('active');
+                        if (active) active.classList.add('active');
+                    }
+                    function update() { offset(); spy(); }
+                    window.addEventListener('scroll', update, {passive: true});
+                    window.addEventListener('resize', update);
+                    update();
+                })();
+                </script>""";
+    }
+
+    /**
+     * WHEN THIS PAGE WAS WRITTEN — "November 12, 2026". The date is the BUILDING MACHINE's, because that
+     * is the fact a reader wants when a page looks stale; the minute is noise for a doc that changes
+     * once a day at most.
      */
     static String lastBuilt() {
-        return ZonedDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy HH:mmz", Locale.US));
+        return ZonedDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US));
     }
 
     // ── Documentation rendering ────────────────────────────────────────
@@ -1722,7 +1872,7 @@ public class InstSetDocGenerator {
                             id="%s-tab" data-bs-toggle="pill" data-bs-target="#%s"
                             type="button" role="tab" aria-selected="%s"
                             style="font-size:0.75rem;max-width:60px;">
-                            <i class="fas fa-info-circle me-1"></i> %d
+                            <i class="bi bi-info-circle me-1"></i> %d
                         </button>
                     </li>""".formatted(active, tabId, tabId, i == 0 ? "true" : "false", i + 1));
             contents.append("""

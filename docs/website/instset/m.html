@@ -37,7 +37,6 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
@@ -52,7 +51,21 @@
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
+         (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
+         downloading it on every page view. Page-specific MathJax config scripts (e.g. the
+         theory articles) run during parse, before this loader fires. -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var content = document.querySelector('main') || document.body;
+            var text = content.textContent || '';
+            if (text.indexOf('\\(') === -1 && text.indexOf('\\[') === -1) return;
+            var mathjax = document.createElement('script');
+            mathjax.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js';
+            mathjax.async = true;
+            document.head.appendChild(mathjax);
+        });
+    </script>
     <!-- <script src="data/console.txt"></script>-->
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="../css/metatron.css" rel="stylesheet">
@@ -115,8 +128,7 @@
     </div>
 </div>
 <!-- NAVIGATION BAR -->
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
-     data-wow-delay="0.1s">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5">
     <h2 class="mb-0 navbar-brand nav-brand ms-4 ms-lg-0">
         <a href="../index.html" title="metatron"><img src="../images/favicon-32x32.png" alt="PhaseShift Studio"></a>
         <a href="http://phaseshift.studio">PhaseShift Studio</a>
@@ -480,17 +492,24 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         });
     })();
 </script>
-<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
-    <div class="text-center mb-2">
-        <h1 class="text-primary glow-text mb-1">
-            <span class="text-light">/</span>m
-        </h1>
-        <p class="set-desc text-light" style="max-width:1100px;margin:0.2rem auto 0.9rem;font-size:1.05rem;line-height:1.5;">
-the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
-
-        <p class="subtitle text-muted"
-           style="margin-top:0.15rem;margin-bottom:0;font-size:0.95rem;letter-spacing:0.16em;text-transform:uppercase;">instruction set reference</p>
+<main class="container my-4 flex-grow-1"><header class="instset-masthead container-xxl">
+    <div class="instset-masthead-id">
+        <nav class="instset-breadcrumb" aria-label="breadcrumb"><a href="../instset/index.html">instruction sets</a><span class="instset-breadcrumb-sep instset-breadcrumb-colon">:</span><span class="instset-breadcrumb-sep">/</span><span>m</span></nav>
+        <h1 class="instset-title"><span class="instset-title-slash">/</span>m</h1>
+        <p class="instset-desc">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
     </div>
+    <div class="instset-masthead-meta">
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">49</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">354</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">9</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-meta-foot">
+            <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/m-instset-mtron.md">md</a></div>
+            <span class="instset-built">built November 7, 2026</span>
+        </div>
+    </div>
+</header><div class="instset-subnav" id="instset-subnav">
+    <div class="container-xxl">
+        <nav class="instset-subnav-inner" aria-label="sections"><a class="instset-subnav-link" href="#types" data-target="types">types</a><a class="instset-subnav-link" href="#spaces" data-target="spaces">spaces</a><a class="instset-subnav-link" href="#instructions" data-target="instructions">insts</a><a class="instset-subnav-link" href="#rewrites" data-target="rewrites">rewrites</a></nav>
+    </div>
+</div><div class="container-xxl">
     <div class="instset-accordion-wrapper">
         <div class="accordion accordion-flush" id="accordionInstSet">
             <div class="accordion-item">
@@ -517,63 +536,6 @@ the core instruction set of metatron containing the base types and useful instru
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[=&gt;]]],
              pattern=&gt;/m/#,
-             const=&gt;[,],
-             type=&gt;[
-              &lt;#&gt;::T,
-              bool::T,
-              int::T,
-              real::T,
-              bytes::T,
-              str::T,
-              uri::T,
-              uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law,
-              rel::T,
-              lst::T,
-              rec::T,
-              inst::T,
-              code::T,
-              fail::T,
-              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
-              rec::T[?[
-               pattern=&gt;uri::T,
-               {?}pre_write=&gt;inst::T,
-               {?}post_write=&gt;inst::T,
-               {?}qless_write=&gt;inst::T,
-               {?}pre_read=&gt;inst::T,
-               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
-              str::T@/m/str/rx,
-              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
-              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
-              lst::T[?[uri::T,&lt;#&gt;::T]]@/m/qproc/subq/pub,
-              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
-              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
-              rec::T[?[
-               {?}obj=&gt;&lt;#&gt;::T,
-               {?}dom=&gt;str::T,
-               {?}rng=&gt;str::T,
-               {?}args=&gt;&lt;#&gt;::T,
-               desc=&gt;str::T,
-               {?}build=&gt;str::T,
-               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
-              rec::T[?[
-               obj=&gt;&lt;#&gt;::T,
-               {?}theory=&gt;&lt;#&gt;::T,
-               {?}law=&gt;&lt;#&gt;::T,
-               {?}inverse=&gt;&lt;#&gt;::T,
-               {?}derivation=&gt;&lt;#&gt;::T,
-               {?}form=&gt;&lt;#&gt;::T,
-               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
-              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
-              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
-              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
-              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
-              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
-              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
-              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
-              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
-              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
-              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
-              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq],
              rewrite=&gt;[
               /m/inst/rewrite/profile_analysis?code{?}&lt;=code&amp;analysis(){&lt;j&gt;},
               /m/inst/rewrite/id_removal?code{?}&lt;=code(){&lt;j&gt;},
@@ -856,10 +818,6 @@ the core instruction set of metatron containing the base types and useful instru
               rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
-              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
-              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
-              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
-              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
               isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
               isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
               isa?int{?}&lt;=int(#{**}::T){&lt;j&gt;},
@@ -867,18 +825,75 @@ the core instruction set of metatron containing the base types and useful instru
               isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
               isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
               isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
+              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
+              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
+              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
+              isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
               save?#&lt;=#(){&lt;j&gt;},
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
-              as?str&lt;=docs(str::T){&lt;j&gt;}]]@/m</code></pre>
+              as?str&lt;=docs(str::T){&lt;j&gt;}],
+             const=&gt;[,],
+             type=&gt;[
+              &lt;#&gt;::T,
+              bool::T,
+              int::T,
+              real::T,
+              bytes::T,
+              str::T,
+              uri::T,
+              uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law,
+              rel::T,
+              lst::T,
+              rec::T,
+              inst::T,
+              code::T,
+              fail::T,
+              /m/space::T[][ctor?memspace&lt;=(isa(rec::T)){&lt;j&gt;}]@/m/space/memspace,
+              rec::T[?[
+               pattern=&gt;uri::T,
+               {?}pre_write=&gt;inst::T,
+               {?}post_write=&gt;inst::T,
+               {?}qless_write=&gt;inst::T,
+               {?}pre_read=&gt;inst::T,
+               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc,
+              str::T@/m/str/rx,
+              qproc::T[?[{?}sub=&gt;[=&gt;]]][ctor?subq&lt;=(){&lt;j&gt;}]@/m/qproc/subq,
+              rec::T[?[{?}target=&gt;uri::T,code=&gt;&lt;#?dom=lst&gt;::T]]@/m/qproc/subq/sub,
+              lst::T[?[uri::T,&lt;#&gt;::T]]@/m/qproc/subq/pub,
+              rec::T[?[usr=&gt;uri::T]]@/m/qproc/lockq/lock,
+              qproc::T[][ctor?typeq&lt;=(){&lt;j&gt;}]@/m/qproc/typeq,
+              rec::T[?[
+               {?}obj=&gt;&lt;#&gt;::T,
+               {?}dom=&gt;str::T,
+               {?}rng=&gt;str::T,
+               {?}args=&gt;&lt;#&gt;::T,
+               desc=&gt;str::T,
+               {?}build=&gt;str::T,
+               {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
+              rec::T[?[
+               obj=&gt;&lt;#&gt;::T,
+               {?}theory=&gt;&lt;#&gt;::T,
+               {?}law=&gt;&lt;#&gt;::T,
+               {?}inverse=&gt;&lt;#&gt;::T,
+               {?}derivation=&gt;&lt;#&gt;::T,
+               {?}form=&gt;&lt;#&gt;::T,
+               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
+              qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
+              qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
+              qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
+              qproc::T[][ctor?safeq&lt;=(){&lt;j&gt;}]@/m/qproc/safeq,
+              qproc::T[][ctor?incrq&lt;=(){&lt;j&gt;}]@/m/qproc/incrq,
+              qproc::T[][ctor?embedq&lt;=(){&lt;j&gt;}]@/m/qproc/embedq,
+              qproc::T[][ctor?constq&lt;=(){&lt;j&gt;}]@/m/qproc/constq,
+              qproc::T[][ctor?refq&lt;=(){&lt;j&gt;}]@/m/qproc/refq,
+              qproc::T[][ctor?lineq&lt;=(){&lt;j&gt;}]@/m/qproc/lineq,
+              qproc::T[][ctor?mimeq&lt;=(){&lt;j&gt;}]@/m/qproc/mimeq,
+              qproc::T[][ctor?lockq&lt;=(){&lt;j&gt;}]@/m/qproc/lockq]]@/m</code></pre>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div><div class="container-xxl mb-4">
-    <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">49</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">354</span></a><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -2240,8 +2255,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
-  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
   <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
   <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
   <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
@@ -2249,6 +2263,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
   <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
   <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
+  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -3323,518 +3338,518 @@ a/b/c/                           [-- relative/branch uri            --]
         id="__m__inst__as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-7-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-7"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 8
+        <i class="bi bi-info-circle me-1"></i> 8
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-8-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-8"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 9
+        <i class="bi bi-info-circle me-1"></i> 9
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-9-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-9"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 10
+        <i class="bi bi-info-circle me-1"></i> 10
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-10-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-10"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 11
+        <i class="bi bi-info-circle me-1"></i> 11
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-11-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-11"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 12
+        <i class="bi bi-info-circle me-1"></i> 12
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-12-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-12"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 13
+        <i class="bi bi-info-circle me-1"></i> 13
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-13-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-13"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 14
+        <i class="bi bi-info-circle me-1"></i> 14
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-14-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-14"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 15
+        <i class="bi bi-info-circle me-1"></i> 15
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-15-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-15"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 16
+        <i class="bi bi-info-circle me-1"></i> 16
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-16-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-16"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 17
+        <i class="bi bi-info-circle me-1"></i> 17
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-17-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-17"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 18
+        <i class="bi bi-info-circle me-1"></i> 18
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-18-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-18"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 19
+        <i class="bi bi-info-circle me-1"></i> 19
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-19-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-19"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 20
+        <i class="bi bi-info-circle me-1"></i> 20
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-20-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-20"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 21
+        <i class="bi bi-info-circle me-1"></i> 21
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-21-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-21"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 22
+        <i class="bi bi-info-circle me-1"></i> 22
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-22-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-22"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 23
+        <i class="bi bi-info-circle me-1"></i> 23
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-23-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-23"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 24
+        <i class="bi bi-info-circle me-1"></i> 24
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-24-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-24"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 25
+        <i class="bi bi-info-circle me-1"></i> 25
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-25-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-25"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 26
+        <i class="bi bi-info-circle me-1"></i> 26
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-26-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-26"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 27
+        <i class="bi bi-info-circle me-1"></i> 27
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-27-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-27"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 28
+        <i class="bi bi-info-circle me-1"></i> 28
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-28-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-28"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 29
+        <i class="bi bi-info-circle me-1"></i> 29
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-29-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-29"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 30
+        <i class="bi bi-info-circle me-1"></i> 30
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-30-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-30"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 31
+        <i class="bi bi-info-circle me-1"></i> 31
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-31-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-31"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 32
+        <i class="bi bi-info-circle me-1"></i> 32
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-32-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-32"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 33
+        <i class="bi bi-info-circle me-1"></i> 33
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-33-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-33"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 34
+        <i class="bi bi-info-circle me-1"></i> 34
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-34-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-34"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 35
+        <i class="bi bi-info-circle me-1"></i> 35
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-35-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-35"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 36
+        <i class="bi bi-info-circle me-1"></i> 36
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-36-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-36"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 37
+        <i class="bi bi-info-circle me-1"></i> 37
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-37-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-37"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 38
+        <i class="bi bi-info-circle me-1"></i> 38
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-38-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-38"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 39
+        <i class="bi bi-info-circle me-1"></i> 39
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-39-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-39"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 40
+        <i class="bi bi-info-circle me-1"></i> 40
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-40-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-40"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 41
+        <i class="bi bi-info-circle me-1"></i> 41
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-41-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-41"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 42
+        <i class="bi bi-info-circle me-1"></i> 42
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-42-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-42"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 43
+        <i class="bi bi-info-circle me-1"></i> 43
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-43-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-43"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 44
+        <i class="bi bi-info-circle me-1"></i> 44
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-44-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-44"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 45
+        <i class="bi bi-info-circle me-1"></i> 45
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-45-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-45"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 46
+        <i class="bi bi-info-circle me-1"></i> 46
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-46-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-46"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 47
+        <i class="bi bi-info-circle me-1"></i> 47
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-47-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-47"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 48
+        <i class="bi bi-info-circle me-1"></i> 48
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-48-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-48"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 49
+        <i class="bi bi-info-circle me-1"></i> 49
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-49-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-49"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 50
+        <i class="bi bi-info-circle me-1"></i> 50
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-50-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-50"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 51
+        <i class="bi bi-info-circle me-1"></i> 51
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-51-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-51"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 52
+        <i class="bi bi-info-circle me-1"></i> 52
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-52-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-52"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 53
+        <i class="bi bi-info-circle me-1"></i> 53
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-53-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-53"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 54
+        <i class="bi bi-info-circle me-1"></i> 54
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-54-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-54"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 55
+        <i class="bi bi-info-circle me-1"></i> 55
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-55-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-55"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 56
+        <i class="bi bi-info-circle me-1"></i> 56
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-56-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-56"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 57
+        <i class="bi bi-info-circle me-1"></i> 57
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-57-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-57"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 58
+        <i class="bi bi-info-circle me-1"></i> 58
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-58-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-58"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 59
+        <i class="bi bi-info-circle me-1"></i> 59
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-59-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-59"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 60
+        <i class="bi bi-info-circle me-1"></i> 60
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-60-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-60"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 61
+        <i class="bi bi-info-circle me-1"></i> 61
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-61-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-61"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 62
+        <i class="bi bi-info-circle me-1"></i> 62
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-62-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-62"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 63
+        <i class="bi bi-info-circle me-1"></i> 63
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-63-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-63"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 64
+        <i class="bi bi-info-circle me-1"></i> 64
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-64-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-64"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 65
+        <i class="bi bi-info-circle me-1"></i> 65
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-65-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-65"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 66
+        <i class="bi bi-info-circle me-1"></i> 66
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-66-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-66"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 67
+        <i class="bi bi-info-circle me-1"></i> 67
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-67-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-67"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 68
+        <i class="bi bi-info-circle me-1"></i> 68
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-68-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-68"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 69
+        <i class="bi bi-info-circle me-1"></i> 69
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-69-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-69"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 70
+        <i class="bi bi-info-circle me-1"></i> 70
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-70-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-70"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 71
+        <i class="bi bi-info-circle me-1"></i> 71
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-71-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-71"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 72
+        <i class="bi bi-info-circle me-1"></i> 72
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-72-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-72"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 73
+        <i class="bi bi-info-circle me-1"></i> 73
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__as-doc-73-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__as-doc-73"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 74
+        <i class="bi bi-info-circle me-1"></i> 74
     </button>
 </li>
     </ul>
@@ -4923,14 +4938,14 @@ arguments are blocked, so a call is not computed here.
         id="__m__inst__cc-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__cc-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__cc-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__cc-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -5080,21 +5095,21 @@ arguments are blocked, so a call is not computed here.
         id="__m__inst__div-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__div-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__div-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__div-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__div-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__div-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -5382,21 +5397,21 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
         id="__m__inst__gt-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gt-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__gt-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gt-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__gt-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gt-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -5454,21 +5469,21 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
         id="__m__inst__gte-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gte-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__gte-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gte-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__gte-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__gte-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -5554,42 +5569,42 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
         id="__m__inst__has-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__has-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__has-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__has-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__has-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__has-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__has-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li>
     </ul>
@@ -5679,14 +5694,14 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__host-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__host-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__host-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__host-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -5784,14 +5799,14 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__inv-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__inv-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__inv-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__inv-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -5837,27 +5852,11 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">isa</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">str{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__rel" data-bs-toggle="tooltip" title="domain" class="code text-info">rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rel{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">rel{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/isa</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
@@ -5883,6 +5882,22 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>
@@ -5995,14 +6010,14 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__lshift-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lshift-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__lshift-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lshift-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -6054,21 +6069,21 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__lt-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lt-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__lt-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lt-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__lt-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lt-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -6126,21 +6141,21 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__lte-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lte-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__lte-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lte-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__lte-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__lte-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -6251,14 +6266,14 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__mean-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mean-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mean-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mean-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -6344,49 +6359,49 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__merge-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__merge-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__merge-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li>
     </ul>
@@ -6488,49 +6503,49 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
         id="__m__inst__minus-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__minus-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li>
     </ul>
@@ -6683,42 +6698,42 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__mult-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mult-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mult-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mult-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mult-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__mult-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li>
     </ul>
@@ -6843,28 +6858,28 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__neg-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__neg-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__neg-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__neg-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__neg-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__neg-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__neg-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__neg-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li>
     </ul>
@@ -6985,35 +7000,35 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__one-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__one-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__one-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__one-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__one-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__one-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__one-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__one-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__one-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__one-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li>
     </ul>
@@ -7168,14 +7183,14 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
         id="__m__inst__path-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__path-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__path-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__path-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -7275,84 +7290,84 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
         id="__m__inst__plus-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-7-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-7"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 8
+        <i class="bi bi-info-circle me-1"></i> 8
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-8-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-8"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 9
+        <i class="bi bi-info-circle me-1"></i> 9
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-9-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-9"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 10
+        <i class="bi bi-info-circle me-1"></i> 10
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-10-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-10"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 11
+        <i class="bi bi-info-circle me-1"></i> 11
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__plus-doc-11-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-11"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 12
+        <i class="bi bi-info-circle me-1"></i> 12
     </button>
 </li>
     </ul>
@@ -7500,14 +7515,14 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__port-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__port-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__port-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__port-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -7563,28 +7578,28 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__pow-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__pow-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__pow-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__pow-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__pow-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__pow-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__pow-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__pow-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li>
     </ul>
@@ -7686,21 +7701,21 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__prod-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__prod-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__prod-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__prod-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__prod-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__prod-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -7884,10 +7899,10 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the repeated application results" class="text-success">the repeated application results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
-  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
   <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
+  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__reverse">
@@ -7926,28 +7941,28 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__reverse-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__reverse-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__reverse-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__reverse-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__reverse-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__reverse-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__reverse-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__reverse-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li>
     </ul>
@@ -8072,14 +8087,14 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__scheme-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__scheme-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__scheme-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__scheme-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -8151,49 +8166,49 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__select-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__select-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__select-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li>
     </ul>
@@ -8398,21 +8413,21 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__split-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__split-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__split-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__split-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__split-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__split-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li>
     </ul>
@@ -8501,42 +8516,42 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         id="__m__inst__sum-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__sum-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__sum-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__sum-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__sum-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__sum-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__sum-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li>
     </ul>
@@ -8843,14 +8858,14 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         id="__m__inst__vid-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__vid-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__vid-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__vid-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -8904,14 +8919,14 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         id="__m__inst__within-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__within-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__within-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__within-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li>
     </ul>
@@ -8987,56 +9002,56 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         id="__m__inst__zero-doc-0-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-0"
         type="button" role="tab" aria-selected="true"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
+        <i class="bi bi-info-circle me-1"></i> 1
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-1-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-1"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
+        <i class="bi bi-info-circle me-1"></i> 2
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-2-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-2"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
+        <i class="bi bi-info-circle me-1"></i> 3
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-3-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-3"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
+        <i class="bi bi-info-circle me-1"></i> 4
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-4-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-4"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
+        <i class="bi bi-info-circle me-1"></i> 5
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-5"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 6
+        <i class="bi bi-info-circle me-1"></i> 6
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-6"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 7
+        <i class="bi bi-info-circle me-1"></i> 7
     </button>
 </li><li class="nav-item" role="presentation">
     <button class="nav-link py-1 px-2  text-start h-100"
         id="__m__inst__zero-doc-7-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-7"
         type="button" role="tab" aria-selected="false"
         style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 8
+        <i class="bi bi-info-circle me-1"></i> 8
     </button>
 </li>
     </ul>
@@ -9253,14 +9268,40 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 7, 2026 00:44MST<br>
+        generated by metatron instset doc generator<br>
         &copy; PhaseShift Studio, LLC
     </small>
-</div></main>
-<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+</div><script>
+(function () {
+    var bar = document.getElementById('instset-subnav');
+    if (!bar) return;
+    var navbar = document.querySelector('nav.navbar.sticky-top');
+    var links = Array.prototype.slice.call(bar.querySelectorAll('.instset-subnav-link'));
+    var sections = links.map(function (a) {
+        return {link: a, section: document.getElementById(a.getAttribute('data-target'))};
+    }).filter(function (s) { return !!s.section; });
+    function offset() {
+        var navH = navbar ? navbar.offsetHeight : 0;
+        bar.style.top = (window.scrollY > 300 ? navH : 0) + 'px';
+    }
+    function spy() {
+        var active = null;
+        for (var i = 0; i < sections.length; i++) {
+            if (sections[i].section.getBoundingClientRect().top <= 120) active = sections[i].link;
+        }
+        for (var j = 0; j < links.length; j++) links[j].classList.remove('active');
+        if (active) active.classList.add('active');
+    }
+    function update() { offset(); spy(); }
+    window.addEventListener('scroll', update, {passive: true});
+    window.addEventListener('resize', update);
+    update();
+})();
+</script></main>
+<footer class="container-fluid fixed-bottom text-light footer">
     <div class="d-flex pt-1 mb-0">
         <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
-                class="fa fa-envelope-open text-primary"></i></a>
+                class="bi bi-envelope text-primary"></i></a>
         <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
     </div>
 </footer>
