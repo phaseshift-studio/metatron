@@ -968,12 +968,17 @@ public class catInstSetTest extends AbstractInstSetTest {
      * An abstraction's morphisms carry each instruction's own form and class. An op a {@code ?decq} claim declares is
      * keyed by that claim. One no claim declares is keyed by the contract the resolver picks, so the seed reads
      * initial ({@code start} is registered {@code {0} => A}) instead of the bare instruction's {@code # => #} mapper
-     * and endomorphism, and the maybe-dom {@code is} reads standard. Each row: the chain % each morphism's form, seed
-     * first % each morphism's class labels ({@code -} for none).
+     * and endomorphism, and the maybe-dom {@code is} reads standard. Where an unclaimed op's overloads disagree, only
+     * the picked contract can say which ran, and it is read at the carrier: {@code cc(3)} sets a coefficient
+     * ({@code A => A{*}}, an endomorphism) and {@code cc()} reads one ({@code A{*} => int}, an endomorphism on int
+     * alone), where the registrations agree on no class. Each row: the chain % each morphism's form, seed first % each
+     * morphism's class labels ({@code -} for none).
      */
     @ParameterizedTest
     @CsvSource(value = {
             "start({1,2,3}).mult(20).sum()        % initial mapper reducer    % - endo endo",
+            "5.cc(3).cc()                         % initial reducer reducer   % - endo endo",
+            "start('mtron').cc(3).cc()            % initial reducer reducer   % - endo -",
             "start({1,2,3}).is(gt(1)).sum()       % initial standard reducer  % - endo endo",
             "start({1,2,3}).side(plus(1)).sum()   % initial mapper reducer    % - endo endo",
             "5.plus(0).neg()                      % initial mapper mapper     % - endo endo,iso,auto,section,retraction,mono,epi",

@@ -282,7 +282,7 @@ public class catTypes {
                                 else {
                                     final Rec block = morphism.asRec();
                                     block.at(uri(OBJ), chain, MUTABLE);
-                                    if (null == declared)
+                                    if (declared.isNoObj())
                                         attachShape(block, chain, contracts.get(i));
                                     morphisms.add(block);
                                 }
