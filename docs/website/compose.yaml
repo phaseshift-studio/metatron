@@ -1,5 +1,5 @@
 # =============================================================================
-#  metatron — Docker Compose deployment (the VM + a repl sidecar)
+#  metatron — Docker Compose deployment (the metatron VM)
 #  PhaseShift Studio, LLC
 #
 #  This file is the BOUNDARY: the image and its host couplings (socket, state
@@ -17,7 +17,7 @@
 #  QUICK START
 #      docker compose up -d                                  # boot + healthcheck
 #      docker compose logs -f metatron
-#      docker compose --profile repl run --rm repl           # wsplus REPL against it
+#      docker compose exec metatron wsplus ws://localhost:8555/mtron   # the REPL console
 #      docker compose -f compose.yaml -f compose.infra.yaml up -d   # + backends
 #      docker compose down                                   # keep the state volume
 #      docker compose down -v                                # ... or wipe it too
@@ -146,24 +146,10 @@ services:
     networks:
       - netatron
 
-  # --- the REPL: a wsplus console sidecar (--profile repl) -------------------
-  #   docker compose --profile repl run --rm repl
-  repl:
-    profiles: [ "repl" ]
-    image: ${METATRON_IMAGE:-ghcr.io/phaseshift-studio/metatron:latest}
-    container_name: ${METATRON_CONTAINER:-metatron}-repl
-    # skip the VM entrypoint: wsplus is the client, not a second server
-    entrypoint: [ "/app/bin/wsplus" ]
-    command:
-      - "ws://${METATRON_HOSTNAME:-metatron}:${METATRON_WS_PORT:-8555}/mtron"
-    stdin_open: true
-    tty: true
-    restart: "no"
-    depends_on:
-      metatron:
-        condition: service_healthy
-    networks:
-      - netatron
+  # --- the REPL console ------------------------------------------------------
+  # wsplus (the mtron console) is distributed with the metatron image.  Access it by
+  # exec'ing into the running server:
+  #   docker compose exec metatron wsplus ws://localhost:8555/mtron
 
 # -----------------------------------------------------------------------------
 # Networks and volumes.  Both support a `name:` override so the docker objects
