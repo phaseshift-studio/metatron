@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.GenericBinder;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -38,6 +39,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -187,6 +189,106 @@ public class InstTest extends AbstractObjTest {
             LOG.warn("resolution algorithm produces compatible but not equal result — may indicate partially-resolved generics\n\tresult:   %s\n\texpected: %s", resultA, resolutionA);
         else
             assertEquals(resolutionA, resultA);
+    }
+
+    /**
+     * HOW A GENERIC BINDS, one row per situation, read top to bottom. A generic is an all-caps name ({@code A},
+     * {@code B}): a bare {@code A::T} is unbounded, and {@code X::T@A} declares it as {@code X}. The binder threads ONE
+     * binding through a sequence of candidates (a code pattern is one signature), seeds it from the declarations first,
+     * and enforces a bound generic against value arguments. A generic binds a type NAME, never a coefficient: each slot
+     * keeps the coefficient it declares. Each row: lhs % the user's code % the candidate % each bound instruction, or
+     * {@code null} when the candidate is rejected. A bound instruction's dom and rng are checked by type name AND
+     * coefficient; it carries the user's own arguments (resolveArgs), so an argument shows, for the reader, the
+     * candidate's argument as bound.
+     */
+    @TestData(value = {"int::T[?>0]@posint"})
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            // A. ONE INSTRUCTION: A is bound from the dom (1 is an int), so a value argument must then be an int.
+            //    (Before, the argument was retyped int::T@A but kept the generic name, so 'x' passed.)
+            "1           % test(2)                    % test?A<=A(A::T)                              % test?int<=int(int::T)",
+            "1           % test('x')                  % test?A<=A(A::T)                              % null",
+            // B. A SEQUENCE: the first instruction's argument binds B, and the second's must match it ...
+            "1           % test(true).test(true)      % test?A<=A(B::T).test?A<=A(B::T)              % test?int<=int(bool::T).test?int<=int(bool::T)",
+            "1           % test(true).test('hello')   % test?A<=A(B::T).test?A<=A(B::T)              % null",
+            //    ... although that second instruction binds on its own: the pin belongs to the sequence
+            "1           % test('hello')              % test?A<=A(B::T)                              % test?int<=int(str::T)",
+            // C. A CALL ARGUMENT is compiled later (true.type() parses as map(true).type()), so it is not checked
+            "1           % test(true.type())          % test?A<=A(A::T)                              % test?int<=int(int::T)",
+            // D. A DECLARED GENERIC: str::T@B constrains B before any argument is seen ...
+            "1           % test('hello')              % test?A<=A(str::T@B)                          % test?int<=int(str::T)",
+            "1           % test(true)                 % test?A<=A(str::T@B)                          % null",
+            //    ... a type argument is held to it by name, and one letter declared as two types contradicts itself
+            "1           % test(int::T)               % test?A<=A(str::T@B)                          % null",
+            "1           % test(5).test(5)            % test?A<=A(int::T@B).test?A<=A(str::T@B)      % null",
+            // E. A DECLARATION BINDS (Marko, 2026-11-07): int::T@B makes B exactly int. A posint argument fits, but B stays
+            //    int: data streams through a compiled instruction, and its declared type is the contract for all of it, not
+            //    a refinement read off the first value. A declaration narrower than the argument's type also holds: 5
+            //    passes posint's predicate (posint is int::T[?>0]), so B is posint, and -5 does not.
+            "1           % test(posint::5)            % test?B<=A(int::T@B)                          % test?int<=int(int::T)",
+            "1           % test(5)                    % test?B<=A(posint::T@B)                       % test?posint<=int(posint::T)",
+            "1           % test(-5)                   % test?B<=A(posint::T@B)                       % null",
+            // F. COEFFICIENTS. The dom keeps its own coefficient, and the lhs must fit it ...
+            "{1,2}       % test()                     % test?A<=A{*}()                               % test?int<=int{*}()",
+            "{1,2}       % test()                     % test?A<=A{+}()                               % test?int<=int{+}()",
+            //    ({*} is {0,}, zero or more, and {+} is {1,}, one or more: the same coefficients, spelled out)
+            "{1,2}       % test()                     % test?A<=A{0,}()                              % test?int<=int{*}()",
+            "{1,2}       % test()                     % test?A<=A{1,}()                              % test?int<=int{+}()",
+            "{1,2}       % test()                     % test?A<=A{2}()                               % test?int<=int{2}()",
+            "{1,2,3}     % test()                     % test?A<=A{2}()                               % null",
+            "{1,2,3}     % test()                     % test?A<=A{0,4}()                             % test?int<=int{0,4}()",
+            "{1,2,3,4,5} % test()                     % test?A<=A{0,4}()                             % null",
+            //    ... except a one-obj dom, which meets a bulk lhs one obj at a time ...
+            "int{2}::T   % test()                     % test?A<=A()                                  % test?int<=int()",
+            //    ... and a noobj lhs, which fits any dom (A then binds from the argument)
+            "noobj       % test(3)                    % test?A<=A{?}(A::T)                           % test?int<=int{?}(int::T)",
+            //    the rng keeps its own coefficient over what the generic names ({0} is noobj, whatever A is)
+            "1           % test()                     % test?A{*}<=A()                               % test?int{*}<=int()",
+            "1           % test()                     % test?A{0,4}<=A()                             % test?int{0,4}<=int()",
+            "1           % test()                     % test?A{0}<=A()                               % test?int{0}<=int()",
+            //    an argument: A is int (from the dom), and the slot's own coefficient says how many ints
+            "1           % test(2)                    % test?A<=A(A{?}::T)                           % test?int<=int(int{?}::T)",
+            "1           % test({2,3})                % test?A<=A(A{?}::T)                           % null",
+            "1           % test({2,3})                % test?A<=A(A{*}::T)                           % test?int<=int(int{*}::T)",
+            "1           % test({2,3})                % test?A<=A(A::T)                              % null",
+            "1           % test({2,3})                % test?A<=A(A{2}::T)                           % test?int<=int(int{2}::T)",
+            "1           % test({2,3,4})              % test?A<=A(A{2}::T)                           % null",
+            //    zero ints (noobj) fit {*}, zero or more, but not {+}, one or more
+            "1           % test(noobj)                % test?A<=A(A{*}::T)                           % test?int<=int(int{*}::T)",
+            "1           % test(noobj)                % test?A<=A(A{+}::T)                           % null",
+            //    a declaration's coefficient belongs to its slot: B is int, so the rng B is one int; {+} admits no noobj
+            "1           % test({5,6})                % test?B<=A(int{+}::T@B)                       % test?int<=int(int{+}::T)",
+            "1           % test(noobj)                % test?B<=A(int{+}::T@B)                       % null",
+            //    a sequence: the next instruction's lhs is this one's rng, so a one-obj instruction after a stream meets
+            //    it one obj at a time ...
+            "{1,2}       % test().test()              % test?A{+}<=A{+}().test?A<=A()                % test?int{+}<=int{+}().test?int<=int()",
+            //    ... OPEN: but not after a {*} stream. Inst.Helper.appliesPerObject asks lhs.c().gt(1), and cInt.compareTo
+            //    adds the min and max comparisons, so {*} (0 vs 1, then the unbounded max vs 1) is not greater than one,
+            //    nor is {?} or {0,4}. Should any stream that may hold more than one obj meet a one-obj dom per obj?
+            "{1,2}       % test().test()              % test?A{*}<=A{*}().test?A<=A()                % null",
+    })
+    public void testGenericBinding(final String lhs, final String user, final String candidate, final String bound) {
+        final List<Inst> result = GenericBinder.single().apply(ObjmtronSerializer.parse(lhs.trim()),
+                insts(ObjmtronSerializer.parse(user.trim())), insts(ObjmtronSerializer.parse(candidate.trim())));
+        if ("null".equals(bound.trim()))
+            assertNull(result, () -> "the candidate must be rejected, got " + result);
+        else {
+            final List<Inst> expected = insts(ObjmtronSerializer.parse(bound.trim()));
+            assertNotNull(result, () -> "the code must bind to the candidate");
+            assertEquals(expected.size(), result.size());
+            // a slot reads as its type's name and its coefficient: int{*} is not int
+            final Function<Obj, String> slot = type -> Obj.Helper.specificTypeId(type).one() + "{" + type.c() + "}";
+            for (int i = 0; i < expected.size(); i++) {
+                final Inst want = expected.get(i);
+                final Inst got = result.get(i);
+                assertEquals(slot.apply(want.dom()), slot.apply(got.dom()), () -> "dom of " + got);
+                assertEquals(slot.apply(want.rng()), slot.apply(got.rng()), () -> "rng of " + got);
+            }
+        }
+    }
+
+    private static List<Inst> insts(final Obj code) {
+        return code.isCode() ? code.asCode().insts() : List.of(code.asInst());
     }
 
     /**

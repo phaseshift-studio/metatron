@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.GenericBinde
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -87,5 +88,22 @@ public interface Binder extends Component {
      * @param candidate the candidate instruction selected for this call, hints applied
      * @return the bound instruction, or {@code null} to reject the candidate
      */
-    Inst apply(final Obj lhs, final Inst user, final Inst candidate);
+    default Inst apply(final Obj lhs, final Inst user, final Inst candidate) {
+        final List<Inst> bound = this.apply(lhs, List.of(user), List.of(candidate));
+        return null == bound ? null : bound.getFirst();
+    }
+
+    /**
+     * Bind a SEQUENCE of candidates against the sequence of calls being resolved, with ONE GENERIC BINDING for its whole
+     * length: a generic one candidate binds holds for every candidate after it, as it already holds across a single
+     * candidate's dom, rng and arguments. Each call's lhs is the range the candidate before it was bound to. The
+     * candidates are one signature (a code pattern whose generics are scoped to the whole code), not independently
+     * registered contracts, whose generic names are their own: those bind one at a time ({@link #apply(Obj, Inst, Inst)}).
+     *
+     * @param lhs        the left-hand-side object the first call operates on
+     * @param users      the user instructions being resolved, in order
+     * @param candidates the candidate instructions, one per call, in order
+     * @return the bound instructions, or {@code null} when any candidate is rejected
+     */
+    List<Inst> apply(final Obj lhs, final List<Inst> users, final List<Inst> candidates);
 }

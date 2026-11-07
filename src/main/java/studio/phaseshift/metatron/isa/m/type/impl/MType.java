@@ -132,8 +132,10 @@ public class MType extends MObj implements Type {
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
+        // A GENERIC NAME IS A BINDER VARIABLE, never a machine type, so it is neither looked up nor registered. A bare A::T
+        // is a label (its tid is its own name); X::T@A DECLARES it ("A is X"), so the type it names over is kept
         if (checkID.isGeneric())
-            return checkPolyPoly(new MType(Tuple.Pair.with(null, null), checkID, checkID));
+            return checkPolyPoly(new MType(Tuple.Pair.with(null, null), null == tid || null == vid ? checkID : bigTID, checkID));
         // THE IN-FLIGHT BRAKE. the registry read below can re-enter this very resolution: a space read
         // walks its q-proc list, which constructs objs whose type checks resolve this same name, which
         // reads the registry, which walks the q-proc list... the memoized first lap broke that cycle BY
