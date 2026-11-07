@@ -298,11 +298,12 @@ public class TheoryHelper extends MRec {
     }
 
     /**
-     * The op address a law block's role binds, or null when the block or the role is absent, or the role binds a
-     * literal: the value arrives as a {@code !*} auto pointer naming its target in its own argument, so the address
-     * is read without resolving — the target may be an as-yet-unresolved registration.
+     * The op address a law block's role (or a declaration's {@code inverse}) binds, or null when the block or the role
+     * is absent, or the role binds a literal: the value arrives as a uri or a {@code !*} auto pointer naming its target
+     * in its own argument, so the address is read without resolving — the target may be an as-yet-unresolved
+     * registration.
      */
-    static fURI roleAddress(final Rec block, final String role) {
+    public static fURI roleAddress(final Rec block, final String role) {
         if (null == block)
             return null;
         final Obj holder = block.atDirect(uri(role));

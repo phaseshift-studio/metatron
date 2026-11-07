@@ -828,10 +828,10 @@ public final class PlanInterpreter {
      * operation is declared {@code monoidic} — the shape a repeated fold is idempotent on.
      */
     private static boolean isFold(final Inst inst, final Type carrier) {
-        final Law.Helper.Declared declared = Law.Helper.declared(inst.tid().basePath(), carrier);
-        if (null == declared)
+        final Rec declared = Law.Helper.declared(inst.tid().basePath(), carrier);
+        if (declared.isNoObj())
             return false;
-        final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
+        final Inst.Form form = Inst.Form.of(inst.tid(declared.atDirect(OBJ).tid()));
         return (Inst.Form.reducer == form || Inst.Form.join == form) && declares(inst, carrier, Law.monoidic);
     }
 
@@ -852,9 +852,8 @@ public final class PlanInterpreter {
      * inverse), and under {@code plus} it is the unit law's anyway.
      */
     private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
-        final Law.Helper.Declared declared = Law.Helper.declared(a.tid().basePath(), carrier);
-        return null != declared && null != declared.entry().inverse()
-                && b.tid().basePath().equals(declared.entry().inverse().basePath())
+        final fURI inverse = TheoryHelper.roleAddress(Law.Helper.declared(a.tid().basePath(), carrier), INVERSE);
+        return null != inverse && b.tid().basePath().equals(inverse.basePath())
                 && a.args().equals(b.args())
                 && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
                 .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
@@ -961,11 +960,11 @@ public final class PlanInterpreter {
         final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
         for (int i = 0; i < insts.size(); i++) {
             final Inst inst = insts.get(i);
-            final Law.Helper.Declared absorber = i < seed || !declares(inst, carriers.get(i), Law.absorbing)
-                    ? null : Law.Helper.declared(inst.tid().basePath(), carriers.get(i));
-            if (null != absorber)
-                while (kept.size() > seed && absorbable(insts.get(kept.getLast()), absorber.tid(), carriers.get(kept.getLast())))
+            if (i >= seed && declares(inst, carriers.get(i), Law.absorbing)) {
+                final fURI absorber = Law.Helper.declared(inst.tid().basePath(), carriers.get(i)).atDirect(OBJ).tid();
+                while (kept.size() > seed && absorbable(insts.get(kept.getLast()), absorber, carriers.get(kept.getLast())))
                     kept.removeLast();
+            }
             kept.add(i);
         }
         return kept.size() == insts.size() ? code : code(kept.stream().map(insts::get).toList());
@@ -987,14 +986,15 @@ public final class PlanInterpreter {
      * </ul>
      */
     private static boolean absorbable(final Inst prior, final fURI absorber, final Type carrier) {
-        final Law.Helper.Declared declared = Law.Helper.declared(prior.tid().basePath(), carrier);
-        if (null == declared || !declares(prior, carrier, Law.pure))
+        final Rec declared = Law.Helper.declared(prior.tid().basePath(), carrier);
+        if (!declares(declared, Law.pure))
             return false;
         if (absorber.rng().c().isZero())
             return true;
-        if (!cInt.ONE().equals(prior.c()) || !isEndo(declared.tid(), carrier))
+        final fURI tid = declared.atDirect(OBJ).tid();
+        if (!cInt.ONE().equals(prior.c()) || !isEndo(tid, carrier))
             return false;
-        final Inst.Form form = Inst.Form.of(prior.tid(declared.tid()));
+        final Inst.Form form = Inst.Form.of(prior.tid(tid));
         return Inst.Form.mapper == form || (Inst.Form.filter == form && !isStrict(absorber));
     }
 

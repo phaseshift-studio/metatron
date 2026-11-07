@@ -125,10 +125,10 @@ public class catTypes {
                             final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
                             // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
                             final Inst inst = objInstRec.atDirect(OBJ).asInst();
-                            final Law.Helper.Entry entry = Law.Helper.lawsOf(inst.tid());
-                            // no table entry and no contract of its own: the form and class are read off the dom/rng
+                            final Rec entry = Law.Helper.lawsOf(inst.tid());
+                            // no declaration and no contract of its own: the form and class are read off the dom/rng
                             // its registrations agree on, so start's {0} => A is initial, not the bare # => # mapper
-                            final List<Inst> shapes = null == entry && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
+                            final List<Inst> shapes = entry.isNoObj() && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
                             final Map<Obj, Obj> block = new LinkedHashMap<>();
                             block.put(uri(NAME), uri(inst.tid().name()));
                             block.put(uri(FORM), uri(formOf(shapes, inst).name()));
@@ -143,8 +143,9 @@ public class catTypes {
                                 analysis.put(uri(CONTESTED), auto_(instLambda((_, _) -> catGraph.contested(inst))).tryToInst());
                                 analysis.put(uri(ORBIT), auto_(instLambda((_, _) -> catGraph.orbit(inst))).tryToInst());
                                 analysis.put(uri(POSITION), auto_(instLambda((_, _) -> catGraph.position(inst))).tryToInst());
-                                if (null != entry && null != entry.inverse())
-                                    analysis.put(uri(INVERSE), uri(entry.inverse()));
+                                final fURI inverse = TheoryHelper.roleAddress(entry, INVERSE);
+                                if (null != inverse)
+                                    analysis.put(uri(INVERSE), uri(inverse));
                                 // the edge the partials recombine through -- computed off the laws and the
                                 // derivation, never declared (Law.Helper.combiner); a reducer without one has none
                                 final fURI combiner = Law.Helper.combinerOf(inst);
@@ -153,10 +154,12 @@ public class catTypes {
                                 return rec(analysis);
                             })).tryToInst());
                             block.putAll(objInstRec.jvm());
-                            if (null != entry && !entry.laws().isEmpty())
-                                block.put(uri(LAW), entry.laws());
-                            if (null != entry && null != entry.derivation())
-                                block.put(uri(DERIVATION), rec(uri(LHS), entry.derivation().lhs(), uri(RHS), entry.derivation().rhs()));
+                            final Obj laws = entry.atDirect(LAW);
+                            if (laws.isLst() && !laws.asLst().isEmpty())
+                                block.put(uri(LAW), laws);
+                            final Obj derivation = entry.atDirect(DERIVATION);
+                            if (derivation.isRec())
+                                block.put(uri(DERIVATION), derivation);
                             return rec(block).clone().selfTID(MORPHISM_TID.poly(inst.typeId()));
                         })
                         .create(),
@@ -264,8 +267,8 @@ public class catTypes {
                                 final Inst chain = code.insts().get(i);
                                 // the declared n-tid keys the chain instruction into the law table in-graph, read at
                                 // the carrier flowing into it
-                                final Law.Helper.Declared declared = Law.Helper.declared(chain.tid().basePath(), carriers.get(i));
-                                final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
+                                final Rec declared = Law.Helper.declared(chain.tid().basePath(), carriers.get(i));
+                                final Inst keyed = declared.isNoObj() ? chain : chain.tid(declared.atDirect(OBJ).tid());
                                 Obj morphism;
                                 try {
                                     morphism = MORPHISM_TYPE.constructor().apply(keyed);
