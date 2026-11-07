@@ -65,14 +65,7 @@ public final class TypeGraph {
     public record Key(fURI tid, fURI vid, Call predicate, Call constructor) {
     }
 
-    private static final class Entry {
-        final Type type;
-        final long gen;
-
-        Entry(final Type type, final long gen) {
-            this.type = type;
-            this.gen = gen;
-        }
+    private record Entry(Type type, long gen) {
     }
 
     private final ConcurrentHashMap<Key, Entry> resolved = new ConcurrentHashMap<>();

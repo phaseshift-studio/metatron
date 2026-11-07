@@ -27,7 +27,8 @@
         return false;
     });
     // SYNTAX HIGHLIGHTING IN <code> SNIPPETS
-    hljs.highlightAll();
+    // (pages that do not ship highlight.js — e.g. 404.html — must still run the rest of this file)
+    if (typeof hljs !== 'undefined') hljs.highlightAll();
     // TERMYNAL TABS
     $(function () {
         $(".tabrow li").click(function (e) {
