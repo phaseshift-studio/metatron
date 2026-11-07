@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -109,7 +110,10 @@ public class BasicMemory extends MRec implements Memory {
      * relative write. A field cannot be orphaned that way, which is what makes {@code addSpace}'s put stick.
      */
     private final Rec spaces = rec(mutableMap());
-    private final Rec rootFrame = rec(mutableMap());
+    // SHARED ACROSS THREADS: every thread's relative write lands here while others read it (variableStack), so the
+    // map is concurrent. A put into a plain map broke another thread's Rec.at walk with a
+    // ConcurrentModificationException (ten threads defining @names in one machine, CodeUpdateTest).
+    private final Rec rootFrame = rec(new ConcurrentHashMap<>());
     private final TypeGraph typeGraph = new TypeGraph();
 
     public BasicMemory() {
