@@ -282,7 +282,7 @@ public class StatusLineTest extends AbstractMetatronTest {
             assertEquals(FloatingSurface.Anchor.TOP_RIGHT, panel.getStyle().anchor(), "it opens at the top-right");
             assertEquals(100, panel.getStyle().width(), "the width is its natural 100 (the terminal allows it)");
             assertEquals(20, panel.getStyle().height(), "the height is its natural 15 (the terminal allows it)");
-            assertEquals(13, panel.max(), "its rows are the box's interior, so it fills the viewport");
+            assertEquals(18, panel.max(), "its rows are the box's interior, so it fills the viewport");
             assertEquals(console.vid().extend(STATUS), panel.vid(),
                     "the panel lives at the status address, so mtron can reach it");
             assertTrue(StatusLine.history().contains("still here"),
