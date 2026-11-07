@@ -550,13 +550,19 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     void testDecQLivesBesideItsType() {
         final Rec ring = rec(uri("ring"), rec(uri("zero"), jnt(0), uri("one"), jnt(1)));
-        Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ),
-                rec(mutableMap(uri(OBJ), mInstSet.INT_TYPE, uri(THEORY), ring), QCollection.DECS_TID, null));
-        final Obj read = Machine.read(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ));
-        assertTrue(read.isRec(), "int::T's algebra must be readable through ?decq, got " + read);
-        final Rec theory = read.asRec().atDirect(uri(THEORY)).asRec();
-        assertTrue(theory.has(uri("ring")), "the ring instance survives the round trip, got " + read);
-        assertEquals(jnt(0), theory.at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");
+        try {
+            Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ),
+                    rec(mutableMap(uri(OBJ), mInstSet.INT_TYPE, uri(THEORY), ring), QCollection.DECS_TID, null));
+            final Obj read = Machine.read(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ));
+            assertTrue(read.isRec(), "int::T's algebra must be readable through ?decq, got " + read);
+            final Rec theory = read.asRec().atDirect(uri(THEORY)).asRec();
+            assertTrue(theory.has(uri("ring")), "the ring instance survives the round trip, got " + read);
+            assertEquals(jnt(0), theory.at(uri("ring")).asRec().at(uri("zero")), "the block is stored verbatim");
+        } finally {
+            // the write replaced int's real algebra, and the algebra memo no longer hides that from the tests after this
+            // one: clear it, so the next read misses and re-publishes the staged claim
+            Machine.write(mInstSet.INT_TYPE.vid().addQ(QCollection.DECQ), noobj());
+        }
     }
 
     /**

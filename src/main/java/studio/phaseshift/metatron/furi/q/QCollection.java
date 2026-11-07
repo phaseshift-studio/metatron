@@ -536,6 +536,14 @@ public final class QCollection {
      */
     public static volatile java.util.function.Predicate<fURI> LAZY_PUBLISH = address -> false;
 
+    /**
+     * THE WRITER HOOK FOR DECLARATIONS: told every {@code ?decq} declaration (noobj, the override, included) the moment
+     * the store holds it, in the writer's thread, so a memo derived from declarations evicts before the write returns.
+     * Installed by {@code PendingWrites}, for the reason {@link #LAZY_PUBLISH} is.
+     */
+    public static volatile java.util.function.BiConsumer<fURI, Obj> EVICT = (address, declaration) -> {
+    };
+
     public static QProc docQ() {
         return docQ(noobj());
     }
@@ -657,7 +665,13 @@ public final class QCollection {
                     // a declaration is about an obj: only a decs::T is stored (noobj, the override, clears it)
                     if (!obj.isNoObj() && !obj.test(DECS_TYPE))
                         return fail(MTronException.of("%s is not a decs::T declaration", obj));
-                    declarations.write(vidBig.removeQ(DECQ), obj);
+                    final fURI address = vidBig.removeQ(DECQ);
+                    // a claim the store already holds changes nothing, so it evicts nothing: a read that misses re-writes
+                    // every staged sibling of its operation (PendingWrites.publish), most of them already published
+                    if (obj.equals(declarations.read(address)))
+                        return obj;
+                    declarations.write(address, obj);
+                    EVICT.accept(address, obj);
                     return obj;
                 })
                 .preRead((vid) -> {

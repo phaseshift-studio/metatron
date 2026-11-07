@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -151,20 +152,38 @@ public class TheoryHelper extends MRec {
         final Algebra cached = ALGEBRAS.get(key);
         if (null != cached)
             return cached;
+        final long written = WRITES.get();
         final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
         final boolean spaceAnswered = declared.isRec();
         final Obj theory = spaceAnswered ? declared.asRec().atDirect(uri(THEORY)) : noobj();
         final Algebra algebra = theory.isRec() ? Algebra.of(theory.asRec()) : Algebra.empty();
-        if (memoizable(algebra, spaceAnswered))
+        // a relative vid names a machine's own type (two machines may each declare an `a`), so only an absolute one is
+        // memoized; and a read a declaration write overlapped is not, or it could restore what that write evicted
+        if (memoizable(algebra, spaceAnswered) && key.isAbsolute() && written == WRITES.get())
             ALGEBRAS.putIfAbsent(key, algebra);
         return algebra;
     }
 
     /**
      * THE ALGEBRA MEMO, keyed by the type's VID base path (two refinements of one base share a tid, so a tid key would
-     * answer one's algebra for the other). INTERIM: type-edit subscriptions will replace it.
+     * answer one's algebra for the other). Kept current by the {@code ?decq} write hook ({@link #evict}): a declaration
+     * drops its type's entry before the write returns.
      */
     private static final Map<fURI, Algebra> ALGEBRAS = new ConcurrentHashMap<>();
+
+    /**
+     * The count of declarations written, so a read that one overlapped does not memoize.
+     */
+    private static final AtomicLong WRITES = new AtomicLong();
+
+    /**
+     * A {@code ?decq} DECLARATION LANDED at {@code address} ({@code QCollection.EVICT}): its type's memoized algebra is
+     * dropped, and a read already in flight will not memoize what it saw before.
+     */
+    public static void evict(final fURI address) {
+        WRITES.incrementAndGet();
+        ALGEBRAS.remove(address.basePath());
+    }
 
     /**
      * A BOOT IS A FRESH WORLD — the memoized algebras hold role pointers into the spaces of the boot that read them, so a
