@@ -288,7 +288,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.
 * [fascinations](references/fascinations-mtron.md) -- the surprising things mtron does, one section each, every example
   run by the docs pipeline: shipping a socket (a built obj travels as its data, so a `ws_client` sent to another
-  machine makes that machine dial).
+  machine makes that machine dial); rewriting code by pattern (a program is a value that code patterns match and
+  `update` rewrites).
 
 ### execution & the machine
 

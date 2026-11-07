@@ -3,10 +3,11 @@ name: fascinations
 description: |
   The surprising things mtron does, one section each: the phenomenon, a block the docs pipeline runs, and the few
   rules it falls out of. Sections so far: shipping a socket (a built obj travels as its data, so a ws_client sent to
-  another machine makes that machine dial).
+  another machine makes that machine dial); rewriting code by pattern (a program is a value: code patterns find runs
+  of instructions, update rewrites them, and as(lst::T) edits a program as a list before it runs).
   TRIGGER: When showing what makes mtron different from other languages; when looking for a striking, runnable
   example; when explaining why a shipped client dials from where it lands, or why a built obj's wire form is only its
-  data.
+  data; when showing code as data, pattern matching on code, or a rewrite rule written in mtron.
 ---
 
 # fascinations — the surprising things mtron does
@@ -65,3 +66,52 @@ Two consequences come with it:
 - Reading the text is enough to dial. Whoever can send a machine mtron can make it open a connection.
 - A network keeps no two equivalent connections, so a shipped client replaces the one the receiver already holds for
   that host.
+
+## rewriting code by pattern
+
+In most languages a program is text to parse or an opaque function to call. In mtron a program is a value: held in a
+poly it stays unevaluated, it is tested like data, it is rewritten by the same `update` (`>>=`) that rewrites a str or a
+rec, and it runs again afterwards. The pattern a rewrite looks for is code too. Its instruction names are uri patterns,
+its arguments are types, and the code tests the pattern exactly as a value tests a type.
+
+The block rewrites four programs, then takes a fifth apart as a list, edits it, and runs it:
+
+```mtron_pre
+[-- a name is a uri pattern, so one rule rewrites every plus and every mult --]
+[plus(1).mult(2).plus(3)]==[update([</m/inst/{plus,mult}>(int::T)=>id()])]
+[-- an argument is a type, its coefficient included: a bag of ints is an int{*}, never an int --]
+[start({1,2}).plus(1)]==[update([start(int{*}::T)=>start(0)])]
+[-- an argument rewritten in place, as an update rewrites a lst --]
+[plus(5).mult(2)]==[update([plus(int::T)=>[args=>[+10]]])]
+[-- named groups and a template: the monoid law of plus, written as data --]
+[plus(2).plus(3).mult(4)]==[update([plus(int::T@a).plus(int::T@b)=>plus(${*a.plus(*b)})])]
+[-- the same program as a list of instructions: replace the seed, keep the rest, rebuild the code, run it --]
+[start({1,2,3}).plus(10).order(mult(-1))]==[as(lst::T)]==[==[|start({-9,-8,-7}),#::T,#::T]]==[as(code::T)]>-
+```
+
+The first four answers are programs, rewritten and still unevaluated. The fifth is numbers. The program was taken apart
+as a `lst::T` of instructions, its seed replaced (`|start(...)`, the bar holding the replacement as data) and its other
+instructions kept (`#::T`), and `as(code::T)` put it back together. The merge `>-` then ran it: the new seed plus 10,
+ordered by its negation.
+
+Five rules, each true before this worked, make it work:
+
+- **A poly holds code without running it.** Only `at()` fires an initial or an auto, and `update` walks its rules with
+  `elements()`, so a pattern such as `start(int{*}::T)` reaches the matcher as code.
+- **An instruction is tested like a value.** `Inst.test` matches a name as a uri (`{plus,mult}`, `#`) and each argument
+  with `test`. So a type is a hole (`int::T`), a coefficient is a shape (`int{*}`), a predicate is a guard (`?>0`), and an
+  instruction pattern nests (`#(mult(_))`).
+- **`update` has one philosophy.** A str's keys are regexes that select sections; a code's are patterns that select runs
+  of instructions. The value says what each becomes, and a key of `args` updates in place, as `>>=` updates a lst.
+- **A name is an argument uri.** `@a` binds what its pattern element matched, in a frame on the running thread's
+  argument stack that is pushed for the change and popped after. A template parameter (`${...}`, a str's own template
+  syntax, which already parses as a uri in an argument) reads it as `*a`.
+- **Iterating code runs it.** `as(lst::T)` and `as(code::T)` are two views of one program, and `>-` iterates the code,
+  which evaluates it.
+
+Two consequences come with it:
+
+- A rewrite rule is data. A rec of `pattern => change` can be stored, shipped, and documented. The compiler's Java
+  rewrites (the move extractor, the law folds) are this shape compiled.
+- A name on a typed hole is also a type of the machine: `int::T@a` defines `a::T` in the machine's root frame. Threads
+  that rewrite at once each work in a machine of their own (`push`, then `pop`), where those types live and die.

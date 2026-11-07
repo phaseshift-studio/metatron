@@ -572,6 +572,19 @@ A pattern matches runs of consecutive instructions, left to right, never overlap
 and a rec applies its own rules inside the run. The rules run in order, each over what the last one left, and a change
 is not matched again.
 
+### in place: an instruction's args
+
+A rule keyed by `args` (a uri, not a pattern) updates the arguments of each instruction in place, as `>>=` updates a
+lst: a call transforms, a literal or a blocked `|x` replaces, `_` keeps a value, `#::T` keeps an argument that is itself
+an instruction, and the rule's lst gives the new arity. An instruction updates itself the same way
+(`update?inst<=inst(rec::T)`).
+
+```mtron_pre
+[plus(5)]==[update([args=>[+10]])]                                    [-- an inst updates its own args --]
+[branch(plus(1),mult(2))]==[update([args=>[#::T,|mult(3)]])]          [-- keep one, replace the other --]
+[plus(5).mult(2)]==[update([plus(int::T)=>[args=>[+10]]])]            [-- in place, in the run a pattern matched --]
+```
+
 ### names and templates
 
 `@name` on a pattern element names what it matched. In a change, a `${...}` argument is a **template parameter**: it is
