@@ -265,8 +265,8 @@ public class catTypes {
                             final List<Obj> morphisms = new ArrayList<>();
                             for (int i = 0; i < code.insts().size(); i++) {
                                 final Inst chain = code.insts().get(i);
-                                // the declared n-tid keys the chain instruction into the law table in-graph, read at
-                                // the carrier flowing into it
+                                // the declared n-tid (the obj of the ?decq claim Law.Helper.declared answers) keys
+                                // the chain instruction in-graph, read at the carrier flowing into it
                                 final Rec declared = Law.Helper.declared(chain.tid().basePath(), carriers.get(i));
                                 final Inst keyed = declared.isNoObj() ? chain : chain.tid(declared.atDirect(OBJ).tid());
                                 Obj morphism;
@@ -414,7 +414,7 @@ public class catTypes {
     }
 
     /**
-     * Attach the form and class of the contract the resolver picked for an op the law table does not declare: the
+     * Attach the form and class of the contract the resolver picked for an op no {@code ?decq} claim declares: the
      * seed's {@code {0} => A} reads initial and is no endomorphism. The contract is read here and never stored, since a
      * rec or lst holding an initial instruction evaluates it.
      */

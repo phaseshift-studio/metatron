@@ -138,7 +138,7 @@ and apply individually:
 
 `{<j>}` is **compilation made visible**: before the resolver the insts are bare signatures; after, they carry their
 function. `plus(0)` vanishing is `theory_unit_removal` — a declared law firing as a rewrite, not a hard-coded
-optimization. Rewrites run before resolution in the default schedule; law-driven rewrites read `LawTable.declared` to
+optimization. Rewrites run before resolution in the default schedule; law-driven rewrites read `Law.Helper.declared` to
 re-type the bare addresses.
 
 ### 3.2 The runtime — monad, computer, thread, barrier
@@ -190,7 +190,7 @@ Java field shielded from metatron's reflection.
 | `?split` | what counts as one share | `stream` (stride) and `copy` lower; `block`/`key`/`owner`/`index` decline |
 
 The emit: `start([slave…]).select([virtual::[code=>eval(p_i)]…]).select([>>rhs…]).merge().<combiner>`. The combiner
-is **computed** (`LawTable.combiner`: `count↦sum`, `order(s)↦kmerge(s)`, `group([k⇒h])↦pointwise`), never named. The
+is **computed** (`Law.Helper.combiner`: `count↦sum`, `order(s)↦kmerge(s)`, `group([k⇒h])↦pointwise`), never named. The
 emitted `start([…]).select([…])` **is a `branch` spelled as transport** — the decision (serial/parallel/distributed)
 is *collapsed* into `virtual::[eval(p_i)]` at plan time.
 
@@ -222,7 +222,7 @@ rewrite table: types are objects, insts are morphisms, `path::T` is code-as-vert
 
 ### 4.4 The pattern layer — `?decq` and the cat-graph
 
-The plan's `cut`/`span`/`LawTable` are all **predicates over algebraic metadata** that metatron already serves through
+The plan's `cut`/`span`/`Law.Helper` are all **predicates over algebraic metadata** that metatron already serves through
 the **`?decq`** q-proc (the algebra twin of `?docq`):
 
 | `?decq` on | returns | the cat-graph read |
@@ -237,7 +237,7 @@ So the plan's Java types are a re-encoding of this one door:
 | `Cut.reducer(Law.monoidic, Law.commutative)` | `form == reducer` and `law ⊇ {monoidic, commutative}` |
 | `Cut.role("id")` (the unit law) | the theory role `id` off `*<type>?decq` |
 | `Span.floatable()` / `.blocked` | `form ∈ {mapper, filter, flatmapper}` vs `{reducer, gather}` |
-| `LawTable.combiner(keyed, laws)` | `?decq>>law` (monoidic+commutative → self; `derivation` → the defining fold) |
+| `Law.Helper.combiner(keyed, laws)` | `?decq>>law` (monoidic+commutative → self; `derivation` → the defining fold) |
 
 The cat-graph takes `?decq` from *local* to *global*: types are objects, insts are morphisms, and the structure answers
 *which rewrite is live and unique* for a given code — **iso-clusters** (`analysis.orbit` / `coupling` / `retract`, the
@@ -303,7 +303,7 @@ becomes "move *where*" — to a barrier (join), to the run pool (parallel), or t
 
 | phase | ring | reads | outputs |
 |-------|------|-------|---------|
-| **factor** | stream | the **laws** (`LawTable`, combiner) + the **data ring** (`?split`) | `branch(lane₁,…,laneₙ).<combiner>` |
+| **factor** | stream | the **laws** (`Law.Helper`, combiner) + the **data ring** (`?split`) | `branch(lane₁,…,laneₙ).<combiner>` |
 | **plan** | machine | the **network** (`reach` / `serves` / `shardTargets`) | `planRec[i] = place` |
 
 They share **no overlapping behavior**: one decides *where the code factors* (algebraic cuts), the other decides
@@ -312,7 +312,7 @@ input. The organic tree is the two phases *alternating machine by machine*: phas
 machine's compiler runs phase 1 (factor again) then phase 2 (place again).
 
 **The hard line is already drawn in the code.** In `PlanInterpreter.shard`, everything up to and including the
-combiner + seed factoring is stream ring (laws, coefficient shape, `LawTable.combiner`, `?split`); everything from
+combiner + seed factoring is stream ring (laws, coefficient shape, `Law.Helper.combiner`, `?split`); everything from
 `resolve()`/`shares()` onward is machine ring (place resolution, lane order, `virtual`/`eval`/`to(uri)`). And
 `PlaceResolver` is already a **separate class** — the machine-ring side is already extracted (the design's C4). So the
 refactor is to *finish* that extraction: `factor` (emit `branch`) and `place` (emit `to(uri)`), meeting only at the

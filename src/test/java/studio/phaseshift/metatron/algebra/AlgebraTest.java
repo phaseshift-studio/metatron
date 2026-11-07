@@ -41,7 +41,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /**
  * THE LAW BLOCK AS A VALUE — what an {@link Algebra} says about the theories a type models, and the two properties
  * that make it safe to hand around: it is the rec it views (so nothing about introspection, serialization or selection
- * changes), and every change is a copy (so a view can never write back into the block a law table answered).
+ * changes), and every change is a copy (so a view can never write back into the block a {@code ?decq} declaration
+ * holds).
  *
  * <p>The fixture is the shape {@code TheoryHelper.instances} answers — theory-instance name to declaration rec, in
  * declaration order — modeled on int's declared ring: {@code ring => [zero => 0, one => 1]} and
@@ -148,7 +149,7 @@ public class AlgebraTest extends AbstractMetatronTest {
         assertFalse(original.models(f("field")));
         assertEquals(2, original.theories().size());
         assertEquals(3, extended.theories().size());
-        // the source block is the table's: the copy-on-write never reaches it
+        // the source block keeps its two theories: the copy-on-write never reaches it
         assertEquals(2, laws.jvm().size());
         assertEquals(declaredRing, Algebra.of(laws).theory(RING));
     }

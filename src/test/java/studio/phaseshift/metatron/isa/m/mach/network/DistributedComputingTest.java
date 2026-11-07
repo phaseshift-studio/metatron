@@ -508,7 +508,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * A KNOWN GAP, PINNED SO IT CANNOT ROT QUIETLY: the argless {@code order()} does not shard, while
      * {@code order(>>)} does.
      * <p>
-     * The law row for {@code order} declares a {@code Derivation} keyed on the SELECTOR-bearing spelling
+     * The {@code ?decq} claim for {@code order} declares a {@code Derivation} keyed on the SELECTOR-bearing spelling
      * ({@code start(A).order(B) ↦ start(A).split([id]).kmerge(B)}) and {@code pure}, and no
      * {@code monoidic}/{@code commutative}. {@code Law.Helper.combiner} therefore falls through to the
      * derivation, and {@code Derivation.bind} refuses an arity mismatch
@@ -518,9 +518,9 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * master would re-apply {@code order} to a stream of sorted lsts and sort the lists instead of merging
      * their runs.
      * <p>
-     * The honest fix is to key law rows by (basePath, ARITY) as well as by dom/rng signature, and register
-     * the argless derivation {@code start(A).order() ↦ start(A).split([id]).kmerge()}; entries are keyed by
-     * signature today, so the argless spelling has nowhere to put its own row. Until then this test records
+     * The honest fix is to key declarations by (basePath, ARITY) as well as by dom/rng signature, and declare
+     * the argless derivation {@code start(A).order() ↦ start(A).split([id]).kmerge()}; claims are keyed by
+     * signature today, so the argless spelling has nowhere to put its own claim. Until then this test records
      * that the selector-less spelling declines, so nobody "fixes" it by making order self-combining.
      */
    /* @Disabled("known gap, deliberately pinned: shrink this to the passing half once law rows are keyed by arity")

@@ -148,9 +148,9 @@ in the enum but used by nothing**:
 - `blocked` — *"cannot float past a barrier — a reduce anchors the coefficient in place"* (`:855`).
 
 `catInstSet.isFold(inst, carrier)` already computes the right predicate for a distributable reduction: `reducer` or
-`join` **form** *and* a declared `monoidic` law (`:663-668`). And the law table already knows which operations
-qualify — `sum` is `monoidic` (`mInstSetLawTable.java:251`), `mean` is `magmadic` (`:250`) and therefore correctly
-not distributable. The type system already encodes the answer the distribution rewrite hardcodes.
+`join` **form** *and* a declared `monoidic` law (`:663-668`). And the `?decq` declarations already know which
+operations qualify — `sum` is `monoidic` (`mInsts.java:180`), while `mean` declares only `pure` (`:136`) and is
+therefore correctly not distributable. The type system already encodes the answer the distribution rewrite hardcodes.
 
 ---
 
@@ -300,10 +300,10 @@ that makes compiled code portable and makes nested clusters composable, because 
 against its own network.
 
 **Testability follows from the same declarations.** Once the gate is a law, the distributed suite stops being CSV
-rows of hand-computed mailboxes and becomes a property over the law table: *for every `(op, carrier)` where `isFold`
-and `commutative`, `local fold == sharded fold` for random slices* — and *sharding is legal iff every replicated
-operation is `floatable` and no `blocked` operation intervenes*. That is "known and tested distributed semantics"
-generated from the declarations rather than asserted by hand.
+rows of hand-computed mailboxes and becomes a property over the `?decq` declarations: *for every `(op, carrier)`
+where `isFold` and `commutative`, `local fold == sharded fold` for random slices* — and *sharding is legal iff every
+replicated operation is `floatable` and no `blocked` operation intervenes*. That is "known and tested distributed
+semantics" generated from the declarations rather than asserted by hand.
 
 ---
 
@@ -513,7 +513,7 @@ one-liners.
 | Inst.Form coefficient shapes                              | `Inst.java:60-72`                                                                                                   |
 | `isFold` = reducer/join + `monoidic`                      | `catInstSet.java:663-668`                                                                                           |
 | `floatable` / `blocked` declared, unconsumed              | `catInstSet.java:851`, `:855` (no consumers)                                                                        |
-| `sum` monoidic, `mean` magmadic                           | `mInstSetLawTable.java:251`, `:250`                                                                                 |
+| `sum` monoidic, `mean` only `pure`                        | `mInsts.java:180`, `:136`                                                                                           |
 | cat family (4) reserved for relation-driven rules         | `catInstSet.java:338-378`                                                                                           |
 | container run / compose --wait / no exec                  | `dckrSpace.java:592`, `:547-576`; grep: no `"exec"`                                                                 |
 | every backend a container                                 | `boot/spaces.boot.mtron:1-10`; `boot/space/tble/mariadb.mtron`; `boot/space/vec/chromadb.mtron`                     |

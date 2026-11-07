@@ -1466,8 +1466,8 @@ public class mInstSet extends AbstractInstSet {
         // EVERY CARRIER'S ALGEBRA IS DECLARED AT ITS TYPE (mTypes.declareAlgebras) — the theory instances it
         // models, with !* pointers to the live operations. Invoked from this static block, not from a field
         // initializer in mTypes, because the recs name the inst tids above and the theory tids below: a field
-        // there would close a class-initialisation cycle. Staged here and persisted to ?decq by the drain that
-        // runs when this set is mounted. The law table no longer restates any carrier's algebra.
+        // there would close a class-initialisation cycle. Staged here, and published to ?decq on first read (the
+        // q-proc's lazy hook).
         mTypes.declareAlgebras();
         // EVERY THEORY'S LAW BATTERY IS DECLARED AT THE THEORY (mTypes.declareAxioms) — WHICH process laws an
         // instance of it entails, so a validator can turn a carrier's declared instances into a claim list. Same

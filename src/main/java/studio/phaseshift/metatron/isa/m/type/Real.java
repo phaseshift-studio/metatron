@@ -116,12 +116,12 @@ public interface Real extends Mono {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversion real->int (no law-table row, hence no claim and no
-     * inverse) and the `math`/`order` bodies, which reach for MathUtil/ExpressionBuilder/Machine and
-     * MLst.lst/Comparator. THE ROWED PAIR IS GONE: real->str is the SOUND direction (the printed decimal reads
-     * back to the same double) and is declared WITH its inverse beside the other real operations in
-     * mInsts.reals(); str->real is LOSSY and declares no inverse anywhere. The rest of real's operations live in
-     * mInsts.reals(), `div` and `minus` included (their `derivation` is what lets the rows retire).
+     * WHAT REMAINS HERE, and why: the `as` conversion real->int (built through InstBuilder, but it declares no law
+     * and no inverse) and the `math` body, which reaches for MathUtil/ExpressionBuilder/Machine. real->str is the
+     * SOUND direction (the printed decimal reads back to the same double) and is declared WITH its inverse beside
+     * the other real operations in mInsts.real_insts(); str->real is LOSSY and declares no inverse anywhere. The
+     * rest of real's operations live in mInsts.real_insts(), `div` and `minus` included (each declares its
+     * `derivation` there).
      */
     final class RealType {
 

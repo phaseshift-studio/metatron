@@ -111,11 +111,11 @@ public final class InstPattern {
     }
 
     /**
-     * Does one instruction satisfy this slot? Laws are declared facts — an inst whose table declares
-     * nothing matches no law-bearing slot, fail closed, never guess. The two form-derived laws are the
+     * Does one instruction satisfy this slot? Laws are declared facts — an inst whose {@code ?decq} claim
+     * declares nothing matches no law-bearing slot, fail closed, never guess. The two form-derived laws are the
      * exception: {@code floatable} (Thm 6, {@code F_m ∪ F_f ∪ F_fm}) and {@code blocked} (Thm 17,
-     * {@code F_r ∪ F_b}) are read off the inst's {@link Inst.Form form}, since they are declared nowhere
-     * in the table. A floatable run is also replicated into every peer, so it must be declared
+     * {@code F_r ∪ F_b}) are read off the inst's {@link Inst.Form form}, never off a declaration. A
+     * floatable run is also replicated into every peer, so it must be declared
      * {@link Law#pure}: a write or a print is no less a mapper by its form, and floated it would run once
      * per part. The inst is expected to carry its declared (dom/rng-qualified) tid, so the form and the
      * declared-law lookups both resolve pre-resolution.

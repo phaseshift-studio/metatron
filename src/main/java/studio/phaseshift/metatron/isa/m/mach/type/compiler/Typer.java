@@ -194,8 +194,8 @@ public interface Typer extends Component {
         }
 
         /**
-         * {@link #deduceTypeInst(InstSet, Type, Inst)} from an op address alone — what a law table has before
-         * resolution, when it knows the family ({@code /m/inst/plus}) and the operand but holds no instruction.
+         * {@link #deduceTypeInst(InstSet, Type, Inst)} from an op address alone — what {@code Law.Helper.declared} has
+         * before resolution, when it knows the family ({@code /m/inst/plus}) and the operand but holds no instruction.
          */
         public static Inst deduceTypeInst(final InstSet instSet, final Type type, final fURI op) {
             if (null == instSet || null == op || null == op.basePath())
@@ -234,7 +234,7 @@ public interface Typer extends Component {
          *       nothing specific — it is the weakest claim, not a match for everything;</li>
          *   <li><b>ranking</b>: an exact rng match first (that is what {@code ?rng=} asks for), then
          *       closest-to-the-token on the dom axis ({@link Type#pathTo}), then on the rng axis. Deterministic
-         *       on purpose — a family read, a resolver and the law table must agree on the winner.</li>
+         *       on purpose — a family read, a resolver and {@code Law.Helper.declared} must agree on the winner.</li>
          * </ul>
          * A null {@code queriedDom} admits the whole family, unranked (a bare family read).
          *

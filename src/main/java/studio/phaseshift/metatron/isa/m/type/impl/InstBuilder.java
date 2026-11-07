@@ -52,8 +52,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /**
  * BUILD AN INSTRUCTION IN ONE CHAIN — the friendly surface over {@code instC}. A single declaration states the
  * contract ({@code tid/dom/rng/argLst}), the implementation ({@code body}), its DOCS ({@code ?docq}) and its
- * process LAWS with the two relations a row still carries — its INVERSE and its DERIVATION ({@code ?decq}) —
- * instead of scattering the four across an {@code instC} call, a documentation call and a law-table row:
+ * process LAWS with its two relations — its INVERSE and its DERIVATION ({@code ?decq}) — instead of scattering
+ * the four across an {@code instC} call, a documentation call and a separate {@code ?decq} write:
  *
  * <pre>{@code
  * InstBuilder.build().tid(PLUS_INST_TID, "addition")
@@ -74,10 +74,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * <p>NOTHING IS WRITTEN HERE. An instruction is built while its instruction set is still initializing, before the
  * space that would receive it exists, so {@link #create()} composes the value and QUEUES the writes — the object at
- * its contract address, its docs at {@code ?docq}, its declaration at {@code ?decq} — and the set that owns the address
- * republishes them when it mounts. The retained staging log ({@link PendingWrites}) IS the query index a law table
- * reads: a declaration is answerable from memory the moment the instruction is created and stays answerable, so a
- * rewrite costs a hash read instead of a walk. The ONE thing kept here is the declared FORM index
+ * its contract address, its docs at {@code ?docq}, its declaration at {@code ?decq} — in the retained staging log
+ * ({@link PendingWrites}). The set that owns the address publishes the object when it mounts, and a declaration is
+ * published on first read (the q-proc's lazy hook), so it is answerable the moment the instruction is created and
+ * stays answerable after a re-mount. The ONE thing kept here is the declared FORM index
  * ({@link #DECLARED_FORMS}): a form is keyed by the OPERATION's address rather than the full n-tid, because a rewrite
  * reads the form off an instruction whose tid has been RETYPED to its declared contract, and the staging log — which
  * is keyed by that full n-tid — would miss exactly the reads that matter.

@@ -83,10 +83,10 @@ public interface Rewriter extends Component {
         }
 
         /**
-         * The contract the resolver picks for each instruction of the chain, index-aligned with {@code code.insts()}, read
-         * in the same probe as {@link #carriers}; null where none resolves. An op the law table does not declare is keyed
-         * by it, so its form is its own: the seed's {@code {0} ⇒ A} is initial, where the bare instruction's {@code # ⇒ #}
-         * reads as a mapper.
+         * The contract the resolver picks for each instruction of the chain, index-aligned with {@code code.insts()},
+         * read in the same probe as {@link #carriers}; null where none resolves. An op no {@code ?decq} claim declares
+         * is keyed by it, so its form is its own: the seed's {@code {0} ⇒ A} is initial, where the bare instruction's
+         * {@code # ⇒ #} reads as a mapper.
          */
         public static List<Inst> contracts(final Code code) {
             return typing(code).contracts();

@@ -62,18 +62,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * Every entry states all four facets in ONE chain, documentation colocated with what it documents: the CONTRACT
  * ({@code tid(tid, desc)}, {@code dom(dom, desc)}, {@code rng(rng, desc)}, {@code argLst(type, desc)}, {@code seed}),
  * the IMPLEMENTATION ({@code body}), the DOCS ({@code ?docq}, written by the builder) and the process LAWS
- * ({@code ?decq}, staged and persisted by the set's drain). A type's algebra is declared at the type
+ * ({@code ?decq}, staged by the builder and published on first read). A type's algebra is declared at the type
  * ({@link mTypes}); this class declares what its OPERATIONS do.
  *
- * <p>THE MIGRATION RULE: an instruction moves here when its law-table row carried LAWS only — or, now that the
- * builder states them, an {@code inverse} (int's {@code mult}→{@code div} retraction) or a {@code derivation}
- * (int's {@code minus}, real's {@code minus}/{@code div}). A row survives while it carries a claim the builder
- * cannot express: the {@code as} pairs, whose direction IS the claim, and a body that needs a helper its slice
- * cannot import. Those retire as {@code InstBuilder} grows the remaining facets; the rows then delete with them.
- * <p>BECAUSE A DECLARATION IS KEYED BY THE INSTRUCTION'S N-TID ({@code tid.dom(A).rng(B)}), a migrated entry must
- * sit at the ROW'S OWN address ({@code tid(op).dom(A).rng(B)}): that is how the declaration is served in place of
- * the row, and how {@link studio.phaseshift.metatron.algebra.Law.Helper#derivations()} dedupes the two
- * forms into one rule.
+ * <p>WHAT STAYS IN A TYPE'S OWN CLASS: the retired LawTable's rows moved here as the builder learned to state their
+ * laws, an {@code inverse} (the sound {@code as} directions) and a {@code derivation} (int's {@code minus}, real's
+ * {@code minus}/{@code div}). An entry that remains in its type's class ({@code Int.IntType}, …) declares no law,
+ * inverse or derivation, or has a body that needs a helper this slice cannot import; each of those classes says
+ * which, and why.
+ * <p>A DECLARATION IS KEYED BY THE INSTRUCTION'S N-TID ({@code tid(op).dom(A).rng(B)}): the builder stages it at that
+ * address's {@code ?decq}, which is where {@link studio.phaseshift.metatron.algebra.Law.Helper} reads it, and
+ * {@link studio.phaseshift.metatron.algebra.Law.Helper#derivations()} keeps one defining equation per address.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -199,8 +198,8 @@ public final class mInsts {
                 // THE as PAIR, DECLARED BESIDE ITS INSTRUCTIONS (the human's ruling): int->str is the SOUND
                 // direction -- print an int, read the printed str back, and the value returns (42 -> "42" -> 42) --
                 // so it declares the opposing edge. str->int is LOSSY: every int renders, but only SOME strs read
-                // back ("007" -> 7 -> "7"), so it declares NO inverse. The pair's law-table rows are deleted; the
-                // one claim that survives is the sound one, stated here.
+                // back ("007" -> 7 -> "7"), so it declares NO inverse. Only the sound direction declares one, and
+                // it is stated here.
                 InstBuilder.build().tid(AS_INST_TID, "print the lhs int into a str")
                         .dom(INT_TID, "the int to convert").rng(STR_TID, "the lhs int as a str")
                         .argLst(STR_TYPE, "the str type that receives the value")
@@ -315,7 +314,7 @@ public final class mInsts {
                         .law(Law.pure)
                         .create(),
                 // DIV AND MINUS DECLARE THEIR DEFINING EQUATIONS, which is what lets real's field (and its
-                // add_group) derive the inverse pairs instead of a row declaring them: div ≡ mult ∘ inv,
+                // add_group) derive the inverse pairs instead of an `inverse` declaring them: div ≡ mult ∘ inv,
                 // minus ≡ plus ∘ neg. The carrier states the group; the equation states which instruction it is.
                 InstBuilder.build().tid(DIV_INST_TID, "a quotient function \\(f(x, y) \\mapsto x/y\\): the lhs real divided by the rhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the quotient")
@@ -485,7 +484,7 @@ public final class mInsts {
                 // SOUND side of exactly one: str->bytes, whose bytes read back as the same str -- that direction
                 // declares the opposing edge. Its other four are LOSSY (a str is not the type it names: only SOME
                 // strs parse as an int/real, only the two spellings read back as a bool, and only a legal uri is a
-                // uri), so they declare no inverse at all. Every row that used to claim otherwise is deleted.
+                // uri), so they declare no inverse at all.
                 InstBuilder.build().tid(AS_INST_TID, "read the bytes of the lhs str")
                         .dom(STR_TID, "the str to convert").rng(BYTES_TID, "the lhs str as bytes")
                         .argLst(BYTES_TYPE, "the bytes type that receives the value")
@@ -526,7 +525,7 @@ public final class mInsts {
                         .create(),
                 // SPLIT AND MERGE ARE NOT PRESERVING IN EITHER DIRECTION -- an empty segment (a trailing token, an
                 // empty field) does not survive the round trip -- so neither direction declares an inverse. Their
-                // laws are the ones their rows carried: split is pure, merge is the monoid's own op and pure.
+                // laws: split is pure, merge is the monoid's own op and pure.
                 InstBuilder.build().tid(SPLIT_INST_TID, "split the lhs string according to the token arg and insert components into an ordered lst")
                         .dom(STR_TID, "a str to split").rng(LST_TID, "lst encoded components of the split lhs str")
                         .argLst(STR_TYPE, "a token to split on")
@@ -869,7 +868,7 @@ public final class mInsts {
                         .create(),
                 // lst<->rec IS NOT PRESERVING IN EITHER DIRECTION -- a pair maps to a rel and a lst of rels maps to
                 // a rec, but the round trip reorders and re-keys what it carries -- so neither direction declares
-                // an inverse. The lossy claim its row made is deleted with the row.
+                // an inverse.
                 InstBuilder.build().tid(AS_INST_TID, "convert the lhs lst into the rec the argument rec type constructs")
                         .dom(LST_TID, "the lst to convert").rng(REC_TID, "the lhs lst as the argument's rec type")
                         .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")

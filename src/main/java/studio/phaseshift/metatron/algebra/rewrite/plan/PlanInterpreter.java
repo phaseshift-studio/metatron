@@ -475,11 +475,11 @@ public final class PlanInterpreter {
     /**
      * Whether the cut's COMBINER — the fold the partials recombine through, {@link Law.Helper#combiner computed} and
      * never declared — declares {@code idempotent}. Its TERMINAL instruction is the fold that recombines (a derivation
-     * lowers to {@code … · fold}), and the law row is read the two ways the table already serves one: the
-     * carrier-resolved read every other law gate in this class uses, and — when the carrier resolves no row — the
+     * lowers to {@code … · fold}), and its claim is read the two ways {@link Law.Helper} serves one: the
+     * carrier-resolved read every other law gate in this class uses, and — when the carrier resolves no claim — the
      * instruction's own {@code ?decq} declaration ({@link Law.Helper#declares(fURI, Law)}, the route a fold declared
-     * beside its body takes). Both are the table's own reads; the second is not a guess across types, it is the one
-     * address the combiner states.
+     * beside its body takes). Both are {@link Law.Helper}'s own reads; the second is not a guess across types, it is
+     * the one address the combiner states.
      */
     private static boolean idempotentCombiner(final Call combined, final Type carrier) {
         final List<Inst> folds = combined.insts();

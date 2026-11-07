@@ -191,6 +191,10 @@ each way, proving the alias); C0's layout pins unchanged (no behaviour change); 
 
 ### C1b — suite isolation: a law-table memo that outlives a boot *(done)*
 
+*(Since then: `LawTable` and its `TABLES` were retired on 2026-11-06. The observed-read guard below lives on as
+`TheoryHelper.memoizable`, the algebra memo is `TheoryHelper`'s, and `BootLoader.resetMemos` resets it and
+`Law.Helper` before the first mount.)*
+
 **The bug (verified, and not what the symptom suggested):** `LawTable.typeLawsCache` is a field of the **JVM-global**
 singleton tables (`LawTable.TABLES`), never cleared across a boot. `typeLaws` memoised an *empty*
 answer — "`/m/int` declares no algebra" — that had been read by a machine which could not resolve `/m/int`'s
@@ -306,16 +310,16 @@ any more; C9 landed), with the `plan::T` predicate dropping `shape`/`target` in 
 **The bands-in-lists lexer rule** — `{}` is not in the bracketed-value charset, so a weighted designator list
 (`[//ginger:8555{2,5},//abc:45]`) has no spelling; the scalar and rec forms cover today's needs. **The visited set** (so
 `n{w}` means *n machines*, not n roles), the **local lane's `timeout(inst)` deadline** (the
-fold runs inside the gather's `FutureObj` deadline today), and the **boot-scoped `LawTable.reset()`** recorded under
-C1b.
+fold runs inside the gather's `FutureObj` deadline today), and the **boot-scoped reset** recorded under C1b (its memo
+half landed as `BootLoader.resetMemos`; `catGraph.invalidate()` still has no caller).
 
-*Fixed this cycle (was listed here):* **`LawTable.keyed`'s keyed-`order` crash** — the throw was not in `keyed` but one
-level down, in `TheoryHelper.instances`: it read a `fail` lift as a `Rec` (`Object::orElse` returns its receiver), so a
-per-key `order(_)` combiner threw `ClassCastException: MFail → Rec` out of the law lookup. `instances` now answers "no
-instances" for a fail, `PlanInterpreter.shard` treats a null combiner as a decline (logged), and the three
-`DistributedRewriteTransportTest` `group(…order(_))` rows are green — the per-key `sum()==[_=>kmerge(_)]` combiner is
-reachable. **The repeated-designator question is settled by C5's resolver**: duplicates of the same form sum (a row
-pins `[//ginger,//ginger,//booger]` at 2:1).
+*Fixed this cycle (was listed here):* **`Law.Helper.keyed`'s keyed-`order` crash** — the throw was not in `keyed` but
+one level down, in `TheoryHelper.instances`: it read a `fail` lift as a `Rec` (`Object::orElse` returns its
+receiver), so a per-key `order(_)` combiner threw `ClassCastException: MFail → Rec` out of the law lookup. `instances`
+now answers "no instances" for a fail, `PlanInterpreter.shard` treats a null combiner as a decline (logged), and the
+three `DistributedRewriteTransportTest` `group(…order(_))` rows are green — the per-key `sum()==[_=>kmerge(_)]`
+combiner is reachable. **The repeated-designator question is settled by C5's resolver**: duplicates of the same form
+sum (a row pins `[//ginger,//ginger,//booger]` at 2:1).
 
 ---
 

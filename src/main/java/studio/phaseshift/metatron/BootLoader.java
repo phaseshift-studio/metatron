@@ -152,7 +152,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
      *
      * <p>What it clears, and why each is a memo:
      * <ul>
-     *   <li>{@link Law.Helper#reset()} — the per-table algebra memo and the derivation snapshots (store and log);</li>
+     *   <li>{@link Law.Helper#reset()} — the derivations snapshot (the defining equations instructions declare);</li>
+     *   <li>{@link TheoryHelper#reset()} — the algebra memo (each type's algebra, as its {@code ?decq} answered);</li>
      *   <li>{@code QCollection.LAZY_PUBLISH} — the reader hook, reinstalled by {@link PendingWrites#install()}.</li>
      * </ul>
      *
@@ -652,8 +653,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Machine.authority().registerRedirect(f("stdin"), f("/sys/io/stdin"));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             // THE READER HOOK AND THE CACHES COME FIRST: an algebra read happens during a set's own setup, so the
-            // lazy `?decq` publication must be installed before the first mount, and the law tables' memo must not
-            // carry a previous boot's algebra views.
+            // lazy `?decq` publication must be installed before the first mount, and the memos (TheoryHelper's
+            // algebras, Law.Helper's derivations) must not carry a previous boot's answers.
             resetMemos();
             PendingWrites.install();
             // InstSet.mount is the ONE door: an ISA is registered for address AND referred into the machine's own

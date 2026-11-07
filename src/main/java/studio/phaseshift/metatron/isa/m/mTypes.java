@@ -157,8 +157,8 @@ public final class mTypes {
      * its constants can observe their defaults. {@code mInstSet}'s end-of-class static block invokes this after
      * every constant exists.
      * <p>
-     * The declaration is STAGED only; {@code ?decq} is the store of record, written by the drain that runs when the
-     * set is mounted, and {@code TheoryHelper.instances} serves it from there. The law table restates none of it.
+     * The declaration is STAGED only; {@code ?decq} is the store of record, the claim is published there on first
+     * read (the q-proc's lazy hook), and {@code TheoryHelper.instances} serves it from there.
      */
     public static void declareAlgebras() {
         // int: a ring — an add_group (plus/neg) and a mult_monoid (mult/1, no mult_group: integer division

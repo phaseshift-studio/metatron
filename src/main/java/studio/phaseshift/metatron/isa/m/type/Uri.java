@@ -345,12 +345,13 @@ public interface Uri extends Mono, Comparable<Uri> {
         private final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
         /*
-         * WHAT REMAINS HERE, and why: two ROW-LESS `as` conversions (uri->int, uri->uri) -- no law-table row, hence
-         * no claim and no inverse -- the has/split bodies, which read this type's PRIVATE REGEX_CACHE, and
-         * uri->rec, whose body calls Uri.Helper.parseQ (package-private here), so it is built here with its claim.
-         * THE SOUND uri->str DIRECTION IS GONE FROM HERE: a uri prints and the same uri parses back, so it is
-         * declared WITH its inverse (str->uri) in mInsts.uris(); the LOSSY str->uri direction declares none. uri->rec is
-         * the SOUND direction (a component rec reads back as its uri) and declares its inverse; rec->uri declares none.
+         * WHAT REMAINS HERE, and why: two `as` conversions that declare nothing (uri->int, uri->uri) -- registered with
+         * instC, so neither stages a `?decq` claim, no law and no inverse -- the has/split bodies, which read this
+         * type's PRIVATE REGEX_CACHE, and uri->rec, whose body calls Uri.Helper.parseQ (package-private here), so it
+         * is built here with its claim. The SOUND uri->str direction lives in mInsts.uri_insts(): a uri prints and the
+         * same uri parses back, so it is declared WITH its inverse (str->uri) there; the LOSSY str->uri direction
+         * declares none. uri->rec is the SOUND direction (a component rec reads back as its uri) and declares its
+         * inverse; rec->uri declares none.
          */
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

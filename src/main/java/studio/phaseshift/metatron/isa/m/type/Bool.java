@@ -77,12 +77,12 @@ public interface Bool extends Mono {
     }
 
     /*
-     * WHAT REMAINS HERE, and why: the ROW-LESS `as` conversions (bool->bool/bytes/int/real). None of them carries
-     * a law-table row, so none carries a claim or an inverse -- nothing retires here, and they move to
-     * mInsts.bools() when their bodies' imports travel with them. THE ROWED PAIR IS GONE: bool->str is the SOUND
-     * direction ("true"/"false" reads back to the same bool) and is declared WITH its inverse beside the Boolean
-     * algebra's operations in mInsts.bools(); str->bool is LOSSY (it answers false for every str that does not
-     * spell true) and declares no inverse anywhere.
+     * WHAT REMAINS HERE, and why: the `as` conversions that declare nothing (bool->bool/bytes/int/real). They are
+     * registered with instC, so none stages a `?decq` claim -- no law, no inverse -- and they move to
+     * mInsts.bool_insts() when their bodies' imports travel with them. bool->str is the SOUND direction
+     * ("true"/"false" reads back to the same bool) and is declared WITH its inverse beside the Boolean algebra's
+     * operations in mInsts.bool_insts(); str->bool is LOSSY (it answers false for every str that does not spell
+     * true) and declares no inverse anywhere.
      */
     final class BoolType {
 
