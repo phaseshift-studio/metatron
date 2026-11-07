@@ -598,14 +598,25 @@ em {
 }
 
 .navbar .navbar-nav .nav-link {
-    margin-right: 30px;
+    margin-right: 16px;
     padding: 40px 0;
     color: var(--light);
     font-family: 'Oswald', sans-serif;
     font-size: 18px;
     font-weight: 600;
     text-transform: uppercase;
+    white-space: nowrap;
     outline: none;
+}
+
+/* Seven uppercase items + the terminal link do not fit at 18px/30px margins until
+   very wide viewports; without this the two-word labels (QUICK START, THE TRACTATUS)
+   break onto a second line. Tighten type and spacing before the labels wrap. */
+@media (min-width: 992px) and (max-width: 1600px) {
+    .navbar .navbar-nav .nav-link {
+        margin-right: 12px;
+        font-size: 16px;
+    }
 }
 
 .navbar .navbar-nav .nav-link:hover,
