@@ -1455,17 +1455,6 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .body((lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0())
                             .create(),
                     InstBuilder.build()
-                            .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")
-                            .dom(A.maybeSome(), "maybe some A to sort")
-                            .rng(LST_TID.poly(A.maybeSome()), "a sorted lst of the lhs A{*}")
-                            .argLst(T(ALL.maybe()), "a projection of A to compare")
-                            .body((lhs, inst) -> inst.arg(0).isNoObj() ?
-                                    lhs.stream().sorted(ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
-                                    lhs.stream().sorted(ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
-                            .law(Law.pure)
-                            .derivation(new Derivation(start_(uri(A)).order_(uri(B)), start_(uri(A)).split_(lst(id_().tryToInst())).kmerge_(uri(B))))
-                            .create(),
-                    InstBuilder.build()
                             .tid(KMERGE_INST_TID)
                             .dom(LST_TID.poly(A.maybeSome()).maybeSome(), "maybe some sorted lists")
                             .rng(LST_TID.poly(A.maybeSome()), "a lst k-way merged by the arg obj")

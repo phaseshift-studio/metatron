@@ -21,8 +21,8 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.PendingWrites;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -54,6 +54,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
+import studio.phaseshift.metatron.isa.m.web.space.http.httpClient;
 import studio.phaseshift.metatron.isa.m.web.space.stdio.handler.mcp_stdioHandler;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WebSocketRecClient;
@@ -65,8 +66,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Stream;
@@ -348,6 +350,16 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 ARGS.jvm().put(uri(MCP), uri(STDIO));
         }
 
+        // --- Resolve the boot address to a local file (http(s):// is fetched) ---
+        if (ARGS.has(BOOT)) {
+            try {
+                ARGS.jvm().put(uri(BOOT), uri(resolveBootFile(ARGS.at(BOOT).uriValue())));
+            } catch (final IOException e) {
+                LOG.error(e);
+                EXIT_HANDLER.accept(1);
+            }
+        }
+
         // --- Parse boot-file header for embedded args -----------------------
         if (ARGS.has(BOOT)) {
             final Path bootPath = Path.of(ARGS.at(BOOT).uriValue().toString());
@@ -492,20 +504,40 @@ public class BootLoader implements Rec, Feature.SelfClone {
         System.out.print(help);
     }
 
+    /**
+     * Resolve the boot address to a LOCAL FILE path.  A bare path (no {@code ://}) and a {@code file://} uri are
+     * taken as file paths; an {@code http(s)://} uri (or any other {@code ://} scheme) is fetched once and cached
+     * to a temp file.  Idempotent: resolving an already-local path returns it unchanged.
+     */
+    static fURI resolveBootFile(final fURI bootUri) throws IOException {
+        if (!bootUri.hasScheme() || bootUri.scheme().equalsIgnoreCase("file"))
+            return bootUri.localize().trim();
+        // http(s):// (or any other scheme) — fetch once and cache to a temp file
+        final String text = httpClient.fetchText(bootUri);
+        final Path tmp = Files.createTempFile("metatron-boot-", ".mtron");
+        Files.writeString(tmp, text, StandardCharsets.UTF_8);
+        return f(tmp.toString());
+    }
+
     public static void load(final Rec args) {
         if (BOOTING) {
             // Re-create executor if a previous test run shut it down
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT)) {
-                final fURI bootUri = args.at(BOOT).uriValue();
-                final String bootPath = bootUri.toString();
-                if (bootPath.startsWith("/")) {
+                // resolve http(s):// to a cached local file, file:// to a path; a bare path is assumed file
+                final fURI bootPath;
+                try {
+                    bootPath = resolveBootFile(args.at(BOOT).uriValue());
+                } catch (final IOException e) {
+                    throw MTronException.of(e);
+                }
+                if (bootPath.isAbsolute()) {
                     // absolute path: normalize but don't prepend CWD
-                    args.at(uri(BOOT), f(Path.of(bootPath).normalize().toString()).toUri(), MUTABLE);
+                    args.at(uri(BOOT), uri(bootPath.resolve().asAbsolute()), MUTABLE);
                 } else {
                     // relative path: resolve against CWD
-                    args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(bootUri).toUri(), MUTABLE);
+                    args.at(uri(BOOT), uri(bootPath), MUTABLE);
                 }
             }
             LogObj.setSLF4J(args.at(uri("log")).orElse(uri("warn")).uriValue().toString());

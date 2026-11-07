@@ -15,14 +15,15 @@ ENDPOINTS (once running)
   http://<host>:8777/mcp    mcp over http (post json-rpc)
   http://<host>:8777/       web root (index page)
 
-COMPOSE (dist/docker/compose.yaml — a template naming every knob, with defaults)
+COMPOSE (dist/docker/compose.yaml + .env.example — every knob with its default)
   cd dist/docker
+  cp .env.example .env                              the one file you edit
   docker compose up -d                              boot + healthcheck
-  docker compose --profile repl run --rm repl       wsplus REPL against it
+  docker compose exec metatron wsplus                 REPL console
   docker compose -f compose.yaml -f compose.infra.yaml up -d   optional space backends
 
 CONSOLE
-  docker exec -it metatron wsplus ws://localhost:8555/mtron
+  docker exec -it metatron wsplus
 
 NOTES
   - the docker socket mount + --group-add are required for dckrspace::T — the

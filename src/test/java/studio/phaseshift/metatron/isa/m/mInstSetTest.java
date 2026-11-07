@@ -51,6 +51,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 @TestReport
 public class mInstSetTest extends AbstractInstSetTest {
 
+    // /m is required and loaded automatically in AbstractInstSetTest
+    // so providing null here ensures /m isn't double loaded
     public mInstSetTest() {
         super(() -> null);
     }
