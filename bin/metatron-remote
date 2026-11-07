@@ -66,14 +66,30 @@ q()   { printf '%q ' "$@"; }
 # ---------- probing ----------
 # Remote bodies are heredocs fed to `sh -s`, so the remote shell sees exactly what is
 # written here. Nested quoting through ssh has silently mangled these twice.
-probe_host() {  # host -> load<TAB>cores<TAB>running<TAB>gid<TAB>ip
+probe_host() {  # host -> load<TAB>cores<TAB>running<TAB>gid<TAB>ip<TAB>docker_ok<TAB>free_gb
+    # docker_ok matters as much as reachability: `docker ps` failing (no daemon, no
+    # socket permission) used to look exactly like "zero builds running", so an
+    # unusable host could win the load comparison and then fail the build it was given.
+    # `docker info` asks the daemon, so it needs the socket the build will need too.
     ssh "${SSH_OPTS[@]}" "$1" sh -s <<'PROBE' 2>/dev/null
 awk '{print $1}' /proc/loadavg
 nproc
 docker ps -q --filter name=metatron-build 2>/dev/null | wc -l | tr -d ' '
 stat -c %g /var/run/docker.sock 2>/dev/null || echo 0
 hostname -I 2>/dev/null | awk '{print $1}'
+docker info -f '{{.ServerVersion}}' >/dev/null 2>&1 && echo 1 || echo 0
+df -Pk "$HOME" 2>/dev/null | awk 'NR==2{print int($4/1048576)}'
 PROBE
+}
+
+# An empty build tree is ~2 GB; refuse to start one that cannot finish.
+MIN_FREE_GB="${METATRON_MIN_FREE_GB:-3}"
+
+# why a reachable host still cannot take work ("" = fine)
+host_unusable() {  # docker_ok free_gb -> reason or empty
+    [ "${1:-0}" = "1" ] || { echo "docker unusable (daemon down or socket permission denied)"; return; }
+    [ "${2:-0}" -ge "$MIN_FREE_GB" ] 2>/dev/null || { echo "only ${2:-0} GB free (needs ${MIN_FREE_GB} GB)"; return; }
+    echo ""
 }
 
 mem_of() {  # local|host -> "usedgb<TAB>pct"
@@ -138,12 +154,23 @@ human_age() {  # ISO-8601 UTC -> 12s | 5min | 1hr30min | 2d3hr
 }
 
 svc_row() {  # label load cores building mem_gb mem_pct
-    local mc=""
+    local mc="" bc="" lp p n bar
     if [ "${6:-0}" -ge 90 ] 2>/dev/null; then mc="$C_RED"
     elif [ "${6:-0}" -ge 70 ] 2>/dev/null; then mc="$C_YEL"
     else mc="$C_GRN"; fi
-    printf '  %-13s load %-6s  %s cores  %s building  mem %s%sgb (%s%%)%s\n' \
-        "$1" "$2" "$3" "$4" "$mc" "$5" "$6" "$C_OFF"
+    # pressure (0-100) = the WORST of per-core load and memory use: one saturated axis
+    # is what actually stops a machine taking work, so an average would hide it.
+    lp="$(awk -v l="${2:-0}" -v c="${3:-1}" 'BEGIN { if (c < 1) c = 1; v = l / c * 100; if (v > 100) v = 100; printf "%d", v }')"
+    p="$(awk -v a="$lp" -v b="${6:-0}" 'BEGIN { printf "%d", (a > b ? a : b) }')"
+    n=$(( (p + 5) / 10 )); [ "$n" -gt 10 ] && n=10; [ "$n" -lt 0 ] && n=0
+    bar="$(printf '%*s' "$n" '' | tr ' ' '#')$(printf '%*s' $((10 - n)) '')"
+    if   [ "$p" -ge 80 ]; then bc="$C_RED"
+    elif [ "$p" -ge 50 ]; then bc="$C_YEL"
+    else bc="$C_GRN"; fi
+    # fixed widths on every numeric column: "4 cores" and "24 cores" are different
+    # lengths, which shifts every column to their right (the bar included)
+    printf '  %-13s load %-6s  %3s cores  %2s building  mem %s%3sgb (%3s%%)%s  %s[%s]%s %3s\n' \
+        "$1" "$2" "$3" "$4" "$mc" "$5" "$6" "$C_OFF" "$bc" "$bar" "$C_OFF" "$p"
 }
 
 # ---------- arguments ----------
@@ -170,8 +197,64 @@ esac
 
 # ---------- status ----------
 if [ "$VERB" = status ]; then
-    printf "%smetatron builds%s\n" "$C_BLD" "$C_OFF"
-    echo
+    printf "%smetatron builds%s\n\n" "$C_BLD" "$C_OFF"
+
+    # ---- machines: probe every host ONCE, then print one aligned table ----
+    # (probing here and reusing the numbers below keeps the table and the build
+    #  list consistent, and stops the two sections interleaving)
+    declare -A M_OK M_LOAD M_CORES M_RUN M_MEM M_WHY
+    MACHINES=()
+    for h in "${HOSTS[@]}"; do
+        lbl="${h#*@}"
+        MACHINES+=("$lbl")
+        if probe="$(probe_host "$h")" && [ -n "$probe" ]; then
+            { IFS= read -r _pl; IFS= read -r _pc; IFS= read -r _pr
+              IFS= read -r _pg; IFS= read -r _pi
+              IFS= read -r _pd; IFS= read -r _pf; } <<< "$probe"
+            read -r _mg _mp <<< "$(mem_of "$h" | tr '\t' ' ')" || true
+            M_LOAD[$lbl]="$_pl"; M_CORES[$lbl]="$_pc"; M_RUN[$lbl]="$_pr"
+            M_MEM[$lbl]="${_mg:-0} ${_mp:-0}"
+            _why="$(host_unusable "$_pd" "$_pf")"
+            if [ -n "$_why" ]; then M_OK[$lbl]=2; M_WHY[$lbl]="$_why"; else M_OK[$lbl]=1; fi
+        else
+            M_OK[$lbl]=0
+        fi
+    done
+    # this machine goes LAST in the table
+    read -r _lg _lp <<< "$(mem_of local | tr '\t' ' ')" || true
+    M_OK[$LOCAL_LABEL]=1
+    M_LOAD[$LOCAL_LABEL]="$(awk '{print $1}' /proc/loadavg)"
+    M_CORES[$LOCAL_LABEL]="$(nproc)"
+    M_RUN[$LOCAL_LABEL]="$(builds_of local | grep -c . || true)"
+    M_MEM[$LOCAL_LABEL]="${_lg:-0} ${_lp:-0}"
+    MACHINES+=("$LOCAL_LABEL")
+
+    echo "machines:"
+    # capture each row so the rule below can be exactly as wide as the widest one
+    # (ANSI escapes stripped before measuring, or the width would be wrong whenever
+    #  colours are on)
+    _mrows=(); _mw=0
+    for lbl in "${MACHINES[@]}"; do
+        case "${M_OK[$lbl]}" in
+            1) read -r _mg _mp <<< "${M_MEM[$lbl]}"
+               _row="$(svc_row "$lbl" "${M_LOAD[$lbl]}" "${M_CORES[$lbl]}" "${M_RUN[$lbl]}" "${_mg:-0}" "${_mp:-0}")" ;;
+            2) _row="$(printf '  %s%-13s unavailable%s  %s' "$C_RED" "$lbl" "$C_OFF" "${M_WHY[$lbl]}")" ;;
+            *) _row="$(printf '  %s%-13s unreachable%s' "$C_RED" "$lbl" "$C_OFF")" ;;
+        esac
+        _mrows+=("$_row")
+        _plain="$(printf '%s' "$_row" | sed $'s/\033\[[0-9;]*m//g')"
+        [ "${#_plain}" -gt "$_mw" ] && _mw=${#_plain}
+    done
+    if [ "${MAX_BUILDS:-0}" -gt 0 ] 2>/dev/null; then
+        _row="$(printf '    %scap:%s %s concurrent builds per host' "$C_BLD" "$C_OFF" "$MAX_BUILDS")"
+        _mrows+=("$_row")
+        _plain="$(printf '%s' "$_row" | sed $'s/\033\[[0-9;]*m//g')"
+        [ "${#_plain}" -gt "$_mw" ] && _mw=${#_plain}
+    fi
+    printf '%s\n' "${_mrows[@]}"
+    printf '%s\n\n' "$(printf '\xe2\x94\x80%.0s' $(seq 1 "$_mw"))"
+
+    # ---- what is building right now ----
     n_loc=0; n_rem=0
     while IFS=$'\t' read -r name st; do
         [ -z "${name:-}" ] && continue
@@ -183,21 +266,16 @@ if [ "$VERB" = status ]; then
 
     for h in "${HOSTS[@]}"; do
         lbl="${h#*@}"
-        if probe="$(probe_host "$h")" && [ -n "$probe" ]; then
-            { IFS= read -r p_load; IFS= read -r p_cores; IFS= read -r p_run; } <<< "$probe"
-            while IFS=$'\t' read -r name st; do
-                [ -z "${name:-}" ] && continue
-                n_rem=$((n_rem + 1))
-                ph="$(phase_of "$h" "$name")"
-                case "$ph" in testing) pc="$C_BLU" ;; compiling) pc="$C_MAG" ;; *) pc="$C_YEL" ;; esac
-                printf '  %s%-11s%s %-14s %-30s %s\n' "$pc" "[$ph]" "$C_OFF" "$lbl" "$name" "$st"
-            done <<< "$(builds_of "$h")"
-            read -r m_gb m_pct <<< "$(mem_of "$h" | tr '\t' ' ')" || true
-            svc_row "$lbl" "$p_load" "$p_cores" "$p_run" "${m_gb:-0}" "${m_pct:-0}"
-        else
-            printf '  %s%-13s unreachable%s\n' "$C_RED" "$lbl" "$C_OFF"
-        fi
+        [ "${M_OK[$lbl]}" = 1 ] || continue        # unreachable hosts are already reported above
+        while IFS=$'\t' read -r name st; do
+            [ -z "${name:-}" ] && continue
+            n_rem=$((n_rem + 1))
+            ph="$(phase_of "$h" "$name")"
+            case "$ph" in testing) pc="$C_BLU" ;; compiling) pc="$C_MAG" ;; *) pc="$C_YEL" ;; esac
+            printf '  %s%-11s%s %-14s %-30s %s\n' "$pc" "[$ph]" "$C_OFF" "$lbl" "$name" "$st"
+        done <<< "$(builds_of "$h")"
     done
+
     # host-side maven (a bare ./mvnw or mvn) runs outside docker and would otherwise be invisible
     for _where in local "${HOSTS[@]}"; do
         [ "$_where" = local ] && _lbl="$LOCAL_LABEL" || _lbl="${_where#*@}"
@@ -225,11 +303,6 @@ if [ "$VERB" = status ]; then
         echo
         awk -F'\t' '{n++; if ($4=="0") ok++; else bad++} END {printf "  %d finished: %d ok, %d failed\n", n, ok, bad}' "$LOG_FILE"
     fi
-
-    echo
-    read -r l_gb l_pct <<< "$(mem_of local | tr '\t' ' ')" || true
-    svc_row "$LOCAL_LABEL" "$(awk '{print $1}' /proc/loadavg)" "$(nproc)" 0 "${l_gb:-0}" "${l_pct:-0}"
-    echo "  cap: ${MAX_BUILDS} concurrent builds per host"
     exit 0
 fi
 
@@ -258,7 +331,10 @@ if [ -n "$PIN_HOST" ]; then
     [ -n "$BEST_HOST" ] || die "--host ${PIN_HOST} is not in METATRON_BUILD_HOSTS (known: ${HOSTS[*]})"
     probe="$(probe_host "$BEST_HOST")" || die "--host ${BEST_HOST} is unreachable"
     { IFS= read -r BEST_LOAD; IFS= read -r BEST_CORES; IFS= read -r BEST_RUN
-      IFS= read -r BEST_GID; IFS= read -r BEST_IP; } <<< "$probe"
+      IFS= read -r BEST_GID; IFS= read -r BEST_IP
+      IFS= read -r _pd; IFS= read -r _pf; } <<< "$probe"
+    _why="$(host_unusable "$_pd" "$_pf")"
+    [ -z "$_why" ] || die "--host ${BEST_HOST} cannot build: ${_why}"
     BEST_SCORE="$(score "$BEST_LOAD" "$BEST_CORES" "$BEST_RUN")"
     say "pinned to ${BEST_HOST} (load ${BEST_LOAD} / ${BEST_CORES} cores + ${BEST_RUN} building)"
     WHERE=remote
@@ -266,7 +342,13 @@ fi
 [ -n "$PIN_HOST" ] || for h in "${HOSTS[@]}"; do
     if probe="$(probe_host "$h")" && [ -n "$probe" ]; then
         { IFS= read -r p_load; IFS= read -r p_cores; IFS= read -r p_run
-          IFS= read -r p_gid; IFS= read -r p_ip; } <<< "$probe"
+          IFS= read -r p_gid; IFS= read -r p_ip
+          IFS= read -r p_dk; IFS= read -r p_free; } <<< "$probe"
+        p_why="$(host_unusable "$p_dk" "$p_free")"
+        if [ -n "$p_why" ]; then
+            say "${h#*@} unavailable   (${p_why})"
+            continue
+        fi
         s="$(score "$p_load" "$p_cores" "$p_run")"
         say "${h#*@} score ${s}   (load ${p_load} / ${p_cores} cores + ${p_run} building)"
         # strict <: the first host in the list wins an exact tie (preference order)
@@ -289,7 +371,7 @@ elif [ -n "$BEST_HOST" ] && awk -v g="$BEST_SCORE" -v b="$LOCAL_SCORE" 'BEGIN { 
 elif [ -n "$BEST_HOST" ] || [ "$FALLBACK" = 1 ]; then
     WHERE=local
 else
-    die "no build host reachable — check ssh (ssh -o BatchMode=yes ${HOSTS[0]} true); set METATRON_BUILD_FALLBACK=1 to build here"
+    die "no usable build host — run 'bin/metatron-remote status' for the reason; set METATRON_BUILD_FALLBACK=1 to build here"
 fi
 
 if [ "$WHERE" = local ]; then
