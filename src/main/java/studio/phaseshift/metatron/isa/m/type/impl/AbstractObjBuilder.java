@@ -192,7 +192,51 @@ public abstract class AbstractObjBuilder<B extends AbstractObjBuilder<B, O>, O e
     }
 
     /**
-     * Declare the defining equation — the composition that defines this object when it is not primitive.
+     * Declare the DEFINING EQUATION — that this instruction equals a composition of other instructions. It is a claim,
+     * not the implementation: the {@code body} still computes the instruction, and the equation tells the rewriter
+     * what the instruction equals. {@link InstBuilder#create} stores it as the {@code derivation} facet of the
+     * instruction's {@code ?decq} claim ({@code [lhs=>code, rhs=>code]}); a {@link TypeBuilder} stores none.
+     *
+     * <p>THE TEMPLATE. Both sides are codes, patterns over the generic uris {@code InstSet.A}…{@code G}:
+     * <ul>
+     *   <li>both open with the seed {@code start(A)}: {@code A} stands for the incoming objs, and the readers skip
+     *       the seed;</li>
+     *   <li>the {@code lhs} is the seed, then exactly this instruction with a generic for each argument —
+     *       {@code start(A).div(B)}. A call binds when it names the same op with the same number of arguments, each
+     *       generic taking the call's argument in its position. A call that omits an optional argument does not
+     *       bind: a bare {@code order()} misses {@code order(B)} and finds no combiner;</li>
+     *   <li>the {@code rhs} is the seed, then the composition, written over the lhs's generics, which a reader replaces
+     *       with what they bound. A generic may sit inside an argument's code: in {@code start(A).mult(map(B).inv())},
+     *       {@code map(B)} maps the incoming obj to {@code B}, so {@code mult} multiplies by {@code B}'s inverse.</li>
+     * </ul>
+     * Matching is structural ({@link Derivation#matchGenerics}): a generic matches anything, and a generic met twice
+     * must meet the same obj; an instruction matches by tid, then argument for argument; anything else matches by
+     * {@code test}, so {@code map(1)} matches only {@code map(1)}.
+     *
+     * <p>THE READERS. Three facts are read off the equation, and the rhs's shape decides which of them follow:
+     * <ul>
+     *   <li>CONTRACTION ({@code derivation_contraction}) rewrites every contiguous run of a chain that matches the rhs,
+     *       seed excluded, back to the lhs: {@code mult(map(B).inv()) ↦ div(B)}, {@code map(1).sum() ↦ count()}. It
+     *       rewrites EVERY match, so the rhs must be specific: an rhs of a lone {@code sum} would turn every
+     *       {@code sum} into this instruction;</li>
+     *   <li>THE COMBINER ({@link Law.Helper#combiner}): for a fold that does not declare the combining laws itself,
+     *       the rhs's LAST instruction, its generics bound from the call, is the fold its partials recombine through.
+     *       That instruction must itself be a fold over this instruction's range that declares those laws:
+     *       {@code count ↦ map(1)·sum} recombines through {@code sum}, {@code order(B) ↦ split([_])·kmerge(B)}
+     *       through {@code kmerge(B)}. This is how a sharded {@code count} or {@code order}, or a {@code group} over
+     *       them, recombines;</li>
+     *   <li>THE INVERSE ({@code Law.Helper.derivedInverse}): an rhs that applies a group's operation to an argument
+     *       holding the group's inverse defines the other half of that group. {@code minus(B) ≡ plus(map(B).neg())}
+     *       makes {@code minus} the inverse of {@code plus}, and {@code plus} the inverse of {@code minus}, over an
+     *       operand whose declared algebra has the {@code plus}/{@code neg} group.</li>
+     * </ul>
+     * A generic's equation covers every carrier that runs its body ({@code count}, {@code order}); a specialization
+     * declares its own ({@code minus} declares the same equation for {@code int}, {@code real} and {@code cmplx}).
+     * {@code real}'s {@code div} and the generic {@code count}:
+     * <pre>{@code
+     * .derivation(new Derivation(start_(uri(A)).div_(uri(B)), start_(uri(A)).mult_(map_(uri(B)).inv_())))
+     * .derivation(new Derivation(start_(uri(A)).count_(), start_(uri(A)).map_(jnt(1)).sum_()))
+     * }</pre>
      */
     public B derivation(final Derivation derivation) {
         this.derivation = derivation;
