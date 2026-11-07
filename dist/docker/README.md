@@ -55,43 +55,70 @@ docker run -d --name metatron \
   ghcr.io/phaseshift-studio/metatron:main \
   "[boot=><boot/deploy.mtron>,log=>info,console=>false]"
 
+The `boot=>` address (and the `-b` flag / `$METATRON_BOOT`) accepts a bare path, `file:///path`, or an `http(s)://`
+URL — a URL boot is fetched and evaluated with no volume mount:
+
+  docker run ... metatron "[boot=><http://host/deploy.mtron>]"
+
 # quick interactive shell (the bin/metatron-docker wrapper does this):
 ./bin/metatron-docker
 ```
 
 ## Compose
 
-`dist/docker/compose.yaml` is a ready-to-run deployment template. It names every knob the image honours, with the
-default as the value, so it doubles as the reference for what can be changed:
+`dist/docker/compose.yaml` is a ready-to-run deployment, and `dist/docker/.env.example` is its configuration surface.
+The YAML names only the **boundary** — image, host socket, state volume, ports, limits, healthcheck — plus the
+boot-args string. Every knob and its default lives in `.env.example`: copy it, edit, deploy.
 
 ```bash
 cd dist/docker
+cp .env.example .env                              # the one file you edit
 docker compose up -d                              # boot (ws 8555 / http 8777) + healthcheck
 docker compose logs -f metatron
-docker compose --profile repl run --rm repl       # a wsplus REPL against the server
+docker compose exec metatron wsplus ws://localhost:8555/mtron   # the REPL console
 docker compose -f compose.yaml -f compose.infra.yaml up -d   # optional mariadb / gremlin / chroma backends
 docker compose down                               # keep VM state
 ```
 
-There are two layers of configuration and they are **not** interchangeable:
+There are three kinds of knob, and they are **not** interchangeable:
 
 | Layer | Where | Drives |
 |-------|-------|--------|
-| host-side | `$VAR` in `compose.yaml`, resolved from your shell or a `.env` beside the file | ports, mounts, the boot-args string |
+| host-side | `$VAR` in `.env` (or exported from your shell) | ports, mounts, limits, the boot-args string |
 | container-side | the service's `environment:` block | the JVM's own options (`JAVA_TOOL_OPTIONS`), `TZ`, ... |
+| boot args | the boot-args rec (the container `command`) | the VM itself: `boot`, `log`, `user`, `console`, `data`, the `web/http` + `web/ws` URIs, the `typer/stage` and `tracer/stack` flags |
 
-The boot-args string (the container `command`) is where the VM itself is configured: `boot`, `log`, `user`, `console`,
-`data`, the `web/http` + `web/ws` URIs, the `typer/stage` flags and the `tracer/stack` flags. Compose assembles it from
-host-side variables, so a whole run can be re-pointed from the shell:
+The boot-args string is where the VM itself is configured; compose assembles it from the host-side variables, so a
+whole run can be re-pointed from the shell:
 
 ```bash
 METATRON_LOG=debug METATRON_USER=marko METATRON_CONSOLE=true docker compose up -d
 ```
 
+**One rule, or the knobs will lie to you:** a deployment-varying value must be read by the boot file from `boot/args`
+(`.else(<dev default>)`). If a boot file hardcodes a key in its own `[== boot args ==]` header, the header wins and the
+value set here is silently ignored.
+
 Every port is one variable used on both sides (host mapping, container bind, boot-args URI and healthcheck), so the
-four cannot drift apart. The file also documents the alternatives as commented-out blocks: building from a checkout,
-mounting a custom boot file or `conf/`, a read-only rootfs, log rotation, resource limits, watchtower labels, a
-bind-mounted state volume, and host aliases/DNS.
+four cannot drift apart.
+
+**Commented-out alternatives.** The rest of the surface was moved out of the YAML to keep it lean; each is a
+commented-out block in `compose.yaml` to uncomment when you need it:
+
+| alternative | what it does |
+|-------------|--------------|
+| `build:` (in `metatron`) | build the image from a checkout instead of pulling (needs the uber-jar in `target/`) |
+| dev-loop boot/conf mounts | a checkout's `boot/` and `conf/` override the baked copies |
+| docker-credentials mount | hand the VM `~/.docker/config.json` instead of the socket |
+| `read_only: true` + `tmpfs:` | read-only rootfs — `/tmp` must stay a writable, exec tmpfs (tree-sitter native lib) |
+| bind-mounted state volume | a host dir instead of the named volume (chown to `10001:10001`) |
+| `expose:` instead of `ports:` | publish nothing — the server is reachable only on the compose network |
+| `env_file:` | bulk-load container-side variables from a file |
+| `ulimits:` / `sysctls:` / `pids_limit:` / `shm_size:` | kernel/process limits |
+| `extra_hosts:` / `dns:` / `dns_search:` | name resolution for boots that dial off-network |
+| `gpus:` (in `deploy.resources`) | GPU access (needs the NVIDIA container toolkit) |
+| `userns_mode:` / `security_opt: label=...` | user-namespace / AppArmor-SELinux labelling |
+| watchtower label | let a watchtower-style updater redeploy this service |
 
 **State.** VM state lives in the named volume `metatron-state` mounted at `/home/metatron` (the sqlite tble space at
 `METATRON_DATA`, default `/home/metatron`). The volume root is deliberately the image's `/home/metatron`: docker seeds
@@ -114,7 +141,9 @@ The image includes `wsplus`, a basic mtron REPL for talking to the headless serv
 is persistent, so session state carries across lines:
 
 ```bash
-docker exec -it metatron wsplus ws://localhost:8555/mtron
+docker exec -it metatron wsplus
+# ... or, from a compose deployment (and a GUI like dockge's console/exec):
+docker compose exec metatron wsplus
 
 mtron> 1 + 2
 ==>3

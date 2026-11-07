@@ -981,6 +981,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         return this.path().stream().anyMatch(segment -> segment.startsWith("{"));
     }
 
+    default fURI trim() {
+        final List<String> trimmed = new ArrayList<>(this.path());
+        return trimmed.removeIf(String::isEmpty) ? (this.isAbsolute() ? this.path(trimmed).asAbsolute() : this.path(trimmed).asRelative()) : this;
+    }
+
     fURI asAbsolute();
 
     fURI asRelative();

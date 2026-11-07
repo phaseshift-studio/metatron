@@ -23,9 +23,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
-
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 public class IntTest extends AbstractAlgebraTest {
 
@@ -179,7 +178,9 @@ public class IntTest extends AbstractAlgebraTest {
             "1                 %order()       %[1]",
             "int{5}::1         %order()       %[int{5}::1]",
             "{-1,0,1}          %order()       %[-1,0,1]",
+            "{-1,0,1}          %order(+2)     %[-1,0,1]",
             "{-5,-2,-10}       %order()       %[-10,-5,-2]",
+            "{-5,-2,-10}       %order(* -1)   %[-2,-5,-10]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, input, code, expected);

@@ -167,12 +167,12 @@ public final class mInsts {
                         .example("{1,2,3,4}.prod() [-- 24 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
-                InstBuilder.build().tid(ORDER_INST_TID, "order the lhs int stream in ascending order")
+                /*InstBuilder.build().tid(ORDER_INST_TID, "order the lhs int stream in ascending order")
                         .dom(INT_TID.maybeSome(), "a stream of ints")
                         .rng(LST_TID.poly(INT_TID.maybeSome()), "the sorted lst of ints").argLst()
                         .body((lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
                         .law(Law.pure)
-                        .create(),
+                        .create(),*/
                 InstBuilder.build().tid(SUM_INST_TID, "add the lhs int stream into a single int")
                         .dom(INT_TID.maybeSome(), "zero or more ints").rng(INT_TID, "a single plus reduced int")
                         .argLst().seed(jnt(0))
@@ -1174,6 +1174,17 @@ public final class mInsts {
                         // a clone of it, so the bound call routes its own lhs
                         .inst(BranchInst::new)
                         .body((lhs, inst) -> ((BranchInst) inst).route(lhs))
+                        .create(),
+                InstBuilder.build()
+                        .tid(ORDER_INST_TID, "a sorting function \\(f(X) \\mapsto X'\\)")
+                        .dom(A.maybeSome(), "maybe some A to sort")
+                        .rng(LST_TID.poly(A.maybeSome()), "a sorted lst of the lhs A{*}")
+                        .argLst(T(ALL.maybe()), "a projection of A to compare")
+                        .body((lhs, inst) -> inst.arg(0).isNoObj() ?
+                                lhs.stream().sorted(CommonUtil.ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
+                                lhs.stream().sorted(CommonUtil.ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
+                        .law(Law.pure)
+                        .derivation(new Derivation(start_(uri(A)).order_(uri(B)), start_(uri(A)).split_(lst(id_().tryToInst())).kmerge_(uri(B))))
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.web.type.MIME;
 import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -134,6 +135,21 @@ public final class httpClient {
                 return noobj();
             return fail(e);
         }
+    }
+
+    /**
+     * ONE-OFF GET — fetch a document's raw text with no MIME reification and no 404 path-walk.  BootLoader uses this
+     * to load a boot profile from a URL ({@code boot=><http://…/x.mtron>}); the body is returned verbatim.  Throws on
+     * a non-2xx answer or a transport error.
+     */
+    public static String fetchText(final fURI address) throws IOException {
+        final Connection.Response response = Jsoup.connect(address.toString())
+                .ignoreContentType(true)
+                .ignoreHttpErrors(true)
+                .execute();
+        if (response.statusCode() / 100 != 2)
+            throw new IOException("GET " + address + " answered " + response.statusCode());
+        return response.body();
     }
 
     /**

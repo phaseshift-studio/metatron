@@ -169,9 +169,10 @@ def usage():
         "usage: wsplus [-e EXPR ...] [-out MIME] [-in MIME] [URL]\n"
         "\n"
         "  -e <expr>   evaluate EXPR once and exit (repeatable; one shared session)\n"
-        "  -out <mime> append ?out=<mime> to the endpoint (as a bare name such as\n"
-        "              x-mtron-ui it becomes application/x-mtron-ui)\n"
-        "  -in <mime>  likewise ?in=<mime>, the inbound direction\n"
+        "  -out <mime> output format (default: application/x-mtron-ui; a bare name\n"
+        "              such as x-mtron-ui becomes application/x-mtron-ui)\n"
+        "  -in <mime>  input format (default: application/x-mtron; a bare name such\n"
+        "              as x-mtron becomes application/x-mtron)\n"
         "  <uri>       the metatron ws endpoint (default: ws://localhost:8555/mtron)\n"
         "\n"
         "  supported formats\n"
@@ -192,8 +193,8 @@ def with_query(url, key, value):
 def main():
     exprs = []
     url = None
-    out_mime = None
-    in_mime = None
+    out_mime = "application/x-mtron-ui"  # default: the pretty, line-broken output
+    in_mime = "application/x-mtron"      # default: the inbound mtron text format
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
@@ -223,9 +224,9 @@ def main():
             i += 1
     if url is None:
         url = "ws://localhost:8555/mtron"
-    if out_mime:
+    if out_mime and "out=" not in url:
         url = with_query(url, "out", out_mime)
-    if in_mime:
+    if in_mime and "in=" not in url:
         url = with_query(url, "in", in_mime)
     if exprs:
         try:
