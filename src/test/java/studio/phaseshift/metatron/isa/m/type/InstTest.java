@@ -30,7 +30,9 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
@@ -632,6 +634,22 @@ public class InstTest extends AbstractObjTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testNamedArgsAcceptAnOrderedCall(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, BULK INCLUDED — {@link Call#tryToInst()} collapses it, and the code's
+     * coefficient multiplies the instruction's own instead of being dropped. A code of coefficient one, nearly every
+     * code, answers the very instruction it holds, and the collapse never touches that instruction.
+     */
+    @Test
+    public void testAOneInstructionCodeCollapsesWithItsBulk() {
+        final Inst plus = plus_(jnt(1)).tryToInst().asInst();
+        assertSame(plus, MCode.of(List.of(plus)).tryToInst(), "a code of coefficient one answers its instruction");
+        assertEquals(cInt.of(3L), MCode.of(List.of(plus), Tokens.CODE_TID.c(cInt.of(3L)), null).tryToInst().c(),
+                "the code's coefficient survives the collapse");
+        assertEquals(cInt.of(6L), MCode.of(List.of(plus.c(cInt.of(2L))), Tokens.CODE_TID.c(cInt.of(3L)), null).tryToInst().c(),
+                "and multiplies the instruction's own");
+        assertEquals(cInt.ONE(), plus.c(), "the instruction inside the code is left as it was");
     }
 
     /**
