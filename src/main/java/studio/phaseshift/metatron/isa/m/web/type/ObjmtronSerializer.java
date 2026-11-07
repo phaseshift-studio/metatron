@@ -33,10 +33,12 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.ARGS;
+import static studio.phaseshift.metatron.Tokens.BASE_TYPES;
 import static studio.phaseshift.metatron.Tokens.REL_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -319,12 +321,20 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public String writeRec(final Rec rec) {
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, rec, true);
-        if (rec.isEmpty()) {
+        // A BUILT OBJ TRAVELS AS ITS DATA: reading it re-runs its type's constructor wherever it lands, so the Java
+        // bodies that constructor derived (a client's status and send, its rec of overrides) are left out here and
+        // derived again there, against that machine. Every other rec is written whole.
+        final Map<Obj, Obj> fields = built(rec) ? rec.jvm().entrySet().stream()
+                .filter(field -> !isJava(field.getValue()))
+                .collect(LinkedHashMap<Obj, Obj>::new, (map, field) -> map.put(field.getKey(), field.getValue()),
+                        Map::putAll)
+                : rec.jvm();
+        if (fields.isEmpty()) {
             sb.append("[=>]");
         } else {
             sb.append("[");
-            // the full rec, always: this output is data, and a clipped rec is not the rec
-            rec.jvm().forEach((k, v) -> {
+            // every data field, always: this output is data, and a clipped rec is not the rec
+            fields.forEach((k, v) -> {
                 if (v == rec)
                     throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
                 sb.append(this.write(k)).append("=>");
@@ -335,6 +345,30 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append("]");
         }
         return this.handleVID(sb, rec).toString();
+    }
+
+    /**
+     * Whether {@code rec} is BUILT and holds what its constructor derived: a Java body ({@link #isJava}) in a rec whose
+     * type has a constructor, which {@link Obj.Helper#construct} re-runs wherever the rec is read. A rec of a base
+     * type, or one that holds no Java body, is never looked up.
+     */
+    private static boolean built(final Rec rec) {
+        if (null == rec.tid() || BASE_TYPES.contains(rec.tid().big().basePath()) || !Machine.loaded()
+                || rec.jvm().values().stream().noneMatch(ObjmtronSerializer::isJava))
+            return false;
+        final Obj type = Machine.read(rec.tid().big());
+        return type.isType() && type.asType().hasConstructor();
+    }
+
+    /**
+     * Whether {@code obj} is a Java body — an instruction that contains a Java lambda rather than mtron code
+     * ({@link Inst#containsJavaFunction}), or a rec holding nothing else (a client's rec of overrides). Text can name
+     * it, but it cannot carry it.
+     */
+    private static boolean isJava(final Obj obj) {
+        return obj.isObjInst() ? obj.asInst().containsJavaFunction()
+                : obj.isRec() && !obj.asRec().isEmpty()
+                && obj.asRec().jvm().values().stream().allMatch(ObjmtronSerializer::isJava);
     }
 
     @Override

@@ -249,6 +249,19 @@ public interface Inst extends Call {
     }
 
     /**
+     * Returns true if this instruction's function is a native Java lambda ({@link #isJavaFunction()}), or if one of its
+     * arguments is an instruction or a code that contains one, at any depth. A chain-built instruction may carry no
+     * function of its own while its argument does (a status is {@code auto_(instLambda(...))}), so
+     * {@code isJavaFunction()} implies {@code containsJavaFunction()}, never the reverse.
+     */
+    @Override
+    default boolean containsJavaFunction() {
+        return this.isJavaFunction() || this.args().elements().anyMatch(arg -> arg.isObjInst()
+                ? arg.asInst().containsJavaFunction()
+                : arg.isCode() && arg.asCode().containsJavaFunction());
+    }
+
+    /**
      * Returns the mtron code Obj stored in this instruction's function,
      * or {@code noobj()} if the function is a Java lambda or absent.
      */
