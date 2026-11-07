@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
-                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -514,7 +519,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
                obj=&gt;/m/instset::[=&gt;]]],
              type=&gt;[
               int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent,
-              int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat,
+              int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
               lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
               real::T@/m/math/datasize,
               uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime,
@@ -880,7 +885,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__math__cmplx-theories" role="tabpanel" aria-labelledby="algebra-__m__math__cmplx-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__field_theory"><span class="theory-chip theory-field">field</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__field_theory">field_theory</a><span class="algebra-theory-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">mul</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-mult_group">mult_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},plus?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(0.0, 0.0)</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value">{mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},mult?lst&lt;=lst(lst::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">(1.0, 0.0)</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__math__cmplx-mtron" role="tabpanel" aria-labelledby="algebra-__m__math__cmplx-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[cmplx]::[obj=&gt;lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx,
-                law=&gt;[
+                theory=&gt;[
                  field=&gt;/m/theory/field_theory::[
                   add=&gt;!*/m/inst/plus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
                   mul=&gt;!*/m/inst/mult?rng=/m/math/cmplx&amp;dom=/m/math/cmplx,
@@ -1227,7 +1232,7 @@ the collection of mathematical instructions, algebraic and numeric data types, a
         </span>
         <small class="text-muted code">/m/math/nat</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat</code></pre></div>
     <div class="card-body py-2">
     <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__math__nat').showModal();" title="show the whole algebra">algebra</button>
 </div>
@@ -1247,8 +1252,8 @@ the collection of mathematical instructions, algebraic and numeric data types, a
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__math__nat-theories" role="tabpanel" aria-labelledby="algebra-__m__math__nat-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__rig_theory"><span class="theory-chip theory-rig">rig</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__rig_theory">rig_theory</a><span class="algebra-theory-desc">the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">0</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">1</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">1</span></td></tr></table></div></div></div>
-        <div class="tab-pane fade" id="algebra-__m__math__nat-mtron" role="tabpanel" aria-labelledby="algebra-__m__math__nat-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[nat]::[obj=&gt;int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat,
-              law=&gt;[
+        <div class="tab-pane fade" id="algebra-__m__math__nat-mtron" role="tabpanel" aria-labelledby="algebra-__m__math__nat-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[nat]::[obj=&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
+              theory=&gt;[
                rig=&gt;/m/theory/rig_theory::[
                 add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                 mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
@@ -1547,13 +1552,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__inst__conjugate-doc-0-tab').click();document.getElementById('__m__math__inst__conjugate-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">conjugate?cmplx&lt;=cmplx(){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m_math.html#__m__math__inst__conjugate" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">conjugate?cmplx&lt;=cmplx(){&lt;j&gt;}</code></pre></a></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex conjugation: \(\overline{a+bi}=a-bi\) — negates the imaginary component
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> complex conjugation: \(\overline{a+bi}=a-bi\) — negates the imaginary component</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex conjugate \(\overline{z}\)" class="text-success">the complex conjugate \(\overline{z}\)</a></pre>
 </div><div class="card-body border-top py-2">
@@ -1923,7 +1927,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
+        generated by metatron instset doc generator &mdash; last built November 7, 2026 00:44MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

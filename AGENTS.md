@@ -10,31 +10,39 @@ apply.
 
 ---
 
-## Absolute Rule
+## Absolute Rules
 
 * Under no circumstance should you perform any git operations. Do not check out, do not stash, do not merge, do not
   commit, and do not push. Git is off limits.
 * bin/metatron-docker is the build infrastructure for agents. Do not use mvn, mvnw, etc. We don't want to fight over
-  target/. Use bin/metatron-remote status to see how many builds are running concurrently. If machine CPUs
-  are pegged, don't throw another build on the pile. Wait.
+  target/. Use `bin/metatron-remote status` to see how many builds are running concurrently across different machines.
+  If machine CPUs are pegged, don't throw another build on the pile. Wait.
 
 ## Strict Rules
 
-* Do not create methods for method creation's sake. One-liners should be inlined at their call site.
-* Don't create multiple data access pathways in the codebase. Machine.read () and Machine.write () should be your
-  primary access points for data.
-* Don't create Java classes that can't be introspected by mtron. Everything must be a metatron Obj (typically, a Rec).
-* Code is not our friend. Minimalistic, targeted edits/additions. If you need help thinking how best to create a simple
-  implementation, ask for advice.
-* Know the API. The internal metatron API is rich with builder APIs, fluent data manipulation APIs, public static helper
-  APIs. Unless you are doing very novel code, code exists to do what you want to do -- don't roll your own
-  implementation.
-* Do not invent vocabulary. For instance, an instruction set is not called a "vocabulary" nor a "schema". Don't know
-  what call something, ask.
+* Do not create methods for the sake of creating methods. One-liners should be inlined at their call site. No
+  "switchboard"/"spaghetti" wiring trivial methods together.
+* Don't create multiple data access pathways in the codebase. `Machine.read()` and `Machine.write()` should be your
+  primary access points for data. They handle all levels of metarton variable scoping (stacks, spaces, remote machine
+  data access, everything).
+* Don't create extraneous (semi-)global data structures. If you need it, we got it. markdown::T, json::T, http_client::
+  T, progress_bar::T,...kitchen_sink::T.
+* Don't create Java classes with long-lived instances that can't be introspected by mtron. Everything must be a metatron
+  `Obj` (typically, a `Rec` in practice).
+* Code is **not** our friend. Minimalistic, targeted edits/additions. If you need help thinking how best to simplify an
+  implementation, ask for advice. Refer back to no "spaghetti"-method chains.
+* Know thy API. metatron rich API containing various builders, fluent data manipulators, public static helper classes.
+  Unless you are doing very novel code, there exists a metatron API to do what you want to do -- don't roll your own
+  implementation. (e.g. never, ever do `"http://" + host + port`. fURI is the most used and useful class in metatron:
+  `f().scheme(HTTP).host(host).port(port)`.
+* Do not invent vocabulary. If there is no obvious set nomenclature for motif, ask. For instance, an "instruction set"
+  is not called a "vocabulary" nor a "schema".
+* Don't write limp test cases. Write a few and then think. How can you break your code? Then write that test case. Then
+  think again. Try and break it again. Only then consider your test case legit.
 
 ## Memory — Hindsight is the shared, harness-agnostic store
 
-This project is worked on from several agent harnesses (Claude Code, the DeepSeek harness, Codex, …). **Hindsight is
+This project is worked on from several agent harnesses (Claude Code, the DeepSeek harness, metatron, …). **Hindsight is
 the one project memory they all share** (MCP server `hindsight`, bank `coding-agent::metatron`). A harness's own
 memory — Claude Code's `~/.claude/projects/*/memory/`, `.remember/`, Codex notes — is visible to that harness alone.
 Treat Hindsight as the source of truth, and write to it.
@@ -60,26 +68,18 @@ Treat Hindsight as the source of truth, and write to it.
 
 ## Build & Test
 
-**JDK 25+** is required to compile and run, and tests must run on JDK 25: the pom's surefire `argLine` uses
-`--sun-misc-unsafe-memory-access=allow`, a JDK 23+ flag. CI uses Oracle JDK 25.
-
-```bash
-./mvnw install                                    # build with tests
-./mvnw install -DskipTests                        # fast dev loop
-./mvnw test                                       # run all tests
-./mvnw test -Dtest=memSpaceTest                   # single test class
-./mvnw test -Dtest='!fsSpaceTest'                 # exclude tests (CI pattern)
-./mvnw clean package                              # uber-jar: target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar
-```
-
 **Agents build and test in docker** with `bin/metatron-docker build …` (no published ports, throwaway containers):
-a live server owns the host's 8555/8777 and is rebuilt constantly, so host-side VM boots collide with it.
+a live server owns the host's 8555/8777 and is rebuilt constantly, so host-side VM boots collide with it. Thus, don't
+use mvn/mvnw.
 
-Those builds are **load balanced** across this workstation and the ginger build server. With
+Docker builds are **load balanced** across a cluster of local workstations. With
 `METATRON_BUILD_REMOTE=1` the isolated `build …` verbs are routed through `bin/metatron-remote`,
-which picks the least-loaded machine (ginger on a tie) and caps concurrent remote builds. `run`,
-`dev` and `image` always stay local — they publish ports or need the jar in this tree. Force a
-local build with `METATRON_BUILD_REMOTE=0`.
+which picks the least-loaded machine and caps concurrent remote builds. `run`,
+`dev` and `image` always stay local — they publish ports or need the jar in this tree. So do
+`build docs` and `build console`: docs writes into this tree (the balancer syncs back only
+`.docker-target` and `target/`, so a delegated docs build would render on the remote checkout
+and hand back nothing), and console drives an interactive pty. Force a local build with
+`METATRON_BUILD_REMOTE=0`.
 
 Hosts, the cap and the delegation flag live in **`bin/test/metatron-remote.env`** (copy it from
 `bin/test/metatron-remote.env.example`; gitignored). Both scripts read it, so editing that one file changes
@@ -95,8 +95,8 @@ the recent history and the load on each. History lands in `~/.metatron-builds.lo
 ```bash
 bin/metatron-docker build                             # package (skip tests)
 bin/metatron-docker build test -Dtest=memSpaceTest    # tests in the container
-bin/metatron-docker build docs [dir|file.md]          # docs pipeline (MarkdownRunner --html)
-bin/metatron-docker build console --steps f.steps     # drive a real console in a pty
+bin/metatron-docker build docs [dir|file.md]          # docs pipeline (MarkdownRunner --html); local
+bin/metatron-docker build console --steps f.steps     # drive a real console in a pty; local
 bin/metatron-docker help                              # the full reference
 ```
 
@@ -128,12 +128,12 @@ of a live console are in [docs/agents/console-harness.md](docs/agents/console-ha
 - Don't create new terms for rec keys unless you absolutely have to. Instead, review `Tokens.java` as that is our
   running list of terms used across the code base. Best to reuse existing terms instead of creating an ever-growing set
   of synonyms.
-- **Never return `Optional<Rec>` (or `Optional<Lst>`) — answer the collection.** A rec query answers a `Rec`,
-  the empty rec is `rec0()` (an empty lst is `lst()`), and the empty value COMPOSES: `at(key)` answers `noobj`,
+- **Never return `Optional<Rec>` (or `Optional<Obj> in general`).** The empty rec is `rec0()` (an empty lst is `lst()`),
+  and the empty value COMPOSES: `at(key)` answers `noobj`,
   `stream()` answers nothing, `isEmpty()`/`isNoObj()` answer truthfully. An `Optional` forces every caller to
   unwrap before asking its next question, and it makes the empty case a different shape than the present one.
   A query that found nothing returns the empty collection, never `null` and never an `Optional`.
-- **Never shape-inspect a read result.** `Objs` — a *Java* notion; in mtron a multiplicity is a tid coefficient, e.g.
+- **Never shape-inspect a read result.** `Objs` — a *Java* notion; in metatron a multiplicity is a tid coefficient, e.g.
   `int{4}::T` — is a stream, and `stream()` is defined on `Obj` itself, so `obj.stream().forEach(...)` covers one match
   and many identically with no `isLst()`/`isRec()`/`isRel()`/`instanceof Poly` branching. Sort a read yourself when
   position matters. See the `stream()` note under Key Concepts.
@@ -388,7 +388,7 @@ Reach for `stream()` whenever you are unsure of the source, rather than branchin
 
 ---
 
-## Skills and docs
+## Skills and Docs
 
 * The agent skills live in `docs/skills/` (markdown; `.metatron/skills` links there). The hand-authored doc sources
   are exactly three: `docs/skills/`, the human-oriented adocs in `docs/website/adoc/`, and the instruction-set API
@@ -424,21 +424,3 @@ guidelines. Key points:
 - Reference a GitHub issue (`Closes #N` or `Refs #N`)
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full details.
-
-## XERJ (code search)
-
-This project uses XERJ for reference coding: when you are about to write code in
-unfamiliar territory, retrieve how somebody already solved it instead of guessing.
-
-```sh
-sh .xerj/start-node.sh &        # the node first — xerj mcp does NOT start one
-xerj search --prefix metatron "<plain words>"   # this repo's own sources
-xerj search --prefix ref      "<plain words>"   # the cloned reference projects
-xerj def --prefix metatron "<Symbol>"           # exact go-to-definition
-```
-
-`--prefix` is not optional here: `metatron-*` is this repository and `ref-*` is
-`ref/` (Graal/Truffle, JikesRVM, TinkerPop, RDF4J, LangChain4j); the tool's default
-prefix `ax` is empty, and neither `xerj search` nor `xerj def` will tell you that.
-Cite file:line for anything you rely on. Setup, corpora and caveats:
-[.xerj/README.md](./.xerj/README.md).

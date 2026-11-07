@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
-                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -571,7 +576,13 @@ the machine instruction set for nesting machines and their components instset, c
               component::T@/m/mach/component/selector,
               selector::T[][ctor?specificity_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/specificity_selector,
               selector::T[][ctor?firstfind_selector&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/selector/firstfind_selector,
-              component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer,
+              component::T[?[check=&gt;[inst_dom=&gt;bool::T,
+                                     inst_rng=&gt;bool::T,
+                                     type_pred=&gt;bool::T,
+                                     code_resolve=&gt;bool::T,
+                                     obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer,
+              rec::T[?[stack=&gt;[{?}mtron_stack=&gt;bool::T,
+                               {?}java_stack=&gt;bool::T]]][ctor?/m/sys/tracer&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/tracer,
               component::T[][ctor?memory&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/memory,
               rec::T[?[
                {?}host=&gt;uri::T,
@@ -1215,7 +1226,7 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
   {?}processor=&gt;component::T[?[
    {?}state=&gt;union(stop,run,pause),
    {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
-                  law=&gt;[
+                  theory=&gt;[
                    free_groupoid=&gt;/m/theory/group_theory::[
                     objects=&gt;/m/mach/machine,
                     morphisms=&gt;/m/uri,
@@ -1410,10 +1421,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <p class="mb-0 text-light"> a rewrite rule as a first-class plan — the morphism of the rewrite category (path → path)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
+  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
   <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
   <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
-  <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__rewriter__plan_rewriter">
@@ -1569,10 +1580,25 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
         </span>
         <small class="text-muted code">/m/mach/component/typer</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[check=&gt;[inst_dom=&gt;bool::T,
+                       inst_rng=&gt;bool::T,
+                       type_pred=&gt;bool::T,
+                       code_resolve=&gt;bool::T,
+                       obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
-    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the check points where the type checker should be applied.
+the more stages that are active, the slower instructions evaluate.
+however, more active stages reduces potential for data corruption.
+typically use many stages when designing code and once stable,
+remove stages accordingly for increased performance.
+</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#check" class="text-light">check</a> <span class="text-light">=&gt;</span> <a href="#'the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)'" class="text-info">&#39;the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)&#39;</a>
+</pre>
+</div>
 </div><div class="card mb-3" id="__m__mach__thread__virtual">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1911,7 +1937,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
+        generated by metatron instset doc generator &mdash; last built November 7, 2026 00:44MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

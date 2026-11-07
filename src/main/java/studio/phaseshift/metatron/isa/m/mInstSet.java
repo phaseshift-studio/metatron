@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.RewriterBuilder;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
@@ -29,7 +28,6 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.ScoringResolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
 import studio.phaseshift.metatron.isa.m.mach.type.processor.BasicSwarmComputer;
@@ -56,8 +54,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
@@ -280,59 +276,6 @@ public class mInstSet extends AbstractInstSet {
                     uri(ON_CLOSE).maybe(), "an optional shutdown down hook"))
             .desc("storage systems structured as uri addressed objs")
             .example("memspace::[pattern=>/usr/marko/#,q=>[mimeq::[=>]]]@/sys/space/usr/marko")
-            .create();
-
-    public static final Type REWRITER_TYPE = TypeBuilder.build()
-            .tid(REC_TID)
-            .vid(REWRITER_TYPE_TID)
-            .isaPredicate(rec(URI_TYPE, T(LST_TID.poly(M_ISA_INST_TID))))
-            .create();
-    /**
-     * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
-     * under {@code check} leaves the typer free to grow more orthogonal features beside it, and keeping each flag a
-     * {@code bool::T} leaves room for a finer realization (a level, a predicate) at the same key.
-     */
-    public static final Type TYPER_TYPE = TypeBuilder.build()
-            .tid(REC_TID)
-            .vid(TYPER_TYPE_TID)
-            .isaPredicate(rec(uri(Typer.CHECK), rec(
-                    uri(Typer.INST_DOM.name()), BOOL_TYPE,
-                    uri(Typer.INST_RNG.name()), BOOL_TYPE,
-                    uri(Typer.TYPE_PRED.name()), BOOL_TYPE,
-                    uri(Typer.CODE_RESOLVE.name()), BOOL_TYPE,
-                    uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)), mutableMap(
-                    uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
-            .constructor(state -> rec(uri(Typer.CHECK), rec(
-                    uri(Typer.INST_DOM.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_DOM)).orElse(BOOL_FALSE),
-                    uri(Typer.INST_RNG.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.INST_RNG)).orElse(BOOL_FALSE),
-                    uri(Typer.TYPE_PRED.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.TYPE_PRED)).orElse(BOOL_FALSE),
-                    uri(Typer.CODE_RESOLVE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.CODE_RESOLVE)).orElse(BOOL_FALSE),
-                    uri(Typer.OBJ_WRITE.name()), state.asRec().at(uri(Typer.CHECK)).asRec().at(uri(Typer.OBJ_WRITE)).orElse(BOOL_FALSE))))
-            .desc("""
-                    the check points where the type checker should be applied.
-                    the more stages that are active, the slower instructions evaluate.
-                    however, more active stages reduces potential for data corruption.
-                    typically use many stages when designing code and once stable,
-                    remove stages accordingly for increased performance.
-                    """)
-            .create();
-    public static final Type TRACER_TYPE = TypeBuilder.build()
-            .tid(REC_TID)
-            .vid(TRACER_TYPE_TID)
-            .isaPredicate(rec(uri("stack"), rec(
-                    uri(Tracer.mtron_stack.name()).maybe().asUri(), BOOL_TYPE,
-                    uri(Tracer.java_stack.name()).maybe(), BOOL_TYPE)))
-            .constructor(stacks -> rec(uri("stack"), rec(
-                    uri(Tracer.mtron_stack.name()), stacks.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
-                    uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
-            .slots(mutableMap(
-                    uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
-                    uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"))
-            .desc("""
-                    diagnostic stages for surfacing internal java state.
-                    useful for debugging native java issues that mtron instructions
-                    trigger but cannot introspect.
-                    """)
             .create();
 
     public static final fURI EXPLANATION_TID = EXPLAIN_INST_TID.extend("explanation");

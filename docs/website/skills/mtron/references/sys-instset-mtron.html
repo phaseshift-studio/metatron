@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -520,8 +525,8 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
           dom=&gt;'maybe an obj',
           rng=&gt;'a lst[str] of results',
           args=&gt;[
-           {?}timeout=&gt;'a real number denoting timeout of ...',
-           cmd=&gt;'the terminal command to evaluate (...'],
+           cmd=&gt;'the terminal command to evaluate (...',
+           {?}timeout=&gt;'a real number denoting timeout of ...'],
           desc=&gt;'evaluate bash command. *important*...',
           example=&gt;[&quot;bash('ls')                        ...&quot;]]
 </code></pre>
@@ -537,14 +542,14 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
 mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
-==&gt;['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
-    'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  572G ...',
-    'tmpfs                   31G  155M ...',
-    'tmpfs                  5.0M   20K ...',
-    'tmpfs                   31G     0 ...',
-    ...(4 more)]
+==&gt;['Filesystem      Size  Used Avail U...',
+    'tmpfs           6.1G  6.3M  6.1G  ...',
+    'efivarfs        128K   42K   82K  ...',
+    '/dev/nvme1n1p2  916G  576G  294G  ...',
+    'tmpfs            31G  189M   31G  ...',
+    'tmpfs           5.0M   20K  5.0M  ...',
+    'tmpfs            31G     0   31G  ...',
+    ...(3 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
@@ -618,10 +623,10 @@ The projection can do the work: first stat line of each entry, nothing else:</p>
     ...(17 more)]
 mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full stat per entry --]
 ==&gt;['  File: AGENTS.md',
-    '  Size: 27203     	Blocks: 56     ...',
+    '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-05 16:03:56.066165...',
+    'Access: 2026-11-07 00:00:26.813553...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -629,7 +634,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
 <code>Size</code>, extracted and typed <code>bB::T</code>, then converted to <code>kB::T</code> — the unit system
 converts against itself, so no <code>awk</code>, <code>grep</code>, or <code>du</code>:</p>
 <pre><code class="language-mtron">mtron&gt; bash('ls')==[_ =&gt; bash('stat ${_} | sed -n &quot;s/.*Size: \([0-9]*\).*/\1/p&quot;')&gt;&gt;0.as?int&lt;=str(int::T).as(bB::T)]
-==&gt;[bB::27203.0,
+==&gt;[bB::26732.0,
     bB::11430.0,
     bB::4096.0,
     bB::4096.0,
@@ -691,12 +696,12 @@ no input to take, so it is shown rather than run:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
 ==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;191
+==&gt;57
 mtron&gt; sys_stat()
 ==&gt;[total_mem_jvm=&gt;mB::480.0,
-    free_mem_jvm=&gt;mB::132.2763,
+    free_mem_jvm=&gt;mB::173.4855,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::347.7236,
+    used_mem_jvm=&gt;mB::306.5144,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',
@@ -886,7 +891,7 @@ text), and <code>objClone</code> (the gauge) — a new throw site belongs to thi
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, <code>.as(type::T)</code>.</li>
-<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>&gt;&gt;</code>, the <code>?</code>-family filters, select (<code>==</code>), split (<code>-&lt;</code>),
+<li><a href="m-instset-mtron.html">mtron language reference</a> — <code>&gt;&gt;</code>, the <code>?</code>-family filters, select (<code>==</code>), split (<code>-&lt;</code>),
 <code>-&gt;</code> write.</li>
 <li><a href="web-instset-mtron.html">web instruction set</a> — the route tables an <code>fsspace</code> mount hangs behind.</li>
 <li><a href="tble-instset-mtron.html">tble instruction set</a> — the same space protocol, on a database.</li>

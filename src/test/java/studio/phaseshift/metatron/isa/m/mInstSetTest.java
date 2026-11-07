@@ -1251,6 +1251,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "[plus(1).mult(2).plus(3)]==[update([plus(int::T)=>mult(5)])]                              % [mult(5).mult(2).mult(5)]",
             // a run of insts matches as a whole
             "[plus(1).plus(2).mult(3)]==[update([plus(int::T).plus(int::T)=>plus(3)])]                 % [plus(3).mult(3)]",
+            // nested pattern matching
+            "[plus(1).mult(plus(mult(3)))]==[update([plus(?>0).mult(#(mult(_)))=>plus(+5)])]           % [plus(plus(5))]",
+            "[plus(1).mult(plus(mult(3)))]==[update([plus(?>10).mult(#(mult(_)))=>plus(+5)])]          % [plus(1).mult(plus(mult(3)))]",
             // left to right and never overlapping, and the change is not matched again
             "[plus(1).plus(1).plus(1)]==[update([plus(int::T).plus(int::T)=>plus(2)])]                 % [plus(2).plus(1)]",
             // the name is a uri pattern

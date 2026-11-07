@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -477,7 +482,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">distributed-computing</h1>
-        <small>The distributed-computing pattern menu for metatron — distribution is a theorem, not a feature. The stream-ring laws (Thm 5 / 6 / 16 / 17 / 19) decide *which* fold can ship, and the /m/math/cat machinery realizes it: the declared theories and process laws on object::T / morphism::T, LawTable's *computed* combiner, the plan::T DSL (cut / where / spans) built by PlanBuilder and lowered by PlanInterpreter. One row per pattern (A–S): its algebraic law (the latex), the mtron you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif). A ✅ marks a pattern implemented today. TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's entries (A–S); when wiring a plan::T / PlanBuilder / PlanInterpreter / LawTable combiner.</small><br/>
+        <small>The distributed-computing pattern menu for metatron — distribution is a theorem, not a feature. The stream-ring laws (Thm 5 / 6 / 16 / 17 / 19) decide *which* fold can ship, and the /m/math/cat machinery realizes it: the declared theories and process laws on object::T / morphism::T, Law.Helper's *computed* combiner, the plan::T DSL (cut / where / spans) built by PlanBuilder and lowered by PlanInterpreter. One row per pattern (A–S): its algebraic law (the latex), the mtron you write **before** the rewrite (the pre-write motif), and the sharded layout the rewrite emits (the rewrite motif). A ✅ marks a pattern implemented today. TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's entries (A–S); when wiring a plan::T / PlanBuilder / PlanInterpreter / Law.Helper combiner.</small><br/>
         <a href="distributed-computing-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>distributed-computing-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -504,7 +509,7 @@ menu, fix the five pieces a row names:</p>
 <tr><td><code>law::T</code>, <code>plan::T</code>, <code>path::T</code></td><td>—</td><td>the engine. A <code>plan::T</code> assembles <code>[name, cut, where]</code> (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the <code>law::T</code> declarations — never named, always computed.</td></tr>
 </tbody>
 </table>
-<p><code>LawTable.combiner(keyed, laws)</code> is the one function that decides a fold's recombination:</p>
+<p><code>Law.Helper.combiner(keyed, laws)</code> is the one function that decides a fold's recombination:</p>
 <ul>
 <li>a fold that declares <code>monoidic</code> + <code>commutative</code> is <strong>its own</strong> combiner (<code>sum</code>, <code>prod</code>);</li>
 <li>a fold defined by its <code>derivation</code> recombines through the fold that defines it (<code>count ↦ sum</code>,
@@ -638,7 +643,10 @@ are placeholders — the schemas below are motifs, not literal runs.</p>
 <tr><td><strong>T</strong> reference frame migration ✅</td><td>\(\mathrm{move}(a) \ldots \mathrm{move}(b) \ldots\) — machine semiring groupoid, stream ring's process dual</td><td><code>{1,2,3}.plus(5).move(//host/a).plus(2).sum()</code></td><td>`{1,2,3}.plus(5).-&lt;[\</td></tr>
 </tbody>
 </table>
-<p>| <strong>U</strong> profile collation              | \(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\) — \(\oplus\) is keyed union with per-op times added, so the report is a commutative monoid | <code>{1,2,3,4,5}.plus(10).sum().profile()&gt;&gt;format</code>                       | <code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start(part_i).plus(10).sum?hop=0().profile(),…).profile_collate()&gt;&gt;format</code> |</p>
+<p>| <strong>U</strong> profile collation | \(\hat{p}(a \uplus b) = \hat{p}(a) \oplus \hat{p}(b)\) — \(\oplus\) is keyed union with per-op
+times added, so the report is a commutative monoid |
+<code>{1,2,3,4,5}.plus(10).sum().profile()&gt;&gt;format</code>                       |
+<code>branch?&lt;={0}(&lt;p_i&gt; =&gt; start(part_i).plus(10).sum?hop=0().profile(),…).profile_collate()&gt;&gt;format</code> |</p>
 <p><strong>Legend.</strong> ✅ = implemented (<code>A</code> done; <code>D</code> done 2026-10-26; <code>E</code>, <code>G</code> v1 done 2026-10-28; <code>S</code> done 2026-10-28 —
 the axes' <code>local</code> designator, <code>?place=[local,peer]</code>; <code>O</code> free today — it needs no plumbing).
 An empty box is <em>not</em> &quot;unsound&quot;: the law holds, the lowering is unwritten. <code>F</code> is struck for streams (order lives in
@@ -712,7 +720,7 @@ defined by its <code>derivation</code> recombines through the fold that defines 
 <tr><td>rec <code>sum</code></td><td>itself</td><td>the deep merge's fold declares <code>monoidic</code> + <code>commutative</code> — a <code>lst</code> is its atom, so colliding values bag in any order</td></tr>
 </tbody>
 </table>
-<p>The cat graph answers lazily: <code>|count?int&lt;=#{*}().as(morphism::T)&gt;&gt;analysis&gt;&gt;combiner</code> is
+<p>The cat graph answers lazily: <code>|count?int&lt;=A{*}().as(morphism::T)&gt;&gt;analysis&gt;&gt;combiner</code> is
 <code>/m/inst/sum?rng=/m/int&amp;dom=/m/int{*}</code>. <code>mean</code> (magmadic) and <code>str</code> <code>sum</code> (not commutative) correctly do not shard.</p>
 <p><strong><code>order</code> is the distributed sort.</strong> The lane sorts its shard and the master k-way-merges the runs — the same shard,
 with <code>kmerge</code> as the combiner instead of <code>sum</code>:</p>
@@ -739,21 +747,22 @@ on p_1:    branch?&lt;={0}&amp;split=part(&lt;p_2&gt; =&gt; start({1,3,5,7}).plu
 tree route (default height 1, the star). A peer re-plans its part because applying a code compiles it
 (<code>Machine.applyCode</code>); at a height of zero the part is a leaf. The emitted lane restates the <strong>form</strong>, never the
 number: the same arity, one height down, stated on the lane's <strong>fold</strong> (its reducer) — <code>{2}2 ⇒ {2}1 ⇒ 0</code> — while the
-lane's seed, <code>start(part)</code>, carries only its part. A chain (<code>[h,1]</code>) hands the whole part to exactly one child, so the tree is a line.
+lane's seed, <code>start(part)</code>, carries only its part. A chain (<code>[h,1]</code>) hands the whole part to exactly one child, so the
+tree is a line.
 <code>?hops</code> is the deprecated pre-singular spelling of the same key: it is read for one cycle, <code>?hop</code> wins at the same
 position (both keys on one instruction), and the earliest statement wins across positions.</p>
 <h4>G — keyed reduce (<code>group([k ⇒ h])</code>)</h4>
 <pre><code class="language-mtron">lane_i:   start(&lt;part_i&gt;).group([mod(3)=&gt;sum()])?hop=0               [-- [1=&gt;1,0=&gt;3,2=&gt;5] --]
 master:   branch?&lt;={0}&amp;split=part(&lt;p_1&gt; =&gt; start(&lt;part_1&gt;)…, &lt;p_2&gt; =&gt; …).sum()==[_=&gt;sum()]   [-- [1=&gt;{1,4},…] → [1=&gt;5,…] --]
 </code></pre>
-<p>The combiner is pointwise, computed from <code>h</code>'s (<code>LawTable.pointwise</code>). The rec <code>sum</code> is the deep merge: colliding
+<p>The combiner is pointwise, computed from <code>h</code>'s (<code>Law.Helper.pointwise</code>). The rec <code>sum</code> is the deep merge: colliding
 partials append into a bag, and a bulked partial reads as its copies (the lanes' bag bulks equal ones). <code>==[_=&gt;C]</code> is
 <code>select</code>, the per-key fold. A <code>lst</code> is an atom of the merge, so an <code>order</code>'s sorted partials bag whole per key and
 <code>kmerge</code> merges the runs.</p>
 <h4>T — migrating a frame of reference</h4>
 <p><code>move()</code> relocates the <em>frame of reference</em> — the machine the code runs in — rather than moving data. It is the
 machine ring's serial <code>·</code> (<code>move</code> points the machine pointer at an existing machine, and the value flows through
-unchanged), so it is the one distributed pattern that is <strong>not a fold</strong>: no reducer, no combiner, no <code>LawTable</code>, no
+unchanged), so it is the one distributed pattern that is <strong>not a fold</strong>: no reducer, no combiner, no <code>Law.Helper</code>, no
 <code>plan::T</code>. A hand-crafted <code>rewriter</code> rule (<code>extractMove</code>) tails the code at the first remote move, ships the tail to
 that authority via <code>eval</code>, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
 tails-and-ships again — the one dumb step propagates <em>fractally</em>, machine to machine, without the origin ever
@@ -779,9 +788,9 @@ machines with different co-located resources and instruction sets.</p>
 <h3>how to add a pattern</h3>
 <p>A pattern is a declaration, not a new subsystem. The recipe, in the order the machinery consumes it:</p>
 <ol>
-<li><strong>Declare the law.</strong> A fold declares <code>monoidic</code> + <code>commutative</code> (or a <code>derivation</code>) in its instset's <code>LawTable</code>
-(<code>mInstSetLawTable</code>, <code>mathInstSetLawTable</code>): <code>entry(inst, inverse, laws…)</code>, or <code>entry(inst, inverse, derivation, laws…)</code> for a derived fold.</li>
-<li><strong>Let the combiner compute.</strong> <code>LawTable.combiner</code> reads it back — self-combining, derivation-defined, or pointwise
+<li><strong>Declare the law.</strong> A fold declares <code>monoidic</code> + <code>commutative</code> (or a <code>derivation</code>) beside itself, in its
+<code>?decq</code>: <code>InstBuilder…law(Law.monoidic, Law.commutative)</code>, or <code>.derivation(…)</code> for a derived fold.</li>
+<li><strong>Let the combiner compute.</strong> <code>Law.Helper.combiner</code> reads it back — self-combining, derivation-defined, or pointwise
 (<code>group</code>) — so no combiner is ever named.</li>
 <li><strong>Author the plan in the axes.</strong> <code>PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))</code>, then
 state each decision's three axes before the <code>where</code> they describe: the origin's tail is
@@ -796,7 +805,8 @@ on every <code>path::T</code> it can move.</li>
 the floatable run before it ships, and everything before the run stays home. It emits one branch keyed by place:
 seeded lanes under <code>branch?&lt;={0}</code> for a literal seed, and <code>&lt;prefix&gt;.branch?&lt;=T{*}&amp;split=part(&lt;p_i&gt; =&gt; &lt;run&gt;.&lt;fold&gt;, …).&lt;combiner&gt;</code> for a computed bag, which the branch deals when it runs.</li>
 <li><strong>Liveness gates it.</strong> The plan is a live out-edge only over reach (<code>Places.reachable()</code> — roster ∪ dialed peers) and
-ships only to targets that <code>serve</code> the route (<code>PlaceResolver.serves</code>: online, and the client overrides the placement's
+ships only to targets that <code>serve</code> the route (<code>PlaceResolver.serves</code>: online, and the client overrides the
+placement's
 insts). An outage <em>shrinks</em> the fan-out; it never poisons the reduction.</li>
 </ol>
 <h3>see also</h3>
@@ -804,7 +814,7 @@ insts). An outage <em>shrinks</em> the fan-out; it never poisons the reduction.<
 <li><a href="cat-instset-mtron.html">the category graph</a> — <code>object::T</code> / <code>morphism::T</code> / <code>path::T</code> / <code>plan::T</code> / <code>place::T</code>, the
 lifts a pattern is authored and matched against.</li>
 <li><a href="../metatron/references/rewrite-system-java.html">rewrite system</a> — the <code>rewriter::T</code> stage the plans run in.</li>
-<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>start</code> / <code>select</code> / <code>merge</code>, coefficients, the <code>==</code>
+<li><a href="m-instset-mtron.html">mtron language reference</a> — <code>start</code> / <code>select</code> / <code>merge</code>, coefficients, the <code>==</code>
 per-key fold.</li>
 <li><a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a> — the coefficient algebra: <code>floatable</code> / <code>blocked</code>,
 Thm 19 which <code>law_shard</code> realizes.</li>

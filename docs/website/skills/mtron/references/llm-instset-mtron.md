@@ -239,8 +239,7 @@ Because a tool is an instruction, a server is a **selection over instructions**,
 
 ```mtron
 mtron> mcp_server::[tool => [!*eval, !*eval]]@/sys/space/mcp/two_say
-==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
-                status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/two_say
+==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/two_say
 mtron> */sys/space/mcp/two_say>>tool     [-- one entry: a collection is keyed by the instruction --]
 ==>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}]
 ```

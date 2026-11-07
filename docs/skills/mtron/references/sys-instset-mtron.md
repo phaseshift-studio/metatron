@@ -386,7 +386,7 @@ text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.
-* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
+* [mtron language reference](m-instset-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
   `->` write.
 * [web instruction set](web-instset-mtron.md) — the route tables an `fsspace` mount hangs behind.
 * [tble instruction set](tble-instset-mtron.md) — the same space protocol, on a database.

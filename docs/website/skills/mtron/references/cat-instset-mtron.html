@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -503,7 +508,7 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 <h3>the first lift — types as objects (<code>object::T</code>)</h3>
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
 ==&gt;object[int]::[obj=&gt;int::T,
-                 law=&gt;[
+                 theory=&gt;[
                   ring=&gt;/m/theory/ring_theory::[
                    add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
@@ -558,10 +563,10 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
    ...
 </code></pre>
 <h4>the algebraic theories</h4>
-<p>An object can model several algebraic structures. <code>object::T&gt;&gt;law</code> is a rec keyed by the name given to each
+<p>An object can model several algebraic structures. <code>object::T&gt;&gt;theory</code> is a rec keyed by the name given to each
 instance at declaration, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy:
-the graph holds the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;law&gt;&gt;ring&gt;&gt;add</code> yields the
-inst). The first example above is the <code>int</code> case in full: its law rec declares a <code>ring</code> and the three constituent
+the graph holds the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;theory&gt;&gt;ring&gt;&gt;add</code> yields the
+inst). The first example above is the <code>int</code> case in full: its theory rec declares a <code>ring</code> and the three constituent
 group/monoid instances. <code>theory::T</code> is the nominal super-type grouping them:</p>
 <table>
 <thead>
@@ -708,8 +713,9 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 </tbody>
 </table>
 <h4>the process laws</h4>
-<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from <code>mInstSetLawTable</code> (the declared process
-laws):</p>
+<p>The morphism's <code>law</code> field is a set of <strong>process</strong> law labels served from the instruction's <code>?decq</code> declaration (the
+declared
+process laws):</p>
 <pre><code class="language-mtron">mtron&gt; |plus?int&lt;=int(int::T).as(morphism::T)&gt;&gt;law
 ==&gt;[commutative,
     right_distributive,
@@ -755,7 +761,7 @@ code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leads
 — the <em>location</em> direction — moves code <em>across places</em>: that is Theorem 19's semi-right distributivity, which
 <code>law_shard</code> realizes — worked out below in the third lift, where the fold is actually partitioned.</p>
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
-<img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/cat-rewrites.png" alt="declarations funnel through ?decq into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 <table>
 <thead>
 <tr><th>rewrite</th><th>reads</th><th>rule</th></tr>
@@ -836,6 +842,8 @@ mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&g
 ==&gt;&quot;&quot;&quot;
     op     dom          rng     args  f    desc     c_dom  c_rng 
     start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
+    plus   int::T       int::T  0     &lt;j&gt;  mapper   {1}    {1}   
+    mult   int::T       int::T  1     &lt;j&gt;  mapper   {1}    {1}   
     minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
     mult   int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
     div    int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
@@ -967,31 +975,146 @@ The <code>==</code> between segments is a structural <code>select</code> — eac
 previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == [lower₂]</code> reads as a chain of witnesses. The
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           theory_involution=&gt;plan::[
-            name=&gt;theory_involution,
-            cut=&gt;[law=&gt;[involution]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[
-            name=&gt;derivation_contraction,
-            cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(0),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(0)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[commutative,right_distributive,action,pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      class=&gt;(==&gt;{?}class)=&gt;[endo]=&gt;==&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
-==&gt;[path::[obj=&gt;start(5).plus(0),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[
-            name=&gt;derivation_contraction,
-            cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(0),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(0)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[commutative,right_distributive,action,pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      class=&gt;(==&gt;{?}class)=&gt;[endo]=&gt;==&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
-==&gt;[path::[obj=&gt;start(5)]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(0),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(0)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[commutative,right_distributive,action,pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      class=&gt;(==&gt;{?}class)=&gt;[endo]=&gt;==&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
@@ -1016,46 +1139,46 @@ derives its rewrite. The guard reads the laws/forms/theories off the word (<code
 and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[abstraction::[obj=&gt;[
-                   morphism[start?args=[/m/int]]::[
-                    name=&gt;start,
-                    form=&gt;initial,
-                    src=&gt;!λ#(){&lt;j&gt;},
-                    trgt=&gt;!λ#(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;start(5)],
-                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
-                    name=&gt;plus,
-                    form=&gt;mapper,
-                    class=&gt;[endo],
-                    src=&gt;!λint(){&lt;j&gt;},
-                    trgt=&gt;!λint(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;plus(0),
-                    ...(1 more)],
-                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                    name=&gt;neg,
-                    form=&gt;mapper,
-                    class=&gt;[
-                     endo,
-                     iso,
-                     auto,
-                     section,
-                     retraction,
-                     mono,
-                     epi],
-                    src=&gt;!λint(){&lt;j&gt;},
-                    trgt=&gt;!λint(){&lt;j&gt;},
-                    analysis=&gt;!λ(){&lt;j&gt;},
-                    obj=&gt;neg(),
-                    ...(1 more)],
-                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                    name=&gt;neg,
-                    form=&gt;mapper,
-                    class=&gt;[
-                     endo,
-                     iso,
-                     auto,
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(0),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(0)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
@@ -1107,51 +1230,68 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               on_message=&gt;print('received ${_}')]
+==&gt;[host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           derivation_contraction=&gt;plan::[
-            name=&gt;derivation_contraction,
-            cut=&gt;[role=&gt;derivation],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           law_shard=&gt;plan::[
-            name=&gt;law_shard,
-            cut=&gt;[
-             form=&gt;reducer,
-             law=&gt;[monoidic,commutative]],
-            where=&gt;[
-             [
-              place=&gt;[local],
-              hop=&gt;0,
-              split=&gt;stream,
-              span=&gt;[[span=&gt;at],[span=&gt;post]]],
-             [
-              place=&gt;[peer],
-              hop=&gt;1,
-              split=&gt;stream,
-              span=&gt;[
-               [span=&gt;seed,flags=&gt;[partition]],
-               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
-               [span=&gt;at]],
-              inst=&gt;[/m/inst/eval]]]]]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(10),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(10)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[commutative,right_distributive,action,pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      class=&gt;(==&gt;{?}class)=&gt;[endo]=&gt;==&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 </code></pre>
 <p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
 monoidic reducers are <strong>semi-right distributive</strong>,
@@ -1166,61 +1306,104 @@ same algebra that says \(x + 0 \leadsto x\) (a time rewrite) says \((a+b)\cdot r
 <code>&gt;&gt;law_shard</code>. Its output is the same <code>path::T</code>, its <code>obj</code> now the distributed layout: one <code>branch</code> keyed by place,
 whose lanes carry their part of the seed (<code>start(part)</code>), the floatable run and a fold stating the remaining hop budget
 (<code>sum?hop=0</code> at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
-partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it
+again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]],
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           branch_collapse=&gt;plan::[
-            name=&gt;branch_collapse,
-            cut=&gt;[role=&gt;add],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           branch_inline=&gt;plan::[
-            name=&gt;branch_inline,
-            cut=&gt;[role=&gt;zero],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           theory_involution=&gt;plan::[
-            name=&gt;theory_involution,
-            cut=&gt;[law=&gt;[involution]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           law_idempotent=&gt;plan::[
-            name=&gt;law_idempotent,
-            cut=&gt;[law=&gt;[idempotent]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           ...(7 more)]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]::T
+     [[name=&gt;plus,
+      form=&gt;mapper,
+      class=&gt;[endo],
+      src=&gt;!λint(){&lt;j&gt;},
+      trgt=&gt;!λint(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;plus(10),
+      law=&gt;[
+       commutative,
+       right_distributive,
+       action,
+       pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/plus?rng=/m/int&amp;dom=/m/int&amp;args=[/m/int]]
+     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;plus(10)=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;mapper=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λint()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λint()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ(),inverse=&gt;/m/inst/minus?rng=/m/int&amp;dom=/m/int]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[commutative,right_distributive,action,pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      class=&gt;(==&gt;{?}class)=&gt;[endo]=&gt;==&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 </code></pre>
-<p>A keyed fold lowers the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the partial recs and
+<p>A keyed fold lowers the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the partial
+recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=&gt;/m/inst/sum()])).sum().select([id()=&gt;sum()]),
-           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]],
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
-           branch_collapse=&gt;plan::[
-            name=&gt;branch_collapse,
-            cut=&gt;[role=&gt;add],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           branch_inline=&gt;plan::[
-            name=&gt;branch_inline,
-            cut=&gt;[role=&gt;zero],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           theory_involution=&gt;plan::[
-            name=&gt;theory_involution,
-            cut=&gt;[law=&gt;[involution]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           law_idempotent=&gt;plan::[
-            name=&gt;law_idempotent,
-            cut=&gt;[law=&gt;[idempotent]],
-            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]],
-           ...(7 more)]]
+==&gt;[fail::[asRec onto a fail: inst apply failure: obj does not match /m/math/cat/category/morphism[/m/inst/group?rng=/m/rec&amp;dom=A{*}&amp;args=[/m/rec]]::T
+     [[name=&gt;group,
+      form=&gt;reducer,
+      src=&gt;!λA(){&lt;j&gt;},
+      trgt=&gt;!λrec(){&lt;j&gt;},
+      analysis=&gt;!λ(){&lt;j&gt;},
+      obj=&gt;group([mod(3)=&gt;sum()]),
+      law=&gt;[pure]]
+         X=&gt;
+     category::T[?[obj=&gt;inst::T,
+                   form=&gt;union(initial,
+                               terminal,
+                               fork,
+                               join,
+                               reducer,
+                               gather,
+                               scatter,
+                               catcher,
+                               filter,
+                               mapper,
+                               flatmapper,
+                               typer,
+                               standard),
+                   {?}src=&gt;!*/m/math/cat/category/object,
+                   {?}trgt=&gt;!*/m/math/cat/category/object,
+                   {?}analysis=&gt;rec::T,
+                   {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                   {?}class=&gt;[rec::T[?union(endo,auto,iso,mono,epi,section,retraction)]@/m/math/cat/class],
+                   {?}derivation=&gt;[lhs=&gt;code::T,rhs=&gt;code::T]]][ctor?morphism&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/morphism[/m/inst/group?rng=/m/rec&amp;dom=A{*}&amp;args=[/m/rec]]
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [obj=&gt;(==&gt;obj)=&gt;group([/m/inst/mod(3)=&gt;/m/inst/sum()])=&gt;==&gt;#::T,
+      form=&gt;(==&gt;form)=&gt;reducer=&gt;==&gt;union(initial,terminal,fork,join,reducer,gather,scatter,catcher,filter,mapper,flatmapper,typer,standard),
+      src=&gt;(==&gt;{?}src)=&gt;!λA()=&gt;==&gt;object::T,
+      trgt=&gt;(==&gt;{?}trgt)=&gt;!λrec()=&gt;==&gt;object::T,
+      analysis=&gt;(==&gt;{?}analysis)=&gt;[family=&gt;!λ(),contested=&gt;!λ(),orbit=&gt;!λ(),position=&gt;!λ()]=&gt;==&gt;rec::T,
+      law=&gt;(==&gt;{?}law)=&gt;[pure]=&gt;==&gt;[uri{+}::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@law],
+      noobj=&gt;(==&gt;{?}class)=&gt;noobj=&gt;/=&gt;[rec{+}::T[?/m/inst/union(endo,auto,iso,mono,epi,section,retraction)]@class],
+      noobj=&gt;(==&gt;{?}derivation)=&gt;noobj=&gt;/=&gt;[lhs=&gt;code::T,rhs=&gt;code::T],
+      noobj=&gt;(==&gt;{?}instset)=&gt;noobj=&gt;/=&gt;[uri::T],
+      noobj=&gt;(==&gt;{?}orbit)=&gt;noobj=&gt;/=&gt;category::T]]
+     predicate apply failed on execution (at /m/inst/ctor)]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1236,8 +1419,8 @@ decided by reading the abstraction, are claims quantified over that set in one o
 </table>
 <p>Thus, the degree ordering \(\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))\) holds: the abstraction licenses
 a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge
-is a must-edge. Refinement is <strong>edge-antitone</strong> (order-reversing) — descending the rungs
-(\(\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)\))
+is a must-edge. Refinement is <strong>edge-antitone</strong> (order-reversing) — descending the rungs ($\mathrm{plus (int)} \to
+\mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)$)
 shrinks the fiber and discharges the ◇ into a □. A rule becomes <em>exact</em> at the rung whose type absorbs its residue.
 Counting instances rather than rules, the ordering reverses: one licensed move fans out to one concrete edge per
 match <em>site</em>, so the abstraction licenses more kinds of moves while the path licenses more copies of fewer kinds.</p>
@@ -1254,9 +1437,7 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[
-            http://localhost:8777,
-            ws://localhost:8555],
+           authority=&gt;[ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]
@@ -1323,7 +1504,8 @@ reaches the peer through the run-time dispatch.</p>
 candidate (<strong>declared</strong>) when some authority's scheme has a dialer in the ISA — <code>Signatures.resolves(scheme)</code>, the
 <code>ws → ws_client</code>, <code>http</code>/<code>https → http_client</code>, <code>loop → id_client</code> table, read with no dial attempted. A dialed peer
 can <em>take</em> a placement (<strong>realized</strong>) when its client <strong>overrides every instruction the placement requires</strong> and is
-<code>online</code> — <code>PlaceResolver.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an <code>http_client</code>
+<code>online</code> — <code>PlaceResolver.serves(peer, placement)</code>. A distributing placement ships through <code>to</code> + <code>eval</code>, so an
+<code>http_client</code>
 (no <code>eval</code>) is not a shard target; an offline peer is not a target either, so an outage <em>shrinks</em> the fan-out rather
 than poisoning the reduction.</p>
 <p><code>law_shard</code> fans out over the surviving set: <code>shardTargets</code> keeps only <strong>dialed</strong> peers (they carry a <code>host</code> — the
@@ -1373,7 +1555,7 @@ are future work.</p>
 <h3>see also</h3>
 <ul>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, coefficients, nominal vs structural, casting.</li>
-<li><a href="language-reference-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
+<li><a href="m-instset-mtron.html">mtron language reference</a> — <code>.as(type::T)</code>, <code>&gt;&gt;</code> rshift, coefficients.</li>
 <li><a href="math-instset-mtron.html">math instruction set</a> — <code>/m/math</code>, where the category and its theories live.</li>
 <li><a href="../metatron/references/rewrite-system-java.html">rewrite system</a> — the <code>rewriter::T</code> stage and rewrite instructions.</li>
 <li><a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a> — the coefficient algebra the laws speak:

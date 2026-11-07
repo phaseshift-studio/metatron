@@ -198,7 +198,8 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 
 ### the process laws
 
-The morphism's `law` field is a set of **process** law labels served from the instruction's `?decq` declaration (the declared
+The morphism's `law` field is a set of **process** law labels served from the instruction's `?decq` declaration (the
+declared
 process laws):
 
 ```mtron_pre
@@ -541,7 +542,8 @@ Finally, the inst `lower?path<=path(plan)` applies a plan read off the path's ou
 `>>law_shard`. Its output is the same `path::T`, its `obj` now the distributed layout: one `branch` keyed by place,
 whose lanes carry their part of the seed (`start(part)`), the floatable run and a fold stating the remaining hop budget
 (`sum?hop=0` at a leaf — the depth rides the fold, never the seed). Each lane runs at its roster member, and the lanes'
-partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it again over its own peers, so the shards
+partials recombine at home through the reducer's combiner (Thm 19). A peer handed a shard with budget left plans it
+again over its own peers, so the shards
 form a tree. The plan — not its
 application — is data, so the rewrite *schedule* and the out-edge
 that licenses it are the same value: every rule is `lower(plan::T)`, and the rewrite table is the category itself.
@@ -550,7 +552,8 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
 ```
 
-A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial recs and
+A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial
+recs and
 `select([_=>sum()])` folds each key (see *the deep merge*).
 
 ```mtron_pre
@@ -569,8 +572,8 @@ decided by reading the abstraction, are claims quantified over that set in one o
 
 Thus, the degree ordering $\mathrm{edges} (p) \subseteq \mathrm{edges} (\alpha (p))$ holds: the abstraction licenses
 a move for the whole fiber when a rule's type-part matches its morphisms, and equality holds exactly when every edge
-is a must-edge. Refinement is **edge-antitone** (order-reversing) — descending the rungs
-($\mathrm{plus (int)} \to \mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)$)
+is a must-edge. Refinement is **edge-antitone** (order-reversing) — descending the rungs ($\mathrm{plus (int)} \to
+\mathrm{plus?int \le int (int{::}T)} \to \mathrm{plus} (0)$)
 shrinks the fiber and discharges the ◇ into a □. A rule becomes *exact* at the rung whose type absorbs its residue.
 Counting instances rather than rules, the ordering reverses: one licensed move fans out to one concrete edge per
 match *site*, so the abstraction licenses more kinds of moves while the path licenses more copies of fewer kinds.
@@ -656,7 +659,8 @@ Distribution liveness has the same declared/realized split as a-priori pruning, 
 candidate (**declared**) when some authority's scheme has a dialer in the ISA — `Signatures.resolves(scheme)`, the
 `ws → ws_client`, `http`/`https → http_client`, `loop → id_client` table, read with no dial attempted. A dialed peer
 can *take* a placement (**realized**) when its client **overrides every instruction the placement requires** and is
-`online` — `PlaceResolver.serves(peer, placement)`. A distributing placement ships through `to` + `eval`, so an `http_client`
+`online` — `PlaceResolver.serves(peer, placement)`. A distributing placement ships through `to` + `eval`, so an
+`http_client`
 (no `eval`) is not a shard target; an offline peer is not a target either, so an outage *shrinks* the fan-out rather
 than poisoning the reduction.
 
@@ -669,11 +673,11 @@ so nothing is dropped and nothing is computed twice.
 
 Three location fields, three questions — easy to conflate because two share the name `where`:
 
-| field    | on               | computed by                                                                                    | the question it answers                                                                           |
-|----------|------------------|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable        |
-| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `branch`'s keys   |
-| `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                              |
+| field    | on               | computed by                                                                                    | the question it answers                                                                    |
+|----------|------------------|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `origin` | `path::T`        | `Places.self()` at lift                                                                        | where the code **starts** — this machine's listeners (`//0.0.0.0`); absent → not placeable |
+| `where`  | `path::T`        | `realizedWhere()` after a distribution                                                         | where it **went** — `{[span=>at] => [place…]}`, read back off the emitted `branch`'s keys  |
+| `where`  | `abstraction::T` | `placeWord()` — `Places.reachable()`, or the realized `path.where` places after a distribution | where it **can go** — roster ∪ dialed peers (the α place-class word)                       |
 
 `Places.reachable()` deliberately excludes the origin — it is where the code starts, not where it can go. The
 `path::T.where` is the *realized* placement (the shard actually shipped); the `abstraction::T.where` is the *reach* a
@@ -714,7 +718,7 @@ are future work.
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, nominal vs structural, casting.
-* [mtron language reference](language-reference-mtron.md) — `.as(type::T)`, `>>` rshift, coefficients.
+* [mtron language reference](m-instset-mtron.md) — `.as(type::T)`, `>>` rshift, coefficients.
 * [math instruction set](math-instset-mtron.md) — `/m/math`, where the category and its theories live.
 * [rewrite system](../metatron/references/rewrite-system-java.md) — the `rewriter::T` stage and rewrite instructions.
 * [Stream Ring Theory](../../../articles/stream-ring-theory.html) — the coefficient algebra the laws speak:

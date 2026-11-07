@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
-                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -512,6 +517,7 @@ the core instruction set of metatron containing the base types and useful instru
                pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                obj=&gt;/m/instset::[=&gt;]]],
              pattern=&gt;/m/#,
+             const=&gt;[,],
              type=&gt;[
               &lt;#&gt;::T,
               bool::T,
@@ -549,6 +555,14 @@ the core instruction set of metatron containing the base types and useful instru
                desc=&gt;str::T,
                {?}build=&gt;str::T,
                {?}example=&gt;lst::T]][ctor?docs&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq/docs,
+              rec::T[?[
+               obj=&gt;&lt;#&gt;::T,
+               {?}theory=&gt;&lt;#&gt;::T,
+               {?}law=&gt;&lt;#&gt;::T,
+               {?}inverse=&gt;&lt;#&gt;::T,
+               {?}derivation=&gt;&lt;#&gt;::T,
+               {?}form=&gt;&lt;#&gt;::T,
+               {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs,
               qproc::T[][ctor?docq&lt;=(#{*}::T){&lt;j&gt;}]@/m/qproc/docq,
               qproc::T[][ctor?mintq&lt;=(){&lt;j&gt;}]@/m/qproc/mintq,
               qproc::T[][ctor?shortq&lt;=(){&lt;j&gt;}]@/m/qproc/shortq,
@@ -588,7 +602,6 @@ the core instruction set of metatron containing the base types and useful instru
               lt?bool&lt;=int(int::T){&lt;j&gt;},
               lte?bool&lt;=int(int::T){&lt;j&gt;},
               prod?int&lt;=int{*}(){&lt;j&gt;},
-              order?lst[int{*}]&lt;=int{*}(){&lt;j&gt;},
               sum?int&lt;=int{*}(){&lt;j&gt;},
               mult?int&lt;=int(int::T){&lt;j&gt;},
               minus?int&lt;=int(int::T){&lt;j&gt;},
@@ -703,12 +716,14 @@ the core instruction set of metatron containing the base types and useful instru
               as?lst&lt;=code(lst::T){&lt;j&gt;},
               as?inst&lt;=code(inst::T){&lt;j&gt;},
               compose?code&lt;=code(code::T){&lt;j&gt;},
+              update?code&lt;=code(rec::T){&lt;j&gt;},
               end?{0}&lt;=code(){&lt;j&gt;},
               id?code&lt;=code(){&lt;j&gt;},
               neg?code&lt;=code(){&lt;j&gt;},
               plus?code&lt;=code(code::T){&lt;j&gt;},
               id?A&lt;=A(){&lt;j&gt;},
               branch?B{*}&lt;=A(uri::T=&gt;B{+}::T){&lt;j&gt;},
+              order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
               swap?A&lt;=A(B::T){&lt;j&gt;},
               *uri::T,
               profile?/m/inst/profile/profiling&lt;=(){&lt;j&gt;},
@@ -730,6 +745,7 @@ the core instruction set of metatron containing the base types and useful instru
               split?lst&lt;=uri(uri::T){&lt;j&gt;},
               args?lst&lt;=inst(){&lt;j&gt;},
               as?code&lt;=inst(code::T){&lt;j&gt;},
+              update?inst&lt;=inst(rec::T){&lt;j&gt;},
               as?lst&lt;=rel(lst::T){&lt;j&gt;},
               as?rec&lt;=rel(rec::T){&lt;j&gt;},
               merge?rec&lt;=rel{*}(rec::T){&lt;j&gt;},
@@ -754,7 +770,6 @@ the core instruction set of metatron containing the base types and useful instru
               serialize?B&lt;=A(/m/web::T){&lt;j&gt;},
               fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;},
               range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;},
-              order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;},
               kmerge?lst[A{*}]&lt;=lst[A{*}]{*}(#::T){&lt;j&gt;},
               via?B&lt;=A(rel::T){&lt;j&gt;},
               as?{0}&lt;=A(){&lt;j&gt;},
@@ -828,19 +843,22 @@ the core instruction set of metatron containing the base types and useful instru
               cc?A{*}&lt;=A(int::T){&lt;j&gt;},
               throw?fail&lt;=#{*}(#{?}::T){&lt;j&gt;},
               parent?#{?}&lt;=#(){&lt;j&gt;},
-              count?int&lt;=#{*}(){&lt;j&gt;},
+              count?int&lt;=A{*}(){&lt;j&gt;},
               skip?&lt;=#{*}(int::T){&lt;j&gt;},
               take?&lt;=#{*}(int::T){&lt;j&gt;},
               update?B{*}&lt;=A(B{*}::T){&lt;j&gt;},
               explain?/m/inst/explain/explanation&lt;=(){&lt;j&gt;},
               reify?rec&lt;=A(){&lt;j&gt;},
               reduce?A&lt;=A{*}(#{?}::T){&lt;j&gt;},
-              group?rec&lt;=#{*}(rec::T){&lt;j&gt;},
+              group?rec&lt;=A{*}(rec::T){&lt;j&gt;},
               eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
               parse(str::T){&lt;j&gt;},
               rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               lshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;},
               start?A{**}&lt;={0}(A{**}::T){&lt;j&gt;},
+              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
+              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
+              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
               isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;},
               isa?rel{?}&lt;=rel(#{**}::T){&lt;j&gt;},
               isa?rec{?}&lt;=rec(#{**}::T){&lt;j&gt;},
@@ -849,14 +867,10 @@ the core instruction set of metatron containing the base types and useful instru
               isa?code{?}&lt;=code(#{**}::T){&lt;j&gt;},
               isa?bytes{?}&lt;=bytes(#{**}::T){&lt;j&gt;},
               isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;},
-              isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;},
-              isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;},
-              isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;},
               save?#&lt;=#(){&lt;j&gt;},
               ctor(),
               lcd?#{?}&lt;=(#{*}::T){&lt;j&gt;},
-              as?str&lt;=docs(str::T){&lt;j&gt;}],
-             const=&gt;[,]]@/m</code></pre>
+              as?str&lt;=docs(str::T){&lt;j&gt;}]]@/m</code></pre>
                     </div>
                 </div>
             </div>
@@ -864,7 +878,7 @@ the core instruction set of metatron containing the base types and useful instru
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">48</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">353</span></a><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
+        <button class="btn btn-outline-secondary" disabled>consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">types <span class="pill-label badge bg-primary">49</span></a><a href="#spaces" class="btn btn-outline-primary">spaces <span class="pill-label badge bg-info">3</span></a><a href="#instructions" class="btn btn-outline-primary">insts <span class="pill-label badge bg-success">354</span></a><button class="btn btn-outline-secondary" disabled>external definition <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">rewrites <span class="pill-label badge bg-warning">9</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -1002,6 +1016,9 @@ the core instruction set of metatron containing the base types and useful instru
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">inst&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">profile</small></div></div><div class="d-flex flex-wrap"><a href="#__m__inst__profile__profiling" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">profiling</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">qproc&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">decq</small></div></div><div class="d-flex flex-wrap"><a href="#__m__qproc__decq__decs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">decs</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">qproc&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">docq</small></div></div><div class="d-flex flex-wrap"><a href="#__m__qproc__docq__docs" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">docs</span>
@@ -1400,7 +1417,7 @@ the core instruction set of metatron containing the base types and useful instru
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">48</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">49</span></h3>
     <div class="card mb-3" id="__m__uri__authority">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1444,7 +1461,7 @@ the core instruction set of metatron containing the base types and useful instru
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__bool-theories" role="tabpanel" aria-labelledby="algebra-__m__bool-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__boolean_theory"><span class="theory-chip theory-boolean">boolean</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__boolean_theory">boolean_theory</a><span class="algebra-theory-desc">the theory of Boolean algebras \(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">or</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">and</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">not</th><td><span class="algebra-value">{not?bool&lt;=bool(){&lt;j&gt;},not?bool&lt;=#(#{?}::T){&lt;j&gt;}}</span></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">false</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">true</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__rig_theory"><span class="theory-chip theory-rig">rig</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__rig_theory">rig_theory</a><span class="algebra-theory-desc">the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">false</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">true</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__lattice_theory"><span class="theory-chip theory-lattice">lattice</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__lattice_theory">lattice_theory</a><span class="algebra-theory-desc">the theory of lattices \(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">meet</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">join</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">bottom</th><td><span class="algebra-value">false</span></td></tr><tr><th class="algebra-role">top</th><td><span class="algebra-value">true</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__bool-mtron" role="tabpanel" aria-labelledby="algebra-__m__bool-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[bool]::[obj=&gt;bool::T,
-               law=&gt;[
+               theory=&gt;[
                 boolean=&gt;/m/theory/boolean_theory::[
                  or=&gt;plus?bool&lt;=bool(bool::T){&lt;j&gt;},
                  and=&gt;mult?bool&lt;=bool(bool::T){&lt;j&gt;},
@@ -1489,45 +1506,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                not=&gt;inst::T,
                zero=&gt;&lt;#&gt;::T,
                one=&gt;&lt;#&gt;::T]]@/m/theory/boolean_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__boolean_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__boolean_theory" aria-label="boolean_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">boolean_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__boolean_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__boolean_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__boolean_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__boolean_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__boolean_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__boolean_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__boolean_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__boolean_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__boolean_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__boolean_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/boolean_theory]::[
- obj=&gt;/m/theory::T[?[
-  or=&gt;inst::T,
-  and=&gt;inst::T,
-  not=&gt;inst::T,
-  zero=&gt;&lt;#&gt;::T,
-  one=&gt;&lt;#&gt;::T]]@/m/theory/boolean_theory,
- law=&gt;[law=&gt;[monoidic,
-             unit,
-             commutative,
-             idempotent,
-             involution,
-             complement,
-             left_distributive,
-             right_distributive]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of Boolean algebras \(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</p>
@@ -1561,7 +1540,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__bytes-theories" role="tabpanel" aria-labelledby="algebra-__m__bytes-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-concat_monoid">concat_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0x</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__bytes-mtron" role="tabpanel" aria-labelledby="algebra-__m__bytes-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[bytes]::[obj=&gt;bytes::T,
-                law=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
+                theory=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
                  op=&gt;plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;},
                  id=&gt;0x]],
                 morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -1582,7 +1561,7 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">code::T</span>
-            <span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = noobj, id = noobj, inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = compose, id = id</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span><span class="chip-tip-roles">add = plus, mul = compose, zero = noobj, one = id</span></span></span>
+            <span class="theory-chip theory-group">group<span class="chip-tip"><span class="chip-tip-name">group</span><span class="chip-tip-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span><span class="chip-tip-roles">op = branch, id = end, inv = neg</span></span></span><span class="theory-chip theory-monoid">monoid<span class="chip-tip"><span class="chip-tip-name">monoid</span><span class="chip-tip-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span><span class="chip-tip-roles">op = compose, id = id</span></span></span><span class="theory-chip theory-ring">ring<span class="chip-tip"><span class="chip-tip-name">ring</span><span class="chip-tip-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span><span class="chip-tip-roles">add = plus, mul = compose, zero = end, one = id</span></span></span>
         </span>
         <small class="text-muted code">/m/code</small>
     </div>
@@ -1605,17 +1584,17 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__code-theories" role="tabpanel" aria-labelledby="algebra-__m__code-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__compose"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">compose()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">noobj()</code></pre></span></td></tr><tr><th class="algebra-role">one</th><td><a class="text-decoration-none" href="m.html#__m__inst__id"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">id()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><span class="algebra-value"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">noobj()</code></pre></span></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">noobj()</code></pre></span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__compose"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">compose()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><a class="text-decoration-none" href="m.html#__m__inst__id"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">id()</code></pre></a></td></tr></table></div></div></div>
+        <div class="tab-pane fade show active" id="algebra-__m__code-theories" role="tabpanel" aria-labelledby="algebra-__m__code-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__compose"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">compose()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><a class="text-decoration-none" href="m.html#__m__inst__end"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">end()</code></pre></a></td></tr><tr><th class="algebra-role">one</th><td><a class="text-decoration-none" href="m.html#__m__inst__id"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">id()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__branch"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">branch()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><a class="text-decoration-none" href="m.html#__m__inst__end"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">end()</code></pre></a></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__compose"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">compose()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><a class="text-decoration-none" href="m.html#__m__inst__id"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">id()</code></pre></a></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__code-mtron" role="tabpanel" aria-labelledby="algebra-__m__code-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[code]::[obj=&gt;code::T,
-               law=&gt;[
+               theory=&gt;[
                 ring=&gt;/m/theory/ring_theory::[
                  add=&gt;plus?code&lt;=code(code::T){&lt;j&gt;},
                  mul=&gt;compose?code&lt;=code(code::T){&lt;j&gt;},
-                 zero=&gt;!*/m/inst/end?rng=/m/code&amp;dom=/m/code,
+                 zero=&gt;end?{0}&lt;=code(){&lt;j&gt;},
                  one=&gt;id?code&lt;=code(){&lt;j&gt;}],
                 add_group=&gt;/m/theory/group_theory::[
-                 op=&gt;!*/m/inst/branch?rng=/m/code&amp;dom=/m/code,
-                 id=&gt;!*/m/inst/end?rng=/m/code&amp;dom=/m/code,
+                 op=&gt;branch?B{*}&lt;=A(uri::T=&gt;B{+}::T){&lt;j&gt;},
+                 id=&gt;end?{0}&lt;=code(){&lt;j&gt;},
                  inv=&gt;neg?code&lt;=code(){&lt;j&gt;}],
                 mult_monoid=&gt;/m/theory/monoid_theory::[
                  op=&gt;compose?code&lt;=code(code::T){&lt;j&gt;},
@@ -1651,6 +1630,26 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
  {?}post_read=&gt;inst::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> prevents the vid from being mutated once set</p>
+</div>
+</div><div class="card mb-3" id="__m__qproc__decq__decs">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">decs::T</span>
+            <span class="ms-2">refines <a href="#__m__rec" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/rec::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/qproc/decq/decs</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[obj=&gt;&lt;#&gt;::T,
+         {?}theory=&gt;&lt;#&gt;::T,
+         {?}law=&gt;&lt;#&gt;::T,
+         {?}inverse=&gt;&lt;#&gt;::T,
+         {?}derivation=&gt;&lt;#&gt;::T,
+         {?}form=&gt;&lt;#&gt;::T,
+         {?}inst=&gt;&lt;#&gt;::T]]@/m/qproc/decq/decs</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-structural">structural</span> an algebraic declaration to attach to objs and access via decq query processor</p>
 </div>
 </div><div class="card mb-3" id="__m__qproc__docq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1784,43 +1783,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
                zero=&gt;&lt;#&gt;::T,
                one=&gt;&lt;#&gt;::T,
                inv=&gt;inst::T]]@/m/theory/field_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__field_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__field_theory" aria-label="field_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">field_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__field_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__field_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__field_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__field_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__field_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__field_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__field_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__field_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__field_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__field_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/field_theory]::[
- obj=&gt;/m/theory::T[?[
-  add=&gt;inst::T,
-  mul=&gt;inst::T,
-  zero=&gt;&lt;#&gt;::T,
-  one=&gt;&lt;#&gt;::T,
-  inv=&gt;inst::T]]@/m/theory/field_theory,
- law=&gt;[law=&gt;[monoidic,
-             unit,
-             commutative,
-             involution,
-             left_distributive,
-             right_distributive]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</p>
@@ -1834,33 +1797,7 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9     --]</code></pre>
         <small class="text-muted code">/m/theory/group_theory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T,inv=&gt;inst::T]]@/m/theory/group_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__group_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__group_theory" aria-label="group_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">group_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__group_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__group_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__group_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__group_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__group_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__group_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__group_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__group_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__group_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__group_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/group_theory]::[
- obj=&gt;/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T,inv=&gt;inst::T]]@/m/theory/group_theory,
- law=&gt;[law=&gt;[monoidic,unit,involution]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</p>
@@ -1960,7 +1897,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__int-theories" role="tabpanel" aria-labelledby="algebra-__m__int-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">0</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">1</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">1</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__int-mtron" role="tabpanel" aria-labelledby="algebra-__m__int-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[int]::[obj=&gt;int::T,
-              law=&gt;[
+              theory=&gt;[
                ring=&gt;/m/theory/ring_theory::[
                 add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                 mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
@@ -2002,37 +1939,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
                join=&gt;inst::T,
                bottom=&gt;&lt;#&gt;::T,
                top=&gt;&lt;#&gt;::T]]@/m/theory/lattice_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__lattice_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__lattice_theory" aria-label="lattice_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">lattice_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__lattice_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__lattice_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__lattice_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__lattice_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__lattice_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__lattice_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__lattice_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__lattice_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__lattice_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__lattice_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/lattice_theory]::[
- obj=&gt;/m/theory::T[?[
-  meet=&gt;inst::T,
-  join=&gt;inst::T,
-  bottom=&gt;&lt;#&gt;::T,
-  top=&gt;&lt;#&gt;::T]]@/m/theory/lattice_theory,
- law=&gt;[law=&gt;[monoidic,unit,commutative,idempotent]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of lattices \(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</p>
@@ -2159,7 +2066,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__lst-theories" role="tabpanel" aria-labelledby="algebra-__m__lst-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-concat_monoid">concat_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">[,]</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__lst-mtron" role="tabpanel" aria-labelledby="algebra-__m__lst-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[lst]::[obj=&gt;lst::T,
-              law=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
+              theory=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
                op=&gt;plus?lst&lt;=lst(lst::T){&lt;j&gt;},
                id=&gt;[,]]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -2227,33 +2134,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
         <small class="text-muted code">/m/theory/monoid_theory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/theory/monoid_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__monoid_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__monoid_theory" aria-label="monoid_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">monoid_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__monoid_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__monoid_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__monoid_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__monoid_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__monoid_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__monoid_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__monoid_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__monoid_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__monoid_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__monoid_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/monoid_theory]::[
- obj=&gt;/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/theory/monoid_theory,
- law=&gt;[law=&gt;[monoidic,unit]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</p>
@@ -2267,33 +2148,7 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
         <small class="text-muted code">/m/theory/near_ring_theory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/theory/near_ring_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__near_ring_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__near_ring_theory" aria-label="near_ring_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">near_ring_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__near_ring_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__near_ring_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__near_ring_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__near_ring_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__near_ring_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__near_ring_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__near_ring_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__near_ring_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__near_ring_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__near_ring_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/near_ring_theory]::[
- obj=&gt;/m/theory::T[?[add=&gt;inst::T,mul=&gt;inst::T,zero=&gt;&lt;#&gt;::T]]@/m/theory/near_ring_theory,
- law=&gt;[law=&gt;[monoidic,left_distributive]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of near-rings \(\langle N, +, \cdot, 0 \rangle\): \(+\) a group, \(\cdot\) a semigroup, one-sided distributivity, no multiplicative \(1\) (reserved for barrier types)</p>
@@ -2385,7 +2240,8 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
     <p class="mb-0 text-light"> a structured profile report produced by profile()</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
+  <a href="#per_inst" class="text-light">per_inst</a> <span class="text-light">=&gt;</span> <a href="#'per-instruction monad__coefficient flow + time'" class="text-info">coefficient flow + time&#39;</a>
   <a href="#apply" class="text-light">apply</a> <span class="text-light">=&gt;</span> <a href="#'processor sub-stages (split__apply__next)'" class="text-info">next)&#39;</a>
   <a href="#cache" class="text-light">cache</a> <span class="text-light">=&gt;</span> <a href="#'type-graph cache hit__miss__hit-rate'" class="text-info">hit-rate&#39;</a>
   <a href="#insts" class="text-light">insts</a> <span class="text-light">=&gt;</span> <a href="#'the resolved instruction count'" class="text-info">&#39;the resolved instruction count&#39;</a>
@@ -2393,7 +2249,6 @@ cs:src/#?lockq -&gt; noobj                                             [-- relea
   <a href="#format" class="text-light">format</a> <span class="text-light">=&gt;</span> <a href="#'lazily constructed pretty print format'" class="text-info">&#39;lazily constructed pretty print format&#39;</a>
   <a href="#flow" class="text-light">flow</a> <span class="text-light">=&gt;</span> <a href="#'bulk-compression flow (monads propagated vs coefficient sum)'" class="text-info">&#39;bulk-compression flow (monads propagated vs coefficient sum)&#39;</a>
   <a href="#rewrite" class="text-light">rewrite</a> <span class="text-light">=&gt;</span> <a href="#'per-rewrite-rule instruction reduction (rules + net total)'" class="text-info">&#39;per-rewrite-rule instruction reduction (rules + net total)&#39;</a>
-  <a href="#resolve" class="text-light">resolve</a> <span class="text-light">=&gt;</span> <a href="#'resolve sub-stages (inst-resolve__generic-binding__inst-composition)'" class="text-info">inst-composition)&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2478,7 +2333,7 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__real-theories" role="tabpanel" aria-labelledby="algebra-__m__real-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__field_theory"><span class="theory-chip theory-field">field</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__field_theory">field_theory</a><span class="algebra-theory-desc">the theory of fields \(\langle F, +, \cdot, 0, 1, {}^{-1} \rangle\): a commutative ring where every non-\(0\) element has a multiplicative inverse, \(x \cdot x^{-1} = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">0.0</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">1.0</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__ring_theory"><span class="theory-chip theory-ring">ring</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__ring_theory">ring_theory</a><span class="algebra-theory-desc">the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">add</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">mul</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">zero</th><td><span class="algebra-value">0.0</span></td></tr><tr><th class="algebra-role">one</th><td><span class="algebra-value">1.0</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-add_group">add_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0.0</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__neg"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-mult_group">mult_group</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">1.0</span></td></tr><tr><th class="algebra-role">inv</th><td><a class="text-decoration-none" href="m.html#__m__inst__inv"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv()</code></pre></a></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-add_monoid">add_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">0.0</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">1.0</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__real-mtron" role="tabpanel" aria-labelledby="algebra-__m__real-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[real]::[obj=&gt;real::T,
-               law=&gt;[
+               theory=&gt;[
                 field=&gt;/m/theory/field_theory::[
                  add=&gt;plus?real&lt;=real(real::T){&lt;j&gt;},
                  mul=&gt;mult?real&lt;=real(real::T){&lt;j&gt;},
@@ -2548,7 +2403,7 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__rec-theories" role="tabpanel" aria-labelledby="algebra-__m__rec-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__commutative_monoid_theory"><span class="theory-chip theory-merge_monoid">merge_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__commutative_monoid_theory">commutative_monoid_theory</a></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">[=&gt;]</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__rec-mtron" role="tabpanel" aria-labelledby="algebra-__m__rec-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[rec]::[obj=&gt;rec::T,
-              law=&gt;[merge_monoid=&gt;/m/theory/commutative_monoid_theory::[
+              theory=&gt;[merge_monoid=&gt;/m/theory/commutative_monoid_theory::[
                op=&gt;plus?rec&lt;=rec(rec{??}::T){&lt;j&gt;},
                id=&gt;[=&gt;]]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -2620,41 +2475,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
                mul=&gt;inst::T,
                zero=&gt;&lt;#&gt;::T,
                one=&gt;&lt;#&gt;::T]]@/m/theory/rig_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__rig_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__rig_theory" aria-label="rig_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">rig_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__rig_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__rig_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__rig_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__rig_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__rig_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__rig_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__rig_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__rig_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__rig_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__rig_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/rig_theory]::[
- obj=&gt;/m/theory::T[?[
-  add=&gt;inst::T,
-  mul=&gt;inst::T,
-  zero=&gt;&lt;#&gt;::T,
-  one=&gt;&lt;#&gt;::T]]@/m/theory/rig_theory,
- law=&gt;[law=&gt;[monoidic,
-             unit,
-             commutative,
-             left_distributive,
-             right_distributive]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of rigs (semirings) \(\langle S, +, \cdot, 0, 1 \rangle\): an additive and a multiplicative monoid with \(\cdot\) distributive over \(+\), and no additive inverses</p>
@@ -2671,42 +2492,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
                mul=&gt;inst::T,
                zero=&gt;&lt;#&gt;::T,
                one=&gt;&lt;#&gt;::T]]@/m/theory/ring_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__ring_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__ring_theory" aria-label="ring_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">ring_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__ring_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__ring_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__ring_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__ring_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__ring_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__ring_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__ring_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__ring_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__ring_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__ring_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/ring_theory]::[
- obj=&gt;/m/theory::T[?[
-  add=&gt;inst::T,
-  mul=&gt;inst::T,
-  zero=&gt;&lt;#&gt;::T,
-  one=&gt;&lt;#&gt;::T]]@/m/theory/ring_theory,
- law=&gt;[law=&gt;[monoidic,
-             unit,
-             commutative,
-             involution,
-             left_distributive,
-             right_distributive]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of rings \(\langle R, +, \cdot, 0, 1 \rangle\): \(+\) an abelian group, \(\cdot\) a monoid, distributive on both sides: \(a \cdot (b + c) = a \cdot b + a \cdot c\) and \((a + b) \cdot c = a \cdot c + b \cdot c\)</p>
@@ -2753,33 +2539,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
         <small class="text-muted code">/m/theory/semilattice_theory</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/theory/semilattice_theory</code></pre></div>
-    <div class="card-body py-2">
-    <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__theory__semilattice_theory').showModal();" title="show the whole algebra">algebra</button>
-</div>
-<dialog class="algebra-dialog" id="algebra-__m__theory__semilattice_theory" aria-label="semilattice_theory::T algebra" onclick="if (event.target === this) this.close();">
-    <div class="algebra-dialog-head">
-        <span class="code text-primary">semilattice_theory::T algebra</span>
-        <button type="button" class="btn-close btn-close-white" onclick="this.closest('dialog').close();" aria-label="close"></button>
-    </div>
-    <div class="algebra-tabs">
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__theory__semilattice_theory-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__semilattice_theory-theories" type="button" role="tab" aria-controls="algebra-__m__theory__semilattice_theory-theories" aria-selected="true">theories</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__theory__semilattice_theory-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__theory__semilattice_theory-mtron" type="button" role="tab" aria-controls="algebra-__m__theory__semilattice_theory-mtron" aria-selected="false">mtron encoding</button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__theory__semilattice_theory-theories" role="tabpanel" aria-labelledby="algebra-__m__theory__semilattice_theory-theories-tab"><div class="algebra-theories"></div></div>
-        <div class="tab-pane fade" id="algebra-__m__theory__semilattice_theory-mtron" role="tabpanel" aria-labelledby="algebra-__m__theory__semilattice_theory-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[/m/theory/semilattice_theory]::[
- obj=&gt;/m/theory::T[?[op=&gt;inst::T,id=&gt;&lt;#&gt;::T]]@/m/theory/semilattice_theory,
- law=&gt;[law=&gt;[monoidic,unit,commutative,idempotent]],
- morphed_to=&gt;!λ(){&lt;j&gt;},
- morphed_from=&gt;!λ(){&lt;j&gt;}]</code></pre></div>
-    </div>
-</div>
-</dialog>
+    
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the theory of semilattices \(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (a single meet or join side of a lattice)</p>
@@ -2835,7 +2595,7 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__str-theories" role="tabpanel" aria-labelledby="algebra-__m__str-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-concat_monoid">concat_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__plus"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">plus()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&#39;&#39;</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__str-mtron" role="tabpanel" aria-labelledby="algebra-__m__str-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[str]::[obj=&gt;str::T,
-              law=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
+              theory=&gt;[concat_monoid=&gt;/m/theory/monoid_theory::[
                op=&gt;plus?str&lt;=str(str::T){&lt;j&gt;},
                id=&gt;&#39;&#39;]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -2960,7 +2720,7 @@ abc?typeq -&gt; &#39;not an int&#39; [-- yields a fail::T --]</code></pre>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="algebra-__m__uri-theories" role="tabpanel" aria-labelledby="algebra-__m__uri-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;&gt;</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__uri-mtron" role="tabpanel" aria-labelledby="algebra-__m__uri-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[uri]::[obj=&gt;uri::T,
-              law=&gt;[mult_monoid=&gt;/m/theory/monoid_theory::[
+              theory=&gt;[mult_monoid=&gt;/m/theory/monoid_theory::[
                op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
                id=&gt;&lt;&gt;]],
               morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -3041,7 +2801,7 @@ a/b/c/                           [-- relative/branch uri            --]
     
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">353</span></h3>
+    <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">354</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
         every contract whose ADDRESS this set holds. A row contributed by another instruction set is
         labelled with the set that declared it, and documented on that set's page as well.
@@ -3237,7 +2997,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-0-tab').click();document.getElementById('__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rec&lt;=uri(rec::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__as" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__as-doc-0-tab').click();document.getElementById('__m__inst__as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?code&lt;=inst(code::T){&lt;j&gt;}</code></pre>
@@ -5232,12 +4992,12 @@ arguments are blocked, so a call is not computed here.
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__int" data-bs-toggle="tooltip" title="range" class="code text-success">int</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/count</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__count-doc-0-tab').click();document.getElementById('__m__inst__count-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">count?int&lt;=#{*}(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__count-doc-0-tab').click();document.getElementById('__m__inst__count-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">count?int&lt;=A{*}(){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).count()</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).map(1).sum()</code></pre></div>
 </div>
 </div>
@@ -5306,7 +5066,7 @@ arguments are blocked, so a call is not computed here.
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__div-doc-2-tab').click();document.getElementById('__m__inst__div-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__div" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<div class="declared-row"><span class="law-chip law-right_distributive">right_distributive<span class="chip-tip"><span class="chip-tip-name">right_distributive</span><span class="chip-tip-desc">distributes over \(+\) on the right — \((a+b)c = ac + bc\)</span></span></span><span class="law-chip law-action">action<span class="chip-tip"><span class="chip-tip-name">action</span><span class="chip-tip-desc">a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__mult" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/inst/mult?rng=/m/math/cmplx&amp;dom=/m/math/cmplx</code></pre></a><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).div(B)</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).mult(map(B).inv())</code></pre></div>
 </div>
 </div>
     
@@ -5353,13 +5113,9 @@ arguments are blocked, so a call is not computed here.
 </div>
 </div><div class="tab-pane fade " id="__m__inst__div-doc-2" role="tabpanel" aria-labelledby="__m__inst__div-doc-2-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex division: \((a+bi)/(c+di)=\frac{ac+bd}{c^2+d^2}+\frac{bc-ad}{c^2+d^2}i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> complex division: \((a+bi)/(c+di)=\frac{ac+bd}{c^2+d^2}+\frac{bc-ad}{c^2+d^2}i\)</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex quotient \(\frac{z}{w}\)" class="text-success">the complex quotient \(\frac{z}{w}\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex divisor \(w = c + di\)'" class="text-info">&#39;the complex divisor \(w = c + di\)&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex quotient \(\frac{z}{w}\)" class="text-success">the complex quotient \(\frac{z}{w}\)</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]</code></pre>
@@ -5579,12 +5335,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">group</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">#{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__rec" data-bs-toggle="tooltip" title="range" class="code text-success">rec</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/group</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__group-doc-0-tab').click();document.getElementById('__m__inst__group-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">group?rec&lt;=#{*}(rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__group-doc-0-tab').click();document.getElementById('__m__inst__group-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">group?rec&lt;=A{*}(rec::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
@@ -5776,7 +5532,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__has-doc-3-tab').click();document.getElementById('__m__inst__has-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?geometry{?}&lt;=geometry(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__has" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__has-doc-4-tab').click();document.getElementById('__m__inst__has-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">has?bbox2d{?}&lt;=bbox2d(#::T){&lt;j&gt;}</code> <a href="m_math_geo.html#defined-__m__inst__has" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math/geo — documented there as well">defined by geo</a></pre>
@@ -5858,13 +5614,9 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__has-doc-3" role="tabpanel" aria-labelledby="__m__inst__has-doc-3-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> the containment predicate as a filter: \(a \sqsupset b\) when every position of \(b\) lies inside \(a\). Because it answers the object rather than a bool, a fibered rec lifts it — \(*\mathrm{marko}.\mathrm{has}(\mathrm{region})\) is marko, or a miss
-conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+    <p class="mb-0 text-light"> the containment predicate as a filter: \(a \sqsupset b\) when every position of \(b\) lies inside \(a\). Because it answers the object rather than a bool, a fibered rec lifts it — \(*\mathrm{marko}.\mathrm{has}(\mathrm{region})\) is marko, or a miss</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry (the container)" class="text-info">the lhs geometry (the container)</a> <span class="text-light">=&gt;</span> <a href="#the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool" class="text-success">the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'what to look for: a geometry (inside the lhs), or a \(\mathrm{geo{:}bbox2d}::T\) envelope'" class="text-info">&#39;what to look for: a geometry (inside the lhs), or a \(\mathrm{geo{:}bbox2d}::T\) envelope&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry (the container)" class="text-info">the lhs geometry (the container)</a> <span class="text-light">=&gt;</span> <a href="#the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool" class="text-success">the lhs itself when it holds the arg, otherwise \(\mathrm{noobj}\) — a filter, not a bool</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6],[-123.2,44.4]]].geo:has(geo:point::[-123.05,44.5])   [-- the polygon --]
@@ -6018,7 +5770,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__inv-doc-1-tab').click();document.getElementById('__m__inst__inv-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inv?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__inv" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__inv" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">inv?cmplx&lt;=cmplx(){&lt;j&gt;}</code></pre></a></div>
 </div>
 </div>
     
@@ -6052,8 +5804,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__inv-doc-1" role="tabpanel" aria-labelledby="__m__inst__inv-doc-1-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex reciprocal: \(\frac{1}{a+bi}=\frac{a-bi}{a^2+b^2}\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> complex reciprocal: \(\frac{1}{a+bi}=\frac{a-bi}{a^2+b^2}\)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the multiplicative inverse \(z^{-1}\)" class="text-success">the multiplicative inverse \(z^{-1}\)</a></pre>
 </div><div class="card-body border-top py-2">
@@ -6086,11 +5837,23 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">isa</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__bool" data-bs-toggle="tooltip" title="domain" class="code text-info">bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__bool{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">bool{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">str{?}</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/isa</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?bool{?}&lt;=bool(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
@@ -6122,18 +5885,6 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?real{?}&lt;=real(#{**}::T){&lt;j&gt;}</code></pre>
 
 </div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?str{?}&lt;=str(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?uri{?}&lt;=uri(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
-<div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__isa-doc-0-tab').click();document.getElementById('__m__inst__isa-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">isa?lst{?}&lt;=lst(#{**}::T){&lt;j&gt;}</code></pre>
-
-</div>
 </div>
     
     
@@ -6147,7 +5898,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__kmerge-doc-0-tab').click();document.getElementById('__m__inst__kmerge-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">kmerge?lst[A{*}]&lt;=lst[A{*}]{*}(#::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-monoidic">monoidic<span class="chip-tip"><span class="chip-tip-name">monoidic</span><span class="chip-tip-desc">an associative binary operation with an identity — \((a \cdot b) \cdot c = a \cdot (b \cdot c)\), \(e \cdot a = a \cdot e = a\)</span></span></span><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
@@ -6714,15 +6465,15 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-3-tab').click();document.getElementById('__m__inst__minus-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-5-tab').click();document.getElementById('__m__inst__minus-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<div class="declared-row"><span class="law-chip law-action">action<span class="chip-tip"><span class="chip-tip-name">action</span><span class="chip-tip-desc">a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__plus" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/inst/plus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx</code></pre></a><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).minus(B)</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).plus(map(B).neg())</code></pre></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-2-tab').click();document.getElementById('__m__inst__minus-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?datetime&lt;=datetime(time::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-5-tab').click();document.getElementById('__m__inst__minus-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?time&lt;=datetime(datetime::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__minus-doc-6-tab').click();document.getElementById('__m__inst__minus-doc-6').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">minus?time&lt;=datetime(datetime::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__minus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
 
 </div>
 </div>
@@ -6774,6 +6525,13 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 6
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__minus-doc-6-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__minus-doc-6"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 7
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__minus-content">
@@ -6804,16 +6562,9 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__minus-doc-3" role="tabpanel" aria-labelledby="__m__inst__minus-doc-3-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex subtraction: \((a+bi)-(c+di)=(a-c)+(b-d)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> remove the slots of the argument lst from the lhs lst</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex difference \(z - w\)" class="text-success">the complex difference \(z - w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex subtrahend \(w = c + di\)'" class="text-info">&#39;the complex subtrahend \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]</code></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs lst" class="text-info">the lhs lst</a> <span class="text-light">=&gt;</span> <a href="#the lst with the argument slots removed" class="text-success">the lst with the argument slots removed</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__minus-doc-4" role="tabpanel" aria-labelledby="__m__inst__minus-doc-4-tab">
     <div class="card-body border-top py-2">
@@ -6822,6 +6573,15 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the lhs rec without the removed entries" class="text-success">the lhs rec without the removed entries</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__minus-doc-5" role="tabpanel" aria-labelledby="__m__inst__minus-doc-5-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> complex subtraction: \((a+bi)-(c+di)=(a-c)+(b-d)i\)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex difference \(z - w\)" class="text-success">the complex difference \(z - w\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__minus-doc-6" role="tabpanel" aria-labelledby="__m__inst__minus-doc-6-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the elapsed duration between two datetimes (in millis — normalize it for a readable unit)
 one-to-one obj transformation (dom_c = rng_c = 1)</p>
@@ -6908,8 +6668,8 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mult-doc-4-tab').click();document.getElementById('__m__inst__mult-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__mult" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__mult-doc-5-tab').click();document.getElementById('__m__inst__mult-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">mult?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__mult" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<div class="declared-row"><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-right_distributive">right_distributive<span class="chip-tip"><span class="chip-tip-name">right_distributive</span><span class="chip-tip-desc">distributes over \(+\) on the right — \((a+b)c = ac + bc\)</span></span></span><span class="law-chip law-action">action<span class="chip-tip"><span class="chip-tip-name">action</span><span class="chip-tip-desc">a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__div" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">div?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code></pre></a></div>
 </div>
 </div>
     
@@ -6953,6 +6713,13 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 5
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__mult-doc-5-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__mult-doc-5"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 6
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__mult-content">
@@ -6982,13 +6749,15 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__mult-doc-4" role="tabpanel" aria-labelledby="__m__inst__mult-doc-4-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex multiplication: \((a+bi)(c+di)=(ac-bd)+(ad+bc)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> pair every slot of the lhs lst with every slot of the argument lst</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex product \(z \cdot w\)" class="text-success">the complex product \(z \cdot w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex multiplier \(w = c + di\)'" class="text-info">&#39;the complex multiplier \(w = c + di\)&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs lst" class="text-info">the lhs lst</a> <span class="text-light">=&gt;</span> <a href="#the lst of slot pairs" class="text-success">the lst of slot pairs</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__mult-doc-5" role="tabpanel" aria-labelledby="__m__inst__mult-doc-5-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> complex multiplication: \((a+bi)(c+di)=(ac-bd)+(ad+bc)i\)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex product \(z \cdot w\)" class="text-success">the complex product \(z \cdot w\)</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] * cmplx::[3.0,4.0]   [-- cmplx::[-5.0,10.0] --]</code></pre>
@@ -7052,7 +6821,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-2-tab').click();document.getElementById('__m__inst__neg-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="law-chip law-unit">unit<span class="chip-tip"><span class="chip-tip-name">unit</span><span class="chip-tip-desc">the identity element — \(e \cdot x = x \cdot e = x\)</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre></a></div>
+<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?code&lt;=code(){&lt;j&gt;}</code></pre></a></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-0-tab').click();document.getElementById('__m__inst__neg-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?rel&lt;=rel(){&lt;j&gt;}</code></pre>
@@ -7060,7 +6829,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__neg-doc-3-tab').click();document.getElementById('__m__inst__neg-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__neg" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<div class="declared-row"><span class="law-chip law-involution">involution<span class="chip-tip"><span class="chip-tip-name">involution</span><span class="chip-tip-desc">self-inverse, period two — \(f(f(x)) = x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__neg" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">neg?cmplx&lt;=cmplx(){&lt;j&gt;}</code></pre></a></div>
 </div>
 </div>
     
@@ -7120,8 +6889,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__neg-doc-3" role="tabpanel" aria-labelledby="__m__inst__neg-doc-3-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex negation (additive inverse): \(-(a+bi)=-a-bi\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> complex negation (additive inverse): \(-(a+bi)=-a-bi\)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the negation \(-z\)" class="text-success">the negation \(-z\)</a></pre>
 </div><div class="card-body border-top py-2">
@@ -7203,7 +6971,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__one-doc-4-tab').click();document.getElementById('__m__inst__one-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">one?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__one" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<div class="declared-row"><span class="law-chip law-idempotent">idempotent<span class="chip-tip"><span class="chip-tip-name">idempotent</span><span class="chip-tip-desc">\(f(f(x)) = f(x)\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
@@ -7276,8 +7044,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__one-doc-4" role="tabpanel" aria-labelledby="__m__inst__one-doc-4-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the multiplicative identity: \(1 = 1 + 0i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the multiplicative identity: \(1 = 1 + 0i\)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex one \(1 + 0i\)" class="text-success">the complex one \(1 + 0i\)</a></pre>
 </div><div class="card-body border-top py-2">
@@ -7310,24 +7077,20 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">order</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__int{*}" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[__m__int{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">int{*}]</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><span class="code text-info">A{*}</span></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__lst[A{*}]" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">lst[A{*}]</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/order</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__order-doc-0-tab').click();document.getElementById('__m__inst__order-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">order?lst[int{*}]&lt;=int{*}(){&lt;j&gt;}</code></pre>
-<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).order(B)</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).split([id()]).kmerge(B)</code></pre></div>
-</div>
-<div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__order-doc-0-tab').click();document.getElementById('__m__inst__order-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">order?lst[A{*}]&lt;=A{*}(#{?}::T){&lt;j&gt;}</code></pre>
 <div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">derivation:</span> <pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).order(B)</code></pre><span class="mx-1 text-muted">≡</span><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">start(A).split([id()]).kmerge(B)</code></pre></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> order the lhs int stream in ascending order</p>
+    <p class="mb-0 text-light"> a sorting function \(f(X) \mapsto X&#39;\)</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a stream of ints" class="text-info">a stream of ints</a> <span class="text-light">=&gt;</span> <a href="#the sorted lst of ints" class="text-success">the sorted lst of ints</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some A to sort" class="text-info">maybe some A to sort</a> <span class="text-light">=&gt;</span> <a href="#a sorted lst of the lhs A{*}" class="text-success">a sorted lst of the lhs A{*}</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__parent">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -7493,8 +7256,8 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus-doc-5-tab').click();document.getElementById('__m__inst__plus-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__plus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus-doc-11-tab').click();document.getElementById('__m__inst__plus-doc-11').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__plus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<div class="declared-row"><span class="law-chip law-commutative">commutative<span class="chip-tip"><span class="chip-tip-name">commutative</span><span class="chip-tip-desc">\(a \cdot b = b \cdot a\)</span></span></span><span class="law-chip law-right_distributive">right_distributive<span class="chip-tip"><span class="chip-tip-name">right_distributive</span><span class="chip-tip-desc">distributes over \(+\) on the right — \((a+b)c = ac + bc\)</span></span></span><span class="law-chip law-action">action<span class="chip-tip"><span class="chip-tip-name">action</span><span class="chip-tip-desc">a monoid/group acting on a carrier — \(f(gh)x = f(g)f(h)x\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="text-muted instset-doc-small-code ms-2">inverse:</span> <a href="m.html#__m__inst__minus" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/inst/minus?rng=/m/math/cmplx&amp;dom=/m/math/cmplx</code></pre></a></div>
 </div>
 <div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__plus-doc-4-tab').click();document.getElementById('__m__inst__plus-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">plus?datetime&lt;=datetime(time::T){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__plus" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
@@ -7584,6 +7347,13 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 11
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__plus-doc-11-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__plus-doc-11"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 12
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__plus-content">
@@ -7635,16 +7405,9 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__plus-doc-5" role="tabpanel" aria-labelledby="__m__inst__plus-doc-5-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> complex addition: \((a+bi)+(c+di)=(a+c)+(b+d)i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> append the slots of the argument lst onto the slots of the lhs lst</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex sum \(z + w\)" class="text-success">the complex sum \(z + w\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#lst[real,real]::T[?[real::T,real::T]]@__m__math__cmplx" class="text-light">cmplx</a> <span class="text-light">=&gt;</span> <a href="#'the complex addend \(w = c + di\)'" class="text-info">&#39;the complex addend \(w = c + di\)&#39;</a>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]</code></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs lst" class="text-info">the lhs lst</a> <span class="text-light">=&gt;</span> <a href="#the concatenated lst" class="text-success">the concatenated lst</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__plus-doc-6" role="tabpanel" aria-labelledby="__m__inst__plus-doc-6-tab">
     <div class="card-body border-top py-2">
@@ -7696,6 +7459,15 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">foot::12.0 + foot::36.0   [-- foot::48.0 --]</code></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__plus-doc-11" role="tabpanel" aria-labelledby="__m__inst__plus-doc-11-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> complex addition: \((a+bi)+(c+di)=(a+c)+(b+d)i\)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex sum \(z + w\)" class="text-success">the complex sum \(z + w\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0] + cmplx::[3.0,4.0]   [-- cmplx::[4.0,6.0] --]</code></pre>
 </div>
 </div>
     </div>
@@ -8112,10 +7884,10 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the repeated application results" class="text-success">the repeated application results</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
+  <a href="#{?}until" class="text-light">{?}until</a> <span class="text-light">=&gt;</span> <a href="#'the exit predicate (true stops the loop)'" class="text-info">&#39;the exit predicate (true stops the loop)&#39;</a>
   <a href="#code" class="text-light">code</a> <span class="text-light">=&gt;</span> <a href="#'the code to repeat'" class="text-info">&#39;the code to repeat&#39;</a>
   <a href="#{?}esc" class="text-light">{?}esc</a> <span class="text-light">=&gt;</span> <a href="#'the escape predicate'" class="text-info">&#39;the escape predicate&#39;</a>
-  <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__reverse">
@@ -8978,12 +8750,20 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">update</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="domain" class="code text-info">str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__str" data-bs-toggle="tooltip" title="range" class="code text-success">str</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#__m__code" data-bs-toggle="tooltip" title="range" class="code text-success">code</a></span></span>
         </span>
         <small class="text-muted code">/m/inst/update</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__update-doc-0-tab').click();document.getElementById('__m__inst__update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?code&lt;=code(rec::T){&lt;j&gt;}</code></pre>
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
+</div>
+<div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__update-doc-0-tab').click();document.getElementById('__m__inst__update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?str&lt;=str(rec::T){&lt;j&gt;}</code></pre>
+
+</div>
+<div class="variant-row">
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__update-doc-0-tab').click();document.getElementById('__m__inst__update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?inst&lt;=inst(rec::T){&lt;j&gt;}</code></pre>
 
 </div>
 <div class="variant-row">
@@ -8993,15 +8773,9 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"> selectively mutate a poly component or an entire mono</p>
+    <p class="mb-0 text-light"> change the runs of the lhs code that the rules&#39; patterns match</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">A</span> <span class="text-light">=&gt;</span> <span class="text-success">B{*}</span></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">@a &gt;&gt;= [b=&gt;[c=&gt;2]]      [-- [b=&gt;[c=&gt;2]]@a     --]
-@a &gt;&gt;= [b=&gt;[c=&gt;+3]]     [-- [b=&gt;[c=&gt;5]]@a     --]
-@a &gt;&gt;= [b=&gt;+[c=&gt;4]]     [-- [b=&gt;[c=&gt;{5,4}]]@a --]
-@a &gt;&gt;= [b=&gt;[c=&gt;sum()]]  [-- [b=&gt;[c=&gt;9]]@a     --]</code></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the code to update" class="text-info">the code to update</a> <span class="text-light">=&gt;</span> <a href="#the code with each matched run changed" class="text-success">the code with each matched run changed</a></pre>
 </div>
 </div><div class="card mb-3" id="__m__inst__uri:c">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -9198,8 +8972,8 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 
 </div>
 <div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__zero-doc-5-tab').click();document.getElementById('__m__inst__zero-doc-5').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">zero?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__zero" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
-
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__inst__zero-doc-7-tab').click();document.getElementById('__m__inst__zero-doc-7').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">zero?cmplx&lt;=cmplx(){&lt;j&gt;}</code> <a href="m_math.html#defined-__m__inst__zero" class="badge bg-info text-decoration-none ms-1" title="defined by /m/math — documented there as well">defined by math</a></pre>
+<div class="declared-row"><span class="law-chip law-absorbing">absorbing<span class="chip-tip"><span class="chip-tip-name">absorbing</span><span class="chip-tip-desc">an annihilator: \(a \cdot x = a\) for every \(x\) — the operation&#39;s absorbing element</span></span></span><span class="law-chip law-idempotent">idempotent<span class="chip-tip"><span class="chip-tip-name">idempotent</span><span class="chip-tip-desc">\(f(f(x)) = f(x)\)</span></span></span><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
@@ -9257,6 +9031,13 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         style="font-size:0.75rem;max-width:60px;">
         <i class="fas fa-info-circle me-1"></i> 7
     </button>
+</li><li class="nav-item" role="presentation">
+    <button class="nav-link py-1 px-2  text-start h-100"
+        id="__m__inst__zero-doc-7-tab" data-bs-toggle="pill" data-bs-target="#__m__inst__zero-doc-7"
+        type="button" role="tab" aria-selected="false"
+        style="font-size:0.75rem;max-width:60px;">
+        <i class="fas fa-info-circle me-1"></i> 8
+    </button>
 </li>
     </ul>
     <div class="tab-content" id="__m__inst__zero-content">
@@ -9292,19 +9073,24 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
 </div><div class="tab-pane fade " id="__m__inst__zero-doc-5" role="tabpanel" aria-labelledby="__m__inst__zero-doc-5-tab">
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the additive identity: \(0 = 0 + 0i\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the zero of the lst monoid</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex zero \(0 + 0i\)" class="text-success">the complex zero \(0 + 0i\)</a></pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]</code></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs lst" class="text-info">the lhs lst</a> <span class="text-light">=&gt;</span> <a href="#the empty lst" class="text-success">the empty lst</a></pre>
 </div>
 </div><div class="tab-pane fade " id="__m__inst__zero-doc-6" role="tabpanel" aria-labelledby="__m__inst__zero-doc-6-tab">
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the zero of the rec monoid</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the empty rec" class="text-success">the empty rec</a></pre>
+</div>
+</div><div class="tab-pane fade " id="__m__inst__zero-doc-7" role="tabpanel" aria-labelledby="__m__inst__zero-doc-7-tab">
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the additive identity: \(0 = 0 + 0i\)</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#a complex number \(z = a + bi\)" class="text-info">a complex number \(z = a + bi\)</a> <span class="text-light">=&gt;</span> <a href="#the complex zero \(0 + 0i\)" class="text-success">the complex zero \(0 + 0i\)</a></pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">cmplx::[1.0,2.0].zero()   [-- cmplx::[0.0,0.0] --]</code></pre>
 </div>
 </div>
     </div>
@@ -9467,7 +9253,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
+        generated by metatron instset doc generator &mdash; last built November 7, 2026 00:44MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

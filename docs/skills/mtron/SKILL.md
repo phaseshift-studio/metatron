@@ -279,7 +279,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 ### language & types
 
-* [mtron language reference](references/language-reference-mtron.md) -- the whole surface in 23 sections: mono/poly/call
+* [mtron language reference](references/m-instset-mtron.md) -- the whole surface in 23 sections: mono/poly/call
   types, coefficients, arithmetic and strings, `*` dereference, `.as(type::T)` casting, map/filter/group, merge/split,
   `>>`/`<<`, the `|` barrier, `>>=` update, `!*`/`!@` auto-references, path ops, failure handling, and the expression
   evaluation model.
@@ -321,7 +321,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar measures a space without
   native spatial support needs (`geo:distance`, `geo:length`, `geo:area`, `geo:coordinates`), the containment FILTER
   (`has` for the container, `geo:inside` for the contained), the shape reductions as casts (`as(point::T)` is the
-  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the laws the family declares (`?decq`), and
+  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the laws the family declares
+  (`?decq`), and
   the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
 * [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a

@@ -265,8 +265,8 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.
 
-The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point
-(`code_resolve`, `inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
+The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point (`code_resolve`,
+`inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
 `code_resolve`. A boot profile overrides individual points with `typer/check => [code_resolve => true]`.
 
 There are exactly two ways to change it, and both are the same nested write:
@@ -776,7 +776,7 @@ and run on mtron's own `plus`. Nothing is added but the parser.
 
 ## see also
 
-* [mtron language reference](language-reference-mtron.md) — the surface the default parser reads: sugar, `>>`
+* [mtron language reference](m-instset-mtron.md) — the surface the default parser reads: sugar, `>>`
   rshift, `.as(type::T)`, coefficients, `.explain()`.
 * [mtron type system](type-system-mtron.md) — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.
 * [the category graph](cat-instset-mtron.md) — the declared rewrites the `rewriter` stage consumes, and the

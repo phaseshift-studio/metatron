@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
-                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../instset/m.html"><img
+                                src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -656,10 +661,10 @@ the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithm
     <p class="mb-0 text-light"> a 2D envelope — four reals, \([\lambda_{\min}, \varphi_{\min}, \lambda_{\max}, \varphi_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
+  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
   <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
   <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
-  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -785,13 +790,12 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__area-doc-0-tab').click();document.getElementById('__m__math__geo__inst__area-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">area?real&lt;=geometry(){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="law-chip law-blocked">blocked<span class="chip-tip"><span class="chip-tip-name">blocked</span><span class="chip-tip-desc">cannot float past a barrier — a reduce anchors the coefficient in place</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the \(2\)-dimensional measure of the polygonal part: shells positive, holes negative, by the planar shoelace formula scaled at the polygon&#39;s mean latitude — tight for parcels and districts, wrong for continents
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the \(2\)-dimensional measure of the polygonal part: shells positive, holes negative, by the planar shoelace formula scaled at the polygon&#39;s mean latitude — tight for parcels and districts, wrong for continents</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#its area in square meters, as a plain \(\mathrm{real}::T\) (\(\mathrm{math}\) has no squared-length unit type)" class="text-success">its area in square meters, as a plain \(\mathrm{real}::T\) (\(\mathrm{math}\) has no squared-length unit type)</a></pre>
 </div><div class="card-body border-top py-2">
@@ -808,13 +812,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__coordinates-doc-0-tab').click();document.getElementById('__m__math__geo__inst__coordinates-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">coordinates?lst&lt;=geometry(){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the flattening: whatever the nesting depth, the points a geometry is ultimately made of
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the flattening: whatever the nesting depth, the points a geometry is ultimately made of</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#every position it stores, in document order, as stamped \(\mathrm{geo{:}point}::T\) values" class="text-success">every position it stores, in document order, as stamped \(\mathrm{geo{:}point}::T\) values</a></pre>
 </div><div class="card-body border-top py-2">
@@ -831,18 +834,14 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__distance-doc-0-tab').click();document.getElementById('__m__math__geo__inst__distance-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">distance?meter&lt;=geometry(geometry::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the geodesic distance \(d(a,b)\), and \(0\) when the geometries intersect — a point inside a polygon is at distance zero, not at the distance to its nearest vertex
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the geodesic distance \(d(a,b)\), and \(0\) when the geometries intersect — a point inside a polygon is at distance zero, not at the distance to its nearest vertex</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#the distance to the arg geometry as a \(\mathrm{meter}::T\)" class="text-success">the distance to the arg geometry as a \(\mathrm{meter}::T\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#lst::T@__m__math__geo__geometry" class="text-light">geometry</a> <span class="text-light">=&gt;</span> <a href="#'the geometry to measure to'" class="text-info">&#39;the geometry to measure to&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#the distance to the arg geometry as a \(\mathrm{meter}::T\)" class="text-success">the distance to the arg geometry as a \(\mathrm{meter}::T\)</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.13,44.47].geo:distance(geo:point::[-122.68,45.52])   [-- meter::121998.59… (the Columbia gorge, about 122 km) --]</code></pre>
@@ -857,17 +856,14 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__inside-doc-0-tab').click();document.getElementById('__m__math__geo__inst__inside-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">inside?geometry{?}&lt;=geometry(#::T){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the mirror of {@code has}: the same containment predicate, answering the CONTAINED object. \(a.\mathrm{inside}(b) \iff b.\mathrm{has}(a)\), but the two answer different subjects, and only this one returns the wrapper of a fibered rec</p>
 </div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry (the contained thing)" class="text-info">the lhs geometry (the contained thing)</a> <span class="text-light">=&gt;</span> <a href="#the lhs itself when it lies in the arg, otherwise \(\mathrm{noobj}\)" class="text-success">the lhs itself when it lies in the arg, otherwise \(\mathrm{noobj}\)</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">&lt;#&gt;::T</span> <span class="text-light">=&gt;</span> <a href="#'the container: a geometry, or a \(\mathrm{geo{:}bbox2d}::T\) envelope'" class="text-info">&#39;the container: a geometry, or a \(\mathrm{geo{:}bbox2d}::T\) envelope&#39;</a>
-</pre>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry (the contained thing)" class="text-info">the lhs geometry (the contained thing)</a> <span class="text-light">=&gt;</span> <a href="#the lhs itself when it lies in the arg, otherwise \(\mathrm{noobj}\)" class="text-success">the lhs itself when it lies in the arg, otherwise \(\mathrm{noobj}\)</a></pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">geo:point::[-123.05,44.5].geo:inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])   [-- the point --]</code></pre>
@@ -882,13 +878,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__length-doc-0-tab').click();document.getElementById('__m__math__geo__inst__length-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">length?meter&lt;=geometry(){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span><span class="law-chip law-blocked">blocked<span class="chip-tip"><span class="chip-tip-name">blocked</span><span class="chip-tip-desc">cannot float past a barrier — a reduce anchors the coefficient in place</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the \(1\)-dimensional measure: the geodesic distance along each part&#39;s consecutive points; a point has length zero
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the \(1\)-dimensional measure: the geodesic distance along each part&#39;s consecutive points; a point has length zero</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#its measured length as a \(\mathrm{meter}::T\) — every polyline and every polygon boundary, summed geodesically" class="text-success">its measured length as a \(\mathrm{meter}::T\) — every polyline and every polygon boundary, summed geodesically</a></pre>
 </div><div class="card-body border-top py-2">
@@ -905,13 +900,12 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     </div>
     <div class="card-body p-2"><div class="variant-row">
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__math__geo__inst__wkt-doc-0-tab').click();document.getElementById('__m__math__geo__inst__wkt-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">wkt?str&lt;=geometry(){&lt;j&gt;}</code></pre>
-
+<div class="declared-row"><span class="law-chip law-pure">pure<span class="chip-tip"><span class="chip-tip-name">pure</span><span class="chip-tip-desc">the effect axis: the result is a function of the lhs and args alone — no write, no print, no spawn. Declared, never inferred</span></span></span></div>
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-mapper">mapper</span> the other string encoding — the one every spatial database&#39;s \(\mathrm{ST\_GeomFromText}\) takes. There is no \(\mathrm{wkt}::T\) document type to cast onto, so this is an instruction rather than an \(\mathrm{as}\)
-one-to-one obj transformation (dom_c = rng_c = 1)</p>
+    <p class="mb-0 text-light"> the other string encoding — the one every spatial database&#39;s \(\mathrm{ST\_GeomFromText}\) takes. There is no \(\mathrm{wkt}::T\) document type to cast onto, so this is an instruction rather than an \(\mathrm{as}\)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs geometry" class="text-info">the lhs geometry</a> <span class="text-light">=&gt;</span> <a href="#its Well-Known Text" class="text-success">its Well-Known Text</a></pre>
 </div><div class="card-body border-top py-2">
@@ -929,7 +923,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator &mdash; last built November 6, 2026 04:03MST<br>
+        generated by metatron instset doc generator &mdash; last built November 7, 2026 00:44MST<br>
         &copy; PhaseShift Studio, LLC
     </small>
 </div></main>

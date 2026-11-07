@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../instset/m.html"><img
-                            src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../instset/m.html"><img
+                                src="../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -797,12 +802,6 @@ the default values are <code>#{?}</code> and <code>#{*}</code>, respectively.</p
           args=&gt;[0=&gt;'/m/real'],
           desc=&gt;'[mapper] add two distances of the ...',
           example=&gt;['foot::12.0 + foot::36.0   [-- foot...']]
-==&gt;docs::[obj=&gt;plus?cmplx&lt;=cmplx(cmplx::T){&lt;j&gt;},
-          dom=&gt;'a complex number \(z = a + bi\)',
-          rng=&gt;'the complex sum \(z + w\)',
-          args=&gt;[lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx=&gt;'the complex addend \(w = c + di\)'],
-          desc=&gt;'[mapper] complex addition: \((a+bi...',
-          example=&gt;['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
 ==&gt;docs::[obj=&gt;plus?datetime&lt;=datetime(time::T){&lt;j&gt;},
           dom=&gt;'/m/math/datetime',
           rng=&gt;'/m/math/datetime',
@@ -821,13 +820,17 @@ mtron&gt; *select?&lt;=str&amp;docq
 <code>?docq</code> of the things they cover -- start there before re-reading the prose.</p>
 <h4>language &amp; types</h4>
 <ul>
-<li><a href="references/language-reference-mtron.html">mtron language reference</a> -- the whole surface in 23 sections: mono/poly/call
+<li><a href="references/m-instset-mtron.html">mtron language reference</a> -- the whole surface in 23 sections: mono/poly/call
 types, coefficients, arithmetic and strings, <code>*</code> dereference, <code>.as(type::T)</code> casting, map/filter/group, merge/split,
 <code>&gt;&gt;</code>/<code>&lt;&lt;</code>, the <code>|</code> barrier, <code>&gt;&gt;=</code> update, <code>!*</code>/<code>!@</code> auto-references, path ops, failure handling, and the expression
 evaluation model.</li>
 <li><a href="references/type-system-mtron.html">mtron type system</a> -- vid/tid, coefficients, the universal type, defining types,
 predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
 readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.</li>
+<li><a href="references/fascinations-mtron.html">fascinations</a> -- the surprising things mtron does, one section each, every example
+run by the docs pipeline: shipping a socket (a built obj travels as its data, so a <code>ws_client</code> sent to another
+machine makes that machine dial); rewriting code by pattern (a program is a value that code patterns match and
+<code>update</code> rewrites).</li>
 </ul>
 <h4>execution &amp; the machine</h4>
 <ul>
@@ -842,7 +845,7 @@ language.</li>
 theorem,
 not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write <em>before</em> the rewrite,
 and the sharded layout the rewrite emits — grounded in the machine nest, <code>Network</code>, the <code>rewriter::T</code> stage, and the
-<code>plan::T</code> / <code>PlanBuilder</code> / <code>PlanInterpreter</code> / <code>LawTable</code>-combiner machinery. ✅ marks what is implemented today.</li>
+<code>plan::T</code> / <code>PlanBuilder</code> / <code>PlanInterpreter</code> / <code>Law.Helper</code>-combiner machinery. ✅ marks what is implemented today.</li>
 </ul>
 <h4>spaces &amp; data sources</h4>
 <ul>
@@ -859,7 +862,8 @@ list-shaped types where a point IS a position, a line IS an ordered list of poin
 a coefficient, a Feature is a rec with a <code>geo:</code>-prefixed fiber, and the geodesic/planar measures a space without
 native spatial support needs (<code>geo:distance</code>, <code>geo:length</code>, <code>geo:area</code>, <code>geo:coordinates</code>), the containment FILTER
 (<code>has</code> for the container, <code>geo:inside</code> for the contained), the shape reductions as casts (<code>as(point::T)</code> is the
-centroid, <code>as(bbox2d::T)</code> the envelope), the <code>as(json::T)</code> and <code>geo:wkt()</code> encodings, the family's law table, and
+centroid, <code>as(bbox2d::T)</code> the envelope), the <code>as(json::T)</code> and <code>geo:wkt()</code> encodings, the laws the family declares
+(<code>?decq</code>), and
 the <code>geoRewrite.pushdown</code> contract that lets a spatial space replace the algorithms with its own operator.</li>
 <li><a href="references/cat-instset-mtron.html">as-graph</a> -- every <code>as</code> instruction read as a property-graph edge (label <code>as</code>,
 outV the dom, inV the rng) and <code>?asq</code> as its property map: the six edge kinds and what each means when you add a
