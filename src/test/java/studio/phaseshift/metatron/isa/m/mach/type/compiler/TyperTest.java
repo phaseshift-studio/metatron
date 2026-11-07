@@ -3,6 +3,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
@@ -50,5 +51,16 @@ public class TyperTest extends AbstractMetatronTest {
 
         // a point nobody wrote keeps the boot default
         assertFalse(Typer.Helper.codeResolve(), "an unwritten point still reads the boot default");
+    }
+
+    /**
+     * A TYPER BUILT AFTER BOOT IS A typer::T. MObj's constructor checks a rec against its type before BasicTyper seeds
+     * its check points, so every slot of typer::T is optional, and an absent point reads the boot default. A compiler
+     * built after boot builds its typer that way ({@link BasicCompiler#defaultStages()}).
+     */
+    @Test
+    public void aTyperBuiltAfterBootIsATyper() {
+        assertTrue(new BasicTyper().asserts(Typer.TYPE_PRED), "a typer built after boot seeds the boot default");
+        assertTrue(BasicCompiler.defaults().typer().asserts(Typer.TYPE_PRED), "a compiler built after boot builds its typer");
     }
 }
