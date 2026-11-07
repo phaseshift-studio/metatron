@@ -20,9 +20,12 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
@@ -37,6 +40,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.branch_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Call extends Obj {
 
@@ -181,10 +186,21 @@ public interface Call extends Obj {
          * argument against the type it must be ({@code int::T} one int, {@code int{*}::T} a bag of them). A matched run becomes the rule's change:
          * a code (or an inst) replaces it, and a rec applies its own rules inside the run. The rules run in order, each
          * over the code the last one left, and a replacement is not matched again.
+         * <p>
+         * NAMES AND TEMPLATES (Marko, 2026-11-06). A pattern element with a relative vid names what it matched
+         * ({@code plus(int::T@a)}, {@code 2@a}, {@code plus(int::T)@f}). The names are the change's own argument
+         * uris: a frame pushed on this thread's arg stack while the change is made, so threads never share them. A
+         * change's {@code ${...}} argument is a template parameter, evaluated against what the run holds in that place
+         * and reading the names: {@code plus(int::T@a).plus(int::T@b) => plus(${*a.plus(*b)})}. All else is literal.
          */
         public static List<Inst> update(final List<Inst> insts, final Obj rules) {
-            if (rules.isCall())
-                return rules.asCall().insts();
+            if (rules.isCall()) {
+                // the change laid over the run, each of its insts against the run's inst in its place
+                final List<Inst> template = rules.asCall().insts();
+                return IntStream.range(0, template.size())
+                        .mapToObj(k -> expand(template.get(k), k < insts.size() ? insts.get(k) : noobj()).asInst())
+                        .toList();
+            }
             if (!rules.isRec())
                 throw MTronException.of("a matched run of code changes into a code or a rec of rules, not %s", rules);
             List<Inst> current = insts;
@@ -202,7 +218,15 @@ public interface Call extends Obj {
                     if (!pattern.isEmpty() && at + pattern.size() <= scanned.size()
                             // the code tests the pattern, as a value tests a type (1.test(int::T)), never the reverse
                             && IntStream.range(0, pattern.size()).allMatch(k -> scanned.get(at + k).test(pattern.get(k)))) {
-                        next.addAll(update(scanned.subList(at, at + pattern.size()), rule.second()));
+                        final List<Inst> run = scanned.subList(at, at + pattern.size());
+                        final List<Rel> names = new ArrayList<>();
+                        IntStream.range(0, pattern.size()).forEach(k -> capture(pattern.get(k), run.get(k), names));
+                        Memory.argStack().push(names.stream().collect(new CommonUtil.RecCollector()));
+                        try {
+                            next.addAll(update(run, rule.second()));
+                        } finally {
+                            Memory.argStack().pop();
+                        }
                         i += pattern.size();
                     } else
                         next.add(scanned.get(i++));
@@ -210,6 +234,62 @@ public interface Call extends Obj {
                 current = next;
             }
             return current;
+        }
+
+        /**
+         * The names a matched pattern binds: each element whose vid would resolve as a binding (relative, as
+         * {@code Memory} routes it) names what it matched, and an inst's arguments are walked beside the matched inst's.
+         * A type's own vid is absolute ({@code int::T} is {@code /m/int}), so only {@code @}-named elements bind.
+         */
+        private static void capture(final Obj pattern, final Obj matched, final List<Rel> names) {
+            final fURI name = pattern.vid();
+            if (null != name && !name.isAbsolute() && !name.hasScheme() && !name.hasHost())
+                names.add(rel(uri(name), matched));
+            if (pattern.isInst() && matched.isInst() && pattern.asInst().args().isLst())
+                IntStream.range(0, (int) pattern.asInst().args().count())
+                        .forEach(i -> capture(pattern.asInst().arg(i), matched.asInst().arg(i), names));
+        }
+
+        /**
+         * A change's element made concrete against the run's element in its place. A templated uri argument
+         * ({@code ${...}} or {@code {{{...}}}}, parsed as a uri) is a template parameter: its inner templates are
+         * spliced first ({@link Str#expandTemplates}), then its expression is applied to the matched element, or to
+         * noobj when it takes none, and the VALUE is the argument, not its text. A uri whose template is only part of
+         * it splices text as a uri does. A parameter that cannot evaluate fails the update rather than staying put.
+         */
+        private static Obj expand(final Obj change, final Obj matched) {
+            if (change.isUri() && change.asUri().hasTemplates()) {
+                final String text = change.uriValue().toString();
+                final int open = text.startsWith("${") ? 2 : text.startsWith("{{{") ? 3 : 0;
+                if (0 != open && text.endsWith(2 == open ? "}" : "}}}")) {
+                    final Obj parsed = ObjmtronSerializer.parse(Str.expandTemplates(text.substring(open, text.length() - (2 == open ? 1 : 3)), matched));
+                    // an expression that does not parse may be several templates in one uri (${a}${b}): spliced below
+                    if (parsed.stream().noneMatch(Obj::isFail)) {
+                        Object failure = null;
+                        for (final Obj lhs : List.of(matched, noobj())) {
+                            try {
+                                final Obj value = parsed.apply(lhs);
+                                if (!value.isFail())
+                                    return value;
+                                failure = value;
+                            } catch (final Exception e) {
+                                // a complete expression takes no lhs: it is tried against noobj next
+                                failure = e.getMessage();
+                            }
+                        }
+                        throw MTronException.of("the template parameter %s did not evaluate against %s: %s", change, matched, failure);
+                    }
+                }
+                final Obj spliced = change.apply(matched);
+                if (spliced.isUri() && spliced.asUri().hasTemplates())
+                    throw MTronException.of("the template parameter %s did not evaluate against %s", change, matched);
+                return spliced;
+            }
+            if (!change.isInst() || !change.asInst().args().isLst())
+                return change;
+            return change.asInst().args(lst(IntStream.range(0, (int) change.asInst().args().count())
+                    .mapToObj(i -> expand(change.asInst().arg(i), matched.isInst() ? matched.asInst().arg(i) : noobj()))
+                    .toList()));
         }
     }
 }
