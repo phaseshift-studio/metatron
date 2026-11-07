@@ -1024,7 +1024,11 @@ public class machInstSet extends AbstractInstSet {
                                     final List<Inst> insts = new ArrayList<>(start_(lhs).insts());
                                     insts.addAll(move_(uri(inst.arg(0).uriValue().path().isEmpty() ? ROOT_MACHINE_VID : f().path(inst.arg(0).uriValue().path()))).insts());
                                     insts.addAll(inst.arg(1).asCall().insts());
-                                    return map_(lst(code(insts))).select_(lst(eval_(inst.arg(0).uriValue().origin()).tryToInst())).merge_();
+                                    // THE CUT ANSWERS WHAT THE PEER ANSWERS, so the scatter runs here. Handed back
+                                    // unrun, the code ran only where a processor iterated it (Code.iterator() applies);
+                                    // a cut applied as an inst, alone in an ordered branch's member, answered the
+                                    // code itself, and the next inst failed to convert a code::T
+                                    return map_(lst(code(insts))).select_(lst(eval_(inst.arg(0).uriValue().origin()).tryToInst())).merge_().apply();
                                 })
                                 .create(),
                         InstBuilder.build().tid(SPAWN_INST_TID)
