@@ -148,23 +148,6 @@ public interface Code extends Call {
         return Machine.evaluate(lhs, this);
     }
 
-    @Override
-    default boolean test(final Obj other) {
-        if (this == other)
-            return true;
-        if (!other.isCall())
-            return Obj.Helper.testObjs(this, other);
-        if (this.insts().size() != other.asCall().insts().size())
-            return false;
-        final List<Inst> thisInsts = this.insts();
-        final List<Inst> otherInsts = other.asCall().insts();
-        for (int i = 0; i < thisInsts.size(); i++) {
-            if (!thisInsts.get(i).test(otherInsts.get(i)))
-                return false;
-        }
-        return true;
-    }
-
     /**
      * Inject a runtime value into code by prepending {@code start(lhs)} — the same shape the
      * processor used to mint. This threads the element type through the whole chain (so e.g.
