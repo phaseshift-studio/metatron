@@ -487,7 +487,7 @@ public final class QCollection {
     /**
      * THE DECLARATION SPACE — the {@code ?decq} store as MACHINE MEMORY, the mirror of {@link DocInstSet}: one
      * instance per q-proc (one per machine), keyed by the DECLARATION ADDRESS (an instruction's {@code operationTid},
-     * a type's vid). This is the space `?docq` and `?decq` now share a realization with; {@code LawTable} is a
+     * a type's vid). This is the space `?docq` and `?decq` now share a realization with; {@code Law.Helper} is a
      * READ-ONLY CACHE over it and holds no store of its own.
      */
     protected final static class DecInstSet extends AbstractInstSet {

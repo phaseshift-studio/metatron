@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -38,7 +37,7 @@ import java.util.Map;
  *
  * <p>A derivation that defines a FOLD — {@code start(A)}, a pointwise run, then a fold, as
  * {@code count ↦ map(1)·sum} — is also where the fold's combiner comes from: its partials recombine through the
- * defining fold ({@link LawTable#combiner}), so the combiner is read off the definition rather than declared.
+ * defining fold ({@link Law.Helper#combiner}), so the combiner is read off the definition rather than declared.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

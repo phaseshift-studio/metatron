@@ -168,18 +168,18 @@ measurement, and no 3D envelope on a geometry (a `bbox3d` is a value of its own,
 
 ## the algebra the rewriter may use
 
-`geoInstSetLawTable` declares what a rewrite may do to a geo instruction: a native spatial operator may be substituted
+Each geo instruction declares beside itself (`?decq`) what a rewrite may do to it: a native spatial operator may be substituted
 only where the laws license it, so **an undeclared instruction is one the optimizer must leave alone.**
 
 | instruction                                     | laws                            | what it licenses                                                                 |
 |-------------------------------------------------|---------------------------------|----------------------------------------------------------------------------------|
-| `geo:distance`                                  | `commutative`, `pure`           | operand order is free, so two callers reach one native operator                  |
-| `has` / `geo:inside`                        | `pure`, each other's INVERSE    | a space with `ST_Within` alone answers `ST_Contains` by swapping the operands    |
+| `geo:distance`                                  | `pure`                          | no effect, so a rewrite may move or drop it; symmetric, but not `commutative`: geometry × geometry → meter is not closed |
+| `has` / `geo:inside`                            | `pure`                          | converses, not inverses (`a.inside(b)` iff `b.has(a)`): a pushdown may swap the operands, no law cancels them |
 | `geo:coordinates`, `geo:wkt`                    | `pure`                          | structural projections have no effect, so a rewrite can move or drop them        |
 | `geo:area`, `geo:length`                        | `pure`, `blocked`               | measured here, not floatable to a native operator                                |
 
 A geometry is not a ring, a monoid or a lattice: there is no `plus` of two geometries, so the family declares no
-carrier algebra and `typeLawsUncached` answers the empty rec. The measures are homomorphisms **to** the reals, not
+carrier algebra: no geo type's `?decq` carries a `theory`. The measures are homomorphisms **to** the reals, not
 operations on geometries.
 
 ## pushdown

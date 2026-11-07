@@ -510,7 +510,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * <p>
      * The law row for {@code order} declares a {@code Derivation} keyed on the SELECTOR-bearing spelling
      * ({@code start(A).order(B) ↦ start(A).split([id]).kmerge(B)}) and {@code pure}, and no
-     * {@code monoidic}/{@code commutative}. {@code LawTable.combiner} therefore falls through to the
+     * {@code monoidic}/{@code commutative}. {@code Law.Helper.combiner} therefore falls through to the
      * derivation, and {@code Derivation.bind} refuses an arity mismatch
      * ({@code derived.args().count() != inst.args().count()}: 1 vs 0). No combiner means no
      * {@code law_shard} out-edge on the vertex -- correct, because the master cannot know the merge key

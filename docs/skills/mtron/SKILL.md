@@ -300,7 +300,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   theorem,
   not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write *before* the rewrite,
   and the sharded layout the rewrite emits — grounded in the machine nest, `Network`, the `rewriter::T` stage, and the
-  `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable`-combiner machinery. ✅ marks what is implemented today.
+  `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Law.Helper`-combiner machinery. ✅ marks what is implemented today.
 
 ### spaces & data sources
 
@@ -317,7 +317,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar measures a space without
   native spatial support needs (`geo:distance`, `geo:length`, `geo:area`, `geo:coordinates`), the containment FILTER
   (`has` for the container, `geo:inside` for the contained), the shape reductions as casts (`as(point::T)` is the
-  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the family's law table, and
+  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the laws the family declares (`?decq`), and
   the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
 * [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a

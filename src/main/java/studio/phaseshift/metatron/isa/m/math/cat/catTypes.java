@@ -18,7 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -124,7 +125,7 @@ public class catTypes {
                             final Rec objInstRec = arg.isRec() && arg.asRec().has(OBJ) ? arg.asRec() : rec(uri(OBJ), arg);
                             // read directly: an initial instruction held in a rec is auto-resolved on an ordinary read
                             final Inst inst = objInstRec.atDirect(OBJ).asInst();
-                            final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
+                            final Law.Helper.Entry entry = Law.Helper.lawsOf(inst.tid());
                             // no table entry and no contract of its own: the form and class are read off the dom/rng
                             // its registrations agree on, so start's {0} => A is initial, not the bare # => # mapper
                             final List<Inst> shapes = null == entry && !inst.tid().hasDom() ? registrations(inst) : List.of(inst);
@@ -145,8 +146,8 @@ public class catTypes {
                                 if (null != entry && null != entry.inverse())
                                     analysis.put(uri(INVERSE), uri(entry.inverse()));
                                 // the edge the partials recombine through -- computed off the laws and the
-                                // derivation, never declared (LawTable.combiner); a reducer without one has none
-                                final fURI combiner = LawTable.combinerOf(inst);
+                                // derivation, never declared (Law.Helper.combiner); a reducer without one has none
+                                final fURI combiner = Law.Helper.combinerOf(inst);
                                 if (null != combiner)
                                     analysis.put(uri(COMBINER), uri(combiner));
                                 return rec(analysis);
@@ -178,7 +179,7 @@ public class catTypes {
                             // stacked into fail space AND, mid-rewrite, aborts the rewrite that asked
                             if (!obj.isType() || null == obj.vid())
                                 return noobj();
-                            object.at(THEORY, LawTable.typeLawsOf(obj.asType()), MUTABLE);
+                            object.at(THEORY, TheoryHelper.instances(obj.asType()), MUTABLE);
                             object.at(MORPHED_TO, auto_(instLambda((ignore, i) -> {
                                 final Obj insts = Machine.read(f("/m/inst/+").dom(obj.vid()));//.rng(i.arg(0).orElse(uri(ALL.maybeSome())).uriValue())); // TODO: constrain to instset
                                 return objs(insts.stream().map(Obj::asInst).filter(m -> !m.tid().dom().isGeneric() && !m.tid().rng().isGeneric()).map(m -> rec(mutableMap(uri(OBJ), m), MORPHISM_TID, null)));
@@ -263,7 +264,7 @@ public class catTypes {
                                 final Inst chain = code.insts().get(i);
                                 // the declared n-tid keys the chain instruction into the law table in-graph, read at
                                 // the carrier flowing into it
-                                final LawTable.Declared declared = LawTable.declared(chain.tid().basePath(), carriers.get(i));
+                                final Law.Helper.Declared declared = Law.Helper.declared(chain.tid().basePath(), carriers.get(i));
                                 final Inst keyed = null == declared ? chain : chain.tid(declared.tid());
                                 Obj morphism;
                                 try {

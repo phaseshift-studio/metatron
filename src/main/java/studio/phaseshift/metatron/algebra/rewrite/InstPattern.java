@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.algebra.rewrite;
 
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ import java.util.List;
  *     InstPattern.law(Law.floatable).star(),   // {*} the prefix the coefficient floats through
  *     InstPattern.law(Law.blocked) ]           // the anchor: a reduce blocks the float (Thm 17)
  * }</pre>
- * Law lookups go through {@link LawTable#declares}, which is keyed by address and so is
+ * Law lookups go through {@link Law.Helper#declares}, which is keyed by address and so is
  * PRE-RESOLUTION SAFE — a pattern never fires for an inst whose operand does not declare the law
  * (the same bridge every declared rewrite uses). {@code form} is an optional refinement for
  * post-resolution matching, where the n-tid coefficient shape is known.
@@ -77,7 +76,7 @@ public final class InstPattern {
 
     /**
      * Require the instruction's partials to recombine through a fold declaring {@code laws} — its COMPUTED combiner
-     * ({@link LawTable#combiner}), which is the instruction itself only when it is self-combining. The slot of a
+     * ({@link Law.Helper#combiner}), which is the instruction itself only when it is self-combining. The slot of a
      * distribution's cut: the plan re-applies the combiner at home, so the cut's laws are the combiner's to declare.
      */
     public InstPattern combinedBy(final Law... laws) {
@@ -127,14 +126,14 @@ public final class InstPattern {
         for (final Law required : this.laws)
             if (!satisfies(inst, required))
                 return false;
-        return null == this.combiner || null != LawTable.combiner(inst, this.combiner.toArray(Law[]::new));
+        return null == this.combiner || null != Law.Helper.combiner(inst, this.combiner.toArray(Law[]::new));
     }
 
     private static boolean satisfies(final Inst inst, final Law law) {
         return switch (law) {
-            case floatable -> Inst.Form.of(inst).isFloatable() && LawTable.declares(inst.tid(), Law.pure);
+            case floatable -> Inst.Form.of(inst).isFloatable() && Law.Helper.declares(inst.tid(), Law.pure);
             case blocked -> Inst.Form.of(inst).isBlocked();
-            default -> LawTable.declares(inst.tid(), law);
+            default -> Law.Helper.declares(inst.tid(), law);
         };
     }
 

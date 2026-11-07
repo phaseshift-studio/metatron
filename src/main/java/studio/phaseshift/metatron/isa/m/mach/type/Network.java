@@ -1205,7 +1205,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          * SWAPPED, never cleared: the caller's stack object must be untouched while the far side runs and is put back
          * by REFERENCE, while the far side's stack is discarded whole — a wire peer's locals vanish too, so that is
          * the semantic, not a leak. Only diagnostics cross ({@code ExecutionStack}), and the reentrancy flags
-         * ({@code LawTable.DERIVING}, {@code MType.RESOLVING}) are deliberately left alone: a nested move is still
+         * ({@code Law.Helper.DERIVING}, {@code MType.RESOLVING}) are deliberately left alone: a nested move is still
          * INSIDE the call that set them.
          * <p>
          * NO THREAD IS SPAWNED. The caller has nothing to do while the shipped program runs, so a worker would only add

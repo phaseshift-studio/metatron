@@ -18,13 +18,13 @@
 
 package studio.phaseshift.metatron.docs;
 
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -838,7 +838,7 @@ public class InstSetDocGenerator {
      * THE TYPE'S ALGEBRA, resolved once: the {@code law} block — {@code ring => /m/theory/ring_theory::[…]},
      * {@code add_group => …} — that says which algebraic structures the type models.
      * <p>
-     * Read through {@link LawTable#typeLawsOf(Type)}, the CONSOLIDATED door: the algebra a type declares
+     * Read through {@link TheoryHelper#instances(Type)}, the CONSOLIDATED door: the algebra a type declares
      * beside itself (the {@code ?decq} block a builder stages) is resolved first, the instruction set's in-code
      * law table second, and the longest matching table owns the answer. Reading the builder's staging map
      * directly would answer {@code rec0()} for every type whose algebra lives in its set's table, i.e. for
@@ -846,7 +846,7 @@ public class InstSetDocGenerator {
      * way — so this asks the one place both of those drain into.
      */
     private static Algebra typeAlgebra(final Type t) {
-        final Algebra laws = LawTable.typeLawsOf(t);
+        final Algebra laws = TheoryHelper.instances(t);
         return null == laws ? Algebra.empty() : laws;
     }
 
@@ -872,7 +872,7 @@ public class InstSetDocGenerator {
      * THE WHOLE ALGEBRA, one click away — a native {@code <dialog>} holding the type's {@code as(object::T)}
      * rec, the block a reader types at the console to see the theory instances, their role bindings, and the
      * morphism pair ({@code morphed_to}/{@code morphed_from}) in one place. The chips state WHICH structures
-     * the type models (and whether it models any at all comes from {@link LawTable#typeLawsOf(Type)}); this
+     * the type models (and whether it models any at all comes from {@link TheoryHelper#instances(Type)}); this
      * states WHAT each role is bound to, which is too much for a header and too little for a page of its own.
      * <p>
      * NATIVE {@code <dialog>}, NOT a Bootstrap modal, and that is a correctness choice: the site wraps every
@@ -1306,7 +1306,7 @@ public class InstSetDocGenerator {
      * AN INSTRUCTION'S DECLARED FACETS — the process {@link Law}s it obeys, its {@code inverse}, and its
      * {@code derivation} — as the badges and lines under its signature.
      * <p>
-     * Read through {@link LawTable#lawsOf(fURI)}, the CONSOLIDATED door: an instruction's laws may be declared
+     * Read through {@link Law.Helper#lawsOf(fURI)}, the CONSOLIDATED door: an instruction's laws may be declared
      * in code by the instruction set's law table, OR beside the instruction by
      * {@code InstBuilder}/{@code TypeBuilder} (persisted to {@code ?decq}), and the lookup answers BOTH —
      * the in-code row, the declaration registry, the store, and the inverse the carrier's algebra derives.
@@ -1318,7 +1318,7 @@ public class InstSetDocGenerator {
      * once in the card header.
      */
     private static String declarationLine(final Inst inst, final Set<String> built) {
-        final LawTable.Entry declared = LawTable.lawsOf(inst.tid());
+        final Law.Helper.Entry declared = Law.Helper.lawsOf(inst.tid());
         if (null == declared) return "";
         final StringBuilder sb = new StringBuilder();
         for (final Obj law : declared.laws().jvm())

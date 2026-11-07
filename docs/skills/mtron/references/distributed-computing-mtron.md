@@ -3,13 +3,13 @@ name: distributed-computing
 description: |
   The distributed-computing pattern menu for metatron — distribution is a theorem, not a feature. The stream-ring
   laws (Thm 5 / 6 / 16 / 17 / 19) decide *which* fold can ship, and the `/m/math/cat` machinery realizes it: the
-  declared theories and process laws on `object::T` / `morphism::T`, `LawTable`'s *computed* combiner, the `plan::T`
+  declared theories and process laws on `object::T` / `morphism::T`, `Law.Helper`'s *computed* combiner, the `plan::T`
   DSL (`cut` / `where` / spans) built by `PlanBuilder` and lowered by `PlanInterpreter`. One row per pattern (A–S):
   its algebraic law (the latex), the mtron you write **before** the rewrite (the pre-write motif), and the sharded
   layout the rewrite emits (the rewrite motif). A ✅ marks a pattern implemented today.
   TRIGGER: When reasoning about distribution, sharding, or fan-out in metatron; when adding or explaining a
   distributed-computing pattern; when you need the law and the pre-write / rewrite motifs for one of the menu's
-  entries (A–S); when wiring a `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable` combiner.
+  entries (A–S); when wiring a `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Law.Helper` combiner.
 ---
 
 # distributed computing — the pattern menu
@@ -35,7 +35,7 @@ menu, fix the five pieces a row names:
 | `instset::T`                   | `/m/math/cat`         | the declaration surface. `object::T` holds a type's structural theories; `morphism::T` holds an inst's process laws, `form`, `class`, and `analysis`; `path::T` lifts *code* to a vertex whose out-edges are the live rewrite rules, each a `plan::T`. `lower(plan::T)` and `bind(plan::T)` are the two applications.       |
 | `law::T`, `plan::T`, `path::T` | —                     | the engine. A `plan::T` assembles `[name, cut, where]` (a value, validated against its axes' law obligations) and lowers to a layout; the combiner a fold's partials recombine through is read off the `law::T` declarations — never named, always computed.                                                              |
 
-`LawTable.combiner(keyed, laws)` is the one function that decides a fold's recombination:
+`Law.Helper.combiner(keyed, laws)` is the one function that decides a fold's recombination:
 
 - a fold that declares `monoidic` + `commutative` is **its own** combiner (`sum`, `prod`);
 - a fold defined by its `derivation` recombines through the fold that defines it (`count ↦ sum`,
@@ -246,7 +246,7 @@ defined by its `derivation` recombines through the fold that defines it:
 | `order(s)`    | `kmerge(s)` | `order(s) ≡ split([_])·kmerge(s)`, and `kmerge` declares `monoidic` + `commutative`                                   |
 | rec `sum`     | itself      | the deep merge's fold declares `monoidic` + `commutative` — a `lst` is its atom, so colliding values bag in any order |
 
-The cat graph answers lazily: `|count?int<=#{*}().as(morphism::T)>>analysis>>combiner` is
+The cat graph answers lazily: `|count?int<=A{*}().as(morphism::T)>>analysis>>combiner` is
 `/m/inst/sum?rng=/m/int&dom=/m/int{*}`. `mean` (magmadic) and `str` `sum` (not commutative) correctly do not shard.
 
 **`order` is the distributed sort.** The lane sorts its shard and the master k-way-merges the runs — the same shard,
@@ -294,7 +294,7 @@ lane_i:   start(<part_i>).group([mod(3)=>sum()])?hop=0               [-- [1=>1,0
 master:   branch?<={0}&split=part(<p_1> => start(<part_1>)…, <p_2> => …).sum()==[_=>sum()]   [-- [1=>{1,4},…] → [1=>5,…] --]
 ```
 
-The combiner is pointwise, computed from `h`'s (`LawTable.pointwise`). The rec `sum` is the deep merge: colliding
+The combiner is pointwise, computed from `h`'s (`Law.Helper.pointwise`). The rec `sum` is the deep merge: colliding
 partials append into a bag, and a bulked partial reads as its copies (the lanes' bag bulks equal ones). `==[_=>C]` is
 `select`, the per-key fold. A `lst` is an atom of the merge, so an `order`'s sorted partials bag whole per key and
 `kmerge` merges the runs.
@@ -303,7 +303,7 @@ partials append into a bag, and a bulked partial reads as its copies (the lanes'
 
 `move()` relocates the *frame of reference* — the machine the code runs in — rather than moving data. It is the
 machine ring's serial `·` (`move` points the machine pointer at an existing machine, and the value flows through
-unchanged), so it is the one distributed pattern that is **not a fold**: no reducer, no combiner, no `LawTable`, no
+unchanged), so it is the one distributed pattern that is **not a fold**: no reducer, no combiner, no `Law.Helper`, no
 `plan::T`. A hand-crafted `rewriter` rule (`extractMove`) tails the code at the first remote move, ships the tail to
 that authority via `eval`, and stops. The receiving machine re-compiles the shipped tail, finds the next move, and
 tails-and-ships again — the one dumb step propagates *fractally*, machine to machine, without the origin ever
@@ -334,10 +334,9 @@ machines with different co-located resources and instruction sets.
 
 A pattern is a declaration, not a new subsystem. The recipe, in the order the machinery consumes it:
 
-1. **Declare the law.** A fold declares `monoidic` + `commutative` (or a `derivation`) in its instset's `LawTable`
-   (`mInstSetLawTable`, `mathInstSetLawTable`): `entry(inst, inverse, laws…)`, or `entry(inst, inverse, derivation,
-   laws…)` for a derived fold.
-2. **Let the combiner compute.** `LawTable.combiner` reads it back — self-combining, derivation-defined, or pointwise
+1. **Declare the law.** A fold declares `monoidic` + `commutative` (or a `derivation`) beside itself, in its
+   `?decq`: `InstBuilder…law(Law.monoidic, Law.commutative)`, or `.derivation(…)` for a derived fold.
+2. **Let the combiner compute.** `Law.Helper.combiner` reads it back — self-combining, derivation-defined, or pointwise
    (`group`) — so no combiner is ever named.
 3. **Author the plan in the axes.** `PlanBuilder.plan(name).cut(Cut.reducer(Law.monoidic, Law.commutative))`, then
    state each decision's three axes before the `where` they describe: the origin's tail is

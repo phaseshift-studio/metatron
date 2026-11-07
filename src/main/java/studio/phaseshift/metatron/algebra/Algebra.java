@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Algebra — the STRUCTURAL THEORIES a type models: the law block {@code LawTable.typeLaws(Type)} answers, read as
+ * Algebra — the STRUCTURAL THEORIES a type models: the law block {@code TheoryHelper.instances} answers, read as
  * Java instead of as a rec.
  *
  * <p>The block is a rec keyed by theory-instance name ({@code ring}, {@code add_group}, {@code semilattice}, …), each

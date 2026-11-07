@@ -283,16 +283,10 @@ public final class PendingWrites {
     public static boolean publish(final fURI address) {
         if (null == address || !Machine.loaded())
             return false;
-        final Write write = WRITES.get(address);
-        if (null != write) {
-            Machine.write(write.address(), write.value());
-            return true;
-        }
-        // A declaration read at a BARE or SUBSUMED operation address asks for EVERY contract under the operation's
-        // base path, while the log stages each declaration at its own contract address (`plus?rng=…&dom=…&decq`) — one
-        // write per contract, so the bare/subsumed spelling has no exact entry. Publish each of those; the reader's
-        // store answers them all, and its dom/rng filter narrows to the subsumed carrier. The exact-address read above
-        // stays the fast path.
+        // A DECLARATION PUBLISHES WITH ITS SIBLINGS: a read at ANY address of an operation (bare, subsumed, or a
+        // contract's own) publishes every contract the log stages under the operation's base path. The store answers a
+        // contract it holds no claim for by subsumption, so a sibling left staged would be pre-empted for good: once
+        // int's order is published, it answers order?A{*}'s own address, and the generic's claim never lands.
         if (address.hasQ(QCollection.DECQ)) {
             final fURI base = address.removeQ(QCollection.DECQ).basePath();
             boolean published = false;
@@ -304,7 +298,10 @@ public final class PendingWrites {
                 }
             return published;
         }
-        return false;
+        final Write write = WRITES.get(address);
+        if (null != write)
+            Machine.write(write.address(), write.value());
+        return null != write;
     }
 
     private static boolean isFacet(final fURI address) {

@@ -166,8 +166,6 @@ public class geoInstSet extends AbstractInstSet {
                 uri(TYPE), geoTypes.registered(this),
                 uri(INST), lst(this.instructions()),
                 uri(REWRITE), lst()));
-        // register the family's process laws before anything resolves a morphism through the router
-        geoInstSetLawTable.INSTANCE.getClass();
         docWrap(this, "the GeoJSON (RFC 7946) data model: geometry types, geodesic and planar algorithms, and the GeoJSON/WKT encodings",
                 "import(/m/math/geo,geo)   [-- types read geo:point, geo:polygon, ...; insts read geo:distance(), geo:inside(), ... --]");
         super.setup();

@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -29,6 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -138,12 +141,47 @@ public class TheoryHelper extends MRec {
      * each instance (e.g. {@code ring}, {@code add_group}, {@code boolean}). Empty when the type models no
      * algebraic structure. This is the enumeration a law-driven rewrite walks.
      */
-    public static Rec instances(final Type type) {
-        // THE DECLARED ALGEBRA, READ LEANLY: object::T's theory field IS LawTable.typeLawsOf(type), so the instances are
-        // read there directly rather than by minting the categorical lift (an object::T with its lazy incidence) that
-        // only the category instset builds. A type with no address, or one that declares nothing, answers the empty
-        // algebra — never a fail, so a law query declines rather than crashing.
-        return LawTable.typeLawsOf(type);
+    public static Algebra instances(final Type type) {
+        // THE DECLARED ALGEBRA, READ LEANLY: the theory facet of the type's ?decq (one Machine.read), not the categorical
+        // lift (an object::T with its lazy incidence) that only the category instset builds. A type with no address, or
+        // one that declares nothing, answers the empty algebra — never a fail, so a law query declines rather than crashing.
+        if (null == type.vid())
+            return Algebra.empty();
+        final fURI key = type.vid().basePath();
+        final Algebra cached = ALGEBRAS.get(key);
+        if (null != cached)
+            return cached;
+        final Obj declared = Machine.read(type.vid().addQ(QCollection.DECQ));
+        final boolean spaceAnswered = declared.isRec();
+        final Obj theory = spaceAnswered ? declared.asRec().atDirect(uri(THEORY)) : noobj();
+        final Algebra algebra = theory.isRec() ? Algebra.of(theory.asRec()) : Algebra.empty();
+        if (memoizable(algebra, spaceAnswered))
+            ALGEBRAS.putIfAbsent(key, algebra);
+        return algebra;
+    }
+
+    /**
+     * THE ALGEBRA MEMO, keyed by the type's VID base path (two refinements of one base share a tid, so a tid key would
+     * answer one's algebra for the other). INTERIM: type-edit subscriptions will replace it.
+     */
+    private static final Map<fURI, Algebra> ALGEBRAS = new ConcurrentHashMap<>();
+
+    /**
+     * A BOOT IS A FRESH WORLD — the memoized algebras hold role pointers into the spaces of the boot that read them, so a
+     * second VM in the same JVM must not answer them ({@code BootLoader.resetMemos}, before any set mounts).
+     */
+    public static void reset() {
+        ALGEBRAS.clear();
+    }
+
+    /**
+     * WHETHER AN ANSWER MAY BE MEMOIZED — a pure function of what the read OBSERVED: a non-empty algebra always; an empty
+     * one only when the type's space answered with a declaration ("declares nothing" is then a fact). A BLIND read — no
+     * space reachable, or no declaration yet — is a fact about the machine asking, and memoizing it would answer "this
+     * type declares no algebra" for the rest of the JVM's life.
+     */
+    public static boolean memoizable(final Rec laws, final boolean spaceAnswered) {
+        return !laws.jvm().isEmpty() || spaceAnswered;
     }
 
     /**

@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * is a hypothesis, and an unverified hypothesis must not become a declaration.
  *
  * <p>WHERE THE ROLES COME FROM — the type's declared algebra ({@code object::T>>theory}): instance name → rec of role
- * → operation. {@link LawTable#typeLawsOf(Type)} serves it, and that
+ * → operation. {@link TheoryHelper#instances(Type)} serves it, and that
  * served rec is itself the {@code ?decq} declaration the base carriers write at their type; when no law table is
  * mounted (the category is optional) the declaration is read directly, so the tool answers on a plain boot. Role
  * pointers are read by {@link TheoryHelper#roleAddress} ({@code atDirect} plus {@link Obj.Helper#getPointer}).
@@ -441,11 +441,11 @@ public final class AlgebraTool {
     /* ------------------------------------------------------------------ the algebra */
 
     /**
-     * The type's declared algebra — the theory instances it models, as {@code LawTable.typeLawsOf} serves them off
+     * The type's declared algebra — the theory instances it models, as {@code Law.Helper.typeLawsOf} serves them off
      * the type's {@code ?decq}.
      */
     private static Rec algebra(final Type type) {
-        return null == type || !Machine.loaded() ? MRec.rec0() : LawTable.typeLawsOf(type);
+        return null == type || !Machine.loaded() ? MRec.rec0() : TheoryHelper.instances(type);
     }
 
     /**

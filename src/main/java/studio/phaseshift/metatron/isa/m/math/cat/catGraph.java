@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
@@ -299,8 +299,8 @@ public class catGraph {
             return lst();
         final boolean endo = object(inst.dom()).equals(object(inst.rng()));
         // the invertible case is the COMPUTED inverse being the edge itself: the law table answers ("an involution
-        // is its own inverse"), the graph reads. Stated once, in LawTable#derivedInverse -- not twice.
-        final LawTable.Entry entry = LawTable.lawsOf(inst.tid());
+        // is its own inverse"), the graph reads. Stated once, in Law.Helper#derivedInverse -- not twice.
+        final Law.Helper.Entry entry = Law.Helper.lawsOf(inst.tid());
         final boolean iso = null != entry && null != entry.inverse() && entry.inverse().equals(inst.tid());
         final List<Obj> labels = new ArrayList<>();
         if (endo)
