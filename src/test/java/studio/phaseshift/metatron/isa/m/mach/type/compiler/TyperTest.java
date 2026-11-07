@@ -5,12 +5,17 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.typer.BasicTyper;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_TYPER_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * THE TYPER'S STATE IS THE TYPER'S REC, at {@code /compiler/typer/check}, and there are exactly two ways to change
@@ -62,5 +67,22 @@ public class TyperTest extends AbstractMetatronTest {
     public void aTyperBuiltAfterBootIsATyper() {
         assertTrue(new BasicTyper().asserts(Typer.TYPE_PRED), "a typer built after boot seeds the boot default");
         assertTrue(BasicCompiler.defaults().typer().asserts(Typer.TYPE_PRED), "a compiler built after boot builds its typer");
+    }
+
+    /**
+     * A TYPER BUILT FROM A REC (typer::T's constructor) KEEPS THE CHECK IT IS GIVEN AND WORKS ON A COPY: BasicTyper seeds
+     * the boot default only when no check is given, a point the given check leaves out still reads the default, and
+     * the caller's rec never receives the typer's own entries.
+     */
+    @Test
+    public void aTyperBuiltFromARecKeepsItsCheck() {
+        final Typer given = ObjmtronSerializer.parse("typer::[check=>[type_pred=>false]]");
+        assertFalse(given.asserts(Typer.TYPE_PRED), "a given check point is kept");
+        assertTrue(given.asserts(Typer.INST_DOM), "a point the given check leaves out reads the boot default");
+        final Typer empty = ObjmtronSerializer.parse("typer::[=>]");
+        assertTrue(empty.asserts(Typer.TYPE_PRED), "the empty rec builds a typer with the boot default");
+        final Rec state = rec(mutableMap(uri(Typer.CHECK), rec(mutableMap(uri(Typer.TYPE_PRED.name()), BOOL_FALSE))));
+        MACH_TYPER_TYPE.constructor().apply(state);
+        assertFalse(state.has(uri("verify")), "the typer is built on a copy of the caller's rec");
     }
 }
