@@ -86,6 +86,10 @@ public class MoveRemoteTest extends AbstractMetatronTest {
             // are the receiver's to re-plan too. The `loop://self/c` beside it is spelled out, so this row pins
             // that BOTH spellings survive untouched.
             "{1,2,3}.move(<//self/a>).branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod() % start({1,2,3}).cut(<loop://self/a>,branch(move(<//self/b>).mult(2),plus(7).move(<loop://self/c>).plus(1)).plus(8).prod()) % 9767520",
+            // A MEMBER THAT IS ONE CUT ANSWERS THE PEER'S RESULT: the rewriter descends into a branch's members, so
+            // move(<//self/b>).mult(2).plus(1) becomes the lone inst cut(<loop://self/b>,mult(2).plus(1)), and the branch
+            // applies it as an inst. The cut answered its shipping code, unrun, and the branch handed that code on as a value.
+            "1.branch(move(<//self/b>).mult(2).plus(1),plus(7))                                                                 % start(1).branch(cut(<loop://self/b>,mult(2).plus(1)),plus(7))                                                                 % {3,8}",
             // THE CUT'S TARGET IS THE SENDER'S TO RESOLVE -- the one thing that IS aligned: `self:/a` (the ISA slot)
             // and `//self/a` (the network slot) are two spellings of one peer, and both ship as loop://self/a.
             "5.move(<self:/a>).plus(1).mult(2)                                                                                        % start(5).cut(<loop://self/a>,plus(1).mult(2))                                                                                        % 12",
