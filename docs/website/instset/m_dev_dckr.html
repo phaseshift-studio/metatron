@@ -50,7 +50,6 @@
     <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -844,6 +843,39 @@ matches docker_image::T</code></pre>
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', update);
     update();
+
+    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+    // (rather than removing it) keeps every anchor and tab handler working while leaving
+    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+    // card can hold several polymorphic variants, and that is the number the badge states.
+    var filter = document.getElementById('instset-inst-filter');
+    var count = document.getElementById('instset-inst-filter-count');
+    var cards = Array.prototype.slice.call(
+        document.querySelectorAll('#instructions .instset-inst-card'));
+    if (filter && cards.length) {
+        var total = cards.reduce(function (n, card) {
+            return n + card.querySelectorAll('.clickable-signature').length;
+        }, 0);
+        var apply = function () {
+            var query = filter.value.trim().toLowerCase();
+            var shown = 0;
+            cards.forEach(function (card) {
+                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                card.hidden = !hit;
+                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+            });
+            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+        };
+        filter.addEventListener('input', apply);
+        filter.addEventListener('search', apply);
+        filter.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                filter.value = '';
+                apply();
+            }
+        });
+        apply();
+    }
 })();
 </script></main>
 <footer class="container-fluid fixed-bottom text-light footer">

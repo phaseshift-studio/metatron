@@ -50,7 +50,6 @@
     <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -746,7 +745,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         every contract whose ADDRESS this set holds. A row contributed by another instruction set is
         labelled with the set that declared it, and documented on that set's page as well.
     </p>
-    <div class="card mb-3" id="__m__sys__inst__bash">
+    <div class="instset-inst-filter" role="search">
+    <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
+    <div class="d-flex align-items-center gap-2">
+        <input type="search" id="instset-inst-filter"
+            class="form-control form-control-sm instset-inst-filter-input"
+            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            aria-controls="instructions" aria-describedby="instset-inst-filter-count">
+        <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
+            aria-live="polite" aria-atomic="true">showing 10 of 10</span>
+    </div>
+</div>
+    <div class="card mb-3 instset-inst-card" id="__m__sys__inst__bash">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">bash</span>
@@ -779,7 +789,7 @@ note that this field is optional, so when in doubt, just don&#39;t fill it out
 [&quot;ls&quot;,&quot;whoami&quot;,&quot;df -h&quot;].mapp(-&lt;[_ =&gt; bash(_)]).sum() [-- same as above but with lst of cmds            --]
 </code></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__close">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__close">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">close</span>
@@ -799,7 +809,7 @@ maps objs to nothing (rng_c = 0)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><span class="text-info">#{?}</span> <span class="text-light">=&gt;</span> <a href="#noobj{0}" class="text-success">noobj{0}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__edit_file">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__edit_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">edit_file</span>
@@ -827,7 +837,7 @@ if both min and max are provided, then those lines are removed and the text is i
   <a href="#file" class="text-light">file</a> <span class="text-light">=&gt;</span> <a href="#'a reference to a fsspace file'" class="text-info">&#39;a reference to a fsspace file&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__find_file">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__find_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">find_file</span>
@@ -853,7 +863,7 @@ if both min and max are provided, then those lines are removed and the text is i
   <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root directory for searching (default: current working directory -- <mfs:.>)'" class="text-info">&#39;the root directory for searching (default: current working directory -- &lt;mfs:.&gt;)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__read_file">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__read_file">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">read_file</span>
@@ -880,7 +890,7 @@ if only a min is provided, then the file is read from that line till the end.
   <a href="#{?}min" class="text-light">{?}min</a> <span class="text-light">=&gt;</span> <a href="#'the start line to read'" class="text-info">&#39;the start line to read&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__redirect">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__redirect">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">redirect</span>
@@ -902,7 +912,7 @@ if only a min is provided, then the file is read from that line till the end.
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'__m__uri'" class="text-info">uri&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__sleep">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__sleep">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sleep</span>
@@ -924,7 +934,7 @@ if only a min is provided, then the file is read from that line till the end.
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the amount of time to pause the current thread'" class="text-info">&#39;the amount of time to pause the current thread&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__stdin">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__stdin">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stdin</span>
@@ -943,7 +953,7 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a single line of input" class="text-success">a single line of input</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__stdout">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__stdout">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">stdout</span>
@@ -962,7 +972,7 @@ if only a min is provided, then the file is read from that line till the end.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#maybe an obj" class="text-success">maybe an obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__sys__inst__sys_stat">
+</div><div class="card mb-3 instset-inst-card" id="__m__sys__inst__sys_stat">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sys_stat</span>
@@ -1020,6 +1030,39 @@ if only a min is provided, then the file is read from that line till the end.
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', update);
     update();
+
+    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+    // (rather than removing it) keeps every anchor and tab handler working while leaving
+    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+    // card can hold several polymorphic variants, and that is the number the badge states.
+    var filter = document.getElementById('instset-inst-filter');
+    var count = document.getElementById('instset-inst-filter-count');
+    var cards = Array.prototype.slice.call(
+        document.querySelectorAll('#instructions .instset-inst-card'));
+    if (filter && cards.length) {
+        var total = cards.reduce(function (n, card) {
+            return n + card.querySelectorAll('.clickable-signature').length;
+        }, 0);
+        var apply = function () {
+            var query = filter.value.trim().toLowerCase();
+            var shown = 0;
+            cards.forEach(function (card) {
+                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                card.hidden = !hit;
+                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+            });
+            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+        };
+        filter.addEventListener('input', apply);
+        filter.addEventListener('search', apply);
+        filter.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                filter.value = '';
+                apply();
+            }
+        });
+        apply();
+    }
 })();
 </script></main>
 <footer class="container-fluid fixed-bottom text-light footer">

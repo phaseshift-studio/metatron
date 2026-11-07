@@ -50,7 +50,6 @@
     <script src="../../../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../../../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -660,7 +659,10 @@ not an assistant (see §1).</p>
   &quot;model_snapshot_path&quot;: &quot;/workspace/work/.hf/hub/models--Qwen--Qwen3.8-27B/snapshots/&lt;hash&gt;&quot;,
   &quot;training_type&quot;: &quot;LoRA/QLoRA&quot;,
   &quot;load_in_4bit&quot;: true,
-  &quot;gpu_ids&quot;: [0, 1],
+  &quot;gpu_ids&quot;: [
+    0,
+    1
+  ],
   &quot;max_seq_length&quot;: 2048,
   &quot;format_type&quot;: &quot;alpaca&quot;,
   &quot;learning_rate&quot;: &quot;5e-5&quot;,
@@ -842,6 +844,77 @@ ssh ginger.local &quot;docker cp unsloth:/workspace/studio/exports/mtron-gguf/&l
 sudo systemctl start ollama
 ollama create mtron -f Modelfile
 </code></pre>
+<h3>Qwen3 Fine-Tuning for Custom Programming Languages (advice from Brave agent)</h3>
+<h4>Symptoms &amp; Root Causes</h4>
+<table>
+<thead>
+<tr><th>Symptom</th><th>Likely Cause</th></tr>
+</thead>
+<tbody>
+<tr><td>Outputs pure garbage / random tokens</td><td>LR too high, or <code>embed_tokens</code> not in <code>modules_to_save</code></td></tr>
+<tr><td>Repeats the same phrase endlessly</td><td>LR too high (model forgot EOS), or too many epochs</td></tr>
+<tr><td>Can generate but ignores your language</td><td>LR too low, or LoRA rank too low</td></tr>
+<tr><td>Works for 2–3 lines then degrades</td><td>Context length too short during training, or overfitting</td></tr>
+</tbody>
+</table>
+<h4>Hyperparameter Recommendations</h4>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Value</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>learning_rate</code></td><td><code>2e-5</code> (or <code>1e-5</code>)</td><td><strong>Critical.</strong> Unsloth default <code>2e-4</code> is too aggressive for new token spaces</td></tr>
+<tr><td><code>num_train_epochs</code></td><td><code>1</code> (max <code>3</code>)</td><td>More than 3 = overfitting = loops</td></tr>
+<tr><td><code>lora_r</code></td><td><code>16</code></td><td>Rank 8 works for 8B; 16 for 14B</td></tr>
+<tr><td><code>lora_alpha</code></td><td><code>16</code></td><td>Must equal <code>lora_r</code></td></tr>
+<tr><td><code>lora_dropout</code></td><td><code>0</code></td><td>—</td></tr>
+<tr><td><code>target_modules</code></td><td><code>q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj</code></td><td>—</td></tr>
+<tr><td><code>modules_to_save</code></td><td><code>[&quot;lm_head&quot;, &quot;embed_tokens&quot;]</code></td><td><strong>Mandatory</strong> when extending vocab</td></tr>
+<tr><td>General data mix</td><td><code>10–20%</code> of training set</td><td>English prose / general code as regularizer</td></tr>
+</tbody>
+</table>
+<h4>Vocabulary Extension Procedure</h4>
+<p>Qwen uses byte-level BPE (151,669 tokens). You <strong>cannot</strong> just append tokens to the vocab file.</p>
+<ol>
+<li>Prepare a plain-text file: one token per line as <code>&lt;token&gt;\t&lt;frequency&gt;</code></li>
+<li>Run Qwen's <code>add_merges.py</code> script with the base <code>qwen.tiktoken</code> + your extra vocab file</li>
+<li>New tokens get indices starting at <strong>151,851</strong> by default</li>
+<li><strong>Resize the embedding layer</strong> in the model to match the new vocab size</li>
+<li>Fine-tune — new embedding rows start random; the model learns their meaning during training</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>Known bug:</strong> <code>Qwen3-8B</code>'s <code>config.json</code> reports <code>vocab_size: 151936</code> but the tokenizer reports <code>151669</code>. Fix
+before resizing embeddings or you'll hit shape mismatch errors.</p>
+</blockquote>
+<h4>Recommended Stack</h4>
+<ul>
+<li><strong>Framework:</strong> Unsloth (cuts VRAM ~50% vs vanilla Transformers + PEFT)</li>
+<li><strong>Base model:</strong> Use the <strong>base</strong> (non-instruct) checkpoint</li>
+<li><strong>Quantization:</strong> 4-bit QLoRA for 8B/14B; BF16 only if you have ≥70 GB VRAM</li>
+</ul>
+<h4>VRAM Budget (2× RTX 3090, 48 GB total)</h4>
+<table>
+<thead>
+<tr><th>Model</th><th>Precision</th><th>VRAM @ batch 4 / 2048 ctx</th><th>Fits?</th></tr>
+</thead>
+<tbody>
+<tr><td>Qwen3-8B</td><td>4-bit QLoRA</td><td>~16 GB</td><td>Single 3090</td></tr>
+<tr><td>Qwen3-14B</td><td>4-bit QLoRA</td><td>~24 GB</td><td>Single 3090</td></tr>
+<tr><td>Qwen3-8B</td><td>BF16 LoRA</td><td>~20 GB</td><td>Single 3090</td></tr>
+<tr><td>Qwen3.8-27B</td><td>4-bit QLoRA</td><td><strong>Broken</strong> (DeltaNet <code>in_proj_z</code> shape bug)</td><td>❌</td></tr>
+<tr><td>Qwen3.8-27B</td><td>BF16</td><td>~70 GB</td><td>❌ (needs H100 80GB)</td></tr>
+</tbody>
+</table>
+<h4>Debugging Checklist</h4>
+<p>When a trained model &quot;can't talk&quot; or &quot;goes in loops&quot;:</p>
+<ol>
+<li>Open the training script — check <code>learning_rate</code>, <code>num_train_epochs</code>, <code>modules_to_save</code>, <code>lora_r</code> / <code>lora_alpha</code></li>
+<li>Verify <code>embed_tokens</code> and <code>lm_head</code> are in <code>modules_to_save</code></li>
+<li>Confirm <code>lora_alpha == lora_r</code></li>
+<li>Check whether general data was mixed in</li>
+<li>Re-run with: <code>lr=2e-5</code>, <code>epochs=1</code>, <code>r=16</code>, <code>alpha=16</code>, <code>modules_to_save=[&quot;lm_head&quot;, &quot;embed_tokens&quot;]</code>, 15% general
+data</li>
+</ol>
 
     </div>
 </main>

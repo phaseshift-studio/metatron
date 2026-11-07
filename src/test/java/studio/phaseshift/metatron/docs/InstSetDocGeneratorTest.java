@@ -314,6 +314,40 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE INSTRUCTION FILTER — a labelled search box and a polite live count above the cards. The count
+     * is the number of CONTRACTS, not names: one card can hold several polymorphic variants, so the
+     * helper states the section's own total (354 on {@code /m}) rather than a card count.
+     */
+    @Test
+    public void testTheInstructionFilterIsALabelledLiveSearchOverEveryContract() {
+        final String html = InstSetDocGenerator.instFilterHtml(354);
+        assertTrue(html.contains("type=\"search\""), "the filter is a search input: " + html);
+        assertTrue(html.contains("placeholder=\"filter insts…\""), "the placeholder names the filter: " + html);
+        assertTrue(html.contains("<label") && html.contains("for=\"instset-inst-filter\""),
+                "the input is labelled, not merely placeholdered: " + html);
+        assertTrue(html.contains("aria-live=\"polite\""), "the count is a polite live region: " + html);
+        assertTrue(html.contains("showing 354 of 354"), "the count starts at every contract: " + html);
+
+        final String small = InstSetDocGenerator.instFilterHtml(7);
+        assertTrue(small.contains("showing 7 of 7"), "the helper states the page's own total: " + small);
+        assertFalse(small.contains("354"), "no page's count is baked in: " + small);
+    }
+
+    /**
+     * THE FILTER'S BEHAVIOUR — the same page script the scroll-spy lives in matches each card's visible
+     * text, hides whole cards (so no gap is left) and resets on Escape; a page without cards just skips it.
+     */
+    @Test
+    public void testThePageScriptFiltersCardsAndClearsOnEscape() {
+        final String script = InstSetDocGenerator.sectionScript();
+        assertTrue(script.contains("instset-inst-filter"), "the script finds the filter: " + script);
+        assertTrue(script.contains("instset-inst-card"), "and the cards it filters: " + script);
+        assertTrue(script.contains("textContent"), "a card is matched by its visible text: " + script);
+        assertTrue(script.contains("Escape"), "Escape resets the filter: " + script);
+        assertTrue(script.contains(".hidden = !hit"), "a miss is hidden, not removed from the DOM: " + script);
+    }
+
+    /**
      * THE BREADCRUMB WALKS THE SET'S OWN PATH — {@code instruction sets: / m / math / geo} — and only the
      * ancestors that were part of this build are links. A folder with no page of its own ({@code /m/db})
      * and the leaf (the page the reader is on) are plain text, so a crumb never points at a 404.

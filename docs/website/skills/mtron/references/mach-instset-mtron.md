@@ -343,13 +343,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}result=>'the last result produced by the th...',
            {?}loop=>'delay to repeat code evaluation (d...',
            {?}runtime=>"computes the thread's current runn...",
            {?}state=>'current state of the thread',
            {?}timeout=>'how long a read of rhs waits for t...',
-           code=>"the thread's executing code"],
+           code=>"the thread's executing code",
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}result=>'the last result produced by the th...'],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -413,11 +413,11 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}roster=>'known machines, connectionless: <h...',
            {?}pattern=>'the branch this network answers as...',
            {?}peer=>"machine's own connections, one per...",
            {?}status=>'the health method — an auto inst c...',
-           {?}listener=>'the sockets this machine serves th...'],
+           {?}listener=>'the sockets this machine serves th...',
+           {?}roster=>'known machines, connectionless: <h...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
@@ -835,7 +835,7 @@ computed:
 
 ```mtron
 mtron> *~/network/host       [-- localhost --]
-==><2f3107c2c04b>
+==>daa865e8c730
 ```
 Peers forked on one host share it; telling them apart takes their service authority.
 

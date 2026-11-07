@@ -50,7 +50,6 @@
     <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/sql.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <!-- MathJax is ~1.5MB and only pages whose content actually carries serialized LaTeX need it
          (\( … \) or \[ … \]). Fetch it after the document is parsed, and only then — instead of
          downloading it on every page view. Page-specific MathJax config scripts (e.g. the
@@ -2821,7 +2820,18 @@ a/b/c/                           [-- relative/branch uri            --]
         every contract whose ADDRESS this set holds. A row contributed by another instruction set is
         labelled with the set that declared it, and documented on that set's page as well.
     </p>
-    <div class="card mb-3" id="__m__inst__and">
+    <div class="instset-inst-filter" role="search">
+    <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
+    <div class="d-flex align-items-center gap-2">
+        <input type="search" id="instset-inst-filter"
+            class="form-control form-control-sm instset-inst-filter-input"
+            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            aria-controls="instructions" aria-describedby="instset-inst-filter-count">
+        <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
+            aria-live="polite" aria-atomic="true">showing 354 of 354</span>
+    </div>
+</div>
+    <div class="card mb-3 instset-inst-card" id="__m__inst__and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">and</span>
@@ -2840,7 +2850,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if all objs are true" class="text-success">true if all objs are true</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__apply">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__apply">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">apply</span>
@@ -2867,7 +2877,7 @@ a/b/c/                           [-- relative/branch uri            --]
   <a href="#lhs" class="text-light">lhs</a> <span class="text-light">=&gt;</span> <a href="#'the obj to apply the lhs inst to'" class="text-info">&#39;the obj to apply the lhs inst to&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__args">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__args">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">args</span>
@@ -2882,7 +2892,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
     
     
-</div><div class="card mb-3" id="__m__inst__as">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__as">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">as</span>
@@ -4688,7 +4698,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__at">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__at">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">at</span>
@@ -4707,7 +4717,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the obj at the arg uri" class="text-success">the obj at the arg uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__auto">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__auto">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">auto</span>
@@ -4726,7 +4736,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the result of applying the arg to the lhs" class="text-success">the result of applying the arg to the lhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__auto_at">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__auto_at">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">auto_at</span>
@@ -4745,7 +4755,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the obj at the arg uri" class="text-success">the obj at the arg uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__auto_from">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__auto_from">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">auto_from</span>
@@ -4764,7 +4774,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the obj at the arg uri" class="text-success">the obj at the arg uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__auto_to">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__auto_to">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">auto_to</span>
@@ -4783,7 +4793,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the uri (if possible) that refers to the obj arg" class="text-success">the uri (if possible) that refers to the obj arg</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__barrier">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__barrier">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">barrier</span>
@@ -4806,7 +4816,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs as a rec" class="text-success">the objs as a rec</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__block">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__block">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">block</span>
@@ -4825,7 +4835,7 @@ retypes the obj&#39;s type/identity, not its value</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#the arg without an applied lhs" class="text-success">the arg without an applied lhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__branch">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__branch">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">branch</span>
@@ -4857,7 +4867,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the branch results as objs" class="text-success">the branch results as objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__cascade">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__cascade">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">cascade</span>
@@ -4876,7 +4886,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the result of applying the arg to the lhs" class="text-success">the result of applying the arg to the lhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__catch">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__catch">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">catch</span>
@@ -4895,7 +4905,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#uncaught fails go to arg, others mapped by identity" class="text-success">uncaught fails go to arg, others mapped by identity</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__cause">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__cause">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">cause</span>
@@ -4910,7 +4920,7 @@ arguments are blocked, so a call is not computed here.
 </div>
     
     
-</div><div class="card mb-3" id="__m__inst__cc">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__cc">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">cc</span>
@@ -4965,7 +4975,7 @@ arguments are blocked, so a call is not computed here.
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__choose">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__choose">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">choose</span>
@@ -4984,7 +4994,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the split as an objs" class="text-success">the split as an objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__compose">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__compose">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">compose</span>
@@ -5003,7 +5013,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the code applied first" class="text-info">the code applied first</a> <span class="text-light">=&gt;</span> <a href="#the serial composition of the two codes" class="text-success">the serial composition of the two codes</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__count">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__count">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">count</span>
@@ -5022,7 +5032,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the count of objs" class="text-success">the count of objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__ctor">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__ctor">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">ctor</span>
@@ -5044,7 +5054,7 @@ arguments are blocked, so a call is not computed here.
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">memspace::[data=&gt;/usr/marko]   [-- a memspace::T built from its constructor arg --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__dedup">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__dedup">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">dedup</span>
@@ -5063,7 +5073,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the deduplicated objs" class="text-success">the deduplicated objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__div">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__div">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">div</span>
@@ -5138,7 +5148,7 @@ arguments are blocked, so a call is not computed here.
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__dom">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__dom">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">dom</span>
@@ -5161,7 +5171,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the keys of the rec" class="text-success">the keys of the rec</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__else">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__else">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">else</span>
@@ -5181,7 +5191,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj else the arg obj" class="text-success">the lhs obj else the arg obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__end">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__end">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">end</span>
@@ -5204,7 +5214,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs code" class="text-info">the lhs code</a> <span class="text-light">=&gt;</span> <a href="#__m__code{0}" class="text-success">code{0}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__eq">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__eq">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">eq</span>
@@ -5223,7 +5233,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs equals rhs" class="text-success">true if lhs equals rhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__eval">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__eval">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">eval</span>
@@ -5242,7 +5252,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#code" class="text-info">code</a> <span class="text-light">=&gt;</span> <a href="#the value of evaluating the lhs code, optionally at the arg uri" class="text-success">the value of evaluating the lhs code, optionally at the arg uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__explain">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__explain">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">explain</span>
@@ -5257,7 +5267,7 @@ arguments are blocked, so a call is not computed here.
 </div>
     
     
-</div><div class="card mb-3" id="__m__inst__filter">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__filter">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">filter</span>
@@ -5276,7 +5286,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs if the arg predicate holds, noobj otherwise" class="text-success">the lhs if the arg predicate holds, noobj otherwise</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__fork">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__fork">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">fork</span>
@@ -5295,7 +5305,7 @@ arguments are blocked, so a call is not computed here.
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj" class="text-success">the lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__from">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__from">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">from</span>
@@ -5323,7 +5333,7 @@ abc.*_      [-- obj at abc via dynamic arg generation --]
 c.*ab${_}   [-- obj at abc via uri template parameter --]
 from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__get">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__get">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">get</span>
@@ -5346,7 +5356,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the value at the uri for each rec" class="text-success">the value at the uri for each rec</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__group">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__group">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">group</span>
@@ -5365,7 +5375,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#a rec of the grouped results" class="text-success">a rec of the grouped results</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__gt">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__gt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">gt</span>
@@ -5437,7 +5447,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__gte">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__gte">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">gte</span>
@@ -5509,7 +5519,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__has">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__has">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">has</span>
@@ -5666,7 +5676,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__host">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__host">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">host</span>
@@ -5721,7 +5731,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__id">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__id">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">id</span>
@@ -5752,7 +5762,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs code" class="text-info">the lhs code</a> <span class="text-light">=&gt;</span> <a href="#__m__code" class="text-success">code</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__import">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__import">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">import</span>
@@ -5771,7 +5781,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the imported instset space" class="text-success">the imported instset space</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__inv">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__inv">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">inv</span>
@@ -5829,7 +5839,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__is">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__is">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">is</span>
@@ -5848,7 +5858,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj if arg is true" class="text-success">the lhs obj if arg is true</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__isa">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__isa">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">isa</span>
@@ -5903,7 +5913,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     
     
-</div><div class="card mb-3" id="__m__inst__kmerge">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__kmerge">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">kmerge</span>
@@ -5922,7 +5932,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some sorted lists" class="text-info">maybe some sorted lists</a> <span class="text-light">=&gt;</span> <a href="#a lst k-way merged by the arg obj" class="text-success">a lst k-way merged by the arg obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__lcase">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__lcase">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">lcase</span>
@@ -5941,7 +5951,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs str" class="text-info">the lhs str</a> <span class="text-light">=&gt;</span> <a href="#the lower-cased str" class="text-success">the lower-cased str</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__lcd">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__lcd">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">lcd</span>
@@ -5963,7 +5973,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'a collection of objs (non-type obj types are extracted)'" class="text-info">&#39;a collection of objs (non-type obj types are extracted)&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__loop">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__loop">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">loop</span>
@@ -5982,7 +5992,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the unchanged lhs obj" class="text-success">the unchanged lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__lshift">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__lshift">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">lshift</span>
@@ -6037,7 +6047,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__lt">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__lt">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">lt</span>
@@ -6109,7 +6119,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__lte">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__lte">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">lte</span>
@@ -6181,7 +6191,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__map">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__map">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">map</span>
@@ -6200,7 +6210,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some obj" class="text-info">maybe some obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj applied to the arg obj" class="text-success">the lhs obj applied to the arg obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__matches">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__matches">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">matches</span>
@@ -6219,7 +6229,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#whether the lhs matches the arg type" class="text-success">whether the lhs matches the arg type</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__math">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__math">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">math</span>
@@ -6238,7 +6248,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a real" class="text-info">a real</a> <span class="text-light">=&gt;</span> <a href="#the value of the arg math expression" class="text-success">the value of the arg math expression</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__mean">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__mean">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">mean</span>
@@ -6299,7 +6309,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__merge">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__merge">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">merge</span>
@@ -6451,7 +6461,7 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__minus">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__minus">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">minus</span>
@@ -6612,7 +6622,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__mod">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__mod">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">mod</span>
@@ -6631,7 +6641,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the dividend int" class="text-info">the dividend int</a> <span class="text-light">=&gt;</span> <a href="#the remainder" class="text-success">the remainder</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__mplus">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__mplus">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">mplus</span>
@@ -6650,7 +6660,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the lhs rec with the argument's entries written over it" class="text-success">the lhs rec with the argument&#39;s entries written over it</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__mult">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__mult">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">mult</span>
@@ -6780,7 +6790,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__name">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__name">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">name</span>
@@ -6799,7 +6809,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the uri to name" class="text-info">the uri to name</a> <span class="text-light">=&gt;</span> <a href="#the name of the lhs uri" class="text-success">the name of the lhs uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__native">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__native">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">native</span>
@@ -6818,7 +6828,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the objs parsed from the command output" class="text-success">the objs parsed from the command output</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__neg">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__neg">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">neg</span>
@@ -6914,7 +6924,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__neq">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__neq">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">neq</span>
@@ -6933,7 +6943,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if lhs does not equal rhs" class="text-success">true if lhs does not equal rhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__not">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__not">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">not</span>
@@ -6956,7 +6966,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs bool" class="text-info">the lhs bool</a> <span class="text-light">=&gt;</span> <a href="#the complemented bool" class="text-success">the complemented bool</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__one">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__one">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">one</span>
@@ -7069,7 +7079,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__or">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__or">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">or</span>
@@ -7088,7 +7098,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#true if any objs are true" class="text-success">true if any objs are true</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__order">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__order">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">order</span>
@@ -7107,7 +7117,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe some A to sort" class="text-info">maybe some A to sort</a> <span class="text-light">=&gt;</span> <a href="#a sorted lst of the lhs A{*}" class="text-success">a sorted lst of the lhs A{*}</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__parent">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__parent">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">parent</span>
@@ -7126,7 +7136,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the parent of the lhs obj" class="text-success">the parent of the lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__parse">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__parse">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">parse</span>
@@ -7151,7 +7161,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --]
 </code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__path">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__path">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">path</span>
@@ -7210,7 +7220,7 @@ parse(&#39;[a=&gt;[b=&gt;c]]&#39;)                     [-- [a=&gt;[b=&gt;c]]  --
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__plus">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__plus">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">plus</span>
@@ -7487,7 +7497,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__port">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__port">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">port</span>
@@ -7542,7 +7552,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__pow">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__pow">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">pow</span>
@@ -7631,7 +7641,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__print">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__print">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">print</span>
@@ -7650,7 +7660,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the rhs obj" class="text-info">the rhs obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj" class="text-success">the lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__println">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__println">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">println</span>
@@ -7669,7 +7679,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the rhs obj" class="text-info">the rhs obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj" class="text-success">the lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__prod">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__prod">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">prod</span>
@@ -7744,7 +7754,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__profile">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__profile">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">profile</span>
@@ -7759,7 +7769,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     
     
-</div><div class="card mb-3" id="__m__inst__q">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__q">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">q</span>
@@ -7778,7 +7788,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the uri to write" class="text-info">the uri to write</a> <span class="text-light">=&gt;</span> <a href="#the uri with its query set" class="text-success">the uri with its query set</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__range">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__range">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">range</span>
@@ -7797,7 +7807,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#a window of the lhs objs" class="text-success">a window of the lhs objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__reduce">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__reduce">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">reduce</span>
@@ -7816,7 +7826,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the result of applying the arg inst to each obj" class="text-success">the result of applying the arg inst to each obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__ref">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__ref">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">ref</span>
@@ -7835,7 +7845,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a uri reference" class="text-info">a uri reference</a> <span class="text-light">=&gt;</span> <a href="#writes the arg obj to the lhs uri" class="text-success">writes the arg obj to the lhs uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__reify">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__reify">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">reify</span>
@@ -7858,7 +7868,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#a rec describing the lhs obj structure" class="text-success">a rec describing the lhs obj structure</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__remove">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__remove">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">remove</span>
@@ -7877,7 +7887,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lst to remove from" class="text-info">the lst to remove from</a> <span class="text-light">=&gt;</span> <a href="#the removed slot" class="text-success">the removed slot</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__repeat">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__repeat">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">repeat</span>
@@ -7905,7 +7915,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
   <a href="#{?}emit" class="text-light">{?}emit</a> <span class="text-light">=&gt;</span> <a href="#'the emit predicate'" class="text-info">&#39;the emit predicate&#39;</a>
 </pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__reverse">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__reverse">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">reverse</span>
@@ -7994,7 +8004,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__rng">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__rng">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">rng</span>
@@ -8017,7 +8027,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs rec" class="text-info">the lhs rec</a> <span class="text-light">=&gt;</span> <a href="#the values of the rec" class="text-success">the values of the rec</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__rshift">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__rshift">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">rshift</span>
@@ -8036,7 +8046,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the obj descended into from the lhs" class="text-success">the obj descended into from the lhs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__save">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__save">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">save</span>
@@ -8059,7 +8069,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">42@abc.save()   [-- 42@abc --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__scheme">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__scheme">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">scheme</span>
@@ -8114,7 +8124,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__select">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__select">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">select</span>
@@ -8263,7 +8273,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__serialize">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__serialize">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">serialize</span>
@@ -8282,7 +8292,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the serial form of the lhs obj" class="text-success">the serial form of the lhs obj</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__side">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__side">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">side</span>
@@ -8304,7 +8314,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1.side(plus(2).to(x)) [-- 1 [x=&gt;3] --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__skip">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__skip">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">skip</span>
@@ -8323,7 +8333,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs after skipping" class="text-success">the objs after skipping</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__sorta">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__sorta">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sorta</span>
@@ -8342,7 +8352,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an obj to match taxonomically" class="text-info">an obj to match taxonomically</a> <span class="text-light">=&gt;</span> <a href="#the unaltered obj if arg matches" class="text-success">the unaltered obj if arg matches</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__source">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__source">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">source</span>
@@ -8361,7 +8371,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#result of evaluating source code" class="text-success">result of evaluating source code</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__split">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__split">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">split</span>
@@ -8453,7 +8463,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__start">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__start">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">start</span>
@@ -8472,7 +8482,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#noobj" class="text-info">noobj</a> <span class="text-light">=&gt;</span> <a href="#initial objs" class="text-success">initial objs</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__sum">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__sum">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">sum</span>
@@ -8598,7 +8608,7 @@ one-to-one obj transformation (dom_c = rng_c = 1)</p>
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__swap">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__swap">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">swap</span>
@@ -8624,7 +8634,7 @@ if an inst arg is wanted for the swap application, then it must be blocked (|) s
 abc.swap(|mult(xyz))      [-- xyz/abc --]
 |-&lt;[_,_].swap(6)          [-- [6,6]   --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__take">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__take">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">take</span>
@@ -8643,7 +8653,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any objs" class="text-info">any objs</a> <span class="text-light">=&gt;</span> <a href="#the objs before skipping" class="text-success">the objs before skipping</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__throw">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__throw">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">throw</span>
@@ -8662,7 +8672,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#a fail::T carrying the arg message" class="text-success">a fail::T carrying the arg message</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__tid">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__tid">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">tid</span>
@@ -8681,7 +8691,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj type id" class="text-success">the lhs obj type id</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__to">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__to">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">to</span>
@@ -8700,7 +8710,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#writes the lhs obj to the arg uri" class="text-success">writes the lhs obj to the arg uri</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__type">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__type">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">type</span>
@@ -8723,7 +8733,7 @@ abc.swap(|mult(xyz))      [-- xyz/abc --]
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">6.type()-&lt;[tid(),vid()]      [-- [/m/int, /m/int] base types are those where vid==tid --]
 nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the types they are refining (super type) --]</code></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__ucase">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__ucase">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">ucase</span>
@@ -8742,7 +8752,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the lhs str" class="text-info">the lhs str</a> <span class="text-light">=&gt;</span> <a href="#the upper-cased str" class="text-success">the upper-cased str</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__union">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__union">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">union</span>
@@ -8761,7 +8771,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs if any arg type matches, noobj otherwise" class="text-success">the lhs if any arg type matches, noobj otherwise</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__update">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__update">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">update</span>
@@ -8792,7 +8802,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the code to update" class="text-info">the code to update</a> <span class="text-light">=&gt;</span> <a href="#the code with each matched run changed" class="text-success">the code with each matched run changed</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__uri:c">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__uri:c">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">uri:c</span>
@@ -8811,7 +8821,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#the uri to read" class="text-info">the uri to read</a> <span class="text-light">=&gt;</span> <a href="#the lst of the coefficient's min and max" class="text-success">the lst of the coefficient&#39;s min and max</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__via">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__via">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">via</span>
@@ -8830,7 +8840,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#any obj" class="text-info">any obj</a> <span class="text-light">=&gt;</span> <a href="#the lhs obj after the conversion chain" class="text-success">the lhs obj after the conversion chain</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__inst__vid">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__vid">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">vid</span>
@@ -8891,7 +8901,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__within">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__within">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">within</span>
@@ -8946,7 +8956,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__zero">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__zero">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">zero</span>
@@ -9110,7 +9120,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
     </div>
 </div>
-</div><div class="card mb-3" id="__m__inst__zip">
+</div><div class="card mb-3 instset-inst-card" id="__m__inst__zip">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">zip</span>
@@ -9296,6 +9306,39 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     window.addEventListener('scroll', update, {passive: true});
     window.addEventListener('resize', update);
     update();
+
+    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+    // (rather than removing it) keeps every anchor and tab handler working while leaving
+    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+    // card can hold several polymorphic variants, and that is the number the badge states.
+    var filter = document.getElementById('instset-inst-filter');
+    var count = document.getElementById('instset-inst-filter-count');
+    var cards = Array.prototype.slice.call(
+        document.querySelectorAll('#instructions .instset-inst-card'));
+    if (filter && cards.length) {
+        var total = cards.reduce(function (n, card) {
+            return n + card.querySelectorAll('.clickable-signature').length;
+        }, 0);
+        var apply = function () {
+            var query = filter.value.trim().toLowerCase();
+            var shown = 0;
+            cards.forEach(function (card) {
+                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                card.hidden = !hit;
+                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+            });
+            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+        };
+        filter.addEventListener('input', apply);
+        filter.addEventListener('search', apply);
+        filter.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                filter.value = '';
+                apply();
+            }
+        });
+        apply();
+    }
 })();
 </script></main>
 <footer class="container-fluid fixed-bottom text-light footer">

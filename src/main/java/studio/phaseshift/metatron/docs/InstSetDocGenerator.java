@@ -1537,6 +1537,32 @@ public class InstSetDocGenerator {
 
     // ── Section: Instructions ──────────────────────────────────────────
 
+    /**
+     * THE FILTER ABOVE THE INSTRUCTIONS — a labelled search box over the cards, with a live count of the
+     * CONTRACTS still shown beside it. The unit is the contract, not the card: one name can hold several
+     * polymorphic variants in a single card, so the count tracks the same 354 the section's badge states
+     * on {@code /m} rather than the number of names.
+     * <p>
+     * The behaviour lives in {@link #sectionScript()}: it matches each card's {@code textContent} (name,
+     * signatures and prose), hides whole cards so no gap is left behind, and clears on Escape or the
+     * search input's own clear button. Package-private so the hooks a reader relies on — a labelled
+     * search field and a polite live count — can be asserted without building a page.
+     */
+    static String instFilterHtml(final int contracts) {
+        return """
+                <div class="instset-inst-filter" role="search">
+                    <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="search" id="instset-inst-filter"
+                            class="form-control form-control-sm instset-inst-filter-input"
+                            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+                            aria-controls="instructions" aria-describedby="instset-inst-filter-count">
+                        <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
+                            aria-live="polite" aria-atomic="true">showing %d of %d</span>
+                    </div>
+                </div>""".formatted(contracts, contracts);
+    }
+
     private static String sectionInsts(final String instsetVid, final Set<Inst> insts,
                                        final Map<String, String> declaring, final Set<String> built) {
         if (insts.isEmpty()) return "";
@@ -1548,7 +1574,8 @@ public class InstSetDocGenerator {
                         labelled with the set that declared it, and documented on that set's page as well.
                     </p>
                     %s
-                </div>""".formatted(insts.size(),
+                    %s
+                </div>""".formatted(insts.size(), instFilterHtml(insts.size()),
                 instCards(instsetVid, insts, declaring, built, false));
     }
 
@@ -1642,7 +1669,7 @@ public class InstSetDocGenerator {
             final String typeSig = contributedSection ? "" : typeSignatureHtml(instsetVid, group.get(0));
             final String intended = contributedSection ? intendedFor(instsetVid, group) : "";
             cards.append("""
-                    <div class="card mb-3" id="%s">
+                    <div class="card mb-3 instset-inst-card" id="%s">
                         <div class="card-header d-flex justify-content-between align-items-center py-2 \
                         text-light border-bottom border-secondary">
                             <span>
@@ -1810,8 +1837,9 @@ public class InstSetDocGenerator {
     }
 
     /**
-     * THE PAGE'S OWN SCROLL BEHAVIOUR — the section bar sticks directly under the site navbar (which reveals
-     * itself past 300px of scroll) and marks the section the reader is in. It lives in the generated page, not
+     * THE PAGE'S OWN SCROLL AND FILTER BEHAVIOUR — the section bar sticks directly under the site navbar
+     * (which reveals itself past 300px of scroll) and marks the section the reader is in; the instruction
+     * filter hides whole cards whose text does not carry the query. It lives in the generated page, not
      * the shared footer, so the reference pages own the behaviour and every other page is untouched.
      */
     static String sectionScript() {
@@ -1841,6 +1869,39 @@ public class InstSetDocGenerator {
                     window.addEventListener('scroll', update, {passive: true});
                     window.addEventListener('resize', update);
                     update();
+
+                    // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
+                    // (rather than removing it) keeps every anchor and tab handler working while leaving
+                    // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
+                    // card can hold several polymorphic variants, and that is the number the badge states.
+                    var filter = document.getElementById('instset-inst-filter');
+                    var count = document.getElementById('instset-inst-filter-count');
+                    var cards = Array.prototype.slice.call(
+                        document.querySelectorAll('#instructions .instset-inst-card'));
+                    if (filter && cards.length) {
+                        var total = cards.reduce(function (n, card) {
+                            return n + card.querySelectorAll('.clickable-signature').length;
+                        }, 0);
+                        var apply = function () {
+                            var query = filter.value.trim().toLowerCase();
+                            var shown = 0;
+                            cards.forEach(function (card) {
+                                var hit = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+                                card.hidden = !hit;
+                                if (hit) shown += card.querySelectorAll('.clickable-signature').length;
+                            });
+                            if (count) count.textContent = 'showing ' + shown + ' of ' + total;
+                        };
+                        filter.addEventListener('input', apply);
+                        filter.addEventListener('search', apply);
+                        filter.addEventListener('keydown', function (event) {
+                            if (event.key === 'Escape') {
+                                filter.value = '';
+                                apply();
+                            }
+                        });
+                        apply();
+                    }
                 })();
                 </script>""";
     }
