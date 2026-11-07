@@ -504,12 +504,14 @@ public class machInstSet extends AbstractInstSet {
                                         typically use many stages when designing code and once stable,
                                         remove stages accordingly for increased performance.
                                         """)
-                                .isaPredicate(rec(uri(Typer.CHECK), rec(
-                                        uri(Typer.INST_DOM.name()), BOOL_TYPE,
-                                        uri(Typer.INST_RNG.name()), BOOL_TYPE,
-                                        uri(Typer.TYPE_PRED.name()), BOOL_TYPE,
-                                        uri(Typer.CODE_RESOLVE.name()), BOOL_TYPE,
-                                        uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)), mutableMap(
+                                // every slot is optional: a BasicTyper is checked against this type while its rec is
+                                // still empty (MObj's constructor), and an absent point reads the boot default
+                                .isaPredicate(rec(uri(Typer.CHECK).maybe().asUri(), rec(
+                                        uri(Typer.INST_DOM.name()).maybe().asUri(), BOOL_TYPE,
+                                        uri(Typer.INST_RNG.name()).maybe(), BOOL_TYPE,
+                                        uri(Typer.TYPE_PRED.name()).maybe(), BOOL_TYPE,
+                                        uri(Typer.CODE_RESOLVE.name()).maybe(), BOOL_TYPE,
+                                        uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE)), mutableMap(
                                         uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
 
                                 .constructor(arg -> new BasicTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
