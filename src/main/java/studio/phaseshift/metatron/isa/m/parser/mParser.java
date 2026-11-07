@@ -75,6 +75,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableList;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mParser {
@@ -670,7 +671,7 @@ public class mParser {
                 /*choice(seq(of('(').trim(), m_obj(), of("=>").trim(), m_obj(), of(')').trim()),*/
                 seq(keyParser, of("=>").trim(), valueParser).separatedBy(of(',').trim()))
                 .map(t -> t.equals("=>") ?
-                        Map.of() :
+                        mutableMap() :
                         collectRec((List) t));
     }
 

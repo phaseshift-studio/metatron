@@ -162,6 +162,17 @@ public class mtronParserTest extends AbstractMetatronTest {
         assertInstanceOf(mtronParser.class, compiler.at(uri(PARSER)), "a compiler wired to a parser keeps it");
     }
 
+    /**
+     * THE EMPTY REC LITERAL IS A REC LIKE ANY OTHER: {@code [=>]} parses to a fresh mutable map, as a non-empty rec and
+     * the empty lst do, never {@code Map.of()}'s shared immutable one, which a constructor that fills in its rec
+     * ({@code typer::[=>]}) could not write.
+     */
+    @Test
+    public void testTheEmptyRecLiteralTakesAWrite() {
+        final Obj empty = ObjmtronSerializer.parse("[=>]");
+        assertDoesNotThrow(() -> empty.asRec().jvm().put(uri("a"), jnt(1)), "[=>] parses to a mutable map");
+    }
+
     // ======================== the schedule runs it ========================
 
     /**
