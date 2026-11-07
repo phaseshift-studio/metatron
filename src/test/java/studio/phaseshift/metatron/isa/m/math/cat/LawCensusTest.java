@@ -353,9 +353,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final Obj fromDecq = Machine.read(Inst.Helper.operationTid(inst.tid()).addQ(DECQ));
         if (fromDecq.isRec())
             addLaws(laws, fromDecq.asRec().atDirect(uri(LAW)));
-        final Law.Helper.Entry served = Law.Helper.lawsOf(inst.tid());
-        if (null != served)
-            addLaws(laws, served.laws());
+        addLaws(laws, Law.Helper.lawsOf(inst.tid()).atDirect(uri(LAW)));
         return laws;
     }
 

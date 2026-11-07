@@ -211,7 +211,8 @@ public class catLiveness {
                     if ((Inst.Form.reducer.name().equals(form) || Inst.Form.join.name().equals(form)) && laws.contains(Law.monoidic.name()))
                         profile.adjMonoidFold = true;
                 }
-                final fURI inverse = null == keyed ? null : inverseOf(keyed);
+                // the declared opposing edge, read off the carried n-tid rather than forcing the morphism's lazy analysis
+                final fURI inverse = null == keyed ? null : TheoryHelper.roleAddress(Law.Helper.lawsOf(keyed.tid()), INVERSE);
                 // directional, as the rule is: the current op must be the PRIOR op's declared inverse (x.f().f⁻¹)
                 if (pastSeed && null != priorInverse && priorInverse.name().equals(name))
                     profile.adjInverse = true;
@@ -235,28 +236,11 @@ public class catLiveness {
         }
 
         /**
-         * The declared opposing edge of the keyed instruction, read from its own entry; null when none. The
-         * one residue the morphism does not yet surface eagerly (it sits in the lazy {@code analysis} block),
-         * so it is read off the carried n-tid rather than forcing the analysis.
-         */
-        private static fURI inverseOf(final Inst keyed) {
-            final Law.Helper.Entry entry = Law.Helper.lawsOf(keyed.tid());
-            return null == entry ? null : entry.inverse();
-        }
-
-        /**
          * Whether the operand's type models any algebraic theory -- memoized per type, since a chain's
          * instructions overwhelmingly share their operand types.
          */
         private static boolean models(final Type operand, final Map<Type, Boolean> cache) {
             return cache.computeIfAbsent(operand, t -> !TheoryHelper.instances(t).jvm().isEmpty());
-        }
-
-        /**
-         * Whether the declaration's opposing edge is the given op -- one side of an adjacent inverse pair.
-         */
-        private static boolean opposes(final Law.Helper.Declared declared, final fURI op) {
-            return null != declared && null != declared.entry().inverse() && declared.entry().inverse().basePath().equals(op);
         }
     }
 }

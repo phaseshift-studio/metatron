@@ -369,10 +369,9 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertTrue(laws.isRec() && laws.asRec().at(uri(LAW)).isLst(),
                 "the builder's laws reach ?decq, got " + laws);
         assertEquals(2, laws.asRec().at(uri(LAW)).asLst().count(), "both laws are declared");
-        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
-        assertNotNull(served, "an inst that declares its own laws is served without a table row");
-        assertTrue(served.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.pure.name())),
-                "the declared laws answer the lookup, got " + served.laws());
+        final Rec served = Law.Helper.lawsOf(built.tid());
+        assertFalse(served.isNoObj(), "an inst that declares its own laws is served without a table row");
+        assertTrue(Law.Helper.declares(served, Law.pure), "the declared laws answer the lookup, got " + served);
     }
 
     /**
@@ -391,10 +390,10 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhs, inst) -> lhs)
                 .inverse(opposing)
                 .create();
-        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
-        assertNotNull(served, "an inst declaring only an inverse is served without a table row");
-        assertEquals(opposing, served.inverse(), "the declared inverse answers the lookup");
-        assertEquals(0, served.laws().count(), "no law was declared, so the served list is empty");
+        final Rec served = Law.Helper.lawsOf(built.tid());
+        assertFalse(served.isNoObj(), "an inst declaring only an inverse is served without a table row");
+        assertEquals(opposing, TheoryHelper.roleAddress(served, INVERSE), "the declared inverse answers the lookup");
+        assertTrue(served.atDirect(uri(LAW)).isNoObj(), "no law was declared, so none is served");
         // the address is stored AS an address, and a facet that was never declared is omitted
         final Rec declaration = Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec();
         assertEquals(opposing, declaration.atDirect(uri(INVERSE)).uriValue(), "the inverse is stored as an address");
@@ -418,11 +417,12 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhsObj, inst) -> lhsObj)
                 .derivation(new Derivation(lhs, rhs))
                 .create();
-        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
-        assertNotNull(served, "an inst declaring only a derivation is served without a table row");
-        assertNotNull(served.derivation(), "the declared derivation answers the lookup");
-        assertEquals(lhs.toString(), served.derivation().lhs().toString(), "the lhs round-trips through ?decq");
-        assertEquals(rhs.toString(), served.derivation().rhs().toString(), "the rhs round-trips through ?decq");
+        final Rec served = Law.Helper.lawsOf(built.tid());
+        assertFalse(served.isNoObj(), "an inst declaring only a derivation is served without a table row");
+        final Obj equation = served.atDirect(uri(DERIVATION));
+        assertTrue(equation.isRec(), "the declared derivation answers the lookup");
+        assertEquals(lhs.toString(), equation.asRec().atDirect(uri(LHS)).toString(), "the lhs round-trips through ?decq");
+        assertEquals(rhs.toString(), equation.asRec().atDirect(uri(RHS)).toString(), "the rhs round-trips through ?decq");
         // only the declared facets are written: the equation is a rec of code::T values, and no inverse key exists
         final Rec declaration = Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec();
         assertEquals(rhs.toString(), declaration.atDirect(uri(DERIVATION)).asRec().atDirect(uri(RHS)).toString(),
@@ -453,7 +453,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
         final Code rhs = ObjmtronSerializer.parse("start(A).siftveil(B).quarrymark()");
         final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
-        final Law[] modLaws = Law.Helper.lawsOf(mod).laws().lstValue().stream()
+        final Law[] modLaws = Law.Helper.lawsOf(mod).atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
         final Inst built = InstBuilder.build()
                 .tid(MOD_INST_TID)
@@ -471,11 +471,12 @@ public class catInstSetTest extends AbstractInstSetTest {
                 "a declared definition feeds the rewrite list, got " + Law.Helper.derivations());
         // the SAME equation lives in a row (int's minus) and now also beside the instruction: it must count once
         final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
-        final Law.Helper.Entry minusEntry = Law.Helper.lawsOf(minus);
-        assertNotNull(minusEntry, "int's minus carries its declaration");
-        final Derivation rowed = minusEntry.derivation();
-        assertNotNull(rowed, "int's minus carries its defining equation");
-        final Law[] minusLaws = minusEntry.laws().lstValue().stream()
+        final Rec minusEntry = Law.Helper.lawsOf(minus);
+        assertFalse(minusEntry.isNoObj(), "int's minus carries its declaration");
+        final Obj equation = minusEntry.atDirect(uri(DERIVATION));
+        assertTrue(equation.isRec(), "int's minus carries its defining equation");
+        final Derivation rowed = new Derivation(equation.asRec().atDirect(uri(LHS)).asCode(), equation.asRec().atDirect(uri(RHS)).asCode());
+        final Law[] minusLaws = minusEntry.atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
         final long before = Law.Helper.derivations().stream()
                 .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
@@ -519,10 +520,9 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @Test
     void testProcessRowIsOwnedByItsCarrier() {
-        final Law.Helper.Entry cmplxNeg = Law.Helper.lawsOf(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID));
-        assertNotNull(cmplxNeg, "a cmplx row belongs to the /m/math table although neg lives under /m/inst");
-        assertTrue(cmplxNeg.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.involution.name())),
-                "cmplx's neg is declared involution, got " + cmplxNeg.laws());
+        final Rec cmplxNeg = Law.Helper.lawsOf(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID));
+        assertFalse(cmplxNeg.isNoObj(), "a cmplx row belongs to the /m/math table although neg lives under /m/inst");
+        assertTrue(Law.Helper.declares(cmplxNeg, Law.involution), "cmplx's neg is declared involution, got " + cmplxNeg);
     }
 
     /**
@@ -534,9 +534,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     void testDispatchSelectsTheDeclaration() {
         for (final fURI carrier : List.of(STR_TID, INT_TID)) {
-            final Law.Helper.Declared order = Law.Helper.declared(ORDER_INST_TID.basePath(), T(carrier));
-            assertNotNull(order, "order answers for a " + carrier + " carrier");
-            assertTrue(Law.Helper.declares(order, Law.pure), carrier + "'s order is declared pure, got " + order.entry().laws());
+            final Rec order = Law.Helper.declared(ORDER_INST_TID.basePath(), T(carrier));
+            assertFalse(order.isNoObj(), "order answers for a " + carrier + " carrier");
+            assertTrue(Law.Helper.declares(order, Law.pure), carrier + "'s order is declared pure, got " + order);
         }
     }
 
@@ -593,26 +593,24 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testStrictLawResolution() {
         final Type nat = T(NAT_TID);
 
-        final Law.Helper.Declared plusOnNat = Law.Helper.declared(PLUS_INST_TID.basePath(), nat);
-        assertNotNull(plusOnNat, "nat runs int's plus, so its row is found along the path (nat -> int -> #)");
-        assertNull(plusOnNat.entry().inverse(), "nat declares a rig: plus has no additive inverse, so nothing cancels");
-        assertTrue(plusOnNat.entry().laws().lstValue().stream()
-                        .anyMatch(l -> l.uriValue().name().equals(Law.commutative.name())),
-                "the implementation's process laws ARE inherited with its row");
+        final Rec plusOnNat = Law.Helper.declared(PLUS_INST_TID.basePath(), nat);
+        assertFalse(plusOnNat.isNoObj(), "nat runs int's plus, so its row is found along the path (nat -> int -> #)");
+        assertNull(TheoryHelper.roleAddress(plusOnNat, INVERSE), "nat declares a rig: plus has no additive inverse, so nothing cancels");
+        assertTrue(Law.Helper.declares(plusOnNat, Law.commutative), "the implementation's process laws ARE inherited with its row");
 
-        final Law.Helper.Declared plusOnInt = Law.Helper.declared(PLUS_INST_TID.basePath(), T(INT_TID));
-        assertNotNull(plusOnInt, "int implements plus itself");
-        assertNotNull(plusOnInt.entry().inverse(), "int is a ring: plus cancels with minus");
+        final Rec plusOnInt = Law.Helper.declared(PLUS_INST_TID.basePath(), T(INT_TID));
+        assertFalse(plusOnInt.isNoObj(), "int implements plus itself");
+        assertNotNull(TheoryHelper.roleAddress(plusOnInt, INVERSE), "int is a ring: plus cancels with minus");
 
-        final Law.Helper.Declared multOnNat = Law.Helper.declared(MULT_INST_TID.basePath(), nat);
-        assertNotNull(multOnNat, "nat's mult lands on the int contract");
-        assertNull(multOnNat.entry().inverse(), "the retraction travels with the implementation: mult -> div");
-        final Law.Helper.Declared divOnNat = Law.Helper.declared(DIV_INST_TID.basePath(), nat);
-        assertNotNull(divOnNat, "nat's div lands on the int contract");
-        assertNull(divOnNat.entry().inverse(), "truncating division is nobody's inverse");
+        final Rec multOnNat = Law.Helper.declared(MULT_INST_TID.basePath(), nat);
+        assertFalse(multOnNat.isNoObj(), "nat's mult lands on the int contract");
+        assertNull(TheoryHelper.roleAddress(multOnNat, INVERSE), "the retraction travels with the implementation: mult -> div");
+        final Rec divOnNat = Law.Helper.declared(DIV_INST_TID.basePath(), nat);
+        assertFalse(divOnNat.isNoObj(), "nat's div lands on the int contract");
+        assertNull(TheoryHelper.roleAddress(divOnNat, INVERSE), "truncating division is nobody's inverse");
 
         // no algebra declared, no row to license a rewrite: imperial has its own plus contract but no laws declared
-        assertNull(Law.Helper.declared(PLUS_INST_TID.basePath(), T(f("imperial"))),
+        assertTrue(Law.Helper.declared(PLUS_INST_TID.basePath(), T(f("imperial"))).isNoObj(),
                 "imperial declares no algebra, so its plus has no row and licenses nothing");
         assertTrue(TheoryHelper.instances(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
         assertFalse(TheoryHelper.instances(nat).jvm().isEmpty(), "nat models a rig (it declares one)");

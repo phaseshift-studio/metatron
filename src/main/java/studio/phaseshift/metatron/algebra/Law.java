@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -396,33 +397,31 @@ public enum Law {
         }
 
         /**
-         * The entry of an inst — the process laws, inverse and derivation it declares beside itself ({@code ?decq}), the
-         * inverse replaced when its carrier's algebra derives one. Null when the inst declares nothing.
+         * The {@code decs::T} an inst declares beside itself ({@code ?decq}) — its process laws, inverse and derivation —
+         * the inverse replaced when its carrier's algebra derives one. {@code noobjRec} when the inst declares nothing.
          */
-        public static Entry lawsOf(final fURI instTid) {
-            final Entry declared = declaredRow(instTid);
-            return null == declared ? null : computed(instTid, declared);
+        public static Rec lawsOf(final fURI instTid) {
+            final Rec declared = declaredRow(instTid);
+            return declared.isNoObj() ? declared : algebraic(instTid, declared, algebraOf(instTid.dom()));
         }
 
         /**
          * THE DECLARATION OF THE OBJ DISPATCH SELECTS ({@link Typer.Helper#deduceTypeInst}): a generic's laws hold for every
          * instantiation that runs its body, a specialization answers with its own, and a refined operand gets the laws of
-         * the body it runs. The INVERSE is the OPERAND's algebra and never inherits ({@link #algebraFor}): nat's rig
-         * subtracts int's add_group. When dispatch names no contract, the op's generic claim answers.
+         * the body it runs. The answer's {@code obj} is that contract, so its tid is the address a rewrite retypes an
+         * unresolved chain instruction with (its coefficient shape made legible). The INVERSE is the OPERAND's algebra and
+         * never inherits ({@link #algebraFor}): nat's rig subtracts int's add_group. When dispatch names no contract, the
+         * op's generic claim answers; {@code noobjRec} when nothing declares the op.
          */
-        public static Declared declared(final fURI op, final Type operand) {
+        public static Rec declared(final fURI op, final Type operand) {
             if (null == op || null == op.basePath())
-                return null;
+                return noobjRec();
             final fURI base = op.basePath();
             if (null == operand || null == operand.vid() || DERIVING.get())
                 return universalDeclared(base);
             final Inst contract = deduce(base, operand);
-            if (null != contract) {
-                final Entry row = declaredRow(contract.tid());
-                if (null != row)
-                    return new Declared(contract.tid(), algebraic(contract.tid(), row, operand));
-            }
-            return universalDeclared(base);
+            final Rec row = null == contract ? noobjRec() : declaredRow(contract.tid());
+            return row.isNoObj() ? universalDeclared(base) : algebraic(contract.tid(), row.at(OBJ, contract), operand);
         }
 
         /**
@@ -450,56 +449,25 @@ public enum Law {
         }
 
         /**
-         * A process-law row: the declared laws, the operation's inverse (null when none), and its derivation
-         * (null when primitive — not definable as a composition of other instructions).
-         * <p>
-         * THE INVERSE IS DIRECTIONAL, AND IT HAS THREE SOURCES in this order:
-         * <ol>
-         *   <li><b>the carrier's algebra</b> — a group instance plus the operation's defining equation
-         *       ({@code div ≡ mult ∘ inv}) gives {@code mult↔div}, and an {@link Law#involution} is its own inverse.
-         *       This is the only source that can answer for an ENDOMORPHISM, where the category graph has no partner
-         *       to offer: {@code position} short-circuits every endo to {@code retract}, and reads {@code coupling}
-         *       only when dom and rng differ — so two endos over one carrier are indistinguishable to it;</li>
-         *   <li><b>the graph's {@code coupling}</b> — an edge running back over the same two objects. A CANDIDATE pair,
-         *       never a decision: the relation is symmetric, so the graph can propose a partner but cannot choose the
-         *       direction, and the direction is the whole content of the claim ({@code int→str→int} holds,
-         *       {@code str→int→str} does not: "007" becomes 7 becomes "7");</li>
-         *   <li><b>the declared field</b> — the residue neither of the above answers, e.g. int's one-way
-         *       {@code mult→div} (truncating division retracts multiplication, sound in one direction only).</li>
-         * </ol>
-         * {@code inverse(f) = g} claims {@code f·g = ε} only — f a section, g its retraction — and never
-         * {@code g·f = ε}, which is why a lossy conversion may declare one direction and answer null for the other.
-         */
-        public record Entry(Lst laws, fURI inverse, Derivation derivation) {
-        }
-
-        /**
-         * Whether a derivation is in flight on this thread — the guard {@link #lookup} answers the declared row under.
+         * Whether a derivation is in flight on this thread — the guard {@link #declared} answers the generic claim under.
          */
         private static final ThreadLocal<Boolean> DERIVING = ThreadLocal.withInitial(() -> Boolean.FALSE);
-
-        /**
-         * An inst's declared entry together with the n-tid it was declared under — the address a rewrite
-         * retypes an unresolved chain instruction with so the instruction's coefficient shape is legible.
-         */
-        public record Declared(fURI tid, Entry entry) {
-        }
 
         /**
          * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF — one {@code Machine.read} of its {@code ?decq} address. A claim
          * {@link InstBuilder#create()} staged and nothing has published yet is published by that read (the q-proc's lazy
          * hook), so the store is the only source.
          */
-        private static Entry declaredRow(final fURI instTid) {
+        private static Rec declaredRow(final fURI instTid) {
             if (null == instTid)
-                return null;
+                return noobjRec();
             // THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
             // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a row is inherited
             // through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused
             final Obj stored = Machine.read(stagingAddress(instTid));
             final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
             return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
-                    ? null : declaredEntry(stored);
+                    ? noobjRec() : declaredEntry(stored);
         }
 
         /**
@@ -513,28 +481,22 @@ public enum Law {
 
         /**
          * THE ROW AN INSTRUCTION DECLARED BESIDE ITSELF AS THE STORE HOLDS IT ({@code ?decq}, staged by
-         * {@code InstBuilder.create}): its process laws, its inverse and its defining equation, each read only when the
-         * rec carries it. An undeclared facet is null (an absent laws list is the empty list, since a row with no laws
-         * still declares its relations), and a rec declaring nothing is null rather than an empty claim — the table's
-         * row is then the only source.
+         * {@code InstBuilder.create}): the {@code decs::T} itself, answered only when it declares a process law, an
+         * inverse or a defining equation — a claim of nothing else (a form alone) is {@code noobjRec}.
          */
-        private static Entry declaredEntry(final Obj fromDecq) {
-            if (null == fromDecq || !fromDecq.isRec())
-                return null;
-            final Rec declaration = fromDecq.asRec();
-            // read as an ADDRESS, never as a value: at(...) auto-resolves and would follow the inverse edge into the
-            // instruction it names instead of answering which instruction it is
-            final fURI inverse = TheoryHelper.roleAddress(declaration, INVERSE);
-            final Derivation derivation = declaredDerivation(declaration);
-            final Obj declaredLaw = declaration.atDirect(uri(LAW));
+        private static Rec declaredEntry(final Obj fromDecq) {
+            if (!fromDecq.isRec())
+                return noobjRec();
+            final Obj declaredLaw = fromDecq.asRec().atDirect(uri(LAW));
             // A TYPE-VALUED SLOT MEANS "ANY LAW": a declaration may state law => uri(LAW_TID) (law::T) instead of a list,
             // so expand it to the vocabulary rather than letting a non-lst silently answer "no laws declared".
-            final Obj lawLst = declaredLaw.isUri() && Law.LAW_TID.equals(declaredLaw.uriValue())
-                    ? lst(Arrays.stream(Law.values()).map(law -> (Obj) uri(law.name())).toList())
-                    : declaredLaw;
-            if (!lawLst.isLst() && null == inverse && null == derivation)
-                return null;
-            return new Entry(lawLst.isLst() ? lawLst.asLst() : lst(), inverse, derivation);
+            final Rec declaration = declaredLaw.isUri() && Law.LAW_TID.equals(declaredLaw.uriValue())
+                    ? fromDecq.asRec().at(LAW, lst(Arrays.stream(Law.values()).map(law -> (Obj) uri(law.name())).toList()))
+                    : fromDecq.asRec();
+            // the inverse is read as an ADDRESS, never as a value: at(...) auto-resolves and would follow the inverse
+            // edge into the instruction it names instead of answering which instruction it is
+            return declaration.atDirect(uri(LAW)).isLst() || null != TheoryHelper.roleAddress(declaration, INVERSE)
+                    || null != declaredDerivation(declaration) ? declaration : noobjRec();
         }
 
         /**
@@ -552,22 +514,6 @@ public enum Law {
         }
 
         /**
-         * The entry as the algebra answers it: the declared row, its inverse replaced when the carrier derives one.
-         * The declared row is returned unchanged when the two agree, so today's declarations cost nothing.
-         */
-        private static Entry computed(final fURI tid, final Entry declared) {
-            DERIVING.set(Boolean.TRUE);
-            try {
-                final Type carrier = algebraOf(null == tid ? null : tid.dom());
-                final fURI inverse = derivedInverse(tid, declared, null == carrier ? null : algebraFor(carrier, tid));
-                return null == inverse || inverse.equals(declared.inverse()) ?
-                        declared : new Entry(declared.laws(), inverse, declared.derivation());
-            } finally {
-                DERIVING.set(Boolean.FALSE);
-            }
-        }
-
-        /**
          * THE INVERSE of an operation, read off THE OPERAND'S declared algebra ({@link #algebraFor} decides which type
          * that is) — a consequence, never a new fact.
          * <ul>
@@ -582,14 +528,14 @@ public enum Law {
          * Only a group is read: a {@code field} names {@code mul}/{@code inv} too, but {@code 0} has no {@code 1/0}, so a
          * field's multiplicative side is no group and licenses no cancellation of its own.
          * <p>
-         * This is SOURCE 1 of the three {@link Entry} names — the algebra, and the only one that can answer for an
+         * This is SOURCE 1 of the three {@link #algebraic} names — the algebra, and the only one that can answer for an
          * endomorphism. Source 2 (the graph's symmetric {@code coupling}, which proposes a partner but not a direction)
          * and source 3 (the declared field) are noted there.
          */
-        private static fURI derivedInverse(final fURI tid, final Entry entry, final Type algebra) {
+        private static fURI derivedInverse(final fURI tid, final Rec entry, final Type algebra) {
             if (null == tid)
                 return null;
-            if (has(entry, Law.involution))
+            if (declares(entry, Law.involution))
                 return tid;
             // THE ALGEBRA IS THE OPERAND'S, NEVER THE CONTRACT'S: a type models exactly what it declares, so an
             // operand that declares none (or a rig where int declares a ring) derives no inverse here
@@ -610,7 +556,7 @@ public enum Law {
                     final fURI form = inverseForm(tid, op, inv);
                     if (null != form)
                         return form;
-                } else if (defined(entry.derivation(), op, inv)) {
+                } else if (defined(declaredDerivation(entry), op, inv)) {
                     // this instruction IS that definition: its inverse is the group's operation
                     return null == tid.dom() || null == tid.rng() || null == op.basePath() ? null : op.basePath().dom(tid.dom()).rng(tid.rng());
                 }
@@ -672,13 +618,6 @@ public enum Law {
         }
 
         /**
-         * Whether an entry declares the given process law.
-         */
-        private static boolean has(final Entry entry, final Law law) {
-            return entry.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(law.name()));
-        }
-
-        /**
          * The registered contract this type lands on, or null when the machine registers none (an unbooted machine
          * included) — see {@link Typer.Helper#deduceTypeInst}.
          */
@@ -687,15 +626,33 @@ public enum Law {
         }
 
         /**
-         * The row as the OPERAND's algebra answers it: its inverse replaced when that algebra derives one, the declared
-         * retraction kept when it does not. Strictly the operand's — see {@link #declared(fURI, Type)}.
+         * The declaration as the OPERAND's algebra answers it: its inverse replaced when that algebra derives one, the
+         * declared retraction kept when it does not, and the declaration itself when the two agree. Strictly the
+         * operand's — see {@link #declared(fURI, Type)}.
+         * <p>
+         * THE INVERSE IS DIRECTIONAL, AND IT HAS THREE SOURCES in this order:
+         * <ol>
+         *   <li><b>the carrier's algebra</b> — a group instance plus the operation's defining equation
+         *       ({@code div ≡ mult ∘ inv}) gives {@code mult↔div}, and an {@link Law#involution} is its own inverse.
+         *       This is the only source that can answer for an ENDOMORPHISM, where the category graph has no partner
+         *       to offer: {@code position} short-circuits every endo to {@code retract}, and reads {@code coupling}
+         *       only when dom and rng differ — so two endos over one carrier are indistinguishable to it;</li>
+         *   <li><b>the graph's {@code coupling}</b> — an edge running back over the same two objects. A CANDIDATE pair,
+         *       never a decision: the relation is symmetric, so the graph can propose a partner but cannot choose the
+         *       direction, and the direction is the whole content of the claim ({@code int→str→int} holds,
+         *       {@code str→int→str} does not: "007" becomes 7 becomes "7");</li>
+         *   <li><b>the declared field</b> — the residue neither of the above answers, e.g. int's one-way
+         *       {@code mult→div} (truncating division retracts multiplication, sound in one direction only).</li>
+         * </ol>
+         * {@code inverse(f) = g} claims {@code f·g = ε} only — f a section, g its retraction — and never
+         * {@code g·f = ε}, which is why a lossy conversion may declare one direction and answer null for the other.
          */
-        private static Entry algebraic(final fURI tid, final Entry declared, final Type operand) {
+        private static Rec algebraic(final fURI tid, final Rec declared, final Type operand) {
             DERIVING.set(Boolean.TRUE);
             try {
                 final fURI inverse = derivedInverse(tid, declared, algebraFor(operand, tid));
-                return null == inverse || inverse.equals(declared.inverse()) ?
-                        declared : new Entry(declared.laws(), inverse, declared.derivation());
+                return null == inverse || inverse.equals(TheoryHelper.roleAddress(declared, INVERSE)) ?
+                        declared : declared.at(INVERSE, uri(inverse));
             } finally {
                 DERIVING.set(Boolean.FALSE);
             }
@@ -721,7 +678,7 @@ public enum Law {
          * {@code strict} and {@code inherit} are identical on today's table (162 tests green either way), because a
          * type that declares a block ({@code nat}'s {@code rig}) is answered by its own block in both policies, and a
          * type that declares none ({@code imperial}) is stopped earlier, at the ROW — its {@code plus?imperial} contract
-         * has no row in any law table, so {@link #declared(fURI, Type)} answers null before an algebra is ever read. The
+         * has no row in any law table, so {@link #declared(fURI, Type)} answers noobjRec before an algebra is ever read. The
          * policy becomes load-bearing when a type has rows but no block: once delegation ({@code law => int}) lands, or
          * the row read learns to fall back to an ancestor's row. {@link #byContract} is the loosest body and the only one
          * that differs today: it hands {@code nat} int's ring, which {@code catInstSetTest#testStrictLawResolution} flags.
@@ -790,14 +747,14 @@ public enum Law {
          * of its body. Dispatch misses {@code count?dom=#{*}} because {@link Type#isRootType()} compares the vid with its
          * coefficient; {@link #isUniversal} compares base paths.
          */
-        private static Declared universalDeclared(final fURI base) {
+        private static Rec universalDeclared(final fURI base) {
             for (final Obj claim : Machine.read(base.addQ(QCollection.DECQ)).stream().toList()) {
                 final Obj obj = claim.isRec() ? claim.asRec().atDirect(uri(OBJ)) : noobj();
-                final Entry entry = obj.isInst() && isUniversal(obj.tid().dom()) ? declaredEntry(claim) : null;
-                if (null != entry)
-                    return new Declared(obj.tid(), entry);
+                final Rec entry = obj.isInst() && isUniversal(obj.tid().dom()) ? declaredEntry(claim) : noobjRec();
+                if (!entry.isNoObj())
+                    return entry;
             }
-            return null;
+            return noobjRec();
         }
 
         /**
@@ -807,10 +764,10 @@ public enum Law {
          * when nothing declares it: an undeclared op matches no law-bearing slot, fail closed.
          */
         public static Inst keyed(final Inst inst, final Type carrier) {
-            final Declared declared = declared(inst.tid().basePath(), carrier);
-            if (null == declared)
+            final Rec declared = declared(inst.tid().basePath(), carrier);
+            if (declared.isNoObj())
                 return inst;
-            final Inst typed = inst.tid(declared.tid());
+            final Inst typed = inst.tid(declared.atDirect(OBJ).tid());
             if (!GROUP_INST_TID.equals(typed.tid().basePath()) || 1 != typed.args().count() || !typed.arg(0).isRec())
                 return typed;
             final Map<Obj, Obj> spec = new LinkedHashMap<>();
@@ -838,22 +795,22 @@ public enum Law {
          * (magmadic), {@code str} {@code sum} (not commutative), an undeclared or non-reducing instruction.
          */
         public static Call combiner(final Inst keyed, final Law... laws) {
-            final Entry entry = lawsOf(keyed.tid());
-            if (null == entry || Inst.Form.reducer != Inst.Form.of(keyed))
+            final Rec entry = lawsOf(keyed.tid());
+            if (entry.isNoObj() || Inst.Form.reducer != Inst.Form.of(keyed))
                 return null;
-            if (declaresAll(entry, laws))
+            if (Arrays.stream(laws).allMatch(law -> declares(entry, law)))
                 return keyed;
             if (GROUP_INST_TID.equals(keyed.tid().basePath()))
                 return pointwise(keyed, laws);
-            if (null == entry.derivation())
-                return null;
-            final Inst fold = entry.derivation().fold(keyed);
+            final Derivation derivation = declaredDerivation(entry);
+            final Inst fold = null == derivation ? null : derivation.fold(keyed);
             if (null == fold)
                 return null;
             // the definition's last step must itself be a FOLD of the target, declaring the laws -- a mapper that
             // happens to be monoidic and commutative (bool plus) recombines nothing
-            final Declared declared = declared(fold.tid().basePath(), keyed.rng());
-            return null != declared && Inst.Form.reducer == Inst.Form.of(fold.tid(declared.tid())) && declaresAll(declared.entry(), laws) ? fold : null;
+            final Rec declared = declared(fold.tid().basePath(), keyed.rng());
+            return !declared.isNoObj() && Inst.Form.reducer == Inst.Form.of(fold.tid(declared.atDirect(OBJ).tid()))
+                    && Arrays.stream(laws).allMatch(law -> declares(declared, law)) ? fold : null;
         }
 
         /**
@@ -908,21 +865,15 @@ public enum Law {
                 return null;
             if (fold == keyed)
                 return keyed.tid();
-            final Declared declared = declared(fold.asInst().tid().basePath(), keyed.rng());
-            return null == declared ? null : declared.tid();
-        }
-
-        private static boolean declaresAll(final Entry entry, final Law... laws) {
-            return Arrays.stream(laws).allMatch(law -> entry.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(law.name())));
+            final Rec declared = declared(fold.asInst().tid().basePath(), keyed.rng());
+            return declared.isNoObj() ? null : declared.atDirect(OBJ).tid();
         }
 
         /**
          * Whether the inst declares the given process law — the guard a law-driven rewrite tests before firing.
          */
         public static boolean declares(final fURI instTid, final Law law) {
-            final Entry entry = lawsOf(instTid);
-            return null != entry && entry.laws().lstValue().stream()
-                    .anyMatch(l -> l.uriValue().name().equals(law.name()));
+            return declares(lawsOf(instTid), law);
         }
 
         /**
@@ -931,13 +882,15 @@ public enum Law {
          * disambiguated by the operand type — never guessed across types.
          */
         public static boolean declares(final Inst inst, final Type carrier, final Law law) {
-            final Declared declared = declared(inst.tid().basePath(), carrier);
-            return null != declared && declares(declared, law);
+            return declares(declared(inst.tid().basePath(), carrier), law);
         }
 
-        public static boolean declares(final Declared declared, final Law law) {
-            return declared.entry().laws().lstValue().stream()
-                    .anyMatch(l -> l.uriValue().name().equals(law.name()));
+        /**
+         * Whether a declaration ({@link #lawsOf}, {@link #declared}) states the given process law in its {@code law} lst.
+         */
+        public static boolean declares(final Rec declared, final Law law) {
+            final Obj laws = declared.atDirect(uri(LAW));
+            return laws.isLst() && laws.asLst().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(law.name()));
         }
 
         /**

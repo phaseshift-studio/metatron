@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
@@ -41,7 +40,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.DERIVATION;
 import static studio.phaseshift.metatron.Tokens.INST;
+import static studio.phaseshift.metatron.Tokens.INVERSE;
+import static studio.phaseshift.metatron.Tokens.LAW;
+import static studio.phaseshift.metatron.Tokens.LHS;
+import static studio.phaseshift.metatron.Tokens.RHS;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -1318,20 +1322,23 @@ public class InstSetDocGenerator {
      * once in the card header.
      */
     private static String declarationLine(final Inst inst, final Set<String> built) {
-        final Law.Helper.Entry declared = Law.Helper.lawsOf(inst.tid());
-        if (null == declared) return "";
+        final Rec declared = Law.Helper.lawsOf(inst.tid());
+        if (declared.isNoObj()) return "";
         final StringBuilder sb = new StringBuilder();
-        for (final Obj law : declared.laws().jvm())
-            sb.append(lawChip(Law.valueOf(law.uriValue().name())));
-        if (null != declared.inverse())
+        final Obj laws = declared.atDirect(LAW);
+        if (laws.isLst())
+            for (final Obj law : laws.asLst().lstValue())
+                sb.append(lawChip(Law.valueOf(law.uriValue().name())));
+        final fURI inverse = TheoryHelper.roleAddress(declared, INVERSE);
+        if (null != inverse)
             sb.append("<span class=\"text-muted instset-doc-small-code ms-2\">inverse:</span> ")
-                    .append(inverseHtml(declared.inverse(), built));
-        final Derivation derivation = declared.derivation();
-        if (null != derivation)
+                    .append(inverseHtml(inverse, built));
+        final Obj derivation = declared.atDirect(DERIVATION);
+        if (derivation.isRec())
             sb.append("<span class=\"text-muted instset-doc-small-code ms-2\">derivation:</span> ")
-                    .append(mtronInline(SER.write(derivation.lhs())))
+                    .append(mtronInline(SER.write(derivation.asRec().atDirect(LHS))))
                     .append("<span class=\"mx-1 text-muted\">\u2261</span>")
-                    .append(mtronInline(SER.write(derivation.rhs())));
+                    .append(mtronInline(SER.write(derivation.asRec().atDirect(RHS))));
         if (sb.isEmpty()) return "";
         return "<div class=\"declared-row\">" + sb + "</div>";
     }
