@@ -75,7 +75,9 @@ public interface Call extends Obj {
             if (this.codeValue().isEmpty())
                 return noobj();
             else if (this.codeValue().size() == 1)
-                return this.codeValue().getFirst();
+                // a one-instruction code IS its instruction, bulk included: the code's coefficient multiplies the
+                // instruction's own (a code of coefficient one, nearly every code, answers the instruction itself)
+                return this.codeValue().getFirst().c(c -> c.mult(this.c())).as();
         }
         return this;
     }
