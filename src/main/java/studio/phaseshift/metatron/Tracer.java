@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -71,13 +71,13 @@ public enum Tracer {
     public static void enable(final Tracer... stages) {
         ACTIVE_TRACERS.addAll(List.of(stages));
         for (final Tracer stage : stages)
-            Machine.write(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_TRUE);
+            Machine.write(f("/sys/tracer").extend("stack").extend(stage.name()), BOOL_TRUE);
     }
 
     public static void disable(final Tracer... stages) {
         List.of(stages).forEach(ACTIVE_TRACERS::remove);
         for (final Tracer stage : stages)
-            Machine.write(mInstSet.TRACER_TYPE_TID.extend("stack").extend(stage.name()), BOOL_FALSE);
+            Machine.write(f("/sys/tracer").extend("stack").extend(stage.name()), BOOL_FALSE);
     }
 
     public static Set<Tracer> getEnabled() {

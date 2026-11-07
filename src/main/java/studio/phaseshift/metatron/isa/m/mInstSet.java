@@ -243,9 +243,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI AUTHORITY_INST_TID = M_ISA_INST_TID.extend("authority");
     public static final fURI HOST_INST_TID = M_ISA_INST_TID.extend("host");
     public static final fURI PORT_INST_TID = M_ISA_INST_TID.extend("port");
-    public static final fURI TYPER_TYPE_TID = f("/m/sys/typer");
     public static final fURI REWRITER_TYPE_TID = f("/m/sys/rewriter");
-    public static final fURI TRACER_TYPE_TID = f("/m/sys/tracer");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");

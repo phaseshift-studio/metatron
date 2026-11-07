@@ -495,6 +495,11 @@ public class machInstSet extends AbstractInstSet {
                                 .example("firstfind_selector::[=>]   [-- first match wins, no scoring --]")
                                 .create(),
                         // the typer family — structural contract, runtime type assertions (identity for now)
+                        /**
+                         * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
+                         * under {@code check} leaves the typer free to grow more orthogonal features beside it, and keeping each flag a
+                         * {@code bool::T} leaves room for a finer realization (a level, a predicate) at the same key.
+                         */
                         MACH_TYPER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
                                 .vid(MACH_TYPER_TID, """
@@ -517,14 +522,10 @@ public class machInstSet extends AbstractInstSet {
                                 // the typer fills in its rec (check, verify), so it gets a copy, never the caller's
                                 .constructor(arg -> new BasicTyper(mutableMap(arg.asRec().jvm()), MACH_TYPER_TID, arg.vid()))
                                 .create(),
-                        /**
-                         * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
-                         * under {@code check} leaves the typer free to grow more orthogonal features beside it, and keeping each flag a
-                         * {@code bool::T} leaves room for a finer realization (a level, a predicate) at the same key.
-                         */
+                        // the tracer family — the stack-trace stages; the boot writes the tracer's state at /sys/tracer
                         MACH_TRACER_TYPE = TypeBuilder.build()
                                 .tid(REC_TID)
-                                .vid(TRACER_TYPE_TID)
+                                .vid(MACH_TRACER_TID)
                                 .isaPredicate(rec(uri("stack"), rec(
                                         uri(Tracer.mtron_stack.name()).maybe().asUri(), BOOL_TYPE,
                                         uri(Tracer.java_stack.name()).maybe(), BOOL_TYPE)))
