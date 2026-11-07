@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -656,7 +661,33 @@ the default compiler, and naming one entry overrides exactly that one stage.</p>
 <code>code::T</code> and returns <code>code::T</code>. Naming a stage that is not that stage's own type is refused where it is written, not
 when the compiler is first used:</p>
 <pre><code class="language-mtron">mtron&gt; compiler::[parser=&gt;mtron_parser::[=&gt;]]
+==&gt;fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::[&quot;&quot;&quot;inst apply failure: obj does not match /m/mach/component/typer::T
+     [[=&gt;]
+         X=&gt;
+     component::T[?[check=&gt;[inst_dom=&gt;bool::T,
+                            inst_rng=&gt;bool::T,
+                            type_pred=&gt;bool::T,
+                            code_resolve=&gt;bool::T,
+                            obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [noobj=&gt;(X=&gt;check)=&gt;noobj=&gt;X=&gt;[inst_dom=&gt;bool::T,inst_rng=&gt;bool::T,type_pred=&gt;bool::T,code_resolve=&gt;bool::T,obj_write=&gt;bool::T],
+      noobj=&gt;(==&gt;{?}machine)=&gt;noobj=&gt;/=&gt;machine::T]]
+     predicate apply failed on execution (at /m/inst/ctor)&quot;&quot;&quot;]
+   	while parsing: compiler::[parser=&gt;mtron_parser::[=&gt;]]]
 mtron&gt; compiler::[rewriter=&gt;fixpoint_rewriter::[max=&gt;3]]
+==&gt;fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::[&quot;&quot;&quot;inst apply failure: obj does not match /m/mach/component/typer::T
+     [[=&gt;]
+         X=&gt;
+     component::T[?[check=&gt;[inst_dom=&gt;bool::T,
+                            inst_rng=&gt;bool::T,
+                            type_pred=&gt;bool::T,
+                            code_resolve=&gt;bool::T,
+                            obj_write=&gt;bool::T]]][ctor?typer&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/typer
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [noobj=&gt;(X=&gt;check)=&gt;noobj=&gt;X=&gt;[inst_dom=&gt;bool::T,inst_rng=&gt;bool::T,type_pred=&gt;bool::T,code_resolve=&gt;bool::T,obj_write=&gt;bool::T],
+      noobj=&gt;(==&gt;{?}machine)=&gt;noobj=&gt;/=&gt;machine::T]]
+     predicate apply failed on execution (at /m/inst/ctor)&quot;&quot;&quot;]
+   	while parsing: compiler::[rewriter=&gt;fixpoint_rewriter::[max=&gt;3]]]
 </code></pre>
 <h4>parse — where a language is hosted</h4>
 <p><code>parser::T</code> is the seam where a <strong>language</strong> is hosted: any language can be parsed as long as it generates <code>code::T</code>.
@@ -739,8 +770,8 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 <h4>type — the fourth stage</h4>
 <p>The last stage is the machine's own type assertion. <code>typer::T</code> is where a frame holds <em>how much</em> checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.</p>
-<p>The typer's state lives in the stage itself — <code>/compiler/typer/check</code>, one <code>bool::T</code> per check point
-(<code>code_resolve</code>, <code>inst_rng</code>, <code>inst_dom</code>, <code>type_pred</code>, <code>obj_write</code>), the boot default being every point on except
+<p>The typer's state lives in the stage itself — <code>/compiler/typer/check</code>, one <code>bool::T</code> per check point (<code>code_resolve</code>,
+<code>inst_rng</code>, <code>inst_dom</code>, <code>type_pred</code>, <code>obj_write</code>), the boot default being every point on except
 <code>code_resolve</code>. A boot profile overrides individual points with <code>typer/check =&gt; [code_resolve =&gt; true]</code>.</p>
 <p>There are exactly two ways to change it, and both are the same nested write:</p>
 <pre><code class="language-mtron">mtron&gt; @/compiler/typer/check &gt;&gt;= [inst_dom =&gt; false]
@@ -797,13 +828,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}result=&gt;'the last result produced by the th...',
            {?}time=&gt;'the datetime::T when the thread wa...',
            code=&gt;&quot;the thread's executing code&quot;,
            {?}timeout=&gt;'how long a read of rhs waits for t...',
            {?}state=&gt;'current state of the thread',
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           {?}loop=&gt;'delay to repeat code evaluation (d...'],
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -978,17 +1009,17 @@ Dropping a non-owner's key withdraws that level's rows and leaves the owner's so
 <p>There is no connect inst, as there is no add-space inst: constructing a protocol client <em>is</em> the dial, and indexing is
 a background behavior of a valid construction.</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[pattern=&gt;&lt;ws://localhost:8555/mtron&gt;]
-==&gt;ws_client::[pattern=&gt;ws://localhost:8555/mtron,
-               host=&gt;ws://localhost:8555/mtron,
-               send=&gt;λ(){&lt;j&gt;},
-               send_recv=&gt;λ(){&lt;j&gt;},
-               inst=&gt;[
-                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-                /m/inst/from=&gt;*uri::T,
-                /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
-               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-               close=&gt;λ(){&lt;j&gt;},
-               ...(1 more)]
+==&gt;[pattern=&gt;ws://localhost:8555/mtron,
+    host=&gt;ws://localhost:8555/mtron,
+    send=&gt;λ(){&lt;j&gt;},
+    send_recv=&gt;λ(){&lt;j&gt;},
+    inst=&gt;[
+     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+     /m/inst/from=&gt;*uri::T,
+     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+    close=&gt;λ(){&lt;j&gt;},
+    ...(1 more)]
 </code></pre>
 <p>The claim (<code>pattern</code>, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as <code>memspace::[pattern=&gt;xyz/#]</code> indexes into memory. The lifecycle is one adjoint pair on the
@@ -1270,11 +1301,11 @@ processor, and distribution.</li>
 and run on mtron's own <code>plus</code>. Nothing is added but the parser.</p>
 <h3>see also</h3>
 <ul>
-<li><a href="language-reference-mtron.html">mtron language reference</a> — the surface the default parser reads: sugar, <code>&gt;&gt;</code>
+<li><a href="m-instset-mtron.html">mtron language reference</a> — the surface the default parser reads: sugar, <code>&gt;&gt;</code>
 rshift, <code>.as(type::T)</code>, coefficients, <code>.explain()</code>.</li>
 <li><a href="type-system-mtron.html">mtron type system</a> — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.</li>
 <li><a href="cat-instset-mtron.html">the category graph</a> — the declared rewrites the <code>rewriter</code> stage consumes, and the
-<code>LawTable</code> that bridges an op address to a declared law.</li>
+<code>Law.Helper</code> reads that bridge an op address to the law it declares (<code>?decq</code>).</li>
 <li><a href="ui-instset-mtron.html">ui instruction set</a> — <code>/m/sys/ui</code>, the widget family carried by the same ISA.</li>
 <li>figure sources — <code>assets/tikz/mach-*.tex</code> (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
 <code>assets/</code>).</li>

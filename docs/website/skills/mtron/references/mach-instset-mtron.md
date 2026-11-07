@@ -193,7 +193,33 @@ when the compiler is first used:
 
 ```mtron
 mtron> compiler::[parser=>mtron_parser::[=>]]
+==>fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::["""inst apply failure: obj does not match /m/mach/component/typer::T
+     [[=>]
+         X=>
+     component::T[?[check=>[inst_dom=>bool::T,
+                            inst_rng=>bool::T,
+                            type_pred=>bool::T,
+                            code_resolve=>bool::T,
+                            obj_write=>bool::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [noobj=>(X=>check)=>noobj=>X=>[inst_dom=>bool::T,inst_rng=>bool::T,type_pred=>bool::T,code_resolve=>bool::T,obj_write=>bool::T],
+      noobj=>(==>{?}machine)=>noobj=>/=>machine::T]]
+     predicate apply failed on execution (at /m/inst/ctor)"""]
+   	while parsing: compiler::[parser=>mtron_parser::[=>]]]
 mtron> compiler::[rewriter=>fixpoint_rewriter::[max=>3]]
+==>fail::[parse error at line 1, col 1: unable to construct compiler::T: fail::["""inst apply failure: obj does not match /m/mach/component/typer::T
+     [[=>]
+         X=>
+     component::T[?[check=>[inst_dom=>bool::T,
+                            inst_rng=>bool::T,
+                            type_pred=>bool::T,
+                            code_resolve=>bool::T,
+                            obj_write=>bool::T]]][ctor?typer<=(#{*}::T){<j>}]@/m/mach/component/typer
+     ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     [noobj=>(X=>check)=>noobj=>X=>[inst_dom=>bool::T,inst_rng=>bool::T,type_pred=>bool::T,code_resolve=>bool::T,obj_write=>bool::T],
+      noobj=>(==>{?}machine)=>noobj=>/=>machine::T]]
+     predicate apply failed on execution (at /m/inst/ctor)"""]
+   	while parsing: compiler::[rewriter=>fixpoint_rewriter::[max=>3]]]
 ```
 ### parse — where a language is hosted
 
@@ -279,8 +305,8 @@ argument, and a cast whose range is rebound to the named type. An inst that cann
 The last stage is the machine's own type assertion. `typer::T` is where a frame holds *how much* checking it wants, in
 the same style as the other three: a rec entry, optional, defaulting.
 
-The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point
-(`code_resolve`, `inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
+The typer's state lives in the stage itself — `/compiler/typer/check`, one `bool::T` per check point (`code_resolve`,
+`inst_rng`, `inst_dom`, `type_pred`, `obj_write`), the boot default being every point on except
 `code_resolve`. A boot profile overrides individual points with `typer/check => [code_resolve => true]`.
 
 There are exactly two ways to change it, and both are the same nested write:
@@ -343,13 +369,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
+           {?}loop=>'delay to repeat code evaluation (d...',
            {?}result=>'the last result produced by the th...',
            {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
            {?}timeout=>'how long a read of rhs waits for t...',
            {?}state=>'current state of the thread',
-           {?}runtime=>"computes the thread's current runn...",
-           {?}loop=>'delay to repeat code evaluation (d...'],
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -527,17 +553,17 @@ a background behavior of a valid construction.
 
 ```mtron
 mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
-==>ws_client::[pattern=>ws://localhost:8555/mtron,
-               host=>ws://localhost:8555/mtron,
-               send=>λ(){<j>},
-               send_recv=>λ(){<j>},
-               inst=>[
-                /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
-                /m/inst/from=>*uri::T,
-                /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
-               status=>!λstatus?bool<=(){<j>},
-               close=>λ(){<j>},
-               ...(1 more)]
+==>[pattern=>ws://localhost:8555/mtron,
+    host=>ws://localhost:8555/mtron,
+    send=>λ(){<j>},
+    send_recv=>λ(){<j>},
+    inst=>[
+     /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
+     /m/inst/from=>*uri::T,
+     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+    status=>!λstatus?bool<=(){<j>},
+    close=>λ(){<j>},
+    ...(1 more)]
 ```
 The claim (`pattern`, retracted to the dialable address) derives the host; on success the client indexes itself into
 the network exactly as `memspace::[pattern=>xyz/#]` indexes into memory. The lifecycle is one adjoint pair on the
@@ -870,11 +896,11 @@ and run on mtron's own `plus`. Nothing is added but the parser.
 
 ## see also
 
-* [mtron language reference](language-reference-mtron.md) — the surface the default parser reads: sugar, `>>`
+* [mtron language reference](m-instset-mtron.md) — the surface the default parser reads: sugar, `>>`
   rshift, `.as(type::T)`, coefficients, `.explain()`.
 * [mtron type system](type-system-mtron.md) — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.
 * [the category graph](cat-instset-mtron.md) — the declared rewrites the `rewriter` stage consumes, and the
-  `LawTable` that bridges an op address to a declared law.
+  `Law.Helper` reads that bridge an op address to the law it declares (`?decq`).
 * [ui instruction set](ui-instset-mtron.md) — `/m/sys/ui`, the widget family carried by the same ISA.
 * figure sources — `assets/tikz/mach-*.tex` (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
   `assets/`).

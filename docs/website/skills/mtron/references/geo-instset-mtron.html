@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -674,21 +679,21 @@ exact for a rectangle whose sides run along parallels and meridians, an approxim
 closure check (a &quot;ring&quot; is a line, and the RFC's first-point-equals-last is the caller's to honour), no altitude in any
 measurement, and no 3D envelope on a geometry (a <code>bbox3d</code> is a value of its own, not a field the model carries).</p>
 <h3>the algebra the rewriter may use</h3>
-<p><code>geoInstSetLawTable</code> declares what a rewrite may do to a geo instruction: a native spatial operator may be substituted
+<p>Each geo instruction declares beside itself (<code>?decq</code>) what a rewrite may do to it: a native spatial operator may be substituted
 only where the laws license it, so <strong>an undeclared instruction is one the optimizer must leave alone.</strong></p>
 <table>
 <thead>
 <tr><th>instruction</th><th>laws</th><th>what it licenses</th></tr>
 </thead>
 <tbody>
-<tr><td><code>geo:distance</code></td><td><code>commutative</code>, <code>pure</code></td><td>operand order is free, so two callers reach one native operator</td></tr>
-<tr><td><code>has</code> / <code>geo:inside</code></td><td><code>pure</code>, each other's INVERSE</td><td>a space with <code>ST_Within</code> alone answers <code>ST_Contains</code> by swapping the operands</td></tr>
+<tr><td><code>geo:distance</code></td><td><code>pure</code></td><td>no effect, so a rewrite may move or drop it; symmetric, but not <code>commutative</code>: geometry × geometry → meter is not closed</td></tr>
+<tr><td><code>has</code> / <code>geo:inside</code></td><td><code>pure</code></td><td>converses, not inverses (<code>a.inside(b)</code> iff <code>b.has(a)</code>): a pushdown may swap the operands, no law cancels them</td></tr>
 <tr><td><code>geo:coordinates</code>, <code>geo:wkt</code></td><td><code>pure</code></td><td>structural projections have no effect, so a rewrite can move or drop them</td></tr>
 <tr><td><code>geo:area</code>, <code>geo:length</code></td><td><code>pure</code>, <code>blocked</code></td><td>measured here, not floatable to a native operator</td></tr>
 </tbody>
 </table>
 <p>A geometry is not a ring, a monoid or a lattice: there is no <code>plus</code> of two geometries, so the family declares no
-carrier algebra and <code>typeLawsUncached</code> answers the empty rec. The measures are homomorphisms <strong>to</strong> the reals, not
+carrier algebra: no geo type's <code>?decq</code> carries a <code>theory</code>. The measures are homomorphisms <strong>to</strong> the reals, not
 operations on geometries.</p>
 <h3>pushdown</h3>
 <p>The instructions are for spaces that have <strong>no</strong> spatial support. One that does — PostGIS behind <code>/m/db/tble</code>, a

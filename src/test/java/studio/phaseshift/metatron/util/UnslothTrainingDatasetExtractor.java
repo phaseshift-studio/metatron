@@ -7,17 +7,17 @@ import studio.phaseshift.metatron.furi.q.QProcIntegrationTest;
 import studio.phaseshift.metatron.furi.q.TypeQTest;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.ai.llm.llmInstSetTest;
+import studio.phaseshift.metatron.isa.m.db.vec.vecInstSetTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSetTest;
 import studio.phaseshift.metatron.isa.m.mParserTest;
+import studio.phaseshift.metatron.isa.m.mach.machInstSetTest;
 import studio.phaseshift.metatron.isa.m.math.mathInstSetTest;
 import studio.phaseshift.metatron.isa.m.parse.CodeParseTest;
 import studio.phaseshift.metatron.isa.m.parse.InstParseTest;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.mach.machInstSetTest;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.sysInstSetTest;
-import studio.phaseshift.metatron.isa.m.db.vec.vecInstSetTest;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializerTest;
 
 import java.io.FileWriter;
@@ -336,7 +336,7 @@ public class UnslothTrainingDatasetExtractor {
                 "Define %s as used in mtron."
         };
         final List<String> files = List.of(
-                "docs/website/skills/mtron/references/language-reference-mtron.md",
+                "docs/website/skills/mtron/references/m-instset-mtron.md",
                 "docs/website/skills/mtron/references/type-system-mtron.md",
                 "docs/website/skills/mtron/references/tble-instset-mtron.md",
                 "docs/website/skills/mtron/references/math-instset-mtron.md",

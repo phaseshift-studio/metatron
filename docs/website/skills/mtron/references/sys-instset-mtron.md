@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -73,14 +73,14 @@ mtron> bash('ls')
 mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
-==>['Filesystem             Size  Used ...',
-    'tmpfs                  6.1G  6.4M ...',
-    'efivarfs               128K   42K ...',
-    '/dev/nvme0n1p2         916G  572G ...',
-    'tmpfs                   31G  155M ...',
-    'tmpfs                  5.0M   20K ...',
-    'tmpfs                   31G     0 ...',
-    ...(4 more)]
+==>['Filesystem      Size  Used Avail U...',
+    'tmpfs           6.1G  6.3M  6.1G  ...',
+    'efivarfs        128K   42K   82K  ...',
+    '/dev/nvme1n1p2  916G  576G  294G  ...',
+    'tmpfs            31G  189M   31G  ...',
+    'tmpfs           5.0M   20K  5.0M  ...',
+    'tmpfs            31G     0   31G  ...',
+    ...(3 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
@@ -164,10 +164,10 @@ mtron> bash('ls')==[_ => bash("stat ${_}")>>0]          [-- each entry => its `F
     ...(17 more)]
 mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
 ==>['  File: AGENTS.md',
-    '  Size: 27203     	Blocks: 56     ...',
+    '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-05 16:03:56.066165...',
+    'Access: 2026-11-07 00:00:26.813553...',
    ...
 ```
 ### a shape of its own
@@ -178,7 +178,7 @@ converts against itself, so no `awk`, `grep`, or `du`:
 
 ```mtron
 mtron> bash('ls')==[_ => bash('stat ${_} | sed -n "s/.*Size: \([0-9]*\).*/\1/p"')>>0.as?int<=str(int::T).as(bB::T)]
-==>[bB::27203.0,
+==>[bB::26732.0,
     bB::11430.0,
     bB::4096.0,
     bB::4096.0,
@@ -254,12 +254,12 @@ One read each: the environment, the thread count, and the executor's own summary
 mtron> */sys/env/HOME
 ==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>191
+==>57
 mtron> sys_stat()
 ==>[total_mem_jvm=>mB::480.0,
-    free_mem_jvm=>mB::132.2763,
+    free_mem_jvm=>mB::173.4855,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::347.7236,
+    used_mem_jvm=>mB::306.5144,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',
@@ -499,7 +499,7 @@ text), and `objClone` (the gauge) — a new throw site belongs to this grammar.
 ## see also
 
 * [mtron type system](type-system-mtron.md) — vid/tid, coefficients, `.as(type::T)`.
-* [mtron language reference](language-reference-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
+* [mtron language reference](m-instset-mtron.md) — `>>`, the `?`-family filters, select (`==`), split (`-<`),
   `->` write.
 * [web instruction set](web-instset-mtron.md) — the route tables an `fsspace` mount hangs behind.
 * [tble instruction set](tble-instset-mtron.md) — the same space protocol, on a database.

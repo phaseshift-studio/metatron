@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="instset/m.html"><img
-                            src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="instset/m.html"><img
+                                src="images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -952,9 +957,9 @@ mtron&gt; 12 + &lt;1&gt;()                [-- 4 --]
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
 ==&gt;&lt;#&gt;=&gt;[args=&gt;[
      log=&gt;info,
-     boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
+     boot=&gt;&lt;boot/docs.mtron&gt;,
      local=&gt;booger],
-    file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file]
+    file=&gt;&lt;boot/docs.mtron&gt;@boot/file]
 ==&gt;&lt;#&gt;=&gt;plus?int&lt;=int(fail::[unable to determine inst function:
    	12          =&gt; /sys/space/cold/instset/1?&lt;=/m/int()   | [inst]
    	int::T      =&gt; int::T   |  \_dom
@@ -1779,12 +1784,8 @@ mtron&gt; http_server::[origin     =&gt; http://localhost:8777,
                      pattern  =&gt; &lt;http://#&gt;,
                      route    =&gt; [/mcp     =&gt; mcp_mtron_http,
                                    /       =&gt; &lt;&gt;]]
-==&gt;fail::[parse error at line 1, col 1: unable to construct http_server::T: fail::['inst apply failure: unable to bind http://localhost:8777: Address already in use [Net&lt;-2&gt;] (at /m/inst/ctor) [Net&lt;-2&gt;]']
-   	while parsing: http_server::[origin     =&gt; http://localhost:8777,
-                        q        =&gt; [mimeq::[=&gt;]],
-                        pattern  =&gt; &lt;http://#&gt;,
-                        route    =&gt; [/mcp     =&gt; mcp_mtron_http,
-                                      /       =&gt; &lt;&gt;]]]
+==&gt;http_server::[origin=&gt;http://localhost:8777,
+                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; ws_server::[host     =&gt; ws://localhost:8555,
                    pattern  =&gt; &lt;ws://#&gt;,
                    q        =&gt; [docq::[=&gt;],subq::[=&gt;]],
@@ -2016,7 +2017,7 @@ These types are distributed in the <code>/m/math</code> instruction set and impo
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;     ​1​
 ==&gt;int::T[?is(gte(0)).is(lte(100))][ctor?percent&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/percent
-==&gt;int::T[/m/inst/is(/m/inst/gt(0))]@/m/math/nat
+==&gt;int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat
 ==&gt;lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx
 ==&gt;real::T@/m/math/datasize
 ==&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/math/datetime
@@ -2271,12 +2272,8 @@ mtron> wsspace::[host     => ws://localhost:8555,
                pre_write=>inst(uri::T,#::T){<j>},
                obj=>memspace::[pattern=><#>],
                inst=>/m/instset::[=>]],
-              subq::[
-               pattern=>subq,
-               pre_read=>inst(uri::T){<j>},
-               pre_write=>inst(uri::T,#::T){<j>},
-               qless_write=>inst(uri::T,#::T){<j>},
-               obj=>[,]]],
+              subq::[pattern=>subq,pre_read=>inst(uri::T){<j>},pre_write=>inst(uri::T,#::T){<j>},qless_write=>inst(uri::T,
+                                                                                                                   #::T){<j>},obj=>[,]]],
              route=>[/mcp=>mcp_mtron_ws]]@/sys/space/web/ws
 ----
 
@@ -2287,70 +2284,8 @@ As such, an MCP client has an natural mapping to an LLM tool feature.
 [source,mtron]
 ----
 mtron> mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron
-==>mcp_client::[host=>ws://localhost:8555/mcp,
-                status=>!λstatus?bool<=(){<j>},
-                tool=>[
-                 m_web_mcp_mcp_mtron_write_memory=>tool::[
-                  inst=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                  name=>m_web_mcp_mcp_mtron_write_memory,
-                  desc=>'(experimental) returns a memory re...',
-                  arg=>[
-                   current_memory=>'the memory to remember -- e.g. a s...',
-                   previous_memory=>'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=>tool::[
-                  inst=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                  name=>m_web_mcp_mcp_mtron_read_memory,
-                  desc=>'(experimental) returns the result ...',
-                  arg=>[memory_vid=>'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=>tool::[
-                  inst=>inst(code=>'/m/code',<>=>'<no description>'){<j>},
-                  name=>m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=>'<no description>',
-                  arg=>[code=>'/m/code',<>=>'<no description>']],
-                 m_web_mcp_mcp_mtron_list_space=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_list_space,
-                  desc=>'returns a rec identifying all acti...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_machine_info=>tool::[
-                  inst=>inst(){<j>},
-                  name=>m_web_mcp_mcp_mtron_machine_info,
-                  desc=>'returns what the running machine i...',
-                  arg=>[=>]],
-                 m_web_mcp_mcp_mtron_find_inst=>tool::[
-                  inst=>inst(pattern=>'the inst tid to match',
-                             dom=>'the dom of inst to match (can be added to pattern arg)',
-                             rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                  name=>m_web_mcp_mcp_mtron_find_inst,
-                  desc=>'returns a lst of all instruction p...',
-                  arg=>[
-                   pattern=>'the inst tid to match',
-                   dom=>'the dom of inst to match (can be a...',
-                   rng=>'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=>tool::[
-                  inst=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                             on_message=>'the function to evaluate on every received message'){<j>},
-                  name=>m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=>'create a websocket client with pro...',
-                  arg=>[
-                   host=>'the full ws:// uri of the websocke...',
-                   on_message=>'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=>[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=>inst(current_memory=>'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=>'a previous memory vid to chain current memory to'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=>inst(memory_vid=>'the vid of the memory to read'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=>inst(code=>'/m/code',
-                                                                     <>=>'<no description>'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=>inst(){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=>inst(pattern=>'the inst tid to match',
-                                                                    dom=>'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=>'the rng of inst to match (can be added to pattern arg'){<j>},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=>inst(host=>'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=>'the function to evaluate on every received message'){<j>},
-                 ...(1 more)]]@/usr/ai/mcp/mtron
+==>fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.util.concurrent.ExecutionException: java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion("2025-03-26"). [SocketChannelImpl<204>]']['fail']['fail']
+   	while parsing: mcp_client::[host => ws://localhost:8555/mcp]@/usr/ai/mcp/mtron]
 mtron> doc_model(aix).>>=+
         [feature =>[
           tool      => [!*/usr/ai/mcp/mtron],
@@ -3338,7 +3273,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}m{{y}}e{{c}}T{{y}}a{{c}}t{{b}}r{{r}}o{{y}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{y}}E{{g}}t{{b}}A{{r}}t{{c}}r{{m}}o{{c}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5877,17 +5812,16 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
-==&gt;'Filesystem             1K-blocks       Used Available Use% Mounted on'
-==&gt;'tmpfs                    6355852       6548   6349304   1% /run'
-==&gt;'efivarfs                     128         42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme0n1p2         959786032  599042384 311915440  66% /'
-==&gt;'tmpfs                   31779244     158052  31621192   1% /dev/shm'
-==&gt;'tmpfs                       5120         20      5100   1% /run/lock'
-==&gt;'tmpfs                   31779244          0  31779244   0% /run/qemu'
-==&gt;'/dev/nvme0n1p1            523248       6288    516960   2% /boot/efi'
-==&gt;'tmpfs                    6355848        272   6355576   1% /run/user/1000'
-==&gt;'/dev/nvme1n1p2         976744444  251306824 725437620  26% /media/hdd0'
-==&gt;'//192.168.1.72/beast1 1921208544 1294111812 627096732  68% /srv/beast/hdd1'
+==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
+==&gt;'tmpfs            6355852      6436   6349416   1% /run'
+==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
+==&gt;'/dev/nvme1n1p2 959786032 603505884 307451940  67% /'
+==&gt;'tmpfs           31779244    199836  31579408   1% /dev/shm'
+==&gt;'tmpfs               5120        20      5100   1% /run/lock'
+==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
+==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
+==&gt;'tmpfs            6355848       264   6355584   1% /run/user/1000'
+==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
 ==&gt;'AGENTSWARM.md'
@@ -6102,7 +6036,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:604/03/24/066?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:700/43/42/756?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7943,7 +7877,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:604/03/26/253?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:700/43/45/446?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7962,7 +7896,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:604/03/26/253?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:700/43/45/446?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -8054,7 +7988,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:604/03/09/703?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:700/43/28/143?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8062,7 +7996,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:604/03/09/703?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:700/43/28/143?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8124,8 +8058,7 @@ When <code><a href="http://#" class="bare">http://#</a></code> is the pattern, t
        ]@/sys/space/web/http
 ==&gt;httpspace::[host=&gt;http://localhost:8777,
                pattern=&gt;http://#,
-               q=&gt;[mimeq::[pattern=&gt;mimeq,
-                           post_read=&gt;inst(uri::T,#::T){&lt;j&gt;}]],
+               q=&gt;[mimeq::[pattern=&gt;mimeq,post_read=&gt;inst(uri::T,#::T){&lt;j&gt;}]],
                route=&gt;[
                 /=&gt;&lt;&gt;,
                 /mcp=&gt;mcp_mtron_http,
@@ -9465,7 +9398,7 @@ If the database is queried by external SQL tooling, FK columns appear as ordinar
     &lt;3rd_place_medal&gt;=&gt;'🥉',
     ...(1848 more)]
 ==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
-==&gt;/m/sys/tracer::[stack=&gt;[mtron_stack=&gt;false,java_stack=&gt;false]]
+==&gt;/m/mach/component/tracer::[stack=&gt;[mtron_stack=&gt;false,java_stack=&gt;false]]
 ==&gt;"""
    use /sys/tmp as a temporary location for objs.
    note that /sys/tmp can be automatically garbage collected at any time.

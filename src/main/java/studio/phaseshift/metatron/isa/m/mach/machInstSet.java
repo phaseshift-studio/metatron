@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.mach;
 
+import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -27,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.parser.mtronParser;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.*;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.FixPointRewriter;
@@ -59,6 +61,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.TIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -269,9 +273,12 @@ public class machInstSet extends AbstractInstSet {
     public static Type MACH_FIRSTFIND_SELECTOR_TYPE;
     public static Type MACH_BINDER_TYPE;
     public static Type MACH_GENERIC_BINDER_TYPE;
-    // the typer family — structural type(code)->code contract
+    // the typer family — structural typer
     public static final fURI MACH_TYPER_TID = MACH_MACHINE_COMPONENT_TID.extend(TYPER);
     public static Type MACH_TYPER_TYPE;
+    // the tracer family — process tracer
+    public static final fURI MACH_TRACER_TID = MACH_MACHINE_COMPONENT_TID.extend(TRACER);
+    public static Type MACH_TRACER_TYPE;
     // memory — the machine's address space: relative bindings plus the index of absolute spaces
     public static final fURI MACH_MEMORY_TID = MACH_MACHINE_COMPONENT_TID.extend(MEMORY);
     public static Type MACH_MEMORY_TYPE;
@@ -490,8 +497,45 @@ public class machInstSet extends AbstractInstSet {
                         // the typer family — structural contract, runtime type assertions (identity for now)
                         MACH_TYPER_TYPE = TypeBuilder.build()
                                 .tid(MACH_MACHINE_COMPONENT_TID)
-                                .vid(MACH_TYPER_TID)
+                                .vid(MACH_TYPER_TID, """
+                                        the check points where the type checker should be applied.
+                                        the more stages that are active, the slower instructions evaluate.
+                                        however, more active stages reduces potential for data corruption.
+                                        typically use many stages when designing code and once stable,
+                                        remove stages accordingly for increased performance.
+                                        """)
+                                .isaPredicate(rec(uri(Typer.CHECK), rec(
+                                        uri(Typer.INST_DOM.name()), BOOL_TYPE,
+                                        uri(Typer.INST_RNG.name()), BOOL_TYPE,
+                                        uri(Typer.TYPE_PRED.name()), BOOL_TYPE,
+                                        uri(Typer.CODE_RESOLVE.name()), BOOL_TYPE,
+                                        uri(Typer.OBJ_WRITE.name()), BOOL_TYPE)), mutableMap(
+                                        uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
+
                                 .constructor(arg -> new BasicTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
+                                .create(),
+                        /**
+                         * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
+                         * under {@code check} leaves the typer free to grow more orthogonal features beside it, and keeping each flag a
+                         * {@code bool::T} leaves room for a finer realization (a level, a predicate) at the same key.
+                         */
+                        MACH_TRACER_TYPE = TypeBuilder.build()
+                                .tid(REC_TID)
+                                .vid(TRACER_TYPE_TID)
+                                .isaPredicate(rec(uri("stack"), rec(
+                                        uri(Tracer.mtron_stack.name()).maybe().asUri(), BOOL_TYPE,
+                                        uri(Tracer.java_stack.name()).maybe(), BOOL_TYPE)))
+                                .constructor(stacks -> rec(uri("stack"), rec(
+                                        uri(Tracer.mtron_stack.name()), stacks.asRec().at(uri(Tracer.mtron_stack.name())).orElse(BOOL_TRUE),
+                                        uri(Tracer.java_stack.name()), stacks.asRec().at(uri(Tracer.java_stack.name())).orElse(BOOL_FALSE))))
+                                .slots(mutableMap(
+                                        uri(Tracer.mtron_stack.name()), "render mtron stack traces on uncaught fail::T",
+                                        uri(Tracer.java_stack.name()), "render java stack traces on uncaught fail::T"))
+                                .desc("""
+                                        diagnostic stages for surfacing internal java state.
+                                        useful for debugging native java issues that mtron instructions
+                                        trigger but cannot introspect.
+                                        """)
                                 .create(),
                         // memory — a machine's address space: its relative bindings are the rec itself, and its
                         // absolute index is the `space` entry inside it, so both are reachable from mtron

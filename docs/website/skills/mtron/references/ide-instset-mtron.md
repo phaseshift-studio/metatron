@@ -101,9 +101,9 @@ mtron> @/dev/scratch >>= +[command => [mvn_build => !ide:command('mvn -f src/tes
      mvn_exec=>!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron> */dev/scratch/command/mvn_clean
 ==>result::[status=>success,
-            runtime=>millis::831.0,
+            runtime=>millis::908.0,
             command=>'mvn -f src/test/resources/scratch ...',
-            output=>!*/sys/tmp/d082ee9f]
+            output=>!*/sys/tmp/1a674580]
 mtron> */dev/scratch/command/mvn_build>>output
 ```
 The project's uri subgraph (tree) can be displayed using the `tree_widget::T` widget.
@@ -381,7 +381,7 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
         args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-        form=>scatter,
+        form=>mapper,
         c_dom=>1,
         c_rng=>1]]]],
     per_inst=>[
@@ -399,7 +399,7 @@ mtron> @/dev/scratch/idx/Echo/method/speak >>= [body =>
       args=>[[body=>split('
    ').as(rec::T).update([is(gt(2)).is(lt(4))=>'return "marko";']).rshift().merge?str<=str{*}('
    ')]],
-      form=>scatter,
+      form=>mapper,
       c_dom=>1,
       c_rng=>1]]]
 ```

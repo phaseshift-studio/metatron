@@ -356,12 +356,6 @@ mtron> *plus?docq
           args=>[0=>'/m/real'],
           desc=>'[mapper] add two distances of the ...',
           example=>['foot::12.0 + foot::36.0   [-- foot...']]
-==>docs::[obj=>plus?cmplx<=cmplx(cmplx::T){<j>},
-          dom=>'a complex number \(z = a + bi\)',
-          rng=>'the complex sum \(z + w\)',
-          args=>[lst[real,real]::T[?[real::T,real::T]]@/m/math/cmplx=>'the complex addend \(w = c + di\)'],
-          desc=>'[mapper] complex addition: \((a+bi...',
-          example=>['cmplx::[1.0,2.0] + cmplx::[3.0,4.0...']]
 ==>docs::[obj=>plus?datetime<=datetime(time::T){<j>},
           dom=>'/m/math/datetime',
           rng=>'/m/math/datetime',
@@ -382,13 +376,17 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
 
 ### language & types
 
-* [mtron language reference](references/language-reference-mtron.md) -- the whole surface in 23 sections: mono/poly/call
+* [mtron language reference](references/m-instset-mtron.md) -- the whole surface in 23 sections: mono/poly/call
   types, coefficients, arithmetic and strings, `*` dereference, `.as(type::T)` casting, map/filter/group, merge/split,
   `>>`/`<<`, the `|` barrier, `>>=` update, `!*`/`!@` auto-references, path ops, failure handling, and the expression
   evaluation model.
 * [mtron type system](references/type-system-mtron.md) -- vid/tid, coefficients, the universal type, defining types,
   predicates (isa vs non-isa), nominal vs structural, refinement, pattern/generic types, poly types and their three
   readings (tensor/fibered/path), lifting, covariance, casting, lowest common denominator.
+* [fascinations](references/fascinations-mtron.md) -- the surprising things mtron does, one section each, every example
+  run by the docs pipeline: shipping a socket (a built obj travels as its data, so a `ws_client` sent to another
+  machine makes that machine dial); rewriting code by pattern (a program is a value that code patterns match and
+  `update` rewrites).
 
 ### execution & the machine
 
@@ -403,7 +401,7 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   theorem,
   not a feature. One row per pattern — its algebraic law (Thm 5/6/16/17/19), the mtron you write *before* the rewrite,
   and the sharded layout the rewrite emits — grounded in the machine nest, `Network`, the `rewriter::T` stage, and the
-  `plan::T` / `PlanBuilder` / `PlanInterpreter` / `LawTable`-combiner machinery. ✅ marks what is implemented today.
+  `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Law.Helper`-combiner machinery. ✅ marks what is implemented today.
 
 ### spaces & data sources
 
@@ -420,7 +418,8 @@ The entry doc above is deliberately brief. These are the deep dives, keyed by ta
   a coefficient, a Feature is a rec with a `geo:`-prefixed fiber, and the geodesic/planar measures a space without
   native spatial support needs (`geo:distance`, `geo:length`, `geo:area`, `geo:coordinates`), the containment FILTER
   (`has` for the container, `geo:inside` for the contained), the shape reductions as casts (`as(point::T)` is the
-  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the family's law table, and
+  centroid, `as(bbox2d::T)` the envelope), the `as(json::T)` and `geo:wkt()` encodings, the laws the family declares
+  (`?decq`), and
   the `geoRewrite.pushdown` contract that lets a spatial space replace the algorithms with its own operator.
 * [as-graph](references/cat-instset-mtron.md) -- every `as` instruction read as a property-graph edge (label `as`,
   outV the dom, inV the rng) and `?asq` as its property map: the six edge kinds and what each means when you add a

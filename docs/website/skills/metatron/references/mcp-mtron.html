@@ -189,9 +189,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     <li><a class="code dropdown-item d-flex align-items-center" href="../../../instset/index.html">
                         <i class="bi bi-grid-3x3-gap-fill me-2"></i>overview</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="code dropdown-item d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
-                            src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
-                            alt="mtron"/>/m</a></li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center isa-depth-0" href="../../../instset/m.html"><img
+                                src="../../../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                                alt="mtron"/>/m</a>
+                        <span class="article-formats"><a class="article-format" href="../../../skills/mtron/references/m-instset-mtron.html">doc</a></span>
+                    </li>
                     <li class="isa-folder d-flex align-items-center isa-depth-1"><i class="bi bi-folder2-open me-2"></i>/m/ai</li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center isa-depth-2" href="../../../instset/m_ai_llm.html"><img
@@ -336,10 +339,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dckrspace-mtron.html">dckrspace-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/distributed-computing-mtron.html">distributed-computing-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/dsh-mtron.html">dsh-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/fascinations-mtron.html">fascinations-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/geo-instset-mtron.html">geo-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/ide-instset-mtron.html">ide-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/language-reference-mtron.html">language-reference-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/llm-instset-mtron.html">llm-instset-mtron</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/m-instset-mtron.html">m-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/mach-instset-mtron.html">mach-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/math-instset-mtron.html">math-instset-mtron</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/references/sys-instset-mtron.html">sys-instset-mtron</a>
@@ -511,31 +516,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
                 tool=&gt;[
-                 execute_run_configuration=&gt;tool::[
-                  inst=&gt;inst(configurationName=&gt;'Name of the existing run configuration to execute',
-                             filePath=&gt;&quot;File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.&quot;,
-                             line=&gt;&quot;1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.&quot;,
-                             timeout=&gt;'Timeout in milliseconds',
-                             waitForExit=&gt;&quot;Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.&quot;,
-                             programArguments=&gt;'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
-                             workingDirectory=&gt;'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
-                             envs=&gt;'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){&lt;j&gt;},
-                  name=&gt;execute_run_configuration,
-                  desc=&gt;'Run either an existing run configu...',
-                  arg=&gt;[
-                   configurationName=&gt;'Name of the existing run configura...',
-                   filePath=&gt;'File path relative to the project ...',
-                   line=&gt;&quot;1-based line number for `filePath`...&quot;,
-                   timeout=&gt;'Timeout in milliseconds',
-                   waitForExit=&gt;'Whether to wait for process termin...',
-                   programArguments=&gt;'Optional program arguments overrid...',
-                   workingDirectory=&gt;'Optional working directory overrid...',
-                   ...(1 more)]],
-                 get_run_configurations=&gt;tool::[
-                  inst=&gt;inst(filePath=&gt;'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){&lt;j&gt;},
-                  name=&gt;get_run_configurations,
-                  desc=&gt;'Returns either project run configu...',
-                  arg=&gt;[filePath=&gt;'Optional file path relative to the...']],
+                 execute_tool=&gt;tool::[
+                  inst=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
+                  name=&gt;execute_tool,
+                  desc=&gt;'Universal tool executor that can i...',
+                  arg=&gt;[command=&gt;'Command-line string with tool name...']],
                  analyze_calls=&gt;tool::[
                   inst=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
                              analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
@@ -586,17 +571,19 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                   name=&gt;get_project_modules,
                   desc=&gt;'Get a list of all modules in the p...',
                   arg=&gt;[=&gt;]],
-                 ...(49 more)],
+                 lint_files=&gt;tool::[
+                  inst=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
+                             min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;lint_files,
+                  desc=&gt;'Analyzes the specified files for e...',
+                  arg=&gt;[
+                   files=&gt;'List of project-relative files to ...',
+                   min_severity=&gt;&quot;Minimum severity to include: `warn...&quot;,
+                   timeout=&gt;'Timeout in milliseconds']],
+                 ...(7 more)],
                 inst=&gt;[
-                 /m/ai/llm/tool/execute_run_configuration=&gt;inst(configurationName=&gt;'Name of the existing run configuration to execute',
-                                                                filePath=&gt;&quot;File path relative to the project root. Provide together with `line` to create and execute a temporary run configuration from code context.&quot;,
-                                                                line=&gt;&quot;1-based line number for `filePath`. Provide together with `filePath` and do not combine with `configurationName`.&quot;,
-                                                                timeout=&gt;'Timeout in milliseconds',
-                                                                waitForExit=&gt;&quot;Whether to wait for process termination. If false, the tool returns immediately after the process starts and ignores `timeout`.&quot;,
-                                                                programArguments=&gt;'Optional program arguments override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
-                                                                workingDirectory=&gt;'Optional working directory override for this launch only. Missing/null or empty string keeps the existing value; whitespace-only string clears it.',
-                                                                envs=&gt;'Optional environment variable overrides for this launch only. Missing/null keeps existing env unchanged; when provided, values are merged over existing env.'){&lt;j&gt;},
-                 /m/ai/llm/tool/get_run_configurations=&gt;inst(filePath=&gt;'Optional file path relative to the project root. When provided, returns run points (executable entry points) in the file instead of project-wide run configurations.'){&lt;j&gt;},
+                 /m/ai/llm/tool/execute_tool=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
                  /m/ai/llm/tool/analyze_calls=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
                                                     analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
                                                     depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
@@ -605,7 +592,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                                     treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
                                                     childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
                                                     timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
-   ...
+                 /m/ai/llm/tool/build_project=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                                                    filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                                                    timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 /m/ai/llm/tool/get_file_problems=&gt;inst(filePath=&gt;'Path relative to the project root',
+                                                        errorsOnly=&gt;'Whether to include only errors or include both errors and warnings',
+                                                        timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 /m/ai/llm/tool/get_project_dependencies=&gt;inst(){&lt;j&gt;},
+                 /m/ai/llm/tool/get_project_modules=&gt;inst(){&lt;j&gt;},
+                 /m/ai/llm/tool/lint_files=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
+                                                 min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                                                 timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 ...(7 more)]]
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {
@@ -634,118 +632,9 @@ After connecting, `mcp_client::T` populates its `tool` field with `tool::T` entr
 
 ```mtron
 mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
-==&gt;mcp_client::[host=&gt;http://localhost:8777/mcp,
-                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-                tool=&gt;[
-                 m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-                  inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                             previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_write_memory,
-                  desc=&gt;'(experimental) returns a memory re...',
-                  arg=&gt;[
-                   current_memory=&gt;'the memory to remember -- e.g. a s...',
-                   previous_memory=&gt;'a previous memory vid to chain cur...']],
-                 m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-                  inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_read_memory,
-                  desc=&gt;'(experimental) returns the result ...',
-                  arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-                 m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-                  inst=&gt;inst(code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-                  desc=&gt;'&lt;no description&gt;',
-                  arg=&gt;[code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;']],
-                 m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_list_space,
-                  desc=&gt;'returns a rec identifying all acti...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-                  inst=&gt;inst(){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_machine_info,
-                  desc=&gt;'returns what the running machine i...',
-                  arg=&gt;[=&gt;]],
-                 m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-                  inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                             dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                             rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_find_inst,
-                  desc=&gt;'returns a lst of all instruction p...',
-                  arg=&gt;[
-                   pattern=&gt;'the inst tid to match',
-                   dom=&gt;'the dom of inst to match (can be a...',
-                   rng=&gt;'the rng of inst to match (can be a...']],
-                 m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-                  inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                             on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                  name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-                  desc=&gt;'create a websocket client with pro...',
-                  arg=&gt;[
-                   host=&gt;'the full ws:// uri of the websocke...',
-                   on_message=&gt;'the function to evaluate on every ...']],
-                 ...(1 more)],
-                inst=&gt;[
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_write_memory=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                                                                       previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_read_memory=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_eval_mtron=&gt;inst(code=&gt;'/m/code',
-                                                                     &lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_list_space=&gt;inst(){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_machine_info=&gt;inst(){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_find_inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                                                                    dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                                                                    rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-                 /m/ai/llm/tool/m_web_mcp_mcp_mtron_spawn_wsclient=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                                                                         on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-                 ...(1 more)]]@a
+==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]']['fail']['fail']
+   	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]
 mtron&gt; *a&gt;&gt;tool
-==&gt;[m_web_mcp_mcp_mtron_write_memory=&gt;tool::[
-     inst=&gt;inst(current_memory=&gt;'the memory to remember -- e.g. a str::T, a markdown::T, etc.',
-                previous_memory=&gt;'a previous memory vid to chain current memory to'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_write_memory,
-     desc=&gt;'(experimental) returns a memory re...',
-     arg=&gt;[
-      current_memory=&gt;'the memory to remember -- e.g. a s...',
-      previous_memory=&gt;'a previous memory vid to chain cur...']],
-    m_web_mcp_mcp_mtron_read_memory=&gt;tool::[
-     inst=&gt;inst(memory_vid=&gt;'the vid of the memory to read'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_read_memory,
-     desc=&gt;'(experimental) returns the result ...',
-     arg=&gt;[memory_vid=&gt;'the vid of the memory to read']],
-    m_web_mcp_mcp_mtron_eval_mtron=&gt;tool::[
-     inst=&gt;inst(code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_eval_mtron,
-     desc=&gt;'&lt;no description&gt;',
-     arg=&gt;[code=&gt;'/m/code',&lt;&gt;=&gt;'&lt;no description&gt;']],
-    m_web_mcp_mcp_mtron_list_space=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_list_space,
-     desc=&gt;'returns a rec identifying all acti...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_machine_info=&gt;tool::[
-     inst=&gt;inst(){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_machine_info,
-     desc=&gt;'returns what the running machine i...',
-     arg=&gt;[=&gt;]],
-    m_web_mcp_mcp_mtron_find_inst=&gt;tool::[
-     inst=&gt;inst(pattern=&gt;'the inst tid to match',
-                dom=&gt;'the dom of inst to match (can be added to pattern arg)',
-                rng=&gt;'the rng of inst to match (can be added to pattern arg'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_find_inst,
-     desc=&gt;'returns a lst of all instruction p...',
-     arg=&gt;[
-      pattern=&gt;'the inst tid to match',
-      dom=&gt;'the dom of inst to match (can be a...',
-      rng=&gt;'the rng of inst to match (can be a...']],
-    m_web_mcp_mcp_mtron_spawn_wsclient=&gt;tool::[
-     inst=&gt;inst(host=&gt;'the full ws:// uri of the websocket server to connect to',
-                on_message=&gt;'the function to evaluate on every received message'){&lt;j&gt;},
-     name=&gt;m_web_mcp_mcp_mtron_spawn_wsclient,
-     desc=&gt;'create a websocket client with pro...',
-     arg=&gt;[
-      host=&gt;'the full ws:// uri of the websocke...',
-      on_message=&gt;'the function to evaluate on every ...']],
-    ...(1 more)]
 mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
 mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)

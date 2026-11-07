@@ -77,9 +77,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.TRACER_TYPE_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_COMPILER_TID;
-import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.mach.machInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.block_;
 import static studio.phaseshift.metatron.isa.m.sys.sysInstSet.SYS_INST_TID;
@@ -554,7 +552,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final Rec tracer = Tracer.init(rec(uri("stack"),
                     args.at("tracer/stack").orElse(Stream.of(Tracer.values())
                             .map(t -> rel(uri(t.name()), BOOL_FALSE))
-                            .collect(new CommonUtil.RecCollector()))).tid(TRACER_TYPE_TID).as());
+                            .collect(new CommonUtil.RecCollector()))).tid(MACH_TRACER_TID).as());
             LOG.info("{{c}}tracer{{X}} registered: %s", tracer);
             /// /// INSTRUCTION SIGNATURE ENCODING /// ///
             // the `args` component of an instruction tid is OPT-IN and read from a JVM system property ONCE, at
