@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
@@ -29,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.algebra.LawTable.declares;
+import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter.comparisonOf;
 import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter.mapArgument;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -51,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * rule is a live candidate on this chain: {@code live(Profile, Inst)} is the necessary half of each
  * rule's guard, so {@code false} proves the rule is the identity while {@code true} only licenses the
  * match. The rule-guard vocabulary it reads lives with its owners: the chain typing in
- * {@code Rewriter.Helper}, the law reads in {@code LawTable}, the instruction equalities in {@code Inst.Helper}, and the
+ * {@code Rewriter.Helper}, the law reads in {@code Law.Helper}, the instruction equalities in {@code Inst.Helper}, and the
  * rules' own guards in {@code PlanInterpreter}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -104,7 +103,7 @@ public class catLiveness {
             case "form_map_unwrap" -> profile.mapWrap;
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;
-            case "derivation_contraction" -> LawTable.derivations().stream()
+            case "derivation_contraction" -> Law.Helper.derivations().stream()
                     .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
             case "law_shard" -> profile.shard;   // a seed + a reducer whose partials recombine (the one-cut shard)
             default -> true; // an undeclared rule proves nothing -- keep the edge
@@ -227,12 +226,12 @@ public class catLiveness {
         }
 
         /**
-         * Whether the chain instruction's partials recombine — it has a computed {@link LawTable#combiner} once keyed
-         * with its declared n-tid, exactly as the shard plan keys it ({@link LawTable#keyed}, a keyed fold's spec folds
+         * Whether the chain instruction's partials recombine — it has a computed {@link Law.Helper#combiner} once keyed
+         * with its declared n-tid, exactly as the shard plan keys it ({@link Law.Helper#keyed}, a keyed fold's spec folds
          * included). The morphism carries the ORIGINAL instruction, so the key is re-derived from the carrier here.
          */
         private static boolean combines(final Inst chain, final Type carrier) {
-            return null != chain && null != LawTable.combiner(LawTable.keyed(chain, carrier));
+            return null != chain && null != Law.Helper.combiner(Law.Helper.keyed(chain, carrier));
         }
 
         /**
@@ -241,7 +240,7 @@ public class catLiveness {
          * so it is read off the carried n-tid rather than forcing the analysis.
          */
         private static fURI inverseOf(final Inst keyed) {
-            final LawTable.Entry entry = LawTable.lawsOf(keyed.tid());
+            final Law.Helper.Entry entry = Law.Helper.lawsOf(keyed.tid());
             return null == entry ? null : entry.inverse();
         }
 
@@ -250,13 +249,13 @@ public class catLiveness {
          * instructions overwhelmingly share their operand types.
          */
         private static boolean models(final Type operand, final Map<Type, Boolean> cache) {
-            return cache.computeIfAbsent(operand, t -> !LawTable.typeLawsOf(t).jvm().isEmpty());
+            return cache.computeIfAbsent(operand, t -> !TheoryHelper.instances(t).jvm().isEmpty());
         }
 
         /**
          * Whether the declaration's opposing edge is the given op -- one side of an adjacent inverse pair.
          */
-        private static boolean opposes(final LawTable.Declared declared, final fURI op) {
+        private static boolean opposes(final Law.Helper.Declared declared, final fURI op) {
             return null != declared && null != declared.entry().inverse() && declared.entry().inverse().basePath().equals(op);
         }
     }

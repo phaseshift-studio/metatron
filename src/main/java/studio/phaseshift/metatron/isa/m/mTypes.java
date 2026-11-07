@@ -158,7 +158,7 @@ public final class mTypes {
      * every constant exists.
      * <p>
      * The declaration is STAGED only; {@code ?decq} is the store of record, written by the drain that runs when the
-     * set is mounted, and {@code LawTable.typeLaws} serves it from there. The law table restates none of it.
+     * set is mounted, and {@code TheoryHelper.instances} serves it from there. The law table restates none of it.
      */
     public static void declareAlgebras() {
         // int: a ring — an add_group (plus/neg) and a mult_monoid (mult/1, no mult_group: integer division

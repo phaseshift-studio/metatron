@@ -19,9 +19,6 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter;
 
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.LawTable;
-import studio.phaseshift.metatron.algebra.mInstSetLawTable;
-import studio.phaseshift.metatron.algebra.mathInstSetLawTable;
 import studio.phaseshift.metatron.algebra.rewrite.plan.*;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -54,14 +51,6 @@ import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_INST_TID;
  */
 public class PlanRewriter extends FixPointRewriter {
 
-    // THE LAW ROWS THE PLANS READ: the /m and /m/math process tables (a derived fold's definition, the code ring's
-    // operations) register on class initialization — the category instset triggers them when it mounts, and the plan
-    // engine must not depend on the category being mounted to read the same laws
-    static {
-        mInstSetLawTable.INSTANCE.getClass();
-        mathInstSetLawTable.INSTANCE.getClass();
-    }
-
     public PlanRewriter(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
@@ -79,7 +68,7 @@ public class PlanRewriter extends FixPointRewriter {
      * The one-cut distribution plan — {@code law_shard}, Thm 19 {@code (a+b)·c = (a·c+b·c)·c}: the anchor is a
      * blocked reducer whose partials recombine through a fold declaring {@code monoidic} (partials regroup) and
      * {@code commutative} (order-free merge) — its COMBINER, computed rather than declared
-     * ({@link LawTable#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
+     * ({@link Law.Helper#combiner}): {@code sum} and {@code prod} recombine through themselves, {@code count} through
      * {@code sum}, {@code order(s)} through {@code kmerge(s)}, and a keyed {@code group([k⇒h])} pointwise — the rec
      * {@code sum} merges its partials by key, then each key folds through {@code h}'s combiner. The master recombines behind the barrier and runs the
      * tail at home; each peer takes one factor of the seed bulk with the floatable run replicated and a local partial

@@ -1185,7 +1185,7 @@ public class mInstSet extends AbstractInstSet {
                 .law(Law.monoidic, Law.commutative, Law.pure)
                 // THE FORM IS DECLARED, not derived: Form.of reads a many-to-one dom as a reducer, and this
                 // inst's dom is deliberately `maybe` (a bulk dom made it answer two reports). Declared so
-                // LawTable.combiner's FORM gate lets the declared laws be consulted — without it the inst
+                // Law.Helper.combiner's FORM gate lets the declared laws be consulted — without it the inst
                 // classifies as a mapper and declaresAll is never reached.
                 .form(Inst.Form.reducer)
                 .desc("profile() is a MAKER: this is the instruction it mints around the captured program. A FOLD and a BARRIER — it aggregates every monad up to the marker and answers one compressed profile::profiling rec, so its laws are the ones a shard's report needs in order to recombine at the master: monoidic (the partials regroup), commutative (a collation is order-free) and pure (it observes, it does not mutate). The program is captured by closure, never as an argument, so the outer resolve cannot collapse the instructions being timed.")

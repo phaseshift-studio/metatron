@@ -72,7 +72,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * cannot import. Those retire as {@code InstBuilder} grows the remaining facets; the rows then delete with them.
  * <p>BECAUSE A DECLARATION IS KEYED BY THE INSTRUCTION'S N-TID ({@code tid.dom(A).rng(B)}), a migrated entry must
  * sit at the ROW'S OWN address ({@code tid(op).dom(A).rng(B)}): that is how the declaration is served in place of
- * the row, and how {@link studio.phaseshift.metatron.algebra.LawTable#derivations()} dedupes the two
+ * the row, and how {@link studio.phaseshift.metatron.algebra.Law.Helper#derivations()} dedupes the two
  * forms into one rule.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

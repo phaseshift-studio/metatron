@@ -374,7 +374,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
     /**
      * DECLARE the type's algebra — the theory instances it models, written as the algebra itself ({@code
      * Algebra.of(rec(uri("ring"), rec(…)))}). It is persisted beside the type at {@code vid?decq}, which is the store
-     * of record a reader ({@code Machine.read}, {@code LawTable.typeLaws}) answers from.
+     * of record a reader ({@code Machine.read}, {@code TheoryHelper.instances}) answers from.
      */
     public TypeBuilder algebra(final Algebra algebra) {
         this.algebra = algebra;
@@ -738,7 +738,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
 
     /**
      * The {@code !*} AUTO pointer a role binds — the operation's own contract address, held as a pointer so the block
-     * names the operation rather than copying it (the form {@code mTypes} and {@code mInstSetLawTable} use).
+     * names the operation rather than copying it (the form {@code mTypes} uses).
      */
     private static Obj pointer(final Inst op) {
         return instB(AUTO_FROM_INST_TID, lst(uri(op.tid())));

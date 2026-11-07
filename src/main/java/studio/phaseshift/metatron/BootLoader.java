@@ -20,7 +20,8 @@ package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import studio.phaseshift.metatron.algebra.LawTable;
+import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -151,7 +152,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
      *
      * <p>What it clears, and why each is a memo:
      * <ul>
-     *   <li>{@link LawTable#reset()} — the per-table algebra memo and the derivation snapshots (store and log);</li>
+     *   <li>{@link Law.Helper#reset()} — the per-table algebra memo and the derivation snapshots (store and log);</li>
      *   <li>{@code QCollection.LAZY_PUBLISH} — the reader hook, reinstalled by {@link PendingWrites#install()}.</li>
      * </ul>
      *
@@ -164,7 +165,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
      * prevent.
      */
     public static void resetMemos() {
-        LawTable.reset();
+        Law.Helper.reset();
+        TheoryHelper.reset();
         QCollection.LAZY_PUBLISH = address -> false;
     }
 

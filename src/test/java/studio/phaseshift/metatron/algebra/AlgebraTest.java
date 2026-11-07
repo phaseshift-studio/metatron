@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * that make it safe to hand around: it is the rec it views (so nothing about introspection, serialization or selection
  * changes), and every change is a copy (so a view can never write back into the block a law table answered).
  *
- * <p>The fixture is the shape {@code LawTable.typeLaws(Type)} answers — theory-instance name to declaration rec, in
+ * <p>The fixture is the shape {@code TheoryHelper.instances} answers — theory-instance name to declaration rec, in
  * declaration order — modeled on int's declared ring: {@code ring => [zero => 0, one => 1]} and
  * {@code group => [op => plus, id => 0]}. A real block is read in the sibling {@code AbstractAlgebraTest} hierarchy;
  * here the block is written by hand so the order and the values under test are unambiguous.

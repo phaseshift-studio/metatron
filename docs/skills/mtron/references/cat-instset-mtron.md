@@ -198,8 +198,8 @@ are computed; proper (non-split) mono/epi classification requires composition, w
 
 ### the process laws
 
-The morphism's `law` field is a set of **process** law labels served from `mInstSetLawTable` (the declared process
-laws):
+The morphism's `law` field is a set of **process** law labels served from the instruction's `?decq` declaration (the declared
+process laws):
 
 ```mtron_pre
 |plus?int<=int(int::T).as(morphism::T)>>law
@@ -243,7 +243,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 `law_shard` realizes — worked out below in the third lift, where the fold is actually partitioned.
 
 <!-- figure source: assets/tikz/cat-rewrites.tex (same recipe) -->
-<img src="../assets/cat-rewrites.png" alt="declarations funnel through the law table into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
+<img src="../assets/cat-rewrites.png" alt="declarations funnel through ?decq into the rewrite families" width="100%" style="margin:0.3em 0 0 0"/>
 
 | rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
 |--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

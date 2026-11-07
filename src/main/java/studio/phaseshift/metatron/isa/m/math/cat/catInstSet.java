@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.mInstSetLawTable;
-import studio.phaseshift.metatron.algebra.mathInstSetLawTable;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
@@ -168,9 +166,6 @@ public class catInstSet extends AbstractInstSet {
 
     public void setup() {
         this.selfTID(CAT_ISA_TID);
-        // self-register the per-instset law tables before any object/morphism resolves laws through the router
-        mInstSetLawTable.INSTANCE.getClass();
-        mathInstSetLawTable.INSTANCE.getClass();
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(CAT_ISA_TID.extend(ALL)),
                 uri(TYPE), catTypes.registered(this),

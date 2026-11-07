@@ -2097,7 +2097,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(COUNT_INST_TID)
-                            .dom(ALL.maybeSome(), "any objs")
+                            .dom(A.maybeSome(), "any objs")
                             .rng(INT_TID, "the count of objs")
                             .argLst()
                             .desc("counts the number of objs")
@@ -2201,7 +2201,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .create(),
                     InstBuilder.build()
                             .tid(GROUP_INST_TID)
-                            .dom(ALL.maybeSome(), "any objs")
+                            .dom(A.maybeSome(), "any objs")
                             .rng(REC_TID, "a rec of the grouped results")
                             .argLst(T(REC_TID), "the grouping key rec, the value inst computing each group")
                             .desc("a grouping function \\(f(X) \\mapsto x'\\): groups the objs by the key rec and computes each group (sugar'd %==)")

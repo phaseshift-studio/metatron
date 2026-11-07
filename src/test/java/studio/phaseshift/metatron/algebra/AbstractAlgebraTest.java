@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -84,7 +83,7 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
     @Test
     public void declaredInstancesEntailTheirLaws() {
         final Type carrier = this.carrier();
-        final Rec instances = LawTable.typeLawsOf(carrier);
+        final Rec instances = TheoryHelper.instances(carrier);
         assumeTrue(!instances.jvm().isEmpty(),
                 () -> "carrier " + carrier.namedType() + " declares no theory instance in ?decq — nothing to validate");
 

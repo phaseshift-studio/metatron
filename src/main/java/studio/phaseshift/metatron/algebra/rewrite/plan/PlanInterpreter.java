@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -40,7 +39,7 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.algebra.LawTable.declares;
+import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
 import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.same;
@@ -66,12 +65,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * runs.
  * The cut's law obligations
  * ({@code monoidic} + {@code commutative}) ride on the {@code blocked} slot's COMBINER — the fold the partials
- * recombine through, computed by {@link LawTable#combiner} — so {@link PlanBuilder#create()}'s shape-derived
+ * recombine through, computed by {@link Law.Helper#combiner} — so {@link PlanBuilder#create()}'s shape-derived
  * check and the match-time check are the same Thm 19 hypothesis, read off the fold that is re-applied.
  *
  * <p>The chain instructions arrive pre-resolution (bare op addresses), so each body inst is first retyped
- * with its declared (dom/rng-qualified) tid via {@link LawTable#declared} — the step that makes
- * {@code Form.of} and {@code LawTable.declares} legible before resolution. The seed is matched by op address.
+ * with its declared (dom/rng-qualified) tid via {@link Law.Helper#declared} — the step that makes
+ * {@code Form.of} and {@code Law.Helper.declares} legible before resolution. The seed is matched by op address.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -179,7 +178,7 @@ public final class PlanInterpreter {
     /**
      * The one-cut distribution (Thm 19): factor the seed bulk over the roster, replicate the floatable run, and
      * recombine the partials behind a barrier through the cut's COMBINER — computed, never declared
-     * ({@link LawTable#combiner}). A self-combining fold re-applies itself ({@code sum}, {@code prod}); a fold defined
+     * ({@link Law.Helper#combiner}). A self-combining fold re-applies itself ({@code sum}, {@code prod}); a fold defined
      * by its derivation recombines through the fold that defines it ({@code count} through {@code sum},
      * {@code order(s)} through {@code kmerge(s)}). The identity unless the chain matches the plan's one-cut shape and
      * the machine has live peers to fan out over.
@@ -253,7 +252,7 @@ public final class PlanInterpreter {
         // the fold its definition names; a keyed fold through the chain its pointwise combiner computes (the rec sum,
         // then a per-key fold)
         final Inst keyed = typed.get(cutIndex);
-        final Call combined = LawTable.combiner(keyed, laws);
+        final Call combined = Law.Helper.combiner(keyed, laws);
         final List<Inst> combiner = keyed == combined ? List.of(reducer) : combined.insts();
         // COPY'S PREMISE: replicating the seed onto every lane double-counts a fold that is not idempotent, so
         // `?split=copy` is legal only when the cut's COMBINER declares `idempotent`. Unsound is the IDENTITY -- the
@@ -474,18 +473,18 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Whether the cut's COMBINER — the fold the partials recombine through, {@link LawTable#combiner computed} and
+     * Whether the cut's COMBINER — the fold the partials recombine through, {@link Law.Helper#combiner computed} and
      * never declared — declares {@code idempotent}. Its TERMINAL instruction is the fold that recombines (a derivation
      * lowers to {@code … · fold}), and the law row is read the two ways the table already serves one: the
      * carrier-resolved read every other law gate in this class uses, and — when the carrier resolves no row — the
-     * instruction's own {@code ?decq} declaration ({@link LawTable#declares(fURI, Law)}, the route a fold declared
+     * instruction's own {@code ?decq} declaration ({@link Law.Helper#declares(fURI, Law)}, the route a fold declared
      * beside its body takes). Both are the table's own reads; the second is not a guess across types, it is the one
      * address the combiner states.
      */
     private static boolean idempotentCombiner(final Call combined, final Type carrier) {
         final List<Inst> folds = combined.insts();
         return !folds.isEmpty() && (declares(folds.getLast(), carrier, Law.idempotent)
-                || LawTable.declares(folds.getLast().tid(), Law.idempotent));
+                || Law.Helper.declares(folds.getLast().tid(), Law.idempotent));
     }
 
     /**
@@ -578,12 +577,12 @@ public final class PlanInterpreter {
 
     /**
      * Retype a bare chain instruction with its declared (dom/rng-qualified) tid, so {@code Form.of} and
-     * {@code LawTable.declares} read its coefficient shape and laws before resolution — and a keyed fold's spec folds
-     * with it ({@link LawTable#keyed}). An undeclared op stays bare and thereby matches no floatable/blocked slot —
+     * {@code Law.Helper.declares} read its coefficient shape and laws before resolution — and a keyed fold's spec folds
+     * with it ({@link Law.Helper#keyed}). An undeclared op stays bare and thereby matches no floatable/blocked slot —
      * fail closed, as the hand-rolled scan did.
      */
     private static Inst retype(final Inst inst, final Type carrier) {
-        return LawTable.keyed(inst, carrier);
+        return Law.Helper.keyed(inst, carrier);
     }
 
     /**
@@ -829,7 +828,7 @@ public final class PlanInterpreter {
      * operation is declared {@code monoidic} — the shape a repeated fold is idempotent on.
      */
     private static boolean isFold(final Inst inst, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(inst.tid().basePath(), carrier);
+        final Law.Helper.Declared declared = Law.Helper.declared(inst.tid().basePath(), carrier);
         if (null == declared)
             return false;
         final Inst.Form form = Inst.Form.of(inst.tid(declared.tid()));
@@ -853,11 +852,11 @@ public final class PlanInterpreter {
      * inverse), and under {@code plus} it is the unit law's anyway.
      */
     private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(a.tid().basePath(), carrier);
+        final Law.Helper.Declared declared = Law.Helper.declared(a.tid().basePath(), carrier);
         return null != declared && null != declared.entry().inverse()
                 && b.tid().basePath().equals(declared.entry().inverse().basePath())
                 && a.args().equals(b.args())
-                && a.args().elements().noneMatch(arg -> LawTable.typeLawsOf(arg.type()).jvm().values().stream()
+                && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
                 .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
     }
 
@@ -962,8 +961,8 @@ public final class PlanInterpreter {
         final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
         for (int i = 0; i < insts.size(); i++) {
             final Inst inst = insts.get(i);
-            final LawTable.Declared absorber = i < seed || !declares(inst, carriers.get(i), Law.absorbing)
-                    ? null : LawTable.declared(inst.tid().basePath(), carriers.get(i));
+            final Law.Helper.Declared absorber = i < seed || !declares(inst, carriers.get(i), Law.absorbing)
+                    ? null : Law.Helper.declared(inst.tid().basePath(), carriers.get(i));
             if (null != absorber)
                 while (kept.size() > seed && absorbable(insts.get(kept.getLast()), absorber.tid(), carriers.get(kept.getLast())))
                     kept.removeLast();
@@ -988,7 +987,7 @@ public final class PlanInterpreter {
      * </ul>
      */
     private static boolean absorbable(final Inst prior, final fURI absorber, final Type carrier) {
-        final LawTable.Declared declared = LawTable.declared(prior.tid().basePath(), carrier);
+        final Law.Helper.Declared declared = Law.Helper.declared(prior.tid().basePath(), carrier);
         if (null == declared || !declares(prior, carrier, Law.pure))
             return false;
         if (absorber.rng().c().isZero())
@@ -1026,7 +1025,7 @@ public final class PlanInterpreter {
      * operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the type's declared {@code derivation}.
      */
     private static Code derivationContraction(final Code code) {
-        final List<Derivation> derivations = LawTable.derivations();
+        final List<Derivation> derivations = Law.Helper.derivations();
         if (derivations.isEmpty())
             return code;
         List<Inst> out = code.insts();

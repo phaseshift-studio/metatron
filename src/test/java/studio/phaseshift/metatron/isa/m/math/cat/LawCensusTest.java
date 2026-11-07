@@ -18,11 +18,11 @@
 
 package studio.phaseshift.metatron.isa.m.math.cat;
 
-import studio.phaseshift.metatron.algebra.LawTable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AlgebraTool;
 import studio.phaseshift.metatron.algebra.Law;
@@ -115,8 +115,7 @@ public class LawCensusTest extends AbstractMetatronTest {
                     + "shape does not name it (its commutative claim matches the arity-agnostic endo shape)");
 
     /**
-     * The category is the set that populates {@link LawTable#rows()} — its {@code setup()} self-registers the
-     * per-instset tables — so the catch-all import is what makes the law table exist at all. {@code /m/math} is
+     * The catch-all import mounts every set, so every declaration the census reads is answerable. {@code /m/math} is
      * re-imported afterwards for the same reason {@code catInstSetTest} does it: the catch-all re-adds the base
      * {@code /m} set and re-registers its types against a fresh space.
      */
@@ -124,53 +123,6 @@ public class LawCensusTest extends AbstractMetatronTest {
     public static void importAllInstSets() {
         InstSet.importInstSet(f("#"));
         InstSet.importInstSet(f("/m/math"));
-    }
-
-    /**
-     * ASSERTION 1 — EVERY DECLARED ROW IS REACHABLE FROM AN ADDRESS. Each row of each registered law table is
-     * classified as {@code live} (an instruction's tid IS the row key), {@code view} (no exact instruction, but the
-     * operation is still liftable: {@code deduceTypeInst} admits it, or a registration shares its op family) or
-     * {@code orphan} (neither). An orphan is a declaration about an address nothing answers for — the
-     * {@code order?int} failure mode — and the failure message prints all three lists so a human can act on the
-     * orphans without reproducing the census by hand.
-     */
-    @Test
-    public void testEveryLawTableRowIsReachable() {
-        final Map<fURI, Map<fURI, LawTable.Entry>> tables = LawTable.rows();
-        assertFalse(tables.isEmpty(),
-                "no law table is registered: the category never mounted, so the census would be vacuous");
-
-        final List<Inst> insts = List.copyOf(Machine.current().instset().insts());
-        final List<String> live = new ArrayList<>();
-        final List<String> view = new ArrayList<>();
-        final List<String> orphan = new ArrayList<>();
-        for (final Map.Entry<fURI, Map<fURI, LawTable.Entry>> table : tables.entrySet()) {
-            for (final fURI address : table.getValue().keySet()) {
-                final String row = table.getKey() + " table, row " + address;
-                if (live(insts, address))
-                    live.add(row);
-                else if (view(insts, address))
-                    view.add(row);
-                else if (!allowed(address.toString()))
-                    orphan.add(row);
-            }
-        }
-        LOG.warn("law census: %d live, %d view, %d orphan row(s) across %d table(s)",
-                live.size(), view.size(), orphan.size(), tables.size());
-        LOG.warn("law census: rows reachable only through the lift (view): %s", view);
-        assertTrue(orphan.isEmpty(), () -> """
-                law-table rows no address answers for (lost registrations):
-                  %s
-                live (%d):
-                  %s
-                view (%d):
-                  %s
-                orphan (%d):
-                  %s""".formatted(
-                String.join("\n  ", orphan),
-                live.size(), String.join("\n  ", live),
-                view.size(), String.join("\n  ", view),
-                orphan.size(), String.join("\n  ", orphan)));
     }
 
     /**
@@ -189,7 +141,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final List<String> exempt = new ArrayList<>();
         final List<String> unbattered = new ArrayList<>();
         for (final Type carrier : carriers()) {
-            final Rec algebra = LawTable.typeLawsOf(carrier);
+            final Rec algebra = TheoryHelper.instances(carrier);
             if (algebra.jvm().isEmpty()) {
                 empty.add(carrier.namedType());
                 continue;
@@ -241,7 +193,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final List<String> dangling = new ArrayList<>();
         int checked = 0;
         for (final Type carrier : carriers()) {
-            final Rec algebra = LawTable.typeLawsOf(carrier);
+            final Rec algebra = TheoryHelper.instances(carrier);
             for (final Map.Entry<Obj, Obj> instance : algebra.jvm().entrySet()) {
                 if (!instance.getKey().isUri() || !instance.getValue().isRec())
                     continue;
@@ -314,7 +266,7 @@ public class LawCensusTest extends AbstractMetatronTest {
     }
 
     /**
-     * THE MEMO DECISION IS MADE FROM WHAT THE READ OBSERVED. {@link LawTable#memoizable(Rec, boolean)} is a pure
+     * THE MEMO DECISION IS MADE FROM WHAT THE READ OBSERVED. {@link TheoryHelper#memoizable(Rec, boolean)} is a pure
      * function of the block a law read produced and whether the type's own space answered it, so the rule is pinned
      * here rather than through a boot/close integration test (which would have to tear the shared VM down inside a
      * test method). A non-empty block is always safe to memoize. An empty one is safe only when a {@code ?decq} rec
@@ -332,7 +284,7 @@ public class LawCensusTest extends AbstractMetatronTest {
     public void testTypeLawsAreMemoizedOnlyFromAnObservedAnswer(final String block, final String read, final boolean memoized) {
         final Rec laws = block.equals("empty") ? rec0() : rec(uri("ring"), uri("ring_theory"));
         final boolean spaceAnswered = read.equals("settled, space answered");
-        assertEquals(memoized, LawTable.memoizable(laws, spaceAnswered),
+        assertEquals(memoized, TheoryHelper.memoizable(laws, spaceAnswered),
                 "the memo decision for a " + block + " block from a " + read + " read");
     }
 
@@ -353,21 +305,6 @@ public class LawCensusTest extends AbstractMetatronTest {
      */
     private static boolean live(final List<Inst> insts, final fURI address) {
         return null != address && insts.stream().anyMatch(inst -> address.equals(inst.tid()));
-    }
-
-    /**
-     * No exact instruction, but the address is still answerable: either the lift resolves the operation over the
-     * address's carrier ({@link #admits}), or a registration shares the row's op family (the row states a
-     * different endpoint spelling than the implementation — a coefficient, a generic — and the family is what a
-     * rewrite reads).
-     */
-    private static boolean view(final List<Inst> insts, final fURI address) {
-        if (null == address)
-            return false;
-        final fURI base = address.basePath();
-        if (null != base && insts.stream().anyMatch(inst -> null != inst.tid() && base.equals(inst.tid().basePath())))
-            return true;
-        return admits(address);
     }
 
     /**
@@ -416,7 +353,7 @@ public class LawCensusTest extends AbstractMetatronTest {
         final Obj fromDecq = Machine.read(Inst.Helper.operationTid(inst.tid()).addQ(DECQ));
         if (fromDecq.isRec())
             addLaws(laws, fromDecq.asRec().atDirect(uri(LAW)));
-        final LawTable.Entry served = LawTable.lawsOf(inst.tid());
+        final Law.Helper.Entry served = Law.Helper.lawsOf(inst.tid());
         if (null != served)
             addLaws(laws, served.laws());
         return laws;

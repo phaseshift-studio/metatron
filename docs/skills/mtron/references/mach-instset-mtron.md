@@ -780,7 +780,7 @@ and run on mtron's own `plus`. Nothing is added but the parser.
   rshift, `.as(type::T)`, coefficients, `.explain()`.
 * [mtron type system](type-system-mtron.md) — vid/tid, predicates (isa vs non-isa), nominal vs structural, refinement.
 * [the category graph](cat-instset-mtron.md) — the declared rewrites the `rewriter` stage consumes, and the
-  `LawTable` that bridges an op address to a declared law.
+  `Law.Helper` reads that bridge an op address to the law it declares (`?decq`).
 * [ui instruction set](ui-instset-mtron.md) — `/m/sys/ui`, the widget family carried by the same ISA.
 * figure sources — `assets/tikz/mach-*.tex` (TikZ, rendered with the tikz MCP server; the PNGs sit beside them in
   `assets/`).

@@ -19,9 +19,7 @@
 package studio.phaseshift.metatron.isa.m.math.cat;
 
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter;
-import studio.phaseshift.metatron.algebra.LawTable;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
-import studio.phaseshift.metatron.algebra.mInstSetLawTable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -306,7 +304,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "|count?int<=#{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/int&dom=/m/int{*}",
+            "|count?int<=A{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/int&dom=/m/int{*}",
             "|sum?rec<=rec{*}().as(morphism::T)>>analysis>>combiner % /m/inst/sum?rng=/m/rec&dom=/m/rec{*}",
     }, delimiter = '%')
     void testCombiner(final String expr, final String expected) {
@@ -315,7 +313,7 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * The INVERSE — the opposing edge {@code f⁻¹} with {@code f·f⁻¹ = 1} — computed from the carrier's declared
-     * algebra wherever the algebra states one, and declared only where it states none ({@link LawTable#lookup}).
+     * algebra wherever the algebra states one, and declared only where it states none ({@link Law.Helper#lookup}).
      * A group states cancellation: its operation's inverse is the instruction DEFINED as it applied to the inverted
      * argument ({@code div ≡ mult ∘ inv}, {@code minus ≡ plus ∘ neg}), and that instruction's inverse is the operation.
      * A monoid states nothing of the sort, so int's {@code mult}→{@code div} is declared — a truncating retraction,
@@ -371,7 +369,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertTrue(laws.isRec() && laws.asRec().at(uri(LAW)).isLst(),
                 "the builder's laws reach ?decq, got " + laws);
         assertEquals(2, laws.asRec().at(uri(LAW)).asLst().count(), "both laws are declared");
-        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
         assertNotNull(served, "an inst that declares its own laws is served without a table row");
         assertTrue(served.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.pure.name())),
                 "the declared laws answer the lookup, got " + served.laws());
@@ -393,7 +391,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhs, inst) -> lhs)
                 .inverse(opposing)
                 .create();
-        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
         assertNotNull(served, "an inst declaring only an inverse is served without a table row");
         assertEquals(opposing, served.inverse(), "the declared inverse answers the lookup");
         assertEquals(0, served.laws().count(), "no law was declared, so the served list is empty");
@@ -420,7 +418,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .body((lhsObj, inst) -> lhsObj)
                 .derivation(new Derivation(lhs, rhs))
                 .create();
-        final LawTable.Entry served = LawTable.lawsOf(built.tid());
+        final Law.Helper.Entry served = Law.Helper.lawsOf(built.tid());
         assertNotNull(served, "an inst declaring only a derivation is served without a table row");
         assertNotNull(served.derivation(), "the declared derivation answers the lookup");
         assertEquals(lhs.toString(), served.derivation().lhs().toString(), "the lhs round-trips through ?decq");
@@ -431,14 +429,14 @@ public class catInstSetTest extends AbstractInstSetTest {
                 "the equation is stored as its lhs/rhs code values");
         assertTrue(declaration.atDirect(uri(INVERSE)).isNoObj(), "an undeclared facet is omitted, not written");
         // an EXISTING fold's combiner is untouched by this declaration: count still recombines through sum
-        final Call count = ObjmtronSerializer.parse("count?int<=#{*}()");
-        final Call combiner = LawTable.combiner(count.tryToInst().asInst());
+        final Call count = ObjmtronSerializer.parse("count?int<=A{*}()");
+        final Call combiner = Law.Helper.combiner(count.tryToInst().asInst());
         assertNotNull(combiner, "an existing fold still has a combiner");
         assertEquals(SUM_INST_TID, combiner.asInst().tid().basePath(), "count still recombines through sum");
     }
 
     /**
-     * A DECLARED DEFINITION IS A REWRITE RULE — {@link LawTable#derivations()} (the list {@code derivation_contraction}
+     * A DECLARED DEFINITION IS A REWRITE RULE — {@link Law.Helper#derivations()} (the list {@code derivation_contraction}
      * applies) must union the in-code rows with the equations instructions declare beside themselves, or a row
      * migrated to the builder would silently stop contracting. The definition declared here is deliberately INERT:
      * its rhs names instructions no chain contains, so the rule can never fire on another test's code and this test
@@ -455,7 +453,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
         final Code rhs = ObjmtronSerializer.parse("start(A).siftveil(B).quarrymark()");
         final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
-        final Law[] modLaws = LawTable.lawsOf(mod).laws().lstValue().stream()
+        final Law[] modLaws = Law.Helper.lawsOf(mod).laws().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
         final Inst built = InstBuilder.build()
                 .tid(MOD_INST_TID)
@@ -469,17 +467,17 @@ public class catInstSetTest extends AbstractInstSetTest {
         Machine.write(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ), noobj());
         assertTrue(Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec().atDirect(uri(DERIVATION)).isRec(),
                 "the definition reaches ?decq beside the registered inst");
-        assertTrue(LawTable.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
-                "a declared definition feeds the rewrite list, got " + LawTable.derivations());
+        assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
+                "a declared definition feeds the rewrite list, got " + Law.Helper.derivations());
         // the SAME equation lives in a row (int's minus) and now also beside the instruction: it must count once
         final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
-        final LawTable.Entry minusEntry = LawTable.lawsOf(minus);
+        final Law.Helper.Entry minusEntry = Law.Helper.lawsOf(minus);
         assertNotNull(minusEntry, "int's minus carries its declaration");
         final Derivation rowed = minusEntry.derivation();
         assertNotNull(rowed, "int's minus carries its defining equation");
         final Law[] minusLaws = minusEntry.laws().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
-        final long before = LawTable.derivations().stream()
+        final long before = Law.Helper.derivations().stream()
                 .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
         InstBuilder.build()
                 .tid(MINUS_INST_TID)
@@ -489,7 +487,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .law(minusLaws)
                 .derivation(rowed)
                 .create();
-        assertEquals(before, LawTable.derivations().stream()
+        assertEquals(before, Law.Helper.derivations().stream()
                         .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
                 "the declared copy of a row's equation is deduped, not added");
     }
@@ -521,7 +519,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @Test
     void testProcessRowIsOwnedByItsCarrier() {
-        final LawTable.Entry cmplxNeg = LawTable.lawsOf(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID));
+        final Law.Helper.Entry cmplxNeg = Law.Helper.lawsOf(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID));
         assertNotNull(cmplxNeg, "a cmplx row belongs to the /m/math table although neg lives under /m/inst");
         assertTrue(cmplxNeg.laws().lstValue().stream().anyMatch(l -> l.uriValue().name().equals(Law.involution.name())),
                 "cmplx's neg is declared involution, got " + cmplxNeg.laws());
@@ -536,9 +534,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     @Test
     void testDispatchSelectsTheDeclaration() {
         for (final fURI carrier : List.of(STR_TID, INT_TID)) {
-            final LawTable.Declared order = LawTable.declared(ORDER_INST_TID.basePath(), T(carrier));
+            final Law.Helper.Declared order = Law.Helper.declared(ORDER_INST_TID.basePath(), T(carrier));
             assertNotNull(order, "order answers for a " + carrier + " carrier");
-            assertTrue(LawTable.declares(order, Law.pure), carrier + "'s order is declared pure, got " + order.entry().laws());
+            assertTrue(Law.Helper.declares(order, Law.pure), carrier + "'s order is declared pure, got " + order.entry().laws());
         }
     }
 
@@ -563,7 +561,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     /**
      * THE CLASS READS THE COMPUTED INVERSE — an involution is its own inverse, so {@code iso} (and with it
      * {@code auto}, {@code section}, {@code retraction}) follows from the law table, stated once in
-     * {@code LawTable#derivedInverse} and read here; a group operation like {@code plus} is not self-inverse and
+     * {@code Law.Helper#derivedInverse} and read here; a group operation like {@code plus} is not self-inverse and
      * stays a bare {@code endo}.
      */
     @Test
@@ -585,9 +583,9 @@ public class catInstSetTest extends AbstractInstSetTest {
      * {@code mult} is div's own derivation (the division algorithm), a fact about truncating division rather than
      * about the algebra. A type that declares no algebra ({@code imperial}) gets no law row at
      * all — it computes through its implementation and licenses no rewrite. This is the switch
-     * {@link LawTable#declared(fURI, Type)} makes, and what lets this table shrink to declarations.
+     * {@link Law.Helper#declared(fURI, Type)} makes, and what lets this table shrink to declarations.
      * <p>
-     * THIS TEST PINS THE STRICT POLICY. {@code LawTable.algebraFor} keeps the inheriting body commented beside the
+     * THIS TEST PINS THE STRICT POLICY. {@code Law.Helper.algebraFor} keeps the inheriting body commented beside the
      * strict one; if you flip that switch, flip these assertions with it (nat's plus then inherits int's inverse,
      * and imperial's plus inherits real's) — the failure is the signal that the policy changed, not a bug.
      */
@@ -595,29 +593,29 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testStrictLawResolution() {
         final Type nat = T(NAT_TID);
 
-        final LawTable.Declared plusOnNat = LawTable.declared(PLUS_INST_TID.basePath(), nat);
+        final Law.Helper.Declared plusOnNat = Law.Helper.declared(PLUS_INST_TID.basePath(), nat);
         assertNotNull(plusOnNat, "nat runs int's plus, so its row is found along the path (nat -> int -> #)");
         assertNull(plusOnNat.entry().inverse(), "nat declares a rig: plus has no additive inverse, so nothing cancels");
         assertTrue(plusOnNat.entry().laws().lstValue().stream()
                         .anyMatch(l -> l.uriValue().name().equals(Law.commutative.name())),
                 "the implementation's process laws ARE inherited with its row");
 
-        final LawTable.Declared plusOnInt = LawTable.declared(PLUS_INST_TID.basePath(), T(INT_TID));
+        final Law.Helper.Declared plusOnInt = Law.Helper.declared(PLUS_INST_TID.basePath(), T(INT_TID));
         assertNotNull(plusOnInt, "int implements plus itself");
         assertNotNull(plusOnInt.entry().inverse(), "int is a ring: plus cancels with minus");
 
-        final LawTable.Declared multOnNat = LawTable.declared(MULT_INST_TID.basePath(), nat);
+        final Law.Helper.Declared multOnNat = Law.Helper.declared(MULT_INST_TID.basePath(), nat);
         assertNotNull(multOnNat, "nat's mult lands on the int contract");
         assertNull(multOnNat.entry().inverse(), "the retraction travels with the implementation: mult -> div");
-        final LawTable.Declared divOnNat = LawTable.declared(DIV_INST_TID.basePath(), nat);
+        final Law.Helper.Declared divOnNat = Law.Helper.declared(DIV_INST_TID.basePath(), nat);
         assertNotNull(divOnNat, "nat's div lands on the int contract");
         assertNull(divOnNat.entry().inverse(), "truncating division is nobody's inverse");
 
         // no algebra declared, no row to license a rewrite: imperial has its own plus contract but no laws declared
-        assertNull(LawTable.declared(PLUS_INST_TID.basePath(), T(f("imperial"))),
+        assertNull(Law.Helper.declared(PLUS_INST_TID.basePath(), T(f("imperial"))),
                 "imperial declares no algebra, so its plus has no row and licenses nothing");
-        assertTrue(LawTable.typeLawsOf(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
-        assertFalse(LawTable.typeLawsOf(nat).jvm().isEmpty(), "nat models a rig (it declares one)");
+        assertTrue(TheoryHelper.instances(T(f("imperial"))).jvm().isEmpty(), "imperial models no theory");
+        assertFalse(TheoryHelper.instances(nat).jvm().isEmpty(), "nat models a rig (it declares one)");
     }
 
     /**
@@ -625,8 +623,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * <p>
      * The base carriers declare their theory instances at the TYPE ({@code mTypes.declareAlgebras()}), staged
      * through {@code TypeBuilder.declare} and persisted to {@code ?decq} by the drain that runs when {@code /m}
-     * mounts; {@link LawTable#typeLawsOf(Type)} serves the declaration. The table's in-code branches were the old
-     * source and are gone ({@code mInstSetLawTable#typeLawsUncached} answers {@code rec0()}), so a declaration that
+     * mounts; {@link TheoryHelper#instances(Type)} serves the declaration. The law tables were the old
+     * source and are gone, so a declaration that
      * stops being staged, or stops being drained, leaves the carrier with NO algebra — which is exactly what these
      * assertions read. The instance keys are the ones the moved declarations write; asserting a name per carrier is
      * what makes a field renamed or an {@code auto_from_} pointer that no longer resolves a failure here rather
@@ -649,24 +647,22 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A carrier declares the given theory instances — and the /m table no longer restates any of them.
+     * A carrier declares the given theory instances.
      */
     private static void assertCarrierDeclares(final Type carrier, final String... instanceNames) {
-        final Rec laws = LawTable.typeLawsOf(carrier);
+        final Rec laws = TheoryHelper.instances(carrier);
         assertFalse(laws.jvm().isEmpty(), carrier.vid() + " declares its algebra, got the empty rec");
         final Set<String> declared = laws.jvm().keySet().stream()
                 .map(key -> key.uriValue().name()).collect(Collectors.toSet());
         for (final String instanceName : instanceNames)
             assertTrue(declared.contains(instanceName),
                     carrier.vid() + " models " + instanceName + ", declared: " + declared);
-        assertTrue(mInstSetLawTable.INSTANCE.typeLawsUncached(carrier).jvm().isEmpty(),
-                carrier.vid() + " is served by its ?decq declaration, not restated by the table");
     }
 
     /**
      * int's multiplicative side at the object-law level — a monoid ({@code op/mult, id/1}), but NO {@code mult_group}
      * (no 1/x — int division truncates). Mirrors the process-law asymmetry where int's {@code div} declares no
-     * inverse but {@code mult}'s inverse is {@code div} ({@link mInstSetLawTable:239-240}). This was a stale
+     * inverse but {@code mult}'s inverse is {@code div}. This was a stale
      * duplicate of testNatVsInt's int-ring row; retargeted to the one int object-law fact testNatVsInt does not pin.
      *
      * <p>The parallel real row — {@code real::T.as(object::T) >> law >> mult_group} = {@code group_theory[op/id/inv]} —
@@ -704,7 +700,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * The process laws — the {@code declared ∩ process} cell, served from {@link mInstSetLawTable}.
+     * The process laws — the {@code declared ∩ process} cell, served from each instruction's {@code ?decq}.
      */
     @ParameterizedTest
     @CsvSource(value = {
