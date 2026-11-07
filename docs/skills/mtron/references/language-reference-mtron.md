@@ -546,7 +546,60 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 
 ---
 
-## 22. sugar & syntax summary
+## 22. code pattern matching
+
+Code is data. A poly holds code without running it (`[plus(1).mult(2)]`), and `==[...]` applies an instruction to that
+code as a value. `update()` on a code (`>>=` is its sugar) changes the runs of instructions a **pattern** matches, as
+`update()` on a str changes the sections a regex matches.
+
+A code pattern is code whose parts are tests. The code tests the pattern, as a value tests a type:
+
+* an instruction's **name** is a uri pattern: `</m/inst/{plus,mult}>` matches either, `#` matches any.
+* an **argument** is the type it must be: `int::T` is one int, `int{*}::T` a bag of them, `int::T[?>0]` a positive int.
+* a predicate guards an argument (`plus(?>0)`), a literal matches itself (`plus(2)`), and an instruction pattern
+  nests (`mult(#(mult(_)))` matches a `mult` whose argument is any instruction holding a `mult`).
+
+```mtron_pre
+[plus(1).mult(2).plus(3)]==[update([plus(int::T)=>mult(5)])]                             [-- every match changes --]
+[plus(1).plus(2).mult(3)]==[update([plus(int::T).plus(int::T)=>plus(3)])]                [-- a run matches as a whole --]
+[plus(1).mult(2).plus(3)]==[update([</m/inst/{plus,mult}>(int::T)=>id()])]               [-- a uri pattern names the inst --]
+[start({1,2}).plus(1)]==[update([start(int::T)=>start(0)])]                              [-- a bag is no int: unchanged --]
+[start({1,2}).plus(1)]==[update([start(int{*}::T)=>start(0)])]                           [-- int{*} takes the bag --]
+[mult(1).plus(2).mult(3)]==[update([plus(int::T).mult(int::T)=>[mult(int::T)=>mult(7)]])] [-- a rec changes inside the run --]
+```
+
+A pattern matches runs of consecutive instructions, left to right, never overlapping. A code change replaces the run,
+and a rec applies its own rules inside the run. The rules run in order, each over what the last one left, and a change
+is not matched again.
+
+### names and templates
+
+`@name` on a pattern element names what it matched. In a change, a `${...}` argument is a **template parameter**: it is
+evaluated against what the run holds in that place, it reads the names with `*name`, and its value (not its text) is
+the argument. Nest one template inside another by alternating `${...}` and `{{{...}}}`. Everything outside a template
+parameter is literal: `plus(+5)` stays `plus(plus(5))`.
+
+```mtron_pre
+[plus(5).mult(2)]==[update([plus(int::T)=>plus(${+10})])]                                    [-- evaluated against the 5 --]
+[plus(5).mult(2)]==[update([plus(int::T@a)=>plus(${*a.plus(10)})])]                          [-- a named group --]
+[plus(2).plus(3).mult(4)]==[update([plus(int::T@a).plus(int::T@b)=>plus(${*a.plus(*b)})])]   [-- the plus monoid law, as data --]
+[mult(plus(mult(3))).plus(1)]==[update([mult(#(mult(int::T@k)))=>mult(plus(mult(${*k.mult(2)})))])] [-- a name bound at depth --]
+```
+
+The names are the change's own argument uris: a frame on the thread's argument stack, pushed for the change and popped
+after it, so threads never see each other's names. A name on a **typed hole** is also a type of the machine.
+`int::T@a` defines `a::T` in the machine's root frame (the scope of relative uris), and a later plain `int::T@a` refers
+to whatever `a` already is. So:
+
+* within one machine, a name means one type: reuse `@a` only for the same type, and give a different refinement its
+  own name.
+* threads that pattern-match concurrently each work in a machine of their own (`push`, then `pop`). Their types live
+  and die there; in one shared machine their definitions collide.
+* a name the argument stack itself answers (such as `q`) cannot be read back as a capture.
+
+---
+
+## 23. sugar & syntax summary
 
 | Sugar     | Expansion        | Use                      |
 |-----------|------------------|--------------------------|
@@ -570,7 +623,7 @@ int{?}::10                     [-- optional coefficient {0,1} --]
 
 ---
 
-## 23. expression evaluation model
+## 24. expression evaluation model
 
 1. **left-to-right chaining:** `lhs.inst(rhs)` — `inst` receives `lhs` and `rhs`
 2. **coefficient propagation:** ops distribute over collections; result coefficients combine
