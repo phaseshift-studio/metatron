@@ -74,7 +74,8 @@ public class BasicTyper extends MRec implements Typer {
 
     public BasicTyper(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.jvm().put(uri(Typer.CHECK), rec(new LinkedHashMap<>(Typer.defaults().jvm())));
+        // a given check is kept (a point it leaves out reads the boot default); only a typer without one is seeded
+        this.jvm().putIfAbsent(uri(Typer.CHECK), rec(new LinkedHashMap<>(Typer.defaults().jvm())));
         this.jvm().put(uri("verify"), instLambda(lst(ALL_TYPE, T(LST_TID.poly(LAW_TID.maybeSome()))), (_, inst) -> {
             if (inst.arg(0).isObjInst())
                 return AlgebraTool.analyzeTypeInst(inst.arg(0).dom(), inst.arg(0).asInst(), inst.arg(1).orElse(lst()).lstValue().stream().map(u -> Law.valueOf(u.uriValue().name())).toList()).toRec();

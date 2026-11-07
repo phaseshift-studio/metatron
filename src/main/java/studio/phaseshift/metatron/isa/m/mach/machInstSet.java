@@ -514,7 +514,8 @@ public class machInstSet extends AbstractInstSet {
                                         uri(Typer.OBJ_WRITE.name()).maybe(), BOOL_TYPE)), mutableMap(
                                         uri(Typer.CHECK), "the type-check points: inst_dom (lhs matches the instruction domain), inst_rng (rhs matches its range), type_pred (a value matches its type predicate), obj_write (a value matches its type on a space write), code_resolve (only fully resolved code executes)"))
 
-                                .constructor(arg -> new BasicTyper(arg.asRec().jvm(), MACH_TYPER_TID, arg.vid()))
+                                // the typer fills in its rec (check, verify), so it gets a copy, never the caller's
+                                .constructor(arg -> new BasicTyper(mutableMap(arg.asRec().jvm()), MACH_TYPER_TID, arg.vid()))
                                 .create(),
                         /**
                          * {@code typer::T}'s state: a {@code check} field holding one bool flag per type-check point. Grouping the points
