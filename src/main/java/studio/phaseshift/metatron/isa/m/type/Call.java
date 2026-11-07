@@ -200,6 +200,11 @@ public interface Call extends Obj {
          * uris: a frame pushed on this thread's arg stack while the change is made, so threads never share them. A
          * change's {@code ${...}} argument is a template parameter, evaluated against what the run holds in that place
          * and reading the names: {@code plus(int::T@a).plus(int::T@b) => plus(${*a.plus(*b)})}. All else is literal.
+         * <p>
+         * COMPONENTS (Marko, 2026-11-06). A rule keyed by the uri {@code args}, not a pattern, updates the arguments of
+         * every instruction in the run in place, as {@code >>=} updates a lst. So {@code [plus(int::T)=>[args=>[+10]]]}
+         * turns {@code plus(5)} into {@code plus(15)}, and an inst updates itself the same way
+         * ({@code update?inst<=inst(rec::T)} is this over a run of one).
          */
         public static List<Inst> update(final List<Inst> insts, final Obj rules) {
             if (rules.isCall()) {
@@ -215,6 +220,18 @@ public interface Call extends Obj {
             // the rules walked as the rec's own rels (elements()), never through at(): a rule's key and value are code
             // held in a poly, and at() would fire an initial or an auto among them
             for (final Rel rule : rules.asRec().elements().toList()) {
+                // A URI KEY NAMES A COMPONENT of every instruction in the run, in the word Inst already reads: its args.
+                // They are updated as >>= updates a lst (Poly.Helper.updateRecursion): a call transforms, a literal or a
+                // blocked |x replaces, _ keeps a value (#::T keeps an instruction, which _ would apply id() to), and
+                // the rhs gives the new arity. A dom or rng is a type, which that rule does not update: refused.
+                if (rule.first().isUri()) {
+                    if (!Tokens.ARGS.equals(rule.first().uriValue().toString()))
+                        throw MTronException.of("an instruction updates its %s, not %s", Tokens.ARGS, rule.first());
+                    current = current.stream()
+                            .map(inst -> inst.args((Poly<?, ?>) Poly.Helper.updateRecursion(inst.args(), rule.second(), Poly.IMMUTABLE)))
+                            .toList();
+                    continue;
+                }
                 if (!rule.first().isCall())
                     throw MTronException.of("a code update matches a code pattern, not %s", rule.first());
                 final List<Inst> pattern = rule.first().asCall().insts();

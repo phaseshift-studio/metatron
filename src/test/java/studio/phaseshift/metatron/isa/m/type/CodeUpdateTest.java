@@ -72,6 +72,28 @@ public class CodeUpdateTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // an inst updates its own args as >>= updates a lst: a call transforms, a literal replaces, |x replaces with a call
+            "[plus(5)]==[update([args=>[+10]])]                                              % [plus(15)]",
+            "[plus(5)]==[update([args=>[7]])]                                                % [plus(7)]",
+            "[plus(5)]==[update([args=>[|mult(2)]])]                                         % [plus(mult(2))]",
+            // #::T keeps an arg that is an instruction (_ would apply id() to it), and the rhs gives the args their arity
+            "[branch(plus(1),mult(2))]==[update([args=>[#::T,|mult(3)]])]                    % [branch(plus(1),mult(3))]",
+            // in a code, a component rule updates the insts a pattern matched, in place
+            "[plus(5).mult(2)]==[update([plus(int::T)=>[args=>[+10]]])]                      % [plus(15).mult(2)]",
+            // ... or, at the top, every inst of the code
+            "[plus(5).mult(2)]==[update([args=>[+10]])]                                      % [plus(15).mult(12)]",
+            // the two kinds of rule run in order: the pattern replaces, then every inst's args grow
+            "[plus(5).mult(2)]==[update([plus(int::T)=>mult(3),args=>[+1]])]                 % [mult(4).mult(3)]",
+            // an inst updates its args: any other component is refused, a dom or rng (a type) included
+            "[plus(5)]==[update([nope=>[+1]])]>-                                             % <ERROR>",
+            "[plus(5)]==[update([rng=>real::T])]>-                                           % <ERROR>",
+    }, delimiter = '%')
+    public void testComponents(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     private static final int THREADS = 10;
     private static final int ROUNDS = 25;
 
