@@ -269,13 +269,19 @@ public final class PendingWrites {
      * boot identity to be correct.
      */
     /**
-     * INSTALL THE READER HOOK: a {@code ?docq}/{@code ?decq} is published by the first reader that misses it. The
-     * hook is installed by the BOOT, never from a static initializer -- {@link PendingWrites} is first touched from
+     * INSTALL THE HOOKS: a {@code ?docq}/{@code ?decq} is published by the first reader that misses it, and a
+     * {@code ?decq} write evicts the algebra memos ({@link TheoryHelper#evict}, {@link Law.Helper#evict}). The
+     * hooks are installed by the BOOT, never from a static initializer -- {@link PendingWrites} is first touched from
      * {@code mTypes}' class initialization, and forcing {@code QCollection} from there closes the documented
      * {@code mTypes -> mInstSet.AS_INST_TID} cycle.
      */
     public static void install() {
         QCollection.LAZY_PUBLISH = PendingWrites::publish;
+        // and the writer hook: a declaration that lands evicts what the algebra memos derived from the one it replaced
+        QCollection.EVICT = (address, declaration) -> {
+            TheoryHelper.evict(address);
+            Law.Helper.evict(address, declaration);
+        };
     }
 
     public static boolean publish(final fURI address) {

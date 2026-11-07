@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -380,12 +381,15 @@ public enum Law {
 
         /**
          * THE DERIVATIONS SNAPSHOT — every registered instruction's {@code ?decq} defining equation, keyed by the address
-         * it is declared at, and the staging revision it was taken at. INTERIM: retaken when the staging log's revision
-         * moves (a builder declared something) or before the machine was up; type-edit subscriptions will replace it.
+         * it is declared at, with the staging revision and the derivation writes it was taken at. Retaken when a builder
+         * stages a claim (the revision moves), when a {@code ?decq} write can change an equation ({@link #evict}), or
+         * while the machine was not yet up.
          */
         private static volatile Map<fURI, Derivation> DERIVATIONS = Map.of();
         private static volatile List<PendingWrites.Write> DERIVATIONS_AT = null;
+        private static volatile long DERIVATIONS_SEEN = -1;
         private static volatile boolean DERIVATIONS_LOADED = false;
+        private static final AtomicLong DERIVATION_WRITES = new AtomicLong();
 
         /**
          * A BOOT IS A FRESH WORLD — forget the derivations snapshot ({@code BootLoader.resetMemos}, before any set mounts).
@@ -393,7 +397,19 @@ public enum Law {
         public static void reset() {
             DERIVATIONS = Map.of();
             DERIVATIONS_AT = null;
+            DERIVATIONS_SEEN = -1;
             DERIVATIONS_LOADED = false;
+        }
+
+        /**
+         * A {@code ?decq} DECLARATION LANDED at {@code address} ({@code QCollection.EVICT}): the snapshot is retaken on its
+         * next read when the write can change a defining equation — the claim carries one, clears the address (noobj, the
+         * override), or replaces an address the snapshot holds. A claim without one (most lazy publishes) leaves it be.
+         */
+        public static void evict(final fURI address, final Obj declaration) {
+            if (declaration.isNoObj() || (declaration.isRec() && null != declaredDerivation(declaration.asRec()))
+                    || DERIVATIONS.containsKey(Inst.Helper.operationTid(address)))
+                DERIVATION_WRITES.incrementAndGet();
         }
 
         /**
@@ -431,7 +447,8 @@ public enum Law {
          */
         private static Map<fURI, Derivation> declaredDerivations() {
             final List<PendingWrites.Write> revision = PendingWrites.writes();
-            if (DERIVATIONS_LOADED && revision == DERIVATIONS_AT)
+            final long written = DERIVATION_WRITES.get();
+            if (DERIVATIONS_LOADED && revision == DERIVATIONS_AT && written == DERIVATIONS_SEEN)
                 return DERIVATIONS;
             final boolean loaded = Machine.loaded();
             final Map<fURI, Derivation> snapshot = new LinkedHashMap<>();
@@ -444,6 +461,7 @@ public enum Law {
                 }
             DERIVATIONS = snapshot;
             DERIVATIONS_AT = revision;
+            DERIVATIONS_SEEN = written;
             DERIVATIONS_LOADED = loaded;
             return snapshot;
         }
