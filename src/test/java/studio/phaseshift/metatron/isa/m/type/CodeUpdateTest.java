@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -103,11 +102,8 @@ public class CodeUpdateTest extends AbstractMetatronTest {
      * But a NAME ON A TYPED HOLE IS A TYPE OF THE MACHINE ({@code int::T@a} defines {@code a::T} in its root frame, and a
      * later plain {@code int::T@a} refers to whatever {@code a} already is), so threads that share a machine take
      * names of their own ({@code fa3}, {@code fb3}), as do the tests that share it (the guard test below uses {@code ga3}).
+     * The root frame they all write is a concurrent map, so one thread's definition never breaks another's read.
      */
-    @Disabled("ONE MACHINE DOES NOT HOLD UP (2026-11-06): parsing int::T@fa3 WRITES a type into the machine's root frame "
-            + "(scope 3, shared by every thread) while other threads read it, and that plain map throws a "
-            + "ConcurrentModificationException in variableStack.read -> Rec.at (intermittent: 1-2 errors in 3 runs). "
-            + "Concurrent named patterns run in a machine of their own instead, as the two tests below do.")
     @Test
     void tenThreadsFoldTheirOwnNumbersInOneMachine() throws Exception {
         this.tenThreads(false, (id, r) -> "[plus(" + id + ").plus(" + r + ").mult(2)]==[update([plus(int::T@fa" + id + ").plus(int::T@fb" + id + ")=>plus(${*fa" + id + ".plus(*fb" + id + ")})])]",
@@ -130,9 +126,6 @@ public class CodeUpdateTest extends AbstractMetatronTest {
      * per thread: a refined {@code @name} redefines the machine's type, and threads sharing one name would race on it,
      * both in the match and in how the template's read of the name is typed.
      */
-    @Disabled("ONE MACHINE DOES NOT HOLD UP (2026-11-06): every thread's refined @name is a definition written to the "
-            + "machine's shared root frame while other threads read it: the same ConcurrentModificationException in "
-            + "variableStack.read as the fold above. Run concurrent named patterns in a machine of their own.")
     @Test
     void tenThreadsGuardWithTheirOwnRefinementInOneMachine() throws Exception {
         this.tenThreads(false, (id, r) -> "[plus(" + id + ").plus(" + id + ").mult(" + r + ")]==[update([plus(int::T[?>" + (id - 1) + "]@ga" + id + ").plus(int::T[?>" + (id - 1) + "]@gb" + id + ")=>plus(${*ga" + id + ".plus(*gb" + id + ")})])]",

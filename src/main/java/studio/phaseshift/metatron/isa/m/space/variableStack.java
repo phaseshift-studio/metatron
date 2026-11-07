@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -118,8 +119,15 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
         // `a -> {5,6,7}` overwrites `a`, while `a/b/c -> {4,5,6}` folds into `a`'s c
         if (1 == vid.asNode().segmentLength())
             rootFrame.jvm().put(vid.toUri(), obj);
-        else
-            rootFrame.at(vid.toUri(), obj, Poly.MUTABLE);
+        else {
+            // THE FRAME IS SHARED ACROSS THREADS, so its concurrent map is only ever put into: the path is merged on a
+            // copy holding just the binding it starts at, and that binding is put back. Merging on the frame itself
+            // (Poly.MUTABLE) would swap in a plain copy, and the next put would break another thread's read.
+            final Uri head = uri(vid.resolve().path().getFirst());
+            final Obj bound = rootFrame.jvm().get(head);
+            rootFrame.jvm().putAll(rec(null == bound ? mutableMap() : mutableMap(head, bound))
+                    .at(vid.toUri(), obj, Poly.MUTABLE).jvm());
+        }
         return obj;
     }
 
