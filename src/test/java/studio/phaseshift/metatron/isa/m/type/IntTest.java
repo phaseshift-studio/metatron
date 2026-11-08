@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TYPE;
@@ -53,6 +54,10 @@ public class IntTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(
+            instruction = "does the mtron expression {{{lhs}}} match {{{rhs}}}?",
+            input = "{{{lhs}}}.matches({{{rhs}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // a                                 % b                            % matches
@@ -72,6 +77,10 @@ public class IntTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkMatches(LOG, lhs, rhs, matches);
     }
 
+    @Training(
+            instruction = "what does the mtron expression {{{lhs}}}.{{{code}}} evaluate to?",
+            input = "{{{lhs}}}.{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // a                                 % b                            % matches
@@ -134,6 +143,7 @@ public class IntTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(coefficient); the mtron take() counts objs instead of splitting by coefficient, so no single expression yields the expected column")
     @ParameterizedTest
     @CsvSource(value = {
             "int{10}::1         %int{5}       %int{5}::1          %int{5}::1",
@@ -165,6 +175,10 @@ public class IntTest extends AbstractAlgebraTest {
         super.testTake(current, remove, retrieved, remaining);
     }
 
+    @Training(
+            instruction = "what does the mtron expression {{{input}}}.{{{code}}} evaluate to?",
+            input = "{{{input}}}.{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "{1,2,3,4}         %order()       %[1,2,3,4]",

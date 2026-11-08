@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -62,6 +63,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     // constQ — parameterized: blocks mutation of constant URIs
     // ================================================================
 
+    @Training.SkipTraining(reason = "the subject is a space's constq write policy: the assertion is that a seeded mutation is BLOCKED and the original value survives, not a value an expression yields")
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
             "/c1 % \"immutable\" % \"mutated\" % blocks overwrite after constQ",
@@ -90,6 +92,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     // typeQ — parameterized: enforces type constraints on writes
     // ================================================================
 
+    @Training.SkipTraining(reason = "the subject is a space's typeq write policy (a write accepted or rejected under a declared type); the expected column is the state read back after the policy, not an evaluation of the input")
     @ParameterizedTest
     @CsvSource(value = {
             "/t1 % int::T     % 42                  % false % 42               % int accepted under int::T",
@@ -131,6 +134,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     // mimeQ — parameterized: MIME serialization on postRead
     // ================================================================
 
+    @Training.SkipTraining(reason = "the subject is a space's mimeq SERIALIZATION round trip: the input is a value written to a uri and the assertion re-parses the MIME output, not that the input evaluates to the expected column")
     @ParameterizedTest
     @CsvSource(value = {
             //"/m1 % text/plain        % \"hello\"    % str serialized as plain text",
@@ -164,6 +168,7 @@ public class QProcIntegrationTest extends AbstractMetatronTest {
     // incrQ — parameterized: auto-incrementing counter in path
     // ================================================================
 
+    @Training.SkipTraining(reason = "the subject is the vid an incrq write MINTS (a path position holding the counter), not a value the input evaluates to")
     @ParameterizedTest(name = "[{index}] {3}")
     @CsvSource(value = {
             "i0/_              % 2      % a    % basic-increment counter",

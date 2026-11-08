@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
@@ -46,6 +47,10 @@ public class ObjsTest extends AbstractObjTest {
         InstSet.importInstSet(MATH_ISA_TID);
     }
 
+    @Training(
+            instruction = "what is the type of the mtron expression {{{objs}}}?",
+            input = "{{{objs}}}.type()",
+            output = "{{{expectedType}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "{1,1,1,1}                      |int{4}::T       |true",
@@ -56,6 +61,7 @@ public class ObjsTest extends AbstractObjTest {
         AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse(expectedType), ObjmtronSerializer.parse(objs).type(), shouldEqual);
     }
 
+    @Training.SkipTraining(reason = "asserts the (retrieved, remaining) PAIR of a Java-side take(coefficient); the mtron take() counts objs instead of splitting by coefficient, so no single expression yields the expected columns")
     @ParameterizedTest
     @CsvSource(value = {
             "{1,1,1,1}                      |int{0}       |{,}                            |{1,1,1,1}",

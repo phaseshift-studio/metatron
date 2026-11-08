@@ -192,6 +192,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @TestData(value = {"1@take/a", "2@take/b", "3@take/c"})
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "from(take/+).count()                                                         % 3",
@@ -641,6 +642,10 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"[a=>1,b=>2,c=>[d=>3,e=>[4,5,6,7]]]@xyz"})
     @CsvSource(value = {
@@ -696,6 +701,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "x -> noobj",
@@ -728,6 +734,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // AN ARGUMENT IS REACHED BY SIGIL, NOT BY NAME — positionally with *<0>, or by the argument's own
@@ -754,6 +761,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"int::T[is(gt(0))]@nat", "int::T[?>0]@nat2"})
     @CsvSource(value = {
@@ -856,6 +864,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "each row is two separate programs (stateCode, then mutationCode) plus a Java-side Machine.read(vid) — no single expression carries both the mutation and the read")
     @ParameterizedTest
     @CsvSource(value = {
             "a -> [b=>[c=>d]]              % a/b/c -> 34                     % a            % [b=>[c=>34]]",
@@ -1013,6 +1022,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     // resolution) returns 3 correctly. a sibling row was worked around the
     // same way (.as(int::T).sum?int<=int{*}()). this is a
     // dynamic-resolution/read-tid dispatch issue, not a fail-text one.
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "a -> [a=>1,b=>[c=>2,d=>[e,f,[g,h]]]]",
@@ -1087,6 +1097,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     // oneTime: the two seeds are only READ by the rows; re-declaring them before every row re-typed `reck` in
     // place mid-method (a redefinition lands by re-typing the registered type object), which is what made the
@@ -1156,6 +1167,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "a -> [x=>!*b]",
@@ -1207,6 +1219,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "a -> [x=>!*b]",
@@ -1306,6 +1319,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "1.and(gt(2),lt(5))                           % false",
@@ -1455,6 +1469,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         assertTrue(t.toString().contains("plus"), "the format should render the insts of the text table: " + t);
     }
 
+    @Training.SkipTraining(reason = "asserts the evaluated result's type vid after a manual resolve-then-compile-then-processor walk; the CSV column is a type vid, not the value the expression yields")
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2).explain()       % /m/inst/explain/explanation",

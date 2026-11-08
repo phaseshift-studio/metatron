@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.List;
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
  */
 public class CodeTest extends AbstractMetatronTest {
 
+    @Training.SkipTraining(reason = "the second column states whether the code fully RESOLVES (a static-analysis result), not what the code evaluates to; e.g. 1.plus(2) is asserted resolved=true while it evaluates to 3")
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2)                                          % true",

@@ -58,6 +58,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     //  JSON translation (existing)
     // ===================================================================
 
+    @Training.SkipTraining(reason = "the left column is JSON, not mtron: the assertion is that reading it yields the same Obj as parsing the right column (a deserialization equivalence), so there is no expression to evaluate")
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """
                                                     1 | 1
@@ -104,6 +105,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     //  Type-conversion: str -> json::T  (tag + validate)
     // ===================================================================
 
+    @Training.SkipTraining(reason = "asserts the tid of a string cast to json::T; the columns are a string literal and a prose description, not an expression and the value it yields")
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'{\"a\":[1,2,3],\"b\":true}'  %  object with array and bool",
@@ -126,6 +128,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     //  Type-conversion: json::T -> rec::T  (parse)
     // ===================================================================
 
+    @Training.SkipTraining(reason = "asserts the tid of JSON parsed to rec::T; the columns are a JSON string and a prose description, not an expression and the value it yields")
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'{\"a\":[1,2,3],\"b\":true}'  %  object parses to rec",
@@ -141,6 +144,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     //  Type-conversion: rec::T -> json::T  (serialize)
     // ===================================================================
 
+    @Training.SkipTraining(reason = "asserts that a rec -> json -> rec round trip preserves structure; the expected column is a second serialization, not the value the input evaluates to")
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'{\"a\":[1,2,3],\"b\":true}'  %  round-trip through rec",
@@ -160,6 +164,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     //  Predicate rejection: invalid JSON
     // ===================================================================
 
+    @Training.SkipTraining(reason = "asserts that invalid JSON is rejected (a failed read); there is no expected value for an input to yield")
     @ParameterizedTest(name = "[{index}] {1}")
     @CsvSource(quoteCharacter = '~', value = {
             "'not json'          %  plain text",
@@ -254,6 +259,7 @@ public class ObjJSONSerializerTest extends AbstractSerializerTest<JsonElement> {
     @Training(
             instruction = "what does the mtron expression {{{mtron}}} serialize to as simple (lossy) JSON?",
             output = "{{{expectedJson}}}")
+    @Training.SkipTraining(reason = "the expected column is the simple-JSON serialization, not the mtron value: a lst/rec/uri serializes to a spelling that differs from what it evaluates to ({9,0} serializes as [9,0], 'a/b' as \"a/b\"), so input -> output does not hold")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '~', delimiter = '%', value = {
             "[1,2,3]                            % [1,2,3]                     % lst serializes as a plain array",
