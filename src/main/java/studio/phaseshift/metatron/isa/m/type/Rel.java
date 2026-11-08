@@ -275,7 +275,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
                     //  instC(MERGE_INST_TID.dom(REL_TID).rng(ALL.c("2")), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(DOM_INST_TID.dom(REL_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> lhs.relValue().get0()),
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> lhs.relValue().get1()),
-                    //instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
                     // instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(T(ALL)), (lhs, inst) -> lhs.asRel().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
@@ -371,18 +370,6 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>> {
                 return firstMatch;
             if (lhs.asRel().second().isPoly()) {
                 return lhs.asRel().second().asPoly().at(arg);
-            }
-            return noobj();
-        }
-
-        public static Obj lshiftRel(final Rel lhs, final Obj arg) {
-            if (arg.isNoObj())
-                return lhs.asRel().first();
-            final Obj firstMatch = lhs.asRel().at(arg);
-            if (!firstMatch.isNoObj())
-                return firstMatch;
-            if (lhs.asRel().first().isPoly()) {
-                return lhs.asRel().first().asPoly().at(arg);
             }
             return noobj();
         }

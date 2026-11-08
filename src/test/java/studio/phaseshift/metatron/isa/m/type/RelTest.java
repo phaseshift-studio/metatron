@@ -192,6 +192,34 @@ public class RelTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // >> descends: a rel's second, or by key into it
+            "(1=>(2=>3))>>                                                 % (2=>3)",
+            "(1=>(2=>3))>>1                                                % (2=>3)",
+            // << ascends the parent link, as on every obj. A rel's first is its dom(), not its parent, and a literal
+            // rel has no parent
+            "(a=>b)<<                                                      % noobj",
+            "(1=>(2=>3))<<                                                 % noobj",
+            "(1=>2)<<1                                                     % noobj",
+            "([x=>1]=>b)<<x                                                % noobj",
+            // a rel reached by >> ascends to what it was reached from: a rel, a lst, a rec
+            "(1=>(2=>3))>>1.<<                                             % (1=>(2=>3))",
+            "(1=>(2=>(3=>4)))>>1>>2.<<.<<                                  % (1=>(2=>(3=>4)))",
+            "[1,(2=>3)]>>1.<<                                              % [1,(2=>3)]",
+            "[k=>(2=>3),j=>7]>>k.<<                                        % [k=>(2=>3),j=>7]",
+            "(1=>2)>>1.<<                                                  % (1=>2)",
+            "(1=>[k=>(2=>3)])>>1>>k.<<.<<                                  % (1=>[k=>(2=>3)])",
+            "{2}(1=>(2=>3))>>1.<<                                          % {2}(1=>(2=>3))",
+            // a ..-led path ascends, then walks down to a sibling. << takes no other arg
+            "[(1=>2),7]>>0.lshift(<../1>)                                  % 7",
+            "[k=>(2=>3),j=>7]>>k.lshift(<../j>)                            % 7",
+            "[1,(2=>3)]>>1.<<2                                             % noobj",
+    }, delimiter = '%')
+    public void testRelShift(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+
 ///////////////////////////////////////////////////////////////////////////
 // SELECT AND WHERE (PATTERN MATCHING AND FILTERING)
 

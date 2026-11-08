@@ -128,6 +128,10 @@ public class LstTest extends AbstractAlgebraTest {
             "{2}[a,b,c]>>{<0>,{23}<1/>,<2>}                                             % {2}[a,{23}<1>=>b,c]>-",
             "{2}[a,b,c]>>{<0>,<1>,2}.<<                                                 % {6}<>",
             "{2}[a,b,{4}c]>>2                                                           % {8}c",
+            // an element reached by >> ascends to its lst, and << takes no depth (a uri's << does)
+            "[1,2,[a=>3],4]>>2.<<                                                       % [1,2,[a=>3],4]",
+            "[1,2,[a=>3],4]>>0.<<                                                       % [1,2,[a=>3],4]",
+            "[1,2,[a=>3],4]>>0.<<5                                                      % noobj",
             // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
     }, delimiter = '%')
     public void testAt(final String code, final String expected) {

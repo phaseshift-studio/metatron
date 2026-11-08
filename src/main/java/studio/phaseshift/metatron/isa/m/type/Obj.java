@@ -2267,16 +2267,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(T(C.maybeSome()), "the depth or path to ascend by (default 1)")
                             .desc("a shift function \\(f(x) \\mapsto x'\\): ascends out of the lhs obj (sugar'd <<)")
                             .body((lhs, inst) -> {
-                                if (lhs.isRec()) {
-                                    return Rec.Helper.lshiftRec(lhs.asRec(), inst.arg(0));
-                                } else if (lhs.isRel()) {
-                                    return Rel.Helper.lshiftRel(lhs.asRel(), inst.arg(0));
-                                } else if (lhs.isUri()) {
+                                final Obj arg = inst.arg(0);
+                                if (lhs.isUri()) {
                                     // uri << — pure uri arithmetic, no obj parent link: the uri
                                     // carries its own parent.  a/b/c << => a/b, a/b/c << 2 => a,
                                     // a/b/c/d << c/d => a/b (retract a matching postfix).
                                     final fURI u = lhs.uriValue();
-                                    final Obj arg = inst.arg(0);
                                     if (arg.isNoObj())
                                         return uri(u.retract(1));
                                     if (arg.isInt())
@@ -2287,9 +2283,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                                                 ? uri(u.retract(postfix.segmentLength())) : noobj();
                                     }
                                     return noobj();
-                                } else {
-                                    return lhs.parent();
                                 }
+                                // every other obj ascends its parent link, so << never descends: a rec's keys and a
+                                // rel's first are its dom(). A ..-led path ascends, then walks down to a sibling
+                                if (arg.isNoObj())
+                                    return lhs.parent();
+                                if (arg.isUri() && arg.uriValue().segments(0, "").equals(".."))
+                                    return arg.uriValue().segmentLength() > 1
+                                            ? auto_(map_(lhs.parent()).rshift_(arg.uriValue().pretract(1).toUri())).tryToInst()
+                                            : lhs.parent();
+                                return noobj();
                             })
                             .create()));
         }
