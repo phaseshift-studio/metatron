@@ -150,7 +150,8 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
     }
 
     default Pair<Obj, Obj> take(final cInt c) {
-        return Pair.with(this.c(c), this.c(this.c().minus(c)));
+        // a take covering every multiplicity there is leaves nothing: x - x is 0, which interval subtraction can't see
+        return Pair.with(this.c(c), this.c(c.contains(this.c()) ? cInt.ZERO() : this.c().minus(c)));
     }
 
     default Obj take() {

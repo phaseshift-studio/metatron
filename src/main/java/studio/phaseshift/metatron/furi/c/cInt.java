@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
+import java.util.function.LongBinaryOperator;
 
 public class cInt implements C<Long, cInt> {
     private final Long min;
@@ -78,7 +79,7 @@ public class cInt implements C<Long, cInt> {
     }
 
     public static cInt ANTIMAYBE() {
-        return cInt.of(null, -1L);
+        return cInt.of(-1L, 0L);
     }
 
     public static cInt ANTISOME() {
@@ -160,7 +161,7 @@ public class cInt implements C<Long, cInt> {
     public cInt plus(final cInt rhs) {
         final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min + rhs.min);
         final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max + rhs.max);
-        return null == newMin && null == newMax ? new cInt(0L, 0L) : new cInt(newMin, newMax);
+        return new cInt(newMin, newMax);
     }
 
     
@@ -187,6 +188,9 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public cInt div(final cInt rhs) {
+        if ((null != this.min && !LONG_ZERO.equals(this.min) && LONG_ZERO.equals(rhs.min))
+                || (null != this.max && !LONG_ZERO.equals(this.max) && LONG_ZERO.equals(rhs.max)))
+            throw MTronException.of("unable to divide {%s} by {%s}: a zero has no inverse", this, rhs);
         final Long minRHS = rhs.min == null ? null : rhs.min;
         final Long maxRHS = rhs.max == null ? null : rhs.max;
         final Long newMin = (this.min == null && minRHS == null) ?
@@ -198,15 +202,29 @@ public class cInt implements C<Long, cInt> {
         return new cInt(newMin, newMax);
     }
 
+    /**
+     * The interval product: every product of a multiplicity in this and one in {@code rhs}, min to max (independent
+     * coefficients pair every way, as a quantum tensor product does): {@code {2,3}·{-3,-2} = {-9,-4}}.
+     */
     @Override
     public cInt mult(final cInt rhs) {
         if (this.isOne()) return rhs;
         else if (rhs.isOne()) return this;
-        final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
-        final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
-        final boolean flip = null != newMin && null != newMax && newMin > newMax;
-        return new cInt(flip ? newMax : newMin, flip ? newMin : newMax);
-        //     return new cInt(newMin, newMax);
+        // MIN_VALUE/MAX_VALUE are the infinities of an unbounded bound (as in within()): zero wins, ∞ takes the sign
+        final LongBinaryOperator product = (x, y) -> 0L == x || 0L == y ? 0L :
+                Long.MIN_VALUE == x || Long.MAX_VALUE == x || Long.MIN_VALUE == y || Long.MAX_VALUE == y ?
+                        ((x < 0L) == (y < 0L) ? Long.MAX_VALUE : Long.MIN_VALUE) : x * y;
+        final long a = null == this.min ? Long.MIN_VALUE : this.min;
+        final long b = null == this.max ? Long.MAX_VALUE : this.max;
+        final long c = null == rhs.min ? Long.MIN_VALUE : rhs.min;
+        final long d = null == rhs.max ? Long.MAX_VALUE : rhs.max;
+        final long ac = product.applyAsLong(a, c);
+        final long ad = product.applyAsLong(a, d);
+        final long bc = product.applyAsLong(b, c);
+        final long bd = product.applyAsLong(b, d);
+        final long low = Math.min(Math.min(ac, ad), Math.min(bc, bd));
+        final long high = Math.max(Math.max(ac, ad), Math.max(bc, bd));
+        return new cInt(Long.MIN_VALUE == low ? null : low, Long.MAX_VALUE == high ? null : high);
     }
 
     @Override
@@ -239,11 +257,16 @@ public class cInt implements C<Long, cInt> {
         return thisMin <= rhsMin && thisMax >= rhsMax;
     }
 
+    /**
+     * The magnitudes the range holds: {@code {-}} is {@code {+}}, {@code {-*}} is {@code {*}}, {@code {??}} is {@code {?}}.
+     */
     @Override
     public cInt abs() {
-        return this.gte(this.zero()) ? this :
-                new cInt(this.min < 0 ? -1L * this.min : this.min,
-                        this.max < 0 ? -1L * this.max : this.max);
+        if (null != this.min && this.min >= 0L)
+            return this;
+        if (null != this.max && this.max <= 0L)
+            return this.neg();
+        return cInt.of(0L, null == this.min || null == this.max ? null : Math.max(-this.min, this.max));
     }
 
     @Override
