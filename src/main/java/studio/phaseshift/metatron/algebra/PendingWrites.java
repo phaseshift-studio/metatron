@@ -283,7 +283,7 @@ public final class PendingWrites {
         // and the writer hook: a declaration that lands evicts what the algebra memos derived from the one it replaced
         QCollection.EVICT = (address, declaration) -> {
             TheoryHelper.evict(address);
-            Law.Helper.evict(address, declaration);
+            Law.Helper.evict();
         };
     }
 

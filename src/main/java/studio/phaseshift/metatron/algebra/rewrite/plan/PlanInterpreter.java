@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.BranchInst;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
@@ -726,16 +727,33 @@ public final class PlanInterpreter {
     }
 
     /**
+     * A LAW'S LOCAL EQUATIONS, APPLIED IN JAVA (Marko, 2026-11-08): each {@code [lhs => rhs]} rule is a
+     * {@link Call.Helper#update} over the chain's Code objects (matched and changed there, nothing evaluated), and a
+     * matched run changes only where {@code admits} the code at the run's start, the law read at the carrier there. A
+     * run whose instructions carry a coefficient stays: the rule's terms are unscaled, and {@code f{2}·f{2}} is no
+     * {@code f·f}.
+     */
+    private static Code rewrite(final Code code, final List<Rec> rules, final BiPredicate<Code, Integer> admits) {
+        Code out = code;
+        for (final Rec rule : rules) {
+            final Code scanned = out;
+            final int window = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts().size()).orElse(0);
+            final List<Inst> next = Call.Helper.update(scanned.insts(), rule, start ->
+                    scanned.insts().subList(start, start + window).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
+                            && admits.test(scanned, start));
+            out = next.equals(scanned.insts()) ? scanned : code(next);
+        }
+        return out;
+    }
+
+    /**
      * The involution law (local): an adjacent pair of the SAME self-inverse operation is the identity —
-     * {@code f·f ↦ ε} for any operation declaring {@code involution} (or the carrier's declared inverse).
+     * {@code f·f ↦ ε} for any operation declaring {@code involution} (or the carrier's declared inverse), the
+     * equation each declaring instruction states ({@link Law.Helper#equations}).
      */
     private static Code involutionRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size())
-            return code;
-        final List<Type> carriers = carriers(code);
-        final List<Inst> collapsed = collapsePairs(insts, i -> same(insts.get(i), insts.get(i + 1)) && isInvolution(insts.get(i), carriers.get(i)));
-        return collapsed.size() == insts.size() ? code : code(collapsed);
+        return rewrite(code, Law.Helper.equations(Law.involution),
+                (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start)));
     }
 
     /**
@@ -767,59 +785,34 @@ public final class PlanInterpreter {
 
     /**
      * The idempotent law (local): an adjacent pair of the SAME idempotent operation is that operation —
-     * {@code f·f ↦ f} for any operation declaring {@code idempotent}.
+     * {@code f·f ↦ f} for any operation declaring {@code idempotent} ({@link Law.Helper#equations}).
      */
     private static Code idempotentRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size())
-            return code;
-        final List<Type> carriers = carriers(code);
-        final List<Inst> collapsed = collapseKeep(insts, i -> same(insts.get(i), insts.get(i + 1)) && declares(insts.get(i), carriers.get(i), Law.idempotent));
-        return collapsed.size() == insts.size() ? code : code(collapsed);
-    }
-
-    /**
-     * Collapse adjacent pairs the predicate accepts to a single instance — the equation {@code f·f ↦ f} shared
-     * by the idempotent law and a monoidic fold (a reduction of one element is that element). The predicate is
-     * handed the pair's first position, so it can read the carrier there.
-     */
-    private static List<Inst> collapseKeep(final List<Inst> insts, final IntPredicate pairAt) {
-        final List<Inst> result = new ArrayList<>();
-        int i = 0;
-        while (i < insts.size()) {
-            if (i + 1 < insts.size() && pairAt.test(i)) {
-                result.add(insts.get(i)); // f·f => f — keep one
-                i += 2;
-            } else
-                result.add(insts.get(i++));
-        }
-        return result;
+        return rewrite(code, Law.Helper.equations(Law.idempotent),
+                (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent));
     }
 
     /**
      * The monoidic law on a fold (local): an adjacent identical reducer/join collapses — {@code f·f ↦ f} for a
-     * fold whose declared process laws include {@code monoidic}.
+     * fold whose declared process laws include {@code monoidic} ({@link Law.Helper#equations}).
      */
     private static Code monoidicRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size())
-            return code;
-        final List<Type> carriers = carriers(code);
-        final List<Inst> collapsed = collapseKeep(insts, i -> same(insts.get(i), insts.get(i + 1))
-                && insts.get(i).c().equals(insts.get(i + 1).c()) && isFold(insts.get(i), carriers.get(i)));
-        return collapsed.size() == insts.size() ? code : code(collapsed);
+        return rewrite(code, Law.Helper.equations(Law.monoidic),
+                (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start)));
     }
 
     /**
      * The inverse law (local): an adjacent declared inverse pair with equal operands cancels to the identity —
-     * {@code f·f⁻¹ ↦ ε} for the declared opposing edge.
+     * {@code f·f⁻¹ ↦ ε} for the declared opposing edge. Its terms are unscaled as every local equation's are
+     * ({@link #rewrite}): an involution is its own inverse, so a scaled {@code neg{2}·neg{2}} must stay here too.
      */
     private static Code inverseCancellation(final Code code) {
         final List<Inst> insts = code.insts();
         if (2 > insts.size())
             return code;
         final List<Type> carriers = carriers(code);
-        final List<Inst> collapsed = collapsePairs(insts, i -> inversePair(insts.get(i), insts.get(i + 1), carriers.get(i)));
+        final List<Inst> collapsed = collapsePairs(insts, i -> cInt.ONE().equals(insts.get(i).c()) && cInt.ONE().equals(insts.get(i + 1).c())
+                && inversePair(insts.get(i), insts.get(i + 1), carriers.get(i)));
         return collapsed.size() == insts.size() ? code : code(collapsed);
     }
 
@@ -1037,13 +1030,9 @@ public final class PlanInterpreter {
      */
     private static Code derivationContraction(final Code code) {
         Code out = code;
-        for (final Map.Entry<fURI, Rec> d : Law.Helper.derivations().entrySet()) {
-            final Code scanned = out;
-            final List<Inst> next = Call.Helper.update(scanned.insts(),
-                    rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode()),
-                    start -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
-            out = next.equals(scanned.insts()) ? scanned : code(next);
-        }
+        for (final Map.Entry<fURI, Rec> d : Law.Helper.derivations().entrySet())
+            out = rewrite(out, List.of(rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode())),
+                    (scanned, start) -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
         return out;
     }
 
