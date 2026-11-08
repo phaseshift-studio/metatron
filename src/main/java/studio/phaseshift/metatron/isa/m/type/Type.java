@@ -705,7 +705,8 @@ public interface Type extends Obj {
                     member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
                             : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
                             : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
-                            : !member.isType() || !poly.isTensored() || testTensor(lst((List) member.asType().lstIndices()), poly)));
+                            // a type against a type compares index by index, spans aside: a run is a value-side reading
+                            : !member.isType() || !poly.isTensored() || lst((List) member.asType().lstIndices()).test(lst((List) poly.lstIndices()))));
         }
 
         /**
@@ -746,9 +747,36 @@ public interface Type extends Obj {
         /**
          * A tensored lst holds the type at each of its indices ({@code lst[int,str]}): {@link Lst#test(Obj)} asks index
          * by index, and a missing trailing index passes when its entry admits zero.
+         * <p>
+         * An entry's SPAN covers a run of indices, {@code {span}type{point}}: {@code lst[{3}int{2}]} is three indices
+         * each holding an int{2}, {@code lst[{?}int,{2}str]} an optional int then two strs. Each entry takes k indices,
+         * k in its span, every one holding its type. Past the last entry the lst is open, unless that entry's span is
+         * unbounded: a {@code {*}} tail claims the rest, so {@code lst[{*}int]} holds ints only.
          */
         public static boolean testTensor(final Lst lst, final Type tensoredLst) {
-            return lst.test(lst((List) tensoredLst.lstIndices()));
+            final List<Type> entries = tensoredLst.lstIndices();
+            if (entries.stream().allMatch(entry -> entry.tid().b().isOne()))
+                return lst.test(lst((List) entries));
+            final List<Obj> values = lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList();
+            Set<Integer> reached = Set.of(0); // the indices the entries so far can end at
+            for (final Type entry : entries) {
+                final cInt span = entry.tid().b();
+                final long least = Math.max(0L, null == span.min() ? 0L : span.min());
+                final Set<Integer> next = new TreeSet<>();
+                for (final int start : reached) {
+                    if (start == values.size() && entry.c().isZeroable())
+                        next.add(start); // a missing trailing index, as Lst.test allows it
+                    if (null != span.max() && span.max() < least)
+                        continue;
+                    int end = start;
+                    while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(entry))
+                        end++;
+                    for (long k = least; start + k <= end; k++)
+                        next.add(start + (int) k);
+                }
+                reached = next;
+            }
+            return null == entries.getLast().tid().b().max() ? reached.contains(values.size()) : !reached.isEmpty();
         }
 
         /**

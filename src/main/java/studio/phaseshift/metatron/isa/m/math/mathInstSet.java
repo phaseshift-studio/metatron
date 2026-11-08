@@ -330,6 +330,7 @@ public class mathInstSet extends AbstractInstSet {
         final String tzCompact = tz.replace(":", ""); // "+HHMM" or "-HHMM"
         final String host = year + "." + month;
         final fURI furi = fURI.of(
+                null,          // span
                 null,          // scheme
                 host,          // host = year.month
                 Integer.parseInt(day),  // port = day
@@ -396,7 +397,7 @@ public class mathInstSet extends AbstractInstSet {
         // serializers round trip a datetime through its string, and the glued form REPARSES as a different (wrong)
         // instant, so a lock expiry written correctly becomes an expiry in the past. datetimeToMillis already
         // accepts either form (`off = path.get(0).isEmpty() ? 1 : 0`); this side must agree.
-        return uri(fURI.of(null,
+        return uri(fURI.of(null, null,
                 String.format("%04d.%02d", year, month), day,
                 List.of("", String.format("%02d", hour), String.format("%02d", minute),
                         String.format("%02d", second), String.format("%03d", millis)),

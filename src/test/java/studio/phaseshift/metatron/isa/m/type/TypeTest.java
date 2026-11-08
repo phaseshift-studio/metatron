@@ -1757,12 +1757,10 @@ public class TypeTest extends AbstractMetatronTest {
      * tuple, because position is significant and each index carries its own type: lst[age,zipcode] is a
      * two-index signature, not a bag of two either-or values.
      * <p>
-     * Two things are pinned here because they came out differently than the sketch implies. The container
-     * spelling lst[{4}int] does not PARSE — the leading brace inside the brackets is read as a
-     * rec/multiplicity, and the parser fails at the '[' — that part awaits the feature and is
-     * disabled ({@code testListContainerCoefficientSpellingIsNotYetParsed}). And the index signature is checked
-     * as CONTAINMENT rather than equality: fewer elements than the signature fails, but MORE pass, so a
-     * four-element list satisfies a two-index signature.
+     * The leading coefficient is the entry's SPAN and the trailing one its POINT, {@code {span}type{point}}: an
+     * entry covers a run of indices, each holding its type. The index signature is checked as CONTAINMENT rather
+     * than equality: fewer elements than the signature fails, but MORE pass, so a four-element list satisfies a
+     * two-index signature, unless the last entry's span is unbounded: a {@code {*}} tail claims the rest.
      */
     @Training(
             instruction = "does {{{instance}}} match the type {{{type}}}?",
@@ -1784,7 +1782,45 @@ public class TypeTest extends AbstractMetatronTest {
             // ---- a tuple is a simply typed list: each index carries its type ----
             "[29,'94103']        % lst[age,zipcode]::T         % true",
             "[29,'94103']        % lst[zipcode,age]::T         % false",
-            "[29,94103]          % lst[age,zipcode]::T         % false"},
+            "[29,94103]          % lst[age,zipcode]::T         % false",
+            // ---- the point: one index holding a {2} int ----
+            "[{2}4]              % lst[int{2}]::T              % true",
+            "[{3}4]              % lst[int{2}]::T              % false",
+            // ---- the span: a run of indices, {span}type{point} ----
+            "[1,2,3,4]           % lst[{4}int]::T              % true",
+            "[1,2,3]             % lst[{4}int]::T              % false",
+            "[1,'a']             % lst[{2}int]::T              % false",
+            "[{2}1,{2}5,{2}7]    % lst[{3}int{2}]::T           % true",
+            "[{2}1,{2}5]         % lst[{3}int{2}]::T           % false",
+            "[{2}1,5,{2}7]       % lst[{3}int{2}]::T           % false",
+            "[{2}1,{2}5,{2}7,'x'] % lst[{3}int{2}]::T          % true",
+            "[{4}1,{4}2,{4}3,{4}4] % lst[{4}int{4}]::T         % true",
+            "[1,2,3,4]           % lst[{4}int{4}]::T           % false",
+            "[1,2,'a','b','c']   % lst[{2}int,{3}str]::T       % true",
+            "[1,'a','b','c']     % lst[{2}int,{3}str]::T       % false",
+            "[1,2,'a','b']       % lst[{2}int,{3}str]::T       % false",
+            // ---- a ranged span: {?} is zero or one index ----
+            "[1,'a','b']         % lst[{?}int,{2}str]::T       % true",
+            "['a','b']           % lst[{?}int,{2}str]::T       % true",
+            "[1,2,'a','b']       % lst[{?}int,{2}str]::T       % false",
+            "[1,2,'a']           % lst[{1,2}int,str]::T        % true",
+            "[1,2,3,'a']         % lst[{1,2}int,str]::T        % false",
+            // ---- an unbounded span on the last entry claims the rest: lst[{*}int] is List<Integer> ----
+            "[1,2,3]             % lst[{*}int]::T              % true",
+            "[,]                 % lst[{*}int]::T              % true",
+            "[1,2,'x']           % lst[{*}int]::T              % false",
+            "[1,'a','b']         % lst[{+}int,{*}str]::T       % true",
+            "['a']               % lst[{+}int,{*}str]::T       % false",
+            "[1,2,'a',3]         % lst[{+}int,{*}str]::T       % false",
+            "[1]                 % lst[int,{*}str]::T          % true",
+            // ---- a missing trailing index still passes when its point admits zero ----
+            "[1,2]               % lst[{2}int,str{?}]::T       % true",
+            "[1]                 % lst[{2}int,str{?}]::T       % false",
+            // ---- a {*} tail of empty indices closes the lst ----
+            "[1,2]               % lst[{2}int,{*}#{0}]::T      % true",
+            "[1,2,3]             % lst[{2}int,{*}#{0}]::T      % false",
+            // ---- {0}::T is still the noobj type, not a span ----
+            "noobj               % {0}::T                      % true"},
             delimiter = '%')
     public void testTypeTestCoefficientPolynomial(final String instance, final String type, final boolean matches) {
         checkMatches(LOG, instance, type, matches);
@@ -2046,19 +2082,26 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     /**
-     * AWAITING A FEATURE — disabled rather than deleted so the intent survives.
-     * <p>
-     * The container spelling {@code lst[{4}int]::T} ("the list is composed of four ints") was specified but never
-     * built, so this asserts a future that does not exist: the expression parses today rather than being rejected.
-     * The seven index-signature rows above are independent of it and still run — the assertion lived in that method
-     * only because the two came out of the same sketch.
+     * A TYPE IS {span}type{point}, and both live in its one id: {@code {2}int{3}::T} is two in a row of an int{3},
+     * with tid {@code {2}/m/int{3}}. The type's coefficient stays the point, so everything that asks a type how many
+     * values it admits is unchanged; the span is read off the id. It prints as it is written.
      */
-    @Disabled("lst[{4}int]::T — the container coefficient spelling is specified but not implemented")
-    @Test
-    public void testListContainerCoefficientSpellingIsNotYetParsed() {
-        final Obj parsed = ObjmtronSerializer.parse("lst[{4}int]::T");
-        assertTrue(parsed.isFail(), "lst[{4}int]::T must not parse");
-        LOG.warn("lst[{4}int]::T => %s", parsed);
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{2}int{3}::T     % {2}/m/int{3}     % 3   % 2",
+            "{2}int::T        % {2}/m/int        % 1   % 2",
+            "int{3}::T        % /m/int{3}        % 3   % 1",
+            "{*}str::T        % {*}/m/str        % 1   % *",
+            "{1,3}int{?}::T   % {1,3}/m/int{?}   % ?   % 1,3"},
+            delimiter = '%')
+    public void testSpanType(final String type, final String tid, final String point, final String span) {
+        final Obj parsed = ObjmtronSerializer.parse(type);
+        assertTrue(parsed.isType());
+        assertEquals(f(tid), parsed.tid());
+        assertEquals(cInt.of(point), parsed.c());
+        assertEquals(cInt.of(span), parsed.tid().b());
+        assertEquals(parsed, ObjmtronSerializer.parse(parsed.toString()));
+        assertEquals(type, parsed.toString());
     }
 
     /**

@@ -200,12 +200,12 @@ public class fURIPerformanceTest extends AbstractMetatronTest {
     @Order(2)
     public void testQueryEqualityAcrossMapImplementations() {
         final fURI parsed = Singleton.parse("a/b?k=v&j=w");
-        final fURI built = fURI.of(null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v", "j", "w"), null);
+        final fURI built = fURI.of(null, null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v", "j", "w"), null);
         assertEquals(parsed, built);
         assertEquals(built, parsed);
         assertEquals(parsed.hashCode(), built.hashCode());
-        assertNotEquals(parsed, fURI.of(null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v"), null));
-        assertNotEquals(parsed, fURI.of(null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v", "j", "x"), null));
+        assertNotEquals(parsed, fURI.of(null, null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v"), null));
+        assertNotEquals(parsed, fURI.of(null, null, null, -1, List.of("a", "b"), cInt.ONE(), List.of(), Map.of("k", "v", "j", "x"), null));
     }
 
     /**

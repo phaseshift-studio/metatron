@@ -48,6 +48,7 @@ import static studio.phaseshift.metatron.Tokens.PORT;
 import static studio.phaseshift.metatron.Tokens.QUERY;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.Tokens.SCHEME;
+import static studio.phaseshift.metatron.Tokens.SPAN;
 import static studio.phaseshift.metatron.Tokens.T;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -285,11 +286,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
     default fURI origin() {
-        return fURI.of(this.scheme(), this.host(), this.port(), List.of(), null, null, Map.of(), null);
+        return fURI.of(null, this.scheme(), this.host(), this.port(), List.of(), null, null, Map.of(), null);
     }
 
     default fURI origin(final fURI origin) {
-        return fURI.of(origin.scheme(), origin.host(), origin.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), origin.scheme(), origin.host(), origin.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
 
@@ -418,7 +419,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     default fURI authority(final String authority) {
         if (null == authority && null != this.authority())
-            return fURI.of(this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
         // the port's colon is the first one AFTER the host: past the closing bracket of an IP-literal ([::1]:8555),
         // whose own colons are the address, not a separator
         final int colon = authority.indexOf(':', authority.startsWith("[") ? Math.max(0, authority.indexOf(']')) : 0);
@@ -447,7 +448,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     default fURI localize() {
         if (null == this.scheme() && null == this.host())
             return this;
-        return fURI.of(null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     String host();
@@ -550,7 +551,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         final List<List<String>> paths = this.branchedPaths();
         if (paths.size() <= 1)
             return Stream.of(this);
-        return paths.stream().map(path -> fURI.of(this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates()));
+        return paths.stream().map(path -> fURI.of(this.b(), this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates()));
     }
 
     boolean test(final fURI lhs);
@@ -703,7 +704,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     fURI poly(final List<String> poly);
 
     default fURI poly(final fURI polynomial, final fURI... polynomials) {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
     }
 
     fURI neg();
@@ -715,6 +716,18 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     cInt c();
 
     fURI c(final cInt coefficient);
+
+    /**
+     * The span: how many in a row, beside the point {@link #c()} (how many at each). Like the letters, b is written
+     * before c, {@code {b}path[poly]{c}}, so the type {@code {2}int{3}::T} has the one id {@code {2}/m/int{3}}: two
+     * slots in a row, each holding an int{3}. A value shows the same two fields the other way around,
+     * {@code {point}value{span}}.
+     *
+     * @return the span, {@code {1}} when none is written
+     */
+    cInt b();
+
+    fURI b(final cInt span);
 
     default fURI cLess() {
         return this.c((cInt) null);
@@ -871,7 +884,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
         else {
             // Extract and merge any templates from the query string
             List<Tuple.Pair<Component, String>> mergedTemplates = null;
@@ -882,7 +895,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                     mergedTemplates.add(Tuple.Pair.with(Component.QUERY, m.group(1)));
                 }
             }
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query),
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query),
                     mergedTemplates != null && !mergedTemplates.isEmpty() ? mergedTemplates : this.templates());
         }
     }
@@ -1392,8 +1405,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // One poly element: the leading run stops at `,` so the separator is never swallowed, and the trailing run is
         // optional so a ONE-CHARACTER element (`lst[A,A]`, `rec[#,#]`) is an entry like any other. The element keeps
         // any whitespace around it, so a reader trims it.
+        // an entry may lead with its span, {span}type{point}: a range in either brace keeps its comma inside the entry
         public static final Pattern POLY_PATTERN = Pattern.compile(
-                "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,]*)");
+                "(?<poly>(\\{[^}\\]]+})?[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,]*)");
         // OLD FURI_PATTERN (pre-branch): the path excluded `{`, so a trailing `{...}` was always the coefficient.
         // Kept for reference; replaced below by the branch-aware pattern that admits `{c,d}` segments in the path.
         /*public static final Pattern FURI_PATTERN = Pattern.compile(
@@ -1417,7 +1431,12 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // poly cannot stand, and an IPv6 address needs them: its colons would otherwise read as the port separator.
         // Only hex digits, colons and dots, and at least one colon, so nothing that spells a poly can match.
         private static final String IP_LITERAL = "\\[(?=[^\\]]*:)[0-9A-Fa-f:.]+(?:%[0-9A-Za-z._~%-]+)?\\]";
+        // A LEADING coefficient is the span, {span}path[poly]{point}: it stands before a `/`, or before a lone atom that
+        // ends the path (`{3}int{2}`, a slot entry). Before an atom the path continues past (`{0}a/b`) it stays that
+        // first segment's coefficient-marked atom, and with nothing after it (`{*}`) the coefficient.
+        private static final String SPAN_PREFIX = "(\\{(?<span>" + COEFFICIENT_BODY + ")}(?=/|[^/{}?&\\[\\]:]+(?:$|[\\[{?])))?";
         public static final Pattern FURI_PATTERN = Pattern.compile(
+                SPAN_PREFIX +
                 "((?<scheme>[^:/.]+):)?" +
                         "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
                         "(?<path>(?:[^?\\[{&]|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
@@ -1435,6 +1454,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // - path: allows ${...} and captures them fully (including at end of path)
         // - coefficient: only matches {..} NOT preceded by $ (negative lookbehind)
         public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
+                SPAN_PREFIX +
                 "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
                         "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
                         "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
@@ -1448,7 +1468,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // Singleton.of(String) below.
         public static final fURI ALL = new XXPXXXfURI(List.of("#"));
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
-        public static final fURI NOOBJ = fURI.of(null, null, -1, List.of("noobj"), cInt.ZERO(), List.of(), Map.of(), null);
+        public static final fURI NOOBJ = fURI.of(null, null, null, -1, List.of("noobj"), cInt.ZERO(), List.of(), Map.of(), null);
 
         public static fURI empty() {
             return XXXXXXfURI.INSTANCE;
@@ -1493,7 +1513,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                 return Singleton.NOOBJ;
 
             if ("/".equals(furiParse))
-                return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of(), null);
+                return fURI.of(null, null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of(), null);
 
             // Quick check: does this fURI contain templates?
             final boolean hasTemplates = furiParse.contains("${");
@@ -1531,6 +1551,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                 }
             }
             final cInt coefficient = matcher.group(COEFFICIENT) == null ? cInt.ONE() : cInt.of(matcher.group(COEFFICIENT));
+            final cInt span = matcher.group(SPAN) == null ? null : cInt.of(matcher.group(SPAN));
             final String queryStr = matcher.group(QUERY);
             final String dom = matcher.group(DOM);
             final String rng = matcher.group(RNG);
@@ -1555,7 +1576,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                     extractTemplates(scheme, host, portStr, pathStr, queryStr) :
                     null;
 
-            return fURI.of(scheme, host, port, path, coefficient, poly, query, templates);
+            return fURI.of(span, scheme, host, port, path, coefficient, poly, query, templates);
         }
 
         /**
@@ -1752,7 +1773,8 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
 
-    static fURI of(final String scheme,
+    static fURI of(final cInt span,
+                   final String scheme,
                    final String host,
                    final int port,
                    final List<String> path,
@@ -1763,8 +1785,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // THE ONE POLY GATE: every poly-bearing fURI is built here — string parse, poly(List), and every form's
         // derived uri — so the parameter-position rule is enforced once, on the way in.
         Helper.validatePoly(poly, scheme, host, port, path, coefficient, query);
-        if (null != templates && !templates.isEmpty())
-            return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
+        // a span is rare (a type's slot run), so only the full form carries the field
+        if ((null != templates && !templates.isEmpty()) || (null != span && !span.isOne()))
+            return new SAPPCQTfURI(span, scheme, host, port, path, poly, coefficient, query, templates);
         if (null != poly && !poly.isEmpty())
             return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
         if (null != coefficient && !coefficient.isOne()) {

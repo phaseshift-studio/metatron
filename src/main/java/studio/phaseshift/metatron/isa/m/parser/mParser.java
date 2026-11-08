@@ -1087,7 +1087,8 @@ public class mParser {
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query, final boolean allowLeadingBranch) {
         final Parser element = m_furi_ip_literal().or(word()).or(m_furi_template()).or(m_furi_branch_literal()).or(m_furi_coefficient_marked_atom()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)));
-        final Parser first = allowLeadingBranch ? m_furi_leading_coefficient_marked_atom().or(element) : element;
+        // a quoted uri may lead with its span before a `/` (`<{2}/m/int{3}>`): the text goes to f(), which reads it
+        final Parser first = allowLeadingBranch ? seq(m_furi_coefficient(), of('/').and()).or(m_furi_leading_coefficient_marked_atom()).or(element) : element;
         final Parser contentParser = seq(first, element.star()).flatten();
         final Parser leadingBraceGuard = allowLeadingBranch ? of("") : of('{').not();
         return new FuriPolyRuleParser(seq(of('-').not(), leadingBraceGuard, contentParser,
@@ -1390,7 +1391,11 @@ public class mParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return (null == baseType) ? seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0) :
+        // a type is {span}type{point}: a leading coefficient is the span (how many in a row), not the point that
+        // m_furi_bare would read it as; `{0}::T` is the noobj type, so a coefficient right before `::` is not a span
+        return (null == baseType) ? seq(opt(seq(m_furi_coefficient(), of("::").not()).pick(0), null),
+                m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE))
+                .map(t -> null == pick(t, 0) ? pick(t, 1) : mParser.<fURI>pick(t, 1).b(coefficientOrOne(pick(t, 0)))) :
                 opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), m_furi_coefficient().map(t -> {
                     try {
                         return baseType.c(coefficientOrOne(t));

@@ -144,7 +144,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getFirst().isEmpty())
             newPath.addFirst("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -154,7 +154,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getFirst().isEmpty())
             newPath.removeFirst();
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -164,7 +164,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getLast().isEmpty())
             newPath.removeLast();
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -174,7 +174,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getLast().isEmpty())
             newPath.add("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     /*
@@ -274,7 +274,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI scheme(final String scheme) {
-        return fURI.of(scheme, this.host(), this.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), scheme, this.host(), this.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -284,7 +284,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI host(final String host) {
-        return fURI.of(this.scheme(), host, this.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), host, this.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -300,7 +300,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI port(final int port) {
-        return fURI.of(this.scheme(), this.host(), port, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), port, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
 
@@ -319,9 +319,9 @@ public abstract class AbstractfURI implements fURI {
         if (this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty() && !path.getFirst().startsWith("/"))) {
             final List<String> newPath = new ArrayList<>(path);
             newPath.addFirst("");
-            return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
         }
-        return fURI.of(this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -335,7 +335,14 @@ public abstract class AbstractfURI implements fURI {
         // instead of a fresh equal copy is what keeps BasicMemory.redirect allocation-free on an unrouted address.
         if (Objects.equals(this.c(), coefficient))
             return this;
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), coefficient, this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), coefficient, this.poly(), this.qMap(), this.templates());
+    }
+
+    @Override
+    public fURI b(final cInt span) {
+        if (this.b().equals(null == span ? cInt.ONE() : span))
+            return this;
+        return fURI.of(span, this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -344,7 +351,7 @@ public abstract class AbstractfURI implements fURI {
         final SortedMap<String, String> newQ = canonicalQ(query);
         if (Objects.equals(this.qMap(), newQ))
             return this;
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
 
     @Override
@@ -417,7 +424,7 @@ public abstract class AbstractfURI implements fURI {
     public fURI poly(final List<String> poly) {
         if (Objects.equals(this.poly(), poly))
             return this;
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), poly, this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), poly, this.qMap(), this.templates());
     }
 
 
@@ -446,17 +453,17 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI basePath() {
-        // THE THREE LESSERS, composed: basePath is exactly cLess + qLess + polyLess -- the coefficient, the query
-        // and the bracket erased, and nothing else (scheme, host, port, path and templates survive). Spelling it as
-        // the composition is what ENFORCES that relationship instead of leaving it to a hand-built fURI.of(...) that
-        // happens to agree today: add a fourth lesser and basePath must take it, or a lesser's contract changes and
-        // basePath follows.
+        // THE LESSERS, composed: basePath is exactly cLess + qLess + polyLess + the span erased -- the coefficient,
+        // the query, the bracket and the span gone, and nothing else (scheme, host, port, path and templates
+        // survive). Spelling it as the composition is what ENFORCES that relationship instead of leaving it to a
+        // hand-built fURI.of(...) that happens to agree today: add another lesser and basePath must take it, or a
+        // lesser's contract changes and basePath follows.
         // Pure in this instance's own fields, and hit twice per BasicMemory.redirect (once per routing table), so it
         // is derived once. The derived uri is a different object, so no recursion back into this slot.
         final fURI cached = this.base;
         if (null != cached)
             return cached;
-        final fURI computed = this.cLess().qLess().polyLess();
+        final fURI computed = this.cLess().qLess().polyLess().b(null);
         this.base = computed;
         return computed;
     }
@@ -591,7 +598,7 @@ public abstract class AbstractfURI implements fURI {
         //   if (segment.endsWith("/"))
         //  newPath.add("");
         newPath.addAll(this.path().getFirst().isEmpty() ? this.path().subList(1, this.path().size()) : this.path());
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -615,9 +622,9 @@ public abstract class AbstractfURI implements fURI {
         if (segment.contains("?")) {
             final SortedMap<String, String> qs = mutableQ(this.qMap());
             qs.putAll(f(segment).qMap());
-            f = fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), qs, this.templates());
+            f = fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), qs, this.templates());
         } else
-            f = fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+            f = fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
         return f.hasHost() ? f.asAbsolute() : f;
     }
 
@@ -657,7 +664,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI neg() {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().neg(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c().neg(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -673,7 +680,7 @@ public abstract class AbstractfURI implements fURI {
         }
         final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.putAll(otherResolved.qMap());
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(otherResolved.c()), this.poly(), newQ, this.templates()).resolve();
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c().mult(otherResolved.c()), this.poly(), newQ, this.templates()).resolve();
     }
 
     @Override
@@ -682,7 +689,7 @@ public abstract class AbstractfURI implements fURI {
             return this;
         final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.remove(key);
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
 
     @Override
@@ -705,11 +712,11 @@ public abstract class AbstractfURI implements fURI {
             // same path → two copies, so the multiplicity is the coefficient sum; a factored branch already encodes
             // the union in the `{…}` segment (per-element operand coefficients moved into it), so its coefficient stays one.
             final cInt coefficient = samePath ? this.c().plus(other.c()) : cInt.ONE();
-            return fURI.of(this.scheme(), this.host(), this.port(), path, coefficient, this.poly(), newQ, this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), path, coefficient, this.poly(), newQ, this.templates());
         } else {
             final SortedMap<String, String> newQ = mutableQ(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
+            return fURI.of(null, null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
             // throw MTronException.of("unable to add %s to %s", other, this);
         }
     }
@@ -811,7 +818,7 @@ public abstract class AbstractfURI implements fURI {
         if (null == segment)
             return this;
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getFirst().isEmpty())
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(1, this.path().size()), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(1, this.path().size()), this.c(), this.poly(), this.qMap(), this.templates());
         if (this.hasPrefix(segment))
             return this.pretract(segment.split("/").length);
         return this;
@@ -826,7 +833,7 @@ public abstract class AbstractfURI implements fURI {
         if (steps == 0)
             return this;
         if (steps >= this.pathLength())
-            return fURI.of(this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
         boolean hasBlank = this.hasBlankCap(true);
         List<String> newPath = new ArrayList<>(this.path());
         if (hasBlank) newPath.removeFirst();
@@ -834,7 +841,7 @@ public abstract class AbstractfURI implements fURI {
             newPath.removeFirst();
         }
         if (hasBlank && !newPath.isEmpty() && !newPath.getFirst().isEmpty()) newPath.addFirst("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
 
@@ -843,7 +850,7 @@ public abstract class AbstractfURI implements fURI {
         if (steps == 0)
             return this;
         if (steps >= this.pathLength())
-            return fURI.of(this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
         boolean hasBlank = this.hasBlankCap(false);
         List<String> newPath = new ArrayList<>(this.path());
         if (hasBlank) newPath.removeLast();
@@ -854,7 +861,7 @@ public abstract class AbstractfURI implements fURI {
         if (newPath.stream().allMatch(String::isEmpty)) {
             newPath.clear();
         }
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     @Override
@@ -868,20 +875,25 @@ public abstract class AbstractfURI implements fURI {
         }
         if (hasBlank && !newPath.isEmpty() && !newPath.getLast().isEmpty())
             newPath.addLast("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
 
     @Override
     public fURI retract(final String segment) {
         if (this.hasPrefix(segment))
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - segment.split("/").length), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - segment.split("/").length), this.c(), this.poly(), this.qMap(), this.templates());
         return this;
     }
 
 
     @Override
     public cInt c() {
+        return cInt.ONE();
+    }
+
+    @Override
+    public cInt b() {
         return cInt.ONE();
     }
 
@@ -972,7 +984,7 @@ public abstract class AbstractfURI implements fURI {
         // the canonical map is the accumulator too: the key lands in normal-form position whatever its name
         final SortedMap<String, String> newQ = mutableQ(this.qMap());
         newQ.put(key, null == value ? "" : value.toString());
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
 
     @Override
@@ -1044,7 +1056,7 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public fURI head(final int steps) {
         if (steps == 0)
-            return fURI.of(this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
         if (steps >= this.pathLength())
             return this;
         boolean hasBlankRight = this.hasBlankCap(false);
@@ -1052,14 +1064,14 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path().subList(0, steps + (hasBlankLeft ? 1 : 0)));
         if (hasBlankRight && !newPath.isEmpty() && !newPath.getLast().isEmpty())
             newPath.addLast("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
-        // return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, steps + (hasBlank ? 1 : 0)), this.c(), List.of(), this.qMap());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        // return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path().subList(0, steps + (hasBlank ? 1 : 0)), this.c(), List.of(), this.qMap());
     }
 
     @Override
     public fURI tail(final int steps) {
         if (steps == 0)
-            return fURI.of(this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), List.of(), this.c(), this.poly(), this.qMap(), this.templates());
         if (steps >= this.pathLength())
             return this;
         boolean hasBlankRight = this.hasBlankCap(false);
@@ -1067,7 +1079,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> newPath = new ArrayList<>(this.path().subList(((this.path().size() - steps) - (hasBlankRight ? 1 : 0)), this.path().size()));
         if (hasBlankLeft && !newPath.isEmpty() && !newPath.getFirst().isEmpty())
             newPath.addFirst("");
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
     }
 
     private Optional<String> getTemplate(final Component component) {
@@ -1082,6 +1094,8 @@ public abstract class AbstractfURI implements fURI {
         if (null != cached)
             return cached;
         final StringBuilder sb = new StringBuilder();
+        if (!this.b().isOne())
+            sb.append("{").append(this.b().toString()).append("}");
         if (this.hasTemplates()) {
             this.getTemplate(SCHEME).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.scheme())).ifPresent(s -> sb.append(s).append(":"));
             this.getTemplate(HOST).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.host())).ifPresent(s -> sb.append("//").append(s));
@@ -1133,6 +1147,7 @@ public abstract class AbstractfURI implements fURI {
         h = 31 * h + (null == thisResolved.scheme() ? 0 : thisResolved.scheme().hashCode());
         h = 31 * h + (null == thisResolved.path() ? 0 : thisResolved.path().hashCode());
         h = 31 * h + (null == thisResolved.c() ? 0 : thisResolved.c().hashCode());
+        h = 31 * h + thisResolved.b().hashCode();
         h = 31 * h + (null == thisResolved.templates() ? 0 : thisResolved.templates().hashCode());
         if (0 == h)
             h = -1; // keep 0 as the not-yet-computed sentinel; any stable value satisfies the contract
@@ -1156,6 +1171,7 @@ public abstract class AbstractfURI implements fURI {
                 && Objects.equals(thisResolved.path(), thatResolved.path())
                 && ((!thisResolved.hasPoly() && !thatResolved.hasPoly()) || Objects.equals(thisResolved.poly(), thatResolved.poly()))
                 && Objects.equals(thisResolved.c(), thatResolved.c())
+                && thisResolved.b().equals(thatResolved.b())
                 && ((!thisResolved.hasTemplates() && !thatResolved.hasTemplates()) || Objects.equals(thisResolved.templates(), thatResolved.templates()))
                 // Map.equals is defined by CONTENT across implementations, and TreeMap inherits it from AbstractMap
                 // (unlike compareTo, it does not consult the comparator), so a sorted q map compares equal to any
