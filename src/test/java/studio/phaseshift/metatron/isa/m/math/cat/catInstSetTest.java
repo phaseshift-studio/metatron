@@ -447,7 +447,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @Test
     void testAnAbsentArgumentIsAdmittedByCoefficient() {
-        final Map<fURI, Rec> declared = Law.Helper.derivations().stream().collect(Collectors.toMap(
+        final Map<fURI, Rec> declared = Law.Helper.derivations().values().stream().collect(Collectors.toMap(
                 d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath(), d -> d, (first, other) -> first));
         final Inst order = declared.get(ORDER_INST_TID).atDirect(uri(LHS)).asCode().insts().getLast();
         assertTrue(ObjmtronSerializer.<Call>parse("order()").tryToInst().asInst().test(order), "a bare order() takes the absent selector");
@@ -504,7 +504,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         Machine.write(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ), noobj());
         assertTrue(Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec().atDirect(uri(DERIVATION)).isRec(),
                 "the definition reaches ?decq beside the registered inst");
-        assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.atDirect(uri(LHS)).toString().equals(lhs.toString())),
+        assertTrue(Law.Helper.derivations().values().stream().anyMatch(d -> d.atDirect(uri(LHS)).toString().equals(lhs.toString())),
                 "a declared definition feeds the rewrite list, got " + Law.Helper.derivations());
         // the SAME equation int's minus already declares, declared again at the same address: it must count once
         final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
@@ -514,7 +514,7 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertTrue(equation.isRec(), "int's minus carries its defining equation");
         final Law[] minusLaws = minusEntry.atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
-        final long before = Law.Helper.derivations().stream()
+        final long before = Law.Helper.derivations().values().stream()
                 .filter(d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
         InstBuilder.build()
                 .tid(MINUS_INST_TID)
@@ -524,7 +524,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .law(minusLaws)
                 .derivation(equation.asRec().atDirect(uri(LHS)).asCode(), equation.asRec().atDirect(uri(RHS)).asCode())
                 .create();
-        assertEquals(before, Law.Helper.derivations().stream()
+        assertEquals(before, Law.Helper.derivations().values().stream()
                         .filter(d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
                 "the declared copy of a row's equation is deduped, not added");
     }
@@ -1243,6 +1243,33 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     public void testDerivationContraction(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08) — {@code derivation_contraction}
+     * folds a run back only where the carrier flowing into it dispatches the derived op to the contract that declares
+     * the equation ({@link Law.Helper#selects}). Each row's chain is rewritten as the rule leaves it, then evaluated.
+     * Contracted elsewhere, a chain that fails as written (int has no {@code inv}, lst no {@code neg}) answered another
+     * op's value: {@code 7.div(2)}, or the lst {@code minus} that removes slots.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // int's truncating div declares no equation, and real's div ≡ mult·inv does not speak for an int
+            "7.mult(2.inv())                          % start(7).mult(2.inv())                          % <ERROR>",
+            // lst's minus removes slots and declares none: int's minus ≡ plus·neg does not speak for a lst
+            "[1,2,3].plus([2].neg())                  % start([1,2,3]).plus([2].neg())                  % <ERROR>",
+            // the declaring contract runs, so its equation folds back
+            "6.0.mult(2.0.inv())                      % start(6.0).div(2.0)                             % 3.0",
+            // a refinement runs its ancestor's contract: nat dispatches minus to int's, so int's equation speaks
+            "nat::6.plus(3.neg())                     % start(nat::6).minus(3)                          % nat::3",
+            // a generic's equation speaks at every carrier: count ≡ map(1).sum() over strs
+            "{'a','b'}.map(1).sum()                   % start({'a','b'}).count()                        % 2",
+            // one chain, two carriers: the window over reals folds back, the window over count's int does not
+            "{6.0,2.0}.mult(2.0.inv()).count().mult(2.inv())  % start({6.0,2.0}).div(2.0).count().mult(2.inv())  % <ERROR>",
+    }, delimiter = '%')
+    void testAnEquationSpeaksWhereItsContractRuns(final String code, final String expected, final String expectedResult) {
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
+        checkCodeParseApply(LOG, code, expectedResult);
     }
 
     /**

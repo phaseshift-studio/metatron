@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
@@ -215,6 +216,15 @@ public interface Call extends Obj {
          * ({@code update?inst<=inst(rec::T)} is this over a run of one).
          */
         public static List<Inst> update(final List<Inst> insts, final Obj rules) {
+            return update(insts, rules, start -> true);
+        }
+
+        /**
+         * {@link #update(List, Obj)} with a matched run changed only where it begins at a position {@code starts} admits,
+         * indexed into the code its rule scans: what a pattern cannot state, such as the carrier flowing into the run
+         * ({@code derivation_contraction}), which is why it is asked only of a run that matched.
+         */
+        public static List<Inst> update(final List<Inst> insts, final Obj rules, final IntPredicate starts) {
             if (rules.isCall()) {
                 // the change laid over the run, each of its insts against the run's inst in its place
                 final List<Inst> template = rules.asCall().insts();
@@ -251,7 +261,7 @@ public interface Call extends Obj {
                     // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as a
                     // value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
                     final Map<fURI, Obj> names = run.isEmpty() ? null : Code.Helper.bind(run, pattern);
-                    if (null != names) {
+                    if (null != names && starts.test(i)) {
                         Memory.argStack().push(names.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
                         try {
                             next.addAll(update(run, rule.second()));

@@ -1028,15 +1028,23 @@ public final class PlanInterpreter {
      * whole WINDOW: a one-instruction rhs nests its composition in that instruction's args ({@code plus(map(#::T@b).neg())}),
      * a longer one spans several, and matching only the rhs's last instruction would contract every {@code sum} to
      * {@code count}.
+     * <p>
+     * AN EQUATION SPEAKS WHERE ITS CONTRACT RUNS (carrier selection, Marko 2026-11-08): a run is contracted only where
+     * the carrier flowing into it dispatches the derived op to the contract that declares the equation
+     * ({@link Law.Helper#selects}). Real's {@code div ≡ mult·inv} once contracted an int's {@code 7.mult(2.inv())} to
+     * a truncating {@code div}, and int's {@code minus ≡ plus·neg} a lst's {@code plus} into the lst {@code minus} that
+     * removes slots: two chains that fail as written (int has no {@code inv}, lst no {@code neg}) answered another op.
      */
     private static Code derivationContraction(final Code code) {
-        final List<Rec> derivations = Law.Helper.derivations();
-        if (derivations.isEmpty())
-            return code;
-        List<Inst> out = code.insts();
-        for (final Rec d : derivations)
-            out = Call.Helper.update(out, rec(d.atDirect(uri(RHS)).asCode(), d.atDirect(uri(LHS)).asCode()));
-        return code(out);
+        Code out = code;
+        for (final Map.Entry<fURI, Rec> d : Law.Helper.derivations().entrySet()) {
+            final Code scanned = out;
+            final List<Inst> next = Call.Helper.update(scanned.insts(),
+                    rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode()),
+                    start -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
+            out = next.equals(scanned.insts()) ? scanned : code(next);
+        }
+        return out;
     }
 
     /**
