@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.parse;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InstParseTest extends AbstractMetatronTest {
 
+    @Training.SkipTraining(reason = "the definition column must be installed before the usage column runs; rendering them as one expression did not reproduce the assertion (19/19 rows failed verification)")
     @ParameterizedTest
     @CsvSource(value = {
             "|(abc?int<=int(){ map(6) }).to(abc)                                            % 2.abc()                   % 6",

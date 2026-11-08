@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -81,6 +82,10 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
     //  @Disabled("everything works with the recent inst typing exception console::T (??)")
+    @Training(
+            instruction = "does {{{obj}}} match the instruction type {{{inst}}}?",
+            input = "{{{obj}}}.matches({{{inst}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // obj                | type                             | matches?
@@ -107,6 +112,10 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training(
+            instruction = "does {{{obj}}} match the type {{{typefURI}}}?",
+            input = "{{{obj}}}.matches({{{typefURI}}}::T)",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // obj                | type                            | matches?
@@ -189,7 +198,7 @@ public class TypeTest extends AbstractMetatronTest {
             "{1,2,3,4}            | /m/int{3}                   | false",
             "{1,2,3,4}            | /m/int{0,5}                 | true",
             "{1,2,3,4}            | /m/int{*}                   | true",
-            "{1,2,3,'abc'}        | /m/{int{*},str{*}}          | false",
+            "{1,2,3,'abc'}        | /m/{{3}int,str}{4}          | true",
             "{1,2,3,'abc'}        | /m/+{*}                     | true",
             "{1,2,3,'abc'}        | /m/+{0,}                    | true",
             "{1,2,3,'abc'}        | /m/+{1,}                    | true",
@@ -226,13 +235,13 @@ public class TypeTest extends AbstractMetatronTest {
         try {
             Obj o = ObjmtronSerializer.parse(obj);
             Type t = T(f(typefURI.trim()));
-            LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
+            LOG.debug("testing %s %s %s with tid %s and type %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t, o.tid(), o.type());
             // a literal that violates its own type now parses to a fail::T instead of throwing
             if (o.stream().anyMatch(Obj::isFail)) {
                 assertFalse(matches, obj + " failed to construct, so it cannot be a " + typefURI + ": " + o);
                 return;
             }
-            // assertEquals(matches, o.type().tid().matches(f(typefURI)));
+//            assertEquals(matches, o.type().tid().test(f(typefURI)));
             assertEquals(matches, o.test(t));
             if (!o.isObjs()) // TODO: ensure proper objs deduction
                 assertEquals(matches, o.testByID(t));
@@ -246,6 +255,10 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
 
+    @Training(
+            instruction = "does {{{obj}}} match the type {{{type}}}?",
+            input = "|{{{obj}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"abc -> noobj::T"})
     @CsvSource(value = {
@@ -314,6 +327,10 @@ public class TypeTest extends AbstractMetatronTest {
             assertEquals(matches, o.testByID(t));
     }
 
+    @Training(
+            instruction = "is the type {{{typeA}}} a {{{typeB}}}?",
+            input = "|{{{typeA}}}.matches({{{typeB}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> int::T[is(gt(100))]",})
     @CsvSource(value = {
@@ -393,6 +410,10 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(bTID, b.tid());
     }
 
+    @Training(
+            instruction = "is the type {{{type}}} a {{{baseType}}}?",
+            input = "|{{{type}}}.matches({{{baseType}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]@nat", "bignat -> nat::T[is(gt(100))]@bignat",})
     @CsvSource(value = {
@@ -433,6 +454,7 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training.SkipTraining(reason = "rows register a tid and later rows reuse it via '.', so each claim is stateful and cannot be re-evaluated alone")
     @ParameterizedTest
     @CsvSource(value = {
             // tid   |  typedef                                 | instance                                         | matches?
@@ -615,6 +637,7 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training.SkipTraining(reason = "rows such as 3{?} and 3{*} do not parse as expressions, and the claim is a Java-parsed tid")
     @ParameterizedTest
     @CsvSource(value = {
             "int{2}::T                  | /m/int{2}",
@@ -636,6 +659,10 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(f(expectedTID), mParser.m_obj().parse(type).<Obj>get().tid());
     }
 
+    @Training(
+            instruction = "what does {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> noobj",
@@ -741,6 +768,10 @@ public class TypeTest extends AbstractMetatronTest {
      * over posint whenever it resolved. testTypeInheritance's {@code nat::T | bignat::T} row read true whenever
      * testTypeType (seeds {@code bignat -> nat::T[is(gt(100))]}, then resolves bignat::T) ran first in the class.
      */
+    @Training(
+            instruction = "does {{{obj}}} match the type {{{type}}}?",
+            input = "{{{obj}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"int::T[is(gt(0))]@/m/type_test/posint", "/m/type_test/bigpos -> /m/type_test/posint::T[is(gt(100))]"})
     @CsvSource(value = {
@@ -759,6 +790,10 @@ public class TypeTest extends AbstractMetatronTest {
     }
 
 
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "a -> int::T[?>0]",
@@ -800,6 +835,10 @@ public class TypeTest extends AbstractMetatronTest {
         checkMatches(LOG, instance, type, matches);
     }
 
+    @Training(
+            instruction = "does {{{objA}}} match {{{objB}}}?",
+            input = "|{{{objA}}}.matches({{{objB}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "entity -> rec::T@entity",
@@ -837,6 +876,7 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training.SkipTraining(reason = "rows mix bare values with unevaluated .as(...) code; the test asserts on the parsed call, so evaluating the instance would test a different obj")
     @ParameterizedTest
     @TestData(value = {
             "being    -> rec::T[?[age=>int::T]]@being",
@@ -923,6 +963,7 @@ public class TypeTest extends AbstractMetatronTest {
         return stack;
     }
 
+    @Training.SkipTraining(reason = "asserts the generated least common denominator's base path and refinement, computed in Java")
     @ParameterizedTest(name = "[{index}] {3}")
     @TestData(value = {
             "pos       -> int::T[is(gt(0))]@pos",
@@ -980,6 +1021,7 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training.SkipTraining(reason = "asserts Type.isNominal on a constructed type; no value is evaluated")
     @ParameterizedTest(name = "[{index}] {2}")
     @TestData(value = {
             "pos       -> int::T[is(gt(0))]@pos",
@@ -1001,6 +1043,7 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(expectedNominal, type.isNominal(), description);
     }
 
+    @Training.SkipTraining(reason = "asserts Java isStructuralRefinementOf and testNominally between two types")
     @ParameterizedTest(name = "[{index}] {3}")
     @TestData(value = {
             "pos       -> int::T[is(gt(0))]@pos",
@@ -1028,6 +1071,7 @@ public class TypeTest extends AbstractMetatronTest {
         assertEquals(expected, typeA.testNominally(typeB), description);
     }
 
+    @Training.SkipTraining(reason = "asserts the shape of a Java-built combined predicate and its stack, not an expression/value pair")
     @ParameterizedTest(name = "[{index}] {1}")
     @TestData(value = {
             "pos       -> int::T[is(gt(0))]@pos",
@@ -1058,6 +1102,7 @@ public class TypeTest extends AbstractMetatronTest {
         }
     }
 
+    @Training.SkipTraining(reason = "asserts coefficient containment on a Java-computed least common denominator type")
     @ParameterizedTest(name = "[{index}] {2}")
     @TestData(value = {
             "pairInt   -> int{2}::T@pairInt",
@@ -1084,6 +1129,7 @@ public class TypeTest extends AbstractMetatronTest {
                 description + ": typeB coeff " + typeB.c() + " within LCD coeff " + lcd.c());
     }
 
+    @Training.SkipTraining(reason = "asserts only that a typed literal constructs without a fail; there is no output value")
     @ParameterizedTest
     @TestData(value = {
             "being -> rec::T[?[age=>int::T]]@being",
@@ -1127,6 +1173,10 @@ public class TypeTest extends AbstractMetatronTest {
      *      |- /m/type_test/dog         animal::T[?[legs=>int::T]]
      * </pre>
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             // ---- the hierarchy: deep (creature -> human -> swedish -> stockholmare) and branching ----
@@ -1189,6 +1239,10 @@ public class TypeTest extends AbstractMetatronTest {
      * chain, and by nothing below it. This is the same move dom admission makes during dispatch
      * (queriedDom.pathIncludes(i.dom())), tested without any as() instruction in play.
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[age=>int::T]]@/m/type_test/creature",
@@ -1227,6 +1281,10 @@ public class TypeTest extends AbstractMetatronTest {
      * time. The implicit move is granted by dom admission; the explicit one goes through as()
      * dispatch and reads the as-graph. They can disagree, which is the point of splitting them.
      */
+    @Training(
+            instruction = "what does {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[age=>int::T]]@/m/type_test/creature",
@@ -1260,6 +1318,10 @@ public class TypeTest extends AbstractMetatronTest {
      * value-level witness that the sibling predicates overlap, which is what makes 2b's label
      * interesting rather than academic.
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[age=>int::T]]@/m/type_test/creature",
@@ -1311,6 +1373,10 @@ public class TypeTest extends AbstractMetatronTest {
      * failure is separate: swedish accepts name=>7, i.e. its own ?str::T.has('son') guard does not
      * reject a non-str.
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[age=>int::T]]@/m/type_test/creature",
@@ -1366,6 +1432,10 @@ public class TypeTest extends AbstractMetatronTest {
      * separable — notably -3, which satisfies young's own ?&lt;25 but violates nat's ?&gt;0, so the inner
      * ROOT is what rejects it (under25 carries the same leaf predicate with no nat parent, and accepts it).
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             // ---- the age band: int -> nat -> {young, midbase -> middle, old} ----
@@ -1435,6 +1505,7 @@ public class TypeTest extends AbstractMetatronTest {
      * -3 is the case worth watching: it satisfies young's own ?&lt;25 and violates nat's ?&gt;0, and the
      * message names only the leaf.
      */
+    @Training.SkipTraining(reason = "the table mixes rejected literals with accepted ones, so no single output column holds the parse result")
     @ParameterizedTest
     @TestData(value = {
             "int::T[?>0]@/m/type_test/nat",
@@ -1452,7 +1523,7 @@ public class TypeTest extends AbstractMetatronTest {
         final Obj parsed = ObjmtronSerializer.parse(literal);
         final boolean isFail = parsed.stream().anyMatch(Obj::isFail);
         final String rendered = parsed.toString();
-        LOG.warn("construction of %s => %s", literal, rendered);
+        LOG.debug("construction of %s => %s", literal, rendered);
         assertEquals(rejected, isFail,
                 "%s should%s have been rejected, got: %s".formatted(literal, rejected ? "" : " not", rendered));
         if (!rejected)
@@ -1627,6 +1698,10 @@ public class TypeTest extends AbstractMetatronTest {
      * test() and isa() also disagree here: the isa guard returns the lhs without consulting coefficient
      * bounds, so it accepts the 3-element multiplicity that test() rejects (asserted at the end).
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "rec::T[?[name=>str::T]]@/m/type_test/human",
@@ -1689,6 +1764,10 @@ public class TypeTest extends AbstractMetatronTest {
      * as CONTAINMENT rather than equality: fewer elements than the signature fails, but MORE pass, so a
      * four-element list satisfies a two-index signature.
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "age     -> int::T@age",
@@ -1719,6 +1798,10 @@ public class TypeTest extends AbstractMetatronTest {
      * same question. Nothing here relaxes {@code fURI.test}: only the type-level sites erase, and only against a
      * bare rhs.
      */
+    @Training(
+            instruction = "does the type {{{instance}}} match the type {{{type}}}?",
+            input = "|{{{instance}}}::T.matches({{{type}}}::T)",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // instance          | type               | matches
@@ -1750,6 +1833,7 @@ public class TypeTest extends AbstractMetatronTest {
      * Only a fibered rec reads its bracket this way: {@code lst[int]} is a list of ints (never an int), and
      * {@code object[int]} is an object built from an int (never an int).
      */
+    @Training.SkipTraining(reason = "one table mixes boolean match rows with <ERROR> parse rows over type URIs, so no single output holds the claim")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[name=>?str::T,age=>?int::T,role=>?rec::T]]@person",
@@ -1809,6 +1893,10 @@ public class TypeTest extends AbstractMetatronTest {
      * no say: {@code person[baker]} is a {@code baker} although person declares {@code name=>str::T} and baker
      * asks {@code name=>int::T}.
      */
+    @Training(
+            instruction = "is the fibered type {{{instance}}} accepted where {{{expected}}} is expected?",
+            input = "|{{{instance}}}::T.matches({{{expected}}}::T)",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[name=>str::T, role=>rec::T]]@person",
@@ -1847,6 +1935,10 @@ public class TypeTest extends AbstractMetatronTest {
      * The fiber's declared type ({@code holder}'s {@code role=>ninja::T}) is not asked either: the bracket gives
      * the fiber its type.
      */
+    @Training(
+            instruction = "is the fibered type {{{instance}}} accepted where {{{expected}}} is expected?",
+            input = "|{{{instance}}}::T.matches({{{expected}}}::T)",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "ringmaster -> rec[role]::T[?[role=>rec::T]]@ringmaster",
@@ -1890,6 +1982,10 @@ public class TypeTest extends AbstractMetatronTest {
      * {@code role} fiber is a baker, whatever the wrapper's own {@code name} is, and is not when that object fails
      * the baker's predicate.
      */
+    @Training(
+            instruction = "does {{{value}}} match the type {{{type}}}?",
+            input = "{{{value}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[name=>str::T, role=>rec::T]]@person",
@@ -1918,6 +2014,7 @@ public class TypeTest extends AbstractMetatronTest {
      * parameter keeps the declaration's entry, and a request that names no arguments leaves the declaration as it
      * stands.
      */
+    @Training.SkipTraining(reason = "asserts Java Type.Helper.instantiate, not a value evaluated from an mtron expression")
     @ParameterizedTest
     @CsvSource(value = {
             // declared      | requested        | instantiated
@@ -1935,6 +2032,7 @@ public class TypeTest extends AbstractMetatronTest {
      * An instantiation survives resolution: {@code lst[int]} resolves to a type whose vid AND tid carry the
      * requested arguments (a base type's name is its type), rather than collapsing to the bare {@code lst}.
      */
+    @Training.SkipTraining(reason = "asserts the vid and tid a resolved type carries, a Java-side property of the type")
     @ParameterizedTest
     @CsvSource(value = {
             "lst[int]     | /m/lst[/m/int]",
@@ -1978,6 +2076,10 @@ public class TypeTest extends AbstractMetatronTest {
      * the bounded form. No spelling here expresses "between 2 and 4 ints IN THE LIST", which is what
      * ranging var args and ranging generics would need.
      */
+    @Training(
+            instruction = "does {{{instance}}} match the type {{{type}}}?",
+            input = "{{{instance}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // instance              % type                        % matches
@@ -2207,6 +2309,10 @@ public class TypeTest extends AbstractMetatronTest {
     @TestData({
             "import(/m/math)",
             "nat -> int::T[?>10]"})
+    @Training(
+            instruction = "what does {{{code}}} evaluate to?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             "*nat                         % |int::T[?>10]",

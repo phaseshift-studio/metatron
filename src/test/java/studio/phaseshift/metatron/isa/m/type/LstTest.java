@@ -29,6 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -198,6 +199,7 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "the row is a Java-side Lst.at(key) read with key and value in their own columns; the empty-root key <> has no >> step the test asserts, so one {{{lst}}}>>{{{key}}} template cannot cover every row")
     @ParameterizedTest
     @CsvSource(value = {
             // lst                                 | key                  | value
@@ -303,6 +305,7 @@ public class LstTest extends AbstractAlgebraTest {
             //"lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-.>-]                                            % [int{10}::6]",
      */
 
+    @Training.SkipTraining(reason = "rows are a stateful sequence over a one-time @TestData seed: each @...>>= mutates the stored lst and the next row's read asserts that mutation, so no row is independently (expression -> value)")
     @ParameterizedTest
     @TestData(value = {"/sys/tmp/lst_test/0 -> [a=>1,b=>[a,b,c]]"}, oneTime = true)
     @CsvSource(value = {
@@ -409,6 +412,7 @@ public class LstTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "rows assert Obj.test on a parsed value; one row's lhs is a multiplicity ({1,2,3}) and the .matches(...) instruction has a one-obj dom, so it would answer {false,false,false} there instead of the asserted false")
     @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3]                                     % lst::T                       % true",
@@ -500,6 +504,7 @@ public class LstTest extends AbstractAlgebraTest {
      * where they do not), so {@code lst[int,int,str]::[1,2,3.5]} names the third index and the value that failed
      * there.
      */
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "<ERROR>")
     @ParameterizedTest
     @CsvSource(value = {
             // code                              % the report pairs each index with its value
@@ -520,6 +525,7 @@ public class LstTest extends AbstractAlgebraTest {
      * as that of a bare one ({@code person}). Its seed sits beside {@link #testUpdate}'s one-time seed: each test
      * method keeps its own loaded flag, so neither seed suppresses the other.
      */
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec::T@person",
@@ -543,6 +549,7 @@ public class LstTest extends AbstractAlgebraTest {
      * admits zero, and a present zero-admitting index is still typed; an index's coefficient is the multiplicity at that
      * index; and a poly at an index is read by its base ({@code lst}, {@code rec}, {@code rel}), not unpacked.
      */
+    @Training(instruction = "does the lst {{{value}}} match the tensor type {{{type}}}?", input = "{{{value}}}.matches({{{type}}})", output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // value                      % type                          % matches
@@ -579,6 +586,7 @@ public class LstTest extends AbstractAlgebraTest {
      * reads every level's indices in turn — untyped inner lsts are read as the tensor their index names — and reading
      * back down walks the same levels.
      */
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",
@@ -609,6 +617,7 @@ public class LstTest extends AbstractAlgebraTest {
      * whose indices are that tensor's, typed or not, and to nothing else; the outer tensor's instruction hands back an
      * inner lst, which takes the inner tensor's instructions in turn; and the outer tensor is not the inner one.
      */
+    @Training(instruction = "what does the mtron expression {{{code}}} evaluate to?", input = "{{{code}}}", output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",
@@ -629,6 +638,7 @@ public class LstTest extends AbstractAlgebraTest {
     }
 
 
+    @Training.SkipTraining(reason = "Java API assertion on Lst.at(key, value, Poly.MUTABLE): it checks reference identity (assertSame) and in-place mutation of the source lst, which no mtron expression states")
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: should mutate original in-place
@@ -650,6 +660,7 @@ public class LstTest extends AbstractAlgebraTest {
         assertEquals(expectedCount, original.count());
     }
 
+    @Training.SkipTraining(reason = "Java API assertion on Lst.at(key, noobj(), Poly.MUTABLE): it checks that the source lst is mutated in place and then reads the shifted remaining elements, not a single evaluated value")
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE delete (value = noobj)
@@ -672,6 +683,7 @@ public class LstTest extends AbstractAlgebraTest {
             assertTrue(mParser.m_obj().parse(remaining1).get().equals(original.at(jnt(1))));
     }
 
+    @Training.SkipTraining(reason = "Java API assertion on Lst.at(key, value, Poly.IMMUTABLE): it checks that the original lst is untouched and the clone (a distinct reference, assertNotSame) holds the new value")
     @ParameterizedTest
     @CsvSource(value = {
             // IMMUTABLE set: should NOT mutate original
@@ -689,6 +701,7 @@ public class LstTest extends AbstractAlgebraTest {
         assertEquals(jnt(expectedCloneVal), clone.at(jnt(key)), "IMMUTABLE clone should have new value");
     }
 
+    @Training.SkipTraining(reason = "Java API assertion on Lst.at(key, noobj(), Poly.IMMUTABLE): it asserts both counts and reads the clone's remaining elements element by element, not one evaluated value")
     @ParameterizedTest
     @CsvSource(value = {
             // IMMUTABLE delete: should NOT mutate original

@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -89,6 +90,8 @@ public class RelTest extends AbstractAlgebraTest {
     /// canonical-zero divergence probe — does zero resolve identically via a deref'd element
     /// (*a) vs a literal rel (a=>1)?  If these disagree, the zero-of-rel is routing through a
     /// non-rel dispatch (bare noobj) on one path and the rel sink (noobj=>noobj) on the other.
+    @Training.SkipTraining(
+            reason = "the rows depend on the memory write the method performs (a -> a=>1) and compare against a second expression; without that state *a.zero() yields 0, not a rel zero")
     @ParameterizedTest
     @CsvSource(value = {
             "*a.zero()                                                    % (a=>1).zero()",
@@ -143,6 +146,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 5 rows is not the asserted lst: (a=>b).as(rec::T).as(lst::T).>> yields 0=>(a=>b), not [(a=>b)]")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).as(rec::T)                                             % [a=>b]",
@@ -179,6 +184,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 6 rows is not the asserted pair: the nested -<(dom().plus(10)=>-<(rng().mult(5))) evaluates to 11=>fail::[...]")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b)-<(_=>_)                                                % ((a=>b)=>(a=>b))",
@@ -192,6 +199,8 @@ public class RelTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
+    @Training.SkipTraining(
+            reason = "2 of 16 rows are not the asserted 7: [(1=>2),7]>>0.lshift(<../1>) evaluates to a map/rshift rewrite call")
     @ParameterizedTest
     @CsvSource(value = {
             // >> descends: a rel's second, or by key into it
@@ -225,6 +234,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "4 of 10 rows are not the asserted value ((a=>b).select((c=>_)) yields c=>b and a mult(4) select yields 2=>13, not (4=>(2=>13)))")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).select((_=>b))                                         % (a=>b)",
@@ -247,6 +258,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 3 rows is not the asserted set: (a=>b).plus((c=>d)).plus((e=>f)) yields {a=>b,{2}(e=>f),c=>d}")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>1).plus((b=>2))                                           % {(a=>1),(b=>2)}",
@@ -263,6 +276,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 11 rows is not the asserted vertex: ((a=>b)=>(c=>d)).dom() yields a=>b, not a")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>(b=>c)).dom()                                           % a",
@@ -286,6 +301,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "{3}(1=>2).dom() yields {3}1 and .rng() yields {3}2, not the asserted 3 and 6")
     @ParameterizedTest
     @CsvSource(value = {
             "{2}(a=>b).dom()                                             % {2}a",
@@ -324,6 +341,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "a=>b=>(c=>d) associates to a=>(b=>(c=>d)), not the asserted ((a=>b)=>(c=>d))")
     @ParameterizedTest
     @CsvSource(value = {
             "a=>b=>(c=>d)                                                  % ((a=>b)=>(c=>d))",
@@ -340,6 +359,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "2 of 6 rows are not the asserted noobj: (x=>y).select((a=>_)) yields a=>y and (x=>y).select((_=>b)) yields x=>b")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).select((_=>_))                                         % (a=>b)",
@@ -358,6 +379,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "all 5 rows evaluate to a fail:: because the select chain cannot resolve dom()/rng() through the pair, so the asserted transformation is never produced")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).select((dom().as(str::T)=>rng()))                      % (\"a\"=>b)",
@@ -393,6 +416,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "cc() answers the lhs at coefficient 1, so all 3 rows assert 2 where the expression yields 1")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).cc()                                                   % 2",
@@ -424,6 +449,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "all 3 rows assert a set the expression does not produce: >>+ yields the second (b), noobj, and d respectively")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b)>>+                                                     % {a,b}",
@@ -439,6 +466,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "all 5 rows assert a value the expression does not yield: (a=>b).one() evaluates to the id inst pair and ?= answers the lhs or noobj, never a bool")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).one()                                                  % (id()=>id())",
@@ -456,6 +485,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "?= (is) answers the lhs or noobj, not a bool: 3 of 5 rows are wrong, e.g. (a=>b).zero().?=(zero()) yields (noobj=>noobj) and (a=>b).?=(zero()) yields noobj")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).zero()                                                 % (noobj=>noobj)",
@@ -473,6 +504,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 10 rows is not the asserted zero: (noobj=>noobj).mult((a=>b)) yields noobj, not (noobj=>noobj)")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).mult((b=>c))                                           % (a=>c)",
@@ -516,6 +549,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "2 of 4 rows are not the asserted set: the 3-term plus yields {a=>b,{2}(e=>f),c=>d} and (a=>b).plus((noobj=>noobj)) drops the zero")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>b).plus((c=>d))                                           % {(a=>b),(c=>d)}",
@@ -584,6 +619,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "2 of 4 rows are not the asserted zero: (a=>b).zero().mult((a=>b)) and (1=>2).zero().mult((1=>2)) yield noobj")
     @ParameterizedTest
     @CsvSource(value = {
             // Right zero: r * 0 = 0
@@ -640,6 +677,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "1 of 4 rows is not the asserted swap: (x=>y=>z).neg() yields (y=>z)=>x, not (z=>(x=>y))")
     @ParameterizedTest
     @CsvSource(value = {
             "(a=>(b=>c)).mult(((b=>c)=>d))                                 % (a=>d)",
@@ -656,6 +695,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
 
+    @Training.SkipTraining(
+            reason = "the asserted column was never verified (checkCodeEvaluate applies it to the lhs, identity for a literal) and 7 of 10 rows differ: {3}(1=>2).mult({4}(2=>3)) yields {3}(1=>3), not {12}(1=>3)")
     @ParameterizedTest
     @CsvSource(value = {
             "{2}(a=>b).mult((b=>c))                                        % {2}(a=>c)",
@@ -675,6 +716,8 @@ public class RelTest extends AbstractAlgebraTest {
 
     /// ////////////////////////////////////////////////////////////////////////
     // MUTABILITY — at(first, second, operation)
+    @Training.SkipTraining(
+            reason = "a Java-level mutability check (at(first, second, MUTABLE) with assertSame); the rows assert reference identity, not an expression value")
     @ParameterizedTest
     @CsvSource(value = {
             // MUTABLE set: mutate same reference
@@ -693,6 +736,8 @@ public class RelTest extends AbstractAlgebraTest {
         assertEquals(s, result.second());
     }
 
+    @Training.SkipTraining(
+            reason = "a Java-level immutability check (original.at(first, second, IMMUTABLE) returns a clone); the columns are the new first and second, not an expression value")
     @ParameterizedTest
     @CsvSource(value = {
             // IMMUTABLE set: return new reference, original untouched
@@ -848,6 +893,8 @@ public class RelTest extends AbstractAlgebraTest {
      * here counts hops — {@code {*}} accepts a two-value vertex as a MULTIPLICITY of two. The poly splitter keeps
      * {@code {2,3}} (comma and all) as one entry, which is why the type is readable at all.
      */
+    @Training.SkipTraining(
+            reason = "8 of the 25 rows judge the @TestData nominal vertex types person/pilgrim, which the corpus verifier does not install, so a value is accepted where the row asserts a mismatch")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec::T@person",
@@ -901,6 +948,10 @@ public class RelTest extends AbstractAlgebraTest {
      * rejected where the type is constructed; and the illegal one-vertex poly is rejected at construction too, so
      * it fails where no value is involved, on a named type as on a base one.
      */
+    @Training(
+            instruction = "is the mtron path expression {{{code}}} rejected?",
+            input = "{{{code}}}",
+            output = "<ERROR>")
     @ParameterizedTest
     @CsvSource(value = {
             // code                                 % the report contains
@@ -927,6 +978,8 @@ public class RelTest extends AbstractAlgebraTest {
      * are BASE types here on purpose: a base type's verdict does not route through the nominal walk's `#` fallback,
      * so the assertion is about the rel reading rather than about that pre-existing looseness.
      */
+    @Training.SkipTraining(
+            reason = "the rows assert a match predicate (checkMatches) and four of them test a bare rel poly as the lhs, whose evaluation is noobj, so no one expression yields the asserted match")
     @ParameterizedTest
     @CsvSource(value = {
             "(rel[int,int]::(1=>2))   % int::T    % false",
@@ -948,6 +1001,10 @@ public class RelTest extends AbstractAlgebraTest {
      * {@code int => str}: a route is a chain whose first vertex is an int and whose closing vertex is a str, and a
      * chain of other vertices is rejected, exactly as for the base {@code rel[int,str]}.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "route -> rel[int,str]::T@route",
@@ -975,6 +1032,10 @@ public class RelTest extends AbstractAlgebraTest {
      * same instruction DOES fire on the vertex when the vertex is the lhs, so the silence is the path's, not the
      * instruction's.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "path_site -> uri::T@path_site",
@@ -1040,6 +1101,8 @@ public class RelTest extends AbstractAlgebraTest {
      * nominal rec with nothing to check). A path's vertices are not paths: a rel where the {@code stride} vertex of a
      * {@code journey} is expected continues the path instead, so it never reaches the stride.
      */
+    @Training.SkipTraining(
+            reason = "the rows assert that a path-typed literal is rejected, and that verdict needs the @TestData path types leg/trek/journey, which the corpus verifier does not install")
     @ParameterizedTest
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",
@@ -1074,6 +1137,8 @@ public class RelTest extends AbstractAlgebraTest {
      * exactly when its vertices are that path's, the named vertex types included; a typed path is still a rel, and it
      * is not any of its vertices.
      */
+    @Training.SkipTraining(
+            reason = "the rows assert a match predicate (value.test(type)) against the @TestData path types leg/trek/stride/journey, which the corpus verifier does not install")
     @ParameterizedTest
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",
@@ -1107,6 +1172,10 @@ public class RelTest extends AbstractAlgebraTest {
      * instruction whose domain is a vertex type runs on that vertex's value, and a path holding such a value does not
      * answer for it.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "ticket -> lst[int,str]::T@ticket",

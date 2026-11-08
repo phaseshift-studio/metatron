@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -114,6 +115,7 @@ public class mParserTest extends AbstractMetatronTest {
      * stack overflowed and mParser's guard reported "infinite recursion in the parser — possible left recursion" for
      * a grammar that was never recursive. These rows pin the reading, with or without a declaration behind the name.
      */
+    @Training.SkipTraining(reason = "asserts only that the source PARSES (assertFalse(parsed.isFail())); the second column is a prose description, not a value the source yields")
     @ParameterizedTest
     @CsvSource(value = {
             "person[ninja]::[name=>'marko',age=>29,role=>ninja::[name=>'dark_assassin',weapon=>bulldozer]] % a bracketed reference, then a typed literal",
@@ -154,6 +156,7 @@ public class mParserTest extends AbstractMetatronTest {
      * to a bare label: the lookup asks for the name (a bracket is an argument list, never part of an address) and the
      * request's arguments are substituted into the declaration's parameter list.
      */
+    @Training.SkipTraining(reason = "asserts the PARSE STRUCTURE of a declared reference (its vid, tid and predicate), not a value the source evaluates to")
     @ParameterizedTest
     @TestData(value = {"wanderer -> rec[leg]::T[?[name=>str::T,age=>int::T]]@wanderer"})
     @CsvSource(value = {
@@ -272,6 +275,7 @@ public class mParserTest extends AbstractMetatronTest {
     }
 
     // Comment tests that don't fit in CSV (brackets, multi-line)
+    @Training.SkipTraining(reason = "the rows are quoted with the CSV '~' quote character, which the extractor does not strip, so the rendered source keeps its ~ wrappers and does not parse; the method also pins comment-grammar parse forms rather than values")
     @ParameterizedTest
     @CsvSource(value = {
             // ; sugar path through operator chain
@@ -349,6 +353,7 @@ public class mParserTest extends AbstractMetatronTest {
      * the author. A bare value in a chain becomes a map of it; a statement boundary is start/end
      * around the chains; a comment is invisible; a literal keeps its dot.
      */
+    @Training.SkipTraining(reason = "asserts that two sources PARSE to the same Obj (a rewrite equivalence), not that the left one evaluates to the right one — evaluating the left source is exactly where the rows diverge")
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2).445                   % 1.plus(2).map(445)",
@@ -608,6 +613,7 @@ public class mParserTest extends AbstractMetatronTest {
      * line:col, the source as written, a caret, an explanation, and no combinator dump. The expected
      * fragment is the one part that may change as labels improve; the shape may not.
      */
+    @Training.SkipTraining(reason = "asserts the parser DIAGNOSTIC of deliberately malformed input (fault source, position, column and caret); the second column is a prose description of the expected message")
     @ParameterizedTest
     @CsvSource(value = {
             "lst[1,2,3                        % unclosed bracket",

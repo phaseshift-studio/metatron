@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
@@ -71,6 +72,7 @@ public class NoObjTest extends AbstractMetatronTest {
         assertTrue(uri("none").isNone());
     }
 
+    @Training.SkipTraining(reason = "asserts symmetry and hash-consistency of Obj.equals on parsed objects; mtron eq() aligns the lhs type before comparing, so it is not this predicate")
     @ParameterizedTest
     @CsvSource(value = {
             "noobj               | noobj                 |true",
@@ -300,6 +302,7 @@ public class NoObjTest extends AbstractMetatronTest {
         assertNotEquals(noobj(), rec0());
     }
 
+    @Training.SkipTraining(reason = "the predicate is obj1.test(obj2) on two raw parsed VALUES; mtron matches() takes its argument as a Type, so the expression that would come closest does not express this comparison")
     @ParameterizedTest
     @CsvSource(value = {
             "noobj               | noobj                 |true",

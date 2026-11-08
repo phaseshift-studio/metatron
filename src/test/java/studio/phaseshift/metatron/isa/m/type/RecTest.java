@@ -126,7 +126,8 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     @Training(
-            instruction = "does the {{{recB}}} rec match the {{{recA}}} rec?",
+            instruction = "does the {{{recA}}} rec match the {{{recB}}} rec?",
+            input = "{{{recA}}}.matches({{{recB}}})",
             output = "{{{matches}}}")
     @ParameterizedTest
     @CsvSource(value = {
@@ -450,6 +451,7 @@ public class RecTest extends AbstractAlgebraTest {
         assertNotEquals(original, clone, "original and clone have different keys");
     }
 
+    @Training.SkipTraining(reason = "mutates through Rec.at(key, noobj(), MUTABLE) and asserts the resulting count; the CSV is not an expression->value pair")
     @ParameterizedTest
     @Training(instruction = "when {{{key}}} is removed from {{{recStr}}, what is the result?", output = "{{{expectedCount}}}")
     @CsvSource(value = {
@@ -467,6 +469,7 @@ public class RecTest extends AbstractAlgebraTest {
         assertTrue(original.at(uri(key)).isNoObj(), "MUTABLE delete should remove key");
     }
 
+    @Training.SkipTraining(reason = "asserts only that the filter expression yields a non-noobj result; the ? sugar cannot be grouped so that the boolean column becomes the evaluated value")
     @ParameterizedTest
     @Training(instruction = "does the mtron expression {{{code}}} yield a result?", output = "{{{matches}}}")
     @CsvSource(value = {
@@ -522,6 +525,7 @@ public class RecTest extends AbstractAlgebraTest {
             assertTrue(codeObj.apply().isNoObj());
     }
 
+    @Training.SkipTraining(reason = "asserts that Poly.Helper.diffObjRecursion's debug string contains \"X=>\", not a value the CSV expression evaluates to")
     @ParameterizedTest
     @Training(instruction = "does {{{a}}} match {{{b}}}?", output = "{{{matches}}}")
     @Training(instruction = "what is the result of {{{a}}}.is({{{b}}})?", output = "{{{matches}}}")
@@ -603,6 +607,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "the rows after the self-contained selects dereference *x and *y, seeded by @TestData and not built by the row; one template must render every row")
     @ParameterizedTest
     @Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?", output = "{{{expected}}}")
     @TestData(value = {
@@ -635,6 +640,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "every row reads *x, whose fan-out world is seeded by @TestData, so no row is a self-contained expression->value pair")
     @ParameterizedTest
     @Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?", output = "{{{expected}}}")
     @TestData(value = {
@@ -689,8 +695,11 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(
+            instruction = "does {{{record}}} match {{{type}}}?",
+            input = "{{{record}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
-    @Training(instruction = "does {{{record}}} match {{{type}}}?", output = "{{{matches}}}")
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3]                            % rec::T                       % true",
             //"[a=>1]                                      % rec[uri=>int]::T             % true",
@@ -713,6 +722,7 @@ public class RecTest extends AbstractAlgebraTest {
      * {@code TypeTest.testFiberedRecIsAcceptedWhereAFiberIs}, and a bracket on an instance of a declaration that
      * names no fiber ({@code drifter}) is an error.
      */
+    @Training.SkipTraining(reason = "the person/drifter/ninja declarations are seeded by @TestData, and the ERROR row expects the value's bracket itself to fail")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[name=>?str::T,age=>?int::T,role=>?rec::T]]@person",
@@ -748,6 +758,7 @@ public class RecTest extends AbstractAlgebraTest {
      * A predicate-free type ({@code spectre -> rec::T@spectre}) asks nothing of the shape, so any rec at the fiber
      * answers it.
      */
+    @Training.SkipTraining(reason = "type acceptance is asserted against the person/ninja/baker/spectre declarations seeded by @TestData, which the row input does not construct")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[role=>rec::T]]@person",
@@ -785,8 +796,9 @@ public class RecTest extends AbstractAlgebraTest {
      * be silent. Absence is legal only where the field's coefficient admits zero ({@code rec[k{?},j]}).
      */
     @Training(
-            instruction = "does {{{literal}}} carry the fields its rec poly declares?",
-            output = "{{{result}}}")
+            instruction = "does {{{code}}} carry the fields its rec poly declares?",
+            input = "{{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @CsvSource(value = {
             // a declared field at coefficient one is required: k2 is declared and absent
@@ -820,6 +832,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkMatches(LOG, record, type, matches);
     }
 
+    @Training.SkipTraining(reason = "the later rows dereference !*xyz, seeded by @TestData, so the self-contained original>>=update rows cannot be isolated under one template")
     @ParameterizedTest
     @TestData(value = {"xyz -> [x=>[y=>1,z=>2]]@xyz"})
     @Training(instruction = "given {{{@TestData}}}, what is the result of {{{original}}}>>={{{update}}}?", output = "{{{expected}}}")
@@ -1076,6 +1089,7 @@ public class RecTest extends AbstractAlgebraTest {
     // Each row writes its own state (anchored via `@`), mutates via `>>=`, then
     // reads the whole rec back and compares. Deeper nesting + mixed data types.
 
+    @Training.SkipTraining(reason = "asserts the stored state after a space mutation (checkSpaceMutation); the CSV is a state/update/fetch/expected tuple, not an expression->value pair")
     @ParameterizedTest
     @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
@@ -1093,6 +1107,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
     }
 
+    @Training.SkipTraining(reason = "asserts the stored state after a space mutation (checkSpaceMutation); the CSV is a state/update/fetch/expected tuple, not an expression->value pair")
     @ParameterizedTest
     @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
@@ -1108,6 +1123,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("x"), expected)));
     }
 
+    @Training.SkipTraining(reason = "asserts the stored state after a space mutation (checkSpaceMutation); the CSV is a state/update/fetch/expected tuple, not an expression->value pair")
     @ParameterizedTest
     @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
@@ -1124,6 +1140,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("y"), expected)));
     }
 
+    @Training.SkipTraining(reason = "asserts the stored state after a space mutation (checkSpaceMutation); the CSV is a state/update/fetch/expected tuple, not an expression->value pair")
     @ParameterizedTest
     @Training(instruction = "when {{{state}}} has been defined and then {{{update}}} is called, what is the result of the {{{fetch}}} dereference?", output = "{{{expected}}}")
     @CsvSource(value = {
@@ -1140,6 +1157,7 @@ public class RecTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkSpaceMutation(LOG, state, update, Map.ofEntries(entry(f("z"), expected)));
     }
 
+    @Training.SkipTraining(reason = "applies the @r state before evaluating update; the update expression dereferences @r, so state and update cannot be one self-contained input")
     @ParameterizedTest
     @Training(instruction = "when {{{state}}} has been defined, what is the result of {{{update}}}?", output = "{{{expected}}}")
     @CsvSource(value = {
@@ -1240,6 +1258,7 @@ public class RecTest extends AbstractAlgebraTest {
      * ({@link #testDelegationIsOneLevelDeep}), and a {@code rec[k1,k2]} FIELD declaration is not a wrapper
      * ({@link #testFieldDeclarationIsNotAWrapper}).
      */
+    @Training.SkipTraining(reason = "asserts delegation over the @TestData world (*marko and the person/ninja/weaponed/fight/love/ponder declarations), which the row input does not construct")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[role=>rec::T,name=>?str::T]]@person",
@@ -1293,6 +1312,10 @@ public class RecTest extends AbstractAlgebraTest {
      * component that is itself a wrapper is applied to as the object it is, so its own {@code role} does not join
      * the stream and {@code 'deep'} (the inner wrapper's component) never answers.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[role=>rec::T,name=>?str::T,age=>int::T]]@person",
@@ -1326,6 +1349,10 @@ public class RecTest extends AbstractAlgebraTest {
      * PROPAGATES: the other candidate's {@code 11} must not be returned in its place, or a broken delegation would
      * read as a successful one.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role,sidekick]::T[?[role=>rec::T,sidekick=>rec::T,name=>?str::T]]@person",
@@ -1356,6 +1383,7 @@ public class RecTest extends AbstractAlgebraTest {
      * {@code duo_person[duo_ninja,duo_position]} and fails at parse time. Absence would be legal only for
      * {@code rec[role,position{?}]} (or a {@code position} the declaration types as optional).
      */
+    @Training.SkipTraining(reason = "reads *marko and the duo_* declarations seeded by @TestData, so the row input is not self-contained")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1384,6 +1412,7 @@ public class RecTest extends AbstractAlgebraTest {
      * {@code duo_ninja::T}, where {@code duo_position::T} and where its own {@code duo_person::T} is expected — and
      * nowhere else ({@code duo_baker::T}, an unrelated declared type, rejects it).
      */
+    @Training.SkipTraining(reason = "judged against the duo_* declarations seeded by @TestData, so the value and type columns are not self-contained")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1414,6 +1443,10 @@ public class RecTest extends AbstractAlgebraTest {
      * A single-valued expectation is also a multiplicity claim: {@code >>title} answering {@code 'sniper'} rather
      * than {@code {'sniper','sniper'}} is the statement that the read reached ONE component.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1443,6 +1476,7 @@ public class RecTest extends AbstractAlgebraTest {
      * is the positive control for that half: a {@code dom=duo_ninja} body reading {@code >>name} answers with the
      * role component's name, 'dark_assassin'.
      */
+    @Training.SkipTraining(reason = "reads *marko and the duo_aim/duo_strike/duo_shadow instructions seeded by @TestData, so the row input is not self-contained")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1488,6 +1522,7 @@ public class RecTest extends AbstractAlgebraTest {
      * A bare {@code describe -> ...} write would not declare a second overload at all (the address is the same, so
      * the second write REPLACES the first); the query-bearing address used here is what keeps both.
      */
+    @Training.SkipTraining(reason = "reads *marko and the two describe overloads seeded by @TestData, so the row input is not self-contained")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1522,6 +1557,10 @@ public class RecTest extends AbstractAlgebraTest {
      * *nested>>rank    [-- 5                   --]   not {5,7}
      * </pre>
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "duo_position -> rec::T@duo_position",
@@ -1550,6 +1589,7 @@ public class RecTest extends AbstractAlgebraTest {
      * wrapper did not take the call (it would have contributed a second answer), while {@code ponder?dom=person}
      * shows the wrapper still answers its own type.
      */
+    @Training.SkipTraining(reason = "reads *loaf, whose person/ninja/baker/fight/ponder world is seeded by @TestData rather than built by the row")
     @ParameterizedTest
     @TestData(value = {
             "person -> rec[role]::T[?[role=>rec::T,name=>?str::T]]@person",
@@ -1578,6 +1618,7 @@ public class RecTest extends AbstractAlgebraTest {
      * where a master is expected (the object at its fiber) and where a form is expected (the object at its fiber's
      * fiber). Only fibers answer: {@code name} is a field, not a fiber, so the dojo is not a str.
      */
+    @Training.SkipTraining(reason = "the rows are judged against the form/master/dojo/rival declarations seeded by @TestData, not a value a single expression produces")
     @ParameterizedTest
     @TestData(value = {
             "form -> rec::T@form",
@@ -1605,6 +1646,7 @@ public class RecTest extends AbstractAlgebraTest {
      * down) and answers {@code noobj}. Reached through {@code >>head}, the master is a wrapper in its own right, and its
      * form answers. Untyped reads fan out one level the same way.
      */
+    @Training.SkipTraining(reason = "reads *kodokan and the visit/bow/drill instructions declared by @TestData, so the row input is not self-contained")
     @ParameterizedTest
     @TestData(value = {
             "form -> rec::T@form",
@@ -1639,6 +1681,10 @@ public class RecTest extends AbstractAlgebraTest {
      * fields are free. A named bracket at a field ({@code pin}'s {@code at} is a {@code coord}) is read in turn, so a
      * value missing a field one level down fails the outer type as well.
      */
+    @Training(
+            instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
+            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "coord -> rec[x,y]::T@coord",
@@ -1666,6 +1712,10 @@ public class RecTest extends AbstractAlgebraTest {
      * the rec, so {@code rec[k1,k2]::[k1=>scout::[…],k2=>2]} is accepted where a scout or an int is expected. A plain
      * rec names no fibers, so its fields never answer for it.
      */
+    @Training(
+            instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
+            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"scout -> rec::T@scout"})
     @CsvSource(value = {
@@ -1683,6 +1733,10 @@ public class RecTest extends AbstractAlgebraTest {
      * A FIBER MAY HOLD A MULTIPLICITY. A {@code troupe}'s {@code crew} holds any number of recs, so a troupe holding two
      * scouts is accepted where two scouts are expected and not where one is; a troupe holding one scout is one scout.
      */
+    @Training(
+            instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
+            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {
             "scout -> rec::T@scout",
@@ -1704,6 +1758,10 @@ public class RecTest extends AbstractAlgebraTest {
      * {@code ex} is both a rec and an int: it is accepted where an int is expected, and an int instruction reaches the
      * int at {@code o} (the wrapper itself is a rec, not an int). A domain no candidate has answers {@code noobj}.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex"})
     @CsvSource(value = {
@@ -1719,6 +1777,10 @@ public class RecTest extends AbstractAlgebraTest {
     /**
      * The same {@code ex} judged as a value: a rec, an {@code ex}, and an int through its fiber, but not a str.
      */
+    @Training(
+            instruction = "given the definitions in the test data, does {{{value}}} match {{{type}}}?",
+            input = "{{{@TestData}}}; {{{value}}}.matches({{{type}}})",
+            output = "{{{matches}}}")
     @ParameterizedTest
     @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex1"})
     @CsvSource(value = {
@@ -1752,6 +1814,7 @@ public class RecTest extends AbstractAlgebraTest {
      * is untouched, and writing it is a separate act), a str fiber reads (and a str instruction reaches it when the
      * navigation is explicit), and a lst fiber reads as the lst it holds.
      */
+    @Training.SkipTraining(reason = "reads *stallion, *mustang and *delta, whose fibered world is seeded by @TestData rather than built by the row")
     @ParameterizedTest
     @TestData(value = {
             "animal -> rec[age]::T[?[age=>int::T]]@animal",
@@ -1807,6 +1870,10 @@ public class RecTest extends AbstractAlgebraTest {
      * ({@code >>geo/0}, {@code >>geo/1}), but only {@code geo/0} is exposed: the second element is a plain lst
      * element, so an untyped {@code +} does not also sum it.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "lst::T[?[real::T,real::T]]@point",
@@ -1837,6 +1904,10 @@ public class RecTest extends AbstractAlgebraTest {
      * is its member (that is what {@code objs()} guarantees everywhere else), so the delegation must still see the
      * wrapper and hand the reduction to the fiber the domain names.
      */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "trail -> lst::T[?[real::T,real::T]]@trail",

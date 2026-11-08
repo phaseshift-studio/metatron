@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -102,21 +105,19 @@ public @interface Training {
      */
     record Entry(String instruction, String input, String output, String sourceMethod) {
 
-        public String toJson() {
-            return String.format(
-                    "{\"instruction\": %s, \"input\": %s, \"output\": %s}",
-                    escapeJson(instruction),
-                    escapeJson(input),
-                    escapeJson(output)
-            );
-        }
+        // Html escaping off: mtron is full of `>`, `<` and `&`, and Gson would otherwise emit
+        // `-\u003e` for an arrow. Escaping happens here and nowhere else.
+        private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
-        private static String escapeJson(String s) {
-            return "\"" + s.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t") + "\"";
+        public String toJson() {
+            final JsonObject json = new JsonObject();
+            json.addProperty("instruction", this.instruction);
+            json.addProperty("input", this.input);
+            json.addProperty("output", this.output);
+            // Provenance: a row that cannot name the test it came from cannot be triaged or repaired.
+            if (null != this.sourceMethod)
+                json.addProperty("source", this.sourceMethod);
+            return GSON.toJson(json);
         }
     }
 
@@ -145,13 +146,16 @@ public @interface Training {
         /**
          * Produces training entries from a test method.
          */
-        public static List<Entry> from(Method method, CsvSource csv) {
+        public static Extraction from(Method method, CsvSource csv) {
             // skill training entry extraction if explicitly stated
             if (method.isAnnotationPresent(Training.SkipTraining.class))
-                return List.of();
+                return new Extraction(List.of(), 0);
             final List<Entry> entries = new ArrayList<>();
             final String methodKey = method.getDeclaringClass().getSimpleName() + "." + method.getName();
             final String delimiter = String.valueOf(csv.delimiter());
+            final int paramCount = method.getParameterCount();
+            final String[] rows = rows(csv);
+            int skipped = 0;
 
             final Training[] trainings = method.getAnnotationsByType(Training.class);
             final String testData = method.isAnnotationPresent(TestData.class) ? String.join("\n", method.getAnnotation(TestData.class).value()) : null;
@@ -159,8 +163,12 @@ public @interface Training {
                 // ── Annotated: render instruction/input/output templates against the row's columns ──
                 final Map<String, Integer> paramToCol = paramNameToColumn(method);
                 for (final Training training : trainings) {
-                    for (final String row : csv.value()) {
+                    for (final String row : rows) {
                         final String[] parts = row.split(java.util.regex.Pattern.quote(delimiter));
+                        if (parts.length != paramCount) {
+                            skipped++;
+                            continue;
+                        }
                         entries.add(new Entry(
                                 render(training.instruction(), parts, paramToCol, testData),
                                 render(training.input(), parts, paramToCol, testData),
@@ -170,17 +178,17 @@ public @interface Training {
                 }
             } else {
                 // ── Fallback: infer two-column lhs/rhs ──
-                final int paramCount = method.getParameterCount();
-                final String[] rows = csv.value();
-
                 for (int r = 0; r < rows.length; r++) {
                     final String[] parts = rows[r].split(java.util.regex.Pattern.quote(delimiter));
 
-                    if (parts.length < 2) continue;
+                    if (parts.length != paramCount || parts.length < 2) {
+                        skipped++;
+                        continue;
+                    }
 
                     final String lhs, rhs;
 
-                    if (paramCount >= 3 && parts.length >= 3) {
+                    if (paramCount >= 3) {
                         // Multi-column: likely trailing description — use second-to-last as rhs
                         lhs = parts[0].trim();
                         rhs = parts[parts.length - 2].trim();
@@ -190,16 +198,35 @@ public @interface Training {
                         rhs = parts[parts.length - 1].trim();
                     }
 
-                    final String opCtx = extractOperatorContext(clean(lhs));
+                    final String opCtx = extractOperatorContext(lhs);
                     entries.add(new Entry(
-                            fallbackInstruction(clean(lhs), methodKey + "#" + r) + (opCtx.isEmpty() ? "" : " " + opCtx),
-                            clean(lhs),
-                            clean(rhs),
+                            fallbackInstruction(lhs, methodKey + "#" + r) + (opCtx.isEmpty() ? "" : " " + opCtx),
+                            lhs,
+                            rhs,
                             methodKey
                     ));
                 }
             }
-            return entries;
+            return new Extraction(entries, skipped);
+        }
+
+        /**
+         * The rows of a {@code @CsvSource}: its {@code value} array, or its {@code textBlock}
+         * one row per line. Reading only {@code value()} silently dropped every textBlock row.
+         */
+        private static String[] rows(final CsvSource csv) {
+            if (csv.textBlock().isEmpty()) return csv.value();
+            return Arrays.stream(csv.textBlock().split("\\R"))
+                    .filter(row -> !row.isBlank())
+                    .toArray(String[]::new);
+        }
+
+        /**
+         * The entries a method yields plus the rows that could not be attributed to its columns.
+         * A row whose field count misses the parameter count is dropped and counted rather than
+         * split into a silently misaligned pair.
+         */
+        public record Extraction(List<Entry> entries, int skipped) {
         }
 
         /**
@@ -252,16 +279,6 @@ public @interface Training {
             return sb.toString();
         }
 
-        private static String clean(String s) {
-            if (s == null) return "";
-            return s.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t")
-                    .trim();
-        }
-
         /**
          * Extracts operator descriptions from an mtron expression by parsing it,
          * finding instructions, and resolving their {@code ?docq>>desc} documentation.
@@ -269,7 +286,7 @@ public @interface Training {
         private static String extractOperatorContext(String expression) {
             if (expression == null || expression.isBlank()) return "";
             try {
-                final Obj obj = ObjmtronSerializer.parse(expression.replace("\\\\", "\\"));
+                final Obj obj = ObjmtronSerializer.parse(expression);
                 if (!obj.isCall()) return "";
                 // Resolve instruction types: resolveCode for Code chains, unresolved for Inst
                 List<Inst> insts;

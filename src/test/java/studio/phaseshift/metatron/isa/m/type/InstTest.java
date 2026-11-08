@@ -57,6 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class InstTest extends AbstractObjTest {
 
 
+    @Training.SkipTraining(reason = "asserts an inst definition's furi canonicalization and the type membership of its dom/rng — no single mtron expression is evaluated to a value")
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range
@@ -84,6 +85,7 @@ public class InstTest extends AbstractObjTest {
     }
 
 
+    @Training.SkipTraining(reason = "Inst.Helper.bindGenerics resolves a type definition against a call specification; each row asserts the resolved inst's type compatibility, a compile-time resolution with no evaluated value")
     @ParameterizedTest
     @CsvSource(value = {
             "1         % test?str<=int()                                   % test()           % test?str<=int()",
@@ -138,6 +140,7 @@ public class InstTest extends AbstractObjTest {
      * Generic names: any all-uppercase fURI path (A, B, LONG, BBBB, …). # and + are NOT generic.
      * Priority: user-explicit dom/rng > lhs type > arg types.
      */
+    @Training.SkipTraining(reason = "Inst.Helper.bindGenerics binds a user inst against a registry inst carrying generics; the row asserts the resolved inst's type compatibility, a compile-time binding rather than an evaluated value")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // lhs              % def (userInst - user typed)   % spec (apiInst - registry, has generics)  % expected resolution
@@ -202,6 +205,7 @@ public class InstTest extends AbstractObjTest {
      * candidate's argument as bound.
      */
     @TestData(value = {"int::T[?>0]@posint"})
+    @Training.SkipTraining(reason = "GenericBinder is handed a user code and a candidate and answers the bound instruction list (or null when it rejects the candidate); each row asserts the bound dom/rng slots, a compile-time decision rather than an evaluated value")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // A. ONE INSTRUCTION: A is bound from the dom (1 is an int), so a value argument must then be an int.
@@ -301,6 +305,7 @@ public class InstTest extends AbstractObjTest {
      * may be empty is left to runtime, where its objs' own types pick the overload (a read emits {@code #{*}}). Each row:
      * lhs % dom % whether the dom applies per obj.
      */
+    @Training.SkipTraining(reason = "Inst.Helper.appliesPerObject(lhs, dom) is a Java predicate about a compile-time dispatch decision; no mtron expression is evaluated")
     @ParameterizedTest
     @CsvSource(delimiter = '%', value = {
             // bulk: at least one obj, and possibly more
@@ -353,6 +358,7 @@ public class InstTest extends AbstractObjTest {
      * compatible result, and an unbound rng ({@code #}) is compatible with everything, so it cannot see the
      * regression ({@code {1,2,3}.side(plus(1)).sum()} answered {@code {1,2,3}}).
      */
+    @Training.SkipTraining(reason = "Inst.Helper.bindGenerics over a bulk lhs; the row asserts the resolved inst's exact dom and rng, a compile-time binding rather than an evaluated value")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // lhs              % def (userInst)   % spec (apiInst)            % expected resolution
@@ -380,9 +386,9 @@ public class InstTest extends AbstractObjTest {
             input = "{{{lhs}}}.{{{chain}}}",
             output = "{{{expectedValue}}}")
     @Training(
-            instruction = "when the {{{lhs}}} obj is resolved against the {{{chain}}} call, what is the rng of the resolved call?",
-            input = "{{{lhs}}}.{{{chain}}}",
-            output = "{{{expectedRng}}}")
+            instruction = "when the {{{lhs}}} obj is applied to the {{{chain}}} call, what is the resulting type?",
+            input = "{{{lhs}}}.{{{chain}}}.type()",
+            output = "{{{expectedRng}}}::T")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             // lhs           % chain                          % expected result  % expected rng type
@@ -440,6 +446,7 @@ public class InstTest extends AbstractObjTest {
     @Training(
             instruction = "inst A is a refinement of inst B if A's rng and dom are refinements of B's rng and dom and its tid path matches B's tid path: is the {{{instA}}} inst a refinement of the {{{instB}}} inst?",
             output = "{{{aSubB}}}")
+    @Training.SkipTraining(reason = "asserts that inst A refines inst B (aInst.test(bInst)) — a type relation between two instruction definitions, not one expression evaluated to a value")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             "plus?int<=int(int::T)                     %       plus?#<=#(#::T)                            % true",
@@ -476,6 +483,10 @@ public class InstTest extends AbstractObjTest {
         }
     }
 
+    @Training(
+            instruction = "when the {{{lhs}}} value is applied to the {{{code}}} code, what is the result?",
+            input = "{{{lhs}}}.{{{code}}}",
+            output = "{{{rhs}}}")
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             "1               % plus(1)._._._                    % [int/int,int/int,int/int,int/int]       % 2",
@@ -567,6 +578,10 @@ public class InstTest extends AbstractObjTest {
         }
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"|inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band"})
     @CsvSource(value = {
@@ -582,6 +597,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"|inst?int{?}<=int(int::T,str::T){ is(and(gte(*0),lte(*1.as(int::T)))) }@band"})
     @CsvSource(value = {
@@ -597,6 +616,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training(
+            instruction = "given the instruction definition in @TestData, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"|inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band"})
     @CsvSource(value = {
@@ -610,6 +633,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "nat -> int::T[?>0]",
@@ -626,6 +653,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "/m/nat -> int::T[?>0]",
@@ -642,6 +673,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "/m/nat -> int::T[?>0]",
@@ -656,6 +691,10 @@ public class InstTest extends AbstractObjTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {"|band?int{?}<=int(min=>else(3),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band"})
     @CsvSource(value = {
@@ -685,6 +724,7 @@ public class InstTest extends AbstractObjTest {
      * the n-tid coefficient shape — {@code as?dom=A&rng=B} is shaped like any mapper — so it is DECLARED through
      * {@link InstBuilder#declareForm} at the very registration site that builds these ops.
      */
+    @Training.SkipTraining(reason = "asserts the declared Inst.Form facet and its floatable/blocked/subring flags for an instruction; the code is inspected, not evaluated to a value")
     @ParameterizedTest
     @CsvSource(value = {
             "as     % as(str::T)",
@@ -760,6 +800,10 @@ public class InstTest extends AbstractObjTest {
      * {@code delta} unbound and making the body's {@code *delta} read nothing. Both spellings, and the keyed one,
      * must answer the same.
      */
+        @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
             "coord -> lst::T[?[real::T,real::T]]@coord",

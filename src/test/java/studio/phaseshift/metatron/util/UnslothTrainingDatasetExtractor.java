@@ -1,5 +1,6 @@
 package studio.phaseshift.metatron.util;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.Training;
@@ -187,7 +188,7 @@ public class UnslothTrainingDatasetExtractor {
         LOG.none("  @ParameterizedTest meth:  %4d\n", totalPT);
         LOG.none("  Methods ignored:          %4d\n", totalIgnored);
         LOG.none("  Rows extracted:           %4d\n", totalRows);
-        LOG.none("  Rows skipped (<2 cols):   %4d\n", totalSkipped);
+        LOG.none("  Rows skipped (col mismatch):%4d\n", totalSkipped);
         LOG.none("  Dataset entries written:  %4d\n", dataset.size());
         if (!RENAME.isEmpty()) {
             LOG.none("----------------------------------------------\n");
@@ -432,12 +433,19 @@ public class UnslothTrainingDatasetExtractor {
                     LOG.warn("  SKIPPED (ignore list): %s", methodKey);
                     continue;
                 }
+                // A disabled test asserts nothing, so its rows carry no verified expectation.
+                if (method.isAnnotationPresent(Disabled.class) || clazz.isAnnotationPresent(Disabled.class)) {
+                    methodsIgnored++;
+                    LOG.warn("  SKIPPED (@Disabled): %s", methodKey);
+                    continue;
+                }
 
                 CsvSource csv = method.getAnnotation(CsvSource.class);
                 if (csv != null) {
-                    List<Training.Entry> entries = Training.Extractor.from(method, csv);
-                    dataset.addAll(entries);
-                    rowsExtracted += entries.size();
+                    final Training.Extractor.Extraction extraction = Training.Extractor.from(method, csv);
+                    dataset.addAll(extraction.entries());
+                    rowsExtracted += extraction.entries().size();
+                    rowsSkipped += extraction.skipped();
                 }
             }
         }
@@ -468,7 +476,7 @@ public class UnslothTrainingDatasetExtractor {
      * selected instructions. {@code generatedAt} is deliberately the only non-reproducible field,
      * and it lives here rather than in the corpus.
      */
-    private static Path writeManifest(final Path dataset, final byte[] bytes, final int entries) {
+    static Path writeManifest(final Path dataset, final byte[] bytes, final int entries) {
         final Map<String, Object> manifest = new LinkedHashMap<>();
         manifest.put("artifact", dataset.getFileName().toString());
         manifest.put("sha256", sha256(bytes));
@@ -476,12 +484,15 @@ public class UnslothTrainingDatasetExtractor {
         manifest.put("entries", entries);
         manifest.put("instructionSelection", "Math.floorMod(hash(method#row), templates)");
         manifest.put("generatedAt", Instant.now().toString());
-        final Path manifestPath = dataset.resolveSibling("mtron_training_dataset.manifest.json");
+        // Derived from the artifact name, so `X.jsonl` -> `X.manifest.json` for both the full
+        // corpus and the verified one.
+        final String name = dataset.getFileName().toString().replace(".jsonl", "") + ".manifest.json";
+        final Path manifestPath = dataset.resolveSibling(name);
         writeAtomically(manifestPath, GSON.toJson(manifest).getBytes(StandardCharsets.UTF_8));
         return manifestPath;
     }
 
-    private static void writeAtomically(final Path target, final byte[] bytes) {
+    static void writeAtomically(final Path target, final byte[] bytes) {
         try {
             Files.createDirectories(target.getParent());
             final Path tmp = Files.createTempFile(target.getParent(), ".mtron-dataset", ".tmp");
@@ -492,7 +503,7 @@ public class UnslothTrainingDatasetExtractor {
         }
     }
 
-    private static String sha256(final byte[] bytes) {
+    static String sha256(final byte[] bytes) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
         } catch (final NoSuchAlgorithmException e) {

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
 
@@ -279,6 +280,7 @@ public class StrTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "the assertion calls the Java helper Str.Helper.cleanString(str, strip) with a boolean strip flag; the columns are a raw string, that flag and the cleaned text, not an expression and the value it yields")
     @ParameterizedTest
     @CsvSource(value = {
             "'''hello'''                   % true            % hello",

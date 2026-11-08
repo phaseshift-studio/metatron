@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.furi.fURI;
 
@@ -159,6 +160,7 @@ public class UriTest extends AbstractAlgebraTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Training.SkipTraining(reason = "the rows dereference *test and *b, values bound by @TestData; the extractor splices @TestData entries newline-joined with no statement separator, so the write-then-read setup cannot be composed into one parseable input")
     @ParameterizedTest
     @TestData({
             "test -> <http://www.marko.com:90/a/b/c?w=abc&x=1&y=2&z=!*test>",
