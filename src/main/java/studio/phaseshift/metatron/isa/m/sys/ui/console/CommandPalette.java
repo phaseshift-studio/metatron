@@ -743,10 +743,10 @@ public final class CommandPalette extends MRec {
     public static void showMessageHistory(final SpanUI envelope) {
         final List<String> history = StatusLine.history();
         final Terminal terminal = Console.getTerminal();
-        final int terminalWidth = null == terminal || terminal.getWidth() <= 0 ? 80 : terminal.getWidth();
-        final int terminalHeight = null == terminal || terminal.getHeight() <= 0 ? 24 : terminal.getHeight();
-        final int width = Math.max(24, Math.min(HISTORY_WIDTH, terminalWidth - 4));
-        final int height = Math.max(4, Math.min(HISTORY_HEIGHT, history.size() + 2));
+        final int terminalWidth = null == terminal || terminal.getColumns() <= 0 ? 100 : terminal.getColumns();
+        final int terminalHeight = null == terminal || terminal.getRows() <= 0 ? 24 : terminal.getRows();
+        final int width = Math.clamp(terminalWidth - 4, 24, HISTORY_WIDTH);
+        final int height = Math.clamp(history.size() + 2, 4, HISTORY_HEIGHT);
         final StringBuilder body = new StringBuilder();
         for (int i = 0; i < history.size(); i++) {
             if (i > 0)
