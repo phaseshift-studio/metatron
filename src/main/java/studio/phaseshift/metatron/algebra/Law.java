@@ -443,8 +443,8 @@ public enum Law {
         }
 
         /**
-         * EVERY DEFINING EQUATION, keyed by the address it is declared at — {@code derivation_contraction} reads the values,
-         * {@link #inverseForm} the entries. A walk of the registered instructions through {@code Machine.read}, kept as the
+         * EVERY DEFINING EQUATION, keyed by the address it is declared at — {@code derivation_contraction} and
+         * {@link #inverseForm} read the entries. A walk of the registered instructions through {@code Machine.read}, kept as the
          * {@link #DERIVATIONS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression.
          */
         private static Map<fURI, Rec> declaredDerivations() {
@@ -964,11 +964,26 @@ public enum Law {
         }
 
         /**
-         * ALL DERIVATIONS A REWRITE CAN APPLY — the values of {@link #declaredDerivations}: the equations instructions
-         * declare beside themselves ({@code ?decq}), one per address, in the order the machine's instset lists them.
+         * ALL DERIVATIONS A REWRITE CAN APPLY — {@link #declaredDerivations}: the equations instructions declare beside
+         * themselves ({@code ?decq}), each keyed by the contract that declares it, in the order the machine's instset
+         * lists them. The key is where the equation speaks ({@link #selects}).
          */
-        public static List<Rec> derivations() {
-            return new ArrayList<>(declaredDerivations().values());
+        public static Map<fURI, Rec> derivations() {
+            return Collections.unmodifiableMap(declaredDerivations());
+        }
+
+        /**
+         * WHERE A CONTRACT'S CLAIM SPEAKS FOR A CHAIN — whether dispatch of {@code contract}'s op on {@code carrier} runs
+         * that very contract ({@link #deduce}). A claim about an op the chain does not hold yet, a derivation's lhs,
+         * holds only there: real's {@code div ≡ mult·inv} contracts a real's {@code mult(map(2.0).inv())}, never an
+         * int's, whose truncating div declares no such equation. A contract whose dom ranges over every carrier speaks
+         * at each; an unknown carrier ({@code #}) selects no other.
+         */
+        public static boolean selects(final Type carrier, final fURI contract) {
+            if (isUniversal(contract.dom()))
+                return true;
+            final Inst selected = deduce(contract.basePath(), carrier);
+            return null != selected && contract.equals(Inst.Helper.operationTid(selected.tid()));
         }
     }
 }
