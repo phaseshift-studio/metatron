@@ -25,10 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,25 +64,11 @@ public class GenericBinder extends MRec implements Binder {
 
     @Override
     public List<Inst> apply(final Obj lhs, final List<Inst> users, final List<Inst> candidates) {
-        // ONE BINDING FOR THE LENGTH OF THE SEQUENCE: a generic a candidate binds holds for every candidate after it
-        final Map<fURI, fURI> generics = new HashMap<>();
-        // A PATTERN'S DECLARATIONS BIND FIRST: an argument written X::T@A ("A is X", a generic name over a concrete type)
-        // pins A before any instruction binds, so every use of A, earlier or later in the sequence, answers to it. A bare
-        // A::T is a label (its tid is its own generic name) and declares nothing.
-        final Deque<Obj> pending = new ArrayDeque<>(candidates);
-        while (!pending.isEmpty()) {
-            final Obj next = pending.pop();
-            if (next.isObjInst())
-                next.asInst().args().elements().forEach(pending::push);
-            else if (next.isCode())
-                next.asCode().insts().forEach(pending::push);
-            else if (next.isType() && null != next.vid() && next.vid().one().isGeneric() && !next.tid().one().isGeneric()) {
-                // ONE LETTER, ONE MEANING: a pattern declaring one generic as two types contradicts itself
-                final fURI prior = generics.putIfAbsent(next.vid().one(), next.tid().one());
-                if (null != prior && !prior.equals(next.tid().one()))
-                    return null;
-            }
-        }
+        // ONE BINDING FOR THE LENGTH OF THE SEQUENCE, starting from the pattern's declarations: a generic a candidate binds
+        // holds for every candidate after it
+        final Map<fURI, fURI> generics = Inst.Helper.declarations(candidates);
+        if (null == generics)
+            return null;
         final List<Inst> sequence = new ArrayList<>(candidates.size());
         Obj input = lhs;
         for (int i = 0; i < candidates.size(); i++) {

@@ -455,6 +455,11 @@ public interface Inst extends Call {
 
     @Override
     default boolean test(final Obj other) {
+        // AN INST TESTS A CODE AS THE INSTRUCTION THE CODE IS, and fails when the code is not one
+        if (other.isCode()) {
+            final Call inst = other.asCode().tryToInst();
+            return inst.isObjInst() && this.test(inst);
+        }
         if (!other.isInst())
             return Obj.Helper.testObjs(this, other);
         else {
@@ -998,6 +1003,33 @@ public interface Inst extends Call {
             if (userInst.tid().hasQ(BLOCK))
                 return apiInst.tid(apiInst.tid().addQ(BLOCK));
             return apiInst;
+        }
+
+        /**
+         * A PATTERN'S DECLARATIONS, BOUND BEFORE ANY INSTRUCTION BINDS: an argument written X::T@A ("A is X", a generic
+         * name over a concrete type) pins A, so every use of A, earlier or later in the sequence, answers to it. A bare
+         * A::T is a label (its tid is its own generic name) and declares nothing. The binding {@link #bindGenerics}
+         * starts from, for the compiler's binder and for {@link Code#test} alike.
+         *
+         * @return the generics the pattern declares, or null when it declares one generic as two types
+         */
+        public static Map<fURI, fURI> declarations(final List<Inst> pattern) {
+            final Map<fURI, fURI> generics = new HashMap<>();
+            final Deque<Obj> pending = new ArrayDeque<>(pattern);
+            while (!pending.isEmpty()) {
+                final Obj next = pending.pop();
+                if (next.isObjInst())
+                    next.asInst().args().elements().forEach(pending::push);
+                else if (next.isCode())
+                    next.asCode().insts().forEach(pending::push);
+                else if (next.isType() && null != next.vid() && next.vid().one().isGeneric() && !next.tid().one().isGeneric()) {
+                    // ONE LETTER, ONE MEANING: a pattern declaring one generic as two types contradicts itself
+                    final fURI prior = generics.putIfAbsent(next.vid().one(), next.tid().one());
+                    if (null != prior && !prior.equals(next.tid().one()))
+                        return null;
+                }
+            }
+            return generics;
         }
 
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {

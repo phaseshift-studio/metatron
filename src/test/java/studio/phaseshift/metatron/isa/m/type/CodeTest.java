@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -98,5 +99,70 @@ public class CodeTest extends AbstractMetatronTest {
         assertEquals(lhs, empty.apply(lhs), "ε is the identity morphism, never the annihilator");
         assertEquals(lhs, identity.apply(lhs), "a bare id is the identity morphism");
         assertEquals(empty.apply(lhs), identity.apply(lhs), "code([]) and code([id]) are the same morphism");
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // a code tests a code pattern instruction by instruction, one binding of its generics for the whole pattern
+            "[plus(2).mult(2)]==[?(plus(int::T@A).mult(A::T))]                 % [plus(2).mult(2)]",
+            "[plus(2).mult('age')]==[?(plus(int::T@A).mult(A::T))]             % [noobj]",
+            // a use before its declaration answers to it too, and a nested instruction's declaration binds the pattern
+            "[plus(2).mult(3)]==[?(plus(A::T).mult(int::T@A))]                 % [plus(2).mult(3)]",
+            "[plus('age').mult(3)]==[?(plus(A::T).mult(int::T@A))]             % [noobj]",
+            "[plus(mult(2)).mult(2)]==[?(plus(mult(int::T@A)).mult(A::T))]     % [plus(mult(2)).mult(2)]",
+            "[plus(mult(2)).mult('age')]==[?(plus(mult(int::T@A)).mult(A::T))] % [noobj]",
+            // with no declaration, the first use binds the generic
+            "[plus(2).mult(2)]==[?(plus(A::T).mult(A::T))]                     % [plus(2).mult(2)]",
+            "[plus(2).mult('age')]==[?(plus(A::T).mult(A::T))]                 % [noobj]",
+            // the ops and the length must agree
+            "[plus(2).plus(2)]==[?(plus(int::T@A).mult(A::T))]                 % [noobj]",
+            "[plus(2).mult(2).plus(1)]==[?(plus(int::T@A).mult(A::T))]         % [noobj]",
+            // a pattern that declares one generic as two types matches nothing
+            "[plus(2).mult('age')]==[?(plus(int::T@A).mult(str::T@A))]         % [noobj]",
+            // a code and an inst test as the inst the code is: two instructions are not one
+            "[plus(2).mult(2)]==[?(plus(int::T))]                              % [noobj]",
+            "[plus(2)]==[?(plus(int::T).mult(int::T))]                         % [noobj]",
+            "[plus(2)]==[?(plus(int::T))]                                      % [plus(2)]",
+            // a lst select keeps the slot its filter rejects, as for any value
+            "[1]==[?(str::T)]                                                  % [noobj]",
+    }, delimiter = '%', quoteCharacter = '^')
+    public void testCodePattern(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, from either side of a test, and nothing longer or emptier is: asserted in
+     * Java because the parser reads {@code plus(2)} as the instruction itself, never as a one-instruction code.
+     */
+    @Test
+    public void testACodeAndAnInstTestAsTheInstTheCodeIs() {
+        final Code user = ObjmtronSerializer.parse("plus(2).mult(3)");
+        final Code pattern = ObjmtronSerializer.parse("plus(int::T).mult(int::T)");
+        final Inst plus = user.inst(0);
+        final Inst plusPattern = pattern.inst(0);
+        assertTrue(code(List.of(plus)).test(plusPattern), "a one-instruction code tests as its instruction");
+        assertTrue(plus.test(code(List.of(plusPattern))), "an inst tests a one-instruction code as its instruction");
+        assertFalse(user.test(plusPattern), "two instructions are not one");
+        assertFalse(plus.test(pattern), "nor against two instructions");
+        assertFalse(code(List.of()).test(plusPattern), "the empty code is no instruction");
+        assertTrue(user.test(pattern), "a code tests a code pattern");
+        final Obj bound = ObjmtronSerializer.parse("plus(int::T@A).mult(A::T)");
+        assertTrue(ObjmtronSerializer.parse("plus(2).mult(2)").test(bound), "A is int for the whole pattern");
+        assertFalse(ObjmtronSerializer.parse("plus(2).mult('age')").test(bound), "so mult's 'age' is not an A");
+        assertFalse(pattern.test(user), "a pattern's types do not test as values");
+    }
+
+    /**
+     * A CODE THAT IS A REFERENCE IS ASSUMED TO BE WHAT IT REFERS TO: a test can neither dereference {@code !*} nor
+     * evaluate the code to see what it would be. A category morphism's src and trgt are such references.
+     */
+    @Test
+    public void testAReferenceCodeIsAssumedLegal() {
+        final Code patterns = ObjmtronSerializer.parse("mult(int::T).mult(int::T)");
+        assertTrue(ObjmtronSerializer.<Code>parse("!*abc.plus(1)").test(patterns), "!* against a code pattern");
+        assertTrue(ObjmtronSerializer.<Code>parse("!*abc.plus(1)").test(patterns.inst(0)), "!* against an instruction");
+        assertTrue(ObjmtronSerializer.<Code>parse("!@abc.plus(1)").test(patterns), "!@ too");
+        assertTrue(ObjmtronSerializer.<Code>parse("!(plus(2)).plus(1)").test(patterns.inst(0)), "and !");
+        assertFalse(ObjmtronSerializer.<Code>parse("plus(1).plus(1)").test(patterns.inst(0)), "a code that is no reference is still tested");
     }
 }
