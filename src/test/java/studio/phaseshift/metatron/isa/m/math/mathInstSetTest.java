@@ -217,8 +217,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "pB::1.0.as(tB::T)            | *tB   | true",
     }, delimiter = '|')
     public void testAs(String code, String expectedType, boolean shouldMatch) {
-        Obj result = ObjmtronSerializer.parse(code);
-        Obj expected = ObjmtronSerializer.parse(expectedType);
+        final Obj result = ObjmtronSerializer.parse(code).apply();
+        final Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
@@ -442,8 +442,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "millis::86400000.0.as(day::T)   | *day      | true",
     }, delimiter = '|')
     public void testTimeAs(String code, String expectedType, boolean shouldMatch) {
-        Obj result = ObjmtronSerializer.parse(code);
-        Obj expected = ObjmtronSerializer.parse(expectedType);
+        final Obj result = ObjmtronSerializer.parse(code).apply();
+        final Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
