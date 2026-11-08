@@ -997,11 +997,6 @@ public final class mInsts {
                         .body((lhs, inst) -> objs(lhs.asRec().elements().map(Rel::second)))
                         .law(Law.pure)
                         .create(),
-                InstBuilder.build().tid(LSHIFT_INST_TID, "the parent of the lhs rec")
-                        .dom(REC_TID, "the lhs rec").rng(A.maybeSome(), "the parent obj").argLst()
-                        .body((lhs, inst) -> lhs.parent())
-                        .law(Law.pure)
-                        .create(),
                 InstBuilder.build().tid(PLUS_INST_TID, "deep merge the argument rec into the lhs rec")
                         .dom(REC_TID, "the lhs rec").rng(REC_TID, "the deep merge of the two recs")
                         .argLst(T(REC_TID.maybeMaybe()), "the rec to merge into the lhs")

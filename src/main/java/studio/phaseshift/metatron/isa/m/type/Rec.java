@@ -297,8 +297,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
         }
 
         public static Obj lshiftRec(final Rec lhs, final Obj arg) {
+            // << ASCENDS, for a rec as for every obj (a uri's parent path, lhs.parent()): its keys are its dom, not its
+            // parent. Answering the keys here made << mean two things on a rec, picked by how much the compiler knew
             if (arg.isNoObj())
-                return objs(lhs.asRec().keys());
+                return lhs.parent();
             else if (arg.isUri() && arg.uriValue().segments(0, "").equals(".."))
                 return arg.uriValue().segmentLength() > 1 ? auto_(map_(lhs.parent()).rshift_(arg.uriValue().pretract(1).toUri())).tryToInst() : lhs.parent();
             else return noobj();

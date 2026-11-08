@@ -624,7 +624,7 @@ to whatever `a` already is. So:
 | `_`       | `id()`           | identity function        |
 | `>>=`     | `update()`       | update-and-write-back    |
 | `>>`      | `rshift()`       | right-shift (drop last)  |
-| `<<`      | `lshift()`       | left-shift (drop first)  |
+| `<<`      | `lshift()`       | ascend to the parent     |
 | `>-`      | `merge()`        | flatten / merge barrier  |
 | `-<`      | `split()`        | distribute into branches |
 | `\|`      | `block()`        | block/prevent evaluation |

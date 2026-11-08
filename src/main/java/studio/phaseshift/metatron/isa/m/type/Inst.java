@@ -661,6 +661,12 @@ public interface Inst extends Call {
          * must agree on this. When only the gate admitted it, a generic {@code A => A} inst (side, filter, ...) right
          * after a seed resolved with {@code A} unbound, its rng fell back to {@code #}, and the reducer after it could
          * not resolve, so it ran per obj: {@code {1,2,3}.side(plus(1)).sum()} answered {@code {1,2,3}}, not {@code 6}.
+         * <p>
+         * A STREAM THAT MAY BE EMPTY IS LEFT TO RUNTIME. {@code gt(1)} holds for an lhs of at least one obj that may
+         * hold more ({@code {2}}, {@code {+}}, {@code {1,7}}), not for {@code {*}} or a page {@code {0,500}}, so the
+         * inst after such a stream (a read emits {@code #{*}}) resolves when its objs arrive and their own types pick
+         * the overload. Reading those ranges as bulk here commits at compile time against their declared element
+         * type, and 2026-11-07 that broke 36 tests (fibered recs, an inst body's {@code *1.as(int::T)}).
          */
         public static boolean appliesPerObject(final Obj lhs, final Obj dom) {
             return dom.c().isOne() && lhs.c().gt(cInt.ONE());
