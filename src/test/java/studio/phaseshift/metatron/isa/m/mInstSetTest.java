@@ -1190,6 +1190,22 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * A ONE-OBJ INSTRUCTION AFTER A STREAM OF UNKNOWN COUNT runs one obj at a time, as it does after a counted bulk:
+     * {@code barrier()} and {@code dedup()} emit {@code A{*}}, and what follows them must mean what it means without
+     * them ({@code barrier()} passes the objs through as is).
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "{1,2,3}.barrier().plus(1)                 % {2,3,4}",
+            "{1,2,2,3}.dedup().plus(1)                 % {2,3,4}",
+            "{[1,2],[3,4]}.>-                          % {1,2,3,4}",
+            "{[1,2],[3,4]}.barrier().>-                % {1,2,3,4}",
+    })
+    public void testOneObjInstructionAfterAStream(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
 
     @ParameterizedTest
     @TestData(value = {

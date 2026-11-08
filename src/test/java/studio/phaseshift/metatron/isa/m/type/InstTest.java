@@ -238,8 +238,16 @@ public class InstTest extends AbstractObjTest {
             "{1,2,3}     % test()                     % test?A<=A{2}()                               % null",
             "{1,2,3}     % test()                     % test?A<=A{0,4}()                             % test?int<=int{0,4}()",
             "{1,2,3,4,5} % test()                     % test?A<=A{0,4}()                             % null",
-            //    ... except a one-obj dom, which meets a bulk lhs one obj at a time ...
-            "int{2}::T   % test()                     % test?A<=A()                                  % test?int<=int()",
+            //    ... except a one-obj dom, which meets a bulk lhs one obj at a time: one of at least one obj that may hold
+            //    more ({2}). A stream that may be empty (the whole stream {*}, a page {0,500}, a maybe) is left to runtime,
+            //    where its objs' own types pick the overload (Inst.Helper.appliesPerObject). A barrier dom ({*}, an exact
+            //    {2}) is never per obj: it takes the stream whole, as it is ...
+            "int{2}::T     % test()                   % test?A<=A()                                  % test?int<=int()",
+            "int{*}::T     % test()                   % test?A<=A()                                  % null",
+            "int{0,500}::T % test()                   % test?A<=A()                                  % null",
+            "int{?}::T     % test()                   % test?A<=A()                                  % null",
+            "int{*}::T     % test()                   % test?A{*}<=A{*}()                            % test?int{*}<=int{*}()",
+            "int{*}::T     % test()                   % test?A<=A{2}()                               % null",
             //    ... and a noobj lhs, which fits any dom (A then binds from the argument)
             "noobj       % test(3)                    % test?A<=A{?}(A::T)                           % test?int<=int{?}(int::T)",
             //    the rng keeps its own coefficient over what the generic names ({0} is noobj, whatever A is)
@@ -259,12 +267,13 @@ public class InstTest extends AbstractObjTest {
             //    a declaration's coefficient belongs to its slot: B is int, so the rng B is one int; {+} admits no noobj
             "1           % test({5,6})                % test?B<=A(int{+}::T@B)                       % test?int<=int(int{+}::T)",
             "1           % test(noobj)                % test?B<=A(int{+}::T@B)                       % null",
-            //    a sequence: the next instruction's lhs is this one's rng, so a one-obj instruction after a stream meets
-            //    it one obj at a time ...
+            //    a sequence: the next instruction's lhs is this one's rng, so a one-obj instruction after a {+} stream takes
+            //    it one obj at a time, and a barrier after a barrier takes the whole stream ...
             "{1,2}       % test().test()              % test?A{+}<=A{+}().test?A<=A()                % test?int{+}<=int{+}().test?int<=int()",
-            //    ... OPEN: but not after a {*} stream. Inst.Helper.appliesPerObject asks lhs.c().gt(1), and cInt.compareTo
-            //    adds the min and max comparisons, so {*} (0 vs 1, then the unbounded max vs 1) is not greater than one,
-            //    nor is {?} or {0,4}. Should any stream that may hold more than one obj meet a one-obj dom per obj?
+            "{1,2}       % test().test()              % test?A{*}<=A{*}().test?A{*}<=A{*}()          % test?int{*}<=int{*}().test?int{*}<=int{*}()",
+            //    ... OPEN: a one-obj instruction after a stream that may be empty ({*}, a page {0,500}) does not bind here,
+            //    as the compiler leaves it to runtime. Reading those ranges as bulk (2026-11-07) committed at compile time
+            //    against weak element types and broke 36 tests, so a code pattern states {+} where it means a stream
             "{1,2}       % test().test()              % test?A{*}<=A{*}().test?A<=A()                % null",
     })
     public void testGenericBinding(final String lhs, final String user, final String candidate, final String bound) {
@@ -285,6 +294,34 @@ public class InstTest extends AbstractObjTest {
                 assertEquals(slot.apply(want.rng()), slot.apply(got.rng()), () -> "rng of " + got);
             }
         }
+    }
+
+    /**
+     * WHEN A ONE-OBJ DOM APPLIES PER OBJ at compile time: to an lhs of at least one obj that may hold more. A stream that
+     * may be empty is left to runtime, where its objs' own types pick the overload (a read emits {@code #{*}}). Each row:
+     * lhs % dom % whether the dom applies per obj.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            // bulk: at least one obj, and possibly more
+            "int{2}::T     % int::T        % true",
+            "int{+}::T     % int::T        % true",
+            "int{1,7}::T   % int::T        % true",
+            // a stream that may be empty: the whole stream {*} (= {0,}), a page, a maybe, zero
+            "int{*}::T     % int::T        % false",
+            "int{0,500}::T % int::T        % false",
+            "int{?}::T     % int::T        % false",
+            "int{0}::T     % int::T        % false",
+            // exactly one: the dom takes it as it is
+            "int::T        % int::T        % false",
+            // only a one-obj dom applies per obj: a barrier dom takes the stream whole, or a page of it
+            "int{*}::T     % int{*}::T     % false",
+            "int{*}::T     % int{0,500}::T % false",
+            "int{2}::T     % int{2}::T     % false",
+            "int{*}::T     % int{?}::T     % false",
+    })
+    public void testAppliesPerObject(final String lhs, final String dom, final boolean perObject) {
+        assertEquals(perObject, Inst.Helper.appliesPerObject(ObjmtronSerializer.parse(lhs.trim()), ObjmtronSerializer.parse(dom.trim())));
     }
 
     private static List<Inst> insts(final Obj code) {
