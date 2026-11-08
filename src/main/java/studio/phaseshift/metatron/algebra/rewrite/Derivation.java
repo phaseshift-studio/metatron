@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+
 /**
  * A derivation — the declaration that an instruction is definable as a composition of other instructions,
  * expressed as a rewrite pair over the generic fURIs ({@code A}…{@code G}).
@@ -53,27 +55,26 @@ public record Derivation(Code lhs, Code rhs) {
     }
 
     /**
-     * Bind the derived instruction — the lhs's last instruction — against {@code inst}: the same op address, and each
-     * argument matched with {@link #matchGenerics}. Null when they do not match.
+     * Bind the derived instruction — the lhs's last instruction — against {@code inst}: the same op address, and the
+     * arguments matched position by position ({@link #matchArgs}). Null when they do not match.
      */
     private Map<fURI, Obj> bind(final Inst inst) {
         final Inst derived = this.lhs.insts().getLast();
-        if (!derived.tid().basePath().equals(inst.tid().basePath()) || derived.args().count() != inst.args().count())
-            return null;
         final Map<fURI, Obj> bindings = new HashMap<>();
-        for (int i = 0; i < derived.args().count(); i++)
-            if (!matchGenerics(derived.arg(i), inst.arg(i), bindings))
-                return null;
-        return bindings;
+        return derived.tid().basePath().equals(inst.tid().basePath()) && matchArgs(derived, inst, bindings) ? bindings : null;
     }
 
     /**
-     * Match a generic pattern against a source, binding the generic fURIs ({@code A}, {@code B}, …) as they are
-     * met. A generic uri matches anything (binding it); an inst matches by tid and recurses into its args.
+     * Match a generic pattern against a source, binding the generic fURIs ({@code A}, {@code B}, …) by name as they are
+     * met. A generic uri matches anything (binding it), and an absent argument (noobj) only where the pattern admits
+     * zero; an inst matches by tid and recurses into its args.
      */
     public static boolean matchGenerics(final Obj pattern, final Obj source, final Map<fURI, Obj> bindings) {
         if (pattern.isUri() && pattern.uriValue().isGeneric()) {
-            final fURI key = pattern.uriValue();
+            // AN ABSENT ARGUMENT BINDS ONLY WHERE THE PATTERN ADMITS ZERO: order(B{?}) takes a bare order()
+            if (source.isNoObj() && !pattern.uriValue().c().isZeroable())
+                return false;
+            final fURI key = pattern.uriValue().one();
             final Obj prior = bindings.get(key);
             if (null == prior) {
                 bindings.put(key, source);
@@ -81,17 +82,13 @@ public record Derivation(Code lhs, Code rhs) {
             }
             return prior.equals(source);
         }
+        // an absent argument against anything else: only an unstructured pattern that admits zero takes it
+        if (source.isNoObj())
+            return !pattern.isInst() && !pattern.isCode() && source.test(pattern);
         if (pattern.isInst() && source.isInst()) {
             final Inst p = pattern.asInst();
             final Inst s = source.asInst();
-            if (!s.tid().test(p.tid()))
-                return false;
-            if (p.args().count() != s.args().count())
-                return false;
-            for (int i = 0; i < p.args().count(); i++)
-                if (!matchGenerics(p.arg(i), s.arg(i), bindings))
-                    return false;
-            return true;
+            return s.tid().test(p.tid()) && matchArgs(p, s, bindings);
         }
         if (pattern.isCode() && source.isCode()) {
             final List<Inst> ps = pattern.asCode().insts();
@@ -108,5 +105,19 @@ public record Derivation(Code lhs, Code rhs) {
         if (pattern.isInst() || pattern.isCode() || source.isInst() || source.isCode())
             return false;
         return source.test(pattern);
+    }
+
+    /**
+     * A PATTERN'S ARGUMENTS AGAINST AN INSTRUCTION'S, POSITION BY POSITION: an argument the instruction does not pass is
+     * noobj, which only a pattern argument admitting zero takes (noobj is within {@code B{0,1}}), and an argument the
+     * pattern does not name matches nothing.
+     */
+    private static boolean matchArgs(final Inst pattern, final Inst source, final Map<fURI, Obj> bindings) {
+        if (source.args().count() > pattern.args().count())
+            return false;
+        for (int i = 0; i < pattern.args().count(); i++)
+            if (!matchGenerics(pattern.arg(i), i < source.args().count() ? source.arg(i) : noobj(), bindings))
+                return false;
+        return true;
     }
 }

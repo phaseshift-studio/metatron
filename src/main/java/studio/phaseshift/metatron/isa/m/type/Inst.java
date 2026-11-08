@@ -1144,13 +1144,20 @@ public interface Inst extends Call {
          * reaches a nested arg like {@code inv(<B>)} inside {@code mult(...)}.
          */
         public static Obj substituteGenerics(final Obj obj, final Map<fURI, Obj> bindings) {
-            if (obj.isUri() && obj.uriValue().isGeneric() && bindings.containsKey(obj.uriValue()))
-                return bindings.get(obj.uriValue());
+            if (obj.isUri() && obj.uriValue().isGeneric() && bindings.containsKey(obj.uriValue().one()))
+                return bindings.get(obj.uriValue().one());
             if (obj.isInst()) {
                 final Inst inst = obj.asInst();
                 final Poly<?, ?> args = inst.args();
-                if (args.isLst())
-                    return inst.args(lst(args.lstValue().stream().map(a -> substituteGenerics(a, bindings)).toList()));
+                if (args.isLst()) {
+                    final List<Obj> given = args.lstValue();
+                    final List<Obj> bound = given.stream().map(a -> substituteGenerics(a, bindings)).toList();
+                    // A GENERIC BOUND TO AN ABSENT ARGUMENT STAYS ABSENT: kmerge(B{?}) with no B is kmerge(), not kmerge(noobj)
+                    int end = bound.size();
+                    while (end > 0 && bound.get(end - 1).isNoObj() && given.get(end - 1).isUri() && given.get(end - 1).uriValue().isGeneric())
+                        end--;
+                    return inst.args(lst(bound.subList(0, end)));
+                }
                 if (args.isRec()) {
                     final Map<Obj, Obj> newArgs = new LinkedHashMap<>();
                     args.recValue().forEach((k, v) -> newArgs.put(k, substituteGenerics(v, bindings)));

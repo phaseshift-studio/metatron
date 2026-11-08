@@ -1186,7 +1186,7 @@ public final class mInsts {
                                 lhs.stream().sorted(CommonUtil.ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
                                 lhs.stream().sorted(CommonUtil.ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
                         .law(Law.pure)
-                        .derivation(new Derivation(order_(uri(B)), split_(lst(id_().tryToInst())).kmerge_(uri(B))))
+                        .derivation(new Derivation(order_(uri(B.maybe())), split_(lst(id_().tryToInst())).kmerge_(uri(B.maybe()))))
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)
