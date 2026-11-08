@@ -505,33 +505,22 @@ public class DistributedComputingTest extends AbstractMetatronTest {
     private static final String SHARD_MASTER = "master";
 
     /**
-     * A KNOWN GAP, PINNED SO IT CANNOT ROT QUIETLY: the argless {@code order()} does not shard, while
-     * {@code order(>>)} does.
-     * <p>
-     * The {@code ?decq} claim for {@code order} declares a {@code Derivation} keyed on the SELECTOR-bearing spelling
-     * ({@code order(B) ↦ split([id]).kmerge(B)}) and {@code pure}, and no
-     * {@code monoidic}/{@code commutative}. {@code Law.Helper.combiner} therefore falls through to the
-     * derivation, and {@code Derivation.bind} refuses an arity mismatch
-     * ({@code derived.args().count() != inst.args().count()}: 1 vs 0). No combiner means no
-     * {@code law_shard} out-edge on the vertex -- correct, because the master cannot know the merge key
-     * without the selector. Declaring {@code order} self-combining would be UNSOUND, not optimistic: the
-     * master would re-apply {@code order} to a stream of sorted lsts and sort the lists instead of merging
-     * their runs.
-     * <p>
-     * The honest fix is to key declarations by (basePath, ARITY) as well as by dom/rng signature, and declare
-     * the argless derivation {@code order() ↦ split([id]).kmerge()}; claims are keyed by
-     * signature today, so the argless spelling has nowhere to put its own claim. Until then this test records
-     * that the selector-less spelling declines, so nobody "fixes" it by making order self-combining.
+     * AN ABSENT SELECTOR IS ADMITTED, SO THE ARGLESS {@code order()} SHARDS AS {@code order(_)} DOES. The {@code ?decq}
+     * claim for {@code order} declares the derivation {@code order(B{?}) ↦ split([id]).kmerge(B{?})}: a call passing no
+     * selector binds {@code B} to noobj, which {@code B{0,1}} admits (Marko 2026-11-08: a default is coefficient
+     * admission, not an arity-keyed claim), so {@code Law.Helper.combiner} reads {@code kmerge()} off the derivation and
+     * the vertex gets its {@code law_shard} out-edge. A passed selector is carried into the merge: the {@code neg()} row's
+     * runs are descending, and a {@code kmerge} merging them in natural order would interleave them. Declaring
+     * {@code order} self-combining would still be UNSOUND: the master would sort the sorted lsts instead of merging their
+     * runs.
      */
-   /* @Disabled("known gap, deliberately pinned: shrink this to the passing half once law rows are keyed by arity")
     @ParameterizedTest
     @CsvSource(value = {
-            // the selector-bearing spelling DOES distribute
-            "{1,2,3,4,5}.plus(10).order(>>)   % branch().kmerge() % [11,12,13,14,15]",
-            // the argless spelling does NOT: it stays whole at home, so its master is the original chain
-            "{1,2,3,4,5}.plus(10).order()     % start().plus().order()                    % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order(_)       % branch().kmerge() % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order()        % branch().kmerge() % [11,12,13,14,15]",
+            "{1,2,3,4,5}.plus(10).order(neg())   % branch().kmerge() % [15,14,13,12,11]",
     }, delimiter = '%')
-    void test_order_arity_keys_the_combiner(final String code, final String expectedRewriteForm, final String expectedResult) {
+    void test_order_recombines_with_or_without_a_selector(final String code, final String expectedRewriteForm, final String expectedResult) {
         checkCodeRewrite(LOG, code, expectedRewriteForm, expectedResult, true);
-    }*/
+    }
 }

@@ -1457,12 +1457,12 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .tid(KMERGE_INST_TID)
                             .dom(LST_TID.poly(A.maybeSome()).maybeSome(), "maybe some sorted lists")
                             .rng(LST_TID.poly(A.maybeSome()), "a lst k-way merged by the arg obj")
-                            .argLst(ALL_TYPE, "the obj to merge by")
+                            .argLst(T(ALL.maybe()), "the obj to merge by (natural order when absent)")
                             .desc("a sorted merge function \\(f(X) \\mapsto X'\\): k-way merges the lhs sorted lists by the arg obj")
                             .body((lhs, inst) -> {
                                 if (lhs.isNoObj())
                                     return noobj();
-                                final ObjProjectionComparator cmp = ObjProjectionComparator.of(inst.arg(0));
+                                final Comparator<Obj> cmp = inst.arg(0).isNoObj() ? ObjComparator.single() : ObjProjectionComparator.of(inst.arg(0));
                                 final List<List<Obj>> streams = lhs.elements()
                                         .map(o -> o.stream().flatMap(s -> s.<Obj>elements()).toList())
                                         .toList();

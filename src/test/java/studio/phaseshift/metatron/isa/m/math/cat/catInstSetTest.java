@@ -437,6 +437,39 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
+     * A DEFAULT IS COEFFICIENT ADMISSION: an argument a call does not pass is noobj, which only a pattern argument
+     * admitting zero takes (Marko 2026-11-08: noobj is within {@code B{0,1}}). {@code order} declares the derivation
+     * {@code order(B{?}) ↦ split([id]).kmerge(B{?})}, so a bare {@code order()} folds through {@code kmerge()} (the absent
+     * selector stays absent, never {@code kmerge(noobj)}) and a passed selector is carried over, while {@code minus(B)}
+     * does not take a bare {@code minus()} and no pattern takes an argument it does not name. The derivations are the
+     * ones the instructions declare ({@code ?decq}), so a claim that stops admitting the default fails here; the combiner
+     * this feeds is exercised end to end by {@code DistributedComputingTest}.
+     */
+    @Test
+    void testAnAbsentArgumentIsAdmittedByCoefficient() {
+        final Map<fURI, Derivation> declared = Law.Helper.derivations().stream().collect(Collectors.toMap(
+                d -> d.lhs().insts().getLast().tid().basePath(), d -> d, (first, other) -> first));
+        final Derivation order = declared.get(ORDER_INST_TID);
+        final Inst argless = order.fold(ObjmtronSerializer.<Call>parse("order()").tryToInst().asInst());
+        assertNotNull(argless, "a bare order() folds");
+        assertEquals(KMERGE_INST_TID, argless.tid().basePath(), "through kmerge");
+        assertEquals(0, argless.args().count(), "with the absent selector absent");
+        final Inst passed = ObjmtronSerializer.<Call>parse("order(neg())").tryToInst().asInst();
+        final Inst selected = order.fold(passed);
+        assertEquals(1, selected.args().count(), "a passed selector folds through kmerge(neg())");
+        assertEquals(passed.arg(0), selected.arg(0), "the selector is carried over");
+        assertNull(order.fold(ObjmtronSerializer.<Call>parse("order(neg(),neg())").tryToInst().asInst()),
+                "an argument the derivation does not name matches nothing");
+        final Derivation minus = declared.get(MINUS_INST_TID);
+        assertNull(minus.fold(ObjmtronSerializer.<Call>parse("minus()").tryToInst().asInst()), "minus(B) needs its argument: B admits no zero");
+        assertNotNull(minus.fold(ObjmtronSerializer.<Call>parse("minus(3)").tryToInst().asInst()), "and takes it when passed");
+        // the same rule without a generic: an unstructured pattern takes an absent argument only when it admits zero
+        assertTrue(Derivation.matchGenerics(T(INT_TID.maybe()), noobj(), new HashMap<>()), "int{?} admits an absent argument");
+        assertFalse(Derivation.matchGenerics(T(INT_TID), noobj(), new HashMap<>()), "int does not");
+        assertFalse(Derivation.matchGenerics(ObjmtronSerializer.parse("neg()"), noobj(), new HashMap<>()), "nor does an instruction");
+    }
+
+    /**
      * A DECLARED DEFINITION IS A REWRITE RULE — {@link Law.Helper#derivations()} (the list
      * {@code derivation_contraction} applies) must hold the equations instructions declare beside themselves
      * ({@code ?decq}), or a definition declared through the builder would silently stop contracting. The definition

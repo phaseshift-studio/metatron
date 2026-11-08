@@ -807,7 +807,7 @@ public enum Law {
          *   <li>a fold DEFINED as a pointwise map into one — its declared {@link Derivation}, {@code r ↦ map(g)·f} —
          *       recombines through {@code f}, read off {@code r}'s target object (the carrier {@code f} folds), with the
          *       generics bound from {@code keyed}'s own arguments — {@code count ↦ map(1)·sum},
-         *       {@code order(B) ↦ split([_])·kmerge(B)};</li>
+         *       {@code order(B{?}) ↦ split([_])·kmerge(B{?})}, which a bare {@code order()} binds too;</li>
          *   <li>a fold whose argument holds folds recombines POINTWISE through theirs — {@code group([k⇒h])}, see
          *       {@link #pointwise} — and its combiner is a chain rather than one instruction.</li>
          * </ul>
