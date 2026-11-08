@@ -36,21 +36,22 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * THE LAW VOCABULARY IS DATA — the law axis is no longer a per-law Java type, it is where the uri lives:
- * {@code /m/law/<label>} holds a plain {@code uri} for every {@link Law} constant, and the nominal type
- * {@code law::T} (registered at {@link Law#LAW_TID}) admits a uri exactly when its own label's address holds one. These
- * tests read the store, not a table:
+ * {@code /m/law/<label>} holds a plain {@code uri} for every {@link Law} constant, and the type {@code law::T}
+ * (registered at {@link Law#LAW_TID}) is the union of those labels (Marko, 2026-11-08). These tests read the store and
+ * the type:
  * <ol>
  *   <li>every constant is stored at its address and the wildcard {@code /m/law/+} read lists them;</li>
- *   <li>{@code law::T}'s predicate admits stored labels and refuses anything else;</li>
+ *   <li>{@code law::T} is a union of the labels: it admits every one of them and refuses anything else;</li>
  *   <li>each law publishes its documentation at {@code ?docq} and its shape declaration at {@code ?decq};</li>
  *   <li>registration is IDEMPOTENT — a second call adds no address to the retained log;</li>
- *   <li>the vocabulary is OPEN — a uri written at {@code /m/law/<label>} after boot is admitted with no code change,
- *       which is the acceptance criterion for the feature.</li>
+ *   <li>the vocabulary is CLOSED — a uri written at {@code /m/law/<label>} after boot is stored, and is no law: users
+ *       assert the existing labels and declare no new logics (ruling 2026-10-21).</li>
  * </ol>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -76,19 +77,20 @@ public class LawUriTest extends AbstractMetatronTest {
     }
 
     /**
-     * (b) THE TYPE'S PREDICATE IS THE STORE. A stored label is admitted, an unstored one is refused — the predicate
-     * answers the match (the stored uri) or {@code noobj()}, never a boolean.
+     * (b) THE TYPE IS A UNION OF THE LABELS (Marko, 2026-11-08): {@code law::T} is
+     * {@code uri::T[?union(absorbing, …, cyclic)]}, so reading the type says what it admits. Every constant's label is
+     * admitted, the last of the 22 too (a union is cut at no fixed arity), and anything it does not name is refused; the
+     * type answers the match or {@code noobj()}, never a boolean.
      */
     @Test
-    void testTheLawTypeAdmitsStoredLabelsAndRefusesOthers() {
+    void testTheLawTypeIsAUnionOfTheLabels() {
         final Type lawType = T(Law.LAW_TID);
         assertTrue(lawType.isType(), "law::T is registered at " + Law.LAW_TID + ", got " + lawType);
-        assertFalse(lawType.apply(uri("commutative")).isNoObj(),
-                "commutative is stored at /m/law/commutative, so law::T admits uri(commutative)");
-        assertFalse(lawType.apply(uri("pure")).isNoObj(),
-                "pure is stored at /m/law/pure, so law::T admits uri(pure)");
-        assertTrue(lawType.apply(uri("not_a_law")).isNoObj(),
-                "nothing is stored at /m/law/not_a_law, so law::T refuses uri(not_a_law)");
+        assertTrue(lawType.toString().contains("union("), "law::T states its labels as a union, got " + lawType);
+        for (final Law law : Law.values())
+            assertFalse(lawType.apply(uri(law.name())).isNoObj(), "law::T admits uri(" + law + ")");
+        assertTrue(lawType.apply(uri("not_a_law")).isNoObj(), "the union names no not_a_law, so law::T refuses it");
+        assertTrue(lawType.apply(str("pure")).isNoObj(), "a str is no uri, so law::T refuses 'pure'");
     }
 
     /**
@@ -130,19 +132,17 @@ public class LawUriTest extends AbstractMetatronTest {
     }
 
     /**
-     * (e) THE VOCABULARY IS OPEN — the acceptance criterion. A uri written at {@code /m/law/probe_law} after boot is
-     * admitted by {@code law::T} with no recompilation and no registry update: the store is the truth.
+     * (e) THE VOCABULARY IS CLOSED (ruling 2026-10-21; Marko, 2026-11-08): users assert the existing law labels and
+     * declare no new logics, so {@code law::T} is the union of the constants' labels. A uri written at
+     * {@code /m/law/probe_law} after boot is stored like any value, and {@code law::T} still refuses it.
      */
     @Test
-    void testANewlyWrittenLawIsAdmitted() {
+    void testAWrittenUriIsNoNewLaw() {
         final fURI probe = Law.LAW_TID.extend("probe_law");
-        assertTrue(Machine.read(probe).isNoObj(), "nothing is stored at the probe address before the write");
-        assertTrue(T(Law.LAW_TID).apply(uri("probe_law")).isNoObj(),
-                "probe_law is not a law until its address holds a uri");
         Machine.write(probe, uri("probe_law"));
-        final Obj admitted = T(Law.LAW_TID).apply(uri("probe_law"));
-        assertFalse(admitted.isNoObj(), "a newly written law is admitted: law is WHERE the uri lives");
-        assertEquals("probe_law", admitted.uriValue().name(), "the predicate answers the matched law");
+        assertEquals("probe_law", Machine.read(probe).uriValue().name(), "the store holds the written uri");
+        assertTrue(T(Law.LAW_TID).apply(uri("probe_law")).isNoObj(),
+                "law::T is the union of the declared labels, so probe_law is no law");
     }
 
     /**

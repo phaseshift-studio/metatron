@@ -87,38 +87,6 @@ public final class mTypes {
 
     public static final Type URI_TYPE = TypeBuilder.build().tid(URI_TID).vid(URI_TID).create();
 
-    /**
-     * {@code law::T} — the process-law vocabulary as DATA: a {@code uri} is a law exactly when its own label's address
-     * under {@link Law#LAW_TID} already holds a uri. The type is a NOMINAL refinement of {@code uri::T} at the
-     * vocabulary's own address ({@code /m/law}), registered with the base set so it mounts with {@code /m} — the law
-     * values live in the same jurisdiction, and the type is needed before the optional category renders it.
-     * <p>
-     * THE PREDICATE READS {@link Machine#current()}'s view through {@code Machine.read}: a law declared in a pushed
-     * frame resolves there (the base {@code /m} is inherited), exactly as the wildcard read of {@code /m/law/+} answers
-     * at the console — the read is the match, and no match is {@code noobj()}. The wildcard read is deliberate: the
-     * store is the truth, so there is no second index (no set, no bloom) to keep in sync with it, and ~22 labels are
-     * cheaper to scan than to hash. A predicate must never throw during boot, so a machine that is not up refuses
-     * rather than reading.
-     */
-    final static Set<String> LAWS_SET = Stream.of(Law.values()).map(Enum::name).collect(Collectors.toSet());
-    public static final Type LAW_TYPE = TypeBuilder.build()
-            .tid(URI_TID)
-            // NO DESCRIPTION HERE, deliberately: create() would compose a ?docq rec through QCollection.Docs, whose
-            // static initialization reads mInstSet.AS_INST_TID — a field this class initializes BEFORE — so a
-            // description here closes a class-initialisation cycle. The vocabulary's documentation is published by
-            // Law.register() (at the type's address and at every law's address) once the machine is up instead.
-            .vid(Law.LAW_TID)
-            .predicate((lhs, inst) -> {
-                if (!Machine.loaded() || null == lhs || !lhs.isUri())
-                    return noobj();
-                final String label = lhs.uriValue().name();
-                // the preconstructed set answers the built-in vocabulary without a read; a law WRITTEN at
-                // /m/law/<label> is admitted because law is where the uri lives, not a compiled-in list
-                return LAWS_SET.contains(label) || !Machine.read(Law.LAW_TID.extend(label)).isNoObj()
-                        ? lhs : noobj();
-            })
-            .create();
-
     public static final Type REL_TYPE = TypeBuilder.build().tid(REL_TID).vid(REL_TID).create();
 
     public static final Type LST_TYPE = TypeBuilder.build().tid(LST_TID).vid(LST_TID).create();
