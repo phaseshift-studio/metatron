@@ -1149,7 +1149,7 @@ public final class mInsts {
                         .create(),
                 InstBuilder.build()
                         .tid(BRANCH_INST_TID)
-                        .dom(A, "any obj")
+                        .dom(A.maybe(), "maybe an obj")
                         .rng(B.maybeSome(), "the branch results as objs")
                         // REC ARGS ARE ROUTES — `place => program`. The key is a TYPE (uri::T), not a name: the
                         // declaration states the SHAPE of the caller's keys, so the caller supplies them all and

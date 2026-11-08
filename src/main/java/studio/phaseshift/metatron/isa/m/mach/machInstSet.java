@@ -1076,7 +1076,7 @@ public class machInstSet extends AbstractInstSet {
                                     // unrun, the code ran only where a processor iterated it (Code.iterator() applies);
                                     // a cut applied as an inst, alone in an ordered branch's member, answered the
                                     // code itself, and the next inst failed to convert a code::T
-                                    return map_(lst(code(insts))).select_(lst(eval_(inst.arg(0).uriValue().origin()).tryToInst())).merge_().apply();
+                                    return eval_(inst.arg(0).uriValue().origin()).apply(code(insts));
                                 })
                                 .create(),
                         InstBuilder.build().tid(SPAWN_INST_TID)

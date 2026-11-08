@@ -2019,7 +2019,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                     InstBuilder.build()
                             .tid(TO_INST_TID)
                             .dom(A.maybe(), "any obj")
-                            .rng(A.maybe(), "writes the lhs obj to the arg uri")
+                            .rng(A.maybeSome(), "writes the lhs obj to the arg uri")
                             .argLst(T(URI_TID), "the uri to write to")
                             .desc("associates the lhs obj to the arg uri")
                             .body((lhs, inst) -> Machine.write(inst.arg(0).uriValue(), lhs))
