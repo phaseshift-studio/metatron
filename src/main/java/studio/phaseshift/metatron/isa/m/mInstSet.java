@@ -97,13 +97,6 @@ public class mInstSet extends AbstractInstSet {
 
     public static final Type URI_TYPE = mTypes.URI_TYPE;
 
-    /**
-     * {@code law::T} — the process-law vocabulary, declared in {@link mTypes} and MOUNTED WITH {@code /m}: the law
-     * values live at {@code /m/law/<label>}, so the type that admits them belongs to this set's jurisdiction (and is
-     * available before the optional category renders it).
-     */
-    public static final Type LAW_TYPE = mTypes.LAW_TYPE;
-
     public static final Type REL_TYPE = mTypes.REL_TYPE;
 
     public static final Type LST_TYPE = mTypes.LST_TYPE;
@@ -257,6 +250,23 @@ public class mInstSet extends AbstractInstSet {
 
     public static final Type ALL_TYPE = TypeBuilder.build().tid(ALL).vid(ALL).create();
     public static final Type ALL_MAYBE_TYPE = TypeBuilder.build().tid(ALL.maybe()).vid(ALL.maybe()).create();
+    /**
+     * {@code law::T} — the process-law vocabulary, MOUNTED WITH {@code /m}: the law values live at
+     * {@code /m/law/<label>}, so the type that admits them belongs to this set's jurisdiction (and is available before
+     * the optional category renders it). A UNION OF ITS LABELS (Marko, 2026-11-08):
+     * {@code uri::T[union(absorbing, …, cyclic)]@/m/law}, one uri per {@link Law} constant, so the type says what it
+     * admits. Users assert these labels and declare no new ones (ruling 2026-10-21), so the union is closed. It is
+     * declared here, past {@link #ISA_INST_TID} and {@link #UNION_INST_TID}: {@link mTypes} initializes while this set
+     * does and would read those constants at their defaults.
+     */
+    public static final Type LAW_TYPE = TypeBuilder.build()
+            .tid(URI_TID)
+            .vid(Law.LAW_TID)
+            // the union IS the predicate, a filter: it keeps a label and drops anything else, and a type refuses what its
+            // predicate drops. isa(union(…)) would not: isa tests the lhs against the union as a type, and the noobj a
+            // misfit yields passes the union's A{?} range
+            .predicate(union_(Arrays.stream(Law.values()).map(law -> (Obj) uri(law.name())).toList()).tryToInst())
+            .create();
     public static final Type SPACE_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
@@ -465,10 +475,10 @@ public class mInstSet extends AbstractInstSet {
                                 "a/b/c/                           [-- relative/branch uri            --]",
                                 "/a/b/c                           [-- absolute/node uri              --]",
                                 "<http://mtron.gov/tax?a=b&c=d>   [-- use < > when . or space in uri --]"),
-                        docWrap(LAW_TYPE, "a process law — a uri whose label names a value stored under /m/law",
-                                "law::commutative      [-- a law, because /m/law/commutative holds a uri --]",
-                                "law::not_a_law        [-- no law, because /m/law/not_a_law holds nothing --]",
-                                "*/m/law/+             [-- every stored process law                  --]"),
+                        docWrap(LAW_TYPE, "a process law — one of the labels the law vocabulary declares, a union of uris",
+                                "law::commutative      [-- a law: commutative is one of the union's labels --]",
+                                "law::not_a_law        [-- no law: the union names no such label          --]",
+                                "*/m/law/+             [-- every stored process law                       --]"),
                         docWrap(REL_TYPE, "a directed binary poly coupling two objs",
                                 "a=>b",
                                 "a=>b=>c=>d       [-- a=>(b=>(c=>d)) --]",

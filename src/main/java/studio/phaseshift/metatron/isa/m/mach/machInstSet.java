@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
@@ -402,7 +403,7 @@ public class machInstSet extends AbstractInstSet {
                                         uri(RESULT).maybe().asUri(), ALL_TYPE, // for lambda based rewrites
                                         uri(CUT).maybe().asUri(), rec(
                                                 uri(FORM).maybe().asUri(), URI_TYPE,
-                                                uri(LAW).maybe().asUri(), lst(mTypes.LAW_TYPE),
+                                                uri(LAW).maybe().asUri(), lst(mInstSet.LAW_TYPE),
                                                 uri(ROLE).maybe().asUri(), URI_TYPE),
                                         uri(WHERE).maybe(), lst(rec(
                                                 // the derived token is OPTIONAL now: a rec stated in the axes alone is

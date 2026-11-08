@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.algebra;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
@@ -31,6 +32,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -53,8 +56,9 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * {@link #address()} — one value per address under {@link #LAW_TID} ({@code /m/law/commutative},
  * {@code /m/law/monoidic}, …). Nothing is typed per law: "law" is WHERE the uri lives, and {@link #register()} writes
  * every constant there at boot (staged through {@link PendingWrites}, so the mount that owns {@code /m} publishes it).
- * The nominal type {@code law::T} lives beside it ({@code mTypes.LAW_TYPE}, at {@link #LAW_TID}) and admits a uri when
- * its own label's address already holds a uri — an open vocabulary that a later write extends without recompiling.
+ * The type {@code law::T} lives beside it ({@code mInstSet.LAW_TYPE}, at {@link #LAW_TID}): a union of the constants'
+ * labels, {@code uri::T[?union(absorbing, …, cyclic)]} (Marko, 2026-11-08). The vocabulary is closed: users assert these
+ * labels and declare no new logics (ruling 2026-10-21).
  *
  * <p>NOTES: the structural laws — semilattice, boolean, near_ring, field, rig, lattice, ring, group, … — are not
  * process laws: they name an algebraic <em>structure</em>, so they are theory types on {@code object::T}
@@ -173,7 +177,7 @@ public enum Law {
 
     /**
      * THE LAW VOCABULARY'S ADDRESS — {@code /m/law}. The nominal type {@code law::T} is registered at exactly this
-     * address ({@code mTypes.LAW_TYPE}), and every constant's value is written at {@link #address()} beneath it: one
+     * address ({@code mInstSet.LAW_TYPE}), and every constant's value is written at {@link #address()} beneath it: one
      * constant for the spelling, so the storage address and the type address can never drift apart.
      */
     public static final fURI LAW_TID = f("/m/law");
@@ -358,9 +362,7 @@ public enum Law {
      * table restating it.
      */
     public static void register() {
-        // the vocabulary itself, documented once at the type's address (mTypes.LAW_TYPE's builder cannot carry a
-        // description: composing a ?docq rec at class-init time would pull QCollection into mTypes' initialization and
-        // close the mTypes -> mInstSet.AS_INST_TID cycle)
+        // the vocabulary itself, documented once at the type's address beside mInstSet's docWrap of the type
         PendingWrites.write(PendingWrites.docq(LAW_TID),
                 QCollection.Docs.doc("the process-law vocabulary: one uri per law, stored at " + LAW_TID + "/<label>"));
         for (final Law law : Law.values()) {
@@ -527,6 +529,50 @@ public enum Law {
             final Obj derivation = declaration.atDirect(uri(DERIVATION));
             return derivation.isRec() && derivation.asRec().atDirect(uri(LHS)).isCode() && derivation.asRec().atDirect(uri(RHS)).isCode()
                     ? derivation.asRec() : noobjRec();
+        }
+
+        /**
+         * WHAT A DECLARATION MAY STATE — the refusal a {@code ?decq} write answers, or noobj when the declaration is sound
+         * (installed as {@code QCollection.VALIDATE}, so a refused claim never reaches the store):
+         * <ul>
+         *   <li>every law it claims is a {@code law::T}, the union of the vocabulary's labels (Marko, 2026-11-08), or the
+         *       law slot is {@code law::T}'s own address, any law;</li>
+         *   <li>a derivation is two codes, its lhs ends in the instruction it defines, and its sides declare the same
+         *       value names, so the equation runs both ways: the write-side twin of every name binding
+         *       ({@link Code.Helper#bind}).</li>
+         * </ul>
+         * Whether a law's shape names the instruction's contract is the census's question (LawCensusTest): a claim no
+         * shape names is a category error it reports, and some built-in claims await a shape of their own (mean's
+         * reduction), so refusing them here would drop declarations the census still allows.
+         */
+        public static Obj validate(final Rec declaration) {
+            final Obj laws = declaration.atDirect(uri(LAW));
+            if (!laws.isNoObj() && !(laws.isUri() && LAW_TID.equals(laws.uriValue()))) {
+                if (!laws.isLst())
+                    return fail(MTronException.of("the laws a declaration claims are a lst of law::T, not %s", laws));
+                for (final Obj law : laws.lstValue())
+                    if (!law.test(LAW_TYPE))
+                        return fail(MTronException.of("%s is no law::T, the union of the declared labels", law));
+            }
+            final Obj derivation = declaration.atDirect(uri(DERIVATION));
+            if (derivation.isNoObj())
+                return noobj();
+            final Obj lhs = derivation.isRec() ? derivation.asRec().atDirect(uri(LHS)) : noobj();
+            final Obj rhs = derivation.isRec() ? derivation.asRec().atDirect(uri(RHS)) : noobj();
+            if (!lhs.isCode() || !rhs.isCode() || lhs.asCode().insts().isEmpty())
+                return fail(MTronException.of("a derivation is [lhs=>code, rhs=>code], not %s", derivation));
+            final Obj obj = declaration.atDirect(uri(OBJ));
+            final Inst derived = lhs.asCode().insts().getLast();
+            // by NAME: the declaration's address states the namespace, and an lhs parsed before its instruction is
+            // registered carries the bare name
+            if (obj.isObjInst() && !derived.tid().name().equals(obj.tid().name()))
+                return fail(MTronException.of("a derivation's lhs ends in the instruction it defines: %s is not %s", derived, obj));
+            final Set<fURI> lhsNames = new HashSet<>();
+            final Set<fURI> rhsNames = new HashSet<>();
+            if (null == Inst.Helper.declarations(lhs.asCode().insts(), lhsNames) || null == Inst.Helper.declarations(rhs.asCode().insts(), rhsNames))
+                return fail(MTronException.of("a derivation declares one generic as two types: %s", derivation));
+            return lhsNames.equals(rhsNames) ? noobj() :
+                    fail(MTronException.of("a derivation's sides declare the same names, so it runs both ways: %s against %s", lhsNames, rhsNames));
         }
 
         /**

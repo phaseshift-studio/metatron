@@ -402,14 +402,15 @@ public class catInstSetTest extends AbstractInstSetTest {
 
     /**
      * A DEFINITION IS A CLAIM OF ITS OWN — the defining equation is likewise a relation beside the process laws, so an
-     * instruction stating only a derivation must be staged, published and served. The pair here defines a FOLD
-     * ({@code count ↦ map(1)·sum}), which is the harmless case: no group operation of the carrier appears in it, so
-     * the carrier's algebra states nothing over the equation and the served derivation is exactly the one written.
+     * instruction stating only a derivation must be staged, published and served. The equation is sound, so it is
+     * admitted ({@code Law.Helper.validate}): its lhs is the instruction it defines and both sides declare the same
+     * (no) names. It is INERT, its rhs naming an instruction no chain contains, so it never fires on another test's
+     * code; and no group operation of the carrier appears in it, so the served derivation is exactly the one written.
      */
     @Test
     void testInstBuilderDeclaresDerivation() {
-        final Code lhs = code(ObjmtronSerializer.<Call>parse("count()"));
-        final Code rhs = ObjmtronSerializer.parse("map(1).sum()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("built_derivation_test()"));
+        final Code rhs = ObjmtronSerializer.parse("map(1).quarrymark()");
         final Inst built = InstBuilder.build()
                 .tid(f("/m/inst/built_derivation_test"))
                 .dom(INT_TID.maybeSome()).rng(INT_TID)

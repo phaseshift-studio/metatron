@@ -277,6 +277,9 @@ public final class PendingWrites {
      */
     public static void install() {
         QCollection.LAZY_PUBLISH = PendingWrites::publish;
+        // the admitting hook: a declaration that states a law outside law::T, or an equation that cannot run both ways, is
+        // refused before the store holds it
+        QCollection.VALIDATE = Law.Helper::validate;
         // and the writer hook: a declaration that lands evicts what the algebra memos derived from the one it replaced
         QCollection.EVICT = (address, declaration) -> {
             TheoryHelper.evict(address);

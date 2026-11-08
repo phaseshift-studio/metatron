@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
 import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
@@ -76,7 +77,7 @@ public class catTypes {
         // published by Law.register()), so law::T is a nominal refinement of uri::T that reads the store
         // (mTypes.LAW_TYPE). The category RENDERS it — morphism::T.law and plan::T's cut hold law values — but does
         // not redeclare the vocabulary; the old union(Law.values()) list is gone.
-        catInstSet.LAW_TYPE = mTypes.LAW_TYPE;
+        catInstSet.LAW_TYPE = mInstSet.LAW_TYPE;
         return lst(
                 CATEGORY_TYPE = TypeBuilder.build()
                         .tid(REC_TID.poly(f(OBJ)))

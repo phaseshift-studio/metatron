@@ -544,6 +544,13 @@ public final class QCollection {
     public static volatile java.util.function.BiConsumer<fURI, Obj> EVICT = (address, declaration) -> {
     };
 
+    /**
+     * THE WRITER HOOK THAT ADMITS A DECLARATION: asked before the store holds a {@code decs::T}, it answers the refusal
+     * (a fail, which the write returns) or noobj. Installed by {@code PendingWrites}, for the reason {@link #LAZY_PUBLISH}
+     * is; the rules are {@code Law.Helper.validate}.
+     */
+    public static volatile java.util.function.Function<Rec, Obj> VALIDATE = declaration -> noobj();
+
     public static QProc docQ() {
         return docQ(noobj());
     }
@@ -670,6 +677,11 @@ public final class QCollection {
                     // every staged sibling of its operation (PendingWrites.publish), most of them already published
                     if (obj.equals(declarations.read(address)))
                         return obj;
+                    // ... and a new claim is stored only when it is sound: a law outside law::T, or an equation that cannot
+                    // run both ways, is refused (a claim the store holds was admitted when it landed)
+                    final Obj refused = obj.isNoObj() ? noobj() : VALIDATE.apply(obj.asRec());
+                    if (refused.isFail())
+                        return refused;
                     declarations.write(address, obj);
                     EVICT.accept(address, obj);
                     return obj;
