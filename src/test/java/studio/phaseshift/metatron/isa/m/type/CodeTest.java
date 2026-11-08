@@ -23,14 +23,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
@@ -164,5 +167,21 @@ public class CodeTest extends AbstractMetatronTest {
         assertTrue(ObjmtronSerializer.<Code>parse("!@abc.plus(1)").test(patterns), "!@ too");
         assertTrue(ObjmtronSerializer.<Code>parse("!(plus(2)).plus(1)").test(patterns.inst(0)), "and !");
         assertFalse(ObjmtronSerializer.<Code>parse("plus(1).plus(1)").test(patterns.inst(0)), "a code that is no reference is still tested");
+    }
+
+    /**
+     * A CODE'S TID IS GENERATIVE: its dom is its head instruction's dom and its rng its tail instruction's rng, read
+     * afresh each time, so a fluent's tid follows the instruction it appends.
+     */
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void testACodesTidIsGatheredFromItsHeadAndTail() {
+        final Code code = ObjmtronSerializer.parse("plus?str<=str('a').count?int<=str{*}()");
+        assertEquals(code.inst(0).tid().dom(), code.tid().dom(), "the dom is the head's");
+        assertEquals(code.inst(1).tid().rng(), code.tid().rng(), "the rng is the tail's");
+        assertNotEquals(code.tid().dom().basePath(), code.tid().rng().basePath(), "two different ends, so the test tells them apart");
+        final mFluent fluent = id_();
+        fluent.addInst(code.inst(1));
+        assertEquals(code.inst(1).tid().rng(), fluent.tid().rng(), "an appended tail gives the rng");
     }
 }

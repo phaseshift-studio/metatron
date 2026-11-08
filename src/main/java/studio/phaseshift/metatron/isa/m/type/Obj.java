@@ -2101,7 +2101,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .seed(jnt(0))
                             .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/))
                             .law(Law.pure)
-                            .derivation(new Derivation(start_(uri(A)).count_(), start_(uri(A)).map_(jnt(1)).sum_()))
+                            .derivation(new Derivation(count_(), map_(jnt(1)).sum_()))
                             .create(),
                     InstBuilder.build()
                             .tid(SKIP_INST_TID)

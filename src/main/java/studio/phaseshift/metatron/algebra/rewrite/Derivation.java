@@ -31,11 +31,11 @@ import java.util.Map;
  * A derivation — the declaration that an instruction is definable as a composition of other instructions,
  * expressed as a rewrite pair over the generic fURIs ({@code A}…{@code G}).
  *
- * <p>For example, {@code div} derives from {@code mult ∘ inv}: the {@code lhs} {@code start(A).div(B)} is the
- * derived instruction and the {@code rhs} {@code start(A).mult(inv(B))} is its primitive expansion. The
+ * <p>For example, {@code div} derives from {@code mult ∘ inv}: the {@code lhs} {@code div(B)} is the
+ * derived instruction and the {@code rhs} {@code mult(inv(B))} is its primitive expansion. The
  * category only <em>declares</em> that the rule is possible; an actual rewrite instruction applies it.
  *
- * <p>A derivation that defines a FOLD — {@code start(A)}, a pointwise run, then a fold, as
+ * <p>A derivation that defines a FOLD — a pointwise run, then a fold, as
  * {@code count ↦ map(1)·sum} — is also where the fold's combiner comes from: its partials recombine through the
  * defining fold ({@link Law.Helper#combiner}), so the combiner is read off the definition rather than declared.
  *

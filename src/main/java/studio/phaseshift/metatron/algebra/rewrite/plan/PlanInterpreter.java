@@ -1036,14 +1036,14 @@ public final class PlanInterpreter {
 
     /**
      * Contract each occurrence of a derivation's primitive composition back to its derived instruction —
-     * {@code mult·inv ↦ div}, {@code map(1)·sum ↦ count}. The composition is the rhs after its seed
-     * ({@code start(A)}), matched as a contiguous WINDOW of the chain: a one-instruction rhs nests its composition in
+     * {@code mult·inv ↦ div}, {@code map(1)·sum ↦ count}. The composition is the rhs, matched as a contiguous
+     * WINDOW of the chain: a one-instruction rhs nests its composition in
      * that instruction's args ({@code plus(map(B).neg())}), a longer one spans several, and matching only the rhs's
      * last instruction would contract every {@code sum} to {@code count}.
      */
     private static List<Inst> contract(final List<Inst> insts, final Derivation d) {
-        final List<Inst> rhs = afterSeed(d.rhs());
-        final List<Inst> lhs = afterSeed(d.lhs());
+        final List<Inst> rhs = d.rhs().insts();
+        final List<Inst> lhs = d.lhs().insts();
         if (rhs.isEmpty() || lhs.isEmpty())
             return insts;
         final List<Inst> out = new ArrayList<>();
@@ -1060,13 +1060,6 @@ public final class PlanInterpreter {
         return out;
     }
 
-    /**
-     * A derivation side without its seed — the instructions a chain matches, {@code start(A)} excluded.
-     */
-    private static List<Inst> afterSeed(final Code side) {
-        final List<Inst> insts = side.insts();
-        return !insts.isEmpty() && START_INST_TID.equals(insts.getFirst().tid().basePath()) ? insts.subList(1, insts.size()) : insts;
-    }
 
     /**
      * Whether a chain window matches a derivation side instruction-for-instruction, the generics binding across the

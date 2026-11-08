@@ -509,7 +509,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * {@code order(>>)} does.
      * <p>
      * The {@code ?decq} claim for {@code order} declares a {@code Derivation} keyed on the SELECTOR-bearing spelling
-     * ({@code start(A).order(B) ↦ start(A).split([id]).kmerge(B)}) and {@code pure}, and no
+     * ({@code order(B) ↦ split([id]).kmerge(B)}) and {@code pure}, and no
      * {@code monoidic}/{@code commutative}. {@code Law.Helper.combiner} therefore falls through to the
      * derivation, and {@code Derivation.bind} refuses an arity mismatch
      * ({@code derived.args().count() != inst.args().count()}: 1 vs 0). No combiner means no
@@ -519,7 +519,7 @@ public class DistributedComputingTest extends AbstractMetatronTest {
      * their runs.
      * <p>
      * The honest fix is to key declarations by (basePath, ARITY) as well as by dom/rng signature, and declare
-     * the argless derivation {@code start(A).order() ↦ start(A).split([id]).kmerge()}; claims are keyed by
+     * the argless derivation {@code order() ↦ split([id]).kmerge()}; claims are keyed by
      * signature today, so the argless spelling has nowhere to put its own claim. Until then this test records
      * that the selector-less spelling declines, so nobody "fixes" it by making order self-combining.
      */

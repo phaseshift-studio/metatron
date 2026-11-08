@@ -592,7 +592,7 @@ public enum Law {
             if (null == derivation)
                 return false;
             final List<Inst> steps = derivation.rhs().insts();
-            for (int i = 1; i < steps.size(); i++) {              // index 0 is the seed, never the definition
+            for (int i = 0; i < steps.size(); i++) {
                 final Inst step = steps.get(i);
                 if (step.tid().basePath().equals(op.basePath()) && step.args().elements().anyMatch(arg -> holds(arg, inv.basePath())))
                     return true;

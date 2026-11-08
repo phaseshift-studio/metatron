@@ -86,6 +86,22 @@ public class MCode extends MObj implements Code {
         return this.clone(this.jvm, tid, this.vid);
     }
 
+    /**
+     * A CODE'S SIGNATURE IS GENERATIVE: its dom is its head instruction's dom and its rng its tail instruction's rng
+     * ({@link Code#dom()}, {@link Code#rng()}), gathered on every read since a fluent appends to the instruction list in
+     * place. The stored tid carries the rest (the code's own coefficient and query).
+     */
+    @Override
+    public fURI tid() {
+        final List<Inst> insts = this.jvm();
+        if (insts.isEmpty())
+            return super.tid();
+        final fURI head = insts.getFirst().tid();
+        final fURI tail = insts.getLast().tid();
+        final fURI withDom = head.hasDom() ? super.tid().dom(head.dom()) : super.tid();
+        return tail.hasRng() ? withDom.rng(tail.rng()) : withDom;
+    }
+
     @Override
     public List<Inst> jvm() {
         return (List<Inst>) this.jvm;

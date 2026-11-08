@@ -234,8 +234,8 @@ public abstract class AbstractObjBuilder<B extends AbstractObjBuilder<B, O>, O e
      * declares its own ({@code minus} declares the same equation for {@code int}, {@code real} and {@code cmplx}).
      * {@code real}'s {@code div} and the generic {@code count}:
      * <pre>{@code
-     * .derivation(new Derivation(start_(uri(A)).div_(uri(B)), start_(uri(A)).mult_(map_(uri(B)).inv_())))
-     * .derivation(new Derivation(start_(uri(A)).count_(), start_(uri(A)).map_(jnt(1)).sum_()))
+     * .derivation(new Derivation(div_(uri(B)), mult_(map_(uri(B)).inv_())))
+     * .derivation(new Derivation(count_(), map_(jnt(1)).sum_()))
      * }</pre>
      */
     public B derivation(final Derivation derivation) {
