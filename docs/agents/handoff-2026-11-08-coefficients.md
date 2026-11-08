@@ -61,7 +61,7 @@ Operations on main (`11e50b25f`):
 | `plus` | interval addition; unbounded stays unbounded | `{**}+{1}` = `{**}`, `{*}+{-*}` = `{**}`, `{3}+{-3}` = `{0}` |
 | `neg` | `[−max, −min]` | `{-}` ↔ `{+}` |
 | `mult` | **interval product**: the four bound products, min to max, `0·∞ = 0` | `{2,3}·{-3,-2}` = `{-9,-4}`, `{-}·{-}` = `{+}`, `{+}·{0}` = `{0}` |
-| `div` | **mult's inverse** (the X with X·rhs = this); a negative divisor goes through `this.neg().div(rhs.neg())`; a zero bound throws; pinned conventions `0/0 = 0`, `∞/∞ = 1` | `{50,100}/{5,10}` = `{10}`, `{4,10}/{-2}` = `{-5,-2}` |
+| `div` | **mult's inverse** (the X with X·rhs = this); a divisor at or below zero flips both sides; over a non-negative divisor a negative bound divides by the divisor's other bound; a zero bound throws; pinned conventions `0/0 = 0`, `∞/∞ = 1` (and `-∞/∞ = -1`), each giving way to the other bound when it lies past; a divisor spanning zero still divides bound by bound | `{50,100}/{5,10}` = `{10}`, `{4,10}/{-2}` = `{-5,-2}`, `{4,9}/{-3,-2}` = `{-3,-2}` |
 | `abs` | set-wise | `{-}`→`{+}`, `{-*}`→`{*}`, `{??}`→`{?}`, `{-2,3}`→`{0,3}` |
 | `within` / `contains` | subset / superset — **the typing relation**; `isZeroable()` = 0 ∈ c | |
 | `span` | convex hull (used by LCD) | |

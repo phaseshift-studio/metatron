@@ -186,23 +186,34 @@ public class cInt implements C<Long, cInt> {
         return new cInt(first, second);
     }
 
+    /**
+     * The inverse of the interval product: the X with {@code X·rhs = this}, where there is one. A negative x times a
+     * non-negative {@code [c,d]} runs from x·d to x·c, so a negative bound divides by the divisor's other bound:
+     * {@code {4,9}/{-3,-2} = {-3,-2}}. A divisor spanning zero still divides bound by bound.
+     */
     @Override
     public cInt div(final cInt rhs) {
-        if ((null != this.min && !LONG_ZERO.equals(this.min) && LONG_ZERO.equals(rhs.min))
-                || (null != this.max && !LONG_ZERO.equals(this.max) && LONG_ZERO.equals(rhs.max)))
+        // x·rhs = this exactly when x·(-rhs) = -this, so a divisor at or below zero flips both sides
+        final boolean flip = null != rhs.max && rhs.max <= 0L && !rhs.isZero();
+        final cInt lhs = flip ? this.neg() : this;
+        final cInt divisor = flip ? rhs.neg() : rhs;
+        final boolean nonNegative = null != divisor.min && divisor.min >= 0L;
+        final boolean minByMax = nonNegative && (null == lhs.min || lhs.min < 0L);
+        final Long minRHS = minByMax ? divisor.max : divisor.min;
+        final Long maxRHS = nonNegative && null != lhs.max && lhs.max < 0L ? divisor.min : divisor.max;
+        if ((!LONG_ZERO.equals(lhs.min) && LONG_ZERO.equals(minRHS))
+                || (!LONG_ZERO.equals(lhs.max) && LONG_ZERO.equals(maxRHS)))
             throw MTronException.of("unable to divide {%s} by {%s}: a zero has no inverse", this, rhs);
-        // div undoes mult (x·rhs = this), and x·rhs = this exactly when x·(-rhs) = -this
-        if (rhs.isNeg())
-            return this.neg().div(rhs.neg());
-        final Long minRHS = rhs.min == null ? null : rhs.min;
-        final Long maxRHS = rhs.max == null ? null : rhs.max;
-        final Long newMin = (this.min == null && minRHS == null) ?
-                Long.valueOf(1L) : ((this.min == null || minRHS == null) ?
-                null : (this.min == 0 && minRHS == 0 ? 0L : this.min / minRHS));
-        final Long newMax = (this.max == null && maxRHS == null) ?
-                Long.valueOf(1L) : ((this.max == null || maxRHS == null) ?
-                null : (this.max == 0 && maxRHS == 0 ? 0L : this.max / maxRHS));
-        return new cInt(newMin, newMax);
+        // zero over anything is zero (0/0 = 0), and an unbounded bound on either side stays unbounded
+        final Long newMin = LONG_ZERO.equals(lhs.min) ? LONG_ZERO :
+                null == lhs.min || null == minRHS ? null : lhs.min / minRHS;
+        final Long newMax = LONG_ZERO.equals(lhs.max) ? LONG_ZERO :
+                null == lhs.max || null == maxRHS ? null : lhs.max / maxRHS;
+        // ∞ over ∞ admits any bound past ±1: ±1 by convention (∞/∞ = 1, -∞/∞ = -1), or the other bound if it lies past
+        return new cInt(
+                null == lhs.min && null == minRHS ?
+                        Long.valueOf(minByMax ? Math.min(-1L, null == newMax ? -1L : newMax) : 1L) : newMin,
+                null == lhs.max && null == maxRHS ? Long.valueOf(Math.max(1L, null == newMin ? 1L : newMin)) : newMax);
     }
 
     /**

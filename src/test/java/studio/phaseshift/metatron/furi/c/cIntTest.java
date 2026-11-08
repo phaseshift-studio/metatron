@@ -213,27 +213,58 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertThrows(MTronException.class, () -> cInt.of("12,-16"));
     }
 
-    @Test
-    public void testDiv() {
-        assertEquals(cInt.of(10), cInt.of(50, 100).div(cInt.of(5, 10)));
-        assertEquals(cInt.of(2), cInt.of(4).div(cInt.of(2)));
-        assertEquals(cInt.of(4), cInt.of(8).div(cInt.of(2)));
-        assertEquals(cInt.of(3), cInt.of(6).div(cInt.of(2)));
-        assertEquals(cInt.of(2), cInt.of(6).div(cInt.of(3)));
-        assertEquals(cInt.of(2), cInt.of(8).div(cInt.of(4)));
-        assertEquals(cInt.of("-*"), cInt.of("-*").div(cInt.of(2)));
-        assertEquals(cInt.of("*"), cInt.of("*").div(cInt.of(100)));
-        assertEquals(cInt.of("?"), cInt.of("*").div(cInt.of("*")));
-        assertEquals(cInt.of("?"), cInt.of("*").div(cInt.of("+")));
-        assertEquals(cInt.of(1), cInt.of("**").div(cInt.of("**")));
-        assertEquals(cInt.of("**"), cInt.of("**").div(cInt.of(2)));
-        assertEquals(cInt.of("??"), cInt.of("??").div(cInt.of(1)));
-        assertEquals(cInt.ZERO(), cInt.ZERO().div(cInt.ZERO()));
-        assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.ZERO()));
-        assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.MAYBE()));
-        assertEquals(cInt.of(-5, -2), cInt.of(4, 10).div(cInt.of(-2)));
-        assertEquals(cInt.of("-*"), cInt.of("*").div(cInt.of(-2)));
-        assertEquals(cInt.of(2, 3), cInt.of(-9, -4).div(cInt.of(-3, -2)));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "50,100 % 5,10   % 10",
+            "4      % 2      % 2",
+            "8      % 2      % 4",
+            "6      % 2      % 3",
+            "6      % 3      % 2",
+            "8      % 4      % 2",
+            "-*     % 2      % -*",
+            "*      % 100    % *",
+            "*      % *      % ?",
+            "*      % +      % ?",
+            "+      % +      % 1",
+            "**     % **     % 1",
+            "**     % 2      % **",
+            "??     % 1      % ??",
+            "0      % 0      % 0",
+            "0      % +      % 0",
+            // a divisor at or below zero flips both sides
+            "4,10   % -2     % -5,-2",
+            "*      % -2     % -*",
+            "-9,-4  % -3,-2  % 2,3",
+            "-4,0   % -?     % 0,4",
+            // a negative bound divides by the divisor's other bound
+            "4,9    % -3,-2  % -3,-2",
+            "-9,-4  % 2,3    % -3,-2",
+            "-4,6   % 1,2    % -2,3",
+            "-4,6   % 0,2    % -2,3",
+            // -∞/∞ = -1 mirrors ∞/∞ = 1, and either gives way to the other bound when it lies past
+            "-      % +      % -1",
+            "-*     % *      % -?",
+            "-*     % +      % -?",
+            "*      % -*     % -?",
+            "**     % *      % ??",
+            "6,     % 3,     % 2",
+            ",-6    % 1,     % -6",
+            ",-6    % ,-3    % 2",
+            // a zero has no inverse
+            "6      % 0      % <ERROR>",
+            "*      % 0      % <ERROR>",
+            "6      % ?      % <ERROR>",
+            "6      % -?     % <ERROR>",
+            "-4,-2  % 0,2    % <ERROR>"
+    }, delimiter = '%')
+    public void testDiv(final String lhs, final String rhs, final String expected) {
+        if ("<ERROR>".equals(expected))
+            assertThrows(MTronException.class, () -> cInt.of(lhs).div(cInt.of(rhs)));
+        else {
+            assertEquals(cInt.of(expected), cInt.of(lhs).div(cInt.of(rhs)));
+            // div undoes mult
+            assertEquals(cInt.of(lhs), cInt.of(expected).mult(cInt.of(rhs)));
+        }
     }
 
     @Test
