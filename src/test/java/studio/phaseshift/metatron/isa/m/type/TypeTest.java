@@ -29,9 +29,9 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -189,7 +189,7 @@ public class TypeTest extends AbstractMetatronTest {
             "{1,2,3,4}            | /m/int{3}                   | false",
             "{1,2,3,4}            | /m/int{0,5}                 | true",
             "{1,2,3,4}            | /m/int{*}                   | true",
-            "{1,2,3,'abc'}        | /m/int{*}                   | false",
+            "{1,2,3,'abc'}        | /m/{int{*},str{*}}          | false",
             "{1,2,3,'abc'}        | /m/+{*}                     | true",
             "{1,2,3,'abc'}        | /m/+{0,}                    | true",
             "{1,2,3,'abc'}        | /m/+{1,}                    | true",
