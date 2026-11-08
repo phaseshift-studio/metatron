@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.docs;
 
-import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.math.cat.catInstSet;
@@ -40,12 +40,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.DERIVATION;
-import static studio.phaseshift.metatron.Tokens.INST;
-import static studio.phaseshift.metatron.Tokens.INVERSE;
-import static studio.phaseshift.metatron.Tokens.LAW;
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.RHS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -1555,7 +1550,7 @@ public class InstSetDocGenerator {
                     <div class="d-flex align-items-center gap-2">
                         <input type="search" id="instset-inst-filter"
                             class="form-control form-control-sm instset-inst-filter-input"
-                            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+                            placeholder="filter by keyword" autocomplete="off" spellcheck="false"
                             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
                         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
                             aria-live="polite" aria-atomic="true">showing %d of %d</span>
@@ -1570,8 +1565,7 @@ public class InstSetDocGenerator {
                 <div class="container-xxl mb-4" id="instructions">
                     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">%d</span></h3>
                     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-                        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
-                        labelled with the set that declared it, and documented on that set's page as well.
+                        An inst::T contributed by another instruction set is documented at the set that declared it.
                     </p>
                     %s
                     %s
@@ -1869,7 +1863,7 @@ public class InstSetDocGenerator {
                     window.addEventListener('scroll', update, {passive: true});
                     window.addEventListener('resize', update);
                     update();
-
+                
                     // THE INSTRUCTION FILTER — a card is matched by its own visible text, and hiding it
                     // (rather than removing it) keeps every anchor and tab handler working while leaving
                     // no gap: `hidden` is display:none. The count is in CONTRACTS, not names, because one
