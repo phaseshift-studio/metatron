@@ -225,7 +225,8 @@ where `loop()` yields the current iteration count of the enclosing `repeat`.
 coefficient is the interference:
 
 ```mtron_pre
-{1,1,1,2,2,3}.plus(2).sum?int<=int{1,3}()
+[{2}5,{3}5,7]>-     [-- constructive --]
+[{2}5,{-2}5,7]>-    [-- destructive: the 5s cancel --]
 ```
 
 **Map, filter, projection, and reduce** (language reference section 8):
