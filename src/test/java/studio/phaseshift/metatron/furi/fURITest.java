@@ -594,12 +594,56 @@ public class fURITest extends AbstractMetatronTest {
             delimiter = '|', nullValues = "null")
     public void testParse(final String furi, final String scheme, final String host, final int port, final String path, final String coefficient, final String poly, final String query) {
         for (final fURI parse : Arrays.asList(f(furi), mParser.m_furi().parse(furi).<fURI>get())) {
-            final fURI components = fURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query), null);
+            final fURI components = fURI.of(null, scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query), null);
             LOG.debug("testing:" +
                     "\n\tparse    : {{b}}%s{{X}} " +
                     "\n\tcomponent: {{b}}%s{{X}}", parse, components);
             checkEquals(parse, components);
         }
+    }
+
+    /**
+     * THE SPAN, {@code {span}path[poly]{point}}: a leading coefficient counts how many in a row, beside the point. It
+     * leads a {@code /} or a lone atom that ends the path, both grammars read it, it prints first, and it is part of
+     * the uri's identity, while {@code basePath()} erases it with the other lessers.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{2}/m/int{3}     % 2   % 3   % /m/int{3}",
+            "{3}int{2}        % 3   % 2   % int{2}",
+            "{*}int           % *   % 1   % int",
+            "{1,3}/m/str      % 1,3 % 1   % /m/str",
+            "{0}/a            % 0   % 1   % /a",
+            "{2}/a/b[c]{?}    % 2   % ?   % /a/b[c]{?}",
+            "{-}/a?x=y        % -   % 1   % /a?x=y"},
+            delimiter = '%')
+    public void testSpan(final String furi, final String span, final String point, final String spanless) {
+        for (final fURI parsed : List.of(f(furi), mParser.m_furi().parse("<" + furi + ">").<fURI>get())) {
+            assertEquals(cInt.of(span), parsed.b());
+            assertEquals(cInt.of(point), parsed.c());
+            assertEquals(f(spanless), parsed.b(null));
+            assertNotEquals(f(spanless), parsed);
+            assertEquals(furi, parsed.toString());
+            assertEquals(parsed, f(parsed.toString()));
+            assertEquals(f(spanless).basePath(), parsed.basePath());
+        }
+    }
+
+    /**
+     * NOT A SPAN: a leading coefficient before an atom the path continues past is still the first segment's
+     * coefficient-marked atom, and with nothing after it, it is the coefficient.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{0}a/b           % {0}a|b   % 1",
+            "{2}c/d/{e,f}     % {2}c|d|{e,f} % 1",
+            "{*}              %          % *"},
+            delimiter = '%')
+    public void testSpanNotRead(final String furi, final String path, final String point) {
+        final fURI parsed = f(furi);
+        assertEquals(cInt.ONE(), parsed.b());
+        assertEquals(null == path ? List.of() : List.of(path.split("\\|")), parsed.path());
+        assertEquals(cInt.of(point), parsed.c());
     }
 
     // ── query parameter values (lst and rec) ────────────────────────

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.furi.form;
 
 import studio.phaseshift.metatron.furi.C;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -27,15 +28,18 @@ import java.util.Map;
 
 /*
  * fURI with Template support - extends the most complete fURI (SAPPCQfURI) and adds template storage.
- * Templates are ${expr} placeholders that get evaluated at the Uri (monadic) level.
+ * Templates are ${expr} placeholders that get evaluated at the Uri (monadic) level. It is also the one form that
+ * carries a span ({@link fURI#b()}): fURI.of routes any uri whose span is not one here.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class SAPPCQTfURI extends SAPPCQfURI {
 
     protected final List<Tuple.Pair<fURI.Component, String>> templates;
+    protected final cInt span;
 
-    public SAPPCQTfURI(final String scheme,
+    public SAPPCQTfURI(final cInt span,
+                       final String scheme,
                        final String host,
                        final int port,
                        final List<String> path,
@@ -45,6 +49,12 @@ public class SAPPCQTfURI extends SAPPCQfURI {
                        final List<Tuple.Pair<fURI.Component, String>> templates) {
         super(scheme, host, port, path, poly, coefficient, query);
         this.templates = null == templates ? List.of() : templates;
+        this.span = null == span ? cInt.ONE() : span;
+    }
+
+    @Override
+    public cInt b() {
+        return this.span;
     }
 
     @Override

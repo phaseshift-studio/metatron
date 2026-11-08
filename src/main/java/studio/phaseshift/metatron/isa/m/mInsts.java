@@ -685,6 +685,7 @@ public final class mInsts {
                         .body((lhs, inst) -> {
                             final Uri.Helper.UriProjected projected = Uri.Helper.project(lhs.uriValue(), inst.arg(0).orElse(rec0()));
                             return uri(fURI.of(
+                                    lhs.uriValue().b(),
                                     projected.scheme(),
                                     projected.host(),
                                     projected.port(),

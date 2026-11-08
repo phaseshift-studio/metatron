@@ -402,7 +402,8 @@ public class BasicMemory extends MRec implements Memory {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
         temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), external)).map(fURI::toString).toList()) : temp;
-        temp = temp.c(furi.c()).q(furi.qMap());
+        // the route was looked up by basePath, so every lesser it erased goes back on: coefficient, query and span
+        temp = temp.c(furi.c()).q(furi.qMap()).b(furi.b());
         temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), external)) : temp;
         temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), external)) : temp;
         return temp;

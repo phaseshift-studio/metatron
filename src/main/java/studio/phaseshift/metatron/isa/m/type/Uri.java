@@ -139,7 +139,7 @@ public interface Uri extends Mono, Comparable<Uri> {
             return f;
         final java.util.List<String> path = new java.util.ArrayList<>(f.path());
         path.set(0, "{" + c + "}" + path.get(0));
-        return fURI.of(f.scheme(), f.host(), f.port(), path, cInt.ONE(), f.poly(), f.qMap(), f.templates());
+        return fURI.of(f.b(), f.scheme(), f.host(), f.port(), path, cInt.ONE(), f.poly(), f.qMap(), f.templates());
     }
 
     @Override
@@ -270,7 +270,7 @@ public interface Uri extends Mono, Comparable<Uri> {
         // double-prepends the template path — so until that is resolved the rule lives at its call sites.
         if (null != host && !normalizedPath.isEmpty() && !normalizedPath.getFirst().isEmpty())
             normalizedPath.add(0, "");
-        return fURI.of(scheme, host, finalPort, normalizedPath, template.c(), template.poly(), query, null);
+        return fURI.of(template.b(), scheme, host, finalPort, normalizedPath, template.c(), template.poly(), query, null);
     }
 
     /**
