@@ -24,11 +24,10 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,9 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
         InstSetDocGenerator.documented(List.of());
     }
 
-    /** the contract geo's point kind declares at /m/inst/as — the row the issue is about. */
+    /**
+     * the contract geo's point kind declares at /m/inst/as — the row the issue is about.
+     */
     private static Inst geoPointCast(final List<Inst> declared) {
         return declared.stream()
                 .filter(inst -> inst.tid().toString().contains("/m/inst/as?")
@@ -163,7 +164,9 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
                 "the fragment is text: `<` must be escaped or the highlighter sees markup");
     }
 
-    /** "November 12, 2026" — the building machine's date, no minute. */
+    /**
+     * "November 12, 2026" — the building machine's date, no minute.
+     */
     @Test
     public void testTheFooterStatesWhenThePageWasBuilt() {
         final String built = InstSetDocGenerator.lastBuilt();
@@ -228,7 +231,9 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
                 "an element role is the literal, not a link: " + literal);
     }
 
-    /** The language's own spelling is its own TAB — one click away, never the only view. */
+    /**
+     * The language's own spelling is its own TAB — one click away, never the only view.
+     */
     @Test
     public void testTheMtronEncodingIsProvidedBesideTheWebView() {
         final Rec law = rec(uri("ring"), rec(uri("zero"), jnt(0)));
@@ -322,7 +327,7 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
     public void testTheInstructionFilterIsALabelledLiveSearchOverEveryContract() {
         final String html = InstSetDocGenerator.instFilterHtml(354);
         assertTrue(html.contains("type=\"search\""), "the filter is a search input: " + html);
-        assertTrue(html.contains("placeholder=\"filter insts…\""), "the placeholder names the filter: " + html);
+        assertTrue(html.contains("placeholder=\"filter by keyword\""), "the placeholder names the filter: " + html);
         assertTrue(html.contains("<label") && html.contains("for=\"instset-inst-filter\""),
                 "the input is labelled, not merely placeholdered: " + html);
         assertTrue(html.contains("aria-live=\"polite\""), "the count is a polite live region: " + html);
