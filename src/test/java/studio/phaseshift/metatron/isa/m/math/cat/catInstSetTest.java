@@ -29,7 +29,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
-import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -416,7 +415,7 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .dom(INT_TID.maybeSome()).rng(INT_TID)
                 .argLst()
                 .body((lhsObj, inst) -> lhsObj)
-                .derivation(new Derivation(lhs, rhs))
+                .derivation(lhs, rhs)
                 .create();
         final Rec served = Law.Helper.lawsOf(built.tid());
         assertFalse(served.isNoObj(), "an inst declaring only a derivation is served without a table row");
@@ -437,36 +436,39 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A DEFAULT IS COEFFICIENT ADMISSION: an argument a call does not pass is noobj, which only a pattern argument
-     * admitting zero takes (Marko 2026-11-08: noobj is within {@code B{0,1}}). {@code order} declares the derivation
-     * {@code order(B{?}) ↦ split([id]).kmerge(B{?})}, so a bare {@code order()} folds through {@code kmerge()} (the absent
-     * selector stays absent, never {@code kmerge(noobj)}) and a passed selector is carried over, while {@code minus(B)}
-     * does not take a bare {@code minus()} and no pattern takes an argument it does not name. The derivations are the
-     * ones the instructions declare ({@code ?decq}), so a claim that stops admitting the default fails here; the combiner
-     * this feeds is exercised end to end by {@code DistributedComputingTest}.
+     * A DEFAULT IS COEFFICIENT ADMISSION: an argument a call does not pass is noobj, which only a hole admitting zero
+     * takes (Marko 2026-11-08: noobj is within {@code #{0,1}}). The equations are the ones the instructions declare
+     * ({@code ?decq}), and a call tests the lhs as a value tests a type ({@link Obj#test}): {@code order(#{?}::T@b)} takes
+     * a bare {@code order()} and {@code order(neg())} but no argument it does not name, while {@code minus(#::T@b)}
+     * refuses a bare {@code minus()}. Run forward as an {@code update()} rule, the equation fills {@code kmerge}'s hole
+     * with what {@code order}'s matched: the selector carried over, or its absence ({@code kmerge(noobj)}, which kmerge
+     * reads as natural order). The combiner this feeds is exercised end to end by {@code DistributedComputingTest}.
      */
     @Test
     void testAnAbsentArgumentIsAdmittedByCoefficient() {
-        final Map<fURI, Derivation> declared = Law.Helper.derivations().stream().collect(Collectors.toMap(
-                d -> d.lhs().insts().getLast().tid().basePath(), d -> d, (first, other) -> first));
-        final Derivation order = declared.get(ORDER_INST_TID);
-        final Inst argless = order.fold(ObjmtronSerializer.<Call>parse("order()").tryToInst().asInst());
-        assertNotNull(argless, "a bare order() folds");
-        assertEquals(KMERGE_INST_TID, argless.tid().basePath(), "through kmerge");
-        assertEquals(0, argless.args().count(), "with the absent selector absent");
+        final Map<fURI, Rec> declared = Law.Helper.derivations().stream().collect(Collectors.toMap(
+                d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath(), d -> d, (first, other) -> first));
+        final Inst order = declared.get(ORDER_INST_TID).atDirect(uri(LHS)).asCode().insts().getLast();
+        assertTrue(ObjmtronSerializer.<Call>parse("order()").tryToInst().asInst().test(order), "a bare order() takes the absent selector");
         final Inst passed = ObjmtronSerializer.<Call>parse("order(neg())").tryToInst().asInst();
-        final Inst selected = order.fold(passed);
-        assertEquals(1, selected.args().count(), "a passed selector folds through kmerge(neg())");
-        assertEquals(passed.arg(0), selected.arg(0), "the selector is carried over");
-        assertNull(order.fold(ObjmtronSerializer.<Call>parse("order(neg(),neg())").tryToInst().asInst()),
+        assertTrue(passed.test(order), "and a passed one");
+        assertFalse(ObjmtronSerializer.<Call>parse("order(neg(),neg())").tryToInst().asInst().test(order),
                 "an argument the derivation does not name matches nothing");
-        final Derivation minus = declared.get(MINUS_INST_TID);
-        assertNull(minus.fold(ObjmtronSerializer.<Call>parse("minus()").tryToInst().asInst()), "minus(B) needs its argument: B admits no zero");
-        assertNotNull(minus.fold(ObjmtronSerializer.<Call>parse("minus(3)").tryToInst().asInst()), "and takes it when passed");
-        // the same rule without a generic: an unstructured pattern takes an absent argument only when it admits zero
-        assertTrue(Derivation.matchGenerics(T(INT_TID.maybe()), noobj(), new HashMap<>()), "int{?} admits an absent argument");
-        assertFalse(Derivation.matchGenerics(T(INT_TID), noobj(), new HashMap<>()), "int does not");
-        assertFalse(Derivation.matchGenerics(ObjmtronSerializer.parse("neg()"), noobj(), new HashMap<>()), "nor does an instruction");
+        final Inst minus = declared.get(MINUS_INST_TID).atDirect(uri(LHS)).asCode().insts().getLast();
+        assertFalse(ObjmtronSerializer.<Call>parse("minus()").tryToInst().asInst().test(minus), "minus(#::T@b) needs its argument: # admits no zero");
+        assertTrue(ObjmtronSerializer.<Call>parse("minus(3)").tryToInst().asInst().test(minus), "and takes it when passed");
+        // forward: the rhs's last instruction reads what the lhs's hole matched
+        final Rec forward = rec(code(List.of(order)), code(List.of(declared.get(ORDER_INST_TID).atDirect(uri(RHS)).asCode().insts().getLast())));
+        final Inst selected = Call.Helper.update(List.of(passed), forward).getFirst();
+        assertEquals(KMERGE_INST_TID, selected.tid().basePath(), "order(neg()) folds through kmerge");
+        assertEquals(passed.arg(0), selected.arg(0), "the selector is carried over");
+        final Inst argless = Call.Helper.update(List.of(ObjmtronSerializer.<Call>parse("order()").tryToInst().asInst()), forward).getFirst();
+        assertEquals(KMERGE_INST_TID, argless.tid().basePath(), "a bare order() folds through kmerge too");
+        assertTrue(argless.arg(0).isNoObj(), "with the absent selector absent");
+        // the same rule without a name: an unstructured pattern takes an absent argument only when it admits zero
+        assertTrue(noobj().test(T(INT_TID.maybe())), "int{?} admits an absent argument");
+        assertFalse(noobj().test(T(INT_TID)), "int does not");
+        assertFalse(noobj().test(ObjmtronSerializer.parse("neg()")), "nor does an instruction");
     }
 
     /**
@@ -484,8 +486,8 @@ public class catInstSetTest extends AbstractInstSetTest {
         // a synthetic declaration DUPLICATES THE WHOLE SERVED ENTRY, not only the facet under test: the ?decq rec
         // it writes REPLACES the inst's real declaration, so a partial copy would silently change the served claim —
         // and mod's laws, like int's minus's, come from ?decq alone
-        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(B)"));
-        final Code rhs = ObjmtronSerializer.parse("siftveil(B).quarrymark()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(#::T@b)"));
+        final Code rhs = ObjmtronSerializer.parse("siftveil(#::T@b).quarrymark()");
         final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
         final Law[] modLaws = Law.Helper.lawsOf(mod).atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
@@ -495,13 +497,13 @@ public class catInstSetTest extends AbstractInstSetTest {
                 .argLst(INT_TYPE)
                 .body((lhsObj, inst) -> lhsObj)
                 .law(modLaws)
-                .derivation(new Derivation(lhs, rhs))
+                .derivation(lhs, rhs)
                 .create();
         // an override is declared noobj first: the next read misses and publishes the re-declared claim
         Machine.write(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ), noobj());
         assertTrue(Machine.read(Inst.Helper.operationTid(built.tid()).addQ(QCollection.DECQ)).asRec().atDirect(uri(DERIVATION)).isRec(),
                 "the definition reaches ?decq beside the registered inst");
-        assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.lhs().toString().equals(lhs.toString())),
+        assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.atDirect(uri(LHS)).toString().equals(lhs.toString())),
                 "a declared definition feeds the rewrite list, got " + Law.Helper.derivations());
         // the SAME equation int's minus already declares, declared again at the same address: it must count once
         final fURI minus = MINUS_INST_TID.dom(INT_TID).rng(INT_TID);
@@ -509,21 +511,20 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertFalse(minusEntry.isNoObj(), "int's minus carries its declaration");
         final Obj equation = minusEntry.atDirect(uri(DERIVATION));
         assertTrue(equation.isRec(), "int's minus carries its defining equation");
-        final Derivation rowed = new Derivation(equation.asRec().atDirect(uri(LHS)).asCode(), equation.asRec().atDirect(uri(RHS)).asCode());
         final Law[] minusLaws = minusEntry.atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
         final long before = Law.Helper.derivations().stream()
-                .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
+                .filter(d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count();
         InstBuilder.build()
                 .tid(MINUS_INST_TID)
                 .dom(INT_TID).rng(INT_TID)
                 .argLst(INT_TYPE)
                 .body((lhsObj, inst) -> lhsObj)
                 .law(minusLaws)
-                .derivation(rowed)
+                .derivation(equation.asRec().atDirect(uri(LHS)).asCode(), equation.asRec().atDirect(uri(RHS)).asCode())
                 .create();
         assertEquals(before, Law.Helper.derivations().stream()
-                        .filter(d -> d.lhs().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
+                        .filter(d -> d.atDirect(uri(LHS)).asCode().insts().getLast().tid().basePath().equals(MINUS_INST_TID)).count(),
                 "the declared copy of a row's equation is deduped, not added");
     }
 

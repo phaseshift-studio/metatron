@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -197,11 +198,16 @@ public interface Call extends Obj {
          * a code (or an inst) replaces it, and a rec applies its own rules inside the run. The rules run in order, each
          * over the code the last one left, and a replacement is not matched again.
          * <p>
-         * NAMES AND TEMPLATES (Marko, 2026-11-06). A pattern element with a relative vid names what it matched
-         * ({@code plus(int::T@a)}, {@code 2@a}, {@code plus(int::T)@f}). The names are the change's own argument
+         * NAMES AND TEMPLATES (Marko, 2026-11-06). A pattern element with a value name names what it matched
+         * ({@code plus(int::T@a)}, {@code 2@a}, {@code plus(int::T)@f}), bound by the binder's walk as any instruction's
+         * names are ({@link Code.Helper#bind}): at any depth, a name met twice meeting the same obj, every name the
+         * pattern declares bound or the run does not match, and an all-caps name a generic, a type and not a value
+         * (2026-11-08). The names are the change's own argument
          * uris: a frame pushed on this thread's arg stack while the change is made, so threads never share them. A
          * change's {@code ${...}} argument is a template parameter, evaluated against what the run holds in that place
-         * and reading the names: {@code plus(int::T@a).plus(int::T@b) => plus(${*a.plus(*b)})}. All else is literal.
+         * and reading the names: {@code plus(int::T@a).plus(int::T@b) => plus(${*a.plus(*b)})}. A named hole in the
+         * change is what its name matched ({@code minus(#::T@b)} reads {@code ${*b}}), so a rule reversed is the same
+         * equation (2026-11-08). All else is literal.
          * <p>
          * COMPONENTS (Marko, 2026-11-06). A rule keyed by the uri {@code args}, not a pattern, updates the arguments of
          * every instruction in the run in place, as {@code >>=} updates a lst. So {@code [plus(int::T)=>[args=>[+10]]]}
@@ -241,14 +247,12 @@ public interface Call extends Obj {
                 final List<Inst> next = new ArrayList<>(scanned.size());
                 int i = 0;
                 while (i < scanned.size()) {
-                    final int at = i;
-                    if (!pattern.isEmpty() && at + pattern.size() <= scanned.size()
-                            // the code tests the pattern, as a value tests a type (1.test(int::T)), never the reverse
-                            && IntStream.range(0, pattern.size()).allMatch(k -> scanned.get(at + k).test(pattern.get(k)))) {
-                        final List<Inst> run = scanned.subList(at, at + pattern.size());
-                        final List<Rel> names = new ArrayList<>();
-                        IntStream.range(0, pattern.size()).forEach(k -> capture(pattern.get(k), run.get(k), names));
-                        Memory.argStack().push(names.stream().collect(new CommonUtil.RecCollector()));
+                    final List<Inst> run = !pattern.isEmpty() && i + pattern.size() <= scanned.size() ? scanned.subList(i, i + pattern.size()) : List.of();
+                    // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as a
+                    // value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
+                    final Map<fURI, Obj> names = run.isEmpty() ? null : Code.Helper.bind(run, pattern);
+                    if (null != names) {
+                        Memory.argStack().push(names.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
                         try {
                             next.addAll(update(run, rule.second()));
                         } finally {
@@ -264,27 +268,26 @@ public interface Call extends Obj {
         }
 
         /**
-         * The names a matched pattern binds: each element whose vid would resolve as a binding (relative, as
-         * {@code Memory} routes it) names what it matched, and an inst's arguments are walked beside the matched inst's.
-         * A type's own vid is absolute ({@code int::T} is {@code /m/int}), so only {@code @}-named elements bind.
-         */
-        private static void capture(final Obj pattern, final Obj matched, final List<Rel> names) {
-            final fURI name = pattern.vid();
-            if (null != name && !name.isAbsolute() && !name.hasScheme() && !name.hasHost())
-                names.add(rel(uri(name), matched));
-            if (pattern.isInst() && matched.isInst() && pattern.asInst().args().isLst())
-                IntStream.range(0, (int) pattern.asInst().args().count())
-                        .forEach(i -> capture(pattern.asInst().arg(i), matched.asInst().arg(i), names));
-        }
-
-        /**
          * A change's element made concrete against the run's element in its place. A templated uri argument
          * ({@code ${...}} or {@code {{{...}}}}, parsed as a uri) is a template parameter: its inner templates are
          * spliced first ({@link Str#expandTemplates}), then its expression is applied to the matched element, or to
          * noobj when it takes none, and the VALUE is the argument, not its text. A uri whose template is only part of
          * it splices text as a uri does. A parameter that cannot evaluate fails the update rather than staying put.
+         * <p>
+         * A NAMED HOLE READS ITS BINDING (Marko, 2026-11-08): a type in the change carrying a value name is what the
+         * pattern matched under that name, read as {@code ${*name}} reads it, so a rule and its reverse are one equation:
+         * {@code [plus(map(#::T@b).neg())=>minus(#::T@b)]} turns {@code plus(map(3).neg())} into {@code minus(3)}, and
+         * {@code [minus(#::T@b)=>plus(map(#::T@b).neg())]} turns it back. A code argument is walked instruction by
+         * instruction, as the binder walks one ({@link Inst.Helper#bindGenerics}).
          */
         private static Obj expand(final Obj change, final Obj matched) {
+            if (change.isType() && null != Inst.Helper.name(change))
+                return expand(uri("${*" + change.vid() + "}"), matched);
+            if (change.isCode())
+                return change.asCode().jvm(IntStream.range(0, change.asCode().insts().size())
+                        .mapToObj(k -> expand(change.asCode().inst(k),
+                                matched.isCall() && k < matched.asCall().insts().size() ? matched.asCall().insts().get(k) : noobj()).asInst())
+                        .toList());
             if (change.isUri() && change.asUri().hasTemplates()) {
                 final String text = change.uriValue().toString();
                 final int open = text.startsWith("${") ? 2 : text.startsWith("{{{") ? 3 : 0;

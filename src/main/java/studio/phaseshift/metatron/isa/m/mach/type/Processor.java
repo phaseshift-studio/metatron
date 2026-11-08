@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.mach.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -40,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * processor::T — the architecture: a machine component (never a thread). It is the schema of computation, one per
@@ -267,6 +270,10 @@ public interface Processor extends Component {
                     }
                     final Inst cin1 = cinst;
                     final Obj clhs1 = clhs;
+                    // A CALL THAT NAMES EVERY ARGUMENT KEYS ITS FRAME (Marko, 2026-11-08: names in any instruction): the
+                    // body reads (plus(2)@a) as *a, as it reads (a=>plus(2)). The names are the arguments' own, read before
+                    // they compute; the instruction's args stay positional for its function
+                    final List<fURI> names = Inst.Helper.slotNames(cin1.args());
                     cinst = ExecutionStack.frame(ExecutionStack.exec(ExecutionStack.ExState.resolve_inst_args, cin1.tid() + ""), () -> applyArgs(clhs1, cin1));
                     // an argument that failed to compute fails the inst, as a failed lhs already does: bound into an
                     // argument, the fail would be read as a plain value (false, nothing) and vanish
@@ -275,7 +282,9 @@ public interface Processor extends Component {
                         if (failed.isPresent())
                             return failed.get();
                     }
-                    Memory.argStack().push(cinst.args());
+                    final Inst computed = cinst;
+                    Memory.argStack().push(null == names || names.size() != computed.args().count() ? computed.args() :
+                            rec(IntStream.range(0, names.size()).mapToObj(i -> rel(uri(names.get(i)), computed.arg(i)))));
                     try {
                         final Inst cin2 = cinst;
                         final Obj clhs2 = clhs;

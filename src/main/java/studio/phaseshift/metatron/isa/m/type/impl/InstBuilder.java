@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
-import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection.Docs;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -309,7 +308,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
      * form it declared. A facet that was never declared is omitted rather than written as a null or an empty list,
      * so the rec carries exactly the claims the instruction made; a claim of nothing at all is the empty rec.
      */
-    private static Rec claimRec(final Inst inst, final List<Law> laws, final fURI inverse, final Derivation derivation,
+    private static Rec claimRec(final Inst inst, final List<Law> laws, final fURI inverse, final Rec derivation,
                                 final Inst.Form form) {
         final Map<Obj, Obj> facets = new LinkedHashMap<>();
         if (null != laws && !laws.isEmpty())
@@ -317,7 +316,7 @@ public final class InstBuilder extends AbstractObjBuilder<InstBuilder, Inst> {
         if (null != inverse)
             facets.put(uri(INVERSE), uri(inverse));
         if (null != derivation)
-            facets.put(uri(DERIVATION), rec(uri(LHS), derivation.lhs(), uri(RHS), derivation.rhs()));
+            facets.put(uri(DERIVATION), derivation);
         if (null != form)
             facets.put(uri(FORM), uri(form.name()));
         if (facets.isEmpty())
