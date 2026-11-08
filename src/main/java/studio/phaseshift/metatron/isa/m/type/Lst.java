@@ -188,7 +188,8 @@ public interface Lst extends Poly<Lst, List<Obj>> {
             for (int i = 0; i < rhs.lstValue().size(); i++) {
                 final Obj r = rhs.lstValue().get(i).autoResolve(this);
                 if (this.lstValue().size() <= i) {
-                    if (!r.c().isZeroable())
+                    // a missing index passes when its entry admits zero: by its point, or by its span (no index at all)
+                    if (!r.c().isZeroable() && !(r.isType() && r.tid().b().isZeroable()))
                         return false;
                     else continue;
                 }

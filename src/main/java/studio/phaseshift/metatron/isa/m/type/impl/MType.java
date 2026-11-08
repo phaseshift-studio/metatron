@@ -145,7 +145,8 @@ public class MType extends MObj implements Type {
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()
                 && RESOLVING.get().add(checkID.toString())) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             try {
-                Obj obj = Machine.read(checkID);
+                // a name is registered without a span ({2}nat is two nats in a row), so it is read without one
+                Obj obj = Machine.read(checkID.b(null));
                 // THE BRACKET IS AN ARGUMENT LIST, NOT AN ADDRESS. a declaration is registered under its NAME
                 // (person), while an instantiation spells its type arguments (person[ninja]). The address carries no
                 // bracket, so the read of the spelled form answers nothing for a name the registry does hold, and
@@ -153,13 +154,13 @@ public class MType extends MObj implements Type {
                 // declaration's ({@code Type.Helper.instantiate(registered.vid(), checkID)}). Ask again with the
                 // bracket erased -- exactly the erasure the bracket rule already defines for a type name.
                 if (!obj.isType() && checkID.hasPoly())
-                    obj = Machine.read(checkID.polyLess());
+                    obj = Machine.read(checkID.polyLess().b(null));
                 // clone before re-typing: self() mutates in place, and the obj just read is the SHARED
                 // registered type (often also referenced from another type's predicate). Re-typing it with
                 // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
                 // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
-                // predicate with it.
-                obj = obj.clone().selfTID(obj.tid().c(checkID.c()));
+                // predicate with it. The request's span goes on with its coefficient: both are the request's.
+                obj = obj.clone().selfTID(obj.tid().c(checkID.c()).b(checkID.b()));
                 if (obj.isType()) {
                     if (checkID.c().equals(obj.c()) &&
                             Objects.equals(obj.asType().predicate(), predicate) &&

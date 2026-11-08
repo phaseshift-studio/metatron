@@ -1820,7 +1820,34 @@ public class TypeTest extends AbstractMetatronTest {
             "[1,2]               % lst[{2}int,{*}#{0}]::T      % true",
             "[1,2,3]             % lst[{2}int,{*}#{0}]::T      % false",
             // ---- {0}::T is still the noobj type, not a span ----
-            "noobj               % {0}::T                      % true"},
+            "noobj               % {0}::T                      % true",
+            // ---- a named entry keeps its span ----
+            "[29,30]             % lst[{2}age]::T              % true",
+            "[29]                % lst[{2}age]::T              % false",
+            "[29,'x']            % lst[{2}age]::T              % false",
+            // ---- a type against a type: its span and its point are within the other's ----
+            "{2}int{3}::T        % {*}int{0,5}::T              % true",
+            "{2}int{3}::T        % {2}int{3}::T                % true",
+            "{3}int{2}::T        % {2}int{2}::T                % false",
+            "{2}int{6}::T        % {*}int{0,5}::T              % false",
+            "{2}int::T           % int::T                      % false",
+            "int::T              % {?}int::T                   % true",
+            "{?}int::T           % int::T                      % false",
+            "{2}int::T           % {2}str::T                   % false",
+            "{2}age::T           % {*}age::T                   % true",
+            "{3}age::T           % {2}age::T                   % false",
+            "{3}age::T           % {*}int::T                   % true",
+            // ---- a lst type against a lst type, entry by entry ----
+            "lst[{2}int{3}]::T   % lst[{*}int{0,5}]::T         % true",
+            "lst[{3}int{2}]::T   % lst[{2}int{2}]::T           % false",
+            "lst[{2}age]::T      % lst[{*}age]::T              % true",
+            "lst[int,int,int]::T % lst[{*}int]::T              % true",
+            "lst[int,str]::T     % lst[{*}int]::T              % false",
+            "lst[int]::T         % lst[int,{?}str]::T          % true",
+            "lst[int]::T         % lst[int,str]::T             % false",
+            "lst[int,str]::T     % lst[int,str]::T             % true",
+            // a type's bracket is its argument list: a claim with no acceptor fails, as before spans
+            "lst[int,str]::T     % lst[int]::T                 % false"},
             delimiter = '%')
     public void testTypeTestCoefficientPolynomial(final String instance, final String type, final boolean matches) {
         checkMatches(LOG, instance, type, matches);

@@ -528,19 +528,25 @@ public abstract class AbstractfURI implements fURI {
             if (rhsPoly.isEmpty()) // case 2: a specialization tested where the erased parameter is expected
                 return false;
             for (int i = 0, n = Math.max(lhsPoly.size(), rhsPoly.size()); i < n; i++) { // walk the CLAIMS
-                if (i >= rhsPoly.size()) // a claim with no acceptor at its position
+                // the acceptor at a claim's position; past the last one, the last one if its span is unbounded: a {*}
+                // tail claims the rest, as it does a lst's indices
+                final fURI rp = f(rhsPoly.get(Math.min(i, rhsPoly.size() - 1)));
+                if (i >= rhsPoly.size() && null != rp.b().max()) // a claim with no acceptor at its position
                     return false;
-                final fURI rp = f(rhsPoly.get(i));
                 if (rp.equals(ALL)) // # accepts this and every remaining claim
                     break;
-                if (i >= lhsPoly.size()) // an argument the lhs supplies no claim for
-                    return false;
+                if (i >= lhsPoly.size()) { // an argument the lhs supplies no claim for, unless its span admits none
+                    if (!rp.b().isZeroable())
+                        return false;
+                    continue;
+                }
                 if (rp.equals(WILD_ONE)) // + accepts exactly one
                     continue;
                 final fURI lp = f(lhsPoly.get(i));
                 // case 3: a generic rhs entry (A, B, ...) accepts any NAME within its coefficient; two generics
-                // still compare names, as a parameter claim is a specific variable, not any variable
-                if (!(rp.isGeneric() && !lp.isGeneric() ? lp.c().within(rp.c()) : lp.test(rp)))
+                // still compare names, as a parameter claim is a specific variable, not any variable. Either way a
+                // claim's span (how many in a row) is within its acceptor's, as its point is.
+                if (!lp.b().within(rp.b()) || !(rp.isGeneric() && !lp.isGeneric() ? lp.c().within(rp.c()) : lp.test(rp)))
                     return false;
             }
         }

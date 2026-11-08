@@ -403,6 +403,11 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        // A TYPE'S SPAN is how many in a row: a type is within another only when its span is, as its point is. A
+        // generic, the root and the type of types are not runs, so they take any span.
+        if (!this.tid().b().within(rhs.tid().b()) && !rhs.asType().isGeneric() && !rhs.asType().isRootType()
+                && !Tokens.TYPE_TID.equals(rhs.tid().basePath()))
+            return false;
         if (this.isFibered() && this.recFibers().stream().anyMatch(fiber -> fiber.test(rhs)))
             return true;
         if (rhs.asType().isNominal())
@@ -705,7 +710,7 @@ public interface Type extends Obj {
                     member.isRec() && poly.isFibered() ? testFibration(member.asRec(), poly)
                             : member.isLst() && poly.isTensored() ? testTensor(member.asLst(), poly)
                             : member.isRel() && poly.isPathed() ? testPaths(member.asRel(), poly)
-                            // a type against a type compares index by index, spans aside: a run is a value-side reading
+                            // a type against a type compares index by index: each index's span and point within
                             : !member.isType() || !poly.isTensored() || lst((List) member.asType().lstIndices()).test(lst((List) poly.lstIndices()))));
         }
 
@@ -761,6 +766,7 @@ public interface Type extends Obj {
             Set<Integer> reached = Set.of(0); // the indices the entries so far can end at
             for (final Type entry : entries) {
                 final cInt span = entry.tid().b();
+                final Obj slot = entry.tid(entry.tid().b(null)); // one index of the run: the entry without its span
                 final long least = Math.max(0L, null == span.min() ? 0L : span.min());
                 final Set<Integer> next = new TreeSet<>();
                 for (final int start : reached) {
@@ -769,7 +775,7 @@ public interface Type extends Obj {
                     if (null != span.max() && span.max() < least)
                         continue;
                     int end = start;
-                    while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(entry))
+                    while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(slot))
                         end++;
                     for (long k = least; start + k <= end; k++)
                         next.add(start + (int) k);
