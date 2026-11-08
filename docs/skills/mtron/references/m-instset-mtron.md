@@ -369,15 +369,17 @@ Distributes elements:
 
 ## 11. right-shift / left-shift (`>>`, `<<`)
 
-Traverse into structures:
+`>>` descends into an obj and `<<` ascends out of it. On a poly, `>>` selects children: by index on a `lst`, by key on
+a `rec`, the second of a `rel`. An obj reached by `>>` keeps a link to the poly it came from, and `<<` follows that link
+back. A `rec`'s keys and a `rel`'s first are its `dom()`, not its parent, so a literal has no parent.
 
 ### lsts
 
 ```mtron_pre
-[1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
-[1,2,[a=>3],4]>>2                  [-- [1,2] --]
-[1,2,[a=>3],4]>>(-2)               [-- [a=>3] (negative indicies) --]
-[1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris) --]
+[1,2,[a=>3],4]>>2                  [-- [a=>3]            (by index) --]
+[1,2,[a=>3],4]>>(-2)               [-- [a=>3]            (negative indices) --]
+[1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4}    (selectors are uris) --]
+[1,2,[a=>3],4]>>2.<<               [-- [1,2,[a=>3],4]    (back to the lst) --]
 ```
 
 ### recs
@@ -387,16 +389,27 @@ Traverse into structures:
 [a=>1,b=>2,c=>[d=>3]].rng()        [-- {1,2,[d=>3]}      (extract values) --]
 [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) --]
 [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
+[a=>1,b=>2,c=>[d=>[e=>3]]]>>c>>d.<<.<<  [-- [a=>1,b=>2,c=>[d=>[e=>3]]]  (ascend twice) --]
+```
+
+### rels
+
+```mtron_pre
+(1=>(2=>3))>>                      [-- (2=>3)            (the second) --]
+(1=>(2=>3)).dom()                  [-- 1                 (the first is the dom, not the parent) --]
+(1=>(2=>3))>>1.<<                  [-- (1=>(2=>3))       (back to the rel) --]
 ```
 
 ### uris
 
+On a uri both shifts are address arithmetic, and nothing resolves: `>>` enumerates the child uris in the address space,
+and `<<` drops trailing segments (a uri carries its parent in its segments).
+
 ```mtron_pre
-a/b/c<<                   [-- b/c    (drop leftmost segment) --]
-a/b/c>>                   [-- a/b    (drop rightmost segment) --]
-a/b/c<<1                  [-- b/c --]
-a/b/c>>1                  [-- a/b --]
-a/b/c<<3                  [-- <.>    (empty) --]
+a/b/c <<                  [-- a/b    (drop the rightmost segment) --]
+a/b/c << 2                [-- a --]
+a/b/c << 3                [-- <>     (empty) --]
+a/b/c/d << c/d            [-- a/b    (retract a matching postfix) --]
 ```
 
 ---
@@ -623,7 +636,7 @@ to whatever `a` already is. So:
 | `@uri`    | `at(uri)`        | anchor to uri location   |
 | `_`       | `id()`           | identity function        |
 | `>>=`     | `update()`       | update-and-write-back    |
-| `>>`      | `rshift()`       | right-shift (drop last)  |
+| `>>`      | `rshift()`       | descend to the children  |
 | `<<`      | `lshift()`       | ascend to the parent     |
 | `>-`      | `merge()`        | flatten / merge barrier  |
 | `-<`      | `split()`        | distribute into branches |
