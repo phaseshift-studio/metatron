@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.algebra;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.algebra.rewrite.plan.Plan;
+import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
@@ -49,11 +52,35 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
- * THE ALGEBRA MEMOS FOLLOW THE STORE: a {@code ?decq} write evicts what {@link TheoryHelper#instances} and
- * {@link Law.Helper#derivations()} derived from the declaration it replaced, before the write returns, so a declaration
- * made at runtime is read at once. A relative type is a machine's own, so its algebra is never memoized for others.
+ * THE ALGEBRA MEMOS FOLLOW THE STORE: a {@code ?decq} write evicts what {@link TheoryHelper#instances},
+ * {@link Law.Helper#derivations()} and {@link Law.Helper#equations} derived from the declaration it replaced, before the
+ * write returns, so a declaration made at runtime is read at once. A relative type is a machine's own, so its algebra is
+ * never memoized for others.
  */
 public class DeclarationMemoTest extends AbstractMetatronTest {
+
+    @Test
+    public void aLawDeclaredAtRuntimeLicensesItsEquation() {
+        // int mod declares pure alone, so mod·mod stays. Declared idempotent at runtime (x % m % m is x % m), the claim
+        // licenses its f·f ⇝ f at once; the restored claim takes the rule away again
+        final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
+        final Obj original = Machine.read(address);
+        final Plan idempotent = PlanRewriter.planOf("law_idempotent");
+        final Code chain = ObjmtronSerializer.parse("5.mod(3).mod(3)").asCode();
+        assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "mod declares no idempotent law");
+        final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
+        claim.put(uri(LAW), ObjmtronSerializer.parse("[pure,idempotent]"));
+        try {
+            Machine.write(address, noobj());
+            Machine.write(address, rec(claim, DECS_TID, null));
+            assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), PlanInterpreter.lower(idempotent, chain),
+                    "the declared law licenses its equation, got the table " + Law.Helper.equations(Law.idempotent));
+        } finally {
+            Machine.write(address, noobj());
+            Machine.write(address, original);
+        }
+        assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "the restored claim takes the rule away");
+    }
 
     /**
      * A COPY of a type's declared theory, two levels down. A builder-declared theory is the live Algebra the staged

@@ -225,11 +225,19 @@ public interface Call extends Obj {
          * ({@code derivation_contraction}), which is why it is asked only of a run that matched.
          */
         public static List<Inst> update(final List<Inst> insts, final Obj rules, final IntPredicate starts) {
+            return update(insts, rules, starts, Map.of());
+        }
+
+        /**
+         * The update over the names the run that led here bound, which a change's named holes read in Java
+         * ({@link #expand}): the rules are code, so matching and changing them evaluates nothing (Marko, 2026-11-08).
+         */
+        private static List<Inst> update(final List<Inst> insts, final Obj rules, final IntPredicate starts, final Map<fURI, Obj> names) {
             if (rules.isCall()) {
                 // the change laid over the run, each of its insts against the run's inst in its place
                 final List<Inst> template = rules.asCall().insts();
                 return IntStream.range(0, template.size())
-                        .mapToObj(k -> expand(template.get(k), k < insts.size() ? insts.get(k) : noobj()).asInst())
+                        .mapToObj(k -> expand(template.get(k), k < insts.size() ? insts.get(k) : noobj(), names).asInst())
                         .toList();
             }
             if (!rules.isRec())
@@ -260,11 +268,12 @@ public interface Call extends Obj {
                     final List<Inst> run = !pattern.isEmpty() && i + pattern.size() <= scanned.size() ? scanned.subList(i, i + pattern.size()) : List.of();
                     // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as a
                     // value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
-                    final Map<fURI, Obj> names = run.isEmpty() ? null : Code.Helper.bind(run, pattern);
-                    if (null != names && starts.test(i)) {
-                        Memory.argStack().push(names.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
+                    final Map<fURI, Obj> bound = run.isEmpty() ? null : Code.Helper.bind(run, pattern);
+                    if (null != bound && starts.test(i)) {
+                        // the frame is for a ${...} template, an expression over the names; a named hole reads bound itself
+                        Memory.argStack().push(bound.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
                         try {
-                            next.addAll(update(run, rule.second()));
+                            next.addAll(update(run, rule.second(), start -> true, bound));
                         } finally {
                             Memory.argStack().pop();
                         }
@@ -285,18 +294,20 @@ public interface Call extends Obj {
          * it splices text as a uri does. A parameter that cannot evaluate fails the update rather than staying put.
          * <p>
          * A NAMED HOLE READS ITS BINDING (Marko, 2026-11-08): a type in the change carrying a value name is what the
-         * pattern matched under that name, read as {@code ${*name}} reads it, so a rule and its reverse are one equation:
+         * pattern matched under that name, read off the run's binding in Java (a name the run did not bind is read as
+         * {@code ${*name}} reads it), so a rule and its reverse are one equation:
          * {@code [plus(map(#::T@b).neg())=>minus(#::T@b)]} turns {@code plus(map(3).neg())} into {@code minus(3)}, and
          * {@code [minus(#::T@b)=>plus(map(#::T@b).neg())]} turns it back. A code argument is walked instruction by
          * instruction, as the binder walks one ({@link Inst.Helper#bindGenerics}).
          */
-        private static Obj expand(final Obj change, final Obj matched) {
-            if (change.isType() && null != Inst.Helper.name(change))
-                return expand(uri("${*" + change.vid() + "}"), matched);
+        private static Obj expand(final Obj change, final Obj matched, final Map<fURI, Obj> names) {
+            final fURI name = change.isType() ? Inst.Helper.name(change) : null;
+            if (null != name)
+                return names.containsKey(name) ? names.get(name) : expand(uri("${*" + name + "}"), matched, names);
             if (change.isCode())
                 return change.asCode().jvm(IntStream.range(0, change.asCode().insts().size())
                         .mapToObj(k -> expand(change.asCode().inst(k),
-                                matched.isCall() && k < matched.asCall().insts().size() ? matched.asCall().insts().get(k) : noobj()).asInst())
+                                matched.isCall() && k < matched.asCall().insts().size() ? matched.asCall().insts().get(k) : noobj(), names).asInst())
                         .toList());
             if (change.isUri() && change.asUri().hasTemplates()) {
                 final String text = change.uriValue().toString();
@@ -328,7 +339,7 @@ public interface Call extends Obj {
             if (!change.isInst() || !change.asInst().args().isLst())
                 return change;
             return change.asInst().args(lst(IntStream.range(0, (int) change.asInst().args().count())
-                    .mapToObj(i -> expand(change.asInst().arg(i), matched.isInst() ? matched.asInst().arg(i) : noobj()))
+                    .mapToObj(i -> expand(change.asInst().arg(i), matched.isInst() ? matched.asInst().arg(i) : noobj(), names))
                     .toList()));
         }
     }

@@ -936,9 +936,58 @@ public class catInstSetTest extends AbstractInstSetTest {
             "\"ab\".ucase().ucase()          % start(\"ab\").ucase()    % \"AB\"",
             "false.plus(true).plus(true)    % start(false).plus(true) % true",
             "2.zero().zero()                % start(2).zero()          % 0",
+            // the table holds bool's plus(a)·plus(a) ⇝ plus(a), and int's plus declares no idempotent law
+            "5.plus(3).plus(3)              % start(5).plus(3).plus(3) % 11",
     }, delimiter = '%')
     public void testIdempotent(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
+    }
+
+    /**
+     * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-08) — {@link Law.Helper#equations} answers {@code [lhs => rhs]}
+     * over the op of every instruction whose claim states the law, one hole per argument slot pinning the pair's operands
+     * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. Each row runs
+     * the law's whole table over a bare chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level,
+     * so {@code plus(3).plus(3)} folds here under bool's idempotent plus, and only the carrier's law stops it in a rewrite
+     * ({@link #testIdempotent}). Each row: the law % the chain % the chain the table leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "involution  % plus(1).neg().neg().plus(2)   % plus(1).plus(2)",
+            "involution  % neg().neg().neg()             % neg()",
+            "involution  % neg().not()                   % neg().not()",
+            "idempotent  % ucase().ucase()               % ucase()",
+            "idempotent  % plus(3).plus(3)               % plus(3)",
+            // the operands are pinned: a pair with different operands is no f·f
+            "idempotent  % plus(3).plus(4)               % plus(3).plus(4)",
+            "monoidic    % sum().sum().plus(1)           % sum().plus(1)",
+            // a law with no local equation has no table
+            "poset       % is(gt(1)).is(gt(1))           % is(gt(1)).is(gt(1))",
+    }, delimiter = '%')
+    void testALawsEquationsAreData(final String law, final String chain, final String expected) {
+        List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
+        for (final Rec rule : Law.Helper.equations(Law.valueOf(law)))
+            out = Call.Helper.update(out, rule);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), code(out).tryToInst(), true);
+    }
+
+    /**
+     * AN EQUATION'S TERMS ARE UNSCALED — a run whose instructions carry a coefficient stays, since a rule's own terms are
+     * coefficient one and {@code f{2}·f{2}} is no {@code f·f}. Folded, {@code 5.neg{2}().neg{2}()} answered 5 where it
+     * means {@code {4}5}, and {@code 6.plus{2}(3.neg())} contracted to {@code minus(3)}, which answers one 3, not two.
+     * Each row's chain is rewritten as the category leaves it, then evaluated.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.neg{2}().neg{2}()              % start(5).neg{2}().neg{2}()              % {4}5",
+            "\"ab\".ucase().ucase{2}()          % start(\"ab\").ucase().ucase{2}()          % {2}\"AB\"",
+            "6.plus{2}(3.neg())               % start(6).plus{2}(3.neg())               % {2}3",
+            // and an unscaled run beside a scaled one still folds
+            "5.neg().neg().neg{2}()           % start(5).neg{2}()                       % {2}-5",
+    }, delimiter = '%')
+    void testAnEquationsTermsAreUnscaled(final String code, final String expected, final String expectedResult) {
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), catRewrite(ObjmtronSerializer.parse(code)).tryToInst(), true);
+        checkCodeParseApply(LOG, code, expectedResult);
     }
 
     /**

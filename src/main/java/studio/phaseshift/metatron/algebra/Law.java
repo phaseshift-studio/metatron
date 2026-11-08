@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -382,36 +384,37 @@ public enum Law {
     public static final class Helper {
 
         /**
-         * THE DERIVATIONS SNAPSHOT — every registered instruction's {@code ?decq} defining equation, keyed by the address
-         * it is declared at, with the staging revision and the derivation writes it was taken at. Retaken when a builder
-         * stages a claim (the revision moves), when a {@code ?decq} write can change an equation ({@link #evict}), or
-         * while the machine was not yet up.
+         * THE CLAIMS SNAPSHOT — the equations the registered instructions' {@code ?decq} claims state: each defining
+         * equation keyed by the address it is declared at, and each law's local equations ({@link #equations}), with the
+         * staging revision and the claim writes it was taken at. Retaken when a builder stages a claim (the revision
+         * moves), when a {@code ?decq} write lands ({@link #evict}), or while the machine was not yet up.
          */
-        private static volatile Map<fURI, Rec> DERIVATIONS = Map.of();
-        private static volatile List<PendingWrites.Write> DERIVATIONS_AT = null;
-        private static volatile long DERIVATIONS_SEEN = -1;
-        private static volatile boolean DERIVATIONS_LOADED = false;
-        private static final AtomicLong DERIVATION_WRITES = new AtomicLong();
+        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations) {
+        }
+
+        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of());
+        private static volatile List<PendingWrites.Write> CLAIMS_AT = null;
+        private static volatile long CLAIMS_SEEN = -1;
+        private static volatile boolean CLAIMS_LOADED = false;
+        private static final AtomicLong CLAIM_WRITES = new AtomicLong();
 
         /**
-         * A BOOT IS A FRESH WORLD — forget the derivations snapshot ({@code BootLoader.resetMemos}, before any set mounts).
+         * A BOOT IS A FRESH WORLD — forget the claims snapshot ({@code BootLoader.resetMemos}, before any set mounts).
          */
         public static void reset() {
-            DERIVATIONS = Map.of();
-            DERIVATIONS_AT = null;
-            DERIVATIONS_SEEN = -1;
-            DERIVATIONS_LOADED = false;
+            CLAIMS = new Claims(Map.of(), Map.of());
+            CLAIMS_AT = null;
+            CLAIMS_SEEN = -1;
+            CLAIMS_LOADED = false;
         }
 
         /**
-         * A {@code ?decq} DECLARATION LANDED at {@code address} ({@code QCollection.EVICT}): the snapshot is retaken on its
-         * next read when the write can change a defining equation — the claim carries one, clears the address (noobj, the
-         * override), or replaces an address the snapshot holds. A claim without one (most lazy publishes) leaves it be.
+         * A {@code ?decq} DECLARATION LANDED ({@code QCollection.EVICT}, which a claim the store already held never
+         * reaches): the snapshot is retaken on its next read, since any changed claim can change an equation, a law or
+         * the instructions that state one.
          */
-        public static void evict(final fURI address, final Obj declaration) {
-            if (declaration.isNoObj() || (declaration.isRec() && !declaredDerivation(declaration.asRec()).isNoObj())
-                    || DERIVATIONS.containsKey(Inst.Helper.operationTid(address)))
-                DERIVATION_WRITES.incrementAndGet();
+        public static void evict() {
+            CLAIM_WRITES.incrementAndGet();
         }
 
         /**
@@ -443,28 +446,43 @@ public enum Law {
         }
 
         /**
-         * EVERY DEFINING EQUATION, keyed by the address it is declared at — {@code derivation_contraction} and
-         * {@link #inverseForm} read the entries. A walk of the registered instructions through {@code Machine.read}, kept as the
-         * {@link #DERIVATIONS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression.
+         * EVERY EQUATION THE CLAIMS STATE — a walk of the registered instructions through {@code Machine.read}, kept as the
+         * {@link #CLAIMS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression. A claimant's
+         * local equations are built over its own op with one hole per argument slot, so the pair's operands are pinned
+         * equal: {@code involution} {@code f·f ⇝ ε} (the empty code), {@code idempotent} and {@code monoidic}
+         * {@code f·f ⇝ f}. Instructions sharing an op share the rule.
          */
-        private static Map<fURI, Rec> declaredDerivations() {
+        private static Claims claims() {
             final List<PendingWrites.Write> revision = PendingWrites.writes();
-            final long written = DERIVATION_WRITES.get();
-            if (DERIVATIONS_LOADED && revision == DERIVATIONS_AT && written == DERIVATIONS_SEEN)
-                return DERIVATIONS;
+            final long written = CLAIM_WRITES.get();
+            if (CLAIMS_LOADED && revision == CLAIMS_AT && written == CLAIMS_SEEN)
+                return CLAIMS;
             final boolean loaded = Machine.loaded();
-            final Map<fURI, Rec> snapshot = new LinkedHashMap<>();
+            final Map<fURI, Rec> derivations = new LinkedHashMap<>();
+            final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
             if (loaded)
                 for (final Inst inst : Machine.current().instset().insts()) {
                     final Obj claim = null == inst.tid() ? noobj() : Machine.read(stagingAddress(inst.tid()));
-                    final Rec derivation = claim.isRec() ? declaredDerivation(claim.asRec()) : noobjRec();
+                    if (!claim.isRec())
+                        continue;
+                    final Rec derivation = declaredDerivation(claim.asRec());
                     if (!derivation.isNoObj())
-                        snapshot.putIfAbsent(Inst.Helper.operationTid(inst.tid()), derivation);
+                        derivations.putIfAbsent(Inst.Helper.operationTid(inst.tid()), derivation);
+                    final Rec declared = declaredEntry(claim);
+                    final Inst op = instB(inst.tid().basePath(), lst(IntStream.range(0, (int) inst.args().count())
+                            .mapToObj(slot -> (Obj) T(ALL, f("a" + slot), null, null)).toList()));
+                    for (final Law law : List.of(Law.involution, Law.idempotent, Law.monoidic))
+                        if (declares(declared, law))
+                            equations.computeIfAbsent(law, key -> new LinkedHashSet<>())
+                                    .add(rec(code(List.of(op, op)), code(Law.involution == law ? List.<Inst>of() : List.of(op))));
                 }
-            DERIVATIONS = snapshot;
-            DERIVATIONS_AT = revision;
-            DERIVATIONS_SEEN = written;
-            DERIVATIONS_LOADED = loaded;
+            final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
+            equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
+            final Claims snapshot = new Claims(derivations, rules);
+            CLAIMS = snapshot;
+            CLAIMS_AT = revision;
+            CLAIMS_SEEN = written;
+            CLAIMS_LOADED = loaded;
             return snapshot;
         }
 
@@ -659,12 +677,12 @@ public enum Law {
          * the instruction whose inverse is {@code op}. Null when nothing declares one.
          * <p>
          * THE DEFINITION IS READ WHEREVER IT IS DECLARED — among the equations every registered instruction declares
-         * beside itself in {@code ?decq} ({@link #declaredDerivations}). The equation lives with the SIBLING it
+         * beside itself in {@code ?decq} ({@link #claims}). The equation lives with the SIBLING it
          * defines, not with {@code tid}: {@code mult}→{@code div} is a consequence of {@code mult_group} plus
          * {@code div ≡ mult ∘ inv}, and the equation is {@code div}'s claim, not {@code mult}'s.
          */
         private static fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {
-            for (final Map.Entry<fURI, Rec> entry : declaredDerivations().entrySet())
+            for (final Map.Entry<fURI, Rec> entry : claims().derivations().entrySet())
                 if (sameCarrier(entry.getKey(), tid) && defined(entry.getValue(), op, inv))
                     return entry.getKey();
             return null;
@@ -964,12 +982,22 @@ public enum Law {
         }
 
         /**
-         * ALL DERIVATIONS A REWRITE CAN APPLY — {@link #declaredDerivations}: the equations instructions declare beside
-         * themselves ({@code ?decq}), each keyed by the contract that declares it, in the order the machine's instset
-         * lists them. The key is where the equation speaks ({@link #selects}).
+         * ALL DERIVATIONS A REWRITE CAN APPLY — the equations instructions declare beside themselves ({@code ?decq}),
+         * each keyed by the contract that declares it, in the order the machine's instset lists them ({@link #claims}).
+         * The key is where the equation speaks ({@link #selects}).
          */
         public static Map<fURI, Rec> derivations() {
-            return Collections.unmodifiableMap(declaredDerivations());
+            return Collections.unmodifiableMap(claims().derivations());
+        }
+
+        /**
+         * A LAW'S LOCAL EQUATIONS AS DATA (Marko, 2026-11-08) — {@code [lhs => rhs]} over the op of every instruction whose
+         * claim states {@code law} ({@link #claims}): {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and
+         * {@code monoidic} {@code f·f ⇝ f}; no rule for any other law. A rewrite matches and applies them in Java
+         * ({@code Call.Helper.update}), where the law holds at the carrier.
+         */
+        public static List<Rec> equations(final Law law) {
+            return claims().equations().getOrDefault(law, List.of());
         }
 
         /**
