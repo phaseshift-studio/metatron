@@ -139,8 +139,6 @@ public @interface Training {
                 "%s evaluates to:"
         };
 
-        private static final Random RANDOM = new Random();
-
         private Extractor() {
         }
 
@@ -173,9 +171,10 @@ public @interface Training {
             } else {
                 // ── Fallback: infer two-column lhs/rhs ──
                 final int paramCount = method.getParameterCount();
+                final String[] rows = csv.value();
 
-                for (final String row : csv.value()) {
-                    final String[] parts = row.split(java.util.regex.Pattern.quote(delimiter));
+                for (int r = 0; r < rows.length; r++) {
+                    final String[] parts = rows[r].split(java.util.regex.Pattern.quote(delimiter));
 
                     if (parts.length < 2) continue;
 
@@ -193,7 +192,7 @@ public @interface Training {
 
                     final String opCtx = extractOperatorContext(clean(lhs));
                     entries.add(new Entry(
-                            fallbackInstruction(clean(lhs), clean(rhs)) + (opCtx.isEmpty() ? "" : " " + opCtx),
+                            fallbackInstruction(clean(lhs), methodKey + "#" + r) + (opCtx.isEmpty() ? "" : " " + opCtx),
                             clean(lhs),
                             clean(rhs),
                             methodKey
@@ -203,9 +202,14 @@ public @interface Training {
             return entries;
         }
 
-        private static String fallbackInstruction(String input, String output) {
-            String template = FALLBACK_TEMPLATES[RANDOM.nextInt(FALLBACK_TEMPLATES.length)];
-            return template.replace("%s", input);
+        /**
+         * Picks the fallback template from a stable seed so that the same method and row always
+         * render the same instruction. The corpus must be a function of the source tree, not of a
+         * random draw — otherwise two regenerations from the same commit differ.
+         */
+        private static String fallbackInstruction(final String input, final String seed) {
+            return FALLBACK_TEMPLATES[Math.floorMod(seed.hashCode(), FALLBACK_TEMPLATES.length)]
+                    .replace("%s", input);
         }
 
         private static final Pattern TEMPLATE_HOLE = Pattern.compile("\\{\\{\\{([^{}]+)\\}\\}\\}");

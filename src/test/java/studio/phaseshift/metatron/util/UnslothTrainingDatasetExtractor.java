@@ -20,12 +20,24 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.web.parser.ObjJSONSerializerTest;
 
-import java.io.FileWriter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +49,8 @@ import java.util.Set;
 public class UnslothTrainingDatasetExtractor {
 
     private static final GraphittyLogger LOG = new GraphittyLogger(UnslothTrainingDatasetExtractor.class);
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     // Lowercased raw class name → display-friendly name for instruction derivation
     private static final Map<String, String> RENAME = Map.of(
@@ -148,8 +162,9 @@ public class UnslothTrainingDatasetExtractor {
         // ── Declarative knowledge from the language reference docs ──
         addReferenceKnowledge(dataset);
 
-        String outputPath = Paths.get(System.getProperty("user.dir") + "/.metatron/skills/mtron/assets", "mtron_training_dataset.jsonl").toString();
-        writeJsonl(dataset, outputPath);
+        final Path outputPath = Paths.get(System.getProperty("user.dir"), ".metatron/skills/mtron/assets", "mtron_training_dataset.jsonl");
+        final byte[] jsonl = writeJsonl(dataset, outputPath);
+        final Path manifestPath = writeManifest(outputPath, jsonl, dataset.size());
 
         // ── Summary ──
         int totalMethods = allStats.stream().mapToInt(s -> s.totalMethods).sum();
@@ -184,6 +199,7 @@ public class UnslothTrainingDatasetExtractor {
         }
         LOG.none("----------------------------------------------\n");
         LOG.none("  Output: %s\n", outputPath);
+        LOG.none("  Manifest: %s\n", manifestPath);
         LOG.none("==============================================\n");
     }
 
@@ -402,7 +418,11 @@ public class UnslothTrainingDatasetExtractor {
         int rowsSkipped = 0;
         String simpleName = clazz.getSimpleName();
 
-        for (Method method : clazz.getDeclaredMethods()) {
+        final Method[] methods = clazz.getDeclaredMethods();
+        // Reflection order is unspecified; sort so that two regenerations agree byte for byte.
+        Arrays.sort(methods, Comparator.comparing(Method::getName).thenComparingInt(Method::getParameterCount));
+
+        for (Method method : methods) {
             totalMethods++;
             if (method.isAnnotationPresent(ParameterizedTest.class)) {
                 ptCount++;
@@ -425,21 +445,58 @@ public class UnslothTrainingDatasetExtractor {
         return new ClassStats(totalMethods, ptCount, rowsExtracted, rowsSkipped, methodsIgnored);
     }
 
-    private static void writeJsonl(List<Training.Entry> entries, String path) {
-        try (FileWriter writer = new FileWriter(path)) {
-            String lastSourceMethod = null;
-            for (Training.Entry entry : entries) {
-                if (entry.sourceMethod() != null && !entry.sourceMethod().equals(lastSourceMethod)) {
-                    // writer.write("# " + entry.sourceMethod() + "\n");
-                    lastSourceMethod = entry.sourceMethod();
-                }
-                final String instruction = INSTRUCTION_DIRECTIVE.isEmpty()
-                        ? entry.instruction()
-                        : INSTRUCTION_DIRECTIVE + "\n\n" + entry.instruction();
-                writer.write(new Training.Entry(instruction, entry.input(), entry.output(), entry.sourceMethod()).toJson() + "\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    /**
+     * Renders the corpus as JSONL bytes and writes it atomically. The same bytes are hashed into
+     * the manifest, so a model can be tied to the exact corpus it was trained on.
+     */
+    private static byte[] writeJsonl(List<Training.Entry> entries, Path path) {
+        final StringBuilder jsonl = new StringBuilder();
+        for (Training.Entry entry : entries) {
+            final String instruction = INSTRUCTION_DIRECTIVE.isEmpty()
+                    ? entry.instruction()
+                    : INSTRUCTION_DIRECTIVE + "\n\n" + entry.instruction();
+            jsonl.append(new Training.Entry(instruction, entry.input(), entry.output(), entry.sourceMethod()).toJson())
+                    .append('\n');
+        }
+        final byte[] bytes = jsonl.toString().getBytes(StandardCharsets.UTF_8);
+        writeAtomically(path, bytes);
+        return bytes;
+    }
+
+    /**
+     * Writes the artifact's identity next to it: content hash, size, entry count and the rule that
+     * selected instructions. {@code generatedAt} is deliberately the only non-reproducible field,
+     * and it lives here rather than in the corpus.
+     */
+    private static Path writeManifest(final Path dataset, final byte[] bytes, final int entries) {
+        final Map<String, Object> manifest = new LinkedHashMap<>();
+        manifest.put("artifact", dataset.getFileName().toString());
+        manifest.put("sha256", sha256(bytes));
+        manifest.put("bytes", bytes.length);
+        manifest.put("entries", entries);
+        manifest.put("instructionSelection", "Math.floorMod(hash(method#row), templates)");
+        manifest.put("generatedAt", Instant.now().toString());
+        final Path manifestPath = dataset.resolveSibling("mtron_training_dataset.manifest.json");
+        writeAtomically(manifestPath, GSON.toJson(manifest).getBytes(StandardCharsets.UTF_8));
+        return manifestPath;
+    }
+
+    private static void writeAtomically(final Path target, final byte[] bytes) {
+        try {
+            Files.createDirectories(target.getParent());
+            final Path tmp = Files.createTempFile(target.getParent(), ".mtron-dataset", ".tmp");
+            Files.write(tmp, bytes);
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (final IOException e) {
+            throw MTronException.of("could not write %s: %s", target, e.getMessage());
+        }
+    }
+
+    private static String sha256(final byte[] bytes) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (final NoSuchAlgorithmException e) {
+            throw MTronException.of("SHA-256 unavailable: %s", e.getMessage());
         }
     }
 
