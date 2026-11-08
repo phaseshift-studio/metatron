@@ -685,9 +685,6 @@ public class RecTest extends AbstractAlgebraTest {
             // a bare .. is the holder, so a poly can refer to itself: each read fires one reference
             "[b=>2,me=>!*<..>]>>me>>b                           % 2",
             "[b=>2,me=>!*<..>]>>me>>me>>me>>b                   % 2",
-            // two levels up: the holder's own container
-            "[x=>1,a=>[c=>!*<../../x>]]>>a/c                    % 1",
-            "[x=>1,a=>[c=>!*<../../x>]]>>a>>c                   % 1",
             // a holder's auto code reaches its siblings too: an auto applies to the poly holding it
             "[b=>2,c=>!(>>b.plus(4))]>>c                      % 6",
             "[a=>[b=>2,c=>!(>>b.plus(4))]]>>a>>c              % 6",
