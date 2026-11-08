@@ -133,6 +133,9 @@ public class LstTest extends AbstractAlgebraTest {
             "[1,2,[a=>3],4]>>2.<<                                                       % [1,2,[a=>3],4]",
             "[1,2,[a=>3],4]>>0.<<                                                       % [1,2,[a=>3],4]",
             "[1,2,[a=>3],4]>>0.<<5                                                      % noobj",
+            // a ..-led !* reads the lst holding it, by index
+            "[2,!*<../0>]>>1                                                              % 2",
+            "[[b=>2,c=>!*<../b>]]>>0>>c                                                   % 2",
             // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
     }, delimiter = '%')
     public void testAt(final String code, final String expected) {

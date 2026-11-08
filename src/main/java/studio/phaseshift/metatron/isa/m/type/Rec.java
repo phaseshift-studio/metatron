@@ -219,7 +219,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                 final cInt cKey = key.c();
                 final boolean isBranch = keyF.isBranch();
                 if (step.equals("..")) {
-                    result = arec.parent();
+                    // UP: the ancestor keeps its own link. The re-parenting below would point it back down at arec
+                    final Obj up = arec.parent();
+                    return singleSegment ? up.c(c -> c.mult(cKey)).as()
+                            : (OBJ) (up.isPoly() ? up.<Poly<?, ?>>as().at(uri(isBranch ? keyF.pretract(1).asBranch() : keyF.pretract(1))) : noobj());
                 } else if (step.equals("+") || step.equals("#")) {
                     result = objs(isBranch ?
                             arec.jvm().entrySet().stream().map(e -> rel(
