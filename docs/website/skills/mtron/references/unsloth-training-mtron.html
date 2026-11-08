@@ -493,7 +493,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </script>
 <main class="container my-4 flex-grow-1">    <div class="skill-doc mb-4">
         <h1 class="skill-title mb-1">unsloth-training-mtron</h1>
-        <small>Fine-tuning an LLM on mtron with Unsloth — training-data extraction from tests, Unsloth Studio, and Ollama deployment.</small><br/>
+        <small>Fine-tuning an LLM on mtron with Unsloth — verified training-data extraction from the test suite, Unsloth Studio, and Ollama deployment.</small><br/>
         <a href="unsloth-training-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>unsloth-training-mtron.md</a>
     </div>
     <div class="markdown-body">
@@ -503,107 +503,142 @@ reflection to Ollama deployment, using Unsloth Studio. Tested on a 64GB machine 
 <hr />
 <h3>1. Dataset Extraction</h3>
 <h4>Source</h4>
-<p><code>src/test/java/studio/phaseshift/metatron/util/UnslothTrainingDatasetExtractor.java</code></p>
-<p>Scans JUnit 5 <code>@ParameterizedTest</code> + <code>@CsvSource</code> methods across ~25 test classes. Each CSV row becomes one
-or more training entries. Entry generation is delegated to <code>Training.Extractor.from()</code> which handles:</p>
+<p><code>src/test/java/studio/phaseshift/metatron/util/UnslothTrainingDatasetExtractor.java</code> reflects over the
+JUnit 5 <code>@ParameterizedTest</code> + <code>@CsvSource</code> methods of 26 test classes. Each CSV row becomes one or more
+entries; entry generation is delegated to <code>Training.Extractor.from()</code>.</p>
+<h4>What a Row Claims</h4>
+<p>A corpus row claims exactly one thing:</p>
+<blockquote>
+<p><code>input</code>, parsed as mtron and applied, yields <code>output</code>.</p>
+</blockquote>
+<p>Nothing else is assumed. A test's intention is often not <code>a == b</code> — a serialization round trip, a rejected
+write, a peer layout — so a method that is not an <code>(expression → value)</code> pair must be annotated with
+<code>@Training.SkipTraining</code>. Every row is checked against this claim by the verifier (see <strong>Verification</strong>
+below); rows that do not verify are excluded from the file you train on.</p>
+<h4>Annotations</h4>
 <ul>
-<li><strong>Annotated methods</strong> (<code>@Training</code>): <code>instruction</code>/<code>input</code>/<code>output</code> are templates whose <code>{{{param}}}</code>
-holes are substituted with the matching column's row value (any other <code>{{{...}}}</code> is left verbatim).
-Repeat the annotation to emit multiple entries per row.</li>
-<li><strong>Fallback methods</strong> (no <code>@Training</code>): classic two-column <code>expression → result</code> with 10 rotating
-instruction templates.</li>
-<li><strong>Operator context enrichment</strong>: every instruction in the expression is resolved via <code>?docq&gt;&gt;desc</code>
-from the metatron VM to weave semantic descriptions into the instruction field.</li>
-<li><strong>Declarative reference knowledge</strong>: the extractor also scans 7 evaluated reference docs (<code>language-reference</code>,
-<code>type-system</code>, the <code>tble</code>/<code>math</code>/<code>sys</code>/<code>web</code> instset docs, and <code>SKILL.md</code>),
-emitting one &quot;verbal knowledge&quot; entry per <code>##</code> section — so the model can <em>explain</em> mtron, not just
-evaluate it.</li>
+<li><strong><code>@Training(instruction, input, output)</code></strong> — <code>@Repeatable</code>. Each field is a template: <code>{{{param}}}</code> is
+replaced by that column's value and <code>{{{@TestData}}}</code> by the method's preloaded <code>@TestData</code> lines.
+Repeat the annotation to emit several entries per row.
+<ul>
+<li><strong><code>input</code> is mandatory.</strong> A template with no <code>input</code> emits a row whose input is empty; empty parses to
+<code>noobj</code> and can never verify.</li>
+<li><code>input</code> must be the <em>one</em> expression the test evaluates. <code>checkCodeParseApply(LOG, lhs, code, expected)</code>
+evaluates <code>lhs.code</code>, so <code>input = &quot;{{{lhs}}}.{{{code}}}&quot;</code>.</li>
+<li>A boolean assertion becomes <code>a.matches(b)</code> (that is exactly <code>bool(lhs.test(arg))</code>):
+<code>input = &quot;{{{instance}}}.matches({{{type}}})&quot;</code>, <code>output = &quot;{{{matches}}}&quot;</code>.</li>
+<li>A type literal as receiver needs the <code>|</code> block so it is not applied:
+<code>input = &quot;|{{{type}}}.matches({{{other}}})&quot;</code>.</li>
+<li>Setup-dependent rows prefix the setup with <code>;</code>, which sequences statements:
+<code>input = &quot;{{{@TestData}}}; {{{code}}}&quot;</code>. The model then sees the state the answer depends on.</li>
+<li>Expected failure: <code>output = &quot;&lt;ERROR&gt;&quot;</code>.</li>
 </ul>
-<h4>Instruction Templates</h4>
-<p>The fallback rotates through 10 templates to prevent the model from pattern-matching on prefix:</p>
-<pre><code>&quot;evaluate: %s&quot;     &quot;what does %s yield?&quot;   &quot;compute: %s&quot;
-&quot;%s = ?&quot;           &quot;the result of %s is:&quot;   &quot;solve: %s&quot;
-&quot;evaluate %s:&quot;     &quot;what is %s?&quot;            &quot;compute %s =&quot;
-&quot;%s evaluates to:&quot;
-</code></pre>
+</li>
+<li><strong><code>@Training.SkipTraining(reason)</code></strong> — contributes no entries. Use it for anything that is not an
+<code>expression → value</code> pair, and say why:
+<code>@Training.SkipTraining(reason = &quot;the row asserts the tid after a serialization round trip&quot;)</code>.</li>
+</ul>
+<h4>Fallback (unannotated methods)</h4>
+<p>An unannotated method falls back to a two-column <code>expression → result</code> mapping, with the instruction
+chosen by a stable hash of <code>method#row</code>. A row whose field count does not match the method's parameter
+count is <strong>dropped and counted</strong>, never silently misaligned.</p>
+<p>The fallback cannot know which column is the asserted value, so an unannotated method with more than two
+columns is almost always mislabeled — annotate it or skip it. <code>@Disabled</code> methods are skipped outright.</p>
+<ul>
+<li><strong>Operator context enrichment</strong>: every instruction in a fallback expression is resolved via <code>?docq&gt;&gt;desc</code>
+from the VM to weave semantic descriptions into the instruction field.</li>
+<li><strong>Declarative reference knowledge</strong>: 7 evaluated reference docs contribute one entry per <code>##</code> section,
+so the model can <em>explain</em> mtron, not just evaluate it.</li>
+</ul>
 <h4>Run</h4>
-<pre><code class="language-bash">cd metatron
-./mvnw test -Dtest=UnslothTrainingDatasetExtractorTest
+<pre><code class="language-bash">bin/metatron-docker build test -Dtest=UnslothTrainingDatasetExtractorTest -Dmtron.training.regenerate=true
 </code></pre>
-<p>The test extends <code>AbstractMetatronTest</code> and boots the VM — required for <code>?docq</code> resolution.</p>
+<p><code>-Dmtron.training.regenerate=true</code> rewrites the corpus and verifies it in the same JVM; omit it to verify
+the corpus already on disk. The test extends <code>AbstractMetatronTest</code> and boots the VM.</p>
 <h4>Output</h4>
-<p><code>.metatron/skills/mtron/assets/mtron_training_dataset.jsonl</code> (~3,000 entries)</p>
+<p>All of these are build products and are gitignored (see <code>docs/website/.gitignore</code>). They live under
+<code>.metatron/skills/mtron/assets/</code>, a symlink to <code>docs/website/skills/</code>:</p>
+<table>
+<thead>
+<tr><th>File</th><th>What it is</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mtron_training_dataset.jsonl</code></td><td>everything that extracted — for diagnosis, <strong>not</strong> for training</td></tr>
+<tr><td><code>mtron_training_dataset.manifest.json</code></td><td>sha256, byte size, entry count, timestamp</td></tr>
+<tr><td><code>mtron_training_dataset.verification.txt</code></td><td>per-row failures grouped by <code>source</code>, tab-separated</td></tr>
+<tr><td><strong><code>mtron_training_dataset.verified.jsonl</code></strong></td><td><strong>only rows that verified — this is the training file</strong></td></tr>
+<tr><td><code>mtron_training_dataset.verified.manifest.json</code></td><td>identity of the file above</td></tr>
+</tbody>
+</table>
+<h4>Verification</h4>
+<p><code>UnslothTrainingDatasetExtractorTest.verifyExtractedCorpus()</code> reads the corpus and, for each row, parses
+<code>input</code>, applies it, and compares the result to <code>output</code> with the same rules as
+<code>AbstractMetatronTest.checkCodeParseApplyRaw</code> — the <code>&lt;ERROR&gt;</code> sentinel, real tolerance, operation-tid
+comparison for addresses, and <code>hasPoly</code> → <code>test()</code>. It reports verified / mismatched / evaluation-error /
+not-an-expression counts, the <strong>failing sources</strong> (<code>Class.method</code>, worst first) as a worklist, and fails
+the build with <code>-Dmtron.training.verify.strict=true</code> if any row does not verify.</p>
+<p>Every row carries <code>source</code>. A row that cannot name the test it came from cannot be triaged or repaired.</p>
+<h4>Known Limitations</h4>
+<ul>
+<li><code>?docq</code> documentation is still woven into the <em>instruction</em> of fallback rows. It is useful context but
+noisy (LaTeX, <code>start: [initial]</code> boilerplate); moving it to a separate <code>explain</code> task is planned.</li>
+<li>A row can verify yet still be poor training data — e.g. an answer that is a vid into transient space
+(<code>*/t/a</code>). Verification is necessary, not sufficient.</li>
+</ul>
 <h4>Assistant Persona (Directive Disabled by Default)</h4>
 <p>The model is trained as a <strong>general mtron/metatron assistant</strong>, not an eval-only calculator. The
 extractor's <code>instruction</code> directive (a system-style prefix prepended to every entry) therefore defaults
 to <strong>empty</strong> — no &quot;answer nothing else&quot; / &quot;do not think&quot; text is baked into the data. The assistant
 persona is supplied at inference time via the Modelfile/request system prompt instead. Override with
 <code>-Dmtron.training.directive=&quot;...&quot;</code> only for a dedicated eval model.</p>
-<h4>Input-Strip Rule</h4>
-<p>When a method's <code>instruction</code> template already carries the full expression, don't duplicate it in
-<code>input</code> — keep <code>input</code> only when it reconstructs something the <code>instruction</code> omits (e.g.
-<code>input=&quot;{{{lhs}}}.{{{chain}}}&quot;</code>). Redundant <code>input</code> fields dilute the training signal by repeating the
-expression twice in one entry.</p>
+<h4>Instruction vs Input</h4>
+<p>The expression belongs in <code>input</code>; the <code>instruction</code> is the operation in words (&quot;what does the mtron
+expression evaluate to?&quot;). Putting the expression in both fields dilutes the signal, and putting it only
+in <code>instruction</code> leaves <code>input</code> empty — a row that can never verify.</p>
 <h4>Mixing General Data (Abandoned ❌)</h4>
 <p>An 80/20 mix of mtron + Alpaca was tried to mitigate catastrophic forgetting, but it <strong>diluted mtron</strong> —
 best loss 0.405 vs 0.093 for the mtron-only run. The LoRA already touches only ~0.99% of weights, so base
 general capability survives a mtron-only fine-tune anyway. Mixing is abandoned; train mtron-only.</p>
 <h4>Dataset Format</h4>
-<p>Alpaca-style JSONL:</p>
+<p>Alpaca-style JSONL, plus <code>source</code> for provenance:</p>
 <pre><code class="language-json">{
-  &quot;instruction&quot;: &quot;evaluate: 1.plus(2) (plus: add the argument int to the lhs int)&quot;,
+  &quot;instruction&quot;: &quot;what does the mtron expression 1.plus(2) evaluate to?&quot;,
   &quot;input&quot;: &quot;1.plus(2)&quot;,
-  &quot;output&quot;: &quot;3&quot;
+  &quot;output&quot;: &quot;3&quot;,
+  &quot;source&quot;: &quot;IntTest.testCode&quot;
 }
 </code></pre>
 <h4>Entry Types</h4>
+<p>Measured on the current suite (counts drift as tests change):</p>
 <table>
 <thead>
-<tr><th>Type</th><th>Count</th><th>Source</th></tr>
+<tr><th>Type</th><th align="right">Count</th><th>Source</th></tr>
 </thead>
 <tbody>
-<tr><td>Expression evaluation</td><td>~2,800</td><td><code>@CsvSource</code> rows from test classes</td></tr>
-<tr><td>Meta-knowledge</td><td>~50</td><td>Hardcoded facts about mtron</td></tr>
-<tr><td>Sugar reference + pairs</td><td>~75</td><td>Auto-generated from <code>mInstSet.sugars()</code></td></tr>
-<tr><td>Declarative reference knowledge</td><td>~100</td><td>One entry per <code>##</code> section of 7 reference docs (evaluated)</td></tr>
+<tr><td>Expression evaluation</td><td align="right">~2,670</td><td><code>@CsvSource</code> rows from the 26 targeted classes</td></tr>
+<tr><td>— of which verify</td><td align="right">~2,270</td><td>re-evaluated to their own <code>output</code></td></tr>
+<tr><td>Meta-knowledge + reference knowledge</td><td align="right">~200</td><td>hardcoded facts; <code>##</code> sections of 7 evaluated docs</td></tr>
+<tr><td><strong>Extracted total</strong></td><td align="right"><strong>~2,870</strong></td><td>before filtering</td></tr>
 </tbody>
 </table>
 <h4>Key Architecture: <code>Training.java</code></h4>
-<p>The <code>@Training</code> annotation lives at <code>src/test/java/studio/phaseshift/metatron/Training.java</code>. It contains:</p>
+<p>The <code>@Training</code> annotation lives at <code>src/test/java/studio/phaseshift/metatron/Training.java</code>:</p>
 <ul>
-<li><strong><code>@Training(instruction, input, output)</code></strong> — <code>@Repeatable</code>; each field is a template whose <code>{{{param}}}</code>
-holes are substituted with the matching column's value. A hole substitutes when its content is an
-exact match for a method parameter name (or the special <code>{{{@TestData}}}</code> accessor — see below);
-anything else (e.g. an mtron <code>{{{expr}}}</code> template) is emitted verbatim. Example:
-<code>@Training(instruction = &quot;when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?&quot;, input = &quot;{{{rec}}}&gt;&gt;{{{key}}}&quot;, output = &quot;{{{value}}}&quot;)</code>.</li>
-<li><strong><code>@Training.SkipTraining(reason)</code></strong> — nested annotation. When present on a method, <code>Extractor.from()</code>
-short-circuits to <code>List.of()</code> before anything else, so the method contributes <strong>no</strong> entries. Use it for
-tests that don't map cleanly to an <code>expression → result</code> pair, and put the reason in <code>reason()</code>:
-<code>@Training.SkipTraining(reason = &quot;too complicated to express easily&quot;)</code>.</li>
-<li><strong><code>record Entry</code></strong> — the data carrier (instruction, input, output, sourceMethod) with <code>toJson()</code>.</li>
-<li><strong><code>final class Extractor</code></strong> — <code>from(Method, CsvSource)</code> renders the templates via <code>render()</code> and
-produces <code>List&lt;Entry&gt;</code> for both annotated and fallback methods; <code>paramNameToColumn()</code> maps parameter
-names to column indices (requires the <code>-parameters</code> compiler flag in <code>pom.xml</code>).</li>
-<li><strong><code>{{{@TestData}}}</code> accessor</strong> — a special template hole (<code>Training.TEST_DATA_ACCESSOR</code>). When the
-method carries <code>@TestData</code>, <code>{{{@TestData}}}</code> is replaced by the annotation's <code>value()</code> strings joined
-with newlines, so an entry can cite the preloaded test data as setup context:
-<code>@Training(instruction = &quot;given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?&quot;, output = &quot;{{{expected}}}&quot;)</code>.
-Rendering throws <code>MTronException(&quot;attempting to access non-existent @TestData&quot;)</code> if the method has no
-<code>@TestData</code>.</li>
+<li><strong><code>@Training(instruction, input, output)</code></strong> — <code>@Repeatable</code>; <code>{{{param}}}</code> holes are substituted by
+parameter name, and <code>{{{@TestData}}}</code> is the special accessor for the method's preloaded data.</li>
+<li><strong><code>@Training.SkipTraining(reason)</code></strong> — <code>Extractor.from()</code> returns no entries for the method.</li>
+<li><strong><code>record Entry</code></strong> — instruction, input, output and <code>sourceMethod</code>; <code>toJson()</code> serializes the three
+Alpaca fields plus <code>source</code>.</li>
+<li><strong><code>final class Extractor</code></strong> — <code>from(Method, CsvSource)</code> returns <code>Extraction(entries, skipped)</code>;
+<code>skipped</code> counts rows whose field count did not match the method's parameter count.</li>
 <li><strong><code>extractOperatorContext()</code></strong> — parses the expression, resolves instruction types via
-<code>resolveCode()</code> (Code chains) or direct <code>insts()</code> (single Inst), then queries
-<code>Router.readFromSpace(inst.tid().addQ(&quot;docq&quot;))</code> for each instruction's <code>desc</code> field.</li>
+<code>resolveCode()</code> (Code chains) or <code>insts()</code> (single Inst), then reads each instruction's <code>?docq</code> <code>desc</code>
+and appends it to the fallback instruction.</li>
 </ul>
-<h4>Dataset Sanitization</h4>
-<p>The <code>?docq</code> descriptions may contain raw tabs or backslashes. These must be escaped for JSON:</p>
-<pre><code class="language-java">private static String escapeJson(String s) {
-    return &quot;\&quot;&quot; + s.replace(&quot;\\&quot;, &quot;\\\\&quot;)
-            .replace(&quot;\&quot;&quot;, &quot;\\\&quot;&quot;)
-            .replace(&quot;\n&quot;, &quot;\\n&quot;)
-            .replace(&quot;\r&quot;, &quot;\\r&quot;)
-            .replace(&quot;\t&quot;, &quot;\\t&quot;) + &quot;\&quot;&quot;;
-}
-</code></pre>
+<h4>Serialization</h4>
+<p>Entries are serialized by Gson with HTML escaping <strong>disabled</strong> — mtron is full of <code>&gt;</code>, <code>&lt;</code> and <code>&amp;</code>, and
+the default would render an arrow as <code>-\u003e</code>. Escaping happens exactly once, at serialization; field
+values must not be pre-escaped.</p>
 <hr />
 <h3>2. Model Selection</h3>
 <h4>Text-Only Models (✅ Verified Working)</h4>
@@ -794,6 +829,11 @@ The <code>OLLAMA_NUM_CTX</code> environment variable sets a system-wide default 
 <p>The <code>hf</code> CLI handles LFS &gt;5GB transparently. Web UI uploads silently cap at 5GB.</p>
 <hr />
 <h3>7. Training History</h3>
+<blockquote>
+<p>⚠️ Every run below predates corpus verification. The losses are <strong>training</strong> loss on a corpus that was
+never checked, and &quot;best loss&quot; is a minimum read off a noisy curve — they are not comparable across runs
+and not evidence of quality. Re-baseline against a verified corpus before drawing conclusions.</p>
+</blockquote>
 <table>
 <thead>
 <tr><th>Variant</th><th>Base Model</th><th align="center">Steps</th><th align="center">Best Loss</th><th align="center">Final Loss</th><th>Time</th><th align="center">Verified</th></tr>
@@ -811,9 +851,10 @@ The <code>OLLAMA_NUM_CTX</code> environment variable sets a system-wide default 
 </table>
 <hr />
 <h3>8. Quick-Start</h3>
-<pre><code class="language-bash"># 1. Regenerate dataset
-cd metatron
-./mvnw test -Dtest=UnslothTrainingDatasetExtractorTest
+<pre><code class="language-bash"># 1. Regenerate and verify the corpus (writes both files; see §1)
+bin/metatron-docker build test -Dtest=UnslothTrainingDatasetExtractorTest -Dmtron.training.regenerate=true
+#    -&gt; .metatron/skills/mtron/assets/mtron_training_dataset.verified.jsonl   (train on this)
+#    -&gt; .metatron/skills/mtron/assets/mtron_training_dataset.verification.txt (worklist of failures)
 
 # 2. Authenticate to Studio
 curl -s -X POST http://ginger.local:8882/api/auth/login \
@@ -821,12 +862,12 @@ curl -s -X POST http://ginger.local:8882/api/auth/login \
   -d '{&quot;username&quot;:&quot;unsloth&quot;,&quot;password&quot;:&quot;&lt;pw&gt;&quot;}' \
   | python3 -c &quot;import json,sys; print(json.load(sys.stdin)['access_token'])&quot; &gt; /tmp/ustok.txt
 
-# 3. Upload dataset — capture the returned UUID-prefixed filename; use it in `local_datasets` below
+# 3. Upload the VERIFIED corpus — capture the returned UUID-prefixed filename; use it in `local_datasets`
 TOKEN=$(cat /tmp/ustok.txt)
 curl -X POST http://ginger.local:8882/api/datasets/upload \
   -H &quot;Authorization: Bearer $TOKEN&quot; \
-  -F &quot;file=@.metatron/skills/mtron/assets/mtron_training_dataset.jsonl&quot;
-# -&gt; {&quot;filename&quot;:&quot;mtron_training_dataset.jsonl&quot;,&quot;stored_path&quot;:&quot;.../uploads/&lt;uuid&gt;_mtron_training_dataset.jsonl&quot;}
+  -F &quot;file=@.metatron/skills/mtron/assets/mtron_training_dataset.verified.jsonl&quot;
+# -&gt; {&quot;filename&quot;:&quot;mtron_training_dataset.verified.jsonl&quot;,&quot;stored_path&quot;:&quot;.../uploads/&lt;uuid&gt;_mtron_training_dataset.verified.jsonl&quot;}
 
 # 4. Start training — text-only via finetune_vision_layers=false; point at the local model snapshot
 curl -X POST http://ginger.local:8882/api/train/start \

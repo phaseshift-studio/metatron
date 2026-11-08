@@ -18,8 +18,8 @@
 /articles/*
 !/articles/images/
 !/articles/images/**
-/skills/mtron/assets/mtron_training_dataset.manifest.json
-/skills/mtron/assets/mtron_training_dataset.verification.txt
-/skills/mtron/assets/mtron_training_dataset.verified.jsonl
-/skills/mtron/assets/mtron_training_dataset.verified.manifest.json
+# The mtron training corpus is a build product: the extractor writes the corpus, its manifest,
+# the verification report, and the verified train/dev split. Regenerated on demand before a run,
+# never committed — see docs/skills/mtron/references/unsloth-training-mtron.md §1.
+/skills/mtron/assets/mtron_training_dataset*
 

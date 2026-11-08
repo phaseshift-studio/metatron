@@ -39,57 +39,13 @@ void testConstQ(String uri, String initial, String mutate, String desc) { ...}
 
 ## `@Training` — Template-Based Training Data
 
-The `@Training` annotation turns a `@ParameterizedTest` + `@CsvSource` method into LLM fine-tuning data for
-`UnslothTrainingDatasetExtractor`. It is `@Repeatable`; each of `instruction`, `input`, and `output` is a template
-whose `{{{param}}}` holes are replaced by that column's row value. A hole substitutes only when its content is an
-exact match for a method parameter name (needs the `-parameters` compiler flag); anything else (e.g. an mtron
-`{{{expr}}}` template) is emitted verbatim.
+`@Training` (and `@Training.SkipTraining(reason)`) marks a `@ParameterizedTest` + `@CsvSource` method for
+extraction into the LLM fine-tuning corpus. A row counts only if its `input`, evaluated, reproduces its
+`output`, so the annotation carries rules that change with the pipeline — a mandatory `input`, how columns
+are composed into an expression, `{{{@TestData}}}` setup, and when to skip a method outright.
 
-```java
-
-@Training(
-        instruction = "when the {{{rec}}} rec is rshifted by the {{{key}}} key, what is the result?",
-        input = "{{{rec}}}>>{{{key}}}",
-        output = "{{{value}}}")
-@ParameterizedTest
-@CsvSource(value = {
-        "[a=>b]   % c   % noobj",
-        "[a=>b]   % a   % b",
-}, delimiter = '%')
-void testKeyValue(String rec, String key, String value) { ...}
-```
-
-Each CSV row emits one `{instruction, input, output}` entry. Repeat the annotation to emit several entries per row.
-Methods with no `@Training` fall back to a two-column `expression → result` mapping (`?docq` operator context is
-woven into the instruction).
-
-**`{{{@TestData}}}` accessor** — when the method carries `@TestData`, the hole `{{{@TestData}}}` is replaced by
-the annotation's `value()` strings joined with newlines, so an entry can cite its preloaded setup data:
-
-```java
-
-@Training(instruction = "given {{{@TestData}}}, what is the result of the mtron expression {{{code}}}?",
-        output = "{{{expected}}}")
-@TestData(value = {
-        "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
-        "y -> [address/home/city=>\"santa fe\",address/work/city=>\"santa fe\"]"})
-@CsvSource(value = {
-        "[a=>1,b=>2,c=>3].select([a=>_,b=>_])   % [a=>1,b=>2]",
-}, delimiter = '%')
-void testSelect(String code, String expected) { ...}
-```
-
-Rendering throws `MTronException("attempting to access non-existent @TestData")` if the method has no `@TestData`.
-
-**`@Training.SkipTraining(reason)`** — nested annotation. When present on a method, the extractor emits no entries
-for it; use it for tests that don't map cleanly to `expression → result`:
-
-```java
-@Training.SkipTraining(reason = "too complicated to express easily")
-```
-
-See `UnslothTrainingDatasetExtractor` for the extraction logic and
-`.metatron/skills/mtron/references/unsloth-training-mtron.md` for the full training pipeline.
+See [unsloth-training-mtron.md](../skills/mtron/references/unsloth-training-mtron.md) §1 *Dataset
+Extraction* for the annotation contract, the extraction/verification commands, and the corpus format.
 
 - **Leverage static helpers** from `AbstractMetatronTest` for assertion logic:
     - `checkCodeParseApply(LOG, code, expected)` — parse + apply mtron, assert result
