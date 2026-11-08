@@ -191,6 +191,9 @@ public class cInt implements C<Long, cInt> {
         if ((null != this.min && !LONG_ZERO.equals(this.min) && LONG_ZERO.equals(rhs.min))
                 || (null != this.max && !LONG_ZERO.equals(this.max) && LONG_ZERO.equals(rhs.max)))
             throw MTronException.of("unable to divide {%s} by {%s}: a zero has no inverse", this, rhs);
+        // div undoes mult (x·rhs = this), and x·rhs = this exactly when x·(-rhs) = -this
+        if (rhs.isNeg())
+            return this.neg().div(rhs.neg());
         final Long minRHS = rhs.min == null ? null : rhs.min;
         final Long maxRHS = rhs.max == null ? null : rhs.max;
         final Long newMin = (this.min == null && minRHS == null) ?
@@ -354,12 +357,15 @@ public class cInt implements C<Long, cInt> {
         return other instanceof cInt && Objects.equals(this.min, ((cInt) other).min) && Objects.equals(this.max, ((cInt) other).max);
     }
 
+    /**
+     * The total order, for sorting: min first, then max (an unbounded min is -∞, an unbounded max +∞). The order a
+     * caller asks about ({@code lt}/{@code gt}/{@code lte}/{@code gte}) is the each-bound order of {@link C}.
+     */
     @Override
     public int compareTo(final cInt rhs) {
-        Long minA = this.min() == null ? 0 : this.min();
-        Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
-        Long minB = rhs.min() == null ? 0 : rhs.min();
-        Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
-        return minA.compareTo(minB) + maxA.compareTo(maxB);
+        final int byMin = Long.compare(null == this.min ? Long.MIN_VALUE : this.min,
+                null == rhs.min ? Long.MIN_VALUE : rhs.min);
+        return 0 != byMin ? byMin :
+                Long.compare(null == this.max ? Long.MAX_VALUE : this.max, null == rhs.max ? Long.MAX_VALUE : rhs.max);
     }
 }

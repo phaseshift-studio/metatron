@@ -528,6 +528,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,int{2}::2,3,4,5,6}-<[_]>-.sum{2}()                                  % int{2}::23",
             "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{2}()                      % {2,4,6}",
             "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{1,2}()                    % {2,4,6}",
+            // two objects are one batch of a {1,3} dom, not three taken and an anti-object left over
+            "{2,2}.sum?int<=int{1,3}()                                              % 4",
+            "{2,2}.prod?int<=int{1,3}()                                             % 4",
+            "{1,1,1,2,2,3}.plus(2).sum?int<=int{1,3}()                              % {9,8,5}",
             "{1,2,3,4}.>-[,]-<[>-.count(),>-.count()]                        % [4,4]",
             "{1,2,3,4}.>-[,]-<[>-.count(),>-.count()]>-                      % int{2}::4",
             "{1,2,3,4}.is(gt(2)).count()                                            % 2",

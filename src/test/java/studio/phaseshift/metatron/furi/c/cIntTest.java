@@ -116,6 +116,53 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertEquals(cInt.of(expected), cInt.of(coefficient).abs());
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "2      % 3      % lt",
+            "3      % 2      % gt",
+            "2      % 2      % eq",
+            "3      % 1,3    % gt",
+            "1      % 1,3    % lt",
+            // a batch of {1,3} is not filled by two objects
+            "2      % 1,3    % none",
+            "0,10   % 1      % none",
+            // appliesPerObject's gt(1): {2}, {+} and {1,7} are bulk, the may-be-empty {*}, {?} and {0,500} are not
+            "+      % 1      % gt",
+            "1,7    % 1      % gt",
+            "*      % 1      % none",
+            "?      % 1      % lt",
+            "0,500  % 1      % none",
+            "-2     % 1      % lt",
+            // an unbounded min is -∞, not 0
+            "-*     % 0      % lt",
+            "**     % *      % lt",
+            "-      % -*     % lt"
+    }, delimiter = '%')
+    public void testOrder(final String lhs, final String rhs, final String relation) {
+        final cInt a = cInt.of(lhs);
+        final cInt b = cInt.of(rhs);
+        assertEquals(relation, a.lt(b) ? "lt" : a.gt(b) ? "gt" : a.lte(b) ? "eq" : "none");
+        assertEquals(a.lt(b), b.gt(a));
+        assertEquals(a.lte(b), b.gte(a));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // {0,10} < {1} < {1,9}: a total order (the sum of two signs tied {0,10} with both)
+            "0,10   % 1      % -1",
+            "1      % 1,9    % -1",
+            "0,10   % 1,9    % -1",
+            "**     % *      % -1",
+            "-*     % 0      % -1",
+            "*      % 0      % 1",
+            "+      % 1,1000 % 1",
+            "2      % 2      % 0"
+    }, delimiter = '%')
+    public void testCompareTo(final String lhs, final String rhs, final int sign) {
+        assertEquals(sign, Integer.signum(cInt.of(lhs).compareTo(cInt.of(rhs))));
+        assertEquals(-sign, Integer.signum(cInt.of(rhs).compareTo(cInt.of(lhs))));
+    }
+
     @Test
     public void testTokens() {
         assertEquals(cInt.of("10"), cInt.of(10, 10));
@@ -184,6 +231,9 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertEquals(cInt.ZERO(), cInt.ZERO().div(cInt.ZERO()));
         assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.ZERO()));
         assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.MAYBE()));
+        assertEquals(cInt.of(-5, -2), cInt.of(4, 10).div(cInt.of(-2)));
+        assertEquals(cInt.of("-*"), cInt.of("*").div(cInt.of(-2)));
+        assertEquals(cInt.of(2, 3), cInt.of(-9, -4).div(cInt.of(-3, -2)));
     }
 
     @Test

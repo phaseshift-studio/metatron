@@ -75,20 +75,26 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return this.clone(newMin, newMax);
     }
 
+    /**
+     * The each-bound order ({@link #lte}): a partial order, so {@code {0,10}} and {@code {1}} are neither less nor
+     * greater. {@link #compareTo} is the total order, for sorting.
+     */
     default boolean lt(final D rhs) {
-        return this.compareTo(rhs) < 0;
+        return this.lte(rhs) && !this.equals(rhs);
     }
 
     default boolean gt(final D rhs) {
-        return this.compareTo(rhs) > 0;
+        return rhs.lt((D) this);
     }
 
     default boolean lte(final D rhs) {
-        return this.compareTo(rhs) <= 0;
+        // both bounds are no greater: an unbounded min is -∞ and an unbounded max is +∞
+        return (null == this.min() || (null != rhs.min() && this.min().compareTo(rhs.min()) <= 0))
+                && (null == rhs.max() || (null != this.max() && this.max().compareTo(rhs.max()) <= 0));
     }
 
     default boolean gte(final D rhs) {
-        return this.compareTo(rhs) >= 0;
+        return rhs.lte((D) this);
     }
 
     default boolean signeq(final D rhs) {
@@ -106,8 +112,9 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     D maybeSome();
 
     default D mirror() {
+        // most() of an unbounded max is {**}, which no order puts above zero, so the +∞ max is read directly
         return this.clone(
-                this.most().gt(this.zero()) ? this.inv().min() : this.min(),
+                null == this.max() || this.most().gt(this.zero()) ? this.inv().min() : this.min(),
                 this.most().lte(this.zero()) ? this.inv().max() : this.max());
     }
 
