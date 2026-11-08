@@ -261,7 +261,7 @@ type = type.c(cInt.of(2, 5));         // set coefficient range
 c.within(other)     // this is tighter than or equal to other
 c.contains(other)   // this is broader than or equal to other
 c.plus(other)       // ring addition (sums mins and maxes)
-c.mult(other)       // ring multiplication (products)
+c.mult(other)       // interval product (every pairwise product, min to max)
 c.span(other)       // narrowest interval containing both (NEW)
 c.isZero()          // [0,0]
 c.isMaybe()         // [0,1]

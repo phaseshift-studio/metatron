@@ -44,12 +44,76 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
 
     @Test
     public void testPlus() {
-        //assertEquals(cInt.ANY(), cInt.ANY().plus(cInt.ANY()));
+        assertEquals(cInt.ANY(), cInt.ANY().plus(cInt.ANY()));
+        assertEquals(cInt.ANY(), cInt.ANY().plus(cInt.ZERO()));
+        assertEquals(cInt.ANY(), cInt.ANY().plus(cInt.ONE()));
+        assertEquals(cInt.ANY(), cInt.MAYBESOME().plus(cInt.ANTIMAYBESOME()));
         assertEquals(cInt.of(2), cInt.ONE().plus(cInt.ONE()));
         assertEquals(cInt.ZERO(), cInt.ANTIONE().plus(cInt.ONE()));
         assertEquals(cInt.of(-8, 9), cInt.of(-10, 2).plus(cInt.of(2, 7)));
         assertEquals(cInt.of(-10, 9), cInt.of(-10, 2).plus(cInt.of(0, 7)));
         assertEquals(cInt.of(-20, -4), cInt.of(-10, -2).plus(cInt.of(-10, -2)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // non-negative coefficients: the bound-wise product
+            "2      % 3      % 6",
+            "?      % ?      % ?",
+            "*      % +      % *",
+            "+      % +      % +",
+            "2,3    % 4,5    % 8,15",
+            "3,5    % 0,2    % 0,10",
+            // a zero factor annihilates, bounded or not (0·∞ = 0)
+            "+      % 0      % 0",
+            "*      % 0      % 0",
+            "**     % 0      % 0",
+            "0      % -      % 0",
+            // anti and mixed coefficients: every cross product
+            "-1     % 2,3    % -3,-2",
+            "-1     % -      % +",
+            "2,3    % -3,-2  % -9,-4",
+            "-5,-3  % 2,4    % -20,-6",
+            "-3,-2  % -3,-2  % 4,9",
+            "-2,3   % -2,3   % -6,9",
+            "2,3    % -2,5   % -6,15",
+            "-3,-2  % -2,5   % -15,6",
+            "-2,3   % -5,1   % -15,10",
+            "0,2    % -3,-1  % -6,0",
+            "??     % ??     % ??",
+            "-?     % ?      % -?",
+            "?      % -      % -*",
+            "-      % -      % +",
+            "+      % -      % -",
+            "-*     % -*     % *",
+            "-*     % *      % -*",
+            "**     % 2      % **",
+            "**     % -2     % **",
+            ",10    % -10,   % **",
+            "1      % ??     % ??"
+    }, delimiter = '%')
+    public void testMult(final String lhs, final String rhs, final String expected) {
+        assertEquals(cInt.of(expected), cInt.of(lhs).mult(cInt.of(rhs)));
+        assertEquals(cInt.of(expected), cInt.of(rhs).mult(cInt.of(lhs)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "7      % 7",
+            "-7     % 7",
+            "0      % 0",
+            "3,     % 3,",
+            "-5,-2  % 2,5",
+            "-2,3   % 0,3",
+            "-?     % ?",
+            "??     % ?",
+            "-      % +",
+            "-*     % *",
+            ",5     % *",
+            "**     % *"
+    }, delimiter = '%')
+    public void testAbs(final String coefficient, final String expected) {
+        assertEquals(cInt.of(expected), cInt.of(coefficient).abs());
     }
 
     @Test
@@ -62,6 +126,7 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertEquals(cInt.of("**"), cInt.of((Long) null, null));
         assertEquals(cInt.of("??"), cInt.of(-1, 1));
         assertEquals(cInt.of("-?"), cInt.of(-1, 0));
+        assertEquals(cInt.of("-?"), cInt.ANTIMAYBE());
         assertEquals(cInt.of("-"), cInt.of(null, -1));
         assertEquals(cInt.ANTIONE(), cInt.ONE().neg());
         assertEquals(cInt.ANTIONE(), cInt.ONE().inv());
@@ -116,6 +181,9 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertEquals(cInt.of(1), cInt.of("**").div(cInt.of("**")));
         assertEquals(cInt.of("**"), cInt.of("**").div(cInt.of(2)));
         assertEquals(cInt.of("??"), cInt.of("??").div(cInt.of(1)));
+        assertEquals(cInt.ZERO(), cInt.ZERO().div(cInt.ZERO()));
+        assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.ZERO()));
+        assertThrows(MTronException.class, () -> cInt.of(6).div(cInt.MAYBE()));
     }
 
     @Test
@@ -228,7 +296,8 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
             "{**}[a=>1,b=>2]        % rec{,}::[a=>1,b=>2]    % true",
             "{??}[a=>1,b=>2]        % rec{??}::[a=>1,b=>2]   % true",
             "{-}[a,b]               % lst{,-1}::[a,b]        % true",
-            "{-?}[a,b]              % lst{-1,0}::[a,b]       % true"
+            "{-?}[a,b]              % lst{-1,0}::[a,b]       % true",
+            "{{2}5,{-2}5}           % noobj                  % true"
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final boolean matches) {
         AbstractMetatronTest.checkEquality(LOG, ObjmtronSerializer.parse(code).apply(), ObjmtronSerializer.parse(expected).apply(), matches);
