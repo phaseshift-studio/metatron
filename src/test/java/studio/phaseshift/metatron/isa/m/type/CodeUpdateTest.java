@@ -60,6 +60,38 @@ public class CodeUpdateTest extends AbstractMetatronTest {
             "[plus(2).plus(-3).mult(4)]==[update([plus(int::T[?>0]@x).plus(int::T[?>0]@y)=>plus(${*x.plus(*y)})])]    % [plus(2).plus(-3).mult(4)]",
             // a name binds at depth, inside a nested code argument
             "[mult(plus(mult(3))).plus(1)]==[update([mult(#(mult(int::T@k)))=>mult(plus(mult(${*k.mult(2)})))])]      % [mult(plus(mult(6))).plus(1)]",
+            // ... and inside a code argument of several instructions, each name in its own place
+            "[plus(map(3).neg()).mult(4)]==[update([plus(map(int::T@m).neg()).mult(int::T@n)=>mult(${*n}).minus(${*m})])]  % [mult(4).minus(3)]",
+            // a code argument of another length is another pattern: nothing matches, nothing is named
+            "[plus(map(3).neg().neg())]==[update([plus(map(int::T@m).neg())=>minus(${*m})])]                         % [plus(map(3).neg().neg())]",
+            // an all-caps name is a generic, a type and not a value (Marko, 2026-11-08): it captures nothing of the 5
+            "[plus(5).mult(2)]==[update([plus(int::T@A)=>plus(${*A})])]                                               % [plus(A::T).mult(2)]",
+            // a run binds the pattern as any instruction binds its declaration (Code.Helper.bind): a generic is pinned for
+            // the run's length, so A, bound to int by plus, refuses mult's 'x' ...
+            "[plus(2).mult(3).plus(1)]==[update([plus(int::T@A).mult(A::T)=>mult(9)])]                                 % [mult(9).plus(1)]",
+            "[plus(2).mult('x').plus(1)]==[update([plus(int::T@A).mult(A::T)=>mult(9)])]                               % [plus(2).mult('x').plus(1)]",
+            // ... and a value name met twice must meet the same value: plus(2).mult(3) is passed over, plus(2).mult(2) folds
+            "[plus(2).mult(3).plus(2).mult(2)]==[update([plus(int::T@n).mult(int::T@n)=>mult(${*n.mult(*n)})])]        % [plus(2).mult(3).mult(4)]",
+            // a hole over # keeps its name, a g that is anything: two of them bind apart (both were once filed under #)
+            "[plus(2).plus(3).mult(4)]==[update([plus(#::T@g).plus(#::T@h)=>plus(${*g.mult(10).plus(*h)})])]          % [plus(23).mult(4)]",
+            // ... and anything includes an instruction argument, which no name makes a nominal type
+            "[order(neg()).plus(1)]==[update([order(#::T@s)=>kmerge(${*s})])]                                         % [kmerge(neg()).plus(1)]",
+            // a named hole in the change is what its name matched, so the rule reversed is the same equation
+            "[plus(map(3).neg()).mult(2)]==[update([plus(map(#::T@u).neg())=>minus(#::T@u)])]                         % [minus(3).mult(2)]",
+            "[minus(3).mult(2)]==[update([minus(#::T@u)=>plus(map(#::T@u).neg())])]                                   % [plus(map(3).neg()).mult(2)]",
+            // a code argument is typed by its range (Marko, 2026-11-08), so a value of that range meets it: neg() names nothing
+            "[mult(2).plus(1)]==[update([mult(neg())=>div(1)])]                                                         % [div(1).plus(1)]",
+            // ... but every name a pattern declares must bind, and a name inside a code argument has nothing to bind in a
+            // value: the 2 and the 2.0 fit mult(map(v).inv()) by type, and v binds nothing, so the rule does not fire
+            "[mult(2).plus(1)]==[update([mult(map(#::T@v).inv())=>div(#::T@v)])]                                       % [mult(2).plus(1)]",
+            "[mult(2.0).plus(1)]==[update([mult(map(#::T@v).inv())=>div(#::T@v)])]                                     % [mult(2.0).plus(1)]",
+            "[mult(map(3).inv()).plus(1)]==[update([mult(map(#::T@v).inv())=>div(#::T@v)])]                            % [div(3).plus(1)]",
+            // a name binds what the call holds in its place, and a value holds no places: v stays unbound against the 2
+            "[mult(2).plus(1)]==[update([mult(neg(#::T@v))=>div(#::T@v)])]                                             % [mult(2).plus(1)]",
+            "[mult(neg(3)).plus(1)]==[update([mult(neg(#::T@v))=>div(#::T@v)])]                                        % [div(3).plus(1)]",
+            // an optional hole takes an absent argument, and its name in the change is that absence
+            "[order().plus(1)]==[update([order(#{?}::T@s)=>kmerge(#{?}::T@s)])]                                       % [kmerge(noobj).plus(1)]",
+            "[order(neg()).plus(1)]==[update([order(#{?}::T@s)=>kmerge(#{?}::T@s)])]                                  % [kmerge(neg()).plus(1)]",
             // a nested rec's changes read the names its run bound
             "[plus(2).mult(3)]==[update([plus(int::T@a).mult(int::T)=>[mult(int::T)=>mult(${*a})]])]                  % [plus(2).mult(2)]",
             // everything outside a template parameter is literal

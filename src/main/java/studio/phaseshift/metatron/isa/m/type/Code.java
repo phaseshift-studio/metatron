@@ -52,11 +52,9 @@ public interface Code extends Call {
     }
 
     /**
-     * A CODE TESTS A CODE PATTERN INSTRUCTION BY INSTRUCTION, with one binding of the pattern's generics for its whole
-     * length (the generic binder's algorithm: {@link Inst.Helper#declarations}, then {@link Inst.Helper#bindGenerics} per
-     * instruction), so plus(int::T@A).mult(A::T) admits plus(2).mult(2) and not plus(2).mult('age'). Against an
-     * instruction, a code is tested as the instruction it is, and fails when it is not one. A code that is a reference
-     * ({@link #isAuto()}) is assumed to be what it refers to.
+     * A CODE TESTS A CODE PATTERN BY BINDING IT ({@link Helper#bind}), so plus(int::T@A).mult(A::T) admits
+     * plus(2).mult(2) and not plus(2).mult('age'). Against an instruction, a code is tested as the instruction it is, and
+     * fails when it is not one. A code that is a reference ({@link #isAuto()}) is assumed to be what it refers to.
      */
     @Override
     default boolean test(final Obj other) {
@@ -64,18 +62,8 @@ public interface Code extends Call {
         // dereference the reference nor evaluate the code to see what it would be
         if (this == other || this.isAuto())
             return true;
-        if (other.isCode()) {
-            final List<Inst> users = this.insts();
-            final List<Inst> patterns = other.asCode().insts();
-            final Map<fURI, fURI> generics = Inst.Helper.declarations(patterns);
-            if (null == generics || users.size() != patterns.size())
-                return false;
-            for (int i = 0; i < users.size(); i++) {
-                if (!users.get(i).test(patterns.get(i)) || null == Inst.Helper.bindGenerics(noobj(), patterns.get(i), users.get(i), generics))
-                    return false;
-            }
-            return true;
-        }
+        if (other.isCode())
+            return null != Helper.bind(this.insts(), other.asCode().insts());
         if (other.isObjInst()) {
             final Call inst = this.tryToInst();
             return inst.isObjInst() && inst.test(other);
@@ -212,6 +200,37 @@ public interface Code extends Call {
             return new LinkedHashSet<>();
         }
 
+    }
+
+    class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        /**
+         * WHAT A CODE BINDS AGAINST A CODE PATTERN, or null when it does not match: instruction by instruction, each
+         * instruction testing its pattern as a value tests a type, with one binding of the pattern's generics and value
+         * names for the whole length (the binder's walk: {@link Inst.Helper#declarations}, then
+         * {@link Inst.Helper#bindGenerics} per instruction). The answer is the value names and what they matched;
+         * {@link Code#test} asks only that there is one, and {@code update()} pushes it for its change.
+         * <p>
+         * EVERY NAME MUST BIND (Marko, 2026-11-08). A code argument is typed by its range, so a value of that range meets
+         * it ({@code mult(2.0)} is {@code mult(real::T)}, as {@code mult(map(#::T@b).inv())} is), but a name declared inside
+         * the code has nothing to bind in a value. A pattern that leaves one of its names unbound does not match: whatever
+         * reads the binding would read nothing in that name's place.
+         */
+        public static Map<fURI, Obj> bind(final List<Inst> users, final List<Inst> patterns) {
+            final Set<fURI> declared = new HashSet<>();
+            final Map<fURI, fURI> generics = Inst.Helper.declarations(patterns, declared);
+            if (null == generics || users.size() != patterns.size())
+                return null;
+            final Map<fURI, Obj> names = new LinkedHashMap<>();
+            for (int i = 0; i < users.size(); i++) {
+                if (!users.get(i).test(patterns.get(i)) || null == Inst.Helper.bindGenerics(noobj(), patterns.get(i), users.get(i), generics, names))
+                    return null;
+            }
+            return names.keySet().containsAll(declared) ? names : null;
+        }
     }
     // Code resolve(final Obj start);
 

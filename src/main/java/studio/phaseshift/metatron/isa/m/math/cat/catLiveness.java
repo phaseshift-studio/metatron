@@ -104,7 +104,7 @@ public class catLiveness {
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;
             case "derivation_contraction" -> Law.Helper.derivations().stream()
-                    .anyMatch(d -> profile.ops.contains(d.rhs().insts().getLast().tid().basePath().toString()));
+                    .anyMatch(d -> profile.ops.contains(d.atDirect(uri(RHS)).asCode().insts().getLast().tid().basePath().toString()));
             case "law_shard" -> profile.shard;   // a seed + a reducer whose partials recombine (the one-cut shard)
             default -> true; // an undeclared rule proves nothing -- keep the edge
         };

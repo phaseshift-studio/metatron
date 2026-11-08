@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -79,7 +80,7 @@ public class GenericBinder extends MRec implements Binder {
             // binding copies the candidate (generics, args, coefficient): never at the definition's own address
             final Inst unaddressed = Inst.Helper.unaddressed(candidates.get(i));
             // an instruction lhs (higher-order) binds nothing; noobj is an Inst too (the ring's zero) but binds like any obj
-            Inst bound = input.isObjInst() ? unaddressed : Inst.Helper.bindGenerics(input, unaddressed, userInst, generics);
+            Inst bound = input.isObjInst() ? unaddressed : Inst.Helper.bindGenerics(input, unaddressed, userInst, generics, new HashMap<>());
             if (null == bound)
                 return null;
             if (!input.isObjInst() && !Inst.Helper.filterOnDomainAllowUnique(input, bound))

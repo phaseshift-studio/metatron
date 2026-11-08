@@ -1014,10 +1014,21 @@ public interface Inst extends Call {
          * @return the generics the pattern declares, or null when it declares one generic as two types
          */
         public static Map<fURI, fURI> declarations(final List<Inst> pattern) {
+            return declarations(pattern, new HashSet<>());
+        }
+
+        /**
+         * {@link #declarations(List)}, with the VALUE NAMES the pattern declares gathered into {@code names} by the same
+         * walk: the names a binding must bind, every one of them, for the pattern to match ({@link Code.Helper#bind}).
+         */
+        public static Map<fURI, fURI> declarations(final List<Inst> pattern, final Set<fURI> names) {
             final Map<fURI, fURI> generics = new HashMap<>();
             final Deque<Obj> pending = new ArrayDeque<>(pattern);
             while (!pending.isEmpty()) {
                 final Obj next = pending.pop();
+                final fURI name = Helper.name(next);
+                if (null != name)
+                    names.add(name);
                 if (next.isObjInst())
                     next.asInst().args().elements().forEach(pending::push);
                 else if (next.isCode())
@@ -1032,12 +1043,59 @@ public interface Inst extends Call {
             return generics;
         }
 
-        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
-            return bindGenerics(lhs, apiInst, userInst, new HashMap<>());
+        /**
+         * THE VALUE NAME AN ELEMENT CARRIES, or null (Marko, 2026-11-08): a vid that resolves as a binding (relative, as
+         * {@code Memory} routes it), not all caps (a generic names a type) and not a pattern ({@code #}, {@code +}).
+         * {@code int::T@a} and {@code plus(2)@a} name {@code a}; {@code int::T} ({@code /m/int}), {@code int::T@A} and
+         * {@code #::T} name nothing.
+         */
+        public static fURI name(final Obj element) {
+            final fURI vid = element.vid();
+            return null == vid || vid.isAbsolute() || vid.hasScheme() || vid.hasHost() || vid.isGeneric() || vid.hasPattern() ? null : vid;
         }
 
-        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics) {
+        /**
+         * The value names a call's positional arguments carry when every one carries one ({@code (plus(2)@a,
+         * mult(10)@b)}), or null: a call with an unnamed argument stays positional.
+         */
+        public static List<fURI> slotNames(final Poly<?, ?> args) {
+            // every instruction application asks, so an unnamed first argument answers before anything is allocated
+            if (null == args || !args.isLst() || args.isEmpty() || null == Helper.name(args.lstValue().getFirst()))
+                return null;
+            final List<fURI> names = args.lstValue().stream().map(Helper::name).toList();
+            return names.contains(null) ? null : names;
+        }
+
+        /**
+         * Record what an element's value name matched, false when the name already holds another obj: a name met twice
+         * must meet the same obj, as a generic met twice must meet the same type.
+         */
+        private static boolean named(final Map<fURI, Obj> names, final Obj element, final Obj matched) {
+            final fURI name = Helper.name(element);
+            if (null == name)
+                return true;
+            final Obj prior = names.putIfAbsent(name, matched);
+            return null == prior || prior.equals(matched);
+        }
+
+        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
+            return bindGenerics(lhs, apiInst, userInst, new HashMap<>(), new HashMap<>());
+        }
+
+        /**
+         * BIND A CALL AGAINST A DECLARATION, slot by slot: the one binding walk of dispatch ({@code GenericBinder}), of a
+         * code tested against a code pattern ({@link Code.Helper#bind}), and so of {@code update()} and the derivations.
+         * An all-caps generic binds a TYPE into {@code generics}; an element carrying a value name binds what it matched
+         * into {@code names} (Marko, 2026-11-08: names in any instruction), at any depth, a code argument's instructions
+         * included. A name binds only a place the call holds (a value holds none), and a name or generic met twice
+         * must meet what it bound.
+         *
+         * @return the declaration with its generics bound, or null when the call does not bind it
+         */
+        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics, final Map<fURI, Obj> names) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
+            if (!Helper.named(names, apiInst, userInst))
+                return null;
             Inst apiInstTemp = apiInst;
             if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj()
                     && (lhs.type().c().within(apiInstTemp.dom().c()) || Helper.appliesPerObject(lhs.type(), apiInstTemp.dom()))) {
@@ -1076,6 +1134,10 @@ public interface Inst extends Call {
                     for (int i = 0; i < apiInst.args().count(); i++) {
                         Obj apiArg = apiInst.arg(i);
                         Obj userArg = userInst.isObjInst() ? userInst.<Inst>as().arg(i) : userInst;
+                        // a name binds what the call holds in its place, and a call that is no instruction holds no places:
+                        // mult(neg(#::T@b)) against mult(2) leaves b unbound, never bound to the 2
+                        if (userInst.isObjInst() && !Helper.named(names, apiArg, userArg))
+                            return null;
                         if (apiArg.typeId().isGeneric()) {
                             final fURI lastBinding = generics.get(apiArg.typeId().one());
                             if (null != lastBinding && !userArg.typeId().test(lastBinding))
@@ -1084,8 +1146,16 @@ public interface Inst extends Call {
                                 generics.computeIfAbsent(apiArg.typeId().one(), k -> userArg.typeId().one()); // beware of int[0] yielding noobj across all bindings
                         }
                         if (apiArg.isObjInst()) { // todo: isCall()?
-                            // a nested instruction is part of the same signature, so its generics are the same variables
-                            apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg, generics);
+                            // a nested instruction is part of the same signature, so its generics and names are the same variables
+                            apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg, generics, names);
+                        } else if (apiArg.isCode() && userArg.isCall()) {
+                            // so is a code argument, instruction by instruction, walked for its names and generics; each
+                            // instruction's lhs is the one before it, never the call's, so none binds a domain. Like a
+                            // nested instruction, it refuses nothing: a declared spec such as is's isa(bool::T).else(false)
+                            // is walked against the caller's eq(10) and binds nothing, which is no refusal
+                            final List<Inst> userInsts = userArg.asCall().insts();
+                            for (int k = 0; k < Math.min(apiArg.asCode().insts().size(), userInsts.size()); k++)
+                                Helper.bindGenerics(noobj(), apiArg.asCode().inst(k), userInsts.get(k), generics, names);
                         } else {
                             if (apiArg.typeId().one().isGeneric()) {
                                 // A BOUND GENERIC IS ENFORCED. Its binding is written into the argument as the declaration
@@ -1135,39 +1205,6 @@ public interface Inst extends Call {
             }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
             return apiInstTemp;
-        }
-
-        /**
-         * Substitute the generic fURIs ({@code A}…{@code G}) in {@code obj} with their bound values. A generic is an
-         * all-caps fURI carried as a uri value ({@code uri(A)}); a bound generic resolves to its value, while anything
-         * else passes through untouched. Nested insts (and their lst/rec args) and codes are walked, so a binding
-         * reaches a nested arg like {@code inv(<B>)} inside {@code mult(...)}.
-         */
-        public static Obj substituteGenerics(final Obj obj, final Map<fURI, Obj> bindings) {
-            if (obj.isUri() && obj.uriValue().isGeneric() && bindings.containsKey(obj.uriValue().one()))
-                return bindings.get(obj.uriValue().one());
-            if (obj.isInst()) {
-                final Inst inst = obj.asInst();
-                final Poly<?, ?> args = inst.args();
-                if (args.isLst()) {
-                    final List<Obj> given = args.lstValue();
-                    final List<Obj> bound = given.stream().map(a -> substituteGenerics(a, bindings)).toList();
-                    // A GENERIC BOUND TO AN ABSENT ARGUMENT STAYS ABSENT: kmerge(B{?}) with no B is kmerge(), not kmerge(noobj)
-                    int end = bound.size();
-                    while (end > 0 && bound.get(end - 1).isNoObj() && given.get(end - 1).isUri() && given.get(end - 1).uriValue().isGeneric())
-                        end--;
-                    return inst.args(lst(bound.subList(0, end)));
-                }
-                if (args.isRec()) {
-                    final Map<Obj, Obj> newArgs = new LinkedHashMap<>();
-                    args.recValue().forEach((k, v) -> newArgs.put(k, substituteGenerics(v, bindings)));
-                    return inst.args(rec(newArgs));
-                }
-                return inst;
-            }
-            if (obj.isCode())
-                return code(obj.asCode().insts().stream().map(i -> (Inst) substituteGenerics(i, bindings)).toList());
-            return obj;
         }
 
         private static fURI apiOrUser(final fURI apiInstTid, final fURI userInstTid, final Map<fURI, fURI> bindings) {

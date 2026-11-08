@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.algebra;
 
-import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -38,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.noobjRec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -385,7 +385,7 @@ public enum Law {
          * stages a claim (the revision moves), when a {@code ?decq} write can change an equation ({@link #evict}), or
          * while the machine was not yet up.
          */
-        private static volatile Map<fURI, Derivation> DERIVATIONS = Map.of();
+        private static volatile Map<fURI, Rec> DERIVATIONS = Map.of();
         private static volatile List<PendingWrites.Write> DERIVATIONS_AT = null;
         private static volatile long DERIVATIONS_SEEN = -1;
         private static volatile boolean DERIVATIONS_LOADED = false;
@@ -407,7 +407,7 @@ public enum Law {
          * override), or replaces an address the snapshot holds. A claim without one (most lazy publishes) leaves it be.
          */
         public static void evict(final fURI address, final Obj declaration) {
-            if (declaration.isNoObj() || (declaration.isRec() && null != declaredDerivation(declaration.asRec()))
+            if (declaration.isNoObj() || (declaration.isRec() && !declaredDerivation(declaration.asRec()).isNoObj())
                     || DERIVATIONS.containsKey(Inst.Helper.operationTid(address)))
                 DERIVATION_WRITES.incrementAndGet();
         }
@@ -445,18 +445,18 @@ public enum Law {
          * {@link #inverseForm} the entries. A walk of the registered instructions through {@code Machine.read}, kept as the
          * {@link #DERIVATIONS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression.
          */
-        private static Map<fURI, Derivation> declaredDerivations() {
+        private static Map<fURI, Rec> declaredDerivations() {
             final List<PendingWrites.Write> revision = PendingWrites.writes();
             final long written = DERIVATION_WRITES.get();
             if (DERIVATIONS_LOADED && revision == DERIVATIONS_AT && written == DERIVATIONS_SEEN)
                 return DERIVATIONS;
             final boolean loaded = Machine.loaded();
-            final Map<fURI, Derivation> snapshot = new LinkedHashMap<>();
+            final Map<fURI, Rec> snapshot = new LinkedHashMap<>();
             if (loaded)
                 for (final Inst inst : Machine.current().instset().insts()) {
                     final Obj claim = null == inst.tid() ? noobj() : Machine.read(stagingAddress(inst.tid()));
-                    final Derivation derivation = claim.isRec() ? declaredDerivation(claim.asRec()) : null;
-                    if (null != derivation)
+                    final Rec derivation = claim.isRec() ? declaredDerivation(claim.asRec()) : noobjRec();
+                    if (!derivation.isNoObj())
                         snapshot.putIfAbsent(Inst.Helper.operationTid(inst.tid()), derivation);
                 }
             DERIVATIONS = snapshot;
@@ -515,21 +515,18 @@ public enum Law {
             // the inverse is read as an ADDRESS, never as a value: at(...) auto-resolves and would follow the inverse
             // edge into the instruction it names instead of answering which instruction it is
             return declaration.atDirect(uri(LAW)).isLst() || null != TheoryHelper.roleAddress(declaration, INVERSE)
-                    || null != declaredDerivation(declaration) ? declaration : noobjRec();
+                    || !declaredDerivation(declaration).isNoObj() ? declaration : noobjRec();
         }
 
         /**
-         * The defining equation a declaration carries — the lhs and rhs stored as {@code code::T} — or null when the
-         * rec holds none. A half-written derivation answers no derivation: it states no equation, and a rewrite run
+         * The defining equation a declaration carries — its {@code [lhs=>code, rhs=>code]} rec — or {@code noobjRec} when
+         * the rec holds none. A half-written derivation answers no derivation: it states no equation, and a rewrite run
          * off half of one would be a guess.
          */
-        private static Derivation declaredDerivation(final Rec declaration) {
+        private static Rec declaredDerivation(final Rec declaration) {
             final Obj derivation = declaration.atDirect(uri(DERIVATION));
-            if (!derivation.isRec())
-                return null;
-            final Obj lhs = derivation.asRec().atDirect(uri(LHS));
-            final Obj rhs = derivation.asRec().atDirect(uri(RHS));
-            return lhs.isCode() && rhs.isCode() ? new Derivation(lhs.asCode(), rhs.asCode()) : null;
+            return derivation.isRec() && derivation.asRec().atDirect(uri(LHS)).isCode() && derivation.asRec().atDirect(uri(RHS)).isCode()
+                    ? derivation.asRec() : noobjRec();
         }
 
         /**
@@ -588,10 +585,10 @@ public enum Law {
          * equation {@code div ≡ mult ∘ inv}. Read structurally, so the argument may be nested however the chain builder
          * wrote it; a derivation ending anywhere else says nothing about cancelling {@code op}.
          */
-        private static boolean defined(final Derivation derivation, final fURI op, final fURI inv) {
-            if (null == derivation)
+        private static boolean defined(final Rec derivation, final fURI op, final fURI inv) {
+            if (derivation.isNoObj())
                 return false;
-            final List<Inst> steps = derivation.rhs().insts();
+            final List<Inst> steps = derivation.atDirect(uri(RHS)).asCode().insts();
             for (int i = 0; i < steps.size(); i++) {
                 final Inst step = steps.get(i);
                 if (step.tid().basePath().equals(op.basePath()) && step.args().elements().anyMatch(arg -> holds(arg, inv.basePath())))
@@ -621,7 +618,7 @@ public enum Law {
          * {@code div ≡ mult ∘ inv}, and the equation is {@code div}'s claim, not {@code mult}'s.
          */
         private static fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {
-            for (final Map.Entry<fURI, Derivation> entry : declaredDerivations().entrySet())
+            for (final Map.Entry<fURI, Rec> entry : declaredDerivations().entrySet())
                 if (sameCarrier(entry.getKey(), tid) && defined(entry.getValue(), op, inv))
                     return entry.getKey();
             return null;
@@ -804,10 +801,11 @@ public enum Law {
          * <ul>
          *   <li>a fold declaring the laws itself is its own combiner — {@code sum}, {@code prod} — and the answer is
          *       {@code keyed} itself;</li>
-         *   <li>a fold DEFINED as a pointwise map into one — its declared {@link Derivation}, {@code r ↦ map(g)·f} —
-         *       recombines through {@code f}, read off {@code r}'s target object (the carrier {@code f} folds), with the
-         *       generics bound from {@code keyed}'s own arguments — {@code count ↦ map(1)·sum},
-         *       {@code order(B{?}) ↦ split([_])·kmerge(B{?})}, which a bare {@code order()} binds too;</li>
+         *   <li>a fold DEFINED as a pointwise map into one — its declared derivation, {@code r ↦ map(g)·f} —
+         *       recombines through {@code f}, read off {@code r}'s target object (the carrier {@code f} folds): the
+         *       equation run forward as an {@code update()} rule, its holes filled from {@code keyed}'s own arguments —
+         *       {@code count ↦ map(1)·sum}, {@code order(#{?}::T@b) ↦ split([_])·kmerge(#{?}::T@b)}, which a bare
+         *       {@code order()} matches too;</li>
          *   <li>a fold whose argument holds folds recombines POINTWISE through theirs — {@code group([k⇒h])}, see
          *       {@link #pointwise} — and its combiner is a chain rather than one instruction.</li>
          * </ul>
@@ -822,10 +820,16 @@ public enum Law {
                 return keyed;
             if (GROUP_INST_TID.equals(keyed.tid().basePath()))
                 return pointwise(keyed, laws);
-            final Derivation derivation = declaredDerivation(entry);
-            final Inst fold = null == derivation ? null : derivation.fold(keyed);
-            if (null == fold)
+            final Rec derivation = declaredDerivation(entry);
+            if (derivation.isNoObj())
                 return null;
+            // the equation run forward: keyed binds the lhs's last instruction as update() binds a run (every name bound),
+            // and the names its holes matched fill the rhs's last instruction -- the fold the partials recombine through
+            final Inst derived = derivation.atDirect(uri(LHS)).asCode().insts().getLast();
+            if (null == Code.Helper.bind(List.of(keyed), List.of(derived)))
+                return null;
+            final Inst fold = Call.Helper.update(List.of(keyed),
+                    rec(code(List.of(derived)), code(List.of(derivation.atDirect(uri(RHS)).asCode().insts().getLast())))).getFirst();
             // the definition's last step must itself be a FOLD of the target, declaring the laws -- a mapper that
             // happens to be monoidic and commutative (bool plus) recombines nothing
             final Rec declared = declared(fold.tid().basePath(), keyed.rng());
@@ -917,7 +921,7 @@ public enum Law {
          * ALL DERIVATIONS A REWRITE CAN APPLY — the values of {@link #declaredDerivations}: the equations instructions
          * declare beside themselves ({@code ?decq}), one per address, in the order the machine's instset lists them.
          */
-        public static List<Derivation> derivations() {
+        public static List<Rec> derivations() {
             return new ArrayList<>(declaredDerivations().values());
         }
     }

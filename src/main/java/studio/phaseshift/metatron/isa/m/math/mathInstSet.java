@@ -21,11 +21,9 @@ package studio.phaseshift.metatron.isa.m.math;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
-import studio.phaseshift.metatron.algebra.rewrite.Derivation;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet.JREService;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Real;
@@ -49,6 +47,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -1149,7 +1148,7 @@ public class mathInstSet extends AbstractInstSet {
                                                 real(lhs.asLst().at(0).asReal().realValue() - inst.arg(0).asLst().at(0).asReal().realValue()),
                                                 real(lhs.asLst().at(1).asReal().realValue() - inst.arg(0).asLst().at(1).asReal().realValue()))))
                                 .example("cmplx::[4.0,6.0] - cmplx::[1.0,2.0]   [-- cmplx::[3.0,4.0] --]")
-                                .derivation(new Derivation(minus_(uri(InstSet.B)), plus_(map_(uri(InstSet.B)).neg_())))
+                                .derivation(minus_(T(ALL, f("b"), null, null)), plus_(map_(T(ALL, f("b"), null, null)).neg_()))
                                 .law(Law.action, Law.pure)
                                 .create(),
                         InstBuilder.build().tid(CONJUGATE_INST_TID, "complex conjugation: \\(\\overline{a+bi}=a-bi\\) — negates the imaginary component")
@@ -1176,7 +1175,7 @@ public class mathInstSet extends AbstractInstSet {
                                     return lhs.jvm(mutableList(real((a * c + b * d) / norm2), real((b * c - a * d) / norm2)));
                                 })
                                 .example("cmplx::[1.0,2.0] / cmplx::[1.0,1.0]   [-- cmplx::[1.5,0.5] --]")
-                                .derivation(new Derivation(div_(uri(InstSet.B)), mult_(map_(uri(InstSet.B)).inv_())))
+                                .derivation(div_(T(ALL, f("b"), null, null)), mult_(map_(T(ALL, f("b"), null, null)).inv_()))
                                 .law(Law.right_distributive, Law.action, Law.pure)
                                 .create(),
                         InstBuilder.build().tid(NEG_INST_TID, "complex negation (additive inverse): \\(-(a+bi)=-a-bi\\)")

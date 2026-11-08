@@ -1022,54 +1022,21 @@ public final class PlanInterpreter {
 
     /**
      * Derivation contraction (local): fold a derived instruction's primitive composition back to the derived
-     * operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the type's declared {@code derivation}.
+     * operation — {@code plus·neg ↦ minus}, {@code mult·inv ↦ div}, from the instruction's declared {@code derivation}.
+     * Each equation runs backward as an {@code update()} rule ({@link Call.Helper#update}): every contiguous run of the
+     * chain that tests the rhs becomes the lhs, its holes reading what the rhs's holes matched. The rhs is matched as a
+     * whole WINDOW: a one-instruction rhs nests its composition in that instruction's args ({@code plus(map(#::T@b).neg())}),
+     * a longer one spans several, and matching only the rhs's last instruction would contract every {@code sum} to
+     * {@code count}.
      */
     private static Code derivationContraction(final Code code) {
-        final List<Derivation> derivations = Law.Helper.derivations();
+        final List<Rec> derivations = Law.Helper.derivations();
         if (derivations.isEmpty())
             return code;
         List<Inst> out = code.insts();
-        for (final Derivation d : derivations)
-            out = contract(out, d);
+        for (final Rec d : derivations)
+            out = Call.Helper.update(out, rec(d.atDirect(uri(RHS)).asCode(), d.atDirect(uri(LHS)).asCode()));
         return code(out);
-    }
-
-    /**
-     * Contract each occurrence of a derivation's primitive composition back to its derived instruction —
-     * {@code mult·inv ↦ div}, {@code map(1)·sum ↦ count}. The composition is the rhs, matched as a contiguous
-     * WINDOW of the chain: a one-instruction rhs nests its composition in
-     * that instruction's args ({@code plus(map(B).neg())}), a longer one spans several, and matching only the rhs's
-     * last instruction would contract every {@code sum} to {@code count}.
-     */
-    private static List<Inst> contract(final List<Inst> insts, final Derivation d) {
-        final List<Inst> rhs = d.rhs().insts();
-        final List<Inst> lhs = d.lhs().insts();
-        if (rhs.isEmpty() || lhs.isEmpty())
-            return insts;
-        final List<Inst> out = new ArrayList<>();
-        int i = 0;
-        while (i < insts.size()) {
-            final Map<fURI, Obj> bindings = new HashMap<>();
-            if (i + rhs.size() <= insts.size() && matchesWindow(rhs, insts.subList(i, i + rhs.size()), bindings)) {
-                for (final Inst derived : lhs)
-                    out.add((Inst) Inst.Helper.substituteGenerics(derived, bindings));
-                i += rhs.size();
-            } else
-                out.add(insts.get(i++));
-        }
-        return out;
-    }
-
-
-    /**
-     * Whether a chain window matches a derivation side instruction-for-instruction, the generics binding across the
-     * whole window.
-     */
-    private static boolean matchesWindow(final List<Inst> pattern, final List<Inst> window, final Map<fURI, Obj> bindings) {
-        for (int j = 0; j < pattern.size(); j++)
-            if (!Derivation.matchGenerics(pattern.get(j), window.get(j), bindings))
-                return false;
-        return true;
     }
 
     /**

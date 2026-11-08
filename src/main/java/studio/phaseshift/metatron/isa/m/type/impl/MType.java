@@ -227,9 +227,11 @@ public class MType extends MObj implements Type {
                 RESOLVING.get().remove(checkID.toString());
             }
         }
-        // final boolean isBaseType = ;
+        // A NAME OVER THE ROOT KEEPS ITS NAME (Marko, 2026-11-08): #::T@b is a b that is anything, vid b over tid #. Anything
+        // constrains nothing, so it defines no type of the machine and is not registered, as a generic is not
         if (BASE_TYPES.contains(checkID.basePath()) || bigTID.basePath().equals(ALL)) {
-            return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID));
+            final fURI named = null == bigVID || BASE_TYPES.contains(checkID.basePath()) ? bigTID : bigVID;
+            return checkPolyPoly(new MType(Tuple.Pair.with(predicate, constructor), bigTID, named, false));
         }
         //if (Objects.equals(bigVID, bigTID))
         //    return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);

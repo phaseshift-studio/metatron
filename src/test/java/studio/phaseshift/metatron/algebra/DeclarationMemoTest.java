@@ -100,17 +100,17 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         // written straight to ?decq, so no builder stages it: only the write hook can tell the snapshot. Its rhs names
         // instructions no chain contains, so the rule is inert for every other test.
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID));
-        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(B)"));
-        final Code rhs = ObjmtronSerializer.parse("thornwhistle(B).quillfeather()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(#::T@b)"));
+        final Code rhs = ObjmtronSerializer.parse("thornwhistle(#::T@b).quillfeather()");
         final Obj original = Machine.read(address.addQ(DECQ));
         final Map<Obj, Obj> claim = original.isRec() ? mutableMap(original.asRec().jvm()) : mutableMap(uri(OBJ), str("mod"));
         claim.put(uri(DERIVATION), rec(mutableMap(uri(LHS), lhs, uri(RHS), rhs)));
-        assertFalse(Law.Helper.derivations().stream().anyMatch(d -> d.rhs().toString().equals(rhs.toString())),
+        assertFalse(Law.Helper.derivations().stream().anyMatch(d -> d.atDirect(uri(RHS)).toString().equals(rhs.toString())),
                 "the snapshot is taken, and holds no such equation yet");
         try {
             Machine.write(address.addQ(DECQ), noobj());
             Machine.write(address.addQ(DECQ), rec(claim, DECS_TID, null));
-            assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.rhs().toString().equals(rhs.toString())),
+            assertTrue(Law.Helper.derivations().stream().anyMatch(d -> d.atDirect(uri(RHS)).toString().equals(rhs.toString())),
                     "a derivation written at runtime feeds the rewrite list, got " + Law.Helper.derivations());
         } finally {
             Machine.write(address.addQ(DECQ), noobj());

@@ -98,8 +98,10 @@ public interface Type extends Obj {
     // Base types are excluded because they carry coefficient variance ({1}, {2}, …): `test()` and
     // `testObjs()` use isNominal() as a shortcut to the coefficient-blind testNominally(), and base
     // types must instead take the coefficient-aware full path. (testNominally strips coefficients.)
+    // A name over the root is not nominal either: #::T@b is a b that is anything, and nothing is nominally a b.
     default boolean isNominal() {
-        return !this.hasPredicate() && !this.hasConstructor() && this.hasVID() && !this.isBaseType() && !this.vid().hasPattern() && !this.vid().isGeneric();
+        return !this.hasPredicate() && !this.hasConstructor() && this.hasVID() && !this.isBaseType() && !this.vid().hasPattern() && !this.vid().isGeneric()
+                && !this.tid().basePath().equals(ALL);
     }
 
     default boolean isStructural() {
