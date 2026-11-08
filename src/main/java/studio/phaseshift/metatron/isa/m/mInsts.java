@@ -192,7 +192,7 @@ public final class mInsts {
                         .dom(INT_TID, "the lhs int").rng(INT_TID, "the result of the subtraction")
                         .argLst(INT_TYPE, "the int to subtract from the lhs")
                         .body((lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue()))
-                        .derivation(new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())))
+                        .derivation(new Derivation(minus_(uri(InstSet.B)), plus_(map_(uri(InstSet.B)).neg_())))
                         .law(Law.action, Law.pure)
                         .create(),
                 // THE as PAIR, DECLARED BESIDE ITS INSTRUCTIONS (the human's ruling): int->str is the SOUND
@@ -320,14 +320,14 @@ public final class mInsts {
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the quotient")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().div(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .derivation(new Derivation(start_(uri(InstSet.A)).div_(uri(InstSet.B)), start_(uri(InstSet.A)).mult_(map_(uri(InstSet.B)).inv_())))
+                        .derivation(new Derivation(div_(uri(InstSet.B)), mult_(map_(uri(InstSet.B)).inv_())))
                         .law(Law.right_distributive, Law.action, Law.pure)
                         .create(),
                 InstBuilder.build().tid(MINUS_INST_TID, "a difference function \\(f(x, y) \\mapsto x - y\\): the rhs real subtracted from the lhs real")
                         .dom(REAL_TID, "a real").rng(REAL_TID, "the difference")
                         .argLst(T(REAL_TID), "the rhs real")
                         .body((lhs, inst) -> lhs.asReal().minus(Inst.Helper.alignRHSType(lhs, inst.arg(0)).asReal()))
-                        .derivation(new Derivation(start_(uri(InstSet.A)).minus_(uri(InstSet.B)), start_(uri(InstSet.A)).plus_(map_(uri(InstSet.B)).neg_())))
+                        .derivation(new Derivation(minus_(uri(InstSet.B)), plus_(map_(uri(InstSet.B)).neg_())))
                         .law(Law.action, Law.pure)
                         .create(),
                 // real->str is SOUND (the printed decimal reads back to the same double), so it declares the
@@ -1186,7 +1186,7 @@ public final class mInsts {
                                 lhs.stream().sorted(CommonUtil.ObjComparator.single()).collect(new CommonUtil.LstCollector()) :
                                 lhs.stream().sorted(CommonUtil.ObjProjectionComparator.of(inst.arg(0))).collect(new CommonUtil.LstCollector()))
                         .law(Law.pure)
-                        .derivation(new Derivation(start_(uri(A)).order_(uri(B)), start_(uri(A)).split_(lst(id_().tryToInst())).kmerge_(uri(B))))
+                        .derivation(new Derivation(order_(uri(B)), split_(lst(id_().tryToInst())).kmerge_(uri(B))))
                         .create(),
                 InstBuilder.build() // SWAP — swap(lhs, g) = g(lhs): the lhs becomes the inst's lhs, the inst's lhs becomes its arg
                         .tid(SWAP_INST_TID)

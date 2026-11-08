@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.algebra;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
  * THE ALGEBRA MEMOS FOLLOW THE STORE: a {@code ?decq} write evicts what {@link TheoryHelper#instances} and
@@ -98,8 +100,8 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
         // written straight to ?decq, so no builder stages it: only the write hook can tell the snapshot. Its rhs names
         // instructions no chain contains, so the rule is inert for every other test.
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID));
-        final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
-        final Code rhs = ObjmtronSerializer.parse("start(A).thornwhistle(B).quillfeather()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(B)"));
+        final Code rhs = ObjmtronSerializer.parse("thornwhistle(B).quillfeather()");
         final Obj original = Machine.read(address.addQ(DECQ));
         final Map<Obj, Obj> claim = original.isRec() ? mutableMap(original.asRec().jvm()) : mutableMap(uri(OBJ), str("mod"));
         claim.put(uri(DERIVATION), rec(mutableMap(uri(LHS), lhs, uri(RHS), rhs)));

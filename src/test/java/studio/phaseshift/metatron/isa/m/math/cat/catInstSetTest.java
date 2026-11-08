@@ -68,6 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -408,8 +409,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @Test
     void testInstBuilderDeclaresDerivation() {
-        final Code lhs = ObjmtronSerializer.parse("start(A).count()");
-        final Code rhs = ObjmtronSerializer.parse("start(A).map(1).sum()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("count()"));
+        final Code rhs = ObjmtronSerializer.parse("map(1).sum()");
         final Inst built = InstBuilder.build()
                 .tid(f("/m/inst/built_derivation_test"))
                 .dom(INT_TID.maybeSome()).rng(INT_TID)
@@ -450,8 +451,8 @@ public class catInstSetTest extends AbstractInstSetTest {
         // a synthetic declaration DUPLICATES THE WHOLE SERVED ENTRY, not only the facet under test: the ?decq rec
         // it writes REPLACES the inst's real declaration, so a partial copy would silently change the served claim —
         // and mod's laws, like int's minus's, come from ?decq alone
-        final Code lhs = ObjmtronSerializer.parse("start(A).mod(B)");
-        final Code rhs = ObjmtronSerializer.parse("start(A).siftveil(B).quarrymark()");
+        final Code lhs = code(ObjmtronSerializer.<Call>parse("mod(B)"));
+        final Code rhs = ObjmtronSerializer.parse("siftveil(B).quarrymark()");
         final fURI mod = MOD_INST_TID.dom(INT_TID).rng(INT_TID);
         final Law[] modLaws = Law.Helper.lawsOf(mod).atDirect(uri(LAW)).asLst().lstValue().stream()
                 .map(law -> Law.valueOf(law.uriValue().name())).toArray(Law[]::new);
