@@ -666,6 +666,39 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     @ParameterizedTest
+    @TestData(value = {"zeta -> 7"})
+    @CsvSource(value = {
+            // a ..-led !* is relative to the reference: the first .. leaves its own key, so it reads the poly holding it
+            "[b=>2,c=>!*<../b>]>>c                              % 2",
+            "[a=>[b=>2,c=>!*<../b>]]>>a>>c                      % 2",
+            "[a=>[b=>2,c=>!*<../b>]]>>a/c                       % 2",
+            "[a=>[b=>2,c=>!*<../b>]]>>a>>c.plus(4)              % 6",
+            "[a=>[b=>[d=>5],c=>!*<../b/d>]]>>a>>c               % 5",
+            "[a=>1,b=>!*<../a>,c=>!*<../b>]>>c                    % 1",
+            "{2}[b=>2,c=>!*<../b>]>>b                           % {2}2",
+            "{2}[b=>2,c=>!*<../b>]>>c                           % {2}2",
+            "[b=>2,c=>!*<../nope>]>>c                           % noobj",
+            // ! is eager, so a code headed by an auto fires on access: the dereference, then the rest of the code
+            "[a=>[b=>2,c=>!*<../b>.plus(4)]]>>a>>c              % 6",
+            "[a=>[b=>2,c=>!*<../b> + 4]]>>a>>c                  % 6",
+            "[b=>2,c=>!(>>b).plus(4)]>>c                        % 6",
+            // a bare .. is the holder, so a poly can refer to itself: each read fires one reference
+            "[b=>2,me=>!*<..>]>>me>>b                           % 2",
+            "[b=>2,me=>!*<..>]>>me>>me>>me>>b                   % 2",
+            // two levels up: the holder's own container
+            "[x=>1,a=>[c=>!*<../../x>]]>>a/c                    % 1",
+            "[x=>1,a=>[c=>!*<../../x>]]>>a>>c                   % 1",
+            // a holder's auto code reaches its siblings too: an auto applies to the poly holding it
+            "[b=>2,c=>!(>>b.plus(4))]>>c                      % 6",
+            "[a=>[b=>2,c=>!(>>b.plus(4))]]>>a>>c              % 6",
+            // a relative uri without .. names a machine variable
+            "[zeta=>2,c=>!*zeta]>>c                           % 7",
+    }, delimiter = '%')
+    public void testIntraPolyReference(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].sum()                                                      % [a=>1,b=>2,c=>3]",
             "{[a=>1],[b=>2]}.sum()                                                       % [a=>1,b=>2]",

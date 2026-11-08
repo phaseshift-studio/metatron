@@ -488,11 +488,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
 
 
     default Obj autoResolve(final Obj obj) {
-        if (!this.isInst())
-            return this;
-        final fURI base = this.tid().basePath();
-        final boolean auto = base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID);
-        if (!auto && !this.asInst().isInitial())
+        // A CODE IS AS AUTOMATIC AS ITS HEAD (Code.isAuto): !*<../b>.plus(4) fires the dereference, then adds 4 to it.
+        // Only an auto head fires one; a code that starts from an initial inst stays code (a poly holds programs)
+        final boolean auto = this.isAuto();
+        if (!auto && !(this.isInst() && this.asInst().isInitial()))
             return this;
         // an auto inst reads the poly holding it; an initial inst maps nothing to objs, so it runs from noobj
         return this.apply(auto ? obj : noobj()).c(c -> obj.isNoObj() ? c : c.mult(obj.c()));
@@ -1704,7 +1703,16 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                             .argLst(T(ALL.maybe()), "the uri to dereference")
                             .desc("an auto dereference function: reads the obj at the arg uri upon inst access (sugar'd !*)")
                             .body((lhs, inst) -> {
-                                final Obj resolved = Machine.read(inst.arg(0).uriValue()).autoResolve(lhs);
+                                final fURI target = inst.arg(0).uriValue();
+                                final Obj resolved;
+                                if (lhs.isPoly() && target.segments(0, "").equals("..")) {
+                                    // A ..-LED URI IS RELATIVE TO THE REFERENCE, not the machine: its first .. leaves
+                                    // the reference's own key, so the rest is read from the poly at() fired it with
+                                    // (the poly holding it), and a bare .. is that poly, so a poly can refer to itself
+                                    final fURI rest = target.pretract(1);
+                                    resolved = 0 == rest.segmentLength() ? lhs : lhs.<Poly<?, ?>>as().at(rest.toUri());
+                                } else
+                                    resolved = Machine.read(target).autoResolve(lhs);
                                 // A TYPE IS ITS NAME, so it comes back as itself, as from() hands back a type: a
                                 // dereferenced value is detached, but a type stripped of its vid is a nameless type
                                 // that no slot can be checked against (an auto_from element in a lst type slot NPE'd
