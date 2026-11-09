@@ -645,8 +645,7 @@ public final class QCollection {
                     uri(INVERSE).maybe(), ALL_TYPE,
                     uri(DERIVATION).maybe(), ALL_TYPE,
                     uri(FORM).maybe(), ALL_TYPE,
-                    uri(INST).maybe(), ALL_TYPE,
-                    uri(REWRITE).maybe(), ALL_TYPE))
+                    uri(INST).maybe(), ALL_TYPE))
             .create();
     /**
      * the sub-space KEY the declarations live under, inside the q-proc (docq's {@code inst}/{@code obj}).

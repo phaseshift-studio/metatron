@@ -1047,15 +1047,24 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * THE MONOID STATES ITS IDENTITY RULE AS DATA (Marko, 2026-11-08) — {@code op(id) ⇝ ε}, in the theory's own role
-     * names, beside its law battery in the theory's {@code ?decq}: the one rule every monoid instance binds
-     * ({@link Law.Helper#units}).
+     * A THEORY'S LAWS AND RULES ARE ITS OWN DATA (Marko, 2026-11-08) — its type states them beside its roles: the
+     * monoid's battery and its identity rule {@code op(id) ⇝ ε}, the one rule every monoid instance binds
+     * ({@link Law.Helper#units}), and the ring's battery with no rule. They are not declarations about the theory, so
+     * nothing stages one at its {@code ?decq}; and they are the theory's, never an instance's, so a monoid built at
+     * runtime with only its roles is still a monoid.
      */
     @Test
-    void testTheMonoidStatesItsIdentityRule() {
-        final Obj declared = Machine.read(PendingWrites.decq(MONOID_THEORY_TID));
+    void testATheoryStatesItsLawsAndRules() {
         checkEquality(LOG, lst(rec(code(List.of(instB(f(OP), lst(uri(ID))))), code(List.<Inst>of()))),
-                declared.asRec().atDirect(uri(REWRITE)), true);
+                TheoryHelper.stated(MONOID_THEORY_TID, REWRITE), true);
+        checkEquality(LOG, ObjmtronSerializer.parse("[monoidic,unit]"), TheoryHelper.stated(MONOID_THEORY_TID, LAW), true);
+        checkEquality(LOG, ObjmtronSerializer.parse("[monoidic,unit,commutative,involution,left_distributive,right_distributive]"),
+                TheoryHelper.stated(RING_THEORY_TID, LAW), true);
+        checkEquality(LOG, noobj(), TheoryHelper.stated(RING_THEORY_TID, REWRITE), true);
+        assertTrue(PendingWrites.writes().stream().noneMatch(write -> write.address().equals(PendingWrites.decq(MONOID_THEORY_TID))),
+                "nothing declares the monoid's laws or rules: they are its type's");
+        final Rec monoid = rec(mutableMap(uri(OP), instB(PLUS_INST_TID, lst()), uri(ID), jnt(0)), MONOID_THEORY_TID, null);
+        checkEquality(LOG, monoid, T(MONOID_THEORY_TID).apply(monoid), true);
     }
 
     /**

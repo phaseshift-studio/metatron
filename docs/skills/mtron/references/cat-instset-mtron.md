@@ -71,8 +71,9 @@ theory with one `op` role by the instruction family that op binds, `add_` for `p
 the graph holds the references, and a role dereferences transparently on `>>` (`...>>theory>>ring>>add` yields the
 inst). The first example above is the `int` case in full: its theory rec declares a `ring` and the three constituent
 group/monoid instances. `theory::T` is the nominal super-type grouping them. The theories are `/m`'s own types
-(`/m/theory`), which the core types and every instruction set's types declare their algebras over; the category renders
-them:
+(`/m/theory`), which the core types and every instruction set's types declare their algebras over. A theory's law
+battery (`law`) and its rewrite rules (`rewrite`) are its own data, stated in its type beside its roles under keys no
+instance carries: the roles are its fields, the rules what to do with them. The category renders them:
 
 | type                 | roles (fields)                     | what it asserts                                                                                                                                                                                  |
 |----------------------|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -280,7 +281,7 @@ stream (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be u
 semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.
 
 The first two generalize a *monoid's* unit and a *group's* inverse to every declared structure. The unit law is a
-rule stated once, in the theory's role names, beside its law battery in `monoid_theory`'s `?decq`:
+rule stated once, in the theory's role names, in `monoid_theory::T` itself beside its roles and its law battery:
 `rewrite => [op(id) => ε]`. Every instance keyed by a monoid form binds the roles, so $x + 0$, $x \cdot 1$,
 $x + \texttt{''}$ (str), $x \cdot \langle\rangle$ (uri) and $x \cdot .$ (machine) all drop. Composition is
 adjacency in a chain, so code's `mul_monoid` binds $\mathrm{id}$ alone: the identity *operation* drops out. A theory

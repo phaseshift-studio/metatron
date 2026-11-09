@@ -274,6 +274,33 @@ public class mInstSet extends AbstractInstSet {
      * add_group, …), and every instruction set inherits them for its own types; the category instruction set keeps
      * category theory (adjunctions, pullbacks, products, …). A theory is a named tuple of roles (role => op or element),
      * and {@code theory::T} is their nominal super-type.
+     * <p>
+     * A THEORY'S LAWS AND RULES ARE ITS OWN DATA (Marko, 2026-11-08). {@code ?decq} holds what is declared ABOUT a type
+     * (int's algebras, an instruction's claims), but a theory is itself data about types, so what it uses to do its job
+     * sits in its definition beside its roles: the roles are its fields (templates), its {@code rewrite} rules its methods
+     * (what to do with those templates), and its {@code law} battery the process laws an instance of it entails. Both
+     * are the theory's, never an instance's, so they sit under optional keys no instance carries ({@code MObj} checks a
+     * theory instance built at runtime against its theory). The batteries, each defensible on its own terms:
+     * <ul>
+     *   <li>MONOID — an associative operation with an identity: {@code monoidic} + {@code unit}; its identity drops out,
+     *       {@code op(id) ⇝ ε}.</li>
+     *   <li>COMMUTATIVE_MONOID — the monoid's laws plus {@code commutative}: lst under concatenation is not one (append is
+     *       ordered), rec under deep merge is (merge is keyed).</li>
+     *   <li>GROUP — a monoid with inverses: those two + {@code involution} ({@code a·a⁻¹ = id} for the operation,
+     *       {@code inv(inv(a)) = a} for the inverse).</li>
+     *   <li>RING — an abelian additive group and a multiplicative monoid distributing over it. The battery is FLAT — a law
+     *       is not attributed to a role — so {@code commutative} is claimed of every operation, true of the commutative
+     *       rings declared here (int, real).</li>
+     *   <li>FIELD — a commutative ring whose non-zero elements are a multiplicative group: the ring's laws, the extra
+     *       structure being the {@code inv} role.</li>
+     *   <li>RIG — monoids with distributivity and NO additive inverse: no {@code involution}, and no {@code idempotent}
+     *       (nat is a rig and is not idempotent).</li>
+     *   <li>BOOLEAN — a complemented distributive lattice: commutative idempotent monoids, distributivity,
+     *       {@code involution} for the complement and {@code complement} for {@code b∧¬b = ⊥}, {@code b∨¬b = ⊤}.</li>
+     *   <li>LATTICE / SEMILATTICE — join and meet are each an idempotent commutative monoid.</li>
+     *   <li>NEAR_RING — one-sided distributivity only; its signature declares no identity and no inverse, and
+     *       {@code semi_right_distributive} is an instruction claim about reducers (Thm 19), not an axiom (Thm 18).</li>
+     * </ul>
      */
     public static final Type THEORY_TYPE = TypeBuilder.build()
             .tid(REC_TID)
@@ -287,7 +314,8 @@ public class mInstSet extends AbstractInstSet {
                     uri(ADD), INST_TYPE,
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
-                    uri(ONE), ALL_TYPE))
+                    uri(ONE), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type GROUP_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -295,21 +323,27 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
-                    uri(INV), INST_TYPE))
+                    uri(INV), INST_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.involution)))
             .create();
     public static final Type MONOID_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
             .vid(MONOID_THEORY_TID, "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)")
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
-                    uri(ID), ALL_TYPE))
+                    uri(ID), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit),
+                    // the monoid's identity drops out, op(id) ⇝ ε, in the theory's own role names: every monoid
+                    // instance binds op and id (Law.Helper.bind)
+                    uri(REWRITE).maybe(), lst(rec(MCode.code(List.of(instB(f(OP), lst(uri(ID))))), MCode.code(List.<Inst>of())))))
             .create();
     public static final Type COMMUTATIVE_MONOID_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
             .vid(COMMUTATIVE_MONOID_THEORY_TID, "the theory of commutative monoids \\(\\langle M, \\cdot, 1 \\rangle\\): a monoid whose operation commutes, \\(m \\cdot n = n \\cdot m\\)")
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
-                    uri(ID), ALL_TYPE))
+                    uri(ID), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative)))
             .create();
     public static final Type FIELD_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -319,7 +353,8 @@ public class mInstSet extends AbstractInstSet {
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
                     uri(ONE), ALL_TYPE,
-                    uri(INV), INST_TYPE))
+                    uri(INV), INST_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type RIG_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -328,7 +363,8 @@ public class mInstSet extends AbstractInstSet {
                     uri(ADD), INST_TYPE,
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
-                    uri(ONE), ALL_TYPE))
+                    uri(ONE), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type BOOLEAN_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -338,7 +374,8 @@ public class mInstSet extends AbstractInstSet {
                     uri(AND), INST_TYPE,
                     uri(NOT), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
-                    uri(ONE), ALL_TYPE))
+                    uri(ONE), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent, Law.involution, Law.complement, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type LATTICE_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -347,14 +384,16 @@ public class mInstSet extends AbstractInstSet {
                     uri(MEET), INST_TYPE,
                     uri(JOIN), INST_TYPE,
                     uri(BOTTOM), ALL_TYPE,
-                    uri(TOP), ALL_TYPE))
+                    uri(TOP), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
             .create();
     public static final Type SEMILATTICE_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
             .vid(SEMILATTICE_THEORY_TID, "the theory of semilattices \\(\\langle S, \\sqcup, 0 \\rangle\\): an idempotent commutative monoid (a single meet or join side of a lattice)")
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
-                    uri(ID), ALL_TYPE))
+                    uri(ID), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
             .create();
     public static final Type NEAR_RING_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -362,8 +401,16 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(ADD), INST_TYPE,
                     uri(MUL), INST_TYPE,
-                    uri(ZERO), ALL_TYPE))
+                    uri(ZERO), ALL_TYPE,
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.left_distributive)))
             .create();
+    /**
+     * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
+     */
+    private static Lst laws(final Law... laws) {
+        return lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList());
+    }
+
     /**
      * {@code theory_form::T} — THE KEYS OF A TYPE'S THEORY BLOCK (Marko, 2026-11-08). A theory with several op roles is
      * keyed by its own name ({@code ring}); a theory with one {@code op} role by the instruction family that op binds,
@@ -544,7 +591,6 @@ public class mInstSet extends AbstractInstSet {
         // their roles), and the retained log would otherwise hand a later boot the objects of an earlier machine --
         // the role pointers then name dead spaces and an algebra reads as "no role-bearing operation".
         mTypes.declareAlgebras();
-        mTypes.declareAxioms();
         this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
@@ -1588,10 +1634,8 @@ public class mInstSet extends AbstractInstSet {
         // there would close a class-initialisation cycle. Staged here, and published to ?decq on first read (the
         // q-proc's lazy hook).
         mTypes.declareAlgebras();
-        // EVERY THEORY'S LAW BATTERY IS DECLARED AT THE THEORY (mTypes.declareAxioms) — WHICH process laws an
-        // instance of it entails, so a validator can turn a carrier's declared instances into a claim list. Same
-        // method-not-field reason as above: the batteries name Law constants and theory tids.
-        mTypes.declareAxioms();
+        // A THEORY'S LAW BATTERY AND RULES ARE NOT DECLARED HERE: they are the theory's own data, stated in its
+        // type (THEORY_TYPE's javadoc), so nothing is staged for /m/theory/*?decq.
     }
 
 }
