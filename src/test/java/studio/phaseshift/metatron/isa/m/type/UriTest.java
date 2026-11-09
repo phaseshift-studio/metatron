@@ -73,19 +73,23 @@ public class UriTest extends AbstractAlgebraTest {
             //"a/b.plus(c/d)                                              | {a/b,c/d}",
             // "a/b.plus(noobj)                                              | a/b",
             "a/b/c.plus(a/c/c)                                            | a/{b,c}/c",
-            "a/{b,d}/c.plus(a/c/c)                                        | a/{b,c,d}/{2}c",
-            "a/{b,d}/c.plus(a/e/c)                                        | a/{b,d,e}/{2}c",
-            "a/{b,d,e}/c.plus(a/f/c)                                      | a/{b,d,e,f}/{3}c",
-            "a/{x,y,z}/p/q.plus(a/w/p/q)                                  | a/{w,x,y,z}/{3}p/{3}q",
-            "a/{m,n}/c/d.plus(a/o/c/d)                                    | a/{m,n,o}/{2}c/{2}d",
+            "a/{b,d}/c.plus(a/c/c)                                        | a/{b,c,d}/c",
+            "a/{b,d}/c.plus(a/e/c)                                        | a/{b,d,e}/c",
+            "a/{b,d,e}/c.plus(a/f/c)                                      | a/{b,d,e,f}/c",
+            "a/{x,y,z}/p/q.plus(a/w/p/q)                                  | a/{w,x,y,z}/p/q",
+            "a/{m,n}/c/d.plus(a/o/c/d)                                    | a/{m,n,o}/c/d",
             "a/b/c/d.plus(a/e/c/d)                                        | a/{b,e}/c/d",
-            "a/c/c.plus(a/{b,d}/c)                                        | a/{b,c,d}/{2}c",
-            //   "a/b/c{2,3}.plus(a/d/c{-3,-2})                                | a/{{2,3}b,{-3,-2}d}/c",
-            //  "a/b/c{2}.plus(a/d/c{3})                                      | a/{{2}b,{3}d}/c",
-            //  "a/{b,d}/c{2}.plus(a/e/c{3})                                  | a/{{2}b,{2}d,{3}e}/{2}c",
-            //  "a/e/c{2}.plus(a/{b,d}/c{3})                                  | a/{{3}b,{3}d,{2}e}/{2}c",
+            "a/c/c.plus(a/{b,d}/c)                                        | a/{b,c,d}/c",
+            // a point the terms do not share stays in the branch, as each term's prefix
+            "a/b/c{2,3}.plus(a/d/c{-3,-2})                                | a/{{2,3}b,{-3,-2}d}/c",
+            "a/b/c{2}.plus(a/d/c{3})                                      | a/{{2}b,{3}d}/c",
+            "a/{b,d}/c{2}.plus(a/e/c{3})                                  | a/{{2}b,{2}d,{3}e}/c",
+            "a/e/c{2}.plus(a/{b,d}/c{3})                                  | a/{{3}b,{3}d,{2}e}/c",
+            // a point every term shares stays in the value, while the uri's own coefficient floats over the sum
+            "a/b/c{2}.plus(a/d/c{2})                                      | a/{b,d}/c{2}",
+            "{2}a/b/c.plus(a/b/c)                                         | {2}a/b/c{2}",
             "a/b/c/d.plus(a/e/f/g)                                        | a/{b/c/d,e/f/g}",
-            "<a/{b,d}/c>.mult(d/e).plus(a/c/c/d/e)                         | a/{b,c,d}/{2}c/{2}d/{2}e",
+            "<a/{b,d}/c>.mult(d/e).plus(a/c/c/d/e)                         | a/{b,c,d}/c/d/e",
             "a/b.mult(c/d)                                                | a/b/c/d",
             "a/b.mult(noobj)                                              | noobj",
             "a/b.one()                                                    | <>",
@@ -377,45 +381,37 @@ public class UriTest extends AbstractAlgebraTest {
     }
 
 
-   /* @ParameterizedTest
+    /**
+     * THE URI SUM is one uri whose value counts its terms (Marko 2026-11-08, option A): a point the terms share and a
+     * point they do not both stay in the value, the argument counts as often as its coefficient, and the uri's own
+     * coefficient floats over the sum (Thm 6). A split hands every term back with its point, so {@code (x + y).-<} is x
+     * and y again. {@code *} concatenates the values and multiplies the coefficients.
+     */
+    @ParameterizedTest
     @CsvSource(value = {
-            "<{a}> + <>                     % <{a,}>", // {,a} == {a,}
+            "<{a}> + <>                     % <{,a}>",
             "<{a}> + <{b}>                  % <{a,b}>",
+            "/a + /a + /a                   % </a{3}>",
+            "/a + /a + a/                   % <{{2}/a,a/}>",
+            "{2}a/b/c + <> + <>             % {2}<{{2},a/b/c}>",
+            "<{a,b}/c> + <e/c/f>            % <{a/c,b/c,e/c/f}>",
+            "{2}/a/b + /a/c                 % {2}</a/{b,c}>",
+            "/a/b + {2}/a/c                 % </a/{b,{2}c}>",
+            "<http://a.com/a> + <ws://a.com/a> % <{http://a.com/a,ws://a.com/a}>",
             "<{a,b}> * c                    % <{a,b}/c>",
             "<{a,b}/c> * <>                 % <{a,b}/c>",
             "<> * <{a,b}/c>                 % <{a,b}/c>",
             "<a/b/{{2}c,d}> * {4}e          % {4}<a/b/{{2}c,d}/e>",
-            "<a/b/{{2}c,d}> * {?}e          % {?}<a/b/{{2}c,d}/e>",
             "<a/b/{c,d}> * {10}<>           % {10}<a/b/{c,d}>",
-            "{2}a/b/c + <> + <>             % {2}<{{2}a/b/c,<>}>",
-            "<> + <> + <>                   % {3}<>",
-            "<> + <>                        % {2}<>",
-            "</a/{b,c}/d> + </a/{2}d/d>     % </a/{b,c,{2}d}/{2}d>",
-            "/a + /a + /a                   % {3}/a",
-            "/a + /a + a/                   % <{{2}/a,a/}>",
-            "</a/{b,c}/d> * </a/b/d>        % </a/{b,c}/d//a/b/d>",
-            "<{a,b}/c> + <e/c/f>            %  <{{a,b}/c,e/c/f}>"
-           /* "</a/{b,c,d,e,f}/{d,d}>         % |a|{b,c,d,e,f}|{d,d}",
-            "<{a,b}/c>                      % {a,b}|c",
-            "<{a,b,c}>                      % {a,b,c}",
-            "<a/{b,c}>                      % a|{b,c}",
-            "<a/{b,c{*}}>                   % a|{b,c{*}}",
-            // "<a/{b,c{0,1}}>                 % a|{b,c{?}}",
-            "<a/{b,c}/d>                    % a|{b,c}|d",
-            "<a/{b{?},c}/d>                 % a|{b{?},c}|d",
-            "<a/{b{?},c}/{1,5}d>            % a|{b{?},c}|{1,5}d",
-            "<a/{/b,/c}/d>                  % a|{/b,/c}|d",
-            "<{/a,/b}/c>                    % |{a,b}|c",
-            "<{/a,/b,/c}>                   % |{a,b,c}",
-            "</a/{b,c}>                     % |a|{b,c}",
-            "/a/{b,c}                       % |a|{b,c}",
-            "a/{{b,d},c}/c/d/e              % a|{{b,d},c}|c|d|e",
-            "<{0}a/{{0}b,{0}d,{0}c}/c/d/e>  % {0}a|{{0}b,{0}d,{0}c}|c|d|e",
-            "a/{b,c,d}/{2}c/{2}d/{2}e       % a|{b,c,d}|{2}c|{2}d|{2}e",
-            "a/{b/c,d/e}/f                  % a|{b/c,d/e}|f",*/
-  /*  }, delimiter = '%')
+            // a split hands every term back with its point, so a sum splits into what was added
+            "</a/{{2}b,c}>.-<               % {/a/b{2},/a/c}",
+            "/a/b{2}.plus(/a/c).-<          % {/a/b{2},/a/c}",
+            "/a/b{2}.plus(/a/c{2}).-<       % {/a/b{2},/a/c{2}}",
+            "{/a/b,/a/c,/a/b}.sum()         % </a/{{2}b,c}>",
+            "{/a/b,/a/c}.sum()              % </a/{b,c}>",
+            "{/a/b,{0}/a/c}.sum()           % /a/b",
+    }, delimiter = '%')
     void testBasicAlgebra(final String code, final String expected) {
-        LOG.warn("parsing: %s %s\n1: %s\n2: %s", code, expected, ObjmtronSerializer.parse(code), ObjmtronSerializer.parse(expected));
-        checkCodeParseApply(LOG, code, expected);
-    }*/
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 }

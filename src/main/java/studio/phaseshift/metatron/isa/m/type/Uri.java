@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.form.AbstractfURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
@@ -33,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
@@ -121,25 +121,16 @@ public interface Uri extends Mono, Comparable<Uri> {
         return this.equals(ONE) ? rhs : rhs.equals(ONE) ? this : this.jvm(this.uriValue().extend(rhs.uriValue())).c(c -> c.mult(rhs.c())).asUri();
     }
 
-    default Uri plus(final Uri rhs) {
-        if (this.uriValue().equals(rhs.uriValue()))
-            return this.c(c -> c.plus(rhs.c())).asUri();
-        return this.jvm(this.uriValue().path(AbstractfURI.mergePaths(this.uriValue().isEmpty() ? List.of("") : this.uriValue().path(), rhs.uriValue().isEmpty() ? List.of("") : rhs.uriValue().path(), cInt.C_ONE, cInt.C_ONE)));
-    }
-
     /**
-     * Carries a rhs uri's tid coefficient onto its first path segment as a {@code {n}atom} marker, so the mult/plus
-     * concatenation keeps the multiplicity in the path ({@code a/b * {4}e} → {@code a/b/{4}e}). A one coefficient is
-     * left alone.
+     * The sum of two uris is one uri whose value is the canonical sum of both values ({@link fURI.Helper#sum}), so its
+     * count lives in the value's points: {@code /a + /a} is {@code </a{2}>}, {@code /a/b{2} + /a/c} is
+     * {@code </a/{{2}b,c}>}, and split ({@code -<}) hands each term back. The argument counts as often as its
+     * coefficient says, while this uri's own coefficient floats (Stream Ring Theory, Thm 6): {@code {2}/a/b + /a/c} is
+     * {@code {2}</a/{b,c}>}, two of the sum (Marko 2026-11-08, option A).
      */
-    private static fURI coefficientPrefix(final Uri rhs) {
-        final fURI f = rhs.uriValue();
-        final cInt c = rhs.tid().c();
-        if (c.isOne() || f.path().isEmpty())
-            return f;
-        final java.util.List<String> path = new java.util.ArrayList<>(f.path());
-        path.set(0, "{" + c + "}" + path.get(0));
-        return fURI.of(f.b(), f.scheme(), f.host(), f.port(), path, cInt.ONE(), f.poly(), f.qMap(), f.templates());
+    default Uri plus(final Uri rhs) {
+        final fURI counted = rhs.uriValue().d(rhs.uriValue().d().mult(rhs.c()));
+        return this.jvm(fURI.Helper.sum(Stream.of(this.uriValue(), counted))).asUri();
     }
 
     @Override
@@ -270,7 +261,7 @@ public interface Uri extends Mono, Comparable<Uri> {
         // double-prepends the template path — so until that is resolved the rule lives at its call sites.
         if (null != host && !normalizedPath.isEmpty() && !normalizedPath.getFirst().isEmpty())
             normalizedPath.add(0, "");
-        return fURI.of(template.b(), scheme, host, finalPort, normalizedPath, template.c(), template.poly(), query, null);
+        return fURI.of(template.b(), scheme, host, finalPort, normalizedPath, template.d(), template.poly(), query, null);
     }
 
     /**
