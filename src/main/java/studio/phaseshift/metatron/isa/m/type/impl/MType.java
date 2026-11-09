@@ -142,7 +142,9 @@ public class MType extends MObj implements Type {
         // ACCIDENT (the second lap hit the cache); this is the same brake made deliberate and scoped: a
         // re-entered name answers the label immediately and nothing is stored, so the brake holds even
         // when a racing write keeps the first lap out of the cache.
-        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()
+        // A BRANCHED NAME IS A SUM, the set of its branches' types ({1,'a'} is int + str): it is not one registered
+        // type, and read as an address it would match only the branches its points admit
+        if (!checkID.hasPattern() && !checkID.hasBranches() && !BASE_TYPES.contains(checkID.basePath()) && Machine.loaded()
                 && RESOLVING.get().add(checkID.toString())) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             try {
                 // a name is registered without a span ({2}nat is two nats in a row), so it is read without one
@@ -159,8 +161,8 @@ public class MType extends MObj implements Type {
                 // registered type (often also referenced from another type's predicate). Re-typing it with
                 // this request's coefficient would rewrite that shared type -- e.g. resolving the two-being
                 // multiplicity being{2} would rewrite the registered being, and team's member=>being{+}
-                // predicate with it. The request's span goes on with its coefficient: both are the request's.
-                obj = obj.clone().selfTID(obj.tid().c(checkID.c()).b(checkID.b()));
+                // predicate with it. The request's span goes on with its point: both are the request's.
+                obj = obj.clone().selfTID(obj.tid().d(checkID.d()).b(checkID.b()));
                 if (obj.isType()) {
                     if (checkID.c().equals(obj.c()) &&
                             Objects.equals(obj.asType().predicate(), predicate) &&
@@ -216,7 +218,7 @@ public class MType extends MObj implements Type {
                         // canonical-only registration rule sees the final coefficient -- a variant must not
                         // register itself after the fact.
                         final boolean useRequested = null != tid && null != vid;
-                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).c(checkID.c());
+                        final fURI derivedTID = (useRequested ? bigTID : obj.tid()).d(checkID.d());
                         final fURI derivedVID = useRequested ? bigVID : Type.Helper.instantiate(obj.vid(), checkID);
                         return checkPolyPoly(new MType(Tuple.Pair.with(
                                 null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,

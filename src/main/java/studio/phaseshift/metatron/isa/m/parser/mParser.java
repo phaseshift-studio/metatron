@@ -205,7 +205,7 @@ public class mParser {
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
-                opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(coefficientOrOne(pick(t, 2))).qString(pick(t, 3))));
+                opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).d(coefficientOrOne(pick(t, 2))).qString(pick(t, 3))));
         rel_parser.set(seq(m_type_prefix(Tokens.REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
         obj_no_call_parser.set(choice(
                 m_comment(),
@@ -1094,7 +1094,7 @@ public class mParser {
         return new FuriPolyRuleParser(seq(of('-').not(), leadingBraceGuard, contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).c(coefficientOrOne(pick(t, 4))).qString(pick(t, 5))));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 2)).poly(pick(t, 3)).d(coefficientOrOne(pick(t, 4))).qString(pick(t, 5))));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
@@ -1115,7 +1115,7 @@ public class mParser {
                 .map(t -> {
                     final String c = pick(t, 0);
                     final fURI f = pick(t, 1);
-                    return null == c ? f : f.c(coefficientOrOne(c));
+                    return null == c ? f : f.d(coefficientOrOne(c));
                 });
     }
 
@@ -1397,7 +1397,7 @@ public class mParser {
                 .map(t -> null == pick(t, 0) ? pick(t, 1) : mParser.<fURI>pick(t, 1).b(coefficientOrOne(pick(t, 0)))) :
                 opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), m_furi_coefficient().map(t -> {
                     try {
-                        return baseType.c(coefficientOrOne(t));
+                        return baseType.d(coefficientOrOne(t));
                     } catch (Exception e) {
                         return null;
                     }
@@ -1502,7 +1502,7 @@ public class mParser {
         return seq(new TypeCoefficientParser(m_type_prefix(null)), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
-                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.c(coefficientOrOne(t))), m_vid_postfix()))
+                choice(m_furi_coefficient().map(t -> Tokens.TYPE_TID.d(coefficientOrOne(t))), m_vid_postfix()))
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0).toString().equals("noobj") ? NOOBJ_TID : pick(t, 0), pick(t, 4)));
     }
 

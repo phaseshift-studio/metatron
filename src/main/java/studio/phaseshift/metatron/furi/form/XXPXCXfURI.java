@@ -36,7 +36,7 @@ public class XXPXCXfURI extends XXPXXXfURI {
     }
 
     @Override
-    public cInt c() {
+    public cInt d() {
         return this.coefficient;
     }
 }

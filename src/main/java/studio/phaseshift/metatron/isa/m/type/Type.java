@@ -404,8 +404,11 @@ public interface Type extends Obj {
         if (!rhs.isType())
             return false;
         // A TYPE'S SPAN is how many in a row: a type is within another only when its span is, as its point is. A
-        // generic, the root and the type of types are not runs, so they take any span.
-        if (!this.tid().b().within(rhs.tid().b()) && !rhs.asType().isGeneric() && !rhs.asType().isRootType()
+        // generic, the root and the type of types are not runs, so they take any span. The coefficient compared
+        // later is the count (span times point), so a run judges its point here: {1}int{6} is no {*}int{0,5}.
+        if ((!this.tid().b().isOne() || !rhs.tid().b().isOne())
+                && !(this.tid().b().within(rhs.tid().b()) && this.tid().d().within(rhs.tid().d()))
+                && !rhs.asType().isGeneric() && !rhs.asType().isRootType()
                 && !Tokens.TYPE_TID.equals(rhs.tid().basePath()))
             return false;
         if (this.isFibered() && this.recFibers().stream().anyMatch(fiber -> fiber.test(rhs)))

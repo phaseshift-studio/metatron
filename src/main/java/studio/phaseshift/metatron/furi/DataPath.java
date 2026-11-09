@@ -174,7 +174,7 @@ public record DataPath(String db, String collection, String entry, String field,
         // 3-segment wildcard like /g/+/+/ as subList(4,3).
         if (vid.segmentLength() > 4) {
             final List<String> props = vid.segments().subList(4, vid.segmentLength());
-            fprops = fURI.of(vid.b(), null, null, -1, props, vid.c(), null, vid.qMap(), vid.templates());
+            fprops = fURI.of(vid.b(), null, null, -1, props, vid.d(), null, vid.qMap(), vid.templates());
         } else {
             fprops = null;
         }

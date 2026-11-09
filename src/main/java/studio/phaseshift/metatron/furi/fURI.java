@@ -291,7 +291,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
     default fURI origin(final fURI origin) {
-        return fURI.of(this.b(), origin.scheme(), origin.host(), origin.port(), this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), origin.scheme(), origin.host(), origin.port(), this.path(), this.d(), this.poly(), this.qMap(), this.templates());
     }
 
 
@@ -344,6 +344,14 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         return false;
     }
 
+    /**
+     * The normal form: the dot segments folded ({@code a/b/../c} is {@code a/c}) and the branches summed into their one
+     * spelling ({@code a/{c,b}}, {@code {a/b,a/c}} and {@code a{/b,/c}} are {@code a/{b,c}}). Only this call makes it:
+     * equality compares the spelling, so two encodings of one sum are equal once resolved. A span never moves, so
+     * {@code {2}int{3}} and {@code int{6}} stay apart.
+     *
+     * @return this uri in its normal form
+     */
     fURI resolve();
 
     default fURI resolve(final Map<fURI, fURI> generics) {
@@ -362,7 +370,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                         lhs.rng(cless.rng().path(cless.rng().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
                         lhs.rng(cless.rng());
             //Graphitty.log(this).trace("generics after resolution: %s", generics);
-            return lhs.qString(this.hasQ() ? this.qString() : null).c(this.c());
+            return lhs.qString(this.hasQ() ? this.qString() : null).d(this.d());
         } else {
             return this;
         }
@@ -420,7 +428,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     default fURI authority(final String authority) {
         if (null == authority && null != this.authority())
-            return fURI.of(this.b(), this.scheme(), null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+            return fURI.of(this.b(), this.scheme(), null, -1, this.path(), this.d(), this.poly(), this.qMap(), this.templates());
         // the port's colon is the first one AFTER the host: past the closing bracket of an IP-literal ([::1]:8555),
         // whose own colons are the address, not a separator
         final int colon = authority.indexOf(':', authority.startsWith("[") ? Math.max(0, authority.indexOf(']')) : 0);
@@ -449,7 +457,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     default fURI localize() {
         if (null == this.scheme() && null == this.host())
             return this;
-        return fURI.of(this.b(), null, null, -1, this.path(), this.c(), this.poly(), this.qMap(), this.templates());
+        return fURI.of(this.b(), null, null, -1, this.path(), this.d(), this.poly(), this.qMap(), this.templates());
     }
 
     String host();
@@ -688,7 +696,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     fURI poly(final List<String> poly);
 
     default fURI poly(final fURI polynomial, final fURI... polynomials) {
-        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
+        return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.d(), Stream.concat(Stream.of(polynomial), Stream.of(polynomials)).map(fURI::toString).toList(), this.qMap(), this.templates());
     }
 
     fURI neg();
@@ -697,14 +705,40 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     fURI plus(final fURI other);
 
+    /**
+     * The coefficient: how many this uri counts. It is the product of the coefficients written in place, the span
+     * {@link #b()} and the point {@link #d()}, summed over the branches: {@code {2}int{3}} counts 6, and
+     * {@code {2}/m/{{3}int,str}} counts {@code 2·3 + 2·1} = 8, the paths through it.
+     *
+     * @return the product of the in-place coefficients, summed over the branches
+     */
     cInt c();
 
+    /**
+     * This uri counting {@code coefficient}. A coefficient floats (Stream Ring Theory, Thm 6: {@code ca·1b = 1a·1b·c1}),
+     * so it is written into the point: over the span and the branch points when they divide it ({@code {2}int{3}} at
+     * 8 is {@code {2}int{4}}), else alone ({@code {2}int{3}} at 7 is {@code int{7}}). A branched uri whose points do
+     * not divide it keeps them, and the coefficient becomes their common factor.
+     *
+     * @param coefficient what this uri is to count, {@code {1}} when null
+     * @return this uri counting {@code coefficient}
+     */
     fURI c(final cInt coefficient);
 
     /**
-     * The span: how many in a row, beside the point {@link #c()} (how many at each). Like the letters, b is written
-     * before c, {@code {b}path[poly]{c}}, so the type {@code {2}int{3}::T} has the one id {@code {2}/m/int{3}}: two
-     * slots in a row, each holding an int{3}. A value shows the same two fields the other way around,
+     * The point as written: the coefficient after the path, {@code {b}path[poly]{d}}, how many at each. Printing,
+     * equality and every uri derived from this one carry it as written; {@link #c()} is what it counts.
+     *
+     * @return the point, {@code {1}} when none is written
+     */
+    cInt d();
+
+    fURI d(final cInt point);
+
+    /**
+     * The span as written: how many in a row, beside the point {@link #d()} (how many at each). Like the letters, b is
+     * written before d, {@code {b}path[poly]{d}}, so the type {@code {2}int{3}::T} has the one id {@code {2}/m/int{3}}:
+     * two slots in a row, each holding an int{3}. A value shows the same two fields the other way around,
      * {@code {point}value{span}}.
      *
      * @return the span, {@code {1}} when none is written
@@ -714,7 +748,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     fURI b(final cInt span);
 
     default fURI cLess() {
-        return this.c((cInt) null);
+        return this.d((cInt) null);
     }
 
     /**
@@ -868,7 +902,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
-            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.d(), this.poly(), Map.of(), this.templates());
         else {
             // Extract and merge any templates from the query string
             List<Tuple.Pair<Component, String>> mergedTemplates = null;
@@ -879,7 +913,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                     mergedTemplates.add(Tuple.Pair.with(Component.QUERY, m.group(1)));
                 }
             }
-            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query),
+            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.d(), this.poly(), Singleton.parseQuery(query),
                     mergedTemplates != null && !mergedTemplates.isEmpty() ? mergedTemplates : this.templates());
         }
     }
@@ -976,7 +1010,13 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
      * @return whether the path carries a branch
      */
     default boolean hasBranches() {
-        return !this.hasTemplates() && this.path().stream().anyMatch(segment -> segment.indexOf('{') >= 0);
+        // a loop, not a stream: c() and c(k) ask this of every uri they count
+        if (this.hasTemplates())
+            return false;
+        for (final String segment : this.path())
+            if (segment.indexOf('{') >= 0)
+                return true;
+        return false;
     }
 
     default fURI trim() {
@@ -1288,7 +1328,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                         null == element.host() ? furi.host() : element.host(),
                         -1 == element.port() ? furi.port() : element.port(),
                         element.path(),
-                        furi.c().mult(term.get1()).mult(element.c()),
+                        furi.d().mult(term.get1()).mult(element.d()),
                         element.poly().isEmpty() ? furi.poly() : element.poly(),
                         element.qMap().isEmpty() ? furi.qMap() : element.qMap(),
                         furi.templates()));
@@ -1358,18 +1398,18 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
          */
         public static fURI sum(final Stream<fURI> terms) {
             final Map<fURI, cInt> points = new LinkedHashMap<>();
-            terms.forEach(term -> points.merge(term.c(cInt.ONE()), term.c(), cInt::plus));
+            terms.forEach(term -> points.merge(term.d(cInt.ONE()), term.d(), cInt::plus));
             final List<fURI> live = points.entrySet().stream().filter(entry -> !entry.getValue().isZero())
-                    .map(entry -> entry.getKey().c(entry.getValue())).toList();
+                    .map(entry -> entry.getKey().d(entry.getValue())).toList();
             if (live.isEmpty())
-                return points.isEmpty() ? Singleton.NOOBJ : points.keySet().iterator().next().c(cInt.ZERO());
-            if (1 == live.stream().map(term -> term.c(cInt.ONE()).path(List.of())).distinct().count())
+                return points.isEmpty() ? Singleton.NOOBJ : points.keySet().iterator().next().d(cInt.ZERO());
+            if (1 == live.stream().map(term -> term.d(cInt.ONE()).path(List.of())).distinct().count())
                 return pathSum(live);
-            final boolean shared = 1 == live.stream().map(fURI::c).distinct().count();
+            final boolean shared = 1 == live.stream().map(fURI::d).distinct().count();
             return Singleton.f(live.stream()
-                    .sorted(Comparator.comparing(term -> term.c(cInt.ONE()).toString()))
-                    .map(term -> element(term.c(cInt.ONE()).toString(), shared ? cInt.ONE() : term.c(), false))
-                    .collect(Collectors.joining(",", "{", "}"))).c(shared ? live.getFirst().c() : cInt.ONE());
+                    .sorted(Comparator.comparing(term -> term.d(cInt.ONE()).toString()))
+                    .map(term -> element(term.d(cInt.ONE()).toString(), shared ? cInt.ONE() : term.d(), false))
+                    .collect(Collectors.joining(",", "{", "}"))).d(shared ? live.getFirst().d() : cInt.ONE());
         }
 
         /**
@@ -1402,9 +1442,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                     break;
             }
             final int s = suffix;
-            final boolean shared = 1 == terms.stream().map(fURI::c).distinct().count();
+            final boolean shared = 1 == terms.stream().map(fURI::d).distinct().count();
             final List<Tuple.Pair<List<String>, cInt>> middles = IntStream.range(0, terms.size())
-                    .mapToObj(i -> Tuple.Pair.with(paths.get(i).subList(p, paths.get(i).size() - s), shared ? cInt.ONE() : terms.get(i).c()))
+                    .mapToObj(i -> Tuple.Pair.with(paths.get(i).subList(p, paths.get(i).size() - s), shared ? cInt.ONE() : terms.get(i).d()))
                     .sorted(Comparator.comparing((Tuple.Pair<List<String>, cInt> middle) -> String.join("/", middle.get0())).thenComparingInt(middle -> middle.get0().size()))
                     .toList();
             final String head = String.join("/", first.subList(0, p));
@@ -1419,7 +1459,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                             middle.get1(), numeric && !leading && !trailing))
                     .collect(Collectors.joining(",", "{", "}"));
             final String path = (0 < p ? head + (leading ? "" : "/") : "") + branch + (0 < s ? (trailing ? "" : "/") + tail : "");
-            return terms.getFirst().path(Singleton.f(path).path()).c(shared ? terms.getFirst().c() : cInt.ONE());
+            return terms.getFirst().path(Singleton.f(path).path()).d(shared ? terms.getFirst().d() : cInt.ONE());
         }
 
         /**

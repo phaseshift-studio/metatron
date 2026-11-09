@@ -35,7 +35,7 @@ public class SAPXCXfURI extends SAPXXXfURI {
     }
 
     @Override
-    public cInt c() {
+    public cInt d() {
         return this.coefficient;
     }
 }
