@@ -28,8 +28,6 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TRUE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -54,8 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * </pre>
  * <p>
  * {@link Helper} is the funnel. It also holds the stage's <b>deduction rule</b> — which instruction <em>implementation</em>
- * a type lands on (the contract between a family read and the resolver) — and the bundle/fiber dispatch decisions
- * that say whether an instruction is about a fibered value's bundle or one of its fibers.
+ * a type lands on (the contract between a family read and the resolver).
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -433,185 +430,6 @@ public interface Typer extends Component {
                     && obj.c().within(type.c()))
                 return true;
             return obj.test(type);
-        }
-
-        // ======================== bundle / fiber dispatch ========================
-
-        /**
-         * WHAT AN INSTRUCTION IS OFFERED BY A FIBERED TYPE — the BUNDLE itself plus the values of its FIBERS, in
-         * declaration order; this is what an instruction fans out over.
-         * <pre>
-         * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
-         * </pre>
-         * A FIBERED TYPE is a {@code rec::T} realized as a bundle and its named fibers: the declaration's tid poly
-         * names the fibers ({@code rec[role]::T[?[…,role=>rec::T]]@person}) and the instantiation
-         * ({@code person[ninja]}) gives their types. The set is the BUNDLE plus every fiber that is PRESENT, whatever
-         * it holds — one level deep, so a fiber's own fibers never join and the walk never recurses. Every other
-         * value (a mono, a plain or anonymous-bracket rec) has nothing to fan out over and yields itself alone.
-         * <p>
-         * A {@code Inst.Form.typer} instruction retypes its subject, so it is OPAQUE: it applies to the bundle
-         * alone and never distributes over the fibers.
-         *
-         * @param lhs  the value the instruction applies to
-         * @param inst the instruction about to be applied
-         * @return the bundle first, then the fiber values; a one-element list when there is nothing to fan out over
-         */
-        public static List<Obj> bundleAndFibers(final Obj lhs, final Inst inst) {
-            if (Inst.Form.of(inst) == Inst.Form.typer)
-                return List.of(lhs);
-            final List<Obj> fibers = fibers(lhs);
-            if (fibers.isEmpty())
-                return List.of(lhs);
-            final List<Obj> candidates = new ArrayList<>(fibers.size() + 1);
-            candidates.add(lhs);
-            candidates.addAll(fibers);
-            return candidates;
-        }
-
-        /**
-         * THE FIBER VALUES of a bundle: the value present at each fiber. A fiber is a particular field of a fibered
-         * {@code rec::T} lifted to be a virtual sibling of the rec's other fields, so it may hold any obj
-         * ({@code rec[o]::T[?[o=>int::T]]@ex} exposes the int at {@code o}). Every other value (a mono, a plain rec,
-         * an anonymous bracket) is no bundle and takes the ordinary single-application path.
-         */
-        private static List<Obj> fibers(final Obj lhs) {
-            return isBundle(lhs)
-                    ? lhs.type().tid().poly().stream()
-                    .map(fiber -> lhs.asRec().<Obj>at(f(fiber.trim()))).filter(part -> !part.isNoObj()).toList()
-                    : List.of();
-        }
-
-        /**
-         * IS THIS VALUE A BUNDLE? A value of a named FIBERED declaration ({@code rec[role]::T[…]@person},
-         * instantiated as {@code person[ninja]} or not). A <i>fibered type</i> is a {@code rec::T} realized as a
-         * BUNDLE (the outer rec) and the named FIBERS its bracket lifts out of it; a <i>field</i> is any
-         * key→value pair of the rec, fiber or not.
-         */
-        public static boolean isBundle(final Obj lhs) {
-            if (!lhs.isRec())
-                return false;
-            final Type type = lhs.type();
-            return type.isFibered() && null != type.vid() && !type.vid().basePath().equals(type.tid().basePath());
-        }
-
-        /**
-         * IS THE RESOLVED INSTRUCTION ABOUT THIS SUBJECT — the bundle, or one of its fibers? The fan-out is not
-         * "apply it to everything": each subject is offered the instruction, and the type system says whether it is
-         * that subject's.
-         * <ol>
-         *   <li>The instruction did not resolve to a callable instruction (noobj, or an unresolved fallback with
-         *       no function) — the subject simply does not receive it.</li>
-         *   <li>A {@code typer} retypes its subject, so it is opaque and never distributed.</li>
-         *   <li>A GENERIC/PATTERN domain ("any obj") is about every subject — the multiplicity reads.</li>
-         *   <li>A BASE-typed domain is about every subject whose own FORM it is: a {@code rec} domain reaches the
-         *       BUNDLE AND a fiber that is a rec refinement ({@code ninja::T} is a {@code rec::T}), since the fiber
-         *       is a rec in its own right; any other base domain reaches the fibers of that form
-         *       ({@code ex::[o=>12].plus?<=int(45)} adds at {@code o}, since the bundle is a rec, not an int). The
-         *       match is on the base FORM, never on the type's name.</li>
-         *   <li>Any other domain NAMES a type, and it reaches the subject whose own type identity is that name:
-         *       the fiber's value for a typed call ({@code fight?<=ninja()}), the bundle for its own type
-         *       ({@code ponder?<=person()}). The bundle is acceptable where a fiber's type is expected
-         *       ({@link Type#recFibers()}), but that is TYPE ACCEPTANCE, NOT dispatch identity — and dispatch is
-         *       the identity question, so that rule is not consulted here.</li>
-         *   <li>A named domain that CARRIES PREDICATES names a STRUCTURAL type ({@code weaponed ->
-         *       rec::T[?[weapon=>str::T]]}), so there is no name to be identical to: it is about every FIBER
-         *       whose OWN value is shaped like it ({@link #ownsShape}) — a {@code ninja} carrying a weapon answers
-         *       {@code ?<=weaponed} as itself. The BUNDLE is not asked: what it IS is its declaration, so it
-         *       answers by identity only, and neither its own fields nor the acceptance it borrows from a fiber
-         *       ({@link Type#recFibers()}) is an identity.</li>
-         * </ol>
-         * WHEN THE CALLER NAMES A DOMAIN ({@code ?<=ninja()}), that name is the subject, not the overload the
-         * resolver happened to bind: {@code describe?<=duo_position()} addresses positions even though
-         * {@code describe} also has a {@code duo_ninja} body. An untyped call has nothing but the resolved
-         * instruction's own domain to go on.
-         *
-         * @param bundle    whether {@code candidate} is the BUNDLE itself (not one of its fibers)
-         * @param candidate the value the instruction was resolved against
-         * @param cinst     the instruction resolved against {@code candidate}
-         * @param original  the instruction before resolution (its named domain, when any, is the subject)
-         * @return true when the resolved instruction is about this subject, so it must be invoked
-         */
-        public static boolean applicable(final boolean bundle, final Obj candidate, final Inst cinst, final Inst original) {
-            if (cinst.isNoObj())
-                return false;
-            // an as() inst is completed by the runtime when it carries no function: every other instance of the
-            // no-function fallback is a resolution that could not determine a body
-            if (!cinst.hasf() && !cinst.tid().basePath().equals(AS_INST_TID))
-                return false;
-            if (cinst.form() == Inst.Form.typer)
-                return bundle;
-            final Type dom = domain(cinst, original);
-            final fURI domID = Obj.Helper.specificTypeId(dom);
-            if (domID.isGeneric() || domID.hasPattern())
-                return true;
-            // a base domain is about every subject whose own FORM it is: the bundle's form is rec, a fiber's is
-            // whatever it holds (ex::[o=>12].plus?<=int adds at o, since the bundle is a rec, not an int) — and a
-            // fiber typed as a rec refinement IS a rec (ninja::T is a rec::T), so a rec domain reaches it exactly
-            // as it reaches the bundle. Membership is the base form, never the type's NAME: a ninja answers a
-            // rec-typed instruction the way a ninja answers any rec-typed call
-            if (dom.isBaseType()) {
-                final fURI base = dom.baseTypeID().basePath();
-                return candidate.baseTypeID().basePath().equals(base);
-            }
-            // a NAME is matched by identity — the bundle answers as the VERY TYPE it instantiates (a bracket does
-            // not change the name: dojo[master] is a dojo) — and a STRUCTURAL name (one carrying predicates) is a
-            // property of a VALUE, so it is also asked of a COMPONENT's own shape (the ninja at role carries a
-            // weapon, so it is weaponed). The bundle is not its field bag: what it IS is its declaration, so a
-            // shape its own fields happen to satisfy does not make it the subject of a shape-typed instruction —
-            // and the acceptance it borrows from a fiber is not dispatch either
-            return candidate.testByID(dom) || (!bundle && ownsShape(candidate, dom));
-        }
-
-        /**
-         * THE BUNDLE SPEAKS FIRST: does the BUNDLE take this instruction alone? A domain that NAMES a type picks
-         * one subject, so when the bundle itself is that subject its fibers are not asked at all —
-         * {@code weaponed[weaponed]::[weapon=>'axe',role=>weaponed::[weapon=>'knife']]} answers a {@code ?<=weaponed}
-         * call with {@code 'axe'} alone, not also with the {@code weaponed} at its {@code role}. A domain that names
-         * no single subject does NOT supersede: a generic domain ("any obj") and a base-FORM domain ({@code rec},
-         * {@code int}) are about every subject of that form, so those calls still sum over both levels
-         * ({@code ?<=rec} sees the bundle AND the ninja, and an untyped read sums both names).
-         *
-         * @param bundle   the BUNDLE the instruction is being applied to
-         * @param cinst    the instruction resolved against the bundle
-         * @param original the instruction before resolution (its named domain, when any, is the subject)
-         * @return true when the bundle is the instruction's subject, so its fibers are not consulted
-         */
-        public static boolean supersedes(final Obj bundle, final Inst cinst, final Inst original) {
-            if (Inst.Form.of(original) == Inst.Form.typer)
-                return true;
-            final Type dom = domain(cinst, original);
-            final fURI domID = Obj.Helper.specificTypeId(dom);
-            return !domID.isGeneric() && !domID.hasPattern() && !dom.isBaseType()
-                    && applicable(true, bundle, cinst, original);
-        }
-
-        /**
-         * The DOMAIN the instruction is about: the one the CALLER named ({@code ?<=ninja()}), else the resolved
-         * instruction's own.
-         */
-        private static Type domain(final Inst cinst, final Inst original) {
-            final fURI requestedID = original.hasDom() ? Obj.Helper.specificTypeId(original.dom()) : null;
-            return null != requestedID && !requestedID.isGeneric() && !requestedID.hasPattern()
-                    ? original.dom() : cinst.dom();
-        }
-
-        /**
-         * IS THIS FIBER'S OWN VALUE SHAPED LIKE THE NAMED TYPE? A named type that carries predicates
-         * ({@code weaponed -> rec::T[?[weapon=>str::T]]}) denotes the values that satisfy them, whatever their own
-         * name — so this is a question about the VALUE, not a name to match, and it is asked of the value ITSELF.
-         * A bundle is ACCEPTABLE where a fiber's type is expected ({@code person[ninja]} is accepted as a
-         * {@code weaponed} through the ninja it exposes), but that claim is borrowed from a fiber, so it is not the
-         * shaped value's own claim: a nested bundle is judged here with its declaration set aside — its own fields,
-         * none of its fibers.
-         */
-        private static boolean ownsShape(final Obj candidate, final Type dom) {
-            final List<Call> predicates = dom.predicateStack().stream().filter(pred -> !pred.isNoObj()).toList();
-            if (predicates.isEmpty())
-                return false;
-            final Obj value = isBundle(candidate)
-                    ? candidate.clone(candidate.jvm(), REC_TID, candidate.vid())
-                    : candidate;
-            return predicates.stream().allMatch(pred -> !pred.dom(ALL_TYPE).apply(value).isNothing());
         }
     }
 }

@@ -1258,37 +1258,27 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * DELEGATION — applying an instruction to a wrapper is applying it to a stream of two objects:
-     * <pre>
-     * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
-     * </pre>
-     * A FIBERED rec type defines fields the wrapper exposes. These fields are called 'fibers'.
+     * DELEGATION — a FIBERED rec type defines fields the wrapper exposes, called 'fibers'.
      * {@code rec[role]::T[?[…,role=>rec::T]]@person} names {@code role} (the declaration's tid poly is the FIELD
-     * NAMES) and {@code person[ninja]} names its type (the instance's vid poly is the COMPONENT TYPES). So
-     * {@code person[ninja]::[role=>ninja::[…]]} is two objects to an instruction — the person-typed wrapper and the
-     * ninja-typed component it exposes — and {@code Processor.Helper.apply} fans an instruction out over both,
-     * summing the results as a multiplicity. {@code noobj} is the identity ({@code {noobj,29} = 29}), so an untyped
-     * read sees BOTH levels while a field only one level carries still answers alone:
-     * <pre>
-     * *marko>>name       [-- {'marko','dark_assassin'}     --]
-     * *marko>>weapon     [-- 'bulldozer' (no weapon above) --]
-     * </pre>
-     * A call whose DOMAIN NAMES a type ({@code fight?dom=ninja}) reaches only the candidate whose OWN type is
-     * that name — the ninja component, not the wrapper. There is no selection step: each candidate is resolved
-     * and invoked on its own, and the type system says which one the domain is about. The wrapper is accepted
-     * where a {@code ninja} is expected (the object at a fiber answers for it),
-     * which is type acceptance, not dispatch identity; the ninja is the object the definition was written for, so a
-     * body reading {@code >>weapon} sees the ninja's. A domain naming no component type ({@code ponder?dom=person})
-     * answers on the wrapper.
-     * <p>
-     * A BASE-typed domain is about a candidate's own FORM, not about a name: {@code ?<=rec} reaches the wrapper
-     * AND the ninja component ({@code ninja::T} is a {@code rec::T}, so the ninja is a rec in its own right),
-     * while {@code ?<=lst} reaches neither and {@code ?<=int} would reach only an int-valued fiber.
+     * NAMES) and {@code person[ninja]} names its type (the instance's vid poly is the COMPONENT TYPES). An
+     * instruction on {@code person[ninja]::[role=>ninja::[…]]} is about one of two things ({@link FiberedRec}):
+     * <ul>
+     *   <li>the BUNDLE ITSELF — a typer, a generic domain, the rec form, or its own name ({@code ponder?dom=person})
+     *       — and runs on the wrapper alone, so an untyped read answers the wrapper's own field:
+     *       {@code *marko>>name} is {@code 'marko'}, and {@code *marko>>weapon} (a key only the ninja carries) is
+     *       {@code noobj};</li>
+     *   <li>a FIBER — a domain naming its type ({@code fight?dom=ninja}), or a base form only a fiber has — and is
+     *       LIFTED: it runs on the ninja, and the answer is the wrapper with that fiber moved. The wrapper is accepted
+     *       where a {@code ninja} is expected, but that is type acceptance, not dispatch identity; the ninja is the
+     *       object the definition was written for, so a body reading {@code >>weapon} sees the ninja's.</li>
+     * </ul>
+     * A call that changes the ninja's type ({@code fight} answers a str) is a PROJECTION: it answers the str, not the
+     * wrapper (Marko, 2026-11-09).
      * <p>
      * A {@code typer} ({@code as}, {@code type}, {@code vid}, {@code tid}) is OPAQUE: it decides what the value IS,
      * so it cannot be distributed over the old basis and applies to the wrapper alone — one result, poly erased.
      * <p>
-     * One level only, and only for a wrapper: a candidate's own components do not join
+     * One level only, and only for a wrapper: a fiber's own fibers are not reached
      * ({@link #testDelegationIsOneLevelDeep}), and a {@code rec[k1,k2]} FIELD declaration is not a wrapper
      * ({@link #testFieldDeclarationIsNotAWrapper}).
      */
@@ -1311,10 +1301,10 @@ public class RecTest extends AbstractAlgebraTest {
             "*marko.fight?<=ninja()    % 'dark_assassin is your name and bulldozer is your weapon'",
             // a domain that names no component type answers on the wrapper, unchanged
             "*marko.ponder()           % 'a person ponders'",
-            // untyped: both levels answer, summed as a multiplicity
-            "*marko>>name                         % {'marko','dark_assassin'}",
-            "*marko>>?<=#(name)                   % {'marko','dark_assassin'}",
-            "*marko>>?<=rec(name)                 % {'marko','dark_assassin'}", // a ninja is a rec
+            // untyped (and any obj, and the rec form): the wrapper's own read, not also its ninja's
+            "*marko>>name                         % 'marko'",
+            "*marko>>?<=#(name)                   % 'marko'",
+            "*marko>>?<=rec(name)                 % 'marko'",
             "*marko>>role.type()                  % ninja::T",
             "*marko.?weaponed::T                   % *marko", // the bundle speaks first: the wrapper answers, not its ninja
             "*marko>>role.?weaponed::T.type()     % ninja::T", // a ninja is weaponed
@@ -1323,14 +1313,13 @@ public class RecTest extends AbstractAlgebraTest {
             "*marko>>?<=ninja{0}(name)            % <ERROR>",
             "*marko>>?<=person(name)              % 'marko' ",
             "*marko>>?<=lst(name)                 % noobj ",  // TODO: should this <ERROR>
-            // ... and noobj is the identity, so the one level that has a weapon answers alone
-            "*marko>>weapon                       % 'bulldozer'",
+            // only the ninja carries a weapon: an untyped read is the wrapper's, and naming the ninja reaches it
+            "*marko>>weapon                       % noobj",
             "*marko>>?<=ninja(weapon)             % 'bulldozer'",
             "*marko>>?<=person(weapon)            % noobj",
             "*marko>>?<=person[ninja](weapon)     % noobj",
-            "*marko>>?<=#(weapon)                 % 'bulldozer'",
-            // ... and noobj is the identity, so the one level that has a weapon answers alone
-            "*marko.>>?<=#(weapon)                % 'bulldozer'",
+            "*marko>>?<=#(weapon)                 % noobj",
+            "*marko.>>?<=#(weapon)                % noobj",
             //
             "*marko.love()             % 'bulldozer fun'",
             // a typer is opaque: one result, the instantiation erased
@@ -1342,9 +1331,9 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * ONE LEVEL DEEP: the candidates are the wrapper and the components its DECLARATION names — nothing else. A
-     * component that is itself a wrapper is applied to as the object it is, so its own {@code role} does not join
-     * the stream and {@code 'deep'} (the inner wrapper's component) never answers.
+     * ONE LEVEL DEEP: a call reaches the wrapper or the fibers its DECLARATION names — nothing else. A fiber that is
+     * itself a wrapper is applied to as the object it is, so the inner wrapper's ninja ({@code 'deep'}) is no
+     * candidate of the outer one; one {@code >>} makes the middle person the wrapper, and its ninja answers.
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -1352,14 +1341,19 @@ public class RecTest extends AbstractAlgebraTest {
             output = "{{{expected}}}")
     @ParameterizedTest
     @TestData(value = {
+            // a type can't be overwritten: other methods of this class define person and ninja (ninja structurally)
+            "person -> noobj",
             "person -> rec[role]::T[?[role=>rec::T,name=>?str::T,age=>int::T]]@person",
+            "ninja -> noobj",
             "ninja -> rec::T@ninja",
             "nested -> person[ninja]::[role=>person[ninja]::[role=>ninja::[name=>'deep'],name=>'middle',age=>32],name=>'outer',age=>29]@nested",
     })
     @CsvSource(value = {
-            "*nested>>name                         % {'outer','middle'}",
-            "*nested>>age                          % {32,29}",
-    }, delimiter = '%')
+            "*nested>>name                         % 'outer'",
+            "*nested>>age                          % 29",
+            "*nested>>?<=ninja(name)               % noobj",
+            "*nested>>role>>?<=ninja(name)         % 'deep'",
+    }, delimiter = '%', quoteCharacter = '~')
     public void testDelegationIsOneLevelDeep(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
@@ -1377,8 +1371,8 @@ public class RecTest extends AbstractAlgebraTest {
 
     /**
      * THE SUM IS A MULTIPLICITY, AND A FAIL IS NOT THE IDENTITY. The wrapper exposes two components of the same
-     * type, so a call whose domain is that type reaches both and their answers are summed ({@code {11,3}}). When one
-     * of them genuinely
+     * type, so a call whose domain is that type reaches both; an int is not a ninja, so the call is a projection and
+     * its answers are summed ({@code {11,3}}). When one of them genuinely
      * errors — the sidekick's {@code power} is a str where the instruction's range demands an int — the fail
      * PROPAGATES: the other candidate's {@code 11} must not be returned in its place, or a broken delegation would
      * read as a successful one.
@@ -1405,9 +1399,9 @@ public class RecTest extends AbstractAlgebraTest {
 
     /**
      * A WRAPPER MAY EXPOSE TWO COMPONENTS. {@code duo_person} declares {@code rec[role,position]} — two fibers — and
-     * an instance names a type for each ({@code duo_person[duo_ninja,duo_position]}), so the wrapper is a stream of
-     * three objects to an instruction: itself, its {@code role} (a {@code duo_ninja}) and its {@code position} (a
-     * {@code duo_position}). This test pins the DECLARATION and the VALUE:
+     * an instance names a type for each ({@code duo_person[duo_ninja,duo_position]}), so an instruction is about the
+     * wrapper itself, its {@code role} (a {@code duo_ninja}) or its {@code position} (a {@code duo_position}). This
+     * test pins the DECLARATION and the VALUE:
      * <pre>
      * *marko                         round-trips, both components carried
      * *marko.type()                  the instantiation keeps both type arguments
@@ -1466,16 +1460,15 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * THE FAN-OUT IS DISJOINT PER KEY. Delegation hands the SAME read to every candidate, and {@code noobj} is the
-     * identity, so a key only one level carries answers ALONE while a key two levels carry is summed:
+     * AN UNTYPED READ IS THE WRAPPER'S; A TYPED READ REACHES THE FIBER ITS TYPE NAMES. A read's domain is any obj,
+     * so it is about the wrapper itself and never fans out over the components, while naming a component's type
+     * reaches that component alone:
      * <pre>
-     * *marko>>title   [-- 'sniper'                   --]   the position component alone
-     * *marko>>rank    [-- 5                          --]   the position component alone
-     * *marko>>age     [-- 29                         --]   the wrapper alone (no component has an age)
-     * *marko>>name    [-- {'marko','dark_assassin'} --]  the wrapper AND the role component
+     * *marko>>name                      [-- 'marko'          --]   the wrapper's own, not also the role's
+     * *marko>>title                     [-- noobj            --]   only the position carries a title
+     * *marko>>?<=duo_position(title)    [-- 'sniper'         --]   the position component
+     * *marko>>?<=duo_ninja(name)        [-- 'dark_assassin'  --]   the role component
      * </pre>
-     * A single-valued expectation is also a multiplicity claim: {@code >>title} answering {@code 'sniper'} rather
-     * than {@code {'sniper','sniper'}} is the statement that the read reached ONE component.
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -1489,19 +1482,21 @@ public class RecTest extends AbstractAlgebraTest {
             "marko -> duo_person[duo_ninja,duo_position]::[name=>'marko',age=>29,role=>duo_ninja::[name=>'dark_assassin'],position=>duo_position::[title=>'sniper',rank=>5]]@marko",
     })
     @CsvSource(value = {
-            "*marko>>title     % 'sniper'",
-            "*marko>>rank      % 5",
-            "*marko>>age       % 29",
-            "*marko>>name      % {'marko','dark_assassin'}",
+            "*marko>>age                        % 29",
+            "*marko>>name                       % 'marko'",
+            "*marko>>title                      % noobj",
+            "*marko>>?<=duo_position(title)     % 'sniper'",
+            "*marko>>?<=duo_position(rank)      % 5",
+            "*marko>>?<=duo_ninja(name)         % 'dark_assassin'",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testTwoComponentFanOutIsDisjointPerKey(final String code, final String expected) {
+    public void testTwoComponentReadReachesTheFiberItsTypeNames(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     /**
-     * A NAMED DOMAIN REACHES THE COMPONENT THAT IS THAT TYPE. There is no selection step: each candidate is
-     * resolved and invoked on its own, and the type system says which candidate the domain is about (see
-     * {@code Processor.Helper#applicable}). {@code duo_aim} is declared {@code dom=duo_position}, so its body's
+     * A NAMED DOMAIN REACHES THE COMPONENT THAT IS THAT TYPE. There is no selection step: each fiber resolves the
+     * call and is invoked on its own, and the type system says which one the domain is about (see
+     * {@link FiberedRec.Helper#applicable}). {@code duo_aim} is declared {@code dom=duo_position}, so its body's
      * {@code >>title} reads the position component's title, 'sniper' — the wrapper is not a position by identity,
      * it is only accepted where one is expected.
      * <p>
@@ -1580,15 +1575,14 @@ public class RecTest extends AbstractAlgebraTest {
     }
 
     /**
-     * ONE LEVEL DEEP, WITH TWO PARTS. The candidates are the wrapper and the components its DECLARATION names —
-     * nothing else. Here the {@code role} fiber itself holds a wrapper, so the role candidate is applied to AS THE
-     * OBJECT IT IS: its own fields join the read ({@code 'middle'}, {@code 32}) and its components' fields do not
-     * ({@code 'deep'} never answers, and neither does the inner wrapper's position title {@code 'inner_title'}):
+     * ONE LEVEL DEEP, WITH TWO PARTS. A call reaches the wrapper or the components its DECLARATION names — nothing
+     * else. Here the {@code role} fiber itself holds a wrapper, so it is applied to AS THE OBJECT IT IS, and its own
+     * components are no candidates of the outer wrapper:
      * <pre>
-     * *nested>>name    [-- {'outer','middle'}  --]   not 'deep'
-     * *nested>>age     [-- {29,32}             --]
-     * *nested>>title   [-- 'outer_title'       --]   not 'inner_title'
-     * *nested>>rank    [-- 5                   --]   not {5,7}
+     * *nested>>name                     [-- 'outer'        --]   the outer wrapper's own
+     * *nested>>?<=duo_position(title)   [-- 'outer_title'  --]   not 'inner_title'
+     * *nested>>?<=duo_position(rank)    [-- 5              --]   not {5,7}
+     * *nested>>?<=duo_ninja(name)       [-- noobj          --]   'deep' is two fibers down
      * </pre>
      */
     @Training(
@@ -1603,10 +1597,10 @@ public class RecTest extends AbstractAlgebraTest {
             "nested -> duo_person[duo_ninja,duo_position]::[name=>'outer',age=>29,role=>duo_person[duo_ninja,duo_position]::[name=>'middle',age=>32,role=>duo_ninja::[name=>'deep'],position=>duo_position::[title=>'inner_title',rank=>7]],position=>duo_position::[title=>'outer_title',rank=>5]]@nested",
     })
     @CsvSource(value = {
-            "*nested>>name     % {'outer','middle'}",
-            "*nested>>age      % {29,32}",
-            "*nested>>title    % 'outer_title'",
-            "*nested>>rank     % 5",
+            "*nested>>name                        % 'outer'",
+            "*nested>>?<=duo_position(title)      % 'outer_title'",
+            "*nested>>?<=duo_position(rank)       % 5",
+            "*nested>>?<=duo_ninja(name)          % noobj",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTwoComponentDelegationIsOneLevelDeep(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -1639,8 +1633,8 @@ public class RecTest extends AbstractAlgebraTest {
             "*loaf.fight?<=ninja()    % 'dark_assassin is your name and bulldozer is your weapon'",
             // ... and the wrapper answers the domain that names ITS type
             "*loaf.ponder()           % 'a person ponders'",
-            // the untyped read still sums the levels the wrapper exposes
-            "*loaf>>name              % {'loaf','dark_assassin'}",
+            // the untyped read is the wrapper's own
+            "*loaf>>name              % 'loaf'",
     }, delimiter = '%', quoteCharacter = '~')
     public void testDelegationReachesTheFieldValueNotTheInstantiation(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -1678,7 +1672,7 @@ public class RecTest extends AbstractAlgebraTest {
      * candidates are itself and the master at its {@code head}, so a dojo instruction runs on the dojo and a master
      * instruction on the master, while a form instruction finds no candidate that is a form (the form is two fibers
      * down) and answers {@code noobj}. Reached through {@code >>head}, the master is a wrapper in its own right, and its
-     * form answers. Untyped reads fan out one level the same way.
+     * form answers. An untyped read is the wrapper's own; naming the form reaches it one level down.
      */
     @Training.SkipTraining(reason = "reads *kodokan and the visit/bow/drill instructions declared by @TestData, so the row input is not self-contained")
     @ParameterizedTest
@@ -1701,9 +1695,10 @@ public class RecTest extends AbstractAlgebraTest {
             // ---- ...but it is a candidate of the master that holds it ----
             "*kodokan>>head.drill()         % 7",
             "*kodokan>>head.bow()           % 'kano'",
-            // ---- untyped reads fan out one level: the dojo's and the master's names, never the form's moves ----
-            "*kodokan>>name                   % {'kodokan','kano'}",
-            "*kodokan>>head>>moves          % 7",
+            // ---- an untyped read is the wrapper's own: the dojo's name, and the master holds no moves of its own ----
+            "*kodokan>>name                   % 'kodokan'",
+            "*kodokan>>head>>moves          % noobj",
+            "*kodokan>>head>>?<=form(moves) % 7",
             "*kodokan>>moves                  % noobj",
     }, delimiter = '%', quoteCharacter = '~')
     public void testRecursiveFibrationInstructions(final String code, final String expected) {
@@ -1790,7 +1785,8 @@ public class RecTest extends AbstractAlgebraTest {
     /**
      * A FIBER MAY HOLD A MONO. {@code rec[o]::T[?[o=>int::T]]@ex} is a rec whose fiber {@code o} holds an int, so an
      * {@code ex} is both a rec and an int: it is accepted where an int is expected, and an int instruction reaches the
-     * int at {@code o} (the wrapper itself is a rec, not an int). A domain no candidate has answers {@code noobj}.
+     * int at {@code o} (the wrapper itself is a rec, not an int) and lifts: the answer is the {@code ex} with
+     * {@code o} moved. A domain no candidate has answers {@code noobj}.
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -1799,7 +1795,7 @@ public class RecTest extends AbstractAlgebraTest {
     @ParameterizedTest
     @TestData(value = {"rec[o]::T[?[o=>int::T]]@ex"})
     @CsvSource(value = {
-            "ex::[o=>12].plus?<=int(45)           % 57",
+            "ex::[o=>12].plus?<=int(45)           % ex::[o=>57]",
             "ex::[o=>12].plus(45)                 % <ERROR>",
             "ex::[o=>12]>>o                       % 12",
             "ex::[o=>12].plus?<=str('x')          % noobj",
@@ -1837,16 +1833,15 @@ public class RecTest extends AbstractAlgebraTest {
      * ridge[herd,str,lst]::[herd=>herd[animal,int]::[lead=>animal[int]::[age=>3],size=>4],name=>'granite',tags=>['alpha','beta']]
      *    \_ herd             \_ animal       \_ age          \_ size            \_ name             \_ tags
      * </pre>
-     * ONE LEVEL PER CALL. A fiber's VALUE is a candidate; a fiber's own fibers are not. So the depth of a read is the
-     * number of {@code >>} it takes: {@code >>age} answers on the animal and on the herd (the {@code lead} candidate's
-     * own field), and is {@code noobj} on the ridge, where age sits two fibers down — the same boundary a typed call
-     * hits ({@code graze} answers on the herd, not on the ridge). Each {@code >>fiber} re-establishes the wrapper, so
-     * the next level becomes visible.
+     * ONE LEVEL PER CALL. A fiber's VALUE is a candidate; a fiber's own fibers are not. An untyped read is the
+     * wrapper's own, so {@code >>age} answers on the animal and is {@code noobj} on the herd, whose age is its lead's;
+     * a typed call reaches one level ({@code graze} answers on the herd, not on the ridge, where age sits two fibers
+     * down). Each {@code >>fiber} re-establishes the wrapper, so the next level becomes visible.
      * <p>
      * NON-REC FIBERS are exposed like any other: an int fiber answers a typed call ({@code birthday?dom=int}) and a
-     * {@code +} whose domain reached it ({@code animal + 3} is the age summed, a VALUE operation — the animal's field
-     * is untouched, and writing it is a separate act), a str fiber reads (and a str instruction reaches it when the
-     * navigation is explicit), and a lst fiber reads as the lst it holds.
+     * {@code +} whose domain reached it, and both LIFT — {@code animal + 3} answers the animal with its age moved, a
+     * VALUE, not a write ({@code *stallion} itself is untouched); a str fiber reads (and a str instruction reaches it
+     * when the navigation is explicit), and a lst fiber reads as the lst it holds.
      */
     @Training.SkipTraining(reason = "reads *stallion, *mustang and *delta, whose fibered world is seeded by @TestData rather than built by the row")
     @ParameterizedTest
@@ -1865,20 +1860,21 @@ public class RecTest extends AbstractAlgebraTest {
             "*stallion                        % animal[int]::[age=>7]",
             "*stallion.type()                 % rec[age]::T[?[age=>int::T]]@animal[int]",
             "*stallion>>age                   % 7",
-            "*stallion.birthday()             % 8",   // ?<=int reaches the int fiber
-            "*stallion + 3                    % 10",  // ... and so does a plus that found it (a VALUE, not a write)
+            "*stallion.birthday()             % animal[int]::[age=>8]",    // ?<=int reaches the int fiber, and lifts
+            "*stallion + 3                    % animal[int]::[age=>10]",   // ... and so does a plus that found it
             // ---- two deep: a rec fiber beside an int ----
             "*mustang>>lead                     % animal[int]::[age=>9]",
-            "*mustang>>age                       % 9", // the lead CANDIDATE's own field, one level down
+            "*mustang>>age                       % noobj", // the lead's age is not the herd's
+            "*mustang>>?<=animal(age)            % 9",     // ... naming the lead's type reaches it
             "*mustang>>lead>>age                 % 9",
-            "*mustang.birthday()                 % 6", // size at the herd is the int the domain reaches
+            "*mustang.birthday()                 % herd[animal,int]::[lead=>animal[int]::[age=>9],size=>6]", // size is the int the domain reaches
             "*mustang.graze()                    % 9", // ?<=animal reaches the lead fiber
             // ---- three deep: rec, str and lst fibers on one wrapper ----
             "*delta>>name                     % 'granite'",
             "*delta>>tags                     % ['alpha','beta']",
-            "*delta>>herd>>age                  % 3",
+            "*delta>>herd>>age                  % noobj",
             "*delta>>herd>>lead>>age            % 3",
-            "*delta>>herd.birthday()            % 5",
+            "*delta>>herd.birthday()            % herd[animal,int]::[lead=>animal[int]::[age=>3],size=>5]",
             "*delta>>?<=herd(size)              % 4",
             "*delta>>herd.graze()               % 3",
             "*delta>>herd>>lead.graze()         % 3",
@@ -1898,11 +1894,12 @@ public class RecTest extends AbstractAlgebraTest {
      * <pre>
      * human[real]::[name=>'marko',age=>29,geo=>point::[2.0,3.5]]
      *          \_ the fiber is geo/0 = 2.0, typed real
-     * *marko + 3.5    =>  5.5    the wrapper's plus reaches that ONE real (not geo/1 = 3.5)
+     * *marko + 3.5    =>  human[real]::[…,geo=>point::[5.5,3.5]]    the plus reaches that ONE real and lifts
      * </pre>
-     * The path stays in the type ({@code rec[geo/0]::T[...]@human[real]}) and reads by path still work
-     * ({@code >>geo/0}, {@code >>geo/1}), but only {@code geo/0} is exposed: the second element is a plain lst
-     * element, so an untyped {@code +} does not also sum it.
+     * The lifted result is written back AT the path, so the wrapper survives and a second {@code +} lifts again. The
+     * path stays in the type ({@code rec[geo/0]::T[...]@human[real]}) and reads by path still work ({@code >>geo/0},
+     * {@code >>geo/1}), but only {@code geo/0} is exposed: the second element is a plain lst element, so an untyped
+     * {@code +} does not also move it.
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -1917,8 +1914,9 @@ public class RecTest extends AbstractAlgebraTest {
     @CsvSource(value = {
             "*marko                                    % human[real]::[name=>'marko',age=>29,geo=>point::[2.0,3.5]]",
             "*marko.type()                             % rec[geo/0]::T[?[name=>str::T,age=>int::T,geo=>lst::T[?[real::T,real::T]]@point]]@human[real]",
-            "*marko + 3.5                              % 5.5",   // the path fiber (geo/0) is the ONE real a plus reaches
-            "*marko + 3.5 + 1.0                        % 6.5",
+            "*marko + 3.5                              % human[real]::[name=>'marko',age=>29,geo=>point::[5.5,3.5]]",   // the path fiber (geo/0) is the ONE real a plus reaches
+            "*marko + 3.5 + 1.0                        % human[real]::[name=>'marko',age=>29,geo=>point::[6.5,3.5]]",
+            "*marko.plus(3.5)>>geo/0                   % 5.5",
             "*marko>>geo                               % point::[2.0,3.5]",
             "*marko>>geo/0                             % 2.0",
             "*marko>>geo/1                             % 3.5",   // a path read is not a fiber: geo/1 is not exposed

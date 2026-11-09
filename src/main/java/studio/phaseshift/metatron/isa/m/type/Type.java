@@ -328,22 +328,6 @@ public interface Type extends Obj {
                         .map(fiber -> fiber.c(fiber.c().mult(this.c()))).map(Obj::asType).toList();
     }
 
-    default List<Tuple.Pair<fURI, Type>> recFiberIndex() {
-        //System.out.println("TYPE: " + this);
-        final List<Type> types = this.vid().poly().stream().map(u -> T(f(u))).toList();//.elements().map(e -> T(e.uriValue())).toList();
-        //System.out.println("FIBER TYPES: " + types);
-        final List<fURI> index = this.tid().poly().stream().map(fURI.Singleton::f).toList();//.elements().map(e -> T(e.uriValue())).toList();
-        //System.out.println("INDEX: " + index);
-        final List<Tuple.Pair<fURI, Type>> typedIndices = new ArrayList<>();
-        //System.out.println(index + "--" + types);
-        if (index.size() != types.size())
-            return List.of();
-        for (int i = 0; i < index.size(); i++) {
-            typedIndices.add(Tuple.Pair.with(index.get(i), types.get(i)));
-        }
-        return typedIndices;
-    }
-
     /**
      * The types at a tensor's indices ({@code lst[int,str]}); empty for any other bracket.
      */

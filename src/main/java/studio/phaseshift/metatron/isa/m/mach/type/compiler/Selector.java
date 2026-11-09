@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.SpecificitySelector;
+import studio.phaseshift.metatron.isa.m.type.FiberedRec;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -94,9 +95,9 @@ public interface Selector extends Component {
      * and hand back the one the binder could make concrete. Resolution is not the executor's question: the processor
      * only invokes what the selector hands it.
      * <p>
-     * An instruction that already carries its function refers to itself and is returned as-is — which is what makes a
-     * per-CANDIDATE resolution (a bundle and its fibers, each a different type) a selector call per subject rather
-     * than a re-resolution in the execution loop.
+     * An instruction that already carries its function refers to itself and is returned as-is. On a fibered rec, a
+     * call about its fibers refers to the LIFT of the instruction ({@link FiberedRec.Helper#resolve}), so the
+     * processor runs a bundle's call like any other.
      */
     final class Helper {
 
@@ -106,19 +107,19 @@ public interface Selector extends Component {
 
         /**
          * The f-bearing instruction {@code inst} refers to against {@code lhs}, or {@code inst} itself when it
-         * already carries its function. A machine whose typer requires fully-resolved code refuses the escape: an
-         * unresolved instruction reaching the executor is then a hard failure rather than a second-chance resolution.
+         * already carries its function — on a bundle, its lift when it is about the bundle's fibers
+         * ({@link FiberedRec.Helper#resolve}). A machine whose typer requires fully-resolved code refuses the escape:
+         * an unresolved instruction reaching the executor is then a hard failure rather than a second-chance
+         * resolution.
          *
          * @param lhs  the object the instruction is being applied to
          * @param inst the instruction, resolved or not
          * @return the instruction with its function, resolved against {@code lhs} when it had none
          */
         public static Inst resolve(final Obj lhs, final Inst inst) {
-            if (inst.hasf())
-                return inst;
-            if (Typer.Helper.codeResolve())
+            if (!inst.hasf() && Typer.Helper.codeResolve())
                 throw MTronException.of("inst reached runtime unresolved (code_resolve enabled): %s => %s", lhs, inst);
-            return inst.resolve(lhs);
+            return FiberedRec.Helper.resolve(lhs, inst.hasf() ? inst : inst.resolve(lhs), inst);
         }
     }
 }
