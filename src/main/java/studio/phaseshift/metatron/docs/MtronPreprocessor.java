@@ -26,7 +26,10 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,15 +44,24 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * listing (mtron&gt; ... / ==&gt; ... lines).
  *
  * <p>The block format is configured at construction time by a block header
- * {@link Pattern} (see {@link #ADOC_HEADER} and {@link #MARKDOWN_HEADER}). The
- * pattern's capture groups define the contract: the LAST group is the block
- * body and, for adoc, the group before it is the block's {@code role}. A
- * two-group header produces adoc output ({@code [source,mtron]}); a one-group
- * header produces markdown output ({@code ```mtron} fenced).</p>
+ * {@link Pattern} (see {@link #ADOC_HEADER} and {@link #MARKDOWN_HEADER}) plus
+ * whether that pattern is the adoc species. The pattern's SECOND capture group
+ * is the block body; the first is the adoc {@code role} or, for markdown, the
+ * fence attributes (see below).</p>
  *
- * <p>For display-only mtron code (no evaluation), use {@code [source,mtron]}
- * (adoc) or a plain {@code ```mtron} fence (markdown) — these are not matched
- * by either header pattern.</p>
+ * <h3>Fence attributes (markdown)</h3>
+ * <p>A markdown fence may carry attributes after {@code mtron_pre}:</p>
+ * <pre>
+ * ```mtron_pre cast=repl-basics cols=100 rows=30 typing_delay=0.05
+ * 1 + 1
+ * ```
+ * </pre>
+ * <p>{@code cast=<name>} makes the block a terminal demo: {@link #compile}
+ * returns its {@link Block}, and the caller (the markdown pass) renders the
+ * block to {@code <name>.cast} while the block itself keeps rendering as the
+ * listing. The listing and the recording are two renderings of ONE evaluation,
+ * so they cannot disagree. {@code cols}, {@code rows} and {@code typing_delay}
+ * shape the recording only.</p>
  *
  * <h3>Inline directives (within block content)</h3>
  * <ul>
@@ -62,6 +74,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *   <li>{@code [MAXOUTPUT N]} — cap output at N lines</li>
  *   <li>{@code /} at end-of-line — continue expression on next line</li>
  *   <li>{@code [-- <N> --]} — callout number marker (stripped, preserved in adoc colist)</li>
+ *   <li>{@code [-- text --]} — a trailing annotation: kept in the listing, shown
+ *       as the recording's caption bar, never typed</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -71,29 +85,58 @@ public final class MtronPreprocessor {
     // ── Block header patterns ─────────────────────────────────────
 
     /**
-     * adoc {@code [mtron]----...----} blocks. group(1)=role (unused in practice),
-     * group(2)=body.
+     * adoc {@code [mtron]----...----} blocks. group(1)=role, group(2)=body.
      */
     public static final Pattern ADOC_HEADER = Pattern.compile(
             "\\[mtron](?:,role=\"([^\"]+)\")?\\R----\\R(.*?)\\R----",
             Pattern.DOTALL);
 
     /**
-     * markdown {@code ```mtron_pre ... ```} fenced blocks. group(1)=body.
+     * markdown {@code ```mtron_pre ... ```} fenced blocks. group(1)=fence
+     * attributes (may be null), group(2)=body.
      */
     public static final Pattern MARKDOWN_HEADER = Pattern.compile(
-            "(?m)^```mtron_pre[ \\t]*\\R(.*?)^```[ \\t]*(?:\\R|$)",
+            "(?m)^```mtron_pre(?:[ \\t]+([^\\r\\n]*))?[ \\t]*\\R(.*?)^```[ \\t]*(?:\\R|$)",
             Pattern.DOTALL);
 
-    private final Pattern header;
+    /** The fence attributes a markdown block may carry. */
+    private static final Set<String> FENCE_ATTRIBUTES = Set.of("cast", "cols", "rows", "typing_delay");
 
     /**
-     * @param header block header pattern; the last capture group is the block
-     *               body and an optional group before it is the adoc role —
-     *               the capture layout also selects the output format
+     * One evaluated statement: what was typed, the exact listing line the page
+     * shows for it (prompt + callout), what the console answered with, and
+     * whether it is hidden from the reader (evaluated, never shown).
      */
-    public MtronPreprocessor(final Pattern header) {
+    public record Statement(String input, String listing, List<String> output,
+                            boolean hidden, boolean noPrompt, String caption) {
+    }
+
+    /**
+     * One evaluated block: its statements, the {@code [HEADER]} lines above it,
+     * and the fence attributes it declared.
+     */
+    public record Block(List<Statement> statements, List<String> headers,
+                        Map<String, String> attributes) {
+    }
+
+    /**
+     * A compiled document: the processed text (what the page renders) and the
+     * blocks that opted into a terminal recording.
+     */
+    public record Result(String text, List<Block> blocks) {
+    }
+
+    private final Pattern header;
+    private final boolean adoc;
+
+    /**
+     * @param header block header pattern; its second capture group is the body
+     * @param adoc   true for the adoc species (role + adoc listing wrapper),
+     *               false for the markdown species (attributes + fence wrapper)
+     */
+    public MtronPreprocessor(final Pattern header, final boolean adoc) {
         this.header = header;
+        this.adoc = adoc;
     }
 
     // ── Inline directive patterns ───────────────────────────────────
@@ -106,6 +149,8 @@ public final class MtronPreprocessor {
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
     private static final Pattern NOPROMPT = Pattern.compile("\\[NO_PROMPT]");
     private static final Pattern MAXOUTPUT = Pattern.compile("\\[MAXOUTPUT (\\d+)]");
+    /** A trailing documentation annotation: shown as a caption, never typed. */
+    private static final Pattern ANNOTATION = Pattern.compile("\\[--(.*?)--]\\s*$");
 
     private static final ObjmtronUISerializer SER;
 
@@ -127,31 +172,79 @@ public final class MtronPreprocessor {
      * @return processed text with evaluated mtron blocks
      */
     public String process(final String text) {
-        final Matcher m = this.header.matcher(text);
-        // Two capture groups → adoc (role+body); one group → markdown (body).
-        final boolean adoc = m.groupCount() >= 2;
-        final StringBuilder sb = new StringBuilder();
-        while (m.find()) {
-            final String role = adoc ? m.group(1) : null;
-            final String body = m.group(m.groupCount());
-            final EvalResult result = evaluateBlock(body);
+        return this.compile(text).text();
+    }
 
-            final String replacement;
-            if (result.noHeader) {
-                // [NO_HEADER] → output just the evaluated lines, no wrapper
-                replacement = String.join("\n", result.lines);
-            } else {
-                replacement = adoc ? wrapAdoc(role, result.lines) : wrapMarkdown(result.lines);
-            }
-            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+    /**
+     * Evaluate every block once and return BOTH renderings' material: the
+     * processed text the page uses, and the blocks that asked for a recording.
+     *
+     * @param text raw adoc or markdown source text
+     */
+    public Result compile(final String text) {
+        final Matcher m = this.header.matcher(text);
+        final StringBuilder sb = new StringBuilder();
+        // A recording's launcher belongs at the TOP of the page (it opens a
+        // modal, so its position in the prose is irrelevant) — collect the
+        // markers and prepend them once the body is assembled.
+        final StringBuilder markers = new StringBuilder();
+        final List<Block> blocks = new ArrayList<>();
+        while (m.find()) {
+            final String first = m.group(1);
+            final Map<String, String> attributes = this.adoc ? Map.of() : attributes(first);
+            final String role = this.adoc ? first : null;
+            final EvalResult result = this.evaluateBlock(m.group(2));
+
+            final String listing = result.noHeader
+                    ? String.join("\n", lines(result))
+                    : (this.adoc ? wrapAdoc(role, lines(result)) : wrapMarkdown(lines(result)));
+            final String cast = attributes.get("cast");
+            if (cast != null) markers.append("<!-- cast: ").append(cast).append(" -->\n");
+            m.appendReplacement(sb, Matcher.quoteReplacement(listing));
+            blocks.add(new Block(result.statements, result.headers, attributes));
         }
         m.appendTail(sb);
 
-        // Rainbow [metatron] replacement (adoc only)
-        final String out = sb.toString();
-        return adoc && out.contains("[metatron]")
+        // The launchers ride at the top of the page BODY — after any YAML
+        // frontmatter, which the site pass reads the page title from (a comment
+        // before the opening '---' would hide it). Rainbow [metatron]
+        // replacement is adoc-only.
+        final String processed = sb.toString();
+        final int frontMatterClose = processed.startsWith("---")
+                ? processed.indexOf("\n---", 3) : -1;
+        final String out = frontMatterClose < 0
+                ? markers + processed
+                : processed.substring(0, frontMatterClose + 5) + "\n" + markers
+                        + processed.substring(frontMatterClose + 5);
+        return new Result(this.adoc && out.contains("[metatron]")
                 ? out.replace("[metatron]", Graphitty.sillyPrint("metatron", true, true))
-                : out;
+                : out, blocks);
+    }
+
+    /**
+     * The fence attributes of a markdown block, validated: an unknown key is a
+     * typo in a doc, so it fails loudly rather than being silently ignored.
+     */
+    static Map<String, String> attributes(final String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Map.of();
+        }
+        final Map<String, String> out = new LinkedHashMap<>();
+        for (final String token : raw.strip().split("\\s+")) {
+            final int eq = token.indexOf('=');
+            final String key = eq < 0 ? token : token.substring(0, eq);
+            final String value = eq < 0 ? "" : token.substring(eq + 1);
+            if (!FENCE_ATTRIBUTES.contains(key)) {
+                throw new IllegalArgumentException("unknown mtron_pre attribute '" + token + "'");
+            }
+            if ("cast".equals(key)) {
+                if (!value.matches("[A-Za-z0-9._-]+")) {
+                    throw new IllegalArgumentException("cast= needs a name of [A-Za-z0-9._-]+, got '" + value + "'");
+                }
+            }
+            out.put(key, value);
+        }
+        return out;
     }
 
     /**
@@ -181,25 +274,46 @@ public final class MtronPreprocessor {
         return block.toString();
     }
 
+    /**
+     * The listing's lines: every {@code [HEADER]} line first (as the page has
+     * always shown them), then each statement's prompt + output.
+     */
+    private static List<String> lines(final EvalResult result) {
+        final List<String> lines = new ArrayList<>();
+        for (final Statement statement : result.statements) {
+            if (!statement.hidden())
+                lines.add(statement.listing());
+            lines.addAll(statement.output());
+        }
+        if (result.headers.isEmpty())
+            return lines;
+        final List<String> all = new ArrayList<>(result.headers);
+        all.addAll(lines);
+        return all;
+    }
+
     // ── Block evaluation ────────────────────────────────────────────
 
     private static class EvalResult {
-        final List<String> lines;
+        final List<Statement> statements;
+        final List<String> headers;
         final boolean noHeader;
 
-        EvalResult(final List<String> lines, final boolean noHeader) {
-            this.lines = lines;
+        EvalResult(final List<Statement> statements, final List<String> headers,
+                   final boolean noHeader) {
+            this.statements = statements;
+            this.headers = headers;
             this.noHeader = noHeader;
         }
     }
 
     /**
      * Evaluate a single block's body content.
-     * Returns the evaluated input/output lines.
+     * Returns the evaluated statements.
      */
     private EvalResult evaluateBlock(final String body) {
         final var headers = new ArrayList<String>();
-        final var lines = new ArrayList<String>();
+        final var statements = new ArrayList<Statement>();
         boolean noHeader = false;
         final StringBuilder acc = new StringBuilder();
 
@@ -260,6 +374,13 @@ public final class MtronPreprocessor {
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
+            // A trailing [-- ... --] is the demo's caption (the page shows it
+            // in the listing; the player shows it in the caption bar) — it is
+            // documentation, not keystrokes, so the recording never types it.
+            final Matcher annotation = ANNOTATION.matcher(expr);
+            final String caption = annotation.find() ? annotation.group(1).strip() : null;
+            final String typed = annotation.replaceAll("").strip();
+
             // ── Evaluate: the results accumulate into `outputs` so that the
             //    input line(s) never count toward, nor get clipped by,
             //    [MAXOUTPUT] ──
@@ -287,19 +408,17 @@ public final class MtronPreprocessor {
                 if (!hidden) outputs.add("==>ERROR: " + e.getMessage());
             }
 
-            // ── Build the input line (always shown in full) ──
-            if (!hidden) {
-                String prefix = (noPrompt ? "" : "mtron> ") + expr;
-                if (calloutNumber != null)
-                    prefix += " ".repeat(5) + "\u200B" + calloutNumber + "\u200B";
-                lines.add(prefix);
-            }
-
             // ── [MAXOUTPUT n]: clip the statement's rendered result lines
             //    only — the input line never counts toward the limit ──
             if (!outputs.isEmpty())
                 MtronPreprocessor.clipOutputs(outputs, maxOutput);
-            lines.addAll(outputs);
+
+            // ── The statement: the exact line the page shows, and the raw
+            //    expression a recording would type ──
+            final String listing = (noPrompt ? "" : "mtron> ") + expr
+                    + (calloutNumber == null ? "" : " ".repeat(5) + "\u200B" + calloutNumber + "\u200B");
+            statements.add(new Statement(typed, listing, List.copyOf(outputs), hidden, noPrompt,
+                    caption == null || caption.isEmpty() ? null : caption));
 
             // statement complete — reset statement-scoped directive state
             noPrompt = false;
@@ -309,13 +428,7 @@ public final class MtronPreprocessor {
             maxOutput = 100;
         }
 
-        // ── Prepend headers ──
-        if (!headers.isEmpty()) {
-            final var all = new ArrayList<>(headers);
-            all.addAll(lines);
-            return new EvalResult(all, noHeader);
-        }
-        return new EvalResult(lines, noHeader);
+        return new EvalResult(statements, headers, noHeader);
     }
 
     /**

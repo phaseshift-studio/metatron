@@ -3,6 +3,7 @@ name: metatron-ui-architecture
 description: Architecture of the metatron UI subsystem (Widget, Style, FloatingSurface, rec-backed widget state via SpaceRec, uiInstSet type registration).  Reference for agents creating or modifying widgets.
 ---
 
+
 # Metatron UI Architecture
 
 ## Package map

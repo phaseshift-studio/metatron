@@ -3291,7 +3291,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{g}}e{{r}}T{{y}}a{{g}}T{{c}}R{{g}}o{{g}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{r}}E{{r}}T{{y}}A{{m}}T{{r}}R{{r}}O{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5831,14 +5831,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      6456   6349396   1% /run'
+==&gt;'tmpfs            6355852      6408   6349444   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 606160200 304797624  67% /'
+==&gt;'/dev/nvme1n1p2 959786032 605603328 305354496  67% /'
 ==&gt;'tmpfs           31779244    302504  31476740   1% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       260   6355588   1% /run/user/1000'
+==&gt;'tmpfs            6355848       284   6355564   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -6054,7 +6054,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:903/49/23/293?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:906/59/48/502?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7897,7 +7897,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:903/49/27/507?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:906/59/53/096?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7916,7 +7916,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:903/49/27/507?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:906/59/53/096?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -7943,7 +7943,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABABA'</code></pre>
+==&gt;'BABABABABAB'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8008,7 +8008,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:903/49/04/756?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:906/59/20/540?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8016,7 +8016,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:903/49/04/756?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:906/59/20/540?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>

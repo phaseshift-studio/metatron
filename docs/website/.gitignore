@@ -18,6 +18,14 @@
 /articles/*
 !/articles/images/
 !/articles/images/**
+# ...and the terminal screencasts: the authored cast sources and their preview
+# page (asciinema/), the vendored asciinema player (lib/), and the page loader
+# (js/).  All three are source, committed and served by the deploy — the rest of
+# this tree is regenerated, so a directory shipped as source has to be
+# re-included explicitly.
+!/asciinema
+!/lib
+!/js
 # The mtron training corpus is a build product: the extractor writes the corpus, its manifest,
 # the verification report, and the verified train/dev split. Regenerated on demand before a run,
 # never committed — see docs/skills/mtron/references/unsloth-training-mtron.md §1.

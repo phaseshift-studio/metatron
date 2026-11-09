@@ -45,6 +45,7 @@ public class MIME {
         APPLICATION_BSON("application/bson"),
         APPLICATION_JSON("application/json"),
         APPLICATION_LD_JSON("application/ld+json"),
+        APPLICATION_ZIP("application/zip"),
         MEDIA("media/"),
         MEDIA_MPEG("media/mpeg"),
         APPLICATION_OCTET_STREAM("application/octet-stream"),
@@ -149,6 +150,7 @@ public class MIME {
             if (extension.equals("bash")) return TEXT_X_SHELLSCRIPT;
             if (extension.equals("py")) return TEXT_PYTHON;
             if (extension.equals("java")) return TEXT_JAVA;
+            if (extension.equals("zip")) return APPLICATION_ZIP;
             return defaultType;
         }
 
@@ -212,6 +214,10 @@ public class MIME {
             return this.equals(APPLICATION_BSON);
         }
 
+        public boolean isZip() {
+            return this.equals(APPLICATION_ZIP);
+        }
+
         public boolean isShell() {
             return this.equals(TEXT_X_SHELLSCRIPT);
         }
@@ -236,6 +242,7 @@ public class MIME {
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();
             if (this.isJava()) return ObjJavaSerializer.single();
             if (this.isBSON()) return ObjBSONSerializer.single();
+            if (this.isZip()) return ObjZipSerializer.single();
             return ObjPlainTextSerializer.single();
         }
 

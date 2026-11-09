@@ -8,6 +8,7 @@ description: |
   a route, an image, or a css file does not serve.
 ---
 
+
 # web instruction set (`/m/web`)
 
 `/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
@@ -168,6 +169,22 @@ rule has two halves, because either alone leaves a hole:
 * the read (`fsspace::T`): not text, or not valid UTF-8 at all (an unlisted extension falls back to `text/plain`), is
   `bytes`;
 * the write (`MIME.MIMEType.toBytes`): bytes are written verbatim, whatever serializer the MIME would otherwise use.
+
+## archives: `application/zip`
+
+`application/zip` is the one media type whose *rendering is a carrier*: `ObjZipSerializer` writes an obj as
+`ObjmtronSerializer` source in a single `obj.mtron` entry, and reads that entry back as the obj.
+
+Its exception is the reason it exists: an obj that **names** a file or directory of a mounted `fsspace::T` is
+not rendered as an obj-of-the-file — the file, or the whole directory tree, is zipped as it stands. That makes
+`?mimeq=application/zip` a move:
+
+```mtron
+*//remote/fs:dir?mimeq=application/zip   [-- the remote directory's files, as one zip of bytes --]
+```
+
+A binary media type answers `bytes::T` from `?mimeq=` (never a `str`), and an archive of files has no single obj to
+read, so the read direction refuses it rather than answering one member.
 
 ## `?mimeq=` — choosing the rendering
 

@@ -12,6 +12,7 @@ description: |
   database as WKT, or declaring a native spatial pushdown.
 ---
 
+
 # the geographic instruction set (`/m/math/geo`)
 
 `/m/math/geo` is GeoJSON with the JSON taken out of it. The wire format's `type`, `coordinates`, `geometry`,

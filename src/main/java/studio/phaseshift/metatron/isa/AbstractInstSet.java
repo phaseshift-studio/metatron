@@ -250,6 +250,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
                         .filter(c -> checkDepth(c, this.tid.extend(CONST)))
+                        // a vid-less const has no address to look up, and a null
+                        // map key makes every readTables() on this set throw
+                        .filter(c -> !Objects.isNull(c) && !Objects.isNull(c.vid()))
                         .forEach(c -> {
                             if (!checkPattern(c))
                                 Machine.write(c);
@@ -408,18 +411,21 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                     .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
                     .append(objs(TYPE_TABLE.entrySet()
                             .stream()
+                            .filter(kv -> !Objects.isNull(kv.getKey()))
                             .filter(kv -> kv.getKey().test(pattern.asNode()))
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))))
                     .append(objs(REWRITE_TABLE.entrySet()
                             .stream()
+                            .filter(kv -> !Objects.isNull(kv.getKey()))
                             .filter(kv -> kv.getKey().test(pattern.asNode()))
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))))
                     .append(objs(CONST_TABLE.entrySet()
                             .stream()
+                            .filter(kv -> !Objects.isNull(kv.getKey()))
                             .filter(kv -> kv.getKey().test(pattern.asNode()))
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
@@ -494,7 +500,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             } else if (obj.isNoObj()) {
                                 final Set<Inst> insts = INST_TABLE.get(vid.basePath());
                                 insts.removeIf(i -> i.tid().test(vid));
-                            } else {
+                            } else if (!Objects.isNull(vid)) {
                                 CONST_TABLE.put(vid, obj);
                                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
                             }

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!--
+  The recording index — a spike for reviewing what the docs pipeline emits.
+  Each entry is a real .cast beside this page; the caption bar under a player
+  is driven by the recording's own markers (the doc's [-- ... --] annotations).
+
+  Serve the website tree, then open /asciinema/ :
+      python3 -m http.server 8000 --directory docs/website
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>terminal recordings · metatron</title>
+    <style>
+        :root { --mred: #7a2518; --mdarkgray: #494554; }
+        body {
+            margin: 0;
+            padding: 2.5rem 1.5rem;
+            background: #f7f5f2;
+            color: #2c2a33;
+            font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+        }
+        main { max-width: 1100px; margin: 0 auto; }
+        h1 {
+            margin: 0 0 .3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--mred);
+        }
+        h2 { margin: 2rem 0 .2rem; font-size: .95rem; font-weight: 600; }
+        p { margin: 0 0 1rem; font-size: .8rem; color: var(--mdarkgray); }
+        code { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: .95em; }
+        .asciinema-figure { margin: 0; }
+        .asciinema-cast {
+            min-height: 120px;
+            background: #000;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px 6px 0 0;
+            overflow: hidden;
+        }
+        .asciinema-caption {
+            display: none;
+            padding: .45rem .9rem;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-top: 0;
+            border-radius: 0 0 6px 6px;
+            color: #d8d2c8;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: .78rem;
+        }
+        .asciinema-caption.show { display: block; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>terminal recordings</h1>
+    <p>every recording is generated from the doc it teaches — click to play.</p>
+
+    <h2>type checks</h2>
+    <p><code>skills/mtron/references/type-system-mtron.md</code> · <code>cast=type-checks</code></p>
+    <figure class="asciinema-figure">
+        <div class="asciinema-cast" data-cast="type-checks.cast"
+             data-cols="100" data-rows="30"></div>
+        <figcaption class="asciinema-caption"></figcaption>
+    </figure>
+
+    <h2>repl basics</h2>
+    <p><code>asciinema/repl-basics.cast.yml</code> · hand-authored (a demo with no doc block)</p>
+    <figure class="asciinema-figure">
+        <div class="asciinema-cast" data-cast="repl-basics.cast"
+             data-cols="100" data-rows="24"></div>
+        <figcaption class="asciinema-caption"></figcaption>
+    </figure>
+</main>
+<script src="../js/asciinema.js"></script>
+</body>
+</html>

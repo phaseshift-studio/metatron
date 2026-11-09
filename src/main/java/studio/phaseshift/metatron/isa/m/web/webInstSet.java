@@ -120,6 +120,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI OBJ_RDF_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_rdf");
     public static final fURI OBJ_PLAINTEXT_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_text");
     public static final fURI OBJ_XSV_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_xsv");
+    public static final fURI OBJ_ZIP_SERIALIZER_TID = OBJ_SERIALIZER_TID.extend("obj_zip");
 
     public static Type MIME_OBJ_TYPE = TypeBuilder.build()
             .tid(URI_TID)
@@ -229,6 +230,7 @@ public class webInstSet extends AbstractInstSet {
     public static Type OBJ_YAML_SERIALIZER_TYPE;
     public static Type OBJ_BYTE_BUFFER_SERIALIZER_TYPE;
     public static Type OBJ_XSV_SERIALIZER_TYPE;
+    public static Type OBJ_ZIP_SERIALIZER_TYPE;
     public static final fURI MCP_SERVER_TID = WEB_ISA_TID.extend("mcp").extend("mcp_server");
     public static final fURI MCP_CLIENT_TID = WEB_ISA_TID.extend("mcp").extend("mcp_client");
     public static Type MCP_CLIENT_TYPE;
@@ -297,7 +299,9 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(ObjXSVSerializer.single(),
                                 "the xsv serializer — parses a {comma,tab,etc.}-separated values document into a rec and writes a rec back as xsv: \\(\\mathrm{xsv} \\leadsto \\mathrm{rec} \\leadsto \\mathrm{xsv}\\)"),
                         docWrap(ObjYAMLSerializer.single(),
-                                "the yaml serializer — parses a yaml document into a rec and writes a rec back as yaml: \\(\\mathrm{yaml} \\leadsto \\mathrm{rec} \\leadsto \\mathrm{yaml}\\)")),
+                                "the yaml serializer — parses a yaml document into a rec and writes a rec back as yaml: \\(\\mathrm{yaml} \\leadsto \\mathrm{rec} \\leadsto \\mathrm{yaml}\\)"),
+                        docWrap(ObjZipSerializer.single(),
+                                "the zip serializer — writes an obj as mtron source inside a zip archive and reads it back, and zips a file or directory an obj names rather than an obj of the file: \\(\\mathrm{zip} \\leadsto \\mathrm{obj} \\leadsto \\mathrm{zip}\\)")),
                 uri(TYPE), lst(
                         docWrap(MIME_OBJ_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a xml verified str encoding of an xml document"),
@@ -388,6 +392,10 @@ public class webInstSet extends AbstractInstSet {
                                         uri("delimiter").maybe().asUri(), "the column delimiter token (e.g. ',' or '\\t')",
                                         uri("header").maybe().asUri(), "whether the first row is a header row parsed into rec::T keys"))
                                         .desc("obj_xsv::[delimiter => ',', header => true]")
+                                        .create(),
+                        OBJ_ZIP_SERIALIZER_TYPE = TypeBuilder.build()
+                                        .tid(OBJ_SERIALIZER_TID)
+                                        .vid(OBJ_ZIP_SERIALIZER_TID, "a serializer for moving an obj, or the files and directories it names, as a zip archive")
                                         .create(),
                         docWrap(HTTP_SERVER_TYPE, """
                                                   an http server as this machine's presence: it serves this machine's routes through an http(s)://host:port socket.

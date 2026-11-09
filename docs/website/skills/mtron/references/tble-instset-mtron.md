@@ -5,6 +5,7 @@ description: >
     a JDBC relational database mounted as a metatron space — tables that appear from the first rec write, typed rows, the rewrite family that pushes reads down into SQL, the key/value fall-through, `auto_from` foreign keys, and native `sql()`. TRIGGER: When connecting a database (SQLite, PostgreSQL, MariaDB, MySQL), writing or reading table rows in mtron, wondering whether a read was pushed down to SQL, mapping a row cell to a `!*` pointer, or asking what a table's schema is.
 ---
 
+
 # tble instruction set (`/m/db/tble`)
 
 A relational database is a space, a table is a collection, and a row is a `rec::T` whose vid **is** its primary key.
@@ -459,21 +460,23 @@ processor (`q => [incrq::[=>]]`, in the setup block above), and the write must a
 
 ```mtron
 mtron> tbledoc:note/_?incrq -> [body=>'a note with a database-assigned key']
-==>[body=>'a note with a database-assigned key']@tbledoc:note/11
+==>[body=>'a note with a database-assigned key']@tbledoc:note/13
 mtron> tbledoc:note/_?incrq -> [body=>'another one']
-==>[body=>'another one']@tbledoc:note/12
+==>[body=>'another one']@tbledoc:note/14
 mtron> *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==>4
-==>7
 ==>8
 ==>12
-==>1
 ==>9
 ==>11
-==>2
-==>5
+==>14
 ==>3
 ==>6
+==>4
+==>7
+==>1
+==>2
+==>5
+==>13
 ==>10
 ```
 ## taking the space down

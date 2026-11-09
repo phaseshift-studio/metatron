@@ -112,6 +112,7 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 | `ObjJavaSerializer`                      | Java object graph                         | `ObjJavaSerializer.java`                |
 | `ObjJSONSerializer`                      | JSON                                      | `isa/web/parser/ObjJSONSerializer.java` |
 | `ObjSQLSerializer` / `ObjYAMLSerializer` | SQL rows / YAML                           | `isa/mach/io/type/`                     |
+| `ObjZipSerializer`                       | an obj (mtron source) or a file tree, zipped | `isa/web/type/ObjZipSerializer.java`  |
 | `MIME.MIMEType.APPLICATION_MTRON`        | negotiates the mtron codec on a transport | `MIME.java`                             |
 
 ## Rules that hold across all of them

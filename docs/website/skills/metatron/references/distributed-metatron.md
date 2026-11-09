@@ -3,6 +3,7 @@ name: distributed-metatron
 description: Index of metatron's distributed primitives — the dispatch seam, every wire transport, the remote endpoints, the in-VM concurrency motifs, and the wire format. Each row is a composable motif with its witness.
 ---
 
+
 # Distributed primitives (Java)
 
 An index of every place metatron crosses a process boundary. Each motif is atomic and user-composable; the witness
@@ -112,6 +113,7 @@ Concurrent, not remote — but the same monad is the work unit in both cases.
 | `ObjJavaSerializer`                      | Java object graph                         | `ObjJavaSerializer.java`                |
 | `ObjJSONSerializer`                      | JSON                                      | `isa/web/parser/ObjJSONSerializer.java` |
 | `ObjSQLSerializer` / `ObjYAMLSerializer` | SQL rows / YAML                           | `isa/mach/io/type/`                     |
+| `ObjZipSerializer`                       | an obj (mtron source) or a file tree, zipped | `isa/web/type/ObjZipSerializer.java`  |
 | `MIME.MIMEType.APPLICATION_MTRON`        | negotiates the mtron codec on a transport | `MIME.java`                             |
 
 ## Rules that hold across all of them

@@ -657,6 +657,16 @@ rule has two halves, because either alone leaves a hole:</p>
 <code>bytes</code>;</li>
 <li>the write (<code>MIME.MIMEType.toBytes</code>): bytes are written verbatim, whatever serializer the MIME would otherwise use.</li>
 </ul>
+<h3>archives: <code>application/zip</code></h3>
+<p><code>application/zip</code> is the one media type whose <em>rendering is a carrier</em>: <code>ObjZipSerializer</code> writes an obj as
+<code>ObjmtronSerializer</code> source in a single <code>obj.mtron</code> entry, and reads that entry back as the obj.</p>
+<p>Its exception is the reason it exists: an obj that <strong>names</strong> a file or directory of a mounted <code>fsspace::T</code> is
+not rendered as an obj-of-the-file — the file, or the whole directory tree, is zipped as it stands. That makes
+<code>?mimeq=application/zip</code> a move:</p>
+<pre><code class="language-mtron">*//remote/fs:dir?mimeq=application/zip   [-- the remote directory's files, as one zip of bytes --]
+</code></pre>
+<p>A binary media type answers <code>bytes::T</code> from <code>?mimeq=</code> (never a <code>str</code>), and an archive of files has no single obj to
+read, so the read direction refuses it rather than answering one member.</p>
 <h3><code>?mimeq=</code> — choosing the rendering</h3>
 <p>The rendering is chosen per request with <code>?mimeq=&lt;media type&gt;</code>. Against a live carrier with a daemon behind the
 <code>/docker</code> mount the same request reads:</p>

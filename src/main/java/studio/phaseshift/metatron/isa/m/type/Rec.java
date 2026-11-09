@@ -109,7 +109,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                 final boolean found = this.elements()
                         .anyMatch(l -> l.jvm().get0().test(r.jvm().get0()) && l.jvm().get1().test(r.jvm().get1())) ||
                         // a type can have values that their super type (TODO: this plays for a type to its refinement and a type to its value -- each has a more particular restriction (this here is too general))
-                        r.secondDirect().isValue();
+                        (this.at(r.firstDirect()).isNoObj() && r.secondDirect().isValue());
                 if (found) return true;
                 boolean notFound = r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().test(r.jvm().get0()));
                 if (notFound) return true;

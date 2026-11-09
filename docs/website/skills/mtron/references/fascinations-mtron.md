@@ -10,6 +10,7 @@ description: |
   data; when showing code as data, pattern matching on code, or a rewrite rule written in mtron.
 ---
 
+
 # fascinations — the surprising things mtron does
 
 Each section is one thing mtron does that most languages cannot, or can only with a framework: the phenomenon, a

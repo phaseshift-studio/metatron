@@ -9,6 +9,7 @@ description: >
   keys a widget type declares.
 ---
 
+
 # ui instruction set (`/m/sys/ui`)
 
 A widget is a **rec**. Its title, its body, its style, whether it is folded, where it sits — every one of

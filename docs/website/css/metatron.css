@@ -2084,3 +2084,172 @@ h6:hover .heading-anchor {
     padding-left: 2.4rem;
     font-size: 0.95rem;
 }
+/* ── terminal screencasts (asciinema) ─────────────────────────────────── */
+.asciinema-figure {
+    margin: 1.25rem 0 1.75rem;
+}
+
+.asciinema-figure .asciinema-cast {
+    border: 1px solid #2a2a2a;
+    border-radius: 6px 6px 0 0;
+    overflow: hidden;
+    background: #000;
+}
+
+.asciinema-caption {
+    display: none;
+    padding: .45rem .9rem;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    color: #d8d2c8;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: .78rem;
+    line-height: 1.35;
+}
+
+.asciinema-caption.show {
+    display: block;
+}
+
+/* ── the screencast launcher and the modal it opens ──────────────────── */
+.asciinema-embed {
+    margin: .5rem 0 1rem;
+}
+
+.asciinema-launch {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .38rem .85rem .38rem .65rem;
+    border: 1px solid var(--mred);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--mred);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+
+.asciinema-launch:hover,
+.asciinema-launch:focus-visible {
+    background: var(--mred);
+    color: #fff;
+}
+
+.asciinema-launch i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.asciinema-modal .modal-content {
+    background: #0d0d0d;
+    border: 1px solid #2a2a2a;
+}
+
+.asciinema-modal .modal-header {
+    padding: .6rem 1rem;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.asciinema-modal .modal-title {
+    color: #d8d2c8;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: .82rem;
+    letter-spacing: .03em;
+}
+
+.asciinema-modal .modal-body {
+    padding: 0;
+}
+
+.asciinema-modal .asciinema-cast {
+    background: #000;
+}
+
+.asciinema-modal .asciinema-caption {
+    border: 0;
+    border-top: 1px solid #2a2a2a;
+    border-radius: 0;
+}
+
+/* the site sets .modal-content { width: unset }, so a dialog shrink-wraps to
+   its content — give the player dialog an explicit width and centering */
+.asciinema-modal .modal-dialog {
+    width: calc(100% - 2rem);
+    max-width: 1080px;
+    margin: 1.75rem auto;
+}
+
+.asciinema-modal .modal-content {
+    width: 100%;
+}
+
+/* fit:width sizes the terminal from the dialog's width; a demo's row count
+   is what keeps it short enough for the caption bar to stay on screen */
+.asciinema-modal .asciinema-cast {
+    min-height: 120px;
+}
+
+
+/* ── screencast modal polish ─────────────────────────────────────────── */
+/* one compact header row, the page's title in the site red */
+.asciinema-modal .modal-header {
+    padding: .3rem .75rem;
+}
+
+.asciinema-modal .modal-title {
+    color: var(--mred);
+    font-size: .975rem;   /* 125% of the original .78rem */
+    max-width: calc(100% - 2.5rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* the terminal at 75% of the player's own fit-to-width size */
+.asciinema-modal .asciinema-player,
+.asciinema-modal .ap-term {
+    font-size: 12.5px !important;
+}
+
+/* the marker banner reads as a warning strip */
+.asciinema-caption {
+    color: var(--bs-warning, #ffc107);
+}
+
+/* the close control belongs in the header row, not floating above it */
+.asciinema-modal .modal-header {
+    display: flex;
+    align-items: center;
+}
+
+.asciinema-modal .modal-header .btn-close {
+    position: static;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    float: none;
+    align-self: center;
+    margin: 0 0 0 auto;
+    padding: .25rem;
+}
+
+/* metatron.css shrinks .btn-close-white to 0.15em and lifts it -20px for
+   another modal; inside a recording dialog it is a normal close control */
+.asciinema-modal .modal-header .btn-close {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 1em !important;
+    height: 1em !important;
+    margin: 0 0 0 auto;
+    padding: .25rem;
+    align-self: center;
+}

@@ -201,7 +201,7 @@ public class AsciiDocRunner {
             final Path outFile = outputPath.resolve(file.getFileName());
             String content = Files.readString(file);
             content = new LegendDocPreprocessor().process(content);   // inject legend + anchors
-            content = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER).process(content);    // evaluate [mtron] blocks
+            content = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER, true).process(content);    // evaluate [mtron] blocks
             Files.writeString(outFile, content.stripTrailing());
             LOG.info("  processed " + file.getFileName() + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             ThreadExecutor.instance().shutdownNow();
