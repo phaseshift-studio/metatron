@@ -88,6 +88,9 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "int::T",
             "real::T",
             "uri::T",
+            "{2}int{3}::T",                     // a type that leads with its span
+            "lst[{3}int{2}]::T",                // a slot run's span lives in the poly
+            "int::T[?>0]",                      // a refinement: the predicate is written with the type
             "[=>]",
             "rec::[a=>b,c=>d]",
             "rec{0}::[a=>b,c=>[c=>d]]",
@@ -103,8 +106,7 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "[a=>b,c=>[c=>d]]",
             "[a=>b,c=>[b=>d]]",
             "[<a>=>b,c=><d>]",
-            "plus(2).mult(7)",
-            "start(1).plus(2).mult(7)",
+            "start(1).plus(2).mult(7)",         // an expression is read as its result, 21: a bare code with no start is noobj
             "{1,2,3,4,5}",
             "{,}",
             "<>",
@@ -124,8 +126,13 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "{true,false,{1,0},{-100,12.35,-12.35}}"
     }, delimiter = '|')
     public void testWriteIsLegalMtronThatReadsBack(final String expr) {
-        final Obj obj = ObjmtronSerializer.parse(expr).apply();
         final ObjmtronSerializer ser = ObjmtronSerializer.single();
+        // THE OBJ IS WHAT READING THE ROW GIVES, the same machine evaluation that brings the written text back.
+        // Applying the parse is not that: a type applied to nothing answers noobj, so int::T round-tripped noobj and
+        // tested nothing. A row that names something must not evaluate to nothing.
+        final Obj obj = ser.read(expr);
+        assertFalse(obj.isNoObj() && !ObjmtronSerializer.parse(expr).isNoObj(),
+                String.format("the row evaluated to noobj, so its round trip tests nothing: %s", expr));
         final String written = ser.write(obj);
         LOG.debug("%s ==> %s", expr, written);
 
