@@ -126,18 +126,6 @@ public class TheoryHelper extends MRec {
     }
 
     /**
-     * The inst of {@code opRole} applied to the value of {@code idRole} — the unit pattern, e.g. a type's
-     * {@code add} applied to its {@code zero}.
-     */
-    public static Inst unit(final Type type, final String name, final String opRole, final String idRole) {
-        return inst(type, name, opRole).args(lst(element(type, name, idRole)));
-    }
-
-    public static Inst unit(final Type type, final fURI theoryTID, final String opRole, final String idRole) {
-        return unit(type, nameOf(theoryTID), opRole, idRole);
-    }
-
-    /**
      * The named theory instances of a type — the {@code object::T.theory} rec, keyed by the user's name for
      * each instance (e.g. {@code ring}, {@code add_group}, {@code boolean}). Empty when the type models no
      * algebraic structure. This is the enumeration a law-driven rewrite walks.
@@ -204,60 +192,6 @@ public class TheoryHelper extends MRec {
     }
 
     /**
-     * The (op, identity) role pairs a theory can witness: {@code add}/{@code zero}, {@code mul}/{@code one},
-     * {@code op}/{@code id}, {@code or}/{@code zero}, {@code and}/{@code one}, {@code join}/{@code bottom},
-     * {@code meet}/{@code top}. Each pair names the unit pattern {@code op(id)} the theory licenses.
-     */
-    public static final List<String[]> UNIT_ROLES = List.of(
-            new String[]{ADD, ZERO}, new String[]{MUL, ONE}, new String[]{OP, ID},
-            new String[]{OR, ZERO}, new String[]{AND, ONE}, new String[]{JOIN, BOTTOM}, new String[]{MEET, TOP});
-
-    /**
-     * The identity roles that may hold an <em>operation</em> rather than a literal ({@code one}, {@code id}), e.g.
-     * the code ring's {@code id}. Such an identity is the identity morphism only when its operation is composition
-     * — see {@link #compositionIdentity} — since the code ring's additive group also names an {@code id}: end.
-     */
-    public static final List<String> IDENTITY_ROLES = List.of(ONE, ID);
-
-    /**
-     * The unit pattern of an instance's role pair — the inst {@code op} applied to the instance's identity
-     * element, e.g. {@code add(zero)} for a ring. {@code noobj} when the instance does not declare both roles.
-     * The law roles hold {@code !*} pointers, so applying {@code args} to the pointer builds the pattern the
-     * shipped rewrites test with {@link Inst#test(Obj)}; the pointer is transparent.
-     */
-    public static Inst unit(final Rec instance, final String opRole, final String idRole) {
-        final Obj id = instance.at(f(idRole));
-        final Obj op = instance.at(f(opRole));
-        if (id.isNoObj() || !op.isInst())
-            return noobj().asInst();
-        return op.asInst().args(lst(id));
-    }
-
-    /**
-     * The op address of an instance's identity <em>operation</em>, or null when the role holds a literal
-     * (e.g. {@code zero => 0}) rather than an operation (code's {@code one => !*id}). A {@code !*} pointer
-     * names its target in its own argument, so the address is read without resolving — the target may be an
-     * as-yet-unresolved registration.
-     */
-    public static fURI identityAddress(final Rec instance, final String idRole) {
-        // the raw rec value: `at()` dereferences an auto (`!*`) role, and a pointer whose target is not
-        // registered yet reads back noobj — which is exactly the code ring's `one => !*id`
-        Obj id = instance.jvm().get(uri(idRole));
-        if (null == id)
-            id = instance.at(f(idRole));
-        if (null == id || id.isNoObj())
-            return null;
-        if (id.isUri())
-            return id.uriValue().basePath();
-        if (!id.isInst())
-            return null;
-        final Inst inst = id.asInst();
-        if (!inst.args().isEmpty() && inst.arg(0).isUri())
-            return inst.arg(0).uriValue().basePath();
-        return inst.tid().basePath();
-    }
-
-    /**
      * The op address of a type's declared additive structure — the law-indexed witness: the first theory
      * instance of {@code object[T].theory} that carries an additive role — the {@code add} role of a ring/field/rig,
      * or the {@code op} role of an {@code add_*} monoid/group. The role is read with {@code atDirect} (no call
@@ -281,39 +215,6 @@ public class TheoryHelper extends MRec {
                 add = roleAddress(block, ADD);
         }
         return add;
-    }
-
-    /**
-     * The op address of the identity MORPHISM — the identity of chain composition, read off the type's declared
-     * algebra: its multiplicative op is the {@code mul} role ({@code compose} for the code ring), and a theory
-     * instance whose operation is that op contributes its operation-valued identity ({@code ring.one},
-     * {@code mul_monoid.id}: both {@code id}). The identity of any OTHER operation is no identity morphism: the
-     * additive group's {@code id} is end, the identity of branch, which under composition is the ZERO. Null when
-     * the type declares no multiplicative structure, so no bare op is taken for the identity.
-     */
-    public static fURI compositionIdentity(final Type type) {
-        final Collection<Obj> blocks = instances(type).jvm().values();
-        final fURI compose = blocks.stream()
-                .filter(Obj::isRec)
-                .map(block -> roleAddress(block.asRec(), MUL))
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(null);
-        if (null == compose)
-            return null;
-        for (final Obj block : blocks) {
-            if (!block.isRec())
-                continue;
-            for (final String[] roles : UNIT_ROLES) {
-                final fURI op = IDENTITY_ROLES.contains(roles[1]) ? roleAddress(block.asRec(), roles[0]) : null;
-                if (null != op && compose.basePath().equals(op.basePath())) {
-                    final fURI identity = identityAddress(block.asRec(), roles[1]);
-                    if (null != identity)
-                        return identity;
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -345,14 +246,6 @@ public class TheoryHelper extends MRec {
 
     public static Inst plusInst(final fURI theoryTID, final Type type) {
         return inst(type, theoryTID, ADD);
-    }
-
-    public static Inst plusZeroInst(final fURI theoryTID, final Type type) {
-        return unit(type, theoryTID, ADD, ZERO);
-    }
-
-    public static Inst multOneInst(final fURI theoryTID, final Type type) {
-        return unit(type, theoryTID, MUL, ONE);
     }
 
     /**

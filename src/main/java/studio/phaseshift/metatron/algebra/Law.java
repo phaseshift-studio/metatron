@@ -32,6 +32,8 @@ import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BRANCH_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.COMPOSE_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -560,17 +562,27 @@ public enum Law {
                     }
                 final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
                 equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
+                // THE THEORIES' RULES, FILLED IN BY EVERY INSTANCE A CARRIER DECLARES: a theory states its rules in its own
+                // role names (monoid_theory's op(id) ⇝ ε) and an instance of that theory binds them (int's add_monoid
+                // gives plus(0) ⇝ ε). A theory refines no other, so an instance answers only its own theory's rules
+                final Map<fURI, List<Obj>> stated = new HashMap<>();
                 final Set<Rec> units = new LinkedHashSet<>();
                 for (final fURI carrier : carriers)
-                    for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values())
-                        for (final String[] roles : block.isRec() ? TheoryHelper.UNIT_ROLES : List.<String[]>of()) {
-                            final Inst unit = TheoryHelper.unit(block.asRec(), roles[0], roles[1]);
-                            if (!unit.isNoObj())
-                                units.add(rec(code(List.of(instB(unit.tid().basePath(), unit.args()))), code(List.<Inst>of())));
+                    for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values()) {
+                        if (!block.isRec() || null == block.asRec().tid())
+                            continue;
+                        for (final Obj rule : stated.computeIfAbsent(block.asRec().tid().basePath(), theory -> {
+                            final Obj declared = Machine.read(PendingWrites.decq(theory));
+                            final Obj rewrite = declared.isRec() ? declared.asRec().atDirect(uri(REWRITE)) : noobj();
+                            return rewrite.isLst() ? rewrite.lstValue() : List.of();
+                        })) {
+                            final Rel equation = rule.isRec() ? rule.asRec().<Rel>elements().findFirst().orElse(null) : null;
+                            final List<Inst> lhs = null == equation ? null : bind(equation.first().asCall().insts(), block.asRec());
+                            final List<Inst> rhs = null == equation ? null : bind(equation.second().asCall().insts(), block.asRec());
+                            if (null != lhs && null != rhs && !lhs.isEmpty())
+                                units.add(rec(code(lhs), code(rhs)));
                         }
-                final fURI identity = loaded ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
-                if (null != identity)
-                    units.add(rec(code(List.of(instB(identity, lst()))), code(List.<Inst>of())));
+                    }
                 final Claims snapshot = new Claims(derivations, rules, List.copyOf(units), List.copyOf(rows), read);
                 CLAIMS = snapshot;
                 CLAIMS_AT = revision;
@@ -578,6 +590,41 @@ public enum Law {
                 CLAIMS_LOADED = loaded;
                 return snapshot;
             }
+        }
+
+        /**
+         * ONE SIDE OF A THEORY'S RULE AS AN INSTANCE BINDS IT — the rule is stated in the theory's role names and the
+         * instance fills them in: an instruction a role names is that role's operation, by its base path (a unit drops by
+         * its literal), and an argument naming a role is that role's value, so monoid's {@code op(id)}, bound by int's
+         * {@code add_monoid}, is {@code plus(0)}. COMPOSITION IS ADJACENCY in a chain ({@code .} is compose), so an
+         * operation bound to {@code compose} hands on its operations in place: code's {@code mul_monoid} gives
+         * {@code id()}. Null when the instance leaves a role the rule names unbound (a pointer whose target is not
+         * registered), or binds one to {@code branch}, whose operands are lanes rather than a chain: code's
+         * {@code add_monoid} means {@code branch(a, end) = a}, which no chain rule spells yet.
+         */
+        private static List<Inst> bind(final List<Inst> insts, final Rec instance) {
+            final List<Inst> out = new ArrayList<>();
+            for (final Inst inst : insts) {
+                final List<Obj> args = new ArrayList<>();
+                for (final Obj arg : inst.args().lstValue()) {
+                    final Obj value = arg.isUri() && instance.jvm().containsKey(arg) ? instance.at(arg.uriValue()) : arg;
+                    if (value.isNoObj())
+                        return null;
+                    args.add(value);
+                }
+                final Obj op = instance.jvm().containsKey(uri(inst.tid().name())) ? instance.at(f(inst.tid().name())) : inst;
+                if (!op.isInst() || BRANCH_INST_TID.basePath().equals(op.asInst().tid().basePath()))
+                    return null;
+                if (!COMPOSE_INST_TID.basePath().equals(op.asInst().tid().basePath()))
+                    out.add(instB(op.asInst().tid().basePath(), lst(args)));
+                else
+                    for (final Obj arg : args) {
+                        if (!arg.isInst())
+                            return null;
+                        out.add(instB(arg.asInst().tid().basePath(), arg.asInst().args()));
+                    }
+            }
+            return out;
         }
 
         /**
@@ -1123,10 +1170,10 @@ public enum Law {
         }
 
         /**
-         * THE UNIT EQUATIONS AS DATA — {@code op(e) ⇝ ε} for every unit a carrier's theory declares
-         * ({@link TheoryHelper#UNIT_ROLES}: {@code plus(0)}, {@code mult(1)}, {@code plus("")}, …; a rewrite compares the
-         * operand, which a match only type-tests), and {@code id() ⇝ ε} for the identity of chain composition
-         * ({@link TheoryHelper#compositionIdentity}). Read off the carriers of the registered instructions ({@link #claims}).
+         * THE UNIT EQUATIONS AS DATA — monoid_theory's {@code op(id) ⇝ ε}, stated once in the theory's {@code ?decq}
+         * ({@code rewrite}) and bound by every monoid instance a carrier declares ({@link #bind}): {@code plus(0)},
+         * {@code mult(1)}, {@code plus("")}, …, and code's {@code id()}, since composition is adjacency. A rewrite compares
+         * the operand, which a match only type-tests. Read off the carriers of the registered instructions ({@link #claims}).
          */
         public static List<Rec> units() {
             return claims().units();

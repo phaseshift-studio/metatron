@@ -954,7 +954,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-08) — {@link Law.Helper#equations} answers {@code [lhs => rhs]}
      * over the op of every instruction whose claim states the law, one hole per argument slot pinning the pair's operands
      * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. The theories
-     * add {@link Law.Helper#units} ({@code op(e) ⇝ ε} and composition's {@code id() ⇝ ε}) and
+     * add {@link Law.Helper#units} (monoid_theory's {@code op(id) ⇝ ε} as each monoid instance binds it, code's
+     * {@code id() ⇝ ε} among them since composition is adjacency) and
      * {@link Law.Helper#inverses} ({@code f(a)·g(a) ⇝ ε}). Each row runs a whole table over a bare
      * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
      * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
@@ -980,6 +981,9 @@ public class catInstSetTest extends AbstractInstSetTest {
             "units       % plus(map(3).neg())            % noobj",
             // end is the additive group's id, composition's zero, never the identity morphism
             "units       % end()                         % end()",
+            // code's add_monoid binds branch, whose operands are lanes: branch(a, end) = a is no chain rule, so it
+            // binds nothing and the lane stays
+            "units       % branch(end).plus(1)           % branch(end).plus(1)",
             "inverses    % plus(3).minus(3).plus(2)      % plus(2)",
             "inverses    % mult(2).div(2).neg()          % neg()",
             "inverses    % plus(3).minus(4)              % plus(3).minus(4)",
@@ -1043,21 +1047,49 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * The identity MORPHISM is the identity of chain composition, read off the type's multiplicative op. The code
-     * ring's additive group names an identity too — end, the identity of branch — and under composition end is the
-     * ZERO: taking it for the identity made {@code 5.end()} answer 5. A type whose identities are literals
-     * ({@code int}'s 0 and 1) has no identity morphism. Each row: the type % its composition identity.
+     * THE MONOID STATES ITS IDENTITY RULE AS DATA (Marko, 2026-11-08) — {@code op(id) ⇝ ε}, in the theory's own role
+     * names, beside its law battery in the theory's {@code ?decq}: the one rule every monoid instance binds
+     * ({@link Law.Helper#units}).
      */
-    @ParameterizedTest
-    @CsvSource(value = {
-            "/m/code   % /m/inst/id",
-            "/m/int    % noobj",
-            "/m/real   % noobj",
-            "/m/str    % noobj",
-    }, delimiter = '%')
-    void testCompositionIdentity(final String type, final String expected) {
-        final fURI identity = TheoryHelper.compositionIdentity(T(f(type)));
-        checkEquality(LOG, ObjmtronSerializer.parse(expected), null == identity ? noobj() : uri(identity), true);
+    @Test
+    void testTheMonoidStatesItsIdentityRule() {
+        final Obj declared = Machine.read(PendingWrites.decq(MONOID_THEORY_TID));
+        checkEquality(LOG, lst(rec(code(List.of(instB(f(OP), lst(uri(ID))))), code(List.<Inst>of()))),
+                declared.asRec().atDirect(uri(REWRITE)), true);
+    }
+
+    /**
+     * A THEORY'S RULE REACHES ONLY ITS OWN INSTANCES — a theory refines no other (Marko, 2026-11-08). str's monoid binds
+     * {@code op(id)} as {@code plus('')}; declared instead as a semilattice over the very same roles it binds nothing,
+     * since the identity rule is the monoid's, and restored it binds again. Each table is applied UNGATED, as in
+     * {@link #testALawsEquationsAreData}.
+     */
+    @Test
+    void testATheorysRuleReachesOnlyItsOwnInstances() {
+        final fURI address = STR_TID.addQ(QCollection.DECQ);
+        final Obj original = Machine.read(address);
+        final Obj monoid = original.asRec().atDirect(uri(THEORY)).asRec().atDirect(uri("add_monoid"));
+        checkEquality(LOG, ObjmtronSerializer.parse("ucase()"), unitsLeave("plus('').ucase()"), true);
+        final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
+        claim.put(uri(THEORY), rec(uri("add_semilattice"), rec(mutableMap(monoid.asRec().jvm()), SEMILATTICE_THEORY_TID, null)));
+        try {
+            assertFalse(Machine.write(address, rec(claim, QCollection.DECS_TID, null)).isFail(), "str declares a semilattice");
+            checkEquality(LOG, ObjmtronSerializer.parse("plus('').ucase()"), unitsLeave("plus('').ucase()"), true);
+        } finally {
+            Machine.write(address, noobj());
+            Machine.write(address, original);
+        }
+        checkEquality(LOG, ObjmtronSerializer.parse("ucase()"), unitsLeave("plus('').ucase()"), true);
+    }
+
+    /**
+     * The chain the unit table leaves, applied ungated.
+     */
+    private static Obj unitsLeave(final String chain) {
+        List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
+        for (final Rec rule : Law.Helper.units())
+            out = Call.Helper.update(out, rule);
+        return code(out).tryToInst();
     }
 
     /**
