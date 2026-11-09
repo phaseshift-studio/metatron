@@ -1165,8 +1165,7 @@ public class mParser {
      * Parses a coefficient-marked atom — {@code /{2}c} — a path segment that carries a multiplicity on the atom. The
      * leading {@code /} is mandatory, so the marker is only read at a segment boundary: {@code a/b/c{2}} ends in the
      * coefficient {@code {2}} (it follows the atom {@code c}, not a slash), while {@code a/b/{2}c} is the segment
-     * {@code {2}c}. This is the coefficient-in-branch encoding: the {@code {2}} records the 2-fold branch that carried
-     * the shared suffix.
+     * {@code {2}c}. The {@code {2}} is a point: every branch through the segment counts twice.
      */
     private static Parser m_furi_coefficient_marked_atom() {
         return seq(of("/"), m_furi_coefficient(), word().or(m_furi_template()))

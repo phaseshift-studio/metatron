@@ -34,7 +34,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
-import static studio.phaseshift.metatron.Tokens.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MObjs implements Objs {
@@ -165,7 +164,7 @@ public class MObjs implements Objs {
         if (objs.isEmpty()) return noobj();
         if (objs.size() == 1) return objs.getFirst();
         final fURI bigTID = tid.big();
-        final fURI newTID = objs.stream().map(Obj::tid).reduce(fURI::plus).orElse(NOOBJ_TID);
+        final fURI newTID = fURI.Helper.sum(objs.stream().map(Obj::tid));
         if (!newTID.test(bigTID))
             throw MTronException.of("tid does not match objs tid: %s != %s", bigTID, newTID);
         return new MObjs(objs, bigTID, vid).attemptBulk(true).tryToShrink();
@@ -308,16 +307,9 @@ public class MObjs implements Objs {
             this.tid = lcd.vid();
         }*/ // TODO: messes up at reduction instructions
         try {
-            return this.jvm
-                    .stream()
-                    .map(Obj::tid)
-                    .reduce(fURI::plus)
-                    .orElse(fURI.Singleton.NOOBJ).c(this.c());
+            return fURI.Helper.sum(this.jvm.stream().map(Obj::tid)).c(this.c());
         } catch (final Exception e) {
-            return this.jvm
-                    .stream()
-                    .map(Obj::tid).reduce(fURI::plus)
-                    .orElse(fURI.Singleton.NOOBJ).c(this.c());
+            return fURI.Helper.sum(this.jvm.stream().map(Obj::tid)).c(this.c());
         }
         //  return this.tid;
     }

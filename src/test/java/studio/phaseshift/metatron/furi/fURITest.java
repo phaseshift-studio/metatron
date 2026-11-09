@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -130,13 +131,15 @@ public class fURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "a                             | b             | false  | {a,b}",
-            "{a,b}                         | b             | true   | {a,b,b}",
-            "a/{b,c}/d                     | a             | false  | a/{{b,c}/d,}",
-            "a/{b,c}/d                     | a/b/d         | true   | a/{b,b,c}/{2}d",
-            "a/{b,c}/d                     | a/c/d         | true   | a/{b,c,c}/{2}d",
+            "{a,b}                         | b             | true   | {a,{2}b}",
+            "a/{b,c}/d                     | a             | false  | a{,/b/d,/c/d}",
+            "a/{b,c}/d                     | a/b/d         | true   | a/{{2}b,c}/d",
+            "a/{b,c}/d                     | a/c/d         | true   | a/{b,{2}c}/d",
             "a/{b,c}/d                     | a/{b,c}/d     | true   | a/{b,c}/d{2}",
             "a/{b,c}/d                     | a             | false  | x",
-            "a/{b,c}/d                     | a/{c,b}/d     | true   | a/{b,b,c,c}/{2}d",
+            "a/{b,c}/d                     | a/{c,b}/d     | true   | a/{b,c}/d{2}",
+            "a/{{2}b,c}/d                  | a/b/d         | false  | a/{{3}b,c}/d",
+            "a/{{2}b,c}/d                  | a/b/d{2}      | true   | a/{{4}b,c}/d",
             "a/{b,c}/d                     | a/{c,b,e}/d   | true   | x",
             "a/{b,c}/d                     | a/{x,b,e}/d   | true   | x",
             "a/{b,c}/d                     | a/e/d         | false  | x",
@@ -1006,23 +1009,59 @@ public class fURITest extends AbstractMetatronTest {
             "a{,10}               | a{-10,}                     | a{,}",
             "a{1,10}              | a{-10,-1}                   | a{-9,9}",
             "http://a.com/a/b{2,} | http://a.com/a/b{4,}        | http://a.com/a/b{6,}",
-            "http://a.com/a{5}    | ws://a.com/a{4}             | #{9}",
-            "a?a=1&b=2            | a?a=3&c=6                   | a{2}?a=3&b=2&c=6",
-            "/a/b/{2}?a=1&b=2     | /a/b/?a=3&c=6               | /a/b/{3}?a=3&b=2&c=6"
+            "http://a.com/a{5}    | ws://a.com/a{4}             | {{5}http://a.com/a,{4}ws://a.com/a}",
+            "http://a.com/a{2}    | ws://a.com/a{2}             | {http://a.com/a,ws://a.com/a}{2}",
+            "http://a.com/a       | http://a.com/b/c            | http://a.com/{a,b/c}",
+            "http://a.com/c       | http://a.com/b/c            | http://a.com/{,b/}c",
+            "a?a=1&b=2            | a?a=3&c=6                   | {a?b=2&a=1,a?c=6&a=3}",
+            "/a/b/{2}?a=1&b=2     | /a/b/?a=3&c=6               | {{2}/a/b/?b=2&a=1,/a/b/?c=6&a=3}",
+            "a[x,y]               | a[x]                        | {a[x,y],a[x]}",
+            "{2}/m/int            | /m/int                      | {/m/int,{1}{2}/m/int}",
+            "a/b/c                | a/d/c                       | a/{b,d}/c",
+            "a/b/c                | a/d/c/e                     | a/{b/c,d/c/e}",
+            "/a/b/c               | /a/b/c/d                    | /a/b/c{,/d}",
+            "/a/b/c/              | /a/b/c/d                    | /a/b/c/{,d}",
+            "a/b/c                | a/b/c/                      | a/b/c{,/}",
+            "/c                   | /b/c                        | /{,b/}c",
+            "c                    | b/c                         | {,b/}c",
+            "a                    | <>                          | {,a}",
+            "/a                   | <>                          | {,/a}",
+            "<{,a}>               | <>                          | {{2},a}",
+            "/                    | /a                          | /{,a}",
+            "/                    | a                           | {/,a}",
+            "a/0                  | a/1                         | a{/0,/1}",
+            "/0                   | /1                          | /{{1}0,{1}1}",
+            "0                    | 1                           | {{1}0,{1}1}",
+            "0/c                  | 1/c                         | {{1}0,{1}1}/c",
+            "a/b{2}               | a/c{2}                      | a/{b,c}{2}",
+            "a/b{2}               | a/c{3}                      | a/{{2}b,{3}c}",
+            "a/b                  | a/c{0}                      | a/b",
+            "{0}                  | a/b                         | a/b",
+            "<a/{b,c}>            | <a/{b,c}{-1}>               | a/b{0}",
+            "<a/{b,c}>            | a/b{-1}                     | a/c",
+            "<a/{{2,3}b,{-3,-2}d}/c> | a/e/c                    | a/{{2,3}b,{-3,-2}d,e}/c",
+            "<a{,/b/d,/c/d}>      | a/c/d                       | a{,/b/d,{2}/c/d}",
+            "<{{5}http://a.com/a,{4}ws://a.com/a}> | http://a.com/b | {{5}http://a.com/a,http://a.com/b,{4}ws://a.com/a}",
+            "<{{5}http://a.com/a,{4}ws://a.com/a}> | ws://a.com/a{-4} | http://a.com/a{5}",
+            "/m/inst/gt           | <{/m/inst/eq,/m/inst/lt}>   | /m/inst/{eq,gt,lt}"
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1 = f(f1);
         final fURI furi2 = f(f2);
-        final fURI result = f(expected);
-        if (result.toString().equals("<ERROR>")) {
-            try {
-                furi1.plus(furi2);
-                assertTrue(false);
-            } catch (final Exception e) {
-                assertTrue(true);
-            }
-        } else
-            checkEquals(result, furi1.plus(furi2));
+        final fURI sum = furi1.plus(furi2);
+        checkEquals(f(expected), sum);
+        // one spelling per sum, whichever term comes first, and that spelling reads back as itself
+        checkEquals(sum, furi2.plus(furi1));
+        checkEquals(sum, idem("<" + sum + ">"));
+        // the sum is sound: its branches are the terms of both, like terms added and zero terms dropped
+        assertEquals(points(Stream.concat(furi1.branches(), furi2.branches())), points(sum.branches()));
+    }
+
+    private static Map<fURI, cInt> points(final Stream<fURI> terms) {
+        final Map<fURI, cInt> points = new HashMap<>();
+        terms.forEach(term -> points.merge(term.c(cInt.ONE()), term.c(), cInt::plus));
+        points.values().removeIf(cInt::isZero);
+        return points;
     }
 
     @ParameterizedTest
@@ -2075,38 +2114,46 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a/b/{c,d}            % a/b/c|a/b/d",
-            "a/b/{{2}c,d}         % a/b/c|a/b/c|a/b/d",
-            "a/b/{d,c}            % a/b/c|a/b/d",
-            "a/b/c                % a/b/c",
-            "a/{c,d}/e            % a/c/e|a/d/e",
-            "a/b/{c,d}/{{2}e,f}   % a/b/c/e|a/b/c/e|a/b/c/f|a/b/d/e|a/b/d/e|a/b/d/f",
-            "a/{b,c,d}/{2}c/{2}d/{2}e % a/b/c/d/e|a/c/c/d/e|a/d/c/d/e",
-            "a/{m,n,o}/{2}c/{2}d   % a/m/c/d|a/n/c/d|a/o/c/d",
-            "a/{{2}b,{3}d}/c       % a/b/c|a/b/c|a/d/c|a/d/c|a/d/c",
-            "a/{{2,3}b,{-3,-2}d}/c % a/b/c|a/d/c",
-            "a/{{2}b,{2}d,{3}e}/{2}c % a/b/c|a/b/c|a/d/c|a/d/c|a/e/c|a/e/c|a/e/c",
-            "a/{b/c,d/e}/f       % a/b/c/f|a/d/e/f",
-            "a/{b/c/d,e/f/g}     % a/b/c/d|a/e/f/g",
-            "<{a,b}/c>            % a/c|b/c",
+            "a/b/{c,d}                      % a/b/c|a/b/d",
+            "a/b/{d,c}                      % a/b/d|a/b/c",
+            "a/b/c                          % a/b/c",
+            "a/{c,d}/e                      % a/c/e|a/d/e",
+            "a/{b/c,d/e}/f                  % a/b/c/f|a/d/e/f",
+            "a/{b/c/d,e/f/g}                % a/b/c/d|a/e/f/g",
+            "<{a,b}/c>                      % a/c|b/c",
+            "<{/a,/b}/c>                    % /a/c|/b/c",
+            // a branch element leads with its point, and the uri's coefficient multiplies every branch
+            "a/b/{{2}c,d}                   % a/b/c{2}|a/b/d",
+            "a/b/{c,d}/{{2}e,f}             % a/b/c/e{2}|a/b/c/f|a/b/d/e{2}|a/b/d/f",
+            "a/{{2}b,{3}d}/c                % a/b/c{2}|a/d/c{3}",
+            "a/{{2,3}b,{-3,-2}d}/c          % a/b/c{2,3}|a/d/c{-3,-2}",
+            "<a/{b,c}/d{3}>                 % a/b/d{3}|a/c/d{3}",
+            "<a/{{2}b,c}/d{-3}>             % a/b/d{-6}|a/c/d{-3}",
+            // a coefficient before an atom mid-path is a point on every branch through it
+            "a/{b,c,d}/{2}c/{2}d/{2}e       % a/b/c/d/e{8}|a/c/c/d/e{8}|a/d/c/d/e{8}",
+            "<{0}a/{{0}b,c}/d>              % a/b/d{0}|a/c/d{0}",
+            // the empty uri is apart from the empty segment: an attached branch carries its own separators
+            "<a/b/c{,/d}>                   % a/b/c|a/b/c/d",
+            "<a/b/c/{,d}>                   % a/b/c/|a/b/c/d",
+            "<a/b/c{,/}>                    % a/b/c|a/b/c/",
+            "</{,b/}c>                      % /c|/b/c",
+            "<{,b/}c>                       % c|b/c",
+            "<{,a}>                         % |a",
+            "<{/,a}>                        % /|a",
+            "<a{{2},/b}>                    % a{2}|a/b",
+            // a numeric branch is a branch, not a coefficient
+            "<a{/0,/1}>                     % a/0|a/1",
+            "</{{1}0,{1}1}>                 % /0|/1",
+            // a root branch is a branch of whole uris, each with its own components
+            "<{{5}http://a.com/a,{4}ws://a.com/a}>   % http://a.com/a{5}|ws://a.com/a{4}",
+            "<{http://a.com/a,ws://a.com/a}{2}>      % http://a.com/a{2}|ws://a.com/a{2}",
+            "<{a?b=2,a?c=6}>                         % a?b=2|a?c=6",
+            "<{a[x,y],a[x]}>                         % a[x,y]|a[x]",
+            "<{/m/int,{1}{2}/m/int}>                 % /m/int|{2}/m/int",
+            "<http://a.com/{a,b/c}>                  % http://a.com/a|http://a.com/b/c",
     }, delimiter = '%')
-    void testBranchedPaths(final String path, final String expected) {
-        final fURI furi = f(path);
-        final List<String> actual = furi.branchedPaths().stream().map(p -> String.join("/", p)).toList();
-        assertEquals(Arrays.asList(expected.split("\\|")), actual);
-    }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "a/{b,c}/d/{e,f}     % a/b/d/e|a/b/d/f|a/c/d/e|a/c/d/f",
-            "a/b/c                % a/b/c",
-            "a/{b,c,d}/{2}c       % a/b/c|a/c/c|a/d/c",
-            "a/{b/c,d/e}/f        % a/b/c/f|a/d/e/f",
-            "<{a,b}/c>            % a/c|b/c",
-    }, delimiter = '%')
-    void testFlatten(final String path, final String expected) {
-        final List<String> actual = f(path).flatten().map(fURI::toString).toList();
-        assertEquals(Arrays.asList(expected.split("\\|")), actual);
+    void testBranches(final String furi, final String expected) {
+        assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());
     }
 
     @ParameterizedTest
@@ -2138,6 +2185,18 @@ public class fURITest extends AbstractMetatronTest {
             "<{0}a/{{0}b,{0}d,{0}c}/c/d/e>  % {0}a|{{0}b,{0}d,{0}c}|c|d|e",
             "<a/{b,c,d}/{2}c/{2}d/{2}e>       % a|{b,c,d}|{2}c|{2}d|{2}e",
             "<a/{b/c,d/e}/f>                  % a|{b/c,d/e}|f",
+            // only a branch of absolute elements is an absolute path, and only when its elements are no coefficient
+            "<{/a,b}>                         % {/a,b}",
+            "<{,/a}>                          % {,/a}",
+            "<{/0,/1}>                        % {/0,/1}",
+            "</{{1}0,{1}1}>                   % |{{1}0,{1}1}",
+            // an attached branch stays in its segment
+            "<a/b/c{,/d}>                     % a|b|c{,/d}",
+            "</{,b/}c>                        % |{,b/}c",
+            "<a{/0,/1}>                       % a{/0,/1}",
+            // a root branch of whole uris is one segment, not a scheme
+            "<{{5}http://a.com/a,{4}ws://a.com/a}> % {{5}http://a.com/a,{4}ws://a.com/a}",
+            "<{a[x,y],a[x]}>                  % {a[x,y],a[x]}",
     }, delimiter = '%')
     void testBranchedPathParsing(final String furi, final String segments) {
         assertEquals(f(furi), idem(furi));

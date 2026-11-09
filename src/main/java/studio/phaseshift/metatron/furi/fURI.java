@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.ARGS;
@@ -529,29 +530,12 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
     /**
-     * Expands any branch segments ({@code {c,d}}, {@code {{2}c,d}}) in this path into the full set of paths they
-     * denote — the cartesian product over the branches. A path with no branches has exactly one entry: itself.
-     * {@code a/b/{c,d}} yields {@code [["a","b","c"],["a","b","d"]]}; {@code a/b/{{2}c,d}} yields three.
-     * Branch elements are canonicalized (sorted by atom), so {@code {c,d}} and {@code {d,c}} expand identically.
+     * The terms of the sum this uri spells, each with its point as its coefficient: {@code a/{{2}b,c}/d{3}} is
+     * {@code a/b/d{6}} and {@code a/c/d{3}}. A uri without branches is its own single term. {@link #plus(fURI)} is
+     * the inverse: the sum of a uri's branches is that uri, and the branches of a sum are its terms.
      */
-    default List<List<String>> branchedPaths() {
-        return Helper.branchedPaths(this.path());
-    }
-
     default Stream<fURI> branches() {
-        return Helper.branchedPaths(this.path()).stream().map(this::path);
-    }
-
-    /**
-     * Flattens this uri into the stream of paths its branch structure denotes. A non-branching uri is its own single
-     * element; a branching uri yields one fURI per path — {@code a/{b,c}/d/{e,f}} → {@code a/b/d/e, a/b/d/f, a/c/d/e,
-     * a/c/d/f} — each carrying this uri's scheme, host, port, coefficient, poly, query and templates.
-     */
-    default Stream<fURI> flatten() {
-        final List<List<String>> paths = this.branchedPaths();
-        if (paths.size() <= 1)
-            return Stream.of(this);
-        return paths.stream().map(path -> fURI.of(this.b(), this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap(), this.templates()));
+        return Helper.branches(this).stream();
     }
 
     boolean test(final fURI lhs);
@@ -985,13 +969,14 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     }
 
     /**
-     * A furi has branches when some path segment is a {@code {…}} branch (or a coefficient-marked atom). Such a uri
-     * must be {@code < >}-quoted to be re-readable, since a bare token leading with {@code {…}} is a stream, not a uri.
+     * A furi has branches when some path segment carries a {@code {…}} branch: the whole segment ({@code a/{b,c}}),
+     * attached to it ({@code a{,/b}}), or a coefficient-marked atom ({@code {2}c}). Such a uri must be
+     * {@code < >}-quoted to be re-readable, since a bare token leading with {@code {…}} is a stream, not a uri.
      *
-     * @return whether the path carries a branch segment
+     * @return whether the path carries a branch
      */
     default boolean hasBranches() {
-        return this.path().stream().anyMatch(segment -> segment.startsWith("{"));
+        return !this.hasTemplates() && this.path().stream().anyMatch(segment -> segment.indexOf('{') >= 0);
     }
 
     default fURI trim() {
@@ -1085,8 +1070,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     /// ////////////////////////////////////////////////
 
     /**
-     * Branch-expansion helpers backing {@link #branchedPaths()}. A branch segment is the string {@code {…}} already
-     * carried in {@link #path()}; these methods re-read it as a stream of path segments.
+     * The algorithms behind the contract: the poly rule and the branch algebra ({@link #branches(fURI)},
+     * {@link #sum(Stream)}). A branch is the text {@code {…}} already carried in {@link fURI#path()}; the algebra re-reads
+     * it.
      */
     final class Helper {
         private Helper() {
@@ -1283,105 +1269,173 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             return List.copyOf(args);
         }
 
-        static List<List<String>> branchedPaths(final List<String> path) {
-            final List<List<String>> paths = new ArrayList<>();
-            paths.add(new ArrayList<>());
-            for (final String segment : path) {
-                final List<String> branches = branch(segment);
-                final List<List<String>> next = new ArrayList<>(paths.size() * branches.size());
-                for (final List<String> prefix : paths)
-                    for (final String branch : branches) {
-                        final List<String> extended = new ArrayList<>(prefix);
-                        extended.addAll(splitSubPath(branch));
-                        next.add(extended);
-                    }
-                paths.clear();
-                paths.addAll(next);
+        /**
+         * THE BRANCH ALGEBRA. A uri spells a formal sum of terms: a branch {@code {x,y}} is a parenthesized sum, the
+         * empty uri is the identity of {@code /}, and a zero point drops a term. Every term carries a POINT, its
+         * multiplicity: the uri's coefficient times the points written inside it. A branch element leads with its
+         * point ({@code {{2}b,c}}), and mid-path a coefficient before an atom is a point too ({@code {0}a/b}); any other
+         * coefficient is the uri's own span or coefficient, left to the parser. A path-level branch expands to paths
+         * under this uri's other components; a root branch expands to whole uris, whose own components win.
+         */
+        static List<fURI> branches(final fURI furi) {
+            if (!furi.hasBranches())
+                return List.of(furi);
+            final List<fURI> branches = new ArrayList<>();
+            for (final Tuple.Pair<String, cInt> term : expand(furi.pathString())) {
+                final fURI element = Singleton.f(term.get0());
+                branches.add(fURI.of(element.b().isOne() ? furi.b() : element.b(),
+                        null == element.scheme() ? furi.scheme() : element.scheme(),
+                        null == element.host() ? furi.host() : element.host(),
+                        -1 == element.port() ? furi.port() : element.port(),
+                        element.path(),
+                        furi.c().mult(term.get1()).mult(element.c()),
+                        element.poly().isEmpty() ? furi.poly() : element.poly(),
+                        element.qMap().isEmpty() ? furi.qMap() : element.qMap(),
+                        furi.templates()));
             }
-            return paths;
+            return branches;
         }
 
-        private static List<String> branch(final String segment) {
-            if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
-                return List.of(absorb(segment));
-            final List<String> elements = new ArrayList<>(splitBranch(segment.substring(1, segment.length() - 1)));
-            elements.sort(Comparator.comparing(Helper::atom));
-            final List<String> expanded = new ArrayList<>();
-            for (final String element : elements)
-                expanded.addAll(expandElement(element));
+        /**
+         * Expands the first branch of a text, and recursively the rest, into every text it spells with that text's
+         * point: the text before the branch, then each element, then each expansion of the text after it. A poly and
+         * a query are literal.
+         */
+        private static List<Tuple.Pair<String, cInt>> expand(final String text) {
+            int open = -1;
+            int close = -1;
+            int depth = 0;
+            int square = 0;
+            for (int i = 0; i < text.length() && -1 == close; i++) {
+                final char ch = text.charAt(i);
+                if ('[' == ch)
+                    square++;
+                else if (']' == ch)
+                    square--;
+                else if (0 != square)
+                    continue;
+                else if ('?' == ch && 0 == depth)
+                    break;
+                else if ('{' == ch) {
+                    if (0 == depth)
+                        open = i;
+                    depth++;
+                } else if ('}' == ch && 0 == --depth)
+                    close = i;
+            }
+            if (-1 == close)
+                return List.of(Tuple.Pair.with(text, cInt.ONE()));
+            final String head = text.substring(0, open);
+            final String body = text.substring(open + 1, close);
+            final List<Tuple.Pair<String, cInt>> tails = expand(text.substring(close + 1));
+            final List<Tuple.Pair<String, cInt>> expanded = new ArrayList<>();
+            if (Singleton.COEFFICIENT_BODY_PATTERN.matcher(body).matches()) {
+                final boolean point = close + 1 < text.length() && "/{},?[]&".indexOf(text.charAt(close + 1)) < 0;
+                for (final Tuple.Pair<String, cInt> tail : tails)
+                    expanded.add(point ?
+                            Tuple.Pair.with(head + tail.get0(), cInt.of(body).mult(tail.get1())) :
+                            Tuple.Pair.with(head + '{' + body + '}' + tail.get0(), tail.get1()));
+                return expanded;
+            }
+            for (final String element : Singleton.splitBranchElements(body)) {
+                final int end = leadingCoefficient(element);
+                final cInt point = -1 == end ? cInt.ONE() : cInt.of(element.substring(1, end));
+                for (final Tuple.Pair<String, cInt> alternative : expand(element.substring(end + 1)))
+                    for (final Tuple.Pair<String, cInt> tail : tails)
+                        expanded.add(Tuple.Pair.with(head + alternative.get0() + tail.get0(), point.mult(alternative.get1()).mult(tail.get1())));
+            }
             return expanded;
         }
 
-        private static List<String> splitBranch(final String inner) {
-            final List<String> elements = new ArrayList<>();
-            int depth = 0;
-            final StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < inner.length(); i++) {
-                final char ch = inner.charAt(i);
-                if (ch == '{')
-                    depth++;
-                else if (ch == '}')
-                    depth--;
-                if (ch == ',' && 0 == depth) {
-                    elements.add(sb.toString());
-                    sb.setLength(0);
-                } else
-                    sb.append(ch);
-            }
-            elements.add(sb.toString());
-            return elements;
-        }
-
-        private static String atom(final String element) {
-            if (element.length() > 1 && element.charAt(0) == '{') {
-                final int close = element.indexOf('}');
-                return close > 0 ? element.substring(close + 1) : element;
-            }
-            return element;
+        /**
+         * The canonical sum of terms, so that equal sums are spelled equally and {@link fURI#branches()} gives every
+         * term back with its point. Like terms add their points and a zero term drops; a sum of nothing but zeros is
+         * its first term at zero, and a sum of nothing is the zero. Summing a stream at once is the fold of
+         * {@link fURI#plus(fURI)} without re-expanding each partial sum. Terms that differ only in their path are one
+         * branch ({@link #pathSum(List)}); terms
+         * that differ in any other component branch at the root, one element per term, sorted:
+         * {@code {{5}http://a.com/a,{4}ws://a.com/a}}. Either way a point shared by every term is the coefficient.
+         */
+        public static fURI sum(final Stream<fURI> terms) {
+            final Map<fURI, cInt> points = new LinkedHashMap<>();
+            terms.forEach(term -> points.merge(term.c(cInt.ONE()), term.c(), cInt::plus));
+            final List<fURI> live = points.entrySet().stream().filter(entry -> !entry.getValue().isZero())
+                    .map(entry -> entry.getKey().c(entry.getValue())).toList();
+            if (live.isEmpty())
+                return points.isEmpty() ? Singleton.NOOBJ : points.keySet().iterator().next().c(cInt.ZERO());
+            if (1 == live.stream().map(term -> term.c(cInt.ONE()).path(List.of())).distinct().count())
+                return pathSum(live);
+            final boolean shared = 1 == live.stream().map(fURI::c).distinct().count();
+            return Singleton.f(live.stream()
+                    .sorted(Comparator.comparing(term -> term.c(cInt.ONE()).toString()))
+                    .map(term -> element(term.c(cInt.ONE()).toString(), shared ? cInt.ONE() : term.c(), false))
+                    .collect(Collectors.joining(",", "{", "}"))).c(shared ? live.getFirst().c() : cInt.ONE());
         }
 
         /**
-         * A coefficient-marked segment ({@code {2}c}) records the 2-fold branch that carried a shared suffix; the
-         * branch structure already accounts for that multiplicity, so the coefficient is absorbed on expansion — the
-         * segment reads as its bare atom {@code c}. In-branch elements ({@code {{2}c,d}}) are the other direction and
-         * DO expand to {@code n} copies (see {@link #expandElement(String)}).
+         * The sum of terms that differ only in their path: the common prefix and suffix around one flat branch of the
+         * middles, sorted by their text, the empty middle first. {@code a/b/c + a/d/c} is {@code a/{b,d}/c}. An empty
+         * middle is the empty uri, which a separator would make an empty segment, so its branch attaches to a
+         * neighbor and every element brings its own separator: {@code a + a/b} is {@code a{,/b}} (and
+         * {@code /c + /b/c} is {@code /{,b/}c}), while {@code a/ + a/b} is {@code a/{,b}}. A branch that would read as
+         * a coefficient attaches too, {@code a{/0,/1}} and not {@code a/{0,1}}, or with nothing to attach to writes
+         * its points: {@code /{{1}0,{1}1}}.
          */
-        private static String absorb(final String segment) {
-            if (segment.length() > 1 && segment.charAt(0) == '{') {
-                final int close = segment.indexOf('}');
-                if (close > 0)
-                    return segment.substring(close + 1);
+        private static fURI pathSum(final List<fURI> terms) {
+            if (1 == terms.size())
+                return terms.getFirst();
+            // the root's one blank is both its absolute and its directory marker: as a path among paths it is both
+            final List<List<String>> paths = terms.stream().map(term -> List.of("").equals(term.path()) ? List.of("", "") : term.path()).toList();
+            final List<String> first = paths.getFirst();
+            int prefix = 0;
+            for (; prefix < first.size(); prefix++) {
+                final int i = prefix;
+                if (!paths.stream().allMatch(path -> i < path.size() && path.get(i).equals(first.get(i))))
+                    break;
             }
-            return segment;
-        }
-
-        private static List<String> expandElement(final String element) {
-            if (element.length() > 1 && element.charAt(0) == '{') {
-                final int close = element.indexOf('}');
-                if (close > 0) {
-                    final String atom = element.substring(close + 1);
-                    final cInt c = cInt.of(element.substring(1, close));
-                    final Long min = c.min();
-                    final Long max = c.max();
-                    if (null != min && min.equals(max) && min >= 0) {
-                        final int n = min.intValue();
-                        final List<String> copies = new ArrayList<>(n);
-                        for (int i = 0; i < n; i++)
-                            copies.add(atom);
-                        return copies;
-                    }
-                    return List.of(atom);
-                }
+            final int p = prefix;
+            int suffix = 0;
+            for (; suffix < first.size() - p; suffix++) {
+                final int j = suffix;
+                final String segment = first.get(first.size() - 1 - j);
+                if (!paths.stream().allMatch(path -> j < path.size() - p && path.get(path.size() - 1 - j).equals(segment)))
+                    break;
             }
-            return List.of(element);
+            final int s = suffix;
+            final boolean shared = 1 == terms.stream().map(fURI::c).distinct().count();
+            final List<Tuple.Pair<List<String>, cInt>> middles = IntStream.range(0, terms.size())
+                    .mapToObj(i -> Tuple.Pair.with(paths.get(i).subList(p, paths.get(i).size() - s), shared ? cInt.ONE() : terms.get(i).c()))
+                    .sorted(Comparator.comparing((Tuple.Pair<List<String>, cInt> middle) -> String.join("/", middle.get0())).thenComparingInt(middle -> middle.get0().size()))
+                    .toList();
+            final String head = String.join("/", first.subList(0, p));
+            final String tail = String.join("/", first.subList(first.size() - s, first.size()));
+            final boolean empty = middles.stream().anyMatch(middle -> middle.get0().isEmpty());
+            final boolean numeric = Singleton.COEFFICIENT_BODY_PATTERN.matcher(middles.stream()
+                    .map(middle -> element(String.join("/", middle.get0()), middle.get1(), false)).collect(Collectors.joining(","))).matches();
+            final boolean leading = (empty || numeric) && !head.isEmpty();
+            final boolean trailing = empty && !leading && 0 < s;
+            final String branch = middles.stream()
+                    .map(middle -> element(middle.get0().isEmpty() ? "" : (leading ? "/" : "") + String.join("/", middle.get0()) + (trailing ? "/" : ""),
+                            middle.get1(), numeric && !leading && !trailing))
+                    .collect(Collectors.joining(",", "{", "}"));
+            final String path = (0 < p ? head + (leading ? "" : "/") : "") + branch + (0 < s ? (trailing ? "" : "/") + tail : "");
+            return terms.getFirst().path(Singleton.f(path).path()).c(shared ? terms.getFirst().c() : cInt.ONE());
         }
 
         /**
-         * A branch element may be a sub-path ({@code b/c}); it splits into its own segments when the path is built —
-         * the {@code /} is a separator there, not part of the atom.
+         * A branch element: its point, then its text. A point of one goes unwritten, unless {@code explicit} or the
+         * text itself leads with a coefficient (a span), which would otherwise read as the point.
          */
-        private static List<String> splitSubPath(final String subPath) {
-            return new ArrayList<>(Arrays.asList(subPath.split("/")));
+        private static String element(final String text, final cInt point, final boolean explicit) {
+            return explicit || !point.isOne() || -1 != leadingCoefficient(text) ? "{" + point + "}" + text : text;
+        }
+
+        /**
+         * Where the coefficient a text leads with closes ({@code {2}b} → 2), or -1 when it leads with none.
+         */
+        private static int leadingCoefficient(final String text) {
+            final int end = text.startsWith("{") ? text.indexOf('}') : -1;
+            return 0 < end && Singleton.COEFFICIENT_BODY_PATTERN.matcher(text).region(1, end).matches() ? end : -1;
         }
     }
 
@@ -1426,6 +1480,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // `{...}` whose body IS a cInt is the trailing coefficient, not a branch — the negative lookahead makes the
         // coefficient win at the end, so `a/b/{c,d}` is path `a/b/{c,d}` while `a/b/c{2}` is path `a/b/c` + coeff `{2}`.
         private static final String COEFFICIENT_BODY = "-?\\d+,-?\\d+|,-?\\d+|-?\\d+,|,|-?\\d+|\\*\\*|-\\*|-\\?|\\?\\?|\\*|\\+|\\?|-";
+        private static final Pattern COEFFICIENT_BODY_PATTERN = Pattern.compile(COEFFICIENT_BODY);
         // An RFC 3986 IP-literal host: `[` an IPv6 address `]`, with an optional zone (`%eth0`, or `%25eth0` as RFC
         // 6874 encodes it). Everywhere else in a fURI brackets open the poly annotation, but directly after `//` a
         // poly cannot stand, and an IPv6 address needs them: its colons would otherwise read as the port separator.
@@ -1433,13 +1488,16 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         private static final String IP_LITERAL = "\\[(?=[^\\]]*:)[0-9A-Fa-f:.]+(?:%[0-9A-Za-z._~%-]+)?\\]";
         // A LEADING coefficient is the span, {span}path[poly]{point}: it stands before a `/`, or before a lone atom that
         // ends the path (`{3}int{2}`, a slot entry). Before an atom the path continues past (`{0}a/b`) it stays that
-        // first segment's coefficient-marked atom, and with nothing after it (`{*}`) the coefficient.
+        // first segment's coefficient-marked atom, and with nothing after it (`{*}`) the coefficient. A scheme holds no
+        // brace, so a root branch of whole uris (`{http://a.com/a,ws://a.com/a}`) is a path, not the scheme `{http`. The
+        // path reads plain text in possessive runs: the engine recurses once per loop iteration, so one character per
+        // iteration overflows the stack on a long branch (a stream of overloads sums to one element per signature).
         private static final String SPAN_PREFIX = "(\\{(?<span>" + COEFFICIENT_BODY + ")}(?=/|[^/{}?&\\[\\]:]+(?:$|[\\[{?])))?";
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
-                "((?<scheme>[^:/.]+):)?" +
+                "((?<scheme>[^:/.{]+):)?" +
                         "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
-                        "(?<path>(?:[^?\\[{&]|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
+                        "(?<path>(?:[^?\\[{&]++|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]++|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "(\\{(?<coefficient>" + COEFFICIENT_BODY + ")})?" +
                         "(\\?" +
@@ -1615,38 +1673,27 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
         /**
          * Normalizes one segment as a set of paths: a non-branch segment is itself. A branch segment ({@code {…}})
-         * collapses a singleton ({@code {a}} → {@code a}). Only the leading branch ({@code leading}) strips a leading
-         * {@code /} from its elements — there it is the absolute marker, hoisted into a leading empty segment
-         * ({@code <{/a,/b}/c>} → {@code ["", {a,b}, c]}); a non-leading branch keeps its atoms verbatim
-         * ({@code a/{/b,/c}/d} → {@code [a, {/b,/c}, d]}).
+         * collapses a singleton ({@code {a}} → {@code a}). A leading branch whose every element is absolute is an
+         * absolute path of relative elements, its marker hoisted into a leading empty segment ({@code <{/a,/b}/c>} →
+         * {@code ["", {a,b}, c]}), unless those elements would read as a coefficient ({@code {/0,/1}} is not
+         * {@code /{0,1}}). Any other branch keeps its elements verbatim: {@code {,/b}} is the empty uri and {@code /b},
+         * and {@code a/{/b,/c}/d} is {@code [a, {/b,/c}, d]}.
          */
         private static List<String> normalizeBranch(final String segment, final boolean leading) {
             if (segment.length() < 2 || segment.charAt(0) != '{' || segment.charAt(segment.length() - 1) != '}')
                 return List.of(segment);
             final List<String> elements = splitBranchElements(segment.substring(1, segment.length() - 1));
-            boolean absolute = false;
-            final List<String> atoms = new ArrayList<>(elements.size());
-            for (int i = 0; i < elements.size(); i++) {
-                final String element = elements.get(i);
-                if (leading && element.startsWith("/")) {
-                    if (0 == i)
-                        absolute = true;
-                    atoms.add(element.substring(1));
-                } else
-                    atoms.add(element);
-            }
-            if (1 == atoms.size())
-                return absolute ? List.of("", atoms.get(0)) : List.of(atoms.get(0));
-            final List<String> normalized = new ArrayList<>();
-            if (absolute)
-                normalized.add("");
-            normalized.add("{" + String.join(",", atoms) + "}");
-            return normalized;
+            final List<String> relative = elements.stream().map(element -> element.startsWith("/") ? element.substring(1) : element).toList();
+            final boolean absolute = leading && elements.stream().allMatch(element -> element.startsWith("/"))
+                    && (1 == elements.size() || !COEFFICIENT_BODY_PATTERN.matcher(String.join(",", relative)).matches());
+            final List<String> atoms = absolute ? relative : elements;
+            final String branch = 1 == atoms.size() ? atoms.getFirst() : "{" + String.join(",", atoms) + "}";
+            return absolute ? List.of("", branch) : List.of(branch);
         }
 
         /**
-         * Splits a branch body on top-level {@code ,} (respecting nested {@code {…}}), mirroring
-         * {@link Helper#splitBranch(String)}.
+         * Splits a branch body on its top-level {@code ,}: a comma inside a nested branch or a poly stays in its
+         * element, so {@code a[x,y],{b,c}/d} is two elements.
          */
         private static List<String> splitBranchElements(final String inner) {
             final List<String> elements = new ArrayList<>();
@@ -1654,9 +1701,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
             final StringBuilder sb = new StringBuilder();
             for (int i = 0; i < inner.length(); i++) {
                 final char ch = inner.charAt(i);
-                if ('{' == ch)
+                if ('{' == ch || '[' == ch)
                     depth++;
-                else if ('}' == ch)
+                else if ('}' == ch || ']' == ch)
                     depth = Math.max(0, depth - 1);
                 if (',' == ch && 0 == depth) {
                     elements.add(sb.toString());
@@ -1811,9 +1858,11 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
                         return new SXPXXXfURI(scheme, path);
                     else
                         return new SAPXXXfURI(scheme, host, port, path);
-                } else {
-                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, path);
-                }
+                } else if (null == host) {
+                    // the empty uri is one value: a pathless build is the singleton, which hashes as one
+                    return null == path || path.isEmpty() ? Singleton.empty() : new XXPXXXfURI(path);
+                } else
+                    return new SAPXXXfURI(null, host, port, path);
             } else {
                 return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
             }
