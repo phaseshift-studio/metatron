@@ -222,7 +222,7 @@ public abstract class AbstractfURI implements fURI {
         final fURI cached = this.normal;
         if (null != cached)
             return cached;
-        final fURI computed = fURI.Helper.sum(folded.branches());
+        final fURI computed = fURI.Helper.sum(Stream.of(folded));
         this.normal = computed;
         return computed;
     }
@@ -748,7 +748,7 @@ public abstract class AbstractfURI implements fURI {
      */
     @Override
     public fURI plus(final fURI other) {
-        return fURI.Helper.sum(Stream.concat(this.branches(), other.branches()));
+        return fURI.Helper.sum(Stream.of(this, other));
     }
 
     /**
