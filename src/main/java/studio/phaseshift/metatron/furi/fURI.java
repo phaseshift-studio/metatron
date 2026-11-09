@@ -457,6 +457,9 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
     default fURI localize() {
         if (null == this.scheme() && null == this.host())
             return this;
+        // necessary for prefix paths like fs:README.txt. these are written //host//fs:README.txt and the // is stripped to enabled localization to prefix paths
+        if (this.path().size() > 2 && path().get(0).isEmpty() && path().get(1).isEmpty())
+            return fURI.of(this.b(), null, null, -1, this.path().subList(2, this.pathLength()), this.d(), this.poly(), this.qMap(), this.templates());
         return fURI.of(this.b(), null, null, -1, this.path(), this.d(), this.poly(), this.qMap(), this.templates());
     }
 
@@ -1171,7 +1174,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
 
         /**
          * Renders the fURI whose poly was rejected, so the diagnostic can name it even from the component-level
-         * construction funnel ({@link fURI#of(String, String, int, List, C, List, Map, List)}), which no longer holds
+         * construction funnel ({@link fURI#of(cInt, String, String, int, List, C, List, Map, List)}), which no longer holds
          * the original text. Only called on the failure path.
          */
         private static String polyFuri(final String scheme, final String host, final int port, final List<String> path,
@@ -1537,7 +1540,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         private static final String SPAN_PREFIX = "(\\{(?<span>" + COEFFICIENT_BODY + ")}(?=/|[^/{}?&\\[\\]:]+(?:$|[\\[{?])))?";
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
-                "((?<scheme>(?!\\{)[^:/.]+):)?" +
+                        "((?<scheme>(?!\\{)[^:/.]+):)?" +
                         "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
                         "(?<path>(?:[^?\\[{&]++|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]++|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
                         "(\\[(?<poly>[^]]+)])?" +
@@ -1555,7 +1558,7 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         // - coefficient: only matches {..} NOT preceded by $ (negative lookbehind)
         public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
-                "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
+                        "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
                         "(//((?<host>\\$\\{[^}]+}|" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
                         "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
                         "(\\[(?<poly>[^]]+)])?" +

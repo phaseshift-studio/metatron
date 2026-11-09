@@ -1149,7 +1149,6 @@ public final class CommandPalette extends MRec {
                             if (console.isSplitMode()) {
                                 console.renderPanesNow();
                             }
-                            console.redrawBuffer();
                         }
                     }
                 }

@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -501,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">19</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">3</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/ui-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 7, 2026</span>
+            <span class="instset-built">built November 8, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -603,21 +610,21 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}scrollX=&gt;int::T,
                {?}scrollY=&gt;int::T,
                {?}wordWrap=&gt;bool::T]][ctor?style&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/style]]@/m/sys/ui/widget,
-              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/accordion_widget,
+              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/accordion_widget,
               widget::T[?[{?}header=&gt;lst::T,{?}row=&gt;lst::T]][ctor?progress_table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/progress_table_widget,
               widget::T[?[
                {?}header=&gt;lst::T,
-               {?}row=&gt;lst::T,
-               {?}metadata=&gt;lst::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/table_widget,
+               {?}row=&gt;lst{*}::T,
+               {?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/table_widget,
               widget::T[?[
                root=&gt;uri::T,
                max=&gt;int::T,
                {?}code=&gt;&lt;#&gt;::T,
                {?}flatten=&gt;bool::T,
                {?}xref=&gt;rec::T,
-               {?}expand=&gt;uri::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_widget,
+               {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_widget,
               widget::T[?[=&gt;]][ctor?selector_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/selector_widget,
-              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?panel_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/panel_widget,
+              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/panel_widget,
               widget::T[?[{?}grid=&gt;lst::T]][ctor?grid_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/grid_widget,
               widget::T[?[{?}grid=&gt;lst::T,{?}title=&gt;str::T]][ctor?matrix_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/matrix_widget,
               widget::T[?[
@@ -631,7 +638,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}on_select=&gt;&lt;#&gt;::T,
                {?}label=&gt;&lt;#&gt;::T]][ctor?tree_select_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_select_widget,
               widget::T[?[{?}obj=&gt;lst::T]][ctor?swipe_panel_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/swipe_panel_widget,
-              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?modal_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/modal_widget,
+              widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?modal_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/modal_widget,
               widget::T[?[
                {?}max=&gt;int::T,
                {?}pause=&gt;bool::T,
@@ -766,7 +773,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         </span>
         <small class="text-muted code">/m/sys/ui/widget/accordion_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/accordion_widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?accordion_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/accordion_widget</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__sys__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,
                     {?}background=&gt;str::T,
@@ -799,8 +806,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#an accordion obj" class="text-success">an accordion obj</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
-  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}body" class="text-light">{?}body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the accordion'" class="text-info">&#39;the body content of the accordion&#39;</a>
+  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the accordion'" class="text-info">&#39;the title of the accordion&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__anchor">
@@ -962,8 +969,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a matrix of glyphs" class="text-success">a matrix of glyphs</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title drawn in the top border'" class="text-info">&#39;the title drawn in the top border&#39;</a>
-  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line'" class="text-info">&#39;a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#grid" class="text-light">grid</a> <span class="text-light">=&gt;</span> <a href="#'a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line'" class="text-info">&#39;a lst of rows, each row a lst of glyph strs — cell (row,col) draws in the col-th column of row-th line&#39;</a>
+  <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#'the title drawn in the top border'" class="text-info">&#39;the title drawn in the top border&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__menu_bar_widget">
@@ -1019,7 +1026,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         </span>
         <small class="text-muted code">/m/sys/ui/widget/modal_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?modal_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/modal_widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?modal_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/modal_widget</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__sys__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,
                     {?}background=&gt;str::T,
@@ -1052,8 +1059,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#modal" class="text-success">modal</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
-  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the modal'" class="text-info">&#39;the body content of the modal&#39;</a>
+  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the modal'" class="text-info">&#39;the title of the modal&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__network_panel_tool">
@@ -1127,8 +1134,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a network panel tool" class="text-success">a network panel tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'draw only the lanes whose name contains this'" class="text-info">&#39;draw only the lanes whose name contains this&#39;</a>
-  <a href="#{?}style" class="text-light">{?}style</a> <span class="text-light">=&gt;</span> <a href="#"the panel's style: anchor places it, width__height size it"" class="text-info">height size it&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}style" class="text-light">{?}style</a> <span class="text-light">=&gt;</span> <a href="#"the panel's style: anchor places it, width__height size it"" class="text-info">height size it&quot;</a>
+  <a href="#peer" class="text-light">peer</a> <span class="text-light">=&gt;</span> <a href="#'draw only the lanes whose name contains this'" class="text-info">&#39;draw only the lanes whose name contains this&#39;</a>
   <a href="#pause" class="text-light">pause</a> <span class="text-light">=&gt;</span> <a href="#'freeze what the panel draws, without stopping the capture'" class="text-info">&#39;freeze what the panel draws, without stopping the capture&#39;</a>
   <a href="#{?}title" class="text-light">{?}title</a> <span class="text-light">=&gt;</span> <a href="#"""the accordion header's title (default "net")"""" class="text-info">&quot;&quot;&quot;the accordion header&#39;s title (default &quot;net&quot;)&quot;&quot;&quot;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'body rows drawn (default 12)'" class="text-info">&#39;body rows drawn (default 12)&#39;</a>
@@ -1142,7 +1149,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         </span>
         <small class="text-muted code">/m/sys/ui/widget/panel_widget</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str::T]][ctor?panel_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/panel_widget</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}title=&gt;str::T,{?}body=&gt;str{*}::T]][ctor?panel_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/panel_widget</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__sys__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,
                     {?}background=&gt;str::T,
@@ -1175,8 +1182,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#rec" class="text-info">rec</a> <span class="text-light">=&gt;</span> <a href="#panel" class="text-success">panel</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
-  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#body" class="text-light">body</a> <span class="text-light">=&gt;</span> <a href="#'the body content of the panel'" class="text-info">&#39;the body content of the panel&#39;</a>
+  <a href="#title" class="text-light">title</a> <span class="text-light">=&gt;</span> <a href="#'the title of the panel'" class="text-info">&#39;the title of the panel&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget__progress_table_widget">
@@ -1305,9 +1312,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a stack bar widget" class="text-success">a stack bar widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
+  <a href="#{?}context" class="text-light">{?}context</a> <span class="text-light">=&gt;</span> <a href="#'the denominator: the bar spans it, the rest is the unused tail, and total__context is the percent; absent = a composition (the data fills the bar, no percent, no tail)'" class="text-info">context is the percent; absent = a composition (the data fills the bar, no percent, no tail)&#39;</a>
   <a href="#{?}data" class="text-light">{?}data</a> <span class="text-light">=&gt;</span> <a href="#"the sections: [key => int], each labelled by its key and drawn smallest first, largest last; the reserved key <> (the empty uri) is the what-is-left section — drawn last, wearing the unused section's style (dark by default)"" class="text-info">&quot;the sections: [key =&gt; int], each labelled by its key and drawn smallest first, largest last; the reserved key &lt;&gt; (the empty uri) is the what-is-left section — drawn last, wearing the unused section&#39;s style (dark by default)&quot;</a>
-  <a href="#{?}total" class="text-light">{?}total</a> <span class="text-light">=&gt;</span> <a href="#'the numerator of the percent (default: the sum of the data)'" class="text-info">&#39;the numerator of the percent (default: the sum of the data)&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__style">
@@ -1426,8 +1433,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <small class="text-muted code">/m/sys/ui/widget/table_widget</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">widget::T[?[{?}header=&gt;lst::T,
-            {?}row=&gt;lst::T,
-            {?}metadata=&gt;lst::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/table_widget</code></pre></div>
+            {?}row=&gt;lst{*}::T,
+            {?}metadata=&gt;lst{*}::T]][ctor?table_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/table_widget</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__sys__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,
                     {?}background=&gt;str::T,
@@ -1509,8 +1516,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree select tool" class="text-success">a tree select tool</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
-  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}label" class="text-light">{?}label</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on each tree node's obj to produce a suffix label (default: identity)"" class="text-info">&quot;instruction called on each tree node&#39;s obj to produce a suffix label (default: identity)&quot;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
   <a href="#{?}on_select" class="text-light">{?}on_select</a> <span class="text-light">=&gt;</span> <a href="#"instruction called on Enter with the selected node's rel::T (default: identity)"" class="text-info">&quot;instruction called on Enter with the selected node&#39;s rel::T (default: identity)&quot;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
 </pre>
@@ -1528,7 +1535,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
             {?}code=&gt;&lt;#&gt;::T,
             {?}flatten=&gt;bool::T,
             {?}xref=&gt;rec::T,
-            {?}expand=&gt;uri::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_widget</code></pre></div>
+            {?}expand=&gt;uri{*}::T]][ctor?tree_widget&lt;=(#{*}::T){&lt;j&gt;}]@/m/sys/ui/widget/tree_widget</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__sys__ui__widget" class="code inherited-link">widget::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,
                     {?}background=&gt;str::T,
@@ -1561,12 +1568,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#maybe an obj" class="text-info">maybe an obj</a> <span class="text-light">=&gt;</span> <a href="#a tree widget" class="text-success">a tree widget</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
-  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
-  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
-  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}expand" class="text-light">{?}expand</a> <span class="text-light">=&gt;</span> <a href="#'branch uris whose children are read regardless of max'" class="text-info">&#39;branch uris whose children are read regardless of max&#39;</a>
   <a href="#{?}flatten" class="text-light">{?}flatten</a> <span class="text-light">=&gt;</span> <a href="#'fold single-folder chains into one path row (default false)'" class="text-info">&#39;fold single-folder chains into one path row (default false)&#39;</a>
   <a href="#max" class="text-light">max</a> <span class="text-light">=&gt;</span> <a href="#'the max depth to traverse'" class="text-info">&#39;the max depth to traverse&#39;</a>
+  <a href="#{?}code" class="text-light">{?}code</a> <span class="text-light">=&gt;</span> <a href="#'transform obj prior to insertion into tree (default _)'" class="text-info">&#39;transform obj prior to insertion into tree (default _)&#39;</a>
+  <a href="#root" class="text-light">root</a> <span class="text-light">=&gt;</span> <a href="#'the root uri to traverse from'" class="text-info">&#39;the root uri to traverse from&#39;</a>
+  <a href="#{?}xref" class="text-light">{?}xref</a> <span class="text-light">=&gt;</span> <a href="#'xref=>[max=>N, code=><call>] cross-reference decoration'" class="text-info">&#39;xref=&gt;[max=&gt;N, code=&gt;&lt;call&gt;] cross-reference decoration&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__sys__ui__widget">
@@ -1610,15 +1617,14 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">3</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
-        labelled with the set that declared it, and documented on that set's page as well.
+        An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
     <div class="instset-inst-filter" role="search">
     <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
     <div class="d-flex align-items-center gap-2">
         <input type="search" id="instset-inst-filter"
             class="form-control form-control-sm instset-inst-filter-input"
-            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
             aria-live="polite" aria-atomic="true">showing 3 of 3</span>

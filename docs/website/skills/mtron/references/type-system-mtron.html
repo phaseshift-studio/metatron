@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -837,11 +844,13 @@ list, so a zero-admitting TRAILING position is one the shorter list does not fil
 a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — <code>rel[int,wayfarer{?},str]</code> accepts
 <code>1=&gt;'tally'</code> (the middle vertex skipped) while <code>rel[int,wayfarer{+},str]</code> does not. A present value must still be the
 entry's type at both: <code>{?}</code> is zero-or-one, not &quot;anything when present&quot;.</p>
-<p><strong>Not yet supported: a PREFIX coefficient, and repetition.</strong> <code>lst[{4}int]</code> — &quot;the list is composed of four ints&quot;,
-spelled before the entry rather than after it — is not matchable today. Neither is a position <em>repetition</em>: a suffix
-coefficient judges the multiplicity of the value already at that position, and nothing reads it as &quot;this entry
-repeats, so the chain is longer&quot; (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
-coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.</p>
+<p><strong>A PREFIX coefficient is the entry's span: how many positions in a row.</strong> An entry is <code>{span}type{point}</code>, so
+<code>lst[{4}int]</code> is four int positions, <code>lst[{3}int{2}]</code> three positions that each hold an <code>int{2}</code>, and
+<code>lst[{?}int,{2}str]</code> an optional int then two strs. A ranged span takes any count it admits, and an unbounded span on
+the LAST entry claims the rest of the list: <code>lst[{*}int]</code> holds ints only. A type keeps both in its one id —
+<code>{2}int{3}::T</code> has tid <code>{2}/m/int{3}</code> — and its coefficient stays the point. A path does not read a prefix yet: whether
+a repeated vertex should lengthen a chain is not settled. A NEGATIVE (anti) coefficient is not a multiplicity at all, so
+a path reports it as not yet matched rather than judging it.</p>
 <h4>declaring a fibered type vs instantiating one</h4>
 <p>Three words, used consistently from here on:</p>
 <ul>

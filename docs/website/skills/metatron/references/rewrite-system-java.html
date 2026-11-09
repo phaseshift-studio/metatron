@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -504,7 +511,7 @@ algebra/rewrite/RewriteBuilder.java ← fluent builder for space-aware native re
 algebra/rewrite/CommonRewrites.java ← shared rewrite utilities
 isa/m/type/InstSet.java             ← InstSet interface, Helper.rewriter() factory
 isa/m/type/Code.java                ← Code.rewrite() — the rewrite loop
-isa/m/mInstSet.java                 ← /m rewrites (id_removal, map_nest, explain_profile, ...)
+isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, else_after_count, split_merge_collapse, ...)
 isa/tble/tbleInstSet.java           ← SQL rewrites (sql_count, sql_where, sql_limit, ...)
 isa/grph/grphInstSet.java           ← Gremlin rewrites (gremlin_count, gremlin_where, ...)
 isa/dcmnt/dcmntInstSet.java         ← MongoDB rewrites (mql_count, mql_where, ...)
@@ -551,26 +558,13 @@ current code for the next iteration. If the result is not a
 <p>Matches a concrete sequence of instruction TIDs against a sliding window, then replaces the matched slice with a new
 instruction list. The rewrite function receives a <code>Map&lt;Inst, Inst&gt;</code>
 mapping pattern instructions to matched source instructions.</p>
-<pre><code class="language-java">// Remove identity instructions
-InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;id_removal&quot;),
-
-code -&gt;code.
-
-selfJVM(
-        Rewriter.search(code.insts())
-        .
-
-match(instA(ID_INST_TID).
-
-insts())   // match [_]
-        .
-
-rewrite(x -&gt;List.
-
-of())              // replace with nothing
-        ).
-
-asCode())
+<pre><code class="language-java">// a count is total, so an else after it is dead code: .count().else(x) =&gt; .count()
+InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;else_after_count&quot;),
+        code -&gt; code.selfJVM(
+                RewriterBuilder.search(code.insts())
+                        .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))   // match [count, else]
+                        .rewrite(map -&gt; List.of(map.values().stream().toList().getFirst())))  // keep the count
+                .asCode())
 </code></pre>
 <p><strong><code>match(List&lt;Inst&gt;)</code></strong> — pattern instructions. <code>instA(tid)</code> creates a bare match instruction (no args, no f). Matching
 uses <code>instsMatch()</code>: TIDs must be compatible via <code>tid.test()</code>, args are compared by position, and <code>?.test(source)</code> tests

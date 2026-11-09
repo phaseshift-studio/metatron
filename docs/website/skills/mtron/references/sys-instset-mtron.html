@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -551,16 +558,16 @@ bare int, which is seconds; the default is <code>second::20.0</code>.</p>
     'dist',
     ...(17 more)]
 mtron&gt; bash(cmd=&gt;'whoami')
-==&gt;['ubuntu']
+==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'overlay         916G  577G  293G  ...',
-    'tmpfs            64M     0   64M  ...',
-    'shm              64M     0   64M  ...',
-    '/dev/nvme1n1p2  916G  577G  293G  ...',
-    'tmpfs           6.1G  6.5M  6.1G  ...',
+    'tmpfs           6.1G  6.4M  6.1G  ...',
+    'efivarfs        128K   42K   82K  ...',
+    '/dev/nvme1n1p2  916G  578G  292G  ...',
+    'tmpfs            31G  302M   31G  ...',
+    'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
-    ...(4 more)]
+    ...(3 more)]
 </code></pre>
 <p>A timeout and a failed exit are both fails, and both are inspectable:</p>
 <pre><code class="language-mtron">mtron&gt; bash(cmd=&gt;'sleep 5', timeout=&gt;millis::500.0)  [-- the timeout kills the process --]
@@ -586,7 +593,7 @@ the same <code>==</code> projection:</p>
            'CONTRIBUTING.md',
            'dist',
            ...(17 more)]]
-==&gt;['whoami'=&gt;['ubuntu']]
+==&gt;['whoami'=&gt;['killswitch']]
 mtron&gt; [&quot;ls&quot;, &quot;whoami&quot;]==[_ =&gt; bash(_)]&gt;&gt;.sum()       [-- lst of cmds =&gt; one flat lst --]
 ==&gt;['AGENTS.md',
     'AGENTSWARM.md',
@@ -637,7 +644,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
     '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-07 07:00:26.813553...',
+    'Access: 2026-11-08 15:23:18.618535...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -705,15 +712,15 @@ no input to take, so it is shown rather than run:</p>
 <p>One read each: the environment, the thread count, and the executor's own summary —
 <code>sys_stat</code> answers with running vs stopped, no introspection ceremony:</p>
 <pre><code class="language-mtron">mtron&gt; */sys/env/HOME
-==&gt;'/work'
+==&gt;'/home/killswitch'
 mtron&gt; */sys/thread/+.count()
-==&gt;21
+==&gt;57
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::536.0,
-    free_mem_jvm=&gt;mB::131.0808,
+==&gt;[total_mem_jvm=&gt;mB::648.0,
+    free_mem_jvm=&gt;mB::281.4598,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::404.9191,
-    jvm=&gt;'OpenJDK 64-Bit Server VM 25.0.4.1',
+    used_mem_jvm=&gt;mB::366.5401,
+    jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',
     ...(4 more)]

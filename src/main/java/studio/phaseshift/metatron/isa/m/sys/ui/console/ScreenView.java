@@ -246,13 +246,14 @@ public final class ScreenView {
         if (!this.toolActive.getAndSet(false)) return;
         if (null != finalFrame && !finalFrame.isEmpty())
             this.screen.append(finalFrame);
-        // The tool's raw frames scrolled the terminal and parked the cursor where the
-        // painter cannot see it — the rows it thinks it knows are no longer where they
-        // were (a plain invalidate left the new frame painted directly on the border
-        // of the old one).  Clear the screen, re-anchor the region at the top, and let
-        // the next frame repaint every row from the content: one copy of the tool's
-        // final state, at the tail of the transcript, exactly as :clear does.
-        this.console.getFloatingSurface().writeToTerminal(CLEAR_SCREEN + "\033[H");
+        // The tool's raw frames parked the cursor where the painter cannot see it — the
+        // rows it thinks it knows are no longer where they were (a plain invalidate left
+        // the new frame painted directly on the border of the old one).  Clear the screen
+        // and re-anchor the region at the top, then let the next frame repaint every row
+        // from the content.  The cursor is NOT homed here: a mid-line tool (e.g. <tab>'s
+        // ExplainTool) must land back on the prompt row, and homing it would leave it at
+        // the top of the screen; the repaint repositions the cursor itself.
+        this.console.getFloatingSurface().writeToTerminal(CLEAR_SCREEN);
         this.screenStart = 1;
         this.screenAppended = false;
         this.screen.invalidate();

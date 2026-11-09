@@ -37,7 +37,7 @@ mtron> ws_handler::[host=><ws://localhost:8555/mtron>]@/fascination/socket
                 inst=>[
                  /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
                  /m/inst/from=>*uri::T,
-                 /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+                 /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
                 status=>!λstatus?bool<=(){<j>},
                 close=>λ(){<j>}]@/fascination/socket
 mtron> [-- the derived status, computed on read from a socket that is not open --]

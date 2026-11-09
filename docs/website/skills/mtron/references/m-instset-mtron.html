@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -718,7 +725,13 @@ mtron&gt; {1,2,3}.(a=&gt;+2){ +*a }                             [-- sugar syntax
 ==&gt;4
 ==&gt;6
 ==&gt;8
+mtron&gt; {1,2,3}.inst?int&lt;=int(plus(2)@a){ plus(*a) }       [-- an argument named by its own vid is read by that name --]
+==&gt;4
+==&gt;6
+==&gt;8
 </code></pre>
+<p>A call that names every argument with <code>@name</code> keys the body's argument frame by those names, so <code>(plus(2)@a)</code> reads
+as <code>(a=&gt;plus(2))</code> does. The instruction's own arguments stay positional.</p>
 <h4>Boolean logic</h4>
 <pre><code class="language-mtron">mtron&gt; 3.is(gt(2))                        [-- 3  (filters: passes lhs through if true, noobj if false) --]
 ==&gt;3
@@ -927,18 +940,21 @@ mtron&gt; {1,2}-&lt;|[?&gt;1 =&gt; +100, _=&gt; +2]&gt;&gt;    [-- 1=&gt;3, 2=&g
 </code></pre>
 <hr />
 <h3>11. right-shift / left-shift (<code>&gt;&gt;</code>, <code>&lt;&lt;</code>)</h3>
-<p>Traverse into structures:</p>
+<p><code>&gt;&gt;</code> descends into an obj and <code>&lt;&lt;</code> ascends out of it. On a poly, <code>&gt;&gt;</code> selects children: by index on a <code>lst</code>, by key on
+a <code>rec</code>, the second of a <code>rel</code>. An obj reached by <code>&gt;&gt;</code> keeps a link to the poly it came from, and <code>&lt;&lt;</code> follows that link
+back. A <code>rec</code>'s keys and a <code>rel</code>'s first are its <code>dom()</code>, not its parent, so a literal has no parent.</p>
 <h4>lsts</h4>
-<pre><code class="language-mtron">mtron&gt; [1,2,[a=&gt;3],4]&lt;&lt;2                  [-- [[a=&gt;3],4] --]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2                  [-- [1,2] --]
+<pre><code class="language-mtron">mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2                  [-- [a=&gt;3]            (by index) --]
 ==&gt;[a=&gt;3]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;(-2)               [-- [a=&gt;3] (negative indicies) --]
+mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;(-2)               [-- [a=&gt;3]            (negative indices) --]
 ==&gt;[a=&gt;3]
-mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4} (selectors are uris) --]
+mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;+                  [-- {1,2,[a=&gt;3],4}    (selectors are uris) --]
 ==&gt;1
 ==&gt;2
 ==&gt;[a=&gt;3]
 ==&gt;4
+mtron&gt; [1,2,[a=&gt;3],4]&gt;&gt;2.&lt;&lt;               [-- [1,2,[a=&gt;3],4]    (back to the lst) --]
+==&gt;[1,2,[a=&gt;3],4]
 </code></pre>
 <h4>recs</h4>
 <pre><code class="language-mtron">mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;3]].dom()        [-- {a,b,c}           (extract keys) --]
@@ -953,16 +969,28 @@ mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c      [-- [d=&gt;[e=
 ==&gt;[d=&gt;[e=&gt;3]]
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c/d/e  [-- 3                 (walk nested structure) --]
 ==&gt;3
+mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]&gt;&gt;c&gt;&gt;d.&lt;&lt;.&lt;&lt;  [-- [a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]  (ascend twice) --]
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;[d=&gt;[e=&gt;3]]]
+</code></pre>
+<h4>rels</h4>
+<pre><code class="language-mtron">mtron&gt; (1=&gt;(2=&gt;3))&gt;&gt;                      [-- (2=&gt;3)            (the second) --]
+==&gt;2=&gt;3
+mtron&gt; (1=&gt;(2=&gt;3)).dom()                  [-- 1                 (the first is the dom, not the parent) --]
+==&gt;1
+mtron&gt; (1=&gt;(2=&gt;3))&gt;&gt;1.&lt;&lt;                  [-- (1=&gt;(2=&gt;3))       (back to the rel) --]
+==&gt;1=&gt;(2=&gt;3)
 </code></pre>
 <h4>uris</h4>
-<pre><code class="language-mtron">mtron&gt; a/b/c&lt;&lt;                   [-- b/c    (drop leftmost segment) --]
+<p>On a uri both shifts are address arithmetic, and nothing resolves: <code>&gt;&gt;</code> enumerates the child uris in the address space,
+and <code>&lt;&lt;</code> drops trailing segments (a uri carries its parent in its segments).</p>
+<pre><code class="language-mtron">mtron&gt; a/b/c &lt;&lt;                  [-- a/b    (drop the rightmost segment) --]
 ==&gt;a/b
-mtron&gt; a/b/c&gt;&gt;                   [-- a/b    (drop rightmost segment) --]
-mtron&gt; a/b/c&lt;&lt;1                  [-- b/c --]
-==&gt;a/b
-mtron&gt; a/b/c&gt;&gt;1                  [-- a/b --]
-mtron&gt; a/b/c&lt;&lt;3                  [-- &lt;.&gt;    (empty) --]
+mtron&gt; a/b/c &lt;&lt; 2                [-- a --]
+==&gt;a
+mtron&gt; a/b/c &lt;&lt; 3                [-- &lt;&gt;     (empty) --]
 ==&gt;&lt;&gt;
+mtron&gt; a/b/c/d &lt;&lt; c/d            [-- a/b    (retract a matching postfix) --]
+==&gt;a/b
 </code></pre>
 <hr />
 <h3>12. skip / take</h3>
@@ -1126,10 +1154,19 @@ mtron&gt; [plus(5).mult(2)]==[&gt;&gt;=[plus(int::T)=&gt;[args=&gt;[+10]]]]     
 ==&gt;[plus(15).mult(2)]
 </code></pre>
 <h4>names and templates</h4>
-<p><code>@name</code> on a pattern element names what it matched. In a change, a <code>${...}</code> argument is a <strong>template parameter</strong>: it is
-evaluated against what the run holds in that place, it reads the names with <code>*name</code>, and its value (not its text) is
-the argument. Nest one template inside another by alternating <code>${...}</code> and <code>{{{...}}}</code>. Everything outside a template
-parameter is literal: <code>plus(+5)</code> stays <code>plus(plus(5))</code>.</p>
+<p><code>@name</code> on a pattern element names what it matched, at any depth, the instructions of a code argument included. A run
+binds the pattern as any instruction binds its declaration, so a name met twice must meet the same value, and a
+generic is pinned for the whole run. A name in all capitals is a generic, which is a type, so it names no value:
+<code>int::T@A</code> binds <code>A</code> to <code>int</code>, and <code>int::T@a</code> captures the int. In a change, a <code>${...}</code> argument is a <strong>template parameter</strong>: it is evaluated against what the run
+holds in that place, it reads the names with <code>*name</code>, and its value (not its text) is the argument. Nest one template
+inside another by alternating <code>${...}</code> and <code>{{{...}}}</code>. A named hole in a change is what its name matched
+(<code>minus(#::T@b)</code> reads <code>${*b}</code>), so a rule and its reverse are one equation. Everything else in a change is literal:
+<code>plus(+5)</code> stays <code>plus(plus(5))</code>.</p>
+<p>A pattern's argument is matched as a value tests a type: a hole (<code>int::T</code>) takes what fits it, and a code argument is
+typed by its range, so a value of that range meets it. A rule fires only when every name its pattern declares binds,
+and a name inside a code argument binds only against code: <code>mult(2.0)</code> fits <code>mult(map(#::T@b).inv())</code> but binds no
+<code>b</code>, so the rule passes it by. An argument the call leaves out is noobj, which only a hole admitting zero takes:
+<code>order(#{?}::T@s)</code> takes a bare <code>order()</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [plus(5).mult(2)]==[&gt;&gt;=[plus(int::T)=&gt;plus(${+10})]]                                             [-- evaluated against the 5 --]
 ==&gt;[plus(15).mult(2)]
 mtron&gt; [plus(5).mult(2)]==[&gt;&gt;=[plus(int::T@a)=&gt;plus(${*a.plus(10)})]]                                   [-- a named group --]
@@ -1138,11 +1175,22 @@ mtron&gt; [plus(2).plus(3).mult(4)]==[&gt;&gt;=[plus(int::T@a).plus(int::T@b)=&g
 ==&gt;[plus(5).mult(4)]
 mtron&gt; [mult(plus(mult(3))).plus(1)]==[&gt;&gt;=[mult(#(mult(int::T@k)))=&gt;mult(plus(mult(${*k.mult(2)})))]]   [-- a name bound at depth --]
 ==&gt;[mult(plus(mult(6))).plus(1)]
+mtron&gt; [plus(2).plus(3).mult(4)]==[&gt;&gt;=[plus(#::T@g).plus(#::T@h)=&gt;plus(${*g.mult(10).plus(*h)})]]       [-- a g and an h that are anything --]
+==&gt;[plus(23).mult(4)]
+mtron&gt; [plus(map(3).neg()).mult(2)]==[&gt;&gt;=[plus(map(#::T@u).neg())=&gt;minus(#::T@u)]]                    [-- a named hole reads its binding --]
+==&gt;[minus(3).mult(2)]
+mtron&gt; [minus(3).mult(2)]==[&gt;&gt;=[minus(#::T@u)=&gt;plus(map(#::T@u).neg())]]                              [-- the rule reversed: the same equation --]
+==&gt;[plus(map(3).neg()).mult(2)]
+mtron&gt; [plus(2).mult(3).plus(2).mult(2)]==[&gt;&gt;=[plus(int::T@n).mult(int::T@n)=&gt;mult(${*n.mult(*n)})]]   [-- n met twice: only plus(2).mult(2) --]
+==&gt;[plus(2).mult(3).mult(4)]
+mtron&gt; [mult(2.0).mult(map(3).inv())]==[&gt;&gt;=[mult(map(#::T@v).inv())=&gt;div(#::T@v)]]                   [-- the 2.0 fits but binds no v: only the code folds --]
+==&gt;[mult(2.0).div(3)]
 </code></pre>
 <p>The names are the change's own argument uris: a frame on the thread's argument stack, pushed for the change and popped
 after it, so threads never see each other's names. A name on a <strong>typed hole</strong> is also a type of the machine.
 <code>int::T@a</code> defines <code>a::T</code> in the machine's root frame (the scope of relative uris), and a later plain <code>int::T@a</code> refers
-to whatever <code>a</code> already is. So:</p>
+to whatever <code>a</code> already is. A hole over <code>#</code> is the exception: <code>#::T@b</code> is a b that is anything, which constrains
+nothing, so it defines no type. So:</p>
 <ul>
 <li>within one machine, a name means one type: reuse <code>@a</code> only for the same type, and give a different refinement its
 own name.</li>
@@ -1162,8 +1210,8 @@ and die there; in one shared machine their definitions collide.</li>
 <tr><td><code>@uri</code></td><td><code>at(uri)</code></td><td>anchor to uri location</td></tr>
 <tr><td><code>_</code></td><td><code>id()</code></td><td>identity function</td></tr>
 <tr><td><code>&gt;&gt;=</code></td><td><code>update()</code></td><td>update-and-write-back</td></tr>
-<tr><td><code>&gt;&gt;</code></td><td><code>rshift()</code></td><td>right-shift (drop last)</td></tr>
-<tr><td><code>&lt;&lt;</code></td><td><code>lshift()</code></td><td>left-shift (drop first)</td></tr>
+<tr><td><code>&gt;&gt;</code></td><td><code>rshift()</code></td><td>descend to the children</td></tr>
+<tr><td><code>&lt;&lt;</code></td><td><code>lshift()</code></td><td>ascend to the parent</td></tr>
 <tr><td><code>&gt;-</code></td><td><code>merge()</code></td><td>flatten / merge barrier</td></tr>
 <tr><td><code>-&lt;</code></td><td><code>split()</code></td><td>distribute into branches</td></tr>
 <tr><td><code>\|</code></td><td><code>block()</code></td><td>block/prevent evaluation</td></tr>

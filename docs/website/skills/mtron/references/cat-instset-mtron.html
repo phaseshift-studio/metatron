@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -520,19 +527,19 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 <pre><code class="language-mtron">mtron&gt; int::T.as(object::T)
 ==&gt;object[int]::[obj=&gt;int::T,
                  theory=&gt;[
-                  ring=&gt;/m/theory/ring_theory::[
+                  ring=&gt;ring_theory::[
                    add=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    mul=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
                    zero=&gt;0,
                    one=&gt;1],
-                  add_group=&gt;/m/theory/group_theory::[
+                  add_group=&gt;group_theory::[
                    op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;0,
                    inv=&gt;neg?int&lt;=int(){&lt;j&gt;}],
-                  add_monoid=&gt;/m/theory/monoid_theory::[
+                  add_monoid=&gt;monoid_theory::[
                    op=&gt;plus?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;0],
-                  mult_monoid=&gt;/m/theory/monoid_theory::[
+                  mul_monoid=&gt;monoid_theory::[
                    op=&gt;mult?int&lt;=int(int::T){&lt;j&gt;},
                    id=&gt;1]],
                  morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -575,10 +582,16 @@ rules a vertex may take are read from exactly these declarations (see <em>the de
 </code></pre>
 <h4>the algebraic theories</h4>
 <p>An object can model several algebraic structures. <code>object::T&gt;&gt;theory</code> is a rec keyed by the name given to each
-instance at declaration, and each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy:
+instance at declaration, a <code>theory_form::T</code>: a theory with several op roles is keyed by its own name (<code>ring</code>), and a
+theory with one <code>op</code> role by the instruction family that op binds, <code>add_</code> for <code>plus</code> and <code>mul_</code> for <code>mult</code>
+(<code>add_group</code>, <code>mul_monoid</code>). A theory refines no other, so a carrier declares each structure it models, and a
+<code>?decq</code> declaration keyed by anything else is refused. Each role holds a <code>!*</code> (<code>auto_from</code>) pointer to the <em>live</em> operation rather than a copy:
 the graph holds the references, and a role dereferences transparently on <code>&gt;&gt;</code> (<code>...&gt;&gt;theory&gt;&gt;ring&gt;&gt;add</code> yields the
 inst). The first example above is the <code>int</code> case in full: its theory rec declares a <code>ring</code> and the three constituent
-group/monoid instances. <code>theory::T</code> is the nominal super-type grouping them:</p>
+group/monoid instances. <code>theory::T</code> is the nominal super-type grouping them. The theories are <code>/m</code>'s own types
+(<code>/m/theory</code>), which the core types and every instruction set's types declare their algebras over. A theory's law
+battery (<code>law</code>) and its rewrite rules (<code>rewrite</code>) are its own data, stated in its type beside its roles under keys no
+instance carries: the roles are its fields, the rules what to do with them. The category renders them:</p>
 <table>
 <thead>
 <tr><th>type</th><th>roles (fields)</th><th>what it asserts</th></tr>
@@ -589,6 +602,7 @@ group/monoid instances. <code>theory::T</code> is the nominal super-type groupin
 <tr><td><code>rig_theory</code></td><td><code>add</code>, <code>mul</code>, <code>zero</code>, <code>one</code></td><td>\(\langle S, +, \cdot, 0, 1 \rangle\): additive and multiplicative monoids, \(\cdot\) distributive over \(+\), no additive inverses</td></tr>
 <tr><td><code>group_theory</code></td><td><code>op</code>, <code>id</code>, <code>inv</code></td><td>\(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</td></tr>
 <tr><td><code>monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</td></tr>
+<tr><td><code>commutative_monoid_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle M, \cdot, 1 \rangle\): a monoid whose operation commutes, \(m \cdot n = n \cdot m\) (rec's <code>add_commutative_monoid</code>)</td></tr>
 <tr><td><code>boolean_theory</code></td><td><code>or</code>, <code>and</code>, <code>not</code>, <code>zero</code>, <code>one</code></td><td>\(\langle B, \lor, \land, \lnot, 0, 1 \rangle\): a complemented distributive lattice, \(b \lor \lnot b = 1\) and \(b \land \lnot b = 0\)</td></tr>
 <tr><td><code>lattice_theory</code></td><td><code>meet</code>, <code>join</code>, <code>bottom</code>, <code>top</code></td><td>\(\langle L, \sqcap, \sqcup, \bot, \top \rangle\): every pair of elements has a meet and a join, bounded by \(\bot\) and \(\top\)</td></tr>
 <tr><td><code>semilattice_theory</code></td><td><code>op</code>, <code>id</code></td><td>\(\langle S, \sqcup, 0 \rangle\): an idempotent commutative monoid (one side of a lattice)</td></tr>
@@ -682,7 +696,7 @@ Composing them round-trips — from an object to its edges and back, or from an 
 <tr><td><code>contested</code></td><td>the witness edges behind the <code>ambiguous</code> / <code>incomparable</code> labels — the competing siblings</td></tr>
 <tr><td><code>orbit</code></td><td>the connected component of the source object in the reversible core — all objects reached by edges that exist in both directions</td></tr>
 <tr><td><code>position</code></td><td>the edge's place among its siblings (a subset of the six kinds below)</td></tr>
-<tr><td><code>inverse</code></td><td>the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\) — computed, never declared wherever the carrier's algebra states it: an <code>involution</code> is its own inverse, and a <strong>group</strong> <code>(op, id, inv)</code> makes <code>op</code>'s inverse the instruction <em>defined</em> as <code>op</code> applied to its inverted argument (<code>div ≡ mult ∘ inv</code>, so real's <code>mult</code>/<code>div</code> pair follows from its <code>mult_group</code>). A carrier whose algebra states none falls back to the declaration — int's <code>mult</code>→<code>div</code>, a truncating one-way retraction (int models a <code>mult_monoid</code>, no group), and int's <code>div</code> then has no inverse at all</td></tr>
+<tr><td><code>inverse</code></td><td>the opposing edge \(f^{-1}\) with \(f \cdot f^{-1} = 1\) — computed, never declared wherever the carrier's algebra states it: an <code>involution</code> is its own inverse, and a <strong>group</strong> <code>(op, id, inv)</code> makes <code>op</code>'s inverse the instruction <em>defined</em> as <code>op</code> applied to its inverted argument (<code>div ≡ mult ∘ inv</code>, so real's <code>mult</code>/<code>div</code> pair follows from its <code>mul_group</code>). A carrier whose algebra states none falls back to the declaration — int's <code>mult</code>→<code>div</code>, a truncating one-way retraction (int models a <code>mul_monoid</code>, no group), and int's <code>div</code> then has no inverse at all</td></tr>
 <tr><td><code>combiner</code></td><td>the edge a reducer's partials recombine through, \((a \uplus b) \cdot r = (a \cdot r \uplus b \cdot r) \cdot \mathrm{combiner}(r)\) — computed, never declared: a fold declaring <code>monoidic</code> + <code>commutative</code> is its own, a fold defined by its <code>derivation</code> names the fold that defines it (<code>count</code> ↦ <code>sum</code>, <code>order</code> ↦ <code>kmerge</code>); a keyed fold (<code>group</code>) recombines pointwise through a chain — <code>sum</code>, then a per-key fold — that no single edge names, so it has none here</td></tr>
 </tbody>
 </table>
@@ -778,15 +792,15 @@ code <em>in place</em>: the local laws below (\(\mathrm{op} (\mathrm{id}) \leads
 <tr><th>rewrite</th><th>reads</th><th>rule</th></tr>
 </thead>
 <tbody>
-<tr><td><code>theory_unit_removal</code></td><td>every theory instance of the operand's type</td><td>\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>theory_unit_removal</code></td><td>every monoid instance of the operand's type (<code>monoid_theory</code>'s rule; <code>/m</code>'s rewrite)</td><td>\(\mathrm{op}(\mathrm{id}) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>theory_involution</code></td><td>\(\mathrm{law} \ni \mathrm{involution}\), or the declared <code>inv</code> role</td><td>\(f \cdot f \leadsto \varepsilon\)</td></tr>
 <tr><td><code>law_idempotent</code></td><td>\(\mathrm{law} \ni \mathrm{idempotent}\)</td><td>\(f \cdot f \leadsto f\)</td></tr>
 <tr><td><code>law_absorbing</code></td><td>\(\mathrm{law} \ni \mathrm{absorbing}\)</td><td>\(g \cdot f \leadsto f\) for a pure \(g\) handing \(f\) one obj per obj: a mapper of the carrier, a filter too when \(f\)'s dom is non-strict, any \(g\) when \(f\) answers noobj</td></tr>
 <tr><td><code>law_monoidic</code></td><td>\(\mathrm{law} \ni \mathrm{monoidic}\) + the <code>reducer</code>/<code>join</code> form</td><td>\(f \cdot f \leadsto f\)</td></tr>
 <tr><td><code>law_poset</code></td><td>\(\mathrm{law} \ni \mathrm{poset}\)</td><td>\(\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))\), \(\min\) for <code>lt</code> — filters only: a bare <code>gt</code> answers a bool</td></tr>
-<tr><td><code>inverse_cancellation</code></td><td><code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
+<tr><td><code>inverse_cancellation</code></td><td>every group instance of the operand's type (<code>group_theory</code>'s rules), gated by <code>analysis.inverse</code></td><td>\(f(a) \cdot f^{-1}(a) \leadsto \varepsilon\)</td></tr>
 <tr><td><code>form_map_unwrap</code></td><td>the stream lift <code>map</code></td><td>\(\mathrm{map}(f) \leadsto f\)</td></tr>
-<tr><td><code>derivation_contraction</code></td><td><code>derivation</code></td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
+<tr><td><code>derivation_contraction</code></td><td>the <code>derivation</code> of the contract the carrier dispatches to</td><td>\(\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}\), \(\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}\)</td></tr>
 <tr><td><code>branch_collapse</code></td><td>the additive role of the operand's algebra — <code>cut =&gt; [role =&gt; add]</code></td><td>\(\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})\) — equal terms collapse, summing the coefficients</td></tr>
 <tr><td><code>branch_inline</code></td><td>the additive role — <code>cut =&gt; [role =&gt; zero]</code></td><td>\(a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c\), \(\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}\), \(\mathrm{S}(x) \leadsto \mathrm{map}(x)\)</td></tr>
 <tr><td><code>law_shard</code></td><td><code>form = reducer</code> with a <code>combiner</code> declaring <code>monoidic</code>, <code>commutative</code> + a live peer roster</td><td>the seed partitions, each peer folds its shard, and the master recombines the partials through the <code>combiner</code> (Thm 19) — <code>sum</code>, <code>prod</code>, <code>count</code>, <code>order</code>, rec <code>sum</code> (distributed rec merging), and a keyed <code>group</code> pointwise (see <em>the deep merge</em>)</td></tr>
@@ -803,11 +817,18 @@ rewriter's guards and for reasoning, with no rewrite of their own: <code>commuta
 <code>commutative</code> is the cleanest case: a canonical form for a commutative operand would be a no-op where it is legal — a
 stream (<code>{3,1,2}</code> already equals <code>{1,2,3}</code>) — while for an <code>lst</code> it would be unsound, its order being
 semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.</p>
-<p>The first two generalize a <em>ring's</em> unit and a <em>group's</em> inverse to every declared structure: the unit law is read
-for each <code>(op, id)</code> role pair a theory names (<code>add</code>/<code>zero</code>, <code>mul</code>/<code>one</code>, <code>op</code>/<code>id</code>, <code>or</code>/<code>zero</code>, <code>and</code>/<code>one</code>,
-<code>join</code>/<code>bottom</code>, <code>meet</code>/<code>top</code>), so \(x + 0\), \(x \cdot 1\), \(x \cdot \langle\rangle\) (uri), \(x \cdot .\) (machine) and
-\(x \cdot \mathrm{id}\) (code) all drop, and a bare identity <em>operation</em> (<code>code</code>'s \(\mathrm{id}\)) is the identity
-morphism. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
+<p>The first two generalize a <em>monoid's</em> unit and a <em>group's</em> inverse to every declared structure. The unit law is a
+rule stated once, in the theory's role names, in <code>monoid_theory::T</code> itself beside its roles and its law battery:
+<code>rewrite =&gt; [op(id) =&gt; ε]</code>. Every instance keyed by a monoid form binds the roles, so \(x + 0\), \(x \cdot 1\),
+\(x + \texttt{''}\) (str), \(x \cdot \langle\rangle\) (uri) and \(x \cdot .\) (machine) all drop. Composition is
+adjacency in a chain, so code's <code>mul_monoid</code> binds \(\mathrm{id}\) alone: the identity <em>operation</em> drops out. A theory
+refines no other, so the rule reaches only monoid instances, and code's <code>add_monoid</code> (whose <code>branch</code> takes lanes) binds
+none yet. The theories are <code>/m</code>'s, so <code>theory_unit_removal</code> is <code>/m</code>'s rewrite and runs on the base path too, with or
+without the category. The group states its inverse rules the same way, on both sides and over a named operand:
+<code>op(a)·op(inv(a)) ⇝ ε</code> and <code>op(inv(a))·op(a) ⇝ ε</code>. The compound <code>op(inv(a))</code> binds the instruction <em>defined</em> that
+way, so int's <code>add_group</code> gives <code>plus(a)·minus(a)</code> and <code>minus(a)·plus(a)</code> (<code>minus ≡ plus∘neg</code>), and real's
+<code>mul_group</code> gives <code>mult·div</code> and <code>div·mult</code> (<code>div ≡ mult∘inv</code>); <code>inverse_cancellation</code> fires only where the chain's
+carrier derives that inverse. The involution law holds for every operation declared <code>involution</code> — <code>neg</code>, <code>inv</code>, <code>not</code>, <code>reverse</code>,
 <code>conjugate</code> — not only the additive group's.</p>
 <pre><code class="language-mtron">mtron&gt; 5.plus(0)
 ==&gt;5
@@ -853,8 +874,6 @@ mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&g
 ==&gt;&quot;&quot;&quot;
     op     dom          rng     args  f    desc     c_dom  c_rng 
     start  noobj{0}::T  int::T  6     &lt;j&gt;  initial  {0}    {1}   
-    plus   int::T       int::T  0     &lt;j&gt;  mapper   {1}    {1}   
-    mult   int::T       int::T  1     &lt;j&gt;  mapper   {1}    {1}   
     minus  int::T       int::T  3     &lt;j&gt;  mapper   {1}    {1}   
     mult   int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
     div    int::T       int::T  2     &lt;j&gt;  mapper   {1}    {1}   
@@ -863,7 +882,7 @@ mtron&gt; 6.plus(0).mult(1).neg().neg().plus(3.neg()).mult(2).div(2).explain()&g
 <p>Only two instructions remain in the explain table: the seed and the one operation that survives. The other
 instructions were rewritten away:</p>
 <ul>
-<li><code>plus(0)</code> and <code>mult(1)</code> are the int ring's units (<code>theory_unit_removal</code>),</li>
+<li><code>plus(0)</code> and <code>mult(1)</code> are int's monoid units (<code>theory_unit_removal</code>),</li>
 <li><code>neg().neg()</code> is the additive group's involution (<code>theory_involution</code>),</li>
 <li><code>plus(3.neg())</code> folds to <code>minus(3)</code> (<code>derivation_contraction</code>), and</li>
 <li><code>mult(2).div(2)</code> is a declared inverse pair (<code>inverse_cancellation</code>).</li>
@@ -987,10 +1006,6 @@ previous segment's result, so a descent <code>[seed] == [lift] == [lower₁] == 
 three steps below are the same vertex after each application — the path shrinks as the rewrites fire:</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start(5).plus(0).neg().neg(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            theory_involution=&gt;plan::[
             name=&gt;theory_involution,
             cut=&gt;[law=&gt;[involution]],
@@ -1001,16 +1016,16 @@ three steps below are the same vertex after each application — the path shrink
             where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]
 ==&gt;[path::[obj=&gt;start(5).plus(0),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[
             name=&gt;derivation_contraction,
             cut=&gt;[role=&gt;derivation],
             where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(&gt;&gt;theory_involution)]==[lower(&gt;&gt;theory_unit_removal)]
-==&gt;[path::[obj=&gt;start(5)]]
+==&gt;[path::[obj=&gt;start(5).plus(0),
+           derivation_contraction=&gt;plan::[
+            name=&gt;derivation_contraction,
+            cut=&gt;[role=&gt;derivation],
+            where=&gt;[[shape=&gt;local,span=&gt;[[span=&gt;at]]]]]]]
 </code></pre>
 <p><strong>A-priori pruning.</strong> Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a <em>type-part</em> (laws, forms, adjacency of classifications) and a <em>value-residue</em> (operand
@@ -1035,46 +1050,46 @@ derives its rewrite. The guard reads the laws/forms/theories off the word (<code
 and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[abstraction::[obj=&gt;[morphism[start?args=[/m/int]]::[
-                         name=&gt;start,
-                         form=&gt;initial,
-                         src=&gt;!λ#(){&lt;j&gt;},
-                         trgt=&gt;!λ#(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;start(5)],
-                        morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
-                         name=&gt;plus,
-                         form=&gt;mapper,
-                         class=&gt;[endo],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;plus(0),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
-                          retraction,
-                          mono,
-                          epi],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;neg(),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
+==&gt;[abstraction::[obj=&gt;[
+                   morphism[start?args=[/m/int]]::[
+                    name=&gt;start,
+                    form=&gt;initial,
+                    src=&gt;!λ#(){&lt;j&gt;},
+                    trgt=&gt;!λ#(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;start(5)],
+                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
+                    name=&gt;plus,
+                    form=&gt;mapper,
+                    class=&gt;[endo],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
@@ -1132,7 +1147,7 @@ self-registers a <code>peer::T</code> into the network; that registration is the
     inst=&gt;[
      /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
      /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
     status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
     close=&gt;λ(){&lt;j&gt;},
     on_message=&gt;print('received ${_}')]
@@ -1143,10 +1158,6 @@ mtron&gt; */network
 now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[
             name=&gt;derivation_contraction,
             cut=&gt;[role=&gt;derivation],
@@ -1192,10 +1203,6 @@ application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            derivation_contraction=&gt;plan::[
             name=&gt;derivation_contraction,
             cut=&gt;[role=&gt;derivation],
@@ -1226,10 +1233,6 @@ recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
 ==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()]),
-           theory_unit_removal=&gt;plan::[
-            name=&gt;theory_unit_removal,
-            cut=&gt;[role=&gt;id],
-            where=&gt;[[shape=&gt;none,span=&gt;[[span=&gt;at]]]]],
            law_shard=&gt;plan::[
             name=&gt;law_shard,
             cut=&gt;[

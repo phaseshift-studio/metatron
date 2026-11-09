@@ -110,30 +110,30 @@ and it is readable as data:
 ```mtron
 mtron> accordion_widget::[title=>'notes',
                           body=>"l01\nl02\nl03"]@/usr/uidoc/notes
-==>accordion_widget::[title=>'notes',
-                      body=>'l01
+==>accordion_widget::[body=>'l01
    l02
    l03',
+                      title=>'notes',
                       style=>style::[
                        border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
                        foreground=>'']]@/usr/uidoc/notes
 mtron> @/usr/uidoc/notes >>= [body=>"l01\nl02\nl03\nl04"]              [-- the update carries the insts with it --]
-==>accordion_widget::[style=>style::[
-                       border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-                       foreground=>''],
-                      body=>'l01
+==>accordion_widget::[body=>'l01
    l02
    l03
    l04',
+                      style=>style::[
+                       border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
+                       foreground=>''],
                       title=>'notes']
 mtron> */usr/uidoc/notes                                               [-- the widget, as the rec it is --]
-==>accordion_widget::[style=>style::[
-                       border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
-                       foreground=>''],
-                      body=>'l01
+==>accordion_widget::[body=>'l01
    l02
    l03
    l04',
+                      style=>style::[
+                       border=>'┌;┐;└;┘;│;│;─;─;┬;┴;├;┤',
+                       foreground=>''],
                       title=>'notes']
 ```
 ## a widget is a rec — state lives in the map

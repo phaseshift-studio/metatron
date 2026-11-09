@@ -244,7 +244,7 @@ public class InstSetDocGeneratorTest extends AbstractMetatronTest {
                         InstSetDocGenerator.algebraEncoding("law=>[ring=>…]")));
         assertTrue(panel.contains("data-bs-target=\"#algebra-x-mtron\""),
                 "the encoding is a tab of the panel: " + panel);
-        assertTrue(panel.contains(">theories</button>") && panel.contains(">mtron encoding</button>"),
+        assertTrue(panel.contains(">theory</button>") && panel.contains(">mtron</button>"),
                 "both views are named: " + panel);
         assertTrue(panel.contains("class=\"algebra-mtron\""),
                 "the encoding scrolls in its own box (with the site's slim scrollbar): " + panel);

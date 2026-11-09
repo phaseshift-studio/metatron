@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -509,7 +516,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         }
        }
        &quot;&quot;&quot;.as(json::T).as(mcp_client::T).to(/usr/marko/mcp/intellij)
-==&gt;fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/as@2) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][fail][fail]
 </code></pre>
 <p>If the snippet provided has an <code>mcpServer</code> outer wrapping, then do:</p>
 <pre><code class="language-mtron">mtron&gt; &quot;&quot;&quot;
@@ -522,7 +528,100 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
           }
         }}}
        &quot;&quot;&quot;.as(json::T).as(rec::T)&gt;&gt;mcpServers/intellij.as(json::T).as(mcp_client::T)
-==&gt;fail::[inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/as) [SocketChannelImpl&lt;204&gt;]][java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]][fail][fail]
+==&gt;mcp_client::[type=&gt;streamable-http,
+                url=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
+                headers=&gt;[IJ_MCP_SERVER_PROJECT_PATH=&gt;~/software/metatron],
+                host=&gt;&lt;http://127.0.0.1:64342/stream&gt;,
+                status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+                tool=&gt;[
+                 execute_tool=&gt;tool::[
+                  inst=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
+                  name=&gt;execute_tool,
+                  desc=&gt;'Universal tool executor that can i...',
+                  arg=&gt;[command=&gt;'Command-line string with tool name...']],
+                 analyze_calls=&gt;tool::[
+                  inst=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
+                             analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                             depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                             maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
+                             maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
+                             treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
+                             childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;analyze_calls,
+                  desc=&gt;'Builds the IDE Call Hierarchy tree...',
+                  arg=&gt;[
+                   symbolFqn=&gt;'Plain fully qualified symbol name,...',
+                   analysisKind=&gt;&quot;Call analysis direction. Use `INCO...&quot;,
+                   depth=&gt;'Maximum number of call levels to r...',
+                   maxChildren=&gt;'Maximum number of direct children ...',
+                   maxNodes=&gt;'Maximum total number of rendered c...',
+                   treePath=&gt;'Optional path to a subtree root, c...',
+                   childOffset=&gt;'Offset for paging direct children ...',
+                   ...(1 more)]],
+                 build_project=&gt;tool::[
+                  inst=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                             filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;build_project,
+                  desc=&gt;'Triggers building of the project o...',
+                  arg=&gt;[
+                   rebuild=&gt;'Whether to perform full rebuild th...',
+                   filesToRebuild=&gt;'If specified, only compile files w...',
+                   timeout=&gt;'Timeout in milliseconds']],
+                 get_file_problems=&gt;tool::[
+                  inst=&gt;inst(filePath=&gt;'Path relative to the project root',
+                             errorsOnly=&gt;'Whether to include only errors or include both errors and warnings',
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;get_file_problems,
+                  desc=&gt;'Analyzes the specified file for er...',
+                  arg=&gt;[
+                   filePath=&gt;'Path relative to the project root',
+                   errorsOnly=&gt;'Whether to include only errors or ...',
+                   timeout=&gt;'Timeout in milliseconds']],
+                 get_project_dependencies=&gt;tool::[
+                  inst=&gt;inst(){&lt;j&gt;},
+                  name=&gt;get_project_dependencies,
+                  desc=&gt;'Get a list of all dependencies def...',
+                  arg=&gt;[=&gt;]],
+                 get_project_modules=&gt;tool::[
+                  inst=&gt;inst(){&lt;j&gt;},
+                  name=&gt;get_project_modules,
+                  desc=&gt;'Get a list of all modules in the p...',
+                  arg=&gt;[=&gt;]],
+                 lint_files=&gt;tool::[
+                  inst=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
+                             min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                             timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                  name=&gt;lint_files,
+                  desc=&gt;'Analyzes the specified files for e...',
+                  arg=&gt;[
+                   files=&gt;'List of project-relative files to ...',
+                   min_severity=&gt;&quot;Minimum severity to include: `warn...&quot;,
+                   timeout=&gt;'Timeout in milliseconds']],
+                 ...(7 more)],
+                inst=&gt;[
+                 /m/ai/llm/tool/execute_tool=&gt;inst(command=&gt;'Command-line string with tool name and arguments'){&lt;j&gt;},
+                 /m/ai/llm/tool/analyze_calls=&gt;inst(symbolFqn=&gt;&quot;Plain fully qualified symbol name, or an exact signature returned by an ambiguity error or copied from a rendered child node. If you only know a short name or fragment, use `search_symbol` first and pass the best fully qualified callable name here. Examples: `com.example.Service.run`, `com.example.Service.run(String)`, or `org.assertj.core.api.Assertions.assertThat(String)`. Do not pass file path, line, column, or a separate target signature.&quot;,
+                                                    analysisKind=&gt;&quot;Call analysis direction. Use `INCOMING_CALLS` to show callers of `symbolFqn`, or `OUTGOING_CALLS` to show symbols called from `symbolFqn`.&quot;,
+                                                    depth=&gt;'Maximum number of call levels to render below the requested subtree root. Default: 5. Use 0 to render only the subtree root.',
+                                                    maxChildren=&gt;'Maximum number of direct children rendered for each node. Default: 50.',
+                                                    maxNodes=&gt;'Maximum total number of rendered call nodes. Default: 1000.',
+                                                    treePath=&gt;&quot;Optional path to a subtree root, copied exactly from a previous `analyze_calls` result. Null or omitted means the root path `[]`. Each component is an exact signature, not a display name.&quot;,
+                                                    childOffset=&gt;&quot;Offset for paging direct children of the node addressed by `treePath`. Default: 0.&quot;,
+                                                    timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 /m/ai/llm/tool/build_project=&gt;inst(rebuild=&gt;&quot;Whether to perform full rebuild the project. Defaults to false. Effective only when `filesToRebuild` is not specified.&quot;,
+                                                    filesToRebuild=&gt;'If specified, only compile files with the specified paths. Paths are relative to the project root.',
+                                                    timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 /m/ai/llm/tool/get_file_problems=&gt;inst(filePath=&gt;'Path relative to the project root',
+                                                        errorsOnly=&gt;'Whether to include only errors or include both errors and warnings',
+                                                        timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 /m/ai/llm/tool/get_project_dependencies=&gt;inst(){&lt;j&gt;},
+                 /m/ai/llm/tool/get_project_modules=&gt;inst(){&lt;j&gt;},
+                 /m/ai/llm/tool/lint_files=&gt;inst(files=&gt;'List of project-relative files to analyze. Duplicate paths are ignored after normalization.',
+                                                 min_severity=&gt;&quot;Minimum severity to include: `warning` (includes weak warnings), `strong_warning`, or `error`. Defaults to `warning`.&quot;,
+                                                 timeout=&gt;'Timeout in milliseconds'){&lt;j&gt;},
+                 ...(7 more)]]
 </code></pre>
 <p>Moreover, if the <code>mcpServer</code> snippet has multiple inner servers endpoints defined, to load all of them, do:</p>
 <pre><code class="language-mtron">mtron&gt; {&quot;mcpServers&quot;: {

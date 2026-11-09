@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -797,28 +804,28 @@ In metatron, the uri is called a <em>fURI</em> (<strong>functional uniform resou
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/+.count()
 ==&gt;11
 mtron&gt; */sys/space/+.&gt;&gt;pattern
+==&gt;ha:#
+==&gt;loc:#
+==&gt;g:#
+==&gt;farm:#
 ==&gt;mtronfs:#
 ==&gt;local:#
-==&gt;/te/cold/#
-==&gt;g:#
-==&gt;ha:#
 ==&gt;/usr/#
-==&gt;http://#
-==&gt;/te/hot/#
-==&gt;loc:#
-==&gt;farm:#
 ==&gt;fs:#
+==&gt;http://#
+==&gt;/te/cold/#
+==&gt;/te/hot/#
 mtron&gt; */sys/space/+.-&lt;[&gt;&gt;pattern=&gt;&gt;&gt;route]
-==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
-==&gt;[local:#=&gt;[local:=&gt;/home/ubuntu/]]
-==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
-==&gt;{3}[=&gt;]
 ==&gt;[ha:#=&gt;[ha:=&gt;/home/chips]]
-==&gt;[http://#=&gt;[/=&gt;local:]]
-==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]
+==&gt;{3}[=&gt;]
 ==&gt;[farm:#=&gt;[farm:=&gt;&lt;&gt;]]
-==&gt;[fs:#=&gt;[fs:m=&gt;/home/ubuntu/software/metatron,
-           fs:=&gt;/home/ubuntu/]]</code></pre>
+==&gt;[mtronfs:#=&gt;[mtronfs:=&gt;&lt;.metatron&gt;]]
+==&gt;[local:#=&gt;[local:=&gt;/home/killswitch/]]
+==&gt;[fs:#=&gt;[fs:m=&gt;/home/killswitch/software/metatron,
+           fs:=&gt;/home/killswitch/]]
+==&gt;[http://#=&gt;[/=&gt;local:]]
+==&gt;[/te/cold/#=&gt;[/te/cold/=&gt;&lt;&gt;]]
+==&gt;[/te/hot/#=&gt;[/te/hot/=&gt;&lt;&gt;]]</code></pre>
 </div>
 </div>
 <br><br></main>

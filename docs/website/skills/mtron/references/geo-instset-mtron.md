@@ -83,8 +83,8 @@ mtron> geo:point::[-123.13]                        [-- fail: not enough coordina
 ==>fail::[parse error at line 1, col 1: obj does not match geo:point::T
      [[-123.13]
          X=>
-     geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point
-     ─────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[real::T,real::T,real{?}::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point
+     ────────────────────────────────────────────────────────────────────────────────────────
      [==>-123.13,X=>noobj,==>noobj]]
      predicate apply failed on execution
    	while parsing: geo:point::[-123.13]]
@@ -92,8 +92,8 @@ mtron> geo:point::[1,2]                            [-- fail: mtron's int is not 
 ==>fail::[parse error at line 1, col 1: obj does not match geo:point::T
      [[1,2]
          X=>
-     geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point
-     ─────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[real::T,real::T,real{?}::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point
+     ────────────────────────────────────────────────────────────────────────────────────────
      [X=>1,X=>2,==>noobj]]
      predicate apply failed on execution
    	while parsing: geo:point::[1,2]]
@@ -101,8 +101,8 @@ mtron> geo:line::[-123.13,44.47]                   [-- fail: a line is a list of
 ==>fail::[parse error at line 1, col 1: obj does not match geo:line::T
      [[-123.13,44.47]
          X=>
-     geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point]][ctor?line<=(#{*}::T){<j>}]@/m/math/geo/line
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point<=(#{*}::T){<j>}]@/m/math/geo/point]][ctor?line<=(#{*}::T){<j>}]@/m/math/geo/line
+     ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
      [X=>-123.13,X=>44.47]]
      predicate apply failed on execution
    	while parsing: geo:line::[-123.13,44.47]]

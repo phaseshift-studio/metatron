@@ -32,10 +32,10 @@ mtron> http_server::[origin => http://localhost:8777,
 mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,inst=>[/m/inst/from=>*uri::T,
-                                       /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
+                                       /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
 mtron> http_client::[host => <https://#>]
 ==>http_client::[host=>https://#,inst=>[/m/inst/from=>*uri::T,
-                                        /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
+                                        /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
 mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
 mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> ws_server::[origin  => ws://localhost:8555,

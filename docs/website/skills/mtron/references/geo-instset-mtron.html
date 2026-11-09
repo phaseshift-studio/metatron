@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -554,8 +561,8 @@ mtron&gt; geo:polygon::[[[-123.2,44.4],[-122.9,44.4],[-122.9,44.6],[-123.2,44.6]
 ==&gt;fail::[parse error at line 1, col 1: obj does not match geo:point::T
      [[-123.13]
          X=&gt;
-     geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
-     ─────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
+     ────────────────────────────────────────────────────────────────────────────────────────
      [==&gt;-123.13,X=&gt;noobj,==&gt;noobj]]
      predicate apply failed on execution
    	while parsing: geo:point::[-123.13]]
@@ -563,8 +570,8 @@ mtron&gt; geo:point::[1,2]                            [-- fail: mtron's int is n
 ==&gt;fail::[parse error at line 1, col 1: obj does not match geo:point::T
      [[1,2]
          X=&gt;
-     geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
-     ─────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point
+     ────────────────────────────────────────────────────────────────────────────────────────
      [X=&gt;1,X=&gt;2,==&gt;noobj]]
      predicate apply failed on execution
    	while parsing: geo:point::[1,2]]
@@ -572,8 +579,8 @@ mtron&gt; geo:line::[-123.13,44.47]                   [-- fail: a line is a list
 ==&gt;fail::[parse error at line 1, col 1: obj does not match geo:line::T
      [[-123.13,44.47]
          X=&gt;
-     geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line
-     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     geometry::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line
+     ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
      [X=&gt;-123.13,X=&gt;44.47]]
      predicate apply failed on execution
    	while parsing: geo:line::[-123.13,44.47]]

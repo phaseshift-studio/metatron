@@ -39,7 +39,8 @@ menu, fix the five pieces a row names:
 
 - a fold that declares `monoidic` + `commutative` is **its own** combiner (`sum`, `prod`);
 - a fold defined by its `derivation` recombines through the fold that defines it (`count ↦ sum`,
-  `order(s) ↦ kmerge(s)`);
+  `order(s) ↦ kmerge(s)`, and a bare `order()` ↦ `kmerge()`: an omitted argument is noobj, which the derivation's
+  `s{?}` admits);
 - a keyed fold `group([k ⇒ h])` recombines **pointwise** — `sum()==[_=>combiner(h)]` — which no single edge names.
 
 ## the theorem bindings
@@ -247,7 +248,7 @@ defined by its `derivation` recombines through the fold that defines it:
 |---------------|-------------|-----------------------------------------------------------------------------------------------------------------------|
 | `sum`, `prod` | itself      | declares `monoidic` + `commutative`                                                                                   |
 | `count`       | `sum`       | `count ≡ map(1)·sum`                                                                                                  |
-| `order(s)`    | `kmerge(s)` | `order(s) ≡ split([_])·kmerge(s)`, and `kmerge` declares `monoidic` + `commutative`                                   |
+| `order(s)`    | `kmerge(s)` | `order(s{?}) ≡ split([_])·kmerge(s{?})`, so a bare `order()` recombines through `kmerge()`; `kmerge` declares `monoidic` + `commutative` |
 | rec `sum`     | itself      | the deep merge's fold declares `monoidic` + `commutative` — a `lst` is its atom, so colliding values bag in any order |
 
 The cat graph answers lazily: `|count?int<=A{*}().as(morphism::T)>>analysis>>combiner` is
