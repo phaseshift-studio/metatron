@@ -145,6 +145,9 @@ public class CodeTest extends AbstractMetatronTest {
             "[plus({3}int::T)]==[?plus({3}int::T)]                             % [plus({3}int::T)]",
             "[plus({3}int::T)]==[?plus({*}int::T)]                             % [plus({3}int::T)]",
             "[plus({*}int::T)]==[?plus({3}int::T)]                             % [noobj]",
+            // and a code pattern binds a run instruction by instruction
+            "[plus(1,2,3).mult(2)]==[?(plus({3}int::T).mult(int::T))]          % [plus(1,2,3).mult(2)]",
+            "[plus(1,2).mult(2)]==[?(plus({3}int::T).mult(int::T))]            % [noobj]",
             // a lst select keeps the slot its filter rejects, as for any value
             "[1]==[?(str::T)]                                                  % [noobj]",
     }, delimiter = '%', quoteCharacter = '^')
