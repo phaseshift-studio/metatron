@@ -67,7 +67,9 @@ An object can model several algebraic structures. `object::T>>theory` is a rec k
 instance at declaration, and each role holds a `!*` (`auto_from`) pointer to the *live* operation rather than a copy:
 the graph holds the references, and a role dereferences transparently on `>>` (`...>>theory>>ring>>add` yields the
 inst). The first example above is the `int` case in full: its theory rec declares a `ring` and the three constituent
-group/monoid instances. `theory::T` is the nominal super-type grouping them:
+group/monoid instances. `theory::T` is the nominal super-type grouping them. The theories are `/m`'s own types
+(`/m/theory`), which the core types and every instruction set's types declare their algebras over; the category renders
+them:
 
 | type                 | roles (fields)                     | what it asserts                                                                                                                                                                                  |
 |----------------------|------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

@@ -267,6 +267,94 @@ public class mInstSet extends AbstractInstSet {
             // misfit yields passes the union's A{?} range
             .predicate(union_(Arrays.stream(Law.values()).map(law -> (Obj) uri(law.name())).toList()).tryToInst())
             .create();
+    /**
+     * THE ALGEBRAIC THEORIES ARE /m's (Marko, 2026-11-08): the core types declare their algebras over them (int's ring,
+     * add_group, …), and every instruction set inherits them for its own types; the category instruction set keeps
+     * category theory (adjunctions, pullbacks, products, …). A theory is a named tuple of roles (role => op or element),
+     * and {@code theory::T} is their nominal super-type.
+     */
+    public static final Type THEORY_TYPE = TypeBuilder.build()
+            .tid(REC_TID)
+            .vid(THEORY_TID, "the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \\(\\mathrm{ring} \\mapsto \\{\\mathrm{add}, \\mathrm{mul}, \\mathrm{zero}, \\mathrm{one}\\}\\)")
+            //.isaPredicate(rec())
+            .create();
+    public static final Type RING_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(RING_THEORY_TID, "the theory of rings \\(\\langle R, +, \\cdot, 0, 1 \\rangle\\): \\(+\\) an abelian group, \\(\\cdot\\) a monoid, distributive on both sides: \\(a \\cdot (b + c) = a \\cdot b + a \\cdot c\\) and \\((a + b) \\cdot c = a \\cdot c + b \\cdot c\\)")
+            .isaPredicate(rec(
+                    uri(ADD), INST_TYPE,
+                    uri(MUL), INST_TYPE,
+                    uri(ZERO), ALL_TYPE,
+                    uri(ONE), ALL_TYPE))
+            .create();
+    public static final Type GROUP_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(GROUP_THEORY_TID, "the theory of groups \\(\\langle G, \\cdot, 1, {}^{-1} \\rangle\\): \\(g \\cdot g^{-1} = g^{-1} \\cdot g = 1\\)")
+            .isaPredicate(rec(
+                    uri(OP), INST_TYPE,
+                    uri(ID), ALL_TYPE,
+                    uri(INV), INST_TYPE))
+            .create();
+    public static final Type MONOID_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(MONOID_THEORY_TID, "the theory of monoids \\(\\langle M, \\cdot, 1 \\rangle\\): \\(m \\cdot 1 = 1 \\cdot m = m\\) and \\((m \\cdot n) \\cdot p = m \\cdot (n \\cdot p)\\)")
+            .isaPredicate(rec(
+                    uri(OP), INST_TYPE,
+                    uri(ID), ALL_TYPE))
+            .create();
+    public static final Type FIELD_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(FIELD_THEORY_TID, "the theory of fields \\(\\langle F, +, \\cdot, 0, 1, {}^{-1} \\rangle\\): a commutative ring where every non-\\(0\\) element has a multiplicative inverse, \\(x \\cdot x^{-1} = 1\\)")
+            .isaPredicate(rec(
+                    uri(ADD), INST_TYPE,
+                    uri(MUL), INST_TYPE,
+                    uri(ZERO), ALL_TYPE,
+                    uri(ONE), ALL_TYPE,
+                    uri(INV), INST_TYPE))
+            .create();
+    public static final Type RIG_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(RIG_THEORY_TID, "the theory of rigs (semirings) \\(\\langle S, +, \\cdot, 0, 1 \\rangle\\): an additive and a multiplicative monoid with \\(\\cdot\\) distributive over \\(+\\), and no additive inverses")
+            .isaPredicate(rec(
+                    uri(ADD), INST_TYPE,
+                    uri(MUL), INST_TYPE,
+                    uri(ZERO), ALL_TYPE,
+                    uri(ONE), ALL_TYPE))
+            .create();
+    public static final Type BOOLEAN_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(BOOLEAN_THEORY_TID, "the theory of Boolean algebras \\(\\langle B, \\lor, \\land, \\lnot, 0, 1 \\rangle\\): a complemented distributive lattice, \\(b \\lor \\lnot b = 1\\) and \\(b \\land \\lnot b = 0\\)")
+            .isaPredicate(rec(
+                    uri(OR), INST_TYPE,
+                    uri(AND), INST_TYPE,
+                    uri(NOT), INST_TYPE,
+                    uri(ZERO), ALL_TYPE,
+                    uri(ONE), ALL_TYPE))
+            .create();
+    public static final Type LATTICE_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(LATTICE_THEORY_TID, "the theory of lattices \\(\\langle L, \\sqcap, \\sqcup, \\bot, \\top \\rangle\\): every pair of elements has a meet and a join, bounded by \\(\\bot\\) and \\(\\top\\)")
+            .isaPredicate(rec(
+                    uri(MEET), INST_TYPE,
+                    uri(JOIN), INST_TYPE,
+                    uri(BOTTOM), ALL_TYPE,
+                    uri(TOP), ALL_TYPE))
+            .create();
+    public static final Type SEMILATTICE_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(SEMILATTICE_THEORY_TID, "the theory of semilattices \\(\\langle S, \\sqcup, 0 \\rangle\\): an idempotent commutative monoid (a single meet or join side of a lattice)")
+            .isaPredicate(rec(
+                    uri(OP), INST_TYPE,
+                    uri(ID), ALL_TYPE))
+            .create();
+    public static final Type NEAR_RING_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(NEAR_RING_THEORY_TID, "the theory of near-rings \\(\\langle N, +, \\cdot, 0 \\rangle\\): \\(+\\) a group, \\(\\cdot\\) a semigroup, one-sided distributivity, no multiplicative \\(1\\) (reserved for barrier types)")
+            .isaPredicate(rec(
+                    uri(ADD), INST_TYPE,
+                    uri(MUL), INST_TYPE,
+                    uri(ZERO), ALL_TYPE))
+            .create();
     public static final Type SPACE_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
@@ -479,6 +567,7 @@ public class mInstSet extends AbstractInstSet {
                                 "law::commutative      [-- a law: commutative is one of the union's labels --]",
                                 "law::not_a_law        [-- no law: the union names no such label          --]",
                                 "*/m/law/+             [-- every stored process law                       --]"),
+                        THEORY_TYPE, RING_THEORY_TYPE, GROUP_THEORY_TYPE, MONOID_THEORY_TYPE, FIELD_THEORY_TYPE, RIG_THEORY_TYPE, BOOLEAN_THEORY_TYPE, LATTICE_THEORY_TYPE, SEMILATTICE_THEORY_TYPE, NEAR_RING_THEORY_TYPE,
                         docWrap(REL_TYPE, "a directed binary poly coupling two objs",
                                 "a=>b",
                                 "a=>b=>c=>d       [-- a=>(b=>(c=>d)) --]",

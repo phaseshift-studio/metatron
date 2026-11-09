@@ -185,7 +185,8 @@ public final class mTypes {
                                 uri(ID), real(1.0d)),
                         MONOID_THEORY_TID, null))));
         // bool: a Boolean algebra — or=join(PLUS), and=meet(MULT), not=complement — a complemented distributive
-        // lattice and a rig (idempotent semiring) with bottom=false / top=true
+        // lattice and a rig (idempotent semiring) with bottom=false / top=true, with the monoid constituents spelled
+        // out: a theory refines no other, so each structure a carrier models is its own instance
         declare(BOOL_TYPE, rec(mutableMap(
                 uri("boolean"), rec(mutableMap(
                                 uri(OR), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
@@ -205,7 +206,15 @@ public final class mTypes {
                                 uri(JOIN), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
                                 uri(BOTTOM), bool(false),
                                 uri(TOP), bool(true)),
-                        LATTICE_THEORY_TID, null))));
+                        LATTICE_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                uri(ID), bool(false)),
+                        MONOID_THEORY_TID, null),
+                uri("mult_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
+                                uri(ID), bool(true)),
+                        MONOID_THEORY_TID, null))));
         // str: a monoid under concatenation (PLUS), identity ""
         declare(STR_TYPE, rec(mutableMap(
                 uri("concat_monoid"), rec(mutableMap(
@@ -253,6 +262,10 @@ public final class mTypes {
                                 uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID.zero())).tryToInst(),
                                 uri(INV), auto_from_(NEG_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
                         GROUP_THEORY_TID, null),
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(BRANCH_INST_TID).tryToInst(),
+                                uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID.zero())).tryToInst()),
+                        MONOID_THEORY_TID, null),
                 uri("mult_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                 uri(ID), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
