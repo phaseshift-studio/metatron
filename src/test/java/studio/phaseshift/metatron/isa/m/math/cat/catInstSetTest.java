@@ -946,10 +946,13 @@ public class catInstSetTest extends AbstractInstSetTest {
     /**
      * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-08) — {@link Law.Helper#equations} answers {@code [lhs => rhs]}
      * over the op of every instruction whose claim states the law, one hole per argument slot pinning the pair's operands
-     * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. Each row runs
-     * the law's whole table over a bare chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level,
-     * so {@code plus(3).plus(3)} folds here under bool's idempotent plus, and only the carrier's law stops it in a rewrite
-     * ({@link #testIdempotent}). Each row: the law % the chain % the chain the table leaves.
+     * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. The theories
+     * add {@link Law.Helper#units} ({@code op(e) ⇝ ε} and composition's {@code id() ⇝ ε}) and
+     * {@link Law.Helper#inverses} ({@code f(a)·g(a) ⇝ ε}). Each row runs a whole table over a bare
+     * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
+     * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
+     * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the table % the
+     * chain % the chain the table leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -963,10 +966,25 @@ public class catInstSetTest extends AbstractInstSetTest {
             "monoidic    % sum().sum().plus(1)           % sum().plus(1)",
             // a law with no local equation has no table
             "poset       % is(gt(1)).is(gt(1))           % is(gt(1)).is(gt(1))",
+            "units       % plus(1).plus(0).mult(1).plus(2)  % plus(1).plus(2)",
+            "units       % plus(\"\").plus(false).id().neg()  % neg()",
+            // a match type-tests the operand, so a computed one passes as the unit here; the rewrite compares it
+            // (testDerivationContraction folds plus(3.neg()) instead)
+            "units       % plus(map(3).neg())            % noobj",
+            // end is the additive group's id, composition's zero, never the identity morphism
+            "units       % end()                         % end()",
+            "inverses    % plus(3).minus(3).plus(2)      % plus(2)",
+            "inverses    % mult(2).div(2).neg()          % neg()",
+            "inverses    % plus(3).minus(4)              % plus(3).minus(4)",
     }, delimiter = '%')
-    void testALawsEquationsAreData(final String law, final String chain, final String expected) {
+    void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
-        for (final Rec rule : Law.Helper.equations(Law.valueOf(law)))
+        final List<Rec> rules = switch (table) {
+            case "units" -> Law.Helper.units();
+            case "inverses" -> Law.Helper.inverses();
+            default -> Law.Helper.equations(Law.valueOf(table));
+        };
+        for (final Rec rule : rules)
             out = Call.Helper.update(out, rule);
         checkEquality(LOG, ObjmtronSerializer.parse(expected), code(out).tryToInst(), true);
     }
@@ -982,6 +1000,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.neg{2}().neg{2}()              % start(5).neg{2}().neg{2}()              % {4}5",
             "\"ab\".ucase().ucase{2}()          % start(\"ab\").ucase().ucase{2}()          % {2}\"AB\"",
             "6.plus{2}(3.neg())               % start(6).plus{2}(3.neg())               % {2}3",
+            "5.plus{2}(0)                     % start(5).plus{2}(0)                     % {2}5",
             // and an unscaled run beside a scaled one still folds
             "5.neg().neg().neg{2}()           % start(5).neg{2}()                       % {2}-5",
     }, delimiter = '%')
