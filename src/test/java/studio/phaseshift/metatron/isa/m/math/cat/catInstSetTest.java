@@ -954,9 +954,9 @@ public class catInstSetTest extends AbstractInstSetTest {
      * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-08) — {@link Law.Helper#equations} answers {@code [lhs => rhs]}
      * over the op of every instruction whose claim states the law, one hole per argument slot pinning the pair's operands
      * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. The theories
-     * add {@link Law.Helper#units} (monoid_theory's {@code op(id) ⇝ ε} as each monoid instance binds it, code's
-     * {@code id() ⇝ ε} among them since composition is adjacency) and
-     * {@link Law.Helper#inverses} ({@code f(a)·g(a) ⇝ ε}). Each row runs a whole table over a bare
+     * add their rules as each instance binds them ({@link Law.Helper#rules}): monoid_theory's {@code op(id) ⇝ ε}
+     * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
+     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. Each row runs a whole table over a bare
      * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
      * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
      * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the table % the
@@ -987,12 +987,17 @@ public class catInstSetTest extends AbstractInstSetTest {
             "inverses    % plus(3).minus(3).plus(2)      % plus(2)",
             "inverses    % mult(2).div(2).neg()          % neg()",
             "inverses    % plus(3).minus(4)              % plus(3).minus(4)",
+            // a⁻¹·a = 1 as well as a·a⁻¹ = 1: the group states both sides
+            "inverses    % minus(3).plus(3).plus(2)      % plus(2)",
+            "inverses    % div(2).mult(2)                % noobj",
+            // an involution's pair is the involution law's, not the group's
+            "inverses    % neg().neg()                   % neg().neg()",
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
         final List<Rec> rules = switch (table) {
-            case "units" -> Law.Helper.units();
-            case "inverses" -> Law.Helper.inverses();
+            case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
+            case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
             default -> Law.Helper.equations(Law.valueOf(table));
         };
         for (final Rec rule : rules)
@@ -1049,7 +1054,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     /**
      * A THEORY'S LAWS AND RULES ARE ITS OWN DATA (Marko, 2026-11-08) — its type states them beside its roles: the
      * monoid's battery and its identity rule {@code op(id) ⇝ ε}, the one rule every monoid instance binds
-     * ({@link Law.Helper#units}), and the ring's battery with no rule. They are not declarations about the theory, so
+     * ({@link Law.Helper#rules}), the ring's battery with no rule, and the group's two inverse rules
+     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε} over a named operand. They are not declarations about the theory, so
      * nothing stages one at its {@code ?decq}; and they are the theory's, never an instance's, so a monoid built at
      * runtime with only its roles is still a monoid.
      */
@@ -1061,6 +1067,9 @@ public class catInstSetTest extends AbstractInstSetTest {
         checkEquality(LOG, ObjmtronSerializer.parse("[monoidic,unit,commutative,involution,left_distributive,right_distributive]"),
                 TheoryHelper.stated(RING_THEORY_TID, LAW), true);
         checkEquality(LOG, noobj(), TheoryHelper.stated(RING_THEORY_TID, REWRITE), true);
+        // the role names stay free: built at boot, before inv names a registered instruction, so the rule reads as written
+        assertEquals("[[op(<#>::T@a).op(inv(<#>::T@a))=>],[op(inv(<#>::T@a)).op(<#>::T@a)=>]]",
+                TheoryHelper.stated(GROUP_THEORY_TID, REWRITE).toString(), "the group states a·a⁻¹ = 1 and a⁻¹·a = 1 over a named operand");
         assertTrue(PendingWrites.writes().stream().noneMatch(write -> write.address().equals(PendingWrites.decq(MONOID_THEORY_TID))),
                 "nothing declares the monoid's laws or rules: they are its type's");
         final Rec monoid = rec(mutableMap(uri(OP), instB(PLUS_INST_TID, lst()), uri(ID), jnt(0)), MONOID_THEORY_TID, null);
@@ -1096,7 +1105,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     private static Obj unitsLeave(final String chain) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
-        for (final Rec rule : Law.Helper.units())
+        for (final Rec rule : Law.Helper.rules(MONOID_THEORY_TID))
             out = Call.Helper.update(out, rule);
         return code(out).tryToInst();
     }

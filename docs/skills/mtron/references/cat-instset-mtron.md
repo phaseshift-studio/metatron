@@ -261,7 +261,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
 | `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
-| `inverse_cancellation`   | `analysis.inverse`                                                                          | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
+| `inverse_cancellation`   | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
@@ -287,7 +287,11 @@ $x + \texttt{''}$ (str), $x \cdot \langle\rangle$ (uri) and $x \cdot .$ (machine
 adjacency in a chain, so code's `mul_monoid` binds $\mathrm{id}$ alone: the identity *operation* drops out. A theory
 refines no other, so the rule reaches only monoid instances, and code's `add_monoid` (whose `branch` takes lanes) binds
 none yet. The theories are `/m`'s, so `theory_unit_removal` is `/m`'s rewrite and runs on the base path too, with or
-without the category. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
+without the category. The group states its inverse rules the same way, on both sides and over a named operand:
+`op(a)·op(inv(a)) ⇝ ε` and `op(inv(a))·op(a) ⇝ ε`. The compound `op(inv(a))` binds the instruction *defined* that
+way, so int's `add_group` gives `plus(a)·minus(a)` and `minus(a)·plus(a)` (`minus ≡ plus∘neg`), and real's
+`mul_group` gives `mult·div` and `div·mult` (`div ≡ mult∘inv`); `inverse_cancellation` fires only where the chain's
+carrier derives that inverse. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
 `conjugate` — not only the additive group's.
 
 ```mtron_pre

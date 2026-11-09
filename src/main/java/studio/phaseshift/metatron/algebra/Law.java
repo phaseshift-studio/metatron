@@ -389,26 +389,25 @@ public enum Law {
 
         /**
          * THE CLAIMS SNAPSHOT — the equations the registered instructions' {@code ?decq} claims state: each defining
-         * equation keyed by the address it is declared at, each law's local equations ({@link #equations}) and the units
-         * their carriers' theories declare ({@link #units}), with each instruction's claim as the walk read it
+         * equation keyed by the address it is declared at, each law's local equations ({@link #equations}) and each
+         * theory's rules as its carriers' instances bind them ({@link #rules}), with each instruction's claim as the walk read it
          * ({@link Claim}, keyed by its tid), and the staging revision and the claim writes it was taken at. Retaken when
          * a builder stages anything (the revision moves), when a {@code ?decq} write lands ({@link #evict}), or while
          * the machine was not yet up; a retake re-reads only the claims a change can have reached ({@link #claims}).
          */
-        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations, List<Rec> units,
-                              List<Map.Entry<Inst, Rec>> rows, Map<fURI, Claim> read) {
+        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations, Map<fURI, List<Rec>> rules,
+                              Map<fURI, Claim> read) {
         }
 
         /**
          * AN INSTRUCTION'S CLAIM AS A WALK READ IT — whether the store answered with the instruction's own claim (an
          * ancestor's, which a read falls back to by subsumption, is not its own), and what the answer states for it: its
-         * defining equation, its row ({@link #declaredRow(fURI, Obj)}) and its local equations by law, noobj (none) when
-         * it states none.
+         * defining equation and its local equations by law, noobj (none) when it states none.
          */
-        private record Claim(Inst inst, boolean own, Rec derivation, Rec row, Map<Law, Rec> equations) {
+        private record Claim(Inst inst, boolean own, Rec derivation, Map<Law, Rec> equations) {
         }
 
-        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of(), Map.of());
+        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of());
         private static volatile List<PendingWrites.Write> CLAIMS_AT = null;
         private static volatile long CLAIMS_SEEN = -1;
         private static volatile boolean CLAIMS_LOADED = false;
@@ -425,25 +424,16 @@ public enum Law {
         private static final Set<fURI> CLAIMED = new HashSet<>();
 
         /**
-         * The inverse equations ({@link #inverses}) and the snapshot they were read off: an inverse is the carrier's
-         * algebra, which reads the snapshot's derivations, so they are taken after it rather than inside its walk.
-         */
-        private static volatile List<Rec> INVERSES = List.of();
-        private static volatile Claims INVERSES_FOR = null;
-
-        /**
          * A BOOT IS A FRESH WORLD — forget the claims snapshot ({@code BootLoader.resetMemos}, before any set mounts).
          */
         public static void reset() {
             synchronized (CLAIMED) {
-                CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of(), Map.of());
+                CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of());
                 CLAIMS_AT = null;
                 CLAIMS_SEEN = -1;
                 CLAIMS_LOADED = false;
                 EVICTED.clear();
                 CLAIMED.clear();
-                INVERSES = List.of();
-                INVERSES_FOR = null;
             }
         }
 
@@ -531,7 +521,6 @@ public enum Law {
                 final Map<fURI, Rec> derivations = new LinkedHashMap<>();
                 final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
                 final Set<fURI> carriers = new LinkedHashSet<>();
-                final List<Map.Entry<Inst, Rec>> rows = new ArrayList<>();
                 if (loaded)
                     for (final Inst inst : Machine.current().instset().insts()) {
                         if (null == inst.tid())
@@ -551,22 +540,21 @@ public enum Law {
                                 if (declares(declared, law))
                                     stated.put(law, rec(code(List.of(op, op)), code(Law.involution == law ? List.<Inst>of() : List.of(op))));
                             claim = new Claim(inst, claimant.isInst() && Inst.Helper.operationTid(claimant.tid()).equals(operation),
-                                    stored.isRec() ? declaredDerivation(stored.asRec()) : noobjRec(), declaredRow(inst.tid(), stored), stated);
+                                    stored.isRec() ? declaredDerivation(stored.asRec()) : noobjRec(), stated);
                         }
                         read.put(inst.tid(), claim);
                         if (!claim.derivation().isNoObj())
                             derivations.putIfAbsent(operation, claim.derivation());
-                        if (!claim.row().isNoObj())
-                            rows.add(Map.entry(inst, claim.row()));
                         claim.equations().forEach((law, rule) -> equations.computeIfAbsent(law, key -> new LinkedHashSet<>()).add(rule));
                     }
                 final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
                 equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
                 // THE THEORIES' RULES, FILLED IN BY EVERY INSTANCE A CARRIER DECLARES: a theory states its rules in its own
                 // role names (monoid_theory's op(id) ⇝ ε) and an instance of that theory binds them (int's add_monoid
-                // gives plus(0) ⇝ ε). A theory refines no other, so an instance answers only its own theory's rules
+                // gives plus(0) ⇝ ε). A theory refines no other, so an instance answers only its own theory's rules, kept
+                // by theory: a rewrite reads one theory's table and gates it its own way
                 final Map<fURI, List<Obj>> stated = new HashMap<>();
-                final Set<Rec> units = new LinkedHashSet<>();
+                final Map<fURI, Set<Rec>> bound = new LinkedHashMap<>();
                 for (final fURI carrier : carriers)
                     for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values()) {
                         if (!block.isRec() || null == block.asRec().tid())
@@ -576,13 +564,15 @@ public enum Law {
                             return rewrite.isLst() ? rewrite.lstValue() : List.of();
                         })) {
                             final Rel equation = rule.isRec() ? rule.asRec().<Rel>elements().findFirst().orElse(null) : null;
-                            final List<Inst> lhs = null == equation ? null : bind(equation.first().asCall().insts(), block.asRec());
-                            final List<Inst> rhs = null == equation ? null : bind(equation.second().asCall().insts(), block.asRec());
+                            final List<Inst> lhs = null == equation ? null : bind(equation.first().asCall().insts(), block.asRec(), derivations);
+                            final List<Inst> rhs = null == equation ? null : bind(equation.second().asCall().insts(), block.asRec(), derivations);
                             if (null != lhs && null != rhs && !lhs.isEmpty())
-                                units.add(rec(code(lhs), code(rhs)));
+                                bound.computeIfAbsent(block.asRec().tid().basePath(), theory -> new LinkedHashSet<>()).add(rec(code(lhs), code(rhs)));
                         }
                     }
-                final Claims snapshot = new Claims(derivations, rules, List.copyOf(units), List.copyOf(rows), read);
+                final Map<fURI, List<Rec>> theories = new LinkedHashMap<>();
+                bound.forEach((theory, rule) -> theories.put(theory, List.copyOf(rule)));
+                final Claims snapshot = new Claims(derivations, rules, theories, read);
                 CLAIMS = snapshot;
                 CLAIMS_AT = revision;
                 CLAIMS_SEEN = written;
@@ -597,13 +587,33 @@ public enum Law {
          * its literal), and an argument naming a role is that role's value, so monoid's {@code op(id)}, bound by int's
          * {@code add_monoid}, is {@code plus(0)}. COMPOSITION IS ADJACENCY in a chain ({@code .} is compose), so an
          * operation bound to {@code compose} hands on its operations in place: code's {@code mul_monoid} gives
-         * {@code id()}. Null when the instance leaves a role the rule names unbound (a pointer whose target is not
-         * registered), or binds one to {@code branch}, whose operands are lanes rather than a chain: code's
-         * {@code add_monoid} means {@code branch(a, end) = a}, which no chain rule spells yet.
+         * {@code id()}. AN OPERATION APPLIED TO ANOTHER ROLE'S OPERATION, {@code op(inv(a))}, is the instruction DEFINED
+         * that way, read off the derivations over the operation's carrier: group's {@code op(a)·op(inv(a))}, bound by int's
+         * {@code add_group}, is {@code plus(a)·minus(a)}, since {@code minus ≡ plus∘neg}. Null when the instance leaves a
+         * role the rule names unbound (a pointer whose target is not registered, an inverse that is no operation), when
+         * nothing defines the composite, or when a role binds {@code branch}, whose operands are lanes rather than a chain:
+         * code's {@code add_monoid} means {@code branch(a, end) = a}, which no chain rule spells yet.
          */
-        private static List<Inst> bind(final List<Inst> insts, final Rec instance) {
+        private static List<Inst> bind(final List<Inst> insts, final Rec instance, final Map<fURI, Rec> derivations) {
             final List<Inst> out = new ArrayList<>();
             for (final Inst inst : insts) {
+                final Obj op = instance.jvm().containsKey(uri(inst.tid().name())) ? instance.at(f(inst.tid().name())) : inst;
+                if (!op.isInst() || BRANCH_INST_TID.basePath().equals(op.asInst().tid().basePath()))
+                    return null;
+                final Obj nested = 1 == inst.args().count() && inst.arg(0).isInst() ? inst.arg(0) : noobj();
+                if (nested.isInst() && instance.jvm().containsKey(uri(nested.asInst().tid().name()))) {
+                    final Obj inner = instance.at(f(nested.asInst().tid().name()));
+                    if (!inner.isInst())
+                        return null;
+                    final fURI form = derivations.keySet().stream()
+                            .filter(tid -> sameCarrier(tid, op.asInst().tid()) && defined(derivations.get(tid), op.asInst().tid(), inner.asInst().tid()))
+                            .findFirst()
+                            .orElse(null);
+                    if (null == form)
+                        return null;
+                    out.add(instB(form.basePath(), nested.asInst().args()));
+                    continue;
+                }
                 final List<Obj> args = new ArrayList<>();
                 for (final Obj arg : inst.args().lstValue()) {
                     final Obj value = arg.isUri() && instance.jvm().containsKey(arg) ? instance.at(arg.uriValue()) : arg;
@@ -611,9 +621,6 @@ public enum Law {
                         return null;
                     args.add(value);
                 }
-                final Obj op = instance.jvm().containsKey(uri(inst.tid().name())) ? instance.at(f(inst.tid().name())) : inst;
-                if (!op.isInst() || BRANCH_INST_TID.basePath().equals(op.asInst().tid().basePath()))
-                    return null;
                 if (!COMPOSE_INST_TID.basePath().equals(op.asInst().tid().basePath()))
                     out.add(instB(op.asInst().tid().basePath(), lst(args)));
                 else
@@ -1169,38 +1176,16 @@ public enum Law {
         }
 
         /**
-         * THE UNIT EQUATIONS AS DATA — monoid_theory's {@code op(id) ⇝ ε}, stated once in the theory type itself
-         * ({@code rewrite}, its own data) and bound by every monoid instance a carrier declares ({@link #bind}): {@code plus(0)},
-         * {@code mult(1)}, {@code plus("")}, …, and code's {@code id()}, since composition is adjacency. A rewrite compares
-         * the operand, which a match only type-tests. Read off the carriers of the registered instructions ({@link #claims}).
+         * A THEORY'S RULES, BOUND — the rules the theory states in its own type ({@link TheoryHelper#stated}), filled in by
+         * every instance of it a carrier declares ({@link #bind}). monoid_theory's {@code op(id) ⇝ ε} gives {@code plus(0)},
+         * {@code mult(1)}, {@code plus("")}, …, and code's {@code id()}, since composition is adjacency; group_theory's
+         * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε} give int's {@code plus·minus} and {@code minus·plus},
+         * and real's {@code mult·div} and {@code div·mult}. The rules are op-level, so a rewrite gates each at the chain's
+         * carrier: a unit compares its operand, which a match only type-tests, and an inverse pair is the inverse the
+         * carrier derives. Read off the carriers of the registered instructions ({@link #claims}).
          */
-        public static List<Rec> units() {
-            return claims().units();
-        }
-
-        /**
-         * THE INVERSE EQUATIONS AS DATA — {@code f(a)·g(a) ⇝ ε} for every registered instruction whose own carrier's
-         * algebra derives an inverse {@code g} ({@link #lawsOf}): int's {@code plus·minus}, real's {@code mult·div}. A
-         * rewrite still reads the inverse at the chain's carrier before it cancels. Taken once per snapshot, after it,
-         * from the rows its walk read.
-         */
-        public static List<Rec> inverses() {
-            final Claims claims = claims();
-            if (claims == INVERSES_FOR)
-                return INVERSES;
-            final Set<Rec> inverses = new LinkedHashSet<>();
-            // each instruction's row as the walk read it, never the store again: lawsOf without its read
-            for (final Map.Entry<Inst, Rec> row : claims.rows()) {
-                final fURI tid = row.getKey().tid();
-                final fURI inverse = TheoryHelper.roleAddress(algebraic(tid, row.getValue(), algebraOf(tid.dom())), INVERSE);
-                if (null == inverse)
-                    continue;
-                final Inst op = op(row.getKey());
-                inverses.add(rec(code(List.of(op, instB(inverse.basePath(), op.args()))), code(List.<Inst>of())));
-            }
-            INVERSES = List.copyOf(inverses);
-            INVERSES_FOR = claims;
-            return INVERSES;
+        public static List<Rec> rules(final fURI theory) {
+            return claims().rules().getOrDefault(theory.basePath(), List.of());
         }
 
         /**
