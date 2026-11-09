@@ -261,6 +261,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         final char startChar = uriString.charAt(0);
         return furi.hasTemplates() ||
                 furi.hasBranches() ||
+                // a value that leads with its span: bare, a leading {n} is the obj coefficient ({2}/a/b is two
+                // /a/b), and before a vid it is the point, so only <{2}/a/b> reads back as one uri spanning 2
+                !furi.b().isOne() ||
                 CommonUtil.isInt(uriString.substring(0, 1)) ||
                 uriString.contains(" ") ||
                 startChar == 'T' ||
@@ -637,7 +640,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         // result (inst::T, union(…), #::T, uri::T) unclickable while the plain uri values beside it
         // were fine
         final fURI name = Machine.loaded() ? Machine.current().memory().redirect(type.tid(), false) : type.tid();
-        sb.append(this.writeUri(name.toUri())).append("::T");
+        // a type is {span}type{point}, and before ::T a leading {n} IS the span (mParser.m_type_prefix), so the span
+        // is written as that prefix: inside the name it would be bracketed, as a value that leads with its span is
+        if (!name.b().isOne())
+            sb.append('{').append(name.b()).append('}');
+        sb.append(this.writeUri(name.b(cInt.ONE()).toUri())).append("::T");
         if (type.hasPredicate()) {
             if (type.isIsaPredicate()) {
                 sb.append("[?");
