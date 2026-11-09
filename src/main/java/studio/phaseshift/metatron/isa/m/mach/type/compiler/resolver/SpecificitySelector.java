@@ -129,6 +129,9 @@ public class SpecificitySelector extends MRec implements Selector {
         final List<Inst> viable = fetched.stream()
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
+                // a declared span is a run of args: each candidate is read at the call's shape, or is no candidate
+                .map(i -> Inst.Helper.unfold(i, userInst))
+                .filter(Objects::nonNull)
                 .filter(i -> (userInst.tid().basePath().equals(AS_INST_TID) && 1 == i.args().count() && userInst.args().count() == 1) ||
                         (i.tid().hasQ(MONAD_IN) || i.tid().hasQ(MONAD_OUT)) ||
                         this.checkArgs(userInst.args(), i.args()))

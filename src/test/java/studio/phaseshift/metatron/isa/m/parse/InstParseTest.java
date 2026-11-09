@@ -52,6 +52,12 @@ public class InstParseTest extends AbstractMetatronTest {
             "|(abc?int<=int(lst::T[],int::T[]){ mult(*<0>>-).plus(*<1>) }).to(abc)          % 2.abc([3],4)              % 10",
             "|(abc?int<=int(int::T[],lst::T[]){ mult(*<0>).plus(*<1>>-) }).to(abc)          % 2.abc(3,[4])              % 10",
             "|(abc?int<=int(int::T[],int::T[]){ mult(*<0>).plus(*<1>) }).to(abc)            % 2.abc(3,4)                % 10",
+            // a declared span is a run of args, each read by its place: {*} takes any number of ints, {3} exactly three
+            "|(abc?int<=int({*}int::T){ mult(*<0>).plus(*<1>) }).to(abc)                    % 2.abc(3,4)                % 10",
+            "|(abc?int<=int({*}int::T){ mult(*<0>).plus(*<1>) }).to(abc)                    % 2.abc(3,4,5)              % 10",
+            "|(abc?int<=int({3}int::T){ mult(*<0>).plus(*<1>).plus(*<2>) }).to(abc)         % 2.abc(3,4,5)              % 15",
+            "|(abc?int<=int(int::T,{2}int::T){ mult(*<0>).plus(*<1>).plus(*<2>) }).to(abc)  % 2.abc(3,4,5)              % 15",
+            "|(abc?int<=int({*}int::T){ mult(*<0>).plus(*<1>) }).to(abc)                    % 2.abc(plus(1),plus(2))    % 10",
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testInstDefinitions(final String definition, final String usage, final String expected) {

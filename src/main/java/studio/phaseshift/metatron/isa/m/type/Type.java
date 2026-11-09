@@ -779,27 +779,61 @@ public interface Type extends Obj {
          */
         public static Set<Integer> runs(final List<? extends Obj> values, final List<? extends Obj> entries) {
             Set<Integer> reached = Set.of(0); // the indices the entries so far can end at
-            for (final Obj entry : entries) {
-                final cInt span = entry.tid().b();
-                final Obj slot = entry.tid(entry.tid().b(null)); // one index of the run: the entry without its span
-                final long least = Math.max(0L, null == span.min() ? 0L : span.min());
-                final Set<Integer> next = new TreeSet<>();
-                for (final int start : reached) {
-                    if (start == values.size() && entry.c().isZeroable())
-                        next.add(start); // a missing trailing index, as Lst.test allows it
-                    if (start < values.size() && !values.get(start).tid().b().isOne() && values.get(start).test(entry))
-                        next.add(start + 1);
-                    if (null != span.max() && span.max() < least)
-                        continue;
-                    int end = start;
-                    while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(slot))
-                        end++;
-                    for (long k = least; start + k <= end; k++)
-                        next.add(start + (int) k);
-                }
-                reached = next;
-            }
+            for (final Obj entry : entries)
+                reached = run(values, entry, reached);
             return reached;
+        }
+
+        /**
+         * The entries laid over the values, one for each value: a value gets the entry whose run claims it, without
+         * its span, so {@code f({*}int::T)} called as {@code f(1,2,3)} reads {@code f(int::T,int::T,int::T)} (Marko,
+         * 2026-11-08: args unfold). A spanned type taken whole keeps the entry, an entry whose run claims nothing has no
+         * place, and an earlier entry claims as much as it can. Null when no runs of the entries claim every value.
+         */
+        public static List<Obj> unfold(final List<? extends Obj> values, final List<? extends Obj> entries) {
+            final List<Set<Integer>> reached = new ArrayList<>(List.of(Set.of(0))); // reached.get(e): where entry e can start
+            for (final Obj entry : entries)
+                reached.add(run(values, entry, reached.getLast()));
+            if (!reached.getLast().contains(values.size()))
+                return null;
+            final Obj[] unfolded = new Obj[values.size()];
+            int end = values.size();
+            for (int e = entries.size() - 1; e >= 0; e--) {
+                final Obj entry = entries.get(e);
+                final Obj slot = entry.tid(entry.tid().b(null));
+                final int stop = end;
+                end = reached.get(e).stream().filter(start -> start <= stop && run(values, entry, Set.of(start)).contains(stop))
+                        .max(Integer::compare).orElseThrow();
+                for (int v = end; v < stop; v++)
+                    unfolded[v] = values.get(v).test(slot) ? slot : entry;
+            }
+            return new ArrayList<>(Arrays.asList(unfolded));
+        }
+
+        /**
+         * Where one entry's run can end, from each of the starts: k values on, k in its span, every one holding the
+         * entry without its span; one value on for a spanned type that tests the entry whole; and right where it
+         * starts at the end of the values, when its point admits zero (a missing trailing index, as Lst.test allows).
+         */
+        private static Set<Integer> run(final List<? extends Obj> values, final Obj entry, final Set<Integer> starts) {
+            final cInt span = entry.tid().b();
+            final Obj slot = entry.tid(entry.tid().b(null)); // one index of the run: the entry without its span
+            final long least = Math.max(0L, null == span.min() ? 0L : span.min());
+            final Set<Integer> next = new TreeSet<>();
+            for (final int start : starts) {
+                if (start == values.size() && entry.c().isZeroable())
+                    next.add(start);
+                if (start < values.size() && !values.get(start).tid().b().isOne() && values.get(start).test(entry))
+                    next.add(start + 1);
+                if (null != span.max() && span.max() < least)
+                    continue;
+                int end = start;
+                while (end < values.size() && (null == span.max() || end - start < span.max()) && values.get(end).test(slot))
+                    end++;
+                for (long k = least; start + k <= end; k++)
+                    next.add(start + (int) k);
+            }
+            return next;
         }
 
         /**

@@ -71,6 +71,9 @@ public class FirstFindSelector extends MRec implements Selector {
         return this.fetchCandidates(lhs, userInst)
                 .filter(Obj::isInst)
                 .map(Obj::asInst)
+                // a declared span is a run of args: each candidate is read at the call's shape, or is no candidate
+                .map(i -> Inst.Helper.unfold(i, userInst))
+                .filter(Objects::nonNull)
                 .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isObjInst() || (i.dom().baseTypeID().equals(M_ISA_INST_TID)))
                 .map(i -> this.hint(Inst.Helper.unaddressed(i), userInst))

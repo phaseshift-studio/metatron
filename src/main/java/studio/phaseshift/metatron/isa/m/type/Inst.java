@@ -622,6 +622,25 @@ public interface Inst extends Call {
         }
 
         /**
+         * A DECLARED SPAN IS A RUN OF ARGS (Marko, 2026-11-08: args unfold, so {@code plus({2}str::T)} is
+         * {@code plus(str::T,str::T)}): the declaration read at the call's shape, one declared arg for each arg the call
+         * holds ({@link Type.Helper#unfold}), with the tid's {@code args} signed to agree. Every positional reading after
+         * it (a selector's pre-filter, {@link #admitsArgs}, {@link #bindGenerics}, {@link #resolveArgs}) is then the one
+         * it always was. A declaration that spans nothing, or a call that is not ordered, is the declaration itself.
+         *
+         * @return the declaration at the call's shape, or null when no runs of its args claim the call's args
+         */
+        public static Inst unfold(final Inst declaration, final Inst call) {
+            if (!declaration.args().isLst() || !call.args().isLst() || declaration.args().lstValue().stream().allMatch(arg -> arg.tid().b().isOne()))
+                return declaration;
+            final List<Obj> unfolded = Type.Helper.unfold(call.args().lstValue(), declaration.args().lstValue());
+            if (null == unfolded)
+                return null;
+            final Inst shaped = declaration.args(lst(unfolded));
+            return declaration.tid().hasQ(ARGS) ? fullSignature(shaped) : shaped;
+        }
+
+        /**
          * The inst's address for origin context in fail messages: the vid if
          * it is a clean full address (no query), otherwise the tid base with
          * the vid's index appended ("plus@1" — the inst plus its slot in the

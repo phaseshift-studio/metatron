@@ -226,7 +226,9 @@ public interface Code extends Call {
                 return null;
             final Map<fURI, Obj> names = new LinkedHashMap<>();
             for (int i = 0; i < users.size(); i++) {
-                if (!users.get(i).test(patterns.get(i)) || null == Inst.Helper.bindGenerics(noobj(), patterns.get(i), users.get(i), generics, names))
+                // a span in the pattern is a run of args: it binds at the user's shape, as a declaration does at a call's
+                final Inst pattern = Inst.Helper.unfold(patterns.get(i), users.get(i));
+                if (null == pattern || !users.get(i).test(patterns.get(i)) || null == Inst.Helper.bindGenerics(noobj(), pattern, users.get(i), generics, names))
                     return null;
             }
             return names.keySet().containsAll(declared) ? names : null;

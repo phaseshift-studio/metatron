@@ -195,6 +195,42 @@ public class InstTest extends AbstractObjTest {
     }
 
     /**
+     * A DECLARED SPAN IS A RUN OF ARGS (Marko, 2026-11-08: args unfold). A declaration is read at the call's shape, one
+     * declared arg for each arg the call holds, and a call that no runs of the declared args claim is refused (null).
+     * Each row: the declaration % the call % the declared args at the call's shape, or null.
+     */
+    @ParameterizedTest
+    @CsvSource(delimiter = '%', value = {
+            "abc({*}int::T)              % abc(3,4,5)              % abc(int::T,int::T,int::T)",
+            "abc({*}int::T)              % abc()                   % abc()",
+            "abc({3}int::T)              % abc(3,4,5)              % abc(int::T,int::T,int::T)",
+            "abc({3}int::T)              % abc(3,4)                % null",
+            "abc({3}int::T)              % abc(3,4,5,6)            % null",
+            "abc({3}int::T)              % abc(3,'a',5)            % null",
+            "abc(int::T,{2}str::T)       % abc(3,'a','b')          % abc(int::T,str::T,str::T)",
+            "abc(int::T,{2}str::T)       % abc(3,'a')              % null",
+            "abc({?}int::T,{2}str::T)    % abc('a','b')            % abc(str::T,str::T)",
+            "abc({?}int::T,{2}str::T)    % abc(3,'a','b')          % abc(int::T,str::T,str::T)",
+            "abc({*}int::T,str::T)       % abc(1,2,'a')            % abc(int::T,int::T,str::T)",
+            "abc({*}int::T)              % abc(plus(1),plus(2))    % abc(int::T,int::T)",
+            // a declaration that spans nothing is the declaration itself
+            "abc(int::T,int::T)          % abc(3,4)                % abc(int::T,int::T)",
+    })
+    public void testADeclaredSpanIsReadAtTheCallsShape(final String declaration, final String call, final String expected) {
+        final Inst callInst = ObjmtronSerializer.parse(call.trim());
+        final Inst unfolded = Inst.Helper.unfold(ObjmtronSerializer.parse(declaration.trim()), callInst);
+        if ("null".equals(expected.trim()))
+            assertNull(unfolded, () -> String.format("%s was read at the shape of %s: %s", declaration, call, unfolded));
+        else {
+            assertNotNull(unfolded, () -> String.format("%s refused %s", declaration, call));
+            assertEquals(ObjmtronSerializer.<Inst>parse(expected.trim()).args().lstValue().stream().map(Obj::tid).toList(),
+                    unfolded.args().lstValue().stream().map(Obj::tid).toList());
+            // the tid's declared args agree with the shape, so the resolution gate reads it as the call's
+            assertTrue(Inst.Helper.admitsArgs(unfolded, callInst), () -> String.format("%s does not admit %s", unfolded, call));
+        }
+    }
+
+    /**
      * HOW A GENERIC BINDS, one row per situation, read top to bottom. A generic is an all-caps name ({@code A},
      * {@code B}): a bare {@code A::T} is unbounded, and {@code X::T@A} declares it as {@code X}. The binder threads ONE
      * binding through a sequence of candidates (a code pattern is one signature), seeds it from the declarations first,
