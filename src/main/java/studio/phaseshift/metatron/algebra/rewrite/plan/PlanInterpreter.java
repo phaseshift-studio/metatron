@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.IntPredicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -662,68 +661,24 @@ public final class PlanInterpreter {
 
     /**
      * The unit law (local, no distribution): an operation applied to its own theory identity drops out, and a
-     * bare identity operation is the identity morphism — remove every such instruction. The theory roles are
-     * read from {@code object::T.theory}, so the one rule covers every declared monoid/group/ring/…
+     * bare identity operation is the identity morphism — the equations {@link Law.Helper#units} states, read from
+     * {@code object::T.theory}, so the one rule set covers every declared monoid/group/ring/…
+     * <p>
+     * THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED, one rule at a time: a match is a type test, under which a
+     * computed operand passes by its range ({@code plus(map(3).neg())} would pass as {@code plus(0)}, and
+     * {@code derivation_contraction} would never see it), so the run's operands must equal the unit's. Only
+     * composition's identity is one: the additive group's {@code id} is end, composition's zero, and taking it for the
+     * identity turned {@code 5.end()} into {@code 5}. A lone instruction is a selector (a payload), not a morphism to
+     * collapse, so the bare identity stays alone; a sole unit such as {@code [plus(0)]} still drops.
      */
     private static Code unitRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (insts.isEmpty())
-            return code;
-        final Map<Type, Rec> laws = new HashMap<>();
-        // a lone instruction is a selector (payload), not a morphism to collapse — suppress the
-        // bare-identity test for it. isUnit still fires on a sole unit such as [plus(0)]; if that
-        // removal ever proves wrong, gate isUnit on !sole too (keep every single-instruction chain).
-        final boolean sole = 1 == insts.size();
-        // the identity morphism is read off the code ring once per pass, and only when a bare op could be it
-        final fURI identity = insts.stream().anyMatch(i -> i.args().isEmpty())
-                ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
-        final List<Inst> kept = insts.stream()
-                .filter(i -> !isUnit(i, laws) && (!isIdentity(i, identity) || sole))
-                .toList();
-        return kept.size() == insts.size() ? code : code(kept);
-    }
-
-    /**
-     * The unit test: an operation applied to its own theory identity — {@code op(id)} — for every theory
-     * instance the operand's type models. The algebras are memoized per rewrite pass by the caller's map,
-     * since a type's theories are shared by every instruction over it.
-     */
-    private static boolean isUnit(final Inst inst, final Map<Type, Rec> laws) {
-        if (inst.args().isEmpty())
-            return false;
-        final List<Type> operands = List.of(inst.dom(), inst.arg(0).type());
-        for (final Type operand : operands)
-            for (final Map.Entry<Obj, Obj> instance : laws.computeIfAbsent(operand, TheoryHelper::instances).jvm().entrySet()) {
-                if (!instance.getValue().isRec())
-                    continue;
-                final Rec block = instance.getValue().asRec();
-                for (final String[] roles : TheoryHelper.UNIT_ROLES) {
-                    final Inst unit = TheoryHelper.unit(block, roles[0], roles[1]);
-                    // THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED. `unit.test(inst)` is a CONTRACT-level test
-                    // (the pattern and the instruction share their dom/rng), so it accepts an instruction whose
-                    // operand is a CODE as readily as the literal identity -- plus(0).test(plus(map(3).neg())) is
-                    // true -- and that composition is exactly what derivation_contraction has to see and contract
-                    // (plus·neg ↦ minus). Without the operand comparison the unit law deletes it first and a derived
-                    // instruction's definition silently stops folding.
-                    if (!unit.isNoObj() && unit.test(inst) && unit.args().equals(inst.args()))
-                        return true;
-                }
-            }
-        return false;
-    }
-
-    /**
-     * The bare-identity test: an instruction with no operands that <em>is</em> the identity of chain composition
-     * ({@link TheoryHelper#compositionIdentity}) — the code ring's {@code id}. Its occurrence in a chain is the
-     * identity morphism, hence dead weight. An identity of another operation is not: the additive group's
-     * {@code id} is end, composition's zero, and taking it for the identity turned {@code 5.end()} into {@code 5}.
-     */
-    private static boolean isIdentity(final Inst inst, final fURI identity) {
-        if (null == identity || !inst.args().isEmpty())
-            return false;
-        if (!cInt.ONE().equals(inst.c()))
-            return false;   // id{n} is a multiplicity, not a no-op
-        return inst.tid().basePath().equals(identity);
+        Code out = code;
+        for (final Rec unit : Law.Helper.units()) {
+            final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
+            out = rewrite(out, List.of(unit), (scanned, start) -> term.args().equals(scanned.insts().get(start).args())
+                    && (!term.args().isEmpty() || 1 < scanned.insts().size()));
+        }
+        return out;
     }
 
     /**
@@ -737,7 +692,11 @@ public final class PlanInterpreter {
         Code out = code;
         for (final Rec rule : rules) {
             final Code scanned = out;
-            final int window = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts().size()).orElse(0);
+            final List<Inst> pattern = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts()).orElse(List.of());
+            // a rule whose head op the chain does not hold cannot match it, so it is not scanned at all
+            if (pattern.isEmpty() || scanned.insts().stream().noneMatch(inst -> inst.tid().basePath().test(pattern.getFirst().tid().basePath())))
+                continue;
+            final int window = pattern.size();
             final List<Inst> next = Call.Helper.update(scanned.insts(), rule, start ->
                     scanned.insts().subList(start, start + window).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
                             && admits.test(scanned, start));
@@ -768,22 +727,6 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Collapse adjacent pairs the predicate accepts to nothing — the equation {@code f·f ↦ ε}. The predicate is
-     * handed the pair's first position, so it can read the carrier there.
-     */
-    private static List<Inst> collapsePairs(final List<Inst> insts, final IntPredicate pairAt) {
-        final List<Inst> result = new ArrayList<>();
-        int i = 0;
-        while (i < insts.size()) {
-            if (i + 1 < insts.size() && pairAt.test(i))
-                i += 2; // f·f => ε — drop the pair
-            else
-                result.add(insts.get(i++));
-        }
-        return result;
-    }
-
-    /**
      * The idempotent law (local): an adjacent pair of the SAME idempotent operation is that operation —
      * {@code f·f ↦ f} for any operation declaring {@code idempotent} ({@link Law.Helper#equations}).
      */
@@ -803,17 +746,14 @@ public final class PlanInterpreter {
 
     /**
      * The inverse law (local): an adjacent declared inverse pair with equal operands cancels to the identity —
-     * {@code f·f⁻¹ ↦ ε} for the declared opposing edge. Its terms are unscaled as every local equation's are
-     * ({@link #rewrite}): an involution is its own inverse, so a scaled {@code neg{2}·neg{2}} must stay here too.
+     * {@code f·f⁻¹ ↦ ε} for the declared opposing edge, the equations {@link Law.Helper#inverses} states, cancelled
+     * only where the chain's carrier derives that inverse ({@link #isInverseOf}). Its terms are unscaled as every local
+     * equation's are ({@link #rewrite}): an involution is its own inverse, so a scaled {@code neg{2}·neg{2}} stays here
+     * too.
      */
     private static Code inverseCancellation(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size())
-            return code;
-        final List<Type> carriers = carriers(code);
-        final List<Inst> collapsed = collapsePairs(insts, i -> cInt.ONE().equals(insts.get(i).c()) && cInt.ONE().equals(insts.get(i + 1).c())
-                && inversePair(insts.get(i), insts.get(i + 1), carriers.get(i)));
-        return collapsed.size() == insts.size() ? code : code(collapsed);
+        return rewrite(code, Law.Helper.inverses(),
+                (scanned, start) -> isInverseOf(scanned.insts().get(start), scanned.insts().get(start + 1), carriers(scanned).get(start)));
     }
 
     /**
@@ -829,20 +769,13 @@ public final class PlanInterpreter {
     }
 
     /**
-     * Adjacent inverse pair with equal operands — {@code x.a().b() ↦ x} — read off {@code a}'s declared
-     * {@code inverse}, in that direction only. A declared inverse is one-sided: {@code inverse(f) = g} claims
-     * {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int,
-     * {@code x.mult(2).div(2)} is {@code x} but {@code 5.div(2).mult(2)} is 4.
-     */
-    private static boolean inversePair(final Inst a, final Inst b, final Type carrier) {
-        return isInverseOf(a, b, carrier);
-    }
-
-    /**
-     * Whether {@code b} is the declared inverse of {@code a} with equal operands. Endpoints are unavailable
-     * before resolution, so the operand type that selected the declaration is the type guard. An operand that is
-     * its type's declared {@code zero} never cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no
-     * inverse), and under {@code plus} it is the unit law's anyway.
+     * Whether {@code b} is the declared inverse of {@code a} with equal operands — {@code x.a().b() ↦ x} — read off
+     * {@code a}'s declared {@code inverse}, in that direction only. A declared inverse is one-sided: {@code inverse(f) = g}
+     * claims {@code x.f().g() = x} (f a section, g its retraction), never {@code x.g().f() = x} — on int,
+     * {@code x.mult(2).div(2)} is {@code x} but {@code 5.div(2).mult(2)} is 4. Endpoints are unavailable before
+     * resolution, so the operand type that selected the declaration is the type guard. An operand that is its type's
+     * declared {@code zero} never cancels: the zero annihilates under {@code mult} ({@code mult(0)} has no inverse), and
+     * under {@code plus} it is the unit law's anyway.
      */
     private static boolean isInverseOf(final Inst a, final Inst b, final Type carrier) {
         final fURI inverse = TheoryHelper.roleAddress(Law.Helper.declared(a.tid().basePath(), carrier), INVERSE);

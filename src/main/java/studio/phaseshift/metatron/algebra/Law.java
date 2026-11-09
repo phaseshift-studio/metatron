@@ -385,27 +385,38 @@ public enum Law {
 
         /**
          * THE CLAIMS SNAPSHOT — the equations the registered instructions' {@code ?decq} claims state: each defining
-         * equation keyed by the address it is declared at, and each law's local equations ({@link #equations}), with the
-         * staging revision and the claim writes it was taken at. Retaken when a builder stages a claim (the revision
-         * moves), when a {@code ?decq} write lands ({@link #evict}), or while the machine was not yet up.
+         * equation keyed by the address it is declared at, each law's local equations ({@link #equations}) and the units
+         * their carriers' theories declare ({@link #units}), with the staging revision and the claim writes it was taken
+         * at. Retaken when a builder stages a claim (the revision moves), when a {@code ?decq} write lands
+         * ({@link #evict}), or while the machine was not yet up.
          */
-        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations) {
+        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations, List<Rec> units,
+                              List<Map.Entry<Inst, Rec>> rows) {
         }
 
-        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of());
+        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of());
         private static volatile List<PendingWrites.Write> CLAIMS_AT = null;
         private static volatile long CLAIMS_SEEN = -1;
         private static volatile boolean CLAIMS_LOADED = false;
         private static final AtomicLong CLAIM_WRITES = new AtomicLong();
 
         /**
+         * The inverse equations ({@link #inverses}) and the snapshot they were read off: an inverse is the carrier's
+         * algebra, which reads the snapshot's derivations, so they are taken after it rather than inside its walk.
+         */
+        private static volatile List<Rec> INVERSES = List.of();
+        private static volatile Claims INVERSES_FOR = null;
+
+        /**
          * A BOOT IS A FRESH WORLD — forget the claims snapshot ({@code BootLoader.resetMemos}, before any set mounts).
          */
         public static void reset() {
-            CLAIMS = new Claims(Map.of(), Map.of());
+            CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of());
             CLAIMS_AT = null;
             CLAIMS_SEEN = -1;
             CLAIMS_LOADED = false;
+            INVERSES = List.of();
+            INVERSES_FOR = null;
         }
 
         /**
@@ -448,9 +459,9 @@ public enum Law {
         /**
          * EVERY EQUATION THE CLAIMS STATE — a walk of the registered instructions through {@code Machine.read}, kept as the
          * {@link #CLAIMS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression. A claimant's
-         * local equations are built over its own op with one hole per argument slot, so the pair's operands are pinned
-         * equal: {@code involution} {@code f·f ⇝ ε} (the empty code), {@code idempotent} and {@code monoidic}
-         * {@code f·f ⇝ f}. Instructions sharing an op share the rule.
+         * local equations are built over its own op ({@link #op}): {@code involution} {@code f·f ⇝ ε} (the empty code),
+         * {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. Instructions sharing an op share the rule. The units are
+         * the theories of every carrier an instruction folds ({@link #units}).
          */
         private static Claims claims() {
             final List<PendingWrites.Write> revision = PendingWrites.writes();
@@ -460,17 +471,23 @@ public enum Law {
             final boolean loaded = Machine.loaded();
             final Map<fURI, Rec> derivations = new LinkedHashMap<>();
             final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
+            final Set<fURI> carriers = new LinkedHashSet<>();
+            final List<Map.Entry<Inst, Rec>> rows = new ArrayList<>();
             if (loaded)
                 for (final Inst inst : Machine.current().instset().insts()) {
+                    if (null != inst.tid() && null != inst.tid().dom() && null != algebraOf(inst.tid().dom()))
+                        carriers.add(inst.tid().dom().basePath());
                     final Obj claim = null == inst.tid() ? noobj() : Machine.read(stagingAddress(inst.tid()));
                     if (!claim.isRec())
                         continue;
                     final Rec derivation = declaredDerivation(claim.asRec());
                     if (!derivation.isNoObj())
                         derivations.putIfAbsent(Inst.Helper.operationTid(inst.tid()), derivation);
+                    final Rec row = declaredRow(inst.tid(), claim);
+                    if (!row.isNoObj())
+                        rows.add(Map.entry(inst, row));
                     final Rec declared = declaredEntry(claim);
-                    final Inst op = instB(inst.tid().basePath(), lst(IntStream.range(0, (int) inst.args().count())
-                            .mapToObj(slot -> (Obj) T(ALL, f("a" + slot), null, null)).toList()));
+                    final Inst op = op(inst);
                     for (final Law law : List.of(Law.involution, Law.idempotent, Law.monoidic))
                         if (declares(declared, law))
                             equations.computeIfAbsent(law, key -> new LinkedHashSet<>())
@@ -478,12 +495,32 @@ public enum Law {
                 }
             final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
             equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
-            final Claims snapshot = new Claims(derivations, rules);
+            final Set<Rec> units = new LinkedHashSet<>();
+            for (final fURI carrier : carriers)
+                for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values())
+                    for (final String[] roles : block.isRec() ? TheoryHelper.UNIT_ROLES : List.<String[]>of()) {
+                        final Inst unit = TheoryHelper.unit(block.asRec(), roles[0], roles[1]);
+                        if (!unit.isNoObj())
+                            units.add(rec(code(List.of(instB(unit.tid().basePath(), unit.args()))), code(List.<Inst>of())));
+                    }
+            final fURI identity = loaded ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
+            if (null != identity)
+                units.add(rec(code(List.of(instB(identity, lst()))), code(List.<Inst>of())));
+            final Claims snapshot = new Claims(derivations, rules, List.copyOf(units), List.copyOf(rows));
             CLAIMS = snapshot;
             CLAIMS_AT = revision;
             CLAIMS_SEEN = written;
             CLAIMS_LOADED = loaded;
             return snapshot;
+        }
+
+        /**
+         * An instruction's op as a rule term: its address with one named hole per argument slot, so a pair of the op over
+         * the same operands binds each name once ({@code plus(#::T@a0).minus(#::T@a0)}).
+         */
+        private static Inst op(final Inst inst) {
+            return instB(inst.tid().basePath(), lst(IntStream.range(0, (int) inst.args().count())
+                    .mapToObj(slot -> (Obj) T(ALL, f("a" + slot), null, null)).toList()));
         }
 
         /**
@@ -497,13 +534,16 @@ public enum Law {
          * q-proc's lazy hook), so the store is the only source.
          */
         private static Rec declaredRow(final fURI instTid) {
-            if (null == instTid)
-                return noobjRec();
-            // THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
-            // subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a claim is
-            // inherited through the contract deduce() lands the operand on, never through the store: an ancestor's
-            // claim is refused
-            final Obj stored = Machine.read(stagingAddress(instTid));
+            return null == instTid ? noobjRec() : declaredRow(instTid, Machine.read(stagingAddress(instTid)));
+        }
+
+        /**
+         * The claim the store answered at an instruction's staging address, as {@link #declaredRow(fURI)} reads it.
+         * THE STORE ANSWERS FOR THE QUERIED CONTRACT ONLY. A read of an address it holds no claim for falls back to
+         * subsumption, so plus?imperial answers real's plus claim (an imperial is a real) -- but a claim is inherited
+         * through the contract deduce() lands the operand on, never through the store: an ancestor's claim is refused.
+         */
+        private static Rec declaredRow(final fURI instTid, final Obj stored) {
             final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
             return claimant.isInst() && !Inst.Helper.operationTid(claimant.tid()).equals(Inst.Helper.operationTid(instTid))
                     ? noobjRec() : declaredEntry(stored);
@@ -1004,6 +1044,41 @@ public enum Law {
          */
         public static List<Rec> equations(final Law law) {
             return claims().equations().getOrDefault(law, List.of());
+        }
+
+        /**
+         * THE UNIT EQUATIONS AS DATA — {@code op(e) ⇝ ε} for every unit a carrier's theory declares
+         * ({@link TheoryHelper#UNIT_ROLES}: {@code plus(0)}, {@code mult(1)}, {@code plus("")}, …; a rewrite compares the
+         * operand, which a match only type-tests), and {@code id() ⇝ ε} for the identity of chain composition
+         * ({@link TheoryHelper#compositionIdentity}). Read off the carriers of the registered instructions ({@link #claims}).
+         */
+        public static List<Rec> units() {
+            return claims().units();
+        }
+
+        /**
+         * THE INVERSE EQUATIONS AS DATA — {@code f(a)·g(a) ⇝ ε} for every registered instruction whose own carrier's
+         * algebra derives an inverse {@code g} ({@link #lawsOf}): int's {@code plus·minus}, real's {@code mult·div}. A
+         * rewrite still reads the inverse at the chain's carrier before it cancels. Taken once per snapshot, after it,
+         * from the rows its walk read.
+         */
+        public static List<Rec> inverses() {
+            final Claims claims = claims();
+            if (claims == INVERSES_FOR)
+                return INVERSES;
+            final Set<Rec> inverses = new LinkedHashSet<>();
+            // each instruction's row as the walk read it, never the store again: lawsOf without its read
+            for (final Map.Entry<Inst, Rec> row : claims.rows()) {
+                final fURI tid = row.getKey().tid();
+                final fURI inverse = TheoryHelper.roleAddress(algebraic(tid, row.getValue(), algebraOf(tid.dom())), INVERSE);
+                if (null == inverse)
+                    continue;
+                final Inst op = op(row.getKey());
+                inverses.add(rec(code(List.of(op, instB(inverse.basePath(), op.args()))), code(List.<Inst>of())));
+            }
+            INVERSES = List.copyOf(inverses);
+            INVERSES_FOR = claims;
+            return INVERSES;
         }
 
         /**
