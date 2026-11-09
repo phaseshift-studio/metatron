@@ -98,14 +98,17 @@ public class ElementRec<T extends Element> extends MRec {
         return super.self(Rec.Helper.cleanMap((Map<Obj, Obj>) jvm), tid, vid != null ? vid : this.vid);
     }*/
 
-    /** Preserve ElementRec type through cloning so {@link #vid(fURI)} override
-     *  survives and rejects the null VID set by auto_from_.vid(null). */
-   /* @Override
+    /**
+     * MRec.clone() replaces the map with a plain {@link java.util.LinkedHashMap} copy, but an
+     * element rec is only meaningful through its live {@link ElementMap}: {@link #elementVID()}
+     * (the fallback used once metatron detaches the vid) and every traversal need the Element.
+     * So a clone keeps the live view.
+     */
+    @Override
     @SuppressWarnings("unchecked")
-    public Rec clone() {
-        //this.jvm = new ElementMap<T>(this.element);
+    public ElementRec<T> clone() {
         final ElementRec<T> clone = (ElementRec<T>) super.clone();
-        //clone.jvm = new LinkedHashMap<>((Map<Obj, Obj>) this.jvm);
+        clone.jvm = this.jvm;
         return clone;
-    }*/
+    }
 }

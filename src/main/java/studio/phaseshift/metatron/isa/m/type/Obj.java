@@ -534,6 +534,10 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         return this instanceof Type;
     }
 
+    default boolean isValue() {
+        return !this.isType() && !this.isCall();
+    }
+
     default boolean isAuto() {
         return Obj.Helper.isAuto(this);
     }

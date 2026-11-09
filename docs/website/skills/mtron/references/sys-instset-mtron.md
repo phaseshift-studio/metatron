@@ -55,8 +55,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           {?}timeout=>'a real number denoting timeout of ...',
-           cmd=>'the terminal command to evaluate (...'],
+           cmd=>'the terminal command to evaluate (...',
+           {?}timeout=>'a real number denoting timeout of ...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -76,8 +76,8 @@ mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
     'tmpfs           6.1G  6.4M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme1n1p2  916G  578G  292G  ...',
-    'tmpfs            31G  302M   31G  ...',
+    '/dev/nvme1n1p2  916G  579G  291G  ...',
+    'tmpfs            31G  300M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -256,10 +256,10 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>57
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::648.0,
-    free_mem_jvm=>mB::281.4598,
+==>[total_mem_jvm=>mB::672.0,
+    free_mem_jvm=>mB::377.1195,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::366.5401,
+    used_mem_jvm=>mB::294.8804,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',

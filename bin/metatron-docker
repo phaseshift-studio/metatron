@@ -142,6 +142,12 @@ build_run() {
     EP_FLAGS=""
     [ -n "$ep" ] && EP_FLAGS="--entrypoint $ep"
     mkdir -p "$REPO/$BUILD_TARGET"
+    # /work/target is a MOUNTPOINT inside the /work bind, so docker creates it under the
+    # bind source -- i.e. on the HOST, as root -- when it is missing. On a fresh host that
+    # leaves a root-owned target/ and then `cp` into it fails ("BUILD SUCCESS" + Permission
+    # denied). Pre-creating it as the invoking user makes a first build work; chokes and
+    # chibi both tripped on this before the cause was clear.
+    mkdir -p "$REPO/target"
     # shellcheck disable=SC2086
     D docker run --rm --name "$BUILD_NAME" \
         --user "$(id -u):$(id -g)" \

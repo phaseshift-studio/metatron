@@ -820,13 +820,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           code=&gt;&quot;the thread's executing code&quot;,
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
-           {?}result=&gt;'the last result produced by the th...',
-           {?}state=&gt;'current state of the thread',
-           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           code=&gt;&quot;the thread's executing code&quot;,
+           {?}time=&gt;'the datetime::T when the thread wa...',
            {?}loop=&gt;'delay to repeat code evaluation (d...',
-           {?}time=&gt;'the datetime::T when the thread wa...'],
+           {?}timeout=&gt;'how long a read of rhs waits for t...',
+           {?}state=&gt;'current state of the thread',
+           {?}result=&gt;'the last result produced by the th...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -885,11 +885,11 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}listener=&gt;'the sockets this machine serves th...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
            {?}pattern=&gt;'the branch this network answers as...',
-           {?}status=&gt;'the health method — an auto inst c...',
-           {?}roster=&gt;'known machines, connectionless: &lt;h...'],
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}roster=&gt;'known machines, connectionless: &lt;h...',
+           {?}status=&gt;'the health method — an auto inst c...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',

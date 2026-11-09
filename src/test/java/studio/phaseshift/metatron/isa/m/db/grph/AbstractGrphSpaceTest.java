@@ -502,6 +502,30 @@ public abstract class AbstractGrphSpaceTest extends AbstractDataPathSpaceTest im
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * Instruction-call traversals off a SINGLE address, discovered at runtime because element ids are
+     * backend-specific (TinkerGraph: 1-6, JanusGraph: its own longs). A single value is the case where
+     * metatron detaches the vid ({@code vid(null)}) and clones the rec before applying the inst, so
+     * {@code resolveVid} has to recover the address from the rec itself (elementVID, then element) - a
+     * clone that keeps only a plain map copy loses the live TinkerPop element.
+     */
+    @Test
+    public void testSingleAddressInstructionTraversal() {
+        final Obj marko = ObjmtronSerializer.parse("*/g/V/+.?[name=>'marko']").apply().stream()
+                .filter(o -> !o.isFail()).findFirst().orElse(noobj());
+        assertFalse(marko.isNoObj(), "the modern dataset must hold marko");
+        final fURI address = marko.vid();
+        assertNotNull(address, "marko must carry his routed address");
+        LOG.warn("single-address instruction traversal from %s", address);
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*" + address + ".out()>>name", "{'vadas','josh','lop'}");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*" + address + ".outE(knows).inV()>>name", "{'vadas','josh'}");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*" + address + ".out().count()", "3");
+        // a WILDCARD read hands the fused walk MANY elements: Obj.stream() walks one and many the same way
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/+.out(knows)>>name", "{'vadas','josh'}");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/+.out(knows).out(created)>>name", "{'ripple','lop'}");
+        AbstractMetatronTest.checkCodeParseApply(LOG, "*/g/V/+.out(knows).out(created)>>name.count()", "2");
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/+.isa([name=>'marko'])                                                % person::T    % true",

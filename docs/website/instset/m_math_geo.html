@@ -508,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">6</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">23</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 8, 2026</span>
+            <span class="instset-built">built November 9, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -529,7 +529,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/geo::[q=&gt;[
+                        <pre><code>/m/math/geo::[pattern=&gt;/m/math/geo/#,
+              q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -541,7 +542,6 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;/m/instset::[=&gt;]]],
-              pattern=&gt;/m/math/geo/#,
               type=&gt;[
                lst::T@/m/math/geo/geometry,
                lst::T@/m/math/geo/bbox,
@@ -682,10 +682,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a 2D envelope — four reals, \([\lambda_{\min}, \varphi_{\min}, \lambda_{\max}, \varphi_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
-  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
   <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
   <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
+  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -711,12 +711,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a 3D envelope — six reals, \([\lambda_{\min}, \varphi_{\min}, h_{\min}, \lambda_{\max}, \varphi_{\max}, h_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">4</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">5</span> <span class="text-light">=&gt;</span> <a href="#'the maximum z'" class="text-info">&#39;the maximum z&#39;</a>
+  <span class="text-light">4</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
   <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
   <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the minimum z'" class="text-info">&#39;the minimum z&#39;</a>
   <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
   <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
-  <span class="text-light">5</span> <span class="text-light">=&gt;</span> <a href="#'the maximum z'" class="text-info">&#39;the maximum z&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -768,9 +768,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a point — a coordinate pair, or a triple with an altitude. \([\lambda, \varphi]\) or \([\lambda, \varphi, h]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">{?}2</span> <span class="text-light">=&gt;</span> <a href="#'the z (altitude) coordinate'" class="text-info">&#39;the z (altitude) coordinate&#39;</a>
-  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the y (latitude) coordinate'" class="text-info">&#39;the y (latitude) coordinate&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the y (latitude) coordinate'" class="text-info">&#39;the y (latitude) coordinate&#39;</a>
   <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the x (longitude) coordinate'" class="text-info">&#39;the x (longitude) coordinate&#39;</a>
+  <span class="text-light">{?}2</span> <span class="text-light">=&gt;</span> <a href="#'the z (altitude) coordinate'" class="text-info">&#39;the z (altitude) coordinate&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>

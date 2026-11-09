@@ -51,6 +51,30 @@ public class EdgeRec extends ElementRec<Edge> {
     }
 
     /**
+     * A vertex carrying {@code !route} is a POINTER to an object in another space: answer what it points at,
+     * else the vertex as a rec. Shared with the fused traversal, whose vertex terminals arrive without the
+     * endpoint re-fetch a mid-chain hop gets.
+     */
+    public static Obj dereference(final grphSpace space, final Vertex vertex) {
+        final VertexProperty<?> redirectProp = vertex.property(grphInstSet.AUTO_ROUTE_STRING);
+        if (redirectProp.isPresent()) {
+            final String redirectStr = redirectProp.value().toString();
+            space.logger().debug("auto resolution of %s", redirectStr);
+            final Obj parsed = ObjmtronSerializer.parse(redirectStr);
+            if (parsed.stream().anyMatch(Obj::isFail))
+                // an unparseable route is reported, not routed: a fallback, never a throw
+                space.logger().warn("an auto routing parse error occured: %s", parsed);
+            else
+                try {
+                    return parsed.apply().parent(new VertexRec(vertex, space));
+                } catch (final Exception e) {
+                    space.logger().warn("an auto routing error occured: %s", e);
+                }
+        }
+        return new VertexRec(vertex, space);
+    }
+
+    /**
      * Return the endpoint vertex, auto-resolving through {@code :redirect}
      * if the vertex is a reference to an object in another space.
      * <p>
@@ -60,23 +84,7 @@ public class EdgeRec extends ElementRec<Edge> {
      */
     private Obj resolveEndpoint(final org.apache.tinkerpop.gremlin.structure.Vertex v) {
         final Vertex fullVertex = v instanceof ReferenceVertex || v instanceof DetachedVertex ? IteratorUtil.stream(this.space.sjvm().V(v.id())).findFirst().orElse(v) : v;
-
-        final VertexProperty<?> redirectProp = fullVertex.property(grphInstSet.AUTO_ROUTE_STRING);
-        if (redirectProp.isPresent()) {
-            final String redirectStr = redirectProp.value().toString();
-            this.logger().debug("auto resolution of %s", redirectStr);
-            final Obj parsed = ObjmtronSerializer.parse(redirectStr);
-            if (parsed.stream().anyMatch(Obj::isFail))
-                // an unparseable route is reported, not routed: a fallback, never a throw
-                this.logger().warn("an auto routing parse error occured: %s", parsed);
-            else
-                try {
-                    return parsed.apply().parent(new VertexRec(fullVertex, this.space));
-                } catch (final Exception e) {
-                    this.logger().warn("an auto routing error occured: %s", e);
-                }
-        }
-        return new VertexRec(fullVertex, this.space);
+        return dereference(this.space, fullVertex);
     }
 
     public Obj inVertex() {

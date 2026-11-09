@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.algebra.Law.LAW_TID;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -263,7 +264,7 @@ public class mInstSet extends AbstractInstSet {
      */
     public static final Type LAW_TYPE = TypeBuilder.build()
             .tid(URI_TID)
-            .vid(Law.LAW_TID)
+            .vid(LAW_TID)
             // the union IS the predicate, a filter: it keeps a label and drops anything else, and a type refuses what its
             // predicate drops. isa(union(…)) would not: isa tests the lhs against the union as a type, and the noobj a
             // misfit yields passes the union's A{?} range
@@ -305,7 +306,7 @@ public class mInstSet extends AbstractInstSet {
     public static final Type THEORY_TYPE = TypeBuilder.build()
             .tid(REC_TID)
             .vid(THEORY_TID, "the nominal super-type of the algebraic theories: a theory names its operations by role, e.g. \\(\\mathrm{ring} \\mapsto \\{\\mathrm{add}, \\mathrm{mul}, \\mathrm{zero}, \\mathrm{one}\\}\\)")
-            //.isaPredicate(rec())
+            .isaPredicate(rec(uri(LAW).maybe().asUri(), T(LST_TID.poly(LAW_TID.b(cInt.C_SOME)))))
             .create();
     public static final Type RING_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -315,7 +316,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
                     uri(ONE), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type GROUP_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -324,11 +325,11 @@ public class mInstSet extends AbstractInstSet {
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
                     uri(INV), INST_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.involution),
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.involution),
                     // an element and its inverse cancel on either side, a·a⁻¹ = 1 and a⁻¹·a = 1, in the theory's own
                     // role names over a named operand: op(inv(a)) binds the instruction DEFINED that way (minus ≡
                     // plus∘neg, div ≡ mult∘inv), so int's add_group gives plus(a)·minus(a) and minus(a)·plus(a)
-                    uri(REWRITE).maybe(), lst(
+                    uri(REWRITE), lst(
                             rec(MCode.code(List.of(instB(f(OP), lst(T(ALL, f("a"), null, null))),
                                             instB(f(OP), lst(instB(f(INV), lst(T(ALL, f("a"), null, null))))))),
                                     MCode.code(List.<Inst>of())),
@@ -342,10 +343,10 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit),
+                    uri(LAW), laws(Law.monoidic, Law.unit),
                     // the monoid's identity drops out, op(id) ⇝ ε, in the theory's own role names: every monoid
                     // instance binds op and id (Law.Helper.bind)
-                    uri(REWRITE).maybe(), lst(rec(MCode.code(List.of(instB(f(OP), lst(uri(ID))))), MCode.code(List.<Inst>of())))))
+                    uri(REWRITE), lst(rec(MCode.code(List.of(instB(f(OP), lst(uri(ID))))), MCode.code(List.<Inst>of())))))
             .create();
     public static final Type COMMUTATIVE_MONOID_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -353,7 +354,7 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative)))
             .create();
     public static final Type FIELD_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -364,7 +365,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(ZERO), ALL_TYPE,
                     uri(ONE), ALL_TYPE,
                     uri(INV), INST_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.involution, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type RIG_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -374,7 +375,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
                     uri(ONE), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.left_distributive, Law.right_distributive)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type BOOLEAN_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -385,7 +386,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(NOT), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
                     uri(ONE), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent, Law.involution, Law.complement, Law.left_distributive, Law.right_distributive)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent, Law.involution, Law.complement, Law.left_distributive, Law.right_distributive)))
             .create();
     public static final Type LATTICE_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -395,7 +396,7 @@ public class mInstSet extends AbstractInstSet {
                     uri(JOIN), INST_TYPE,
                     uri(BOTTOM), ALL_TYPE,
                     uri(TOP), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
             .create();
     public static final Type SEMILATTICE_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -403,7 +404,7 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
+                    uri(LAW), laws(Law.monoidic, Law.unit, Law.commutative, Law.idempotent)))
             .create();
     public static final Type NEAR_RING_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
@@ -412,8 +413,9 @@ public class mInstSet extends AbstractInstSet {
                     uri(ADD), INST_TYPE,
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.left_distributive)))
+                    uri(LAW), laws(Law.monoidic, Law.left_distributive)))
             .create();
+
     /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
      */

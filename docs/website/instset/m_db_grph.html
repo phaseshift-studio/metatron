@@ -505,10 +505,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">from vertex to vertex, the edge of the metatron is traversed</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">12</span><span class="instset-stat-l">rewrites</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">6</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">11</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 8, 2026</span>
+            <span class="instset-built">built November 9, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -544,6 +544,22 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                obj=&gt;/m/instset::[=&gt;]]],
              constq=&gt;[/m/web/serializer/obj_tp3::[=&gt;]@/m/web/serializer/obj_tp3],
              type=&gt;[
+              theory::T[?[
+               mul_monoid=&gt;monoid_theory::[
+                op=&gt;out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+                id=&gt;id()],
+               rewrite=&gt;[
+                out=&gt;&#39;out(%s)&#39;,
+                in=&gt;&#39;in(%s)&#39;,
+                both=&gt;&#39;both(%s)&#39;,
+                outE=&gt;&#39;outE(%s)&#39;,
+                inE=&gt;&#39;inE(%s)&#39;,
+                bothE=&gt;&#39;bothE(%s)&#39;,
+                inV=&gt;&#39;inV()&#39;,
+                outV=&gt;&#39;outV()&#39;,
+                bothV=&gt;&#39;bothV()&#39;,
+                rshift=&gt;&#39;values(%s)&#39;,
+                count=&gt;&#39;count()&#39;]]]@/m/db/grph/theory/gremlin_theory,
               /m/space::T[?[
                {?}schema=&gt;rec::T[?[
                 {?}pattern=&gt;uri::T,
@@ -557,7 +573,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}config=&gt;rec::T]][ctor?grphspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/grph/space/grphspace,
               modern::T],
              inst=&gt;[
-              gremlin?&lt;=grphspace(str::T){&lt;j&gt;},
+              gremlin?&lt;=rec(str::T){&lt;j&gt;},
               label?uri&lt;=rec(){&lt;j&gt;},
               values?&lt;=rec(uri{*}::T){&lt;j&gt;},
               inV?rec&lt;=rec(){&lt;j&gt;},
@@ -581,8 +597,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               /m/db/grph/inst/rewrite/gremlin_where?code{?}&lt;=code(){&lt;j&gt;},
               /m/db/grph/inst/rewrite/gremlin_where_count?code{?}&lt;=code(){&lt;j&gt;},
               /m/db/grph/inst/rewrite/gremlin_where_limit?code{?}&lt;=code(){&lt;j&gt;},
-              /m/db/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;},
-              /m/db/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}]]@/m/db/grph</code></pre>
+              /m/db/grph/inst/rewrite/gremlin_pushdown?code{?}&lt;=code(){&lt;j&gt;}]]@/m/db/grph</code></pre>
                     </div>
                 </div>
             </div>
@@ -595,6 +610,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <h6 class="text-primary mb-2">types</h6>
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">schema</small></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__schema__modern" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">modern</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">theory</small></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__theory__gremlin_theory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_theory</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">schema&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">modern</small></div></div><div class="d-flex flex-wrap"><a href="#__m__db__grph__schema__modern__created" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">created</span>
@@ -671,6 +689,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__db__grph__inst__rewrite__gremlin_order" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_order</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#__m__db__grph__inst__rewrite__gremlin_pushdown" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gremlin_pushdown</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a><a href="#__m__db__grph__inst__rewrite__gremlin_skip" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_skip</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
@@ -689,17 +710,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__db__grph__inst__rewrite__gremlin_where_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">gremlin_where_limit</span>
     <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__db__grph__inst__rewrite__in_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">in_incident_adjacent</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
-</a><a href="#__m__db__grph__inst__rewrite__out_incident_adjacent" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
-    <span class="code" style="font-size:1.2rem;">out_incident_adjacent</span>
-    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
 </a></div>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">5</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">6</span></h3>
     <div class="card mb-3" id="__m__db__grph__schema__modern__created">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -711,6 +726,32 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[weight=&gt;real::T]]@/m/db/grph/schema/modern/created</code></pre></div>
     
     
+    
+</div><div class="card mb-3" id="__m__db__grph__theory__gremlin_theory">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">gremlin_theory::T</span>
+            <span class="ms-2">refines <a href="m.html#__m__theory" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/theory::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/db/grph/theory/gremlin_theory</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">theory::T[?[mul_monoid=&gt;monoid_theory::[
+             op=&gt;out?rec{*}&lt;=rec(uri{*}::T){&lt;j&gt;},
+             id=&gt;id()],
+            rewrite=&gt;[
+             out=&gt;&#39;out(%s)&#39;,
+             in=&gt;&#39;in(%s)&#39;,
+             both=&gt;&#39;both(%s)&#39;,
+             outE=&gt;&#39;outE(%s)&#39;,
+             inE=&gt;&#39;inE(%s)&#39;,
+             bothE=&gt;&#39;bothE(%s)&#39;,
+             inV=&gt;&#39;inV()&#39;,
+             outV=&gt;&#39;outV()&#39;,
+             bothV=&gt;&#39;bothV()&#39;,
+             rshift=&gt;&#39;values(%s)&#39;,
+             count=&gt;&#39;count()&#39;]]]@/m/db/grph/theory/gremlin_theory</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__theory" class="code inherited-link">theory::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}law=&gt;lst[{+}law]::T]</code></div></div>
     
 </div><div class="card mb-3" id="__m__db__grph__schema__modern__knows">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -895,21 +936,21 @@ one-to-many obj transformation (dom_c = 1, rng_c &gt; 1)</p>
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">gremlin</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#__m__db__grph__space__grphspace" data-bs-toggle="tooltip" title="domain" class="code text-info">grphspace</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__rec" data-bs-toggle="tooltip" title="domain" class="code text-info">rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><span class="code text-success">#{*}</span></span></span>
         </span>
         <small class="text-muted code">/m/db/grph/inst/gremlin</small>
     </div>
     <div class="card-body p-2"><div class="variant-row">
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__gremlin-doc-0-tab').click();document.getElementById('__m__db__grph__inst__gremlin-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?&lt;=grphspace(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('__m__db__grph__inst__gremlin-doc-0-tab').click();document.getElementById('__m__db__grph__inst__gremlin-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">gremlin?&lt;=rec(str::T){&lt;j&gt;}</code></pre>
 
 </div>
 </div>
     
     <div class="card-body border-top py-2">
-    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> executes the gremlin expression on the graph space
+    <p class="mb-0 text-light"><span class="spec-chip spec-scatter">scatter</span> executes a gremlin expression: a full script (&quot;g.V().count()&quot;) on a graph space, or a traversal suffix (&quot;out(&#39;knows&#39;).values(&#39;name&#39;)&quot;) walked from the lhs element — the form a fused run compiles to
 maps an obj to objs (rng_c = {0,})</p>
 </div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#execute a gremlin traversal" class="text-info">execute a gremlin traversal</a> <span class="text-light">=&gt;</span> <a href="#the gremlin expression" class="text-success">the gremlin expression</a></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a graph space or element" class="text-info">a graph space or element</a> <span class="text-light">=&gt;</span> <a href="#the gremlin result" class="text-success">the gremlin result</a></pre>
 </div>
 </div><div class="card mb-3 instset-inst-card" id="__m__db__grph__inst__in">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
@@ -1088,7 +1129,7 @@ maps an obj to objs (rng_c = {0,})</p>
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">12</span></h3>
+    <h3 class="text-primary mb-3">rewrites <span class="pill-label badge bg-warning text-dark">11</span></h3>
     <div class="card mb-3" id="__m__db__grph__inst__rewrite__gremlin_count">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1145,6 +1186,21 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_order?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> leverages gremlin&#39;s order()-by for vrtx collections
+conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
+</div><div class="card-body py-2">
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
+</div>
+</div><div class="card mb-3" id="__m__db__grph__inst__rewrite__gremlin_pushdown">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">gremlin_pushdown</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/db/grph/inst/rewrite/gremlin_pushdown?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/gremlin_pushdown?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"><span class="spec-chip spec-filter">filter</span> compiles a maximal run of Gremlin-backed instructions into one gremlin(...) call
 conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
@@ -1239,26 +1295,6 @@ conditionally passes or drops an obj (dom_c = 1, rng_c = {0,1})</p>
 </div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#pre-rewrite code" class="text-info">pre-rewrite code</a> <span class="text-light">=&gt;</span> <a href="#post-rewrite code" class="text-success">post-rewrite code</a></pre>
 </div>
-</div><div class="card mb-3" id="__m__db__grph__inst__rewrite__in_incident_adjacent">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">in_incident_adjacent</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/db/grph/inst/rewrite/in_incident_adjacent?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    
-</div><div class="card mb-3" id="__m__db__grph__inst__rewrite__out_incident_adjacent">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">out_incident_adjacent</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#__m__code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#__m__code{?}" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/db/grph/inst/rewrite/out_incident_adjacent?rng=/m/code{?}&amp;dom=/m/code&amp;args</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/db/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    
 </div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
