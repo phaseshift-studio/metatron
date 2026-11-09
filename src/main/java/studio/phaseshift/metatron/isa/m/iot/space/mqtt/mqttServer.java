@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.web.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
+import studio.phaseshift.metatron.isa.m.mach.type.machine.MachineSpace;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Listener;
 import studio.phaseshift.metatron.isa.m.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
@@ -428,6 +429,10 @@ public final class mqttServer extends Listener {
                 this.machine.memory().spaces()
                         .elements()
                         .map(Rel::second)
+                        // the fan-out is over DATA spaces: the machine's own space (<vid>/#) claims the VM's internals,
+                        // and the delivery machinery saves its own thread object there — a subscription on it would
+                        // fire on that save, spawn another delivery thread, and recurse to StackOverflowError
+                        .filter(second -> !(second.as() instanceof MachineSpace))
                         .filter(second -> second.<Space>as().hasQ(SUBQ_PATTERN))
                         .map(Obj::<Space>as)
                         .forEach(s -> {
