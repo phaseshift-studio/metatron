@@ -1,6 +1,6 @@
 # metatron
 
-<a href="http://metatron.phaseshift.studio"><img src="http://metatron.phaseshift.studio/images/metatron-character.png" width="200px" align="right"></a>
+<a href="http://metatron.phaseshift.studio"><img src="http://metatron.phaseshift.studio/images/metatron-character.png" width="225px" align="right"></a>
 
 **Interconnect Heterogeneous Data Sources and Processes**
 
@@ -9,35 +9,35 @@ using a universal uri address space that is processed by a distributed vm contro
 language called mtron.
 
 **metatron** is the runtime (VM, machines, spaces, instruction sets); **mtron** is the language that drives it. A value
-is an **obj**, an obj lives at a **uri**, and code is built from **inst** with the ring operators `*` (serial
+is an **obj**, an obj lives at a **uri**, and **code** is built from **inst** (instructions) using the ring operators `*` (serial
 composition) and `+` (parallel branching).
 
 | Language                                        | Runtime       | License  | Version        |
 |-------------------------------------------------|---------------|----------|----------------|
-| mtron (`isa/m`), functional + fluent, type-safe | jvm, java 21+ | agpl-3.0 | `0.1-SNAPSHOT` |
+| mtron (`isa/m`), functional + fluent, type-safe | jvm, java 25+ | agpl-3.0 | `0.1-SNAPSHOT` |
 
 ## Core Concepts
 
 | Concept       | Role                                                                                                                                                               |
 |---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **furi**      | *functional* uri — any datum can reference any other regardless of storage; query params even encode instruction domain/range and space modulators called qprocs   |
-| **obj**       | universal value: mono (`bool`, `bytes`, `int`, `real`, `str`, `uri`), poly (`rec`, `lst`, `rel`), call (`inst`, `code`). `noobj` is the 0-object, `#` the 1-object |
+| **furi**      | *functional* uri — any datum can reference any other regardless of storage; query params encode instruction domain/range and space modulators called qprocs        |
+| **obj**       | base types: mono (`bool`, `bytes`, `int`, `real`, `str`, `uri`), poly (`rec`, `lst`, `rel`), call (`inst`, `code`). `noobj` is the `0`-object, `#` the 1-object    |
 | **vid / tid** | for a type, the name / its refinement (`int::T[?>0]@nat`); for a value, its location / constraining type (`nat::29@/usr/marko/age`)                                |
-| **machine**   | a computing context containing memory, network, compiler, processor — nested by frame push/pop with multi-threading and resource isolation                         |
+| **machine**   | a computing context containing memory, network, compiler, processor — nested in frames of reference w/ push/pop multi-threading and resource isolation             |
 | **space**     | a system exposing a subset of the uri address space; registered with machine memory and resolved by uri patterns (`+` and `#` are furi segment wildcards)          |
 | **instset**   | an instruction set, discovered at boot via `META-INF/services/` spi, imported when needed, isolated to importing machine                                           |
 
 ## The Spaces
 
-Every backend is a `space`; the same language, types, and uri algebra apply to them all.
+Every backend is a `space`; the same language, types, and uri algebra apply to each.
 
 | Package                          | Backend / domain                                                                  |
 |----------------------------------|-----------------------------------------------------------------------------------|
-| `isa/m`, `isa/mach`              | core memory + q-procs; machine, compiler, processor, `console::T` ui, serializers |
-| `isa/sys`, `isa/web`             | filesystems, serial ports; http; websockets; mcp                                  |
+| `isa/m`, `isa/mach`              | core algebra, types + q-procs; machine, compiler, processor, ui, serializers      |
+| `isa/sys`, `isa/web`             | filesystems, serial ports; http; websockets; mcp; mime types                      |
 | `isa/tble`, `isa/dcmnt`          | sql (sqlite, mysql, maria, postgresql, rewrite pushdown); mql mongodb             |
-| `isa/grph`, `isa/vec`,           | gremlin (tinkerpop/janusgraph); chromadb embeddings                               |
-| `isa/iot`, `isa/llm`, `isa/dckr` | mqtt, zigbee2mqtt, llm and decision agents; docker                                |
+| `isa/grph`, `isa/vec`,           | gremlin (tinkerpop/janusgraph) w/ mtron expressivity; chromadb embeddings         |
+| `isa/iot`, `isa/llm`, `isa/dckr` | mqtt, zigbee2mqtt, llm and decision agents w/ feature-based harness; docker       |
 
 ## Quick Start
 
@@ -55,7 +55,7 @@ docker run -p 8555:8555 -p 8777:8777 ghcr.io/phaseshift-studio/metatron:main
 
 ## Build and Test
 
-JDK 21+ (tests need JDK 23+; CI uses Oracle JDK 26), Maven via the wrapper.
+JDK 25+ (CI uses Oracle JDK 26), Maven3 via the wrapper.
 
 ```bash
 ./mvnw install                    # build + test (~230 JUnit 5 test classes)
@@ -84,8 +84,8 @@ bin/metatron-docker image                                                     # 
 src/main/java/studio/phaseshift/metatron/
 ├── isa/        # instruction-set architecture: m (core language), mach (machine + UI +
 │               #   serializers), and sys/web/tble/dcmnt/grph/vec/rdf/iot/llm/dckr
-├── furi/       # functional URI (fURI, DataPath, QProc, forms)
-├── algebra/    # rewriting (Rewriter, RewriteBuilder, CommonRewrites)
+├── furi/       # functional URI
+├── algebra/    # rewriting
 ├── docs/ util/ # doc generation; shared utilities
 boot/           # boot profiles: instruction sets + spaces mounted in-language
 bin/            # launcher, docker loop, console harness, wsplus REPL
@@ -99,7 +99,7 @@ ServiceLoader registers every InstSet with the Router → the boot profile mount
 ## Documentation & Contributing
 
 - **website** — <http://metatron.phaseshift.studio>. only `docs/website/adoc/`, `docs/skills/`, and the instset
-  reference (derived from source) are hand-authored; everything else under `docs/website/` is generated.
+  reference (derived from source); everything else under `docs/website/` is generated.
 - **skills** — `docs/skills/metatron/` (vm, type system, ui, rewrite system, machine architecture, distributed
   primitives) and `docs/skills/mtron/` (language reference, instset guides).
 - **Contributing** — [CONTRIBUTING.md](./CONTRIBUTING.md), [AGENTS.md](./AGENTS.md): new code must ship
