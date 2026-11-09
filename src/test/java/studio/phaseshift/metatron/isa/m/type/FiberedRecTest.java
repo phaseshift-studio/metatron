@@ -64,6 +64,7 @@ public class FiberedRecTest extends AbstractMetatronTest {
     })
     @CsvSource(value = {
             "person[int]::[name=>'marko',age=>29].plus(1)                            % person[int]::[name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29].plus(1).type()                     % rec[age]::T[?[name=>str::T,age=>int::T]]@person[int]",
             "person[int]::[name=>'marko',age=>29] + 1                                % person[int]::[name=>'marko',age=>30]",
             "person[int]::[name=>'marko',age=>29].plus(1).plus(1)                    % person[int]::[name=>'marko',age=>31]",
             "{2}person[int]::[name=>'marko',age=>29].plus(1)                         % {2}person[int]::[name=>'marko',age=>30]",
@@ -111,6 +112,7 @@ public class FiberedRecTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "*tg.bump()                                              % tagged[int,str]::[hits=>2,label=>'hi!']",
             "tagged[int,str]::[hits=>1,label=>'hi'].bump()           % tagged[int,str]::[hits=>2,label=>'hi!']",
+            "tagged[int,str]::[hits=>1,label=>'hi'].bump().type()    % rec[hits,label]::T[?[hits=>int::T,label=>str::T]]@tagged[int,str]",
             "*tg.bump().bump()                                       % tagged[int,str]::[hits=>3,label=>'hi!!']",
             "tagged[int,str]::[hits=>1,label=>'hi'].bump().bump()    % tagged[int,str]::[hits=>3,label=>'hi!!']",
             "*tg.shout()                                             % {2,true}",
@@ -126,7 +128,9 @@ public class FiberedRecTest extends AbstractMetatronTest {
      * carries an address is written back to it — so a call on {@code @marko} is a state transition (two hits take the
      * {@code hp} from 100 to 54), while the same call on the copy {@code *marko} is a value and the stored marko is
      * untouched. A projection answers its results and writes nothing back: after {@code hurt(23).gt(50)} the stored
-     * {@code hp} is the hurt's 77. Fibers moved by one call are written back together ({@code @px.plus(10)}).
+     * {@code hp} is the hurt's 77. Fibers moved by one call are written back together ({@code @px.plus(10)}). A keyed
+     * update writes back the same way: {@code @marko >>= [hp=>minus(23)]} stores the moved bundle once, while on the
+     * copy it is a value.
      */
     @Training.SkipTraining(reason = "each row is an evaluation followed by a separate read of the stored marko, not one expression->value pair")
     @ParameterizedTest
@@ -146,6 +150,8 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "*marko.hurt(23)                % *marko>>hp     % 100",
             "@marko.hurt(23).gt(50)         % *marko>>hp     % 77",
             "@px.plus(10)                   % *px            % pair[int,int]::[a=>11,b=>12,tag=>'x']",
+            "@marko >>= [hp=>minus(23)]     % *marko>>hp     % 77",
+            "*marko >>= [hp=>minus(23)]     % *marko>>hp     % 100",
     }, delimiter = '%', quoteCharacter = '~')
     public void testAnAnchoredLiftWritesBack(final String evaluate, final String fetch, final String stored) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, evaluate, fetch, stored);
@@ -252,6 +258,87 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "squad[ninja]::[name=>'alpha',lead=>ninja::[name=>'kai',power=>'feeble']].rank()   % <ERROR>",
     }, delimiter = '%', quoteCharacter = '~')
     public void testATypeChangingCallIsAProjection(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A KEYED UPDATE KEEPS THE BUNDLE. {@code >>=} applies a rec of instructions key by key — the instruction at
+     * {@code a} runs on the field at {@code a} — and keeps every field it does not name. So two fibers of one type can
+     * take different instructions ({@code a=>plus(1)}, {@code b=>mult(2)}), which a single call's lift cannot, and a
+     * field that is no fiber ({@code tag}) is in reach too: {@code >>=} is the rec form, which the bundle owns. The
+     * answer is re-typed with the bundle's own type ({@code Poly.Helper.updateRecursion}), so it must still be the
+     * bundle: a bool at {@code age}, a deleted fiber, or a {@code _} key that also sends {@code plus(10)} to the str at
+     * {@code tag} fails the bundle's type. The rule recs act on the bundle as a monoid: the empty rule is the identity,
+     * two updates are one update with both rules, rules on different keys commute and rules on one key do not; a
+     * literal is a constant, so it is idempotent and a later literal at the same key wins.
+     */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> noobj",
+            "person -> rec[age]::T[?[name=>str::T,age=>int::T]]@person",
+            "pair -> noobj",
+            "pair -> rec[a,b]::T[?[a=>int::T,b=>int::T,tag=>str::T]]@pair",
+            "marko -> person[int]::[name=>'marko',age=>29]@marko",
+    })
+    @CsvSource(value = {
+            "person[int]::[name=>'marko',age=>29] >>= [age=>plus(1)]                  % person[int]::[name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29].update([age=>plus(1)]).type()       % rec[age]::T[?[name=>str::T,age=>int::T]]@person[int]",
+            "*marko >>= [age=>+1]                                                     % person[int]::[name=>'marko',age=>30]",
+            // two fibers of one type, two instructions; and a field that is no fiber
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>plus(1),b=>mult(2)]          % pair[int,int]::[a=>2,b=>4,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [tag=>plus('!')]                 % pair[int,int]::[a=>1,b=>2,tag=>'x!']",
+            // the monoid: the identity, a key the bundle lacks, two updates as one, commuting and non-commuting rules
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [=>]                             % pair[int,int]::[a=>1,b=>2,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [c=>3]                           % pair[int,int]::[a=>1,b=>2,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>plus(1)] >>= [b=>mult(2)]    % pair[int,int]::[a=>2,b=>4,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [b=>mult(2)] >>= [a=>plus(1)]    % pair[int,int]::[a=>2,b=>4,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>plus(1)] >>= [a=>mult(2)]    % pair[int,int]::[a=>4,b=>2,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>mult(2)] >>= [a=>plus(1)]    % pair[int,int]::[a=>3,b=>2,tag=>'x']",
+            // a literal is a constant: idempotent, and the later one wins
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>5] >>= [a=>5]                % pair[int,int]::[a=>5,b=>2,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [a=>5] >>= [a=>7]                % pair[int,int]::[a=>7,b=>2,tag=>'x']",
+            // the answer must still be the bundle
+            "person[int]::[name=>'marko',age=>29] >>= [age=>gt(18)]                   % <ERROR>",
+            "person[int]::[name=>'marko',age=>29] >>= [age=>none]                     % <ERROR>",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] >>= [_=>plus(10)]                    % <ERROR>",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testAKeyedUpdateKeepsTheBundle(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * A KEYED SELECT ANSWERS A PLAIN REC. {@code ==} applies a rec of instructions key by key, as {@code >>=} does,
+     * but keeps only the keys both sides name and types its answer with the PATTERN's type
+     * ({@code Poly.Helper.selectRecRecursion}), so the answer is a plain rec even when every field is named: a select
+     * projects where an update lifts. {@code _} keeps a value as it is, and no key in common answers {@code noobj}.
+     * Every expectation here is a plain rec, which the check compares by equality (a bracketed expectation, as in
+     * {@code person[int]::[…]}, is checked with {@code test()} and would also accept a plain rec of its shape).
+     */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> noobj",
+            "person -> rec[age]::T[?[name=>str::T,age=>int::T]]@person",
+            "pair -> noobj",
+            "pair -> rec[a,b]::T[?[a=>int::T,b=>int::T,tag=>str::T]]@pair",
+    })
+    @CsvSource(value = {
+            "person[int]::[name=>'marko',age=>29] == [age=>plus(1)]                        % [age=>30]",
+            "person[int]::[name=>'marko',age=>29] == [name=>_,age=>plus(1)]                % [name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29].select([name=>_,age=>plus(1)]).type()    % rec::T",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] == [a=>plus(1),b=>mult(2)]                % [a=>2,b=>4]",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'] == [_=>_]                                 % [a=>1,b=>2,tag=>'x']",
+            "person[int]::[name=>'marko',age=>29] == [=>]                                  % noobj",
+            "person[int]::[name=>'marko',age=>29] == [city=>'santafe']                     % noobj",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testAKeyedSelectAnswersAPlainRec(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

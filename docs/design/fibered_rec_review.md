@@ -108,24 +108,30 @@ Removed in the refactor: `Processor.Helper.applyFiberedRec` (the candidate loop)
 
 ## 3. What is verified
 
-`FiberedRecTest` (46 rows, all passing on ginger):
+`FiberedRecTest` (73 rows, all passing on ginger):
 
 | method | pins |
 |---|---|
 | `testTheLiftKeepsTheBundle` | Marko's example, chains, `{2}` bundles, parallel same-type fibers, money and sensor-reading envelopes |
 | `testTheParallelFibersEachTakeTheirOwnOverload` | per-fiber overloads on a read and on a literal, chained, a mixed projection (`{2,true}`), three fibers |
-| `testAnAnchoredLiftWritesBack` | `@` versus `*`, a projection writes nothing back, two fibers written in one write |
+| `testAnAnchoredLiftWritesBack` | `@` versus `*`, a projection writes nothing back, two fibers written in one write, a keyed update on `@` (`@marko >>= [hp=>minus(23)]`) |
 | `testTheBundleTakesItsOwnInstructions` | a typer (`type()`), the bundle's own name (`muster`), generic reads (`>>name`), the rec form (`plus` of a rec merges into the bundle) |
 | `testTheLiftIsOneLevelDeep` | a bundle at a fiber is not lifted again |
 | `testATypeChangingCallIsAProjection` | type change, filter that drops one fiber (`noobj` is a type change), fails propagate |
+| `testAKeyedUpdateKeepsTheBundle` | `>>=` keeps the bundle's type; two fibers of one type take two instructions; a field that is no fiber is in reach; the rule recs act as a monoid (identity `[=>]`, two updates as one, disjoint keys commute, one key does not, a literal is idempotent and the later one wins); a bool at `age`, a deleted fiber, or a `_` that reaches the str `tag` fails the bundle's type |
+| `testAKeyedSelectAnswersAPlainRec` | `==` keeps the keys both sides name and answers a plain rec typed by the pattern, even when every field is named: a select projects where an update lifts |
 | `testWhereTheLiftDoesNotReachYet` | the open gaps of §4, pinned at today's answer with a `TODO` |
+
+A bracketed expectation (`person[int]::[…]`) is checked with `actual.test(expected)`, which a plain rec of the same
+shape passes too (observed: `== [name=>_,age=>plus(1)]` passed against `person[int]::[…]` and against a plain rec).
+The rows that pin a bundle's **type** are the `.type()` rows: for a read, a literal, per-fiber overloads and `>>=`.
 
 `RecTest` carries Marko's earlier delegation worlds (person/ninja, duo, dojo, herd, human/geo, hiker), updated for the
 lift and the bundle-first reads; `TypeTest` covers acceptance, which the refactor did not change.
 
-Verified broadly on ginger after the last change: `FiberedRecTest`, `RecTest`, `TypeTest`, `RelTest`, `catInstSetTest`,
+Verified broadly on ginger at `60a15e326`: `FiberedRecTest`, `RecTest`, `TypeTest`, `RelTest`, `catInstSetTest`,
 `mInstSetTest`, `InstTest`, `CodeTest`, `LstTest` — 3,462 tests, the only failures being three that main already had
-(appendix).
+(appendix). The keyed-apply rows came later and change no main code; they ran with `FiberedRecTest` alone (73/0).
 
 ---
 
@@ -270,7 +276,8 @@ lift is one write per call — one update to a tble, dcmnt or grph space once bu
   keyed by law, `liveness[involution]::T`) as the planned first real user; nothing declares it yet. `object[int]` and
   `morphism[…]` already print with a bracket but are not bundles: in `catTypes`, `category` is
   `rec[obj]::T@category`, while `object` and `morphism` have tid `category`, which is no rec bracket. Separately, a
-  morphism graph (the `?morphq` initiative recorded in Hindsight; not in the code) could list **lifted morphisms**:
+  morphism graph could list **lifted morphisms** — `?morphq`, renamed `?catq` and now `?decq` in `mInstSet`, which
+  answers what is declared about a type:
   every endomorphism of a fiber type induces one on each bundle over it (`hurt : int → int` induces
   `human[int] → human[int]`), so the graph would show what an entity can do through its fibers.
 - **Option/Result containers** *(proposed, depends on §4.6)* — `maybe[int]::[value=>5]`, `result[int]::[ok=>5]`:
