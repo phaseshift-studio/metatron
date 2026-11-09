@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.GROUP_THEORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LAW_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.THEORY_FORM_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.sum_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -660,6 +661,8 @@ public enum Law {
          * <ul>
          *   <li>every law it claims is a {@code law::T}, the union of the vocabulary's labels (Marko, 2026-11-08), or the
          *       law slot is {@code law::T}'s own address, any law;</li>
+         *   <li>its theories are a rec keyed by {@code theory_form::T}, the union of the theory forms (Marko, 2026-11-08):
+         *       {@code ring}, {@code add_monoid}, {@code mul_monoid}, …, never what an instruction does on the carrier;</li>
          *   <li>a derivation is two codes, its lhs ends in the instruction it defines, and its sides declare the same
          *       value names, so the equation runs both ways: the write-side twin of every name binding
          *       ({@link Code.Helper#bind}).</li>
@@ -676,6 +679,14 @@ public enum Law {
                 for (final Obj law : laws.lstValue())
                     if (!law.test(LAW_TYPE))
                         return fail(MTronException.of("%s is no law::T, the union of the declared labels", law));
+            }
+            final Obj theories = declaration.atDirect(uri(THEORY));
+            if (!theories.isNoObj()) {
+                if (!theories.isRec())
+                    return fail(MTronException.of("the theories a declaration models are a rec keyed by theory_form::T, not %s", theories));
+                for (final Obj form : theories.asRec().jvm().keySet())
+                    if (!form.test(THEORY_FORM_TYPE))
+                        return fail(MTronException.of("%s is no theory_form::T, the union of the theory forms", form));
             }
             final Obj derivation = declaration.atDirect(uri(DERIVATION));
             if (derivation.isNoObj())
@@ -783,7 +794,7 @@ public enum Law {
          * <p>
          * THE DEFINITION IS READ WHEREVER IT IS DECLARED — among the equations every registered instruction declares
          * beside itself in {@code ?decq} ({@link #claims}). The equation lives with the SIBLING it
-         * defines, not with {@code tid}: {@code mult}→{@code div} is a consequence of {@code mult_group} plus
+         * defines, not with {@code tid}: {@code mult}→{@code div} is a consequence of {@code mul_group} plus
          * {@code div ≡ mult ∘ inv}, and the equation is {@code div}'s claim, not {@code mult}'s.
          */
         private static fURI inverseForm(final fURI tid, final fURI op, final fURI inv) {

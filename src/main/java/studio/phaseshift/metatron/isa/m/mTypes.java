@@ -129,8 +129,9 @@ public final class mTypes {
      * read (the q-proc's lazy hook), and {@code TheoryHelper.instances} serves it from there.
      */
     public static void declareAlgebras() {
-        // int: a ring — an add_group (plus/neg) and a mult_monoid (mult/1, no mult_group: integer division
-        // truncates, so 5.div(2).mult(2) is 4) — with the monoid constituents spelled out
+        // int: a ring — an add_group (plus/neg) and a mul_monoid (mult/1, no mul_group: integer division
+        // truncates, so 5.div(2).mult(2) is 4) — with the monoid constituents spelled out. Each key is a
+        // theory_form::T: a theory's own name, or add_/mul_ for the instruction family a one-op theory binds
         declare(INT_TYPE, rec(mutableMap(
                 uri("ring"), rec(mutableMap(
                                 uri(ADD), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
@@ -147,7 +148,7 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                 uri(ID), jnt(0)),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                 uri(ID), jnt(1)),
                         MONOID_THEORY_TID, null))));
@@ -171,7 +172,7 @@ public final class mTypes {
                                 uri(ID), real(0.0d),
                                 uri(INV), auto_from_(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
                         GROUP_THEORY_TID, null),
-                uri("mult_group"), rec(mutableMap(
+                uri("mul_group"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
                                 uri(ID), real(1.0d),
                                 uri(INV), auto_from_(INV_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst()),
@@ -180,7 +181,7 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
                                 uri(ID), real(0.0d)),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID)).tryToInst(),
                                 uri(ID), real(1.0d)),
                         MONOID_THEORY_TID, null))));
@@ -211,40 +212,45 @@ public final class mTypes {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
                                 uri(ID), bool(false)),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID)).tryToInst(),
                                 uri(ID), bool(true)),
                         MONOID_THEORY_TID, null))));
         // str: a monoid under concatenation (PLUS), identity ""
         declare(STR_TYPE, rec(mutableMap(
-                uri("concat_monoid"), rec(mutableMap(
+                uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(STR_TID).rng(STR_TID)).tryToInst(),
                                 uri(ID), str("")),
                         MONOID_THEORY_TID, null))));
         // uri: a monoid under extension (mult), identity the empty uri <>; branch (plus) is a commutative
         // semigroup with no identity — a/b + <> = {a/b,<>}, never a/b, so there is no zero object, only a one.
         declare(URI_TYPE, rec(mutableMap(
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
                                 uri(ID), uri("")),
                         MONOID_THEORY_TID, null))));
         // bytes: a monoid under concatenation (PLUS), identity the empty buffer
         declare(BYTES_TYPE, rec(mutableMap(
-                uri("concat_monoid"), rec(mutableMap(
+                uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID)).tryToInst(),
                                 uri(ID), bytes(new byte[0])),
                         MONOID_THEORY_TID, null))));
         // lst: a NON-commutative monoid under concatenation (PLUS), identity the empty lst — [a]+[b] is [a,b]
         // while [b]+[a] is [b,a], which is why the theory is monoid, not commutative_monoid
         declare(LST_TYPE, rec(mutableMap(
-                uri("concat_monoid"), rec(mutableMap(
+                uri("add_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(LST_TID).rng(LST_TID)).tryToInst(),
                                 uri(ID), lst()),
                         MONOID_THEORY_TID, null))));
         // rec: a COMMUTATIVE monoid under deep merge (PLUS), identity the empty rec — merge is keyed, so the
-        // order of the two operands does not change the result
+        // order of the two operands does not change the result. Both structures are declared: a theory refines no
+        // other, so the commutative monoid does not make rec a monoid
         declare(REC_TYPE, rec(mutableMap(
-                uri("merge_monoid"), rec(mutableMap(
+                uri("add_monoid"), rec(mutableMap(
+                                uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
+                                uri(ID), rec()),
+                        MONOID_THEORY_TID, null),
+                uri("add_commutative_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(REC_TID).rng(REC_TID)).tryToInst(),
                                 uri(ID), rec()),
                         COMMUTATIVE_MONOID_THEORY_TID, null))));
@@ -266,7 +272,7 @@ public final class mTypes {
                                 uri(OP), auto_from_(BRANCH_INST_TID).tryToInst(),
                                 uri(ID), auto_from_(END_INST_TID.dom(CODE_TID).rng(CODE_TID.zero())).tryToInst()),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(COMPOSE_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst(),
                                 uri(ID), auto_from_(ID_INST_TID.dom(CODE_TID).rng(CODE_TID)).tryToInst()),
                         MONOID_THEORY_TID, null))));
@@ -288,7 +294,7 @@ public final class mTypes {
                                 uri(ID), uri("."),
                                 uri(INV), uri("..")),
                         GROUP_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(URI_TID).rng(URI_TID)).tryToInst(),
                                 uri(ID), uri(".")),
                         MONOID_THEORY_TID, null))));

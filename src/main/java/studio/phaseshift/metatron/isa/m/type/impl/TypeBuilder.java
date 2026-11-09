@@ -102,7 +102,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
     private static final String RING = "ring";
     private static final String ADD_GROUP = "add_group";
     private static final String ADD_MONOID = "add_monoid";
-    private static final String MULT_MONOID = "mult_monoid";
+    private static final String MUL_MONOID = "mul_monoid";
 
     /**
      * THE INSTRUCTIONS A TYPE DECLARED — the {@code .inst(...)} rows of every builder, keyed by the declaring type's
@@ -677,7 +677,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
      *   <li>{@code add + zero + inv} (no multiplicative side) → {@code add_group}, spelled with the group's
      *       {@code op}/{@code id}/{@code inv} roles ({@code TheoryHelper} reads a group's operation from {@code op});</li>
      *   <li>{@code add + zero} → {@code add_monoid}, spelled {@code op}/{@code id};</li>
-     *   <li>{@code mul + one} (no additive side) → {@code mult_monoid}, spelled {@code op}/{@code id}.</li>
+     *   <li>{@code mul + one} (no additive side) → {@code mul_monoid}, spelled {@code op}/{@code id}.</li>
      * </ul>
      * An explicit {@link #algebra(Algebra)} OVERRIDES all of it: a caller who writes the block means exactly that
      * block, and the roles are then only documentation. Roles that describe none of these shapes compose NO algebra,
@@ -722,7 +722,7 @@ public final class TypeBuilder extends AbstractObjBuilder<TypeBuilder, Type> {
             final Map<Obj, Obj> roles = new LinkedHashMap<>();
             roles.put(uri(Tokens.OP), pointer(this.mul));
             roles.put(uri(Tokens.ID), this.one);
-            return algebraOf(MULT_MONOID, roles, MONOID_THEORY_TID);
+            return algebraOf(MUL_MONOID, roles, MONOID_THEORY_TID);
         }
         return null;
     }

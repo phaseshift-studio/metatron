@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class AlgebraToolTest extends AbstractMetatronTest {
 
     /**
-     * A TRUE CLAIM — int declares a ring (an add_group and a mult_monoid), so its declared monoidicity,
+     * A TRUE CLAIM — int declares a ring (an add_group and a mul_monoid), so its declared monoidicity,
      * commutativity and (multiplicative) distributivity all hold.
      */
     @Test

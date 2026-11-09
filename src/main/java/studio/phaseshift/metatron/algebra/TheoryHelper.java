@@ -287,7 +287,7 @@ public class TheoryHelper extends MRec {
      * The op address of the identity MORPHISM — the identity of chain composition, read off the type's declared
      * algebra: its multiplicative op is the {@code mul} role ({@code compose} for the code ring), and a theory
      * instance whose operation is that op contributes its operation-valued identity ({@code ring.one},
-     * {@code mult_monoid.id}: both {@code id}). The identity of any OTHER operation is no identity morphism: the
+     * {@code mul_monoid.id}: both {@code id}). The identity of any OTHER operation is no identity morphism: the
      * additive group's {@code id} is end, the identity of branch, which under composition is the ZERO. Null when
      * the type declares no multiplicative structure, so no bare op is taken for the identity.
      */

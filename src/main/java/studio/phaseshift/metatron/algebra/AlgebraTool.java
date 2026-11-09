@@ -101,7 +101,7 @@ public final class AlgebraTool {
 
     /**
      * THE INSTANCE NAMES THAT STATE A GROUP — the algebras an {@code involution} claim may read in its group
-     * form, together with the spellings {@code declareAlgebras} gives them ({@code add_group}, {@code mult_group},
+     * form, together with the spellings {@code declareAlgebras} gives them ({@code add_group}, {@code mul_group},
      * {@code free_groupoid}). An operation bound by a lattice, boolean or plain monoid has no group inverse, so
      * the group equation is not its law: the claim is UNCHECKABLE there, never failed.
      */
@@ -694,7 +694,7 @@ public final class AlgebraTool {
      *   <li>(a) THE INVERSE ITSELF — the operation is the instance's {@code inv}/{@code not} role, and states
      *       {@code inv(inv(a)) = a}. This is what a Boolean algebra's {@code not} satisfies.</li>
      *   <li>(b) A GROUP OPERATION — the operation binds to a GROUP-ish instance ({@code group}, {@code ring},
-     *       {@code field}, {@code near_ring}; the {@code add_group}/{@code mult_group} spellings) and has an
+     *       {@code field}, {@code near_ring}; the {@code add_group}/{@code mul_group} spellings) and has an
      *       {@code inv} role beside it, so it states {@code a·inv(a) = id}.</li>
      *   <li>(c) EVERYTHING ELSE — a lattice, Boolean, rig or monoid operation is NOT a group operation, so the
      *       group form is not its law: {@code uncheckable} with that reason, never a failure. A Boolean algebra's
@@ -721,7 +721,7 @@ public final class AlgebraTool {
 
     /**
      * Does the instance that binds an operation state a GROUP? The names are the ones {@code declareAlgebras}
-     * uses ({@code ring}, {@code field}, {@code add_group}, {@code mult_group}, {@code free_groupoid}) plus the
+     * uses ({@code ring}, {@code field}, {@code add_group}, {@code mul_group}, {@code free_groupoid}) plus the
      * plain theory names {@code GROUP_ALGEBRAS} names, so a future spelling that keeps the suffix is recognized.
      */
     private static boolean groupish(final String instance) {
