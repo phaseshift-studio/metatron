@@ -185,7 +185,10 @@ public interface Resolver extends Component {
             for (final Inst inst : code.insts()) {
                 try {
                     final boolean isBranchInst = false && inst.tid().basePath().equals(BRANCH_INST_TID);
-                    final Inst resolvedInst = isBranchInst ? inst : inst.resolve(token, sel, binder);
+                    final Inst bound = isBranchInst ? inst : inst.resolve(token, sel, binder);
+                    // A CALL A BUNDLE'S TYPE BINDS THROUGH ONE OF ITS FIBERS COMPILES TO THE LIFT OF THE CALL (FiberedRec):
+                    // left bound, one fiber's overload would be offered to every fiber. An unbound call stays for run time
+                    final Inst resolvedInst = bound.hasf() ? FiberedRec.Helper.resolve(token.asType(), bound, inst) : bound;
                     if (isBranchInst) {
                         final Obj token2 = token;
                         List<Obj> branches = resolvedInst.args().values().filter(b -> !b.isNoObj()).map(branch -> branch.isCode() ? resolver.apply(token2, branch.asCode()) : branch.isInst() ? branch.resolve(token2) : branch).toList();

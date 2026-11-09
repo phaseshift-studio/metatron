@@ -272,8 +272,12 @@ bundle ITSELF — a typer (`as`, `type`, `vid`, `tid`), a generic domain, the re
 (`FiberedRec.Helper.applicable` with `bundle=true`) — is the bundle's and runs on it alone, as on any rec; any other
 is LIFTED, an instruction from the bundle whose function, `FiberedRec#lift`, runs the call on every fiber it is about
 and writes each result back at its fiber, so `person[int]::[name=>'marko',age=>29].plus(1)` answers
-`person[int]::[name=>'marko',age=>30]`. Each fiber resolves the call against the object it holds (one level deep: a
-bundle at a fiber is applied to as itself), and `applicable` with `bundle=false` says whether the call is about that
+`person[int]::[name=>'marko',age=>30]`. The lift carries the CALL, unbound, and each fiber resolves it against the
+object it holds, so fibers of different types each run their own overload (one level deep: a bundle at a fiber is
+applied to as itself). The compiler asks the same question of the type it resolves against:
+`Resolver.Helper.resolveCode` passes every binding through `FiberedRec.Helper.resolve(Type, …)`, so a call a
+bundle's type binds through one fiber compiles to the lift, never to that fiber's overload. `applicable` with
+`bundle=false` says whether the call is about that
 fiber: a base-typed domain reaches a fiber of that form, a named one the fiber whose own type IDENTITY is that name
 (`fight?dom=ninja`), a structural one a fiber whose own value is shaped like it. The wrapper is acceptable where a
 fiber's type is expected (the fiber check at the top of `Type.test` and `Obj.Helper.testObjs`), which is type

@@ -1310,7 +1310,8 @@ public class RecTest extends AbstractAlgebraTest {
             "*marko>>role.?weaponed::T.type()     % ninja::T", // a ninja is weaponed
             "*marko>>?<=weaponed(name)            % {'dark_assassin'}", // a ninja is weaponed TODO: should work
             "*marko>>?<=ninja(name)               % 'dark_assassin'",
-            "*marko>>?<=ninja{0}(name)            % <ERROR>",
+            // no fiber is zero ninjas: the call is about no fiber, a miss (as plus?<=str is on ex), not a fail
+            "*marko>>?<=ninja{0}(name)            % noobj",
             "*marko>>?<=person(name)              % 'marko' ",
             "*marko>>?<=lst(name)                 % noobj ",  // TODO: should this <ERROR>
             // only the ninja carries a weapon: an untyped read is the wrapper's, and naming the ninja reaches it

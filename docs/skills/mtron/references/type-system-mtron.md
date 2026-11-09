@@ -439,7 +439,9 @@ either the bundle's own or its lift. Each call is about one of two things:
   `noobj`. A bracket does not change the name (`dojo[master]` is a `dojo`).
 - **its fibers** — any other domain. Every fiber the call is about runs it (the parallel fibers); when the results
   keep their fibers' types they are written back, and a fiber the call is not about is left as it is, as is every
-  field that is no fiber:
+  field that is no fiber. Each fiber resolves the CALL against the value it holds, so fibers of different types each
+  run their own overload of it — with `bump` declared on int and on str, `tagged[int,str]::[hits=>1,label=>'hi'].bump()`
+  is `tagged[int,str]::[hits=>2,label=>'hi!']`, written as a literal or read with `*`:
   - a **base-typed domain is about a fiber's own form**: `?<=int(...)` reaches an int-valued fiber
     (`ex::[o=>12].plus?<=int(45)` is `ex::[o=>57]`), `?<=lst(...)` reaches none of a ninja's.
   - a **named domain** reaches the fiber whose own type IDENTITY is that name (`fight?<=ninja()` reaches the ninja,
