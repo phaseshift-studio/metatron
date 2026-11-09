@@ -2250,6 +2250,23 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(points(f(spelling).branches()), points(resolved.branches()));
     }
 
+    /**
+     * A SUM OF URIS counts each by its terms: a branched uri among them, the tid of a mixed stream inside another, is
+     * summed branch by branch, so the sum stays one flat branch the grammar reads back.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/m/bool | /m/bool | /m/int{2} | </m/{int,{2}real}>   % /m/{{2}bool,{3}int,{2}real}",
+            "<a/{b,c}> | <a/{c,d}>                               % a/{b,{2}c,d}",
+            "<a/{b,c}> | <{a/b,x/y}>                             % {{2}a/b,a/c,x/y}",
+            "<a/{b,c}{2}> | <a/{b,c}{-2}>                        % a/b{0}",
+    }, delimiter = '%')
+    void testSumOfUris(final String uris, final String expected) {
+        final fURI sum = fURI.Helper.sum(Arrays.stream(uris.split("\\|")).map(String::trim).map(fURI.Singleton::f));
+        checkEquals(f(expected), sum);
+        checkEquals(sum, idem("<" + sum + ">"));
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "<{a}>                          % a",

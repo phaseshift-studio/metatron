@@ -1388,17 +1388,18 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         }
 
         /**
-         * The canonical sum of terms, so that equal sums are spelled equally and {@link fURI#branches()} gives every
-         * term back with its point. Like terms add their points and a zero term drops; a sum of nothing but zeros is
+         * The canonical sum of uris, so that equal sums are spelled equally and {@link fURI#branches()} gives every
+         * term back with its point. Each uri counts as its terms, so a branched one (a mixed stream's tid inside
+         * another's) is summed branch by branch. Like terms add their points and a zero term drops; a sum of nothing but zeros is
          * its first term at zero, and a sum of nothing is the zero. Summing a stream at once is the fold of
          * {@link fURI#plus(fURI)} without re-expanding each partial sum. Terms that differ only in their path are one
          * branch ({@link #pathSum(List)}); terms
          * that differ in any other component branch at the root, one element per term, sorted:
          * {@code {{5}http://a.com/a,{4}ws://a.com/a}}. Either way a point shared by every term is the coefficient.
          */
-        public static fURI sum(final Stream<fURI> terms) {
+        public static fURI sum(final Stream<fURI> uris) {
             final Map<fURI, cInt> points = new LinkedHashMap<>();
-            terms.forEach(term -> points.merge(term.d(cInt.ONE()), term.d(), cInt::plus));
+            uris.flatMap(fURI::branches).forEach(term -> points.merge(term.d(cInt.ONE()), term.d(), cInt::plus));
             final List<fURI> live = points.entrySet().stream().filter(entry -> !entry.getValue().isZero())
                     .map(entry -> entry.getKey().d(entry.getValue())).toList();
             if (live.isEmpty())
@@ -1528,14 +1529,15 @@ public interface fURI extends Cloneable, Comparable<fURI>, Predicate<fURI> {
         private static final String IP_LITERAL = "\\[(?=[^\\]]*:)[0-9A-Fa-f:.]+(?:%[0-9A-Za-z._~%-]+)?\\]";
         // A LEADING coefficient is the span, {span}path[poly]{point}: it stands before a `/`, or before a lone atom that
         // ends the path (`{3}int{2}`, a slot entry). Before an atom the path continues past (`{0}a/b`) it stays that
-        // first segment's coefficient-marked atom, and with nothing after it (`{*}`) the coefficient. A scheme holds no
-        // brace, so a root branch of whole uris (`{http://a.com/a,ws://a.com/a}`) is a path, not the scheme `{http`. The
+        // first segment's coefficient-marked atom, and with nothing after it (`{*}`) the coefficient. A scheme never
+        // leads with a brace, so a root branch of whole uris (`{http://a.com/a,ws://a.com/a}`) is a path, not the
+        // scheme `{http`. The
         // path reads plain text in possessive runs: the engine recurses once per loop iteration, so one character per
         // iteration overflows the stack on a long branch (a stream of overloads sums to one element per signature).
         private static final String SPAN_PREFIX = "(\\{(?<span>" + COEFFICIENT_BODY + ")}(?=/|[^/{}?&\\[\\]:]+(?:$|[\\[{?])))?";
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 SPAN_PREFIX +
-                "((?<scheme>[^:/.{]+):)?" +
+                "((?<scheme>(?!\\{)[^:/.]+):)?" +
                         "(//((?<host>" + IP_LITERAL + "|[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
                         "(?<path>(?:[^?\\[{&]++|\\{(?!(?:" + COEFFICIENT_BODY + ")})(?:[^{}]++|\\{[^{}]*})*}|(?<![^/])\\{(?:" + COEFFICIENT_BODY + ")}[^/{}?&]+)*)?" +
                         "(\\[(?<poly>[^]]+)])?" +
