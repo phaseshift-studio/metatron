@@ -3,6 +3,7 @@ name: tble-space-java
 description: Java-side tbleSpace architecture — relational-database space, dual-path reads (table-mapped + KV store), ExistingTableSchema lifecycle, SQL rewrite pushdown, schema generation, dialect handling, VID stamping
 ---
 
+
 # tbleSpace (Java)
 
 ## Package map

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  Spike page for reviewing terminal casts in a browser.
+
+  Serve the website tree and open
+      http://127.0.0.1:8000/asciinema/preview.html
+  or point it at any recording in this directory:
+      http://127.0.0.1:8000/asciinema/preview.html?cast=repl-basics.cast
+
+  It is the phase-0 harness only: once casts are embedded from docs/skills/ and
+  the adoc pages, the gallery replaces it (and this page goes away).
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cast preview · metatron</title>
+    <style>
+        :root { --mred: #7a2518; --mdarkgray: #494554; }
+        body {
+            margin: 0;
+            padding: 2.5rem 1.5rem;
+            background: #f7f5f2;
+            color: #2c2a33;
+            font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+        }
+        main { max-width: 1100px; margin: 0 auto; }
+        h1 {
+            margin: 0 0 .3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--mred);
+        }
+        p { margin: 0 0 1.4rem; font-size: .8rem; color: var(--mdarkgray); }
+        code { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: .95em; }
+        .asciinema-figure { margin: 0; }
+        .asciinema-cast {
+            min-height: 120px;
+            background: #000;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px 6px 0 0;
+            overflow: hidden;
+        }
+        /* the caption bar, as the docs pages style it */
+        .asciinema-caption {
+            display: none;
+            padding: .45rem .9rem;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-top: 0;
+            border-radius: 0 0 6px 6px;
+            color: #d8d2c8;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: .78rem;
+        }
+        .asciinema-caption.show { display: block; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>cast preview</h1>
+    <p>spike page — <code>?cast=name.cast</code>, default <code>repl-basics.cast</code></p>
+    <figure class="asciinema-figure">
+        <div class="asciinema-cast" id="cast" data-cast="repl-basics.cast"
+             data-autoplay></div>
+        <figcaption class="asciinema-caption"></figcaption>
+    </figure>
+</main>
+<script src="../js/asciinema.js"></script>
+<script>
+    // page-local selector: review any recording in this directory
+    (function () {
+        var name = new URLSearchParams(location.search).get('cast');
+        if (name) document.getElementById('cast').dataset.cast = name;
+    })();
+</script>
+</body>
+</html>

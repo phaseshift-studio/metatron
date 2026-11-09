@@ -3,6 +3,7 @@ name: rewrite-system-java
 description: Java-side rewrite infrastructure — Rewriter, RewriteBuilder, InstSet.Helper.rewriter, Code.rewrite() loop, space-aware native pushdown, custom rewrite functions, and registration patterns
 ---
 
+
 # Rewrite System (Java)
 
 ## Package map

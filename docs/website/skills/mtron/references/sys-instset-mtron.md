@@ -11,6 +11,7 @@ description: >
     directory as a space, or discovering what a file is before reading it.
 ---
 
+
 # sys instruction set (`/m/sys`)
 
 `/sys` is the required system space — created at boot, it holds the system objs (router, typer, rewriter, environment,
@@ -55,8 +56,8 @@ mtron> *bash?docq
           dom=>'maybe an obj',
           rng=>'a lst[str] of results',
           args=>[
-           cmd=>'the terminal command to evaluate (...',
-           {?}timeout=>'a real number denoting timeout of ...'],
+           {?}timeout=>'a real number denoting timeout of ...',
+           cmd=>'the terminal command to evaluate (...'],
           desc=>'evaluate bash command. *important*...',
           example=>["bash('ls')                        ..."]]
 ```
@@ -74,10 +75,10 @@ mtron> bash(cmd=>'whoami')
 ==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.4M  6.1G  ...',
+    'tmpfs           6.1G  6.3M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme1n1p2  916G  579G  291G  ...',
-    'tmpfs            31G  300M   31G  ...',
+    '/dev/nvme1n1p2  916G  578G  292G  ...',
+    'tmpfs            31G  296M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -256,10 +257,10 @@ mtron> */sys/env/HOME
 mtron> */sys/thread/+.count()
 ==>57
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::672.0,
-    free_mem_jvm=>mB::377.1195,
+==>[total_mem_jvm=>mB::648.0,
+    free_mem_jvm=>mB::424.6033,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::294.8804,
+    used_mem_jvm=>mB::223.3966,
     jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',

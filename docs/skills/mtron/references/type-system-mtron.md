@@ -113,7 +113,7 @@ it (`xxx::T[?]@yyy`) lands off the type hierarchy; types refine types, not refer
 
 ### instantiation
 
-```mtron_pre
+```mtron_pre cast=type-checks cols=100 rows=22 typing_delay=0.05
 hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
 23.as(posint::T)               [-- posint::23 --]
 being::[name=>'marko',age=>29] [-- a rec built under its type --]

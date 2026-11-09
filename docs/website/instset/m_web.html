@@ -505,7 +505,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <p class="instset-desc">the world of the web widens metatron</p>
     </div>
     <div class="instset-masthead-meta">
-        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">50</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">12</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">20</span><span class="instset-stat-l">defined elsewhere</span></div></div>
+        <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">51</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">13</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">20</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/web-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/web-instset-mtron.md">md</a></div>
             <span class="instset-built">built November 9, 2026</span>
@@ -566,11 +566,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                header=&gt;false]@/m/web/serializer/obj_xsv,
               obj_yaml::[
                indent=&gt;2,
-               pretty=&gt;true]@/m/web/serializer/obj_yaml],
+               pretty=&gt;true]@/m/web/serializer/obj_yaml,
+              obj_zip::[=&gt;]@/m/web/serializer/obj_zip],
              type=&gt;[
               uri::T[?union(application/bson,
                             application/json,
                             application/ld+json,
+                            application/zip,
                             media/,
                             media/mpeg,
                             application/octet-stream,
@@ -626,6 +628,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               serializer::T[?[
                {?}delimiter=&gt;isa(str::T),
                {?}header=&gt;isa(bool::T)]][ctor?obj_xsv&lt;=(obj_xsv::T){&lt;j&gt;}]@/m/web/serializer/obj_xsv,
+              serializer::T@/m/web/serializer/obj_zip,
               listener::T[?[
                {?}keystore=&gt;&lt;#&gt;::T,
                {?}pass=&gt;&lt;#&gt;::T,
@@ -690,6 +693,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}in=&gt;uri::T[?union(application/bson,
                                     application/json,
                                     application/ld+json,
+                                    application/zip,
                                     media/,
                                     media/mpeg,
                                     application/octet-stream,
@@ -717,6 +721,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}out=&gt;uri::T[?union(application/bson,
                                      application/json,
                                      application/ld+json,
+                                     application/zip,
                                      media/,
                                      media/mpeg,
                                      application/octet-stream,
@@ -846,6 +851,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__obj_yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_yaml</span>
+    <span class="pill-label badge bg-secondary ms-2">C</span>
+</a><a href="#__m__web__serializer__obj_zip" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_zip</span>
     <span class="pill-label badge bg-secondary ms-2">C</span>
 </a><a href="#__m__web__serializer__string__clean" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">clean</span>
@@ -982,6 +990,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </a><a href="#__m__web__serializer__obj_yaml" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">obj_yaml</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#__m__web__serializer__obj_zip" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">obj_zip</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">ws</small></div><div class="d-flex flex-wrap"><a href="#__m__web__ws__mtron_ws" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">mtron_ws</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -1022,7 +1033,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="consts">
-    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">12</span></h3>
+    <h3 class="text-primary mb-3">constants <span class="pill-label badge bg-secondary">13</span></h3>
     <div class="card mb-3" id="__m__web__serializer__bytebuffer">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span class="code text-secondary fw-bold">bytebuffer</span>
@@ -1135,9 +1146,18 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the yaml serializer — parses a yaml document into a rec and writes a rec back as yaml: \(\mathrm{yaml} \leadsto \mathrm{rec} \leadsto \mathrm{yaml}\)</p>
 </div>
+</div><div class="card mb-3" id="__m__web__serializer__obj_zip">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="code text-secondary fw-bold">obj_zip</span>
+        <small class="text-muted code">/m/web/serializer/obj_zip</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">obj_zip::[=&gt;]@/m/web/serializer/obj_zip</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the zip serializer — writes an obj as mtron source inside a zip archive and reads it back, and zips a file or directory an obj names rather than an obj of the file: \(\mathrm{zip} \leadsto \mathrm{obj} \leadsto \mathrm{zip}\)</p>
+</div>
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">50</span></h3>
+    <h3 class="text-primary mb-3">types <span class="pill-label badge bg-primary">51</span></h3>
     <div class="card mb-3" id="__m__web__mime__css">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1535,9 +1555,9 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#an mcp server specification" class="text-info">an mcp server specification</a> <span class="text-light">=&gt;</span> <a href="#a transport-agnostic mcp server" class="text-success">a transport-agnostic mcp server</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
-  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}prompt" class="text-light">{?}prompt</a> <span class="text-light">=&gt;</span> <a href="#'a collection of prompts (various obj types handled accordingly'" class="text-info">&#39;a collection of prompts (various obj types handled accordingly&#39;</a>
   <a href="#{?}resource" class="text-light">{?}resource</a> <span class="text-light">=&gt;</span> <a href="#'a collection of obj references (various obj types handled accordingly)'" class="text-info">&#39;a collection of obj references (various obj types handled accordingly)&#39;</a>
+  <a href="#{?}tool" class="text-light">{?}tool</a> <span class="text-light">=&gt;</span> <a href="#'a collection of inst::T, tool::T, or skill::T objs'" class="text-info">&#39;a collection of inst::T, tool::T, or skill::T objs&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__web__mcp__mcp_stdio">
@@ -1552,6 +1572,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
          {?}in=&gt;uri::T[?union(application/bson,
                               application/json,
                               application/ld+json,
+                              application/zip,
                               media/,
                               media/mpeg,
                               application/octet-stream,
@@ -1579,6 +1600,7 @@ mcp_client::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron          
          {?}out=&gt;uri::T[?union(application/bson,
                                application/json,
                                application/ld+json,
+                               application/zip,
                                media/,
                                media/mpeg,
                                application/octet-stream,
@@ -1705,6 +1727,7 @@ the session ends at EOF on stdin, which is how a client shuts the server down.
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[?union(application/bson,
               application/json,
               application/ld+json,
+              application/zip,
               media/,
               media/mpeg,
               application/octet-stream,
@@ -1927,6 +1950,20 @@ obj_bytebuffer::[=&gt;]</code></pre>
     
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the yaml serializer — parses a yaml document into a rec and writes a rec back as yaml: \(\mathrm{yaml} \leadsto \mathrm{rec} \leadsto \mathrm{yaml}\)</p>
+</div>
+</div><div class="card mb-3" id="__m__web__serializer__obj_zip">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">obj_zip::T</span>
+            <span class="ms-2">refines <a href="#__m__web__serializer" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/web/serializer::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/web/serializer/obj_zip</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">serializer::T@/m/web/serializer/obj_zip</code></pre></div>
+    
+    
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light"> the zip serializer — writes an obj as mtron source inside a zip archive and reads it back, and zips a file or directory an obj names rather than an obj of the file: \(\mathrm{zip} \leadsto \mathrm{obj} \leadsto \mathrm{zip}\)</p>
 </div>
 </div><div class="card mb-3" id="__m__web__protocol">
     <div class="card-header d-flex justify-content-between align-items-center py-2">

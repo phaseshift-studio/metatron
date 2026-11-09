@@ -15,6 +15,7 @@ description: |
   the liveness lattice (`admissible` / `serves` / `shardTargets`) that gates distribution.
 ---
 
+
 # the category graph (`/m/math/cat`)
 
 `/m/math/cat` realizes types and insts as a **category**: types are the objects (the vertices), insts are the

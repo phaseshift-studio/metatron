@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -34,9 +35,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class MtronPreprocessorTest extends AbstractMetatronTest {
 
+    /**
+     * A trailing [-- ... --] is the demo's caption: the listing keeps it, the
+     * typed line does not (a recording must not type its own documentation).
+     */
+    @Test
+    public void testAnnotationBecomesCaptionNotKeystrokes() {
+        final MtronPreprocessor.Result result =
+                new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER, false)
+                        .compile("```mtron_pre cast=demo\n1 + 1  [-- sums two --]\n```");
+        assertEquals(1, result.blocks().size());
+        assertEquals("demo", result.blocks().get(0).attributes().get("cast"));
+        final MtronPreprocessor.Statement statement = result.blocks().get(0).statements().get(0);
+        assertEquals("1 + 1", statement.input());
+        assertEquals("sums two", statement.caption());
+        assertTrue(statement.listing().contains("[-- sums two --]"));
+        assertTrue(result.text().contains("<!-- cast: demo -->"));
+    }
+
     @Test
     public void testMaxOutputDirective() {
-        MtronPreprocessor preprocessor = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER);
+        MtronPreprocessor preprocessor = new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER, true);
         final String output = preprocessor.process("""
                 [mtron]
                 ----
@@ -66,7 +85,7 @@ public class MtronPreprocessorTest extends AbstractMetatronTest {
 
     /// Run one adoc [mtron] block body through MtronPreprocessor.
     private static String process(final String... bodyLines) {
-        return new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER)
+        return new MtronPreprocessor(MtronPreprocessor.ADOC_HEADER, true)
                 .process("[mtron]\n----\n" + String.join("\n", bodyLines) + "\n----");
     }
 

@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -168,7 +169,9 @@ public class MarkdownRunner {
             LOG.info(Graphitty.sillyPrint("\n\nprocessing " + rel + "...\n\n", true, true));
             final long t0 = System.nanoTime();
             final String content = Files.readString(file);
-            final String processed = new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER).process(content);
+            final MtronPreprocessor.Result compiled =
+                    new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER, false).compile(content);
+            final String processed = compiled.text();
 
             final Path target = out.resolve(rel);
             // Written when the *copy* is out of date, not when evaluation changed the
@@ -182,6 +185,10 @@ public class MarkdownRunner {
                 Files.writeString(target, processed.stripTrailing());
                 LOG.info("  processed " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             }
+            // The blocks that opted into a recording are emitted beside the website
+            // (even when the markdown copy did not change: the cast is a separate
+            // artifact with its own freshness rule).
+            writeCasts(compiled, out, rel);
             ThreadExecutor.instance().shutdownNow();
         }
 
@@ -339,6 +346,8 @@ public class MarkdownRunner {
         final String bodyLinks = MD_HREF.matcher(body).replaceAll(mr ->
                 "href=\"" + mr.group(1) + ".html" + (mr.group(2) == null ? "" : mr.group(2)) + "\"");
         final String bodyShifted = shiftHeadingsDown(bodyLinks);
+        final String bodyCasts = castEmbeds(bodyShifted, websiteRoot, depth, fm.name());
+        final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
 
         final StringBuilder page = new StringBuilder();
         page.append(header);
@@ -348,8 +357,12 @@ public class MarkdownRunner {
         page.append("        <a href=\"").append(mdName).append("\" class=\"text-decoration-none text-light small\"><i class=\"bi bi-file-earmark-code me-1\"></i>").append(mdName).append("</a>\n");
         page.append("    </div>\n");
         page.append("    <div class=\"markdown-body\">\n");
-        page.append(bodyShifted);
+        page.append(bodyCasts);
         page.append("\n    </div>\n");
+        // the loader is only fetched by pages that actually carry a recording
+        if (bodyCasts.contains("asciinema-cast")) {
+            page.append("    <script src=\"").append(pre).append("js/asciinema.js\" defer></script>\n");
+        }
         page.append(footer);
 
         final String html = page.toString();
@@ -499,6 +512,130 @@ public class MarkdownRunner {
      */
     static boolean isCurrent(final Path target, final String processed) throws IOException {
         return Files.exists(target) && processed.stripTrailing().equals(Files.readString(target));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  Terminal recordings (the blocks that opted in with cast=<name>)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Render every block that opted into a recording into
+     * {@code <website>/asciinema/<name>.cast} — the wire format the browser
+     * player reads. The statements come from the SAME evaluation that produced
+     * the listing, so the page and the recording cannot disagree; the listing is
+     * printed once per keystroke by {@link Asciicast}, never by the author.
+     *
+     * <p>Skipped silently when the output is not under a website skills tree
+     * (probe runs), mirroring the html pass's own rule.</p>
+     *
+     * @return the number of recordings actually written (changed)
+     */
+    static int writeCasts(final MtronPreprocessor.Result compiled, final Path out,
+                          final Path source) throws IOException {
+        if (compiled.blocks().isEmpty()) return 0;
+        final Path skillsDir = skillsContainer(out);
+        if (skillsDir == null) return 0;
+        final Path asciinemaDir = skillsDir.getParent().resolve("asciinema");
+
+        int written = 0;
+        for (final MtronPreprocessor.Block block : compiled.blocks()) {
+            final String name = block.attributes().get("cast");
+            if (name == null) continue;
+            final Asciicast cast = Asciicast.of(attribute(block, "cols", 100),
+                            attribute(block, "rows", 30))
+                    .prompt("mtron> ")
+                    .typingDelay(attribute(block, "typing_delay", 0.05));
+            for (final String header : block.headers()) {
+                cast.marker(header);
+            }
+            for (final MtronPreprocessor.Statement statement : block.statements()) {
+                if (statement.hidden()) continue;
+                // the annotation is a caption, not a keystroke: it becomes a
+                // marker the page turns into the caption bar
+                if (statement.caption() != null) cast.marker(statement.caption());
+                cast.statement(statement.input(), statement.output(), !statement.noPrompt());
+            }
+            final Asciicast.Rendered rendered = cast.render(source.toString());
+            final Path target = asciinemaDir.resolve(name + ".cast");
+            Files.createDirectories(target.getParent());
+            if (Files.exists(target)
+                    && Files.readString(target, StandardCharsets.UTF_8).equals(rendered.text())) {
+                continue;
+            }
+            Files.writeString(target, rendered.text(), StandardCharsets.UTF_8);
+            LOG.info("[cast] wrote %s (%d events, %ss)", target, rendered.events(),
+                    String.format(java.util.Locale.ROOT, "%.2f", rendered.seconds()));
+            written++;
+        }
+        return written;
+    }
+
+    private static int attribute(final MtronPreprocessor.Block block, final String key, final int absent) {
+        final String value = block.attributes().get(key);
+        return value == null || value.isBlank() ? absent : Integer.parseInt(value);
+    }
+
+    private static double attribute(final MtronPreprocessor.Block block, final String key, final double absent) {
+        final String value = block.attributes().get(key);
+        return value == null || value.isBlank() ? absent : Double.parseDouble(value);
+    }
+
+    // The markdown pass plants this marker in front of an opted-in block; the
+    // html pass turns it into the player container (which needs the page depth,
+    // known only at render time).
+    private static final Pattern CAST_MARKER = Pattern.compile("<!-- cast: ([A-Za-z0-9._-]+) -->");
+
+    /**
+     * Replace every {@code <!-- cast: name -->} marker with a launcher and the
+     * modal its player lives in. The recording's own header supplies cols/rows,
+     * so a page never repeats the terminal geometry; the player itself is
+     * mounted when the modal opens (a page with a demo costs nothing until
+     * somebody watches it). The id is also the deep link: {@code #cast-<name>}
+     * opens that recording.
+     */
+    private static String castEmbeds(final String body, final Path websiteRoot, final String depth,
+                                     final String pageTitle) {
+        if (!body.contains("<!-- cast: ")) return body;
+        final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
+        return CAST_MARKER.matcher(body).replaceAll(mr -> {
+            final String name = mr.group(1);
+            final String id = "cast-" + name;
+            final String[] term = termSize(websiteRoot.resolve("asciinema").resolve(name + ".cast"));
+            return "<div class=\"asciinema-embed\">"
+                    + "<button type=\"button\" class=\"asciinema-launch\" data-bs-toggle=\"modal\""
+                    + " data-bs-target=\"#" + id + "\""
+                    + " aria-label=\"watch this terminal recording\">"
+                    + "<i class=\"bi bi-terminal-split\" aria-hidden=\"true\"></i>"
+                    + "<span>watch</span></button>"
+                    + "<div class=\"modal fade asciinema-modal\" id=\"" + id + "\" tabindex=\"-1\""
+                    + " aria-labelledby=\"" + id + "-title\" aria-hidden=\"true\">"
+                    + "<div class=\"modal-dialog modal-xl modal-dialog-centered\">"
+                    + "<div class=\"modal-content\">"
+                    + "<div class=\"modal-header\">"
+                    + "<h5 class=\"modal-title\" id=\"" + id + "-title\">" + pageTitle + "</h5>"
+                    + "<button type=\"button\" class=\"btn-close btn-close-white\""
+                    + " data-bs-dismiss=\"modal\" aria-label=\"close\"></button>"
+                    + "</div>"
+                    + "<div class=\"modal-body\">"
+                    + "<div class=\"asciinema-cast\" data-cast=\"" + pre + "asciinema/" + name + ".cast\""
+                    + " data-cols=\"" + term[0] + "\" data-rows=\"" + term[1] + "\""
+                    + " data-autoplay></div>"
+                    + "<div class=\"asciinema-caption\" aria-live=\"polite\"></div>"
+                    + "</div></div></div></div></div>";
+        });
+    }
+
+    /** The recording's term size from its header line; 80x24 when unreadable. */
+    private static String[] termSize(final Path cast) {
+        try {
+            final String header = Files.readString(cast, StandardCharsets.UTF_8).split("\n", 2)[0];
+            final Matcher cols = Pattern.compile("\"cols\":(\\d+)").matcher(header);
+            final Matcher rows = Pattern.compile("\"rows\":(\\d+)").matcher(header);
+            if (cols.find() && rows.find()) return new String[]{cols.group(1), rows.group(1)};
+        } catch (final IOException ignored) {
+            // a missing recording is the link check's problem, not the renderer's
+        }
+        return new String[]{"80", "24"};
     }
 
     /**

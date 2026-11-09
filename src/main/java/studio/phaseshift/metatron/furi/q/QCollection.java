@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.DATETIME_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -331,8 +332,12 @@ public final class QCollection {
                     }
                     // No content-type match — fall back to mimeq serialization
                     // (e.g. str "hello" with ?mimeq=application/json → "\"hello\"")
+                    // A BINARY media type answers its bytes, not a str: the zip archive (and any byte encoding) is
+                    // not text, and stringifying its bytes would corrupt every non-ASCII byte in transit.
                     if (mimeType.hasSerializer())
-                        return str(mimeType.serializer().write(obj).toString());
+                        return mimeType.isText()
+                                ? str(mimeType.serializer().write(obj).toString())
+                                : bytes(mimeType.serializer().outputBytes(obj).array());
                     return obj;
                 }).create();
     }

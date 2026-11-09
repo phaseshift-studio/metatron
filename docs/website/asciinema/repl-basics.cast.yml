@@ -1,0 +1,39 @@
+# repl basics — a terminal demo as a script, not as a recording
+#
+# This file is the SOURCE.  It compiles to repl-basics.cast: the asciicast v3
+# file the browser player reads.  The per-keystroke events in that file are
+# GENERATED from typing_delay below, so a command is one line here and never
+# one-hundred events there.  Set typing_delay: 0 to have it appear instantly.
+#
+# Compile (regenerates the .cast beside this file):
+#     java -cp <snakeyaml> .../AsciinemaRunner.java docs/website/asciinema/repl-basics.cast.yml
+# Check without writing (for a build gate):
+#     ... --check
+#
+# `output:` is what the console prints.  Today it is rendered as given; the
+# next step evaluates `input` in the docs VM and fails when the real answer
+# differs — the same file then *is* the test.
+
+title: "repl basics: the mtron console"
+prompt: "mtron> "
+cols: 100
+rows: 24
+
+typing_delay: 0.06          # seconds per generated keystroke (0 = paste)
+start_delay: 0.35           # before the first prompt
+prompt_delay: 0.20          # before every later prompt
+pre_enter_delay: 0.12       # before the Enter newline
+post_enter_delay: 0.30      # before the result lands
+marker_delay: 0.20
+idle_time_limit: 2
+
+actions:
+  - input: "1 + 1"
+    output:
+      - "==>2"
+
+  - marker: "second expression"
+
+  - input: "2 * 21"
+    output:
+      - "==>42"

@@ -3,6 +3,8 @@ name: type-system-mtron
 description: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, poly types and their three readings (tensor, fibered, path), lifting and covariance
 ---
 
+<!-- cast: type-checks -->
+
 # mtron type system
 
 ## core concepts

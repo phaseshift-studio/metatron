@@ -7,6 +7,7 @@ description: |
   between them.
 ---
 
+
 # Machine Architecture (Java)
 
 ## What a Machine is
