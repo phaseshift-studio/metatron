@@ -1329,6 +1329,10 @@ public interface Inst extends Call {
             return null == func ? null : new f(func);
         }
 
+        public Object func() {
+            return this.func;
+        }
+
         @Override
         public int hashCode() {
             return Objects.hash(this.bi, this.func);

@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
@@ -335,6 +335,7 @@ public interface Uri extends Mono, Comparable<Uri> {
     final class UriType {
         private final static Map<String, Pattern> REGEX_CACHE = new ConcurrentHashMap<>();
 
+
         /*
          * WHAT REMAINS HERE, and why: two `as` conversions that declare nothing (uri->int, uri->uri) -- registered with
          * instC, so neither stages a `?decq` claim, no law and no inverse -- the has/split bodies, which read this
@@ -348,18 +349,7 @@ public interface Uri extends Mono, Comparable<Uri> {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), null)),
                     instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).vidOrTid().c(c -> c.mult(lhs.c())), lhs.vid())),
-                    InstBuilder.build().tid(AS_INST_TID).dom(URI_TID).rng(REC_TID).argLst(REC_TYPE).body((lhs, _) -> {
-                        final fURI lhsUri = lhs.asUri().uriValue();
-                        return rec(
-                                SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
-                                SUB, lhsUri.subdomain() == null ? noobj() : uri(lhsUri.subdomain()),
-                                HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
-                                PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
-                                AUTHORITY, lhsUri.authority() == null ? noobj() : uri(lhsUri.authority()),
-                                PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
-                                COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
-                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue())))).c(c -> c.mult(lhs.c())));
-                    })
+                    InstBuilder.build().tid(AS_INST_TID).dom(URI_TID).rng(REC_TID).argLst(REC_TYPE).body((lhs, _) -> Uri.Helper.uriToRec(lhs.asUri()))
                             .law(Law.pure)
                             .inverse(AS_INST_TID.dom(REC_TID).rng(URI_TID))
                             .create(),
@@ -387,6 +377,19 @@ public interface Uri extends Mono, Comparable<Uri> {
 
         private Helper() {
             // do nothing
+        }
+
+        public static Rec uriToRec(final Uri u) {
+            final fURI lhsUri = u.uriValue();
+            return rec(
+                    SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
+                    SUB, lhsUri.subdomain() == null ? noobj() : uri(lhsUri.subdomain()),
+                    HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
+                    PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
+                    AUTHORITY, lhsUri.authority() == null ? noobj() : uri(lhsUri.authority()),
+                    PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
+                    COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
+                    QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), Helper.parseQ(kv.getValue())))).c(c -> c.mult(u.c())));
         }
 
         /**

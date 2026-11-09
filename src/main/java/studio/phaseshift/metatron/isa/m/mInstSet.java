@@ -789,6 +789,7 @@ public class mInstSet extends AbstractInstSet {
                         mInsts.uri_insts().stream(),
                         mInsts.lsts_insts().stream(),
                         mInsts.rec_insts().stream(),
+                        mInsts.inst_insts().stream(),
                         mInsts.code_insts().stream(),
                         mInsts.objs_insts().stream(),
                         Int.IntType.insts().stream(),
