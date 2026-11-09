@@ -4,8 +4,8 @@
     --secondarycolor: #191C24;
     --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
-    --linkcolor: #58a6ff; /* hyperlink blue */
-    --linkcoloralternate: #2652e5;
+    --linkcolor: #6C7293; /* hyperlink blue */
+    --linkcoloralternate: #4c5375;
     --white: #e8e8e8; /* body text (off-white) */
     --primary: #970207; /* accent red (interactive / hover / brand) */
     --secondary: #191C24;
@@ -448,7 +448,7 @@ code.hljs {
 }
 
 code {
-    color: var(--mblue);
+    color: #797585;
 }
 
 em {
@@ -689,8 +689,8 @@ em {
 .navbar .dropdown-menu {
     max-height: calc(100vh - 120px);
     overflow-y: auto;
-    scrollbar-width: thin;               /* Firefox */
-    scrollbar-color: var(--primary) transparent;  /* Firefox: thumb track */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--primary) transparent; /* Firefox: thumb track */
 }
 
 /* A slim, dark scrollbar for the dropdown — a dark-red thumb on a near-invisible
@@ -1528,11 +1528,25 @@ details[open] summary::before {
     color: var(--mred);
 }
 
-.admonitionblock .icon .icon-note::before { content: "Note"; }
-.admonitionblock .icon .icon-tip::before { content: "Tip"; }
-.admonitionblock .icon .icon-important::before { content: "Important"; }
-.admonitionblock .icon .icon-warning::before { content: "Warning"; }
-.admonitionblock .icon .icon-caution::before { content: "Caution"; }
+.admonitionblock .icon .icon-note::before {
+    content: "Note";
+}
+
+.admonitionblock .icon .icon-tip::before {
+    content: "Tip";
+}
+
+.admonitionblock .icon .icon-important::before {
+    content: "Important";
+}
+
+.admonitionblock .icon .icon-warning::before {
+    content: "Warning";
+}
+
+.admonitionblock .icon .icon-caution::before {
+    content: "Caution";
+}
 
 .admonitionblock .icon .title {
     color: var(--mred);

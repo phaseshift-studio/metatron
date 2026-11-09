@@ -74,6 +74,9 @@ public class ideInstSetTest extends AbstractMetatronTest {
 
     @BeforeAll
     static void loadInstSets() throws IOException {
+        // the project->skill view's range is /m/ai/llm/skill — mount it so the range check is real
+        // here, not silently skipped when this class runs on its own (the type is created on mount)
+        InstSet.importInstSet(f("/m/ai/llm"));
         InstSet.importInstSet(IDE_ISA_TID, f("ide"));
         createSearchTree();
         final fsSpace space = FS_SPACE_TYPE.constructor().asInst().args(lst(rec(

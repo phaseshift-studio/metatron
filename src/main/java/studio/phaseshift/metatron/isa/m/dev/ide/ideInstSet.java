@@ -162,8 +162,13 @@ public class ideInstSet extends AbstractInstSet {
                                     try {
                                         if (project.has(NAME))
                                             skill.at(NAME, uri(project.at(NAME).strValue()), MUTABLE);
+                                        // the skill contract requires a description and a project need not
+                                        // carry one, so name the project — the same defaulting agent->skill
+                                        // applies ("an agent named …")
                                         if (project.has(DESC))
                                             skill.at(DESC, project.at(DESC), MUTABLE);
+                                        else if (project.has(NAME))
+                                            skill.at(DESC, str("a project named " + project.at(NAME).strValue()), MUTABLE);
                                         if (project.has(CONTENT))
                                             skill.at(CONTENT, project.at(CONTENT), MUTABLE);
                                         if (project.has(TOOL))
