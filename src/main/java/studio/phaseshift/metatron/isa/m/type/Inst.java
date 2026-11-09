@@ -474,12 +474,19 @@ public interface Inst extends Call {
                     return false;
             }
             final Inst otherInst = other.asInst();
-            final int maxArgs = (int) Math.max(this.args().count(), otherInst.args().count());
-            for (int i = 0; i < maxArgs; i++) {
-                final Obj aArg = this.arg(i);
-                final Obj bArg = otherInst.arg(i);
-                if (!aArg.test(bArg))
+            if (this.args().isLst() && otherInst.args().isLst() && otherInst.args().lstValue().stream().anyMatch(arg -> !arg.tid().b().isOne())) {
+                // AN ARG'S SPAN IS A RUN OF ARGS (Marko 11-08: plus({2}str::T) is plus(str::T,str::T)), laid over the
+                // args as a lst type's entries are, but closed: an instruction's arity is its own, so every arg is claimed
+                if (!Type.Helper.runs(this.args().lstValue(), otherInst.args().lstValue()).contains(this.args().lstValue().size()))
                     return false;
+            } else {
+                final int maxArgs = (int) Math.max(this.args().count(), otherInst.args().count());
+                for (int i = 0; i < maxArgs; i++) {
+                    final Obj aArg = this.arg(i);
+                    final Obj bArg = otherInst.arg(i);
+                    if (!aArg.test(bArg))
+                        return false;
+                }
             }
             if (this.hasf() && otherInst.hasf())
                 return Objects.equals(this.f(), otherInst.f());

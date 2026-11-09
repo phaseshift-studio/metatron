@@ -766,8 +766,20 @@ public interface Type extends Obj {
             if (entries.stream().allMatch(entry -> entry.tid().b().isOne()))
                 return lst.test(lst((List) entries));
             final List<Obj> values = lst.lstValue().stream().map(value -> (Obj) value.autoResolve(lst)).toList();
+            final Set<Integer> reached = runs(values, entries);
+            return null == entries.getLast().tid().b().max() ? reached.contains(values.size()) : !reached.isEmpty();
+        }
+
+        /**
+         * The runs {@code entries} lay over {@code values}: the indices the entries, in order, can end at. An entry's
+         * SPAN covers a run, {@code {span}type{point}}: it takes k values, k in its span, each holding the entry
+         * without its span, and a trailing entry whose point admits zero may take none. A value that is itself a
+         * spanned type is a whole run, so it takes an entry it tests whole: a signature against a signature. A lst
+         * type is open past its last entry ({@link #testTensor}); an instruction's args are closed ({@link Inst#test}).
+         */
+        public static Set<Integer> runs(final List<? extends Obj> values, final List<? extends Obj> entries) {
             Set<Integer> reached = Set.of(0); // the indices the entries so far can end at
-            for (final Type entry : entries) {
+            for (final Obj entry : entries) {
                 final cInt span = entry.tid().b();
                 final Obj slot = entry.tid(entry.tid().b(null)); // one index of the run: the entry without its span
                 final long least = Math.max(0L, null == span.min() ? 0L : span.min());
@@ -775,6 +787,8 @@ public interface Type extends Obj {
                 for (final int start : reached) {
                     if (start == values.size() && entry.c().isZeroable())
                         next.add(start); // a missing trailing index, as Lst.test allows it
+                    if (start < values.size() && !values.get(start).tid().b().isOne() && values.get(start).test(entry))
+                        next.add(start + 1);
                     if (null != span.max() && span.max() < least)
                         continue;
                     int end = start;
@@ -785,7 +799,7 @@ public interface Type extends Obj {
                 }
                 reached = next;
             }
-            return null == entries.getLast().tid().b().max() ? reached.contains(values.size()) : !reached.isEmpty();
+            return reached;
         }
 
         /**

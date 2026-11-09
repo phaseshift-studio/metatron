@@ -126,6 +126,25 @@ public class CodeTest extends AbstractMetatronTest {
             "[plus(2).mult(2)]==[?(plus(int::T))]                              % [noobj]",
             "[plus(2)]==[?(plus(int::T).mult(int::T))]                         % [noobj]",
             "[plus(2)]==[?(plus(int::T))]                                      % [plus(2)]",
+            // an arg's span is a run of args: plus({3}int::T) is plus(int::T,int::T,int::T), and the args are closed
+            "[plus(1,2,3)]==[?plus({3}int::T)]                                 % [plus(1,2,3)]",
+            "[plus(1,2,3)]==[?(plus({3}int::T))]                               % [plus(1,2,3)]",
+            "[plus(1,2,3)]==[?plus({3}/m/int{1}::T)]                           % [plus(1,2,3)]",
+            "[plus(1,2)]==[?plus({3}int::T)]                                   % [noobj]",
+            "[plus(1,2,3,4)]==[?plus({3}int::T)]                               % [noobj]",
+            "[plus(1,'a',3)]==[?plus({3}int::T)]                               % [noobj]",
+            "[plus(1,2,3,4)]==[?plus({*}int::T)]                               % [plus(1,2,3,4)]",
+            "[plus(1,'a','b')]==[?plus(int::T,{2}str::T)]                      % [plus(1,'a','b')]",
+            "[plus(1,'a','b',2)]==[?plus(int::T,{2}str::T)]                    % [noobj]",
+            "[plus('a','b')]==[?plus({?}int::T,{2}str::T)]                     % [plus('a','b')]",
+            "[plus(1,'a','b')]==[?plus({?}int::T,{2}str::T)]                   % [plus(1,'a','b')]",
+            // a point is how many at one arg, not a run of args
+            "[plus(1,2,3)]==[?plus(int{3}::T)]                                 % [noobj]",
+            "[plus({3}1)]==[?plus(int{3}::T)]                                  % [plus({3}1)]",
+            // a spanned type is a whole run, so a signature tests a signature
+            "[plus({3}int::T)]==[?plus({3}int::T)]                             % [plus({3}int::T)]",
+            "[plus({3}int::T)]==[?plus({*}int::T)]                             % [plus({3}int::T)]",
+            "[plus({*}int::T)]==[?plus({3}int::T)]                             % [noobj]",
             // a lst select keeps the slot its filter rejects, as for any value
             "[1]==[?(str::T)]                                                  % [noobj]",
     }, delimiter = '%', quoteCharacter = '^')
