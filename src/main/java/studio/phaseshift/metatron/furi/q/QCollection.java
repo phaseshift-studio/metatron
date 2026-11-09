@@ -669,14 +669,16 @@ public final class QCollection {
                     final fURI vidBig = vid.big();
                     if (!vidBig.equals(vid))
                         return Machine.write(vidBig, obj);
+                    final fURI address = vidBig.removeQ(DECQ);
+                    // a claim the store already holds changes nothing, so it evicts nothing: a read that misses re-writes
+                    // every staged sibling of its operation (PendingWrites.publish), most of them already published. Asked
+                    // before the decs::T test: an equal claim (vid, tid and value) passed that test when it landed, and the
+                    // test was most of the cost of every such re-write (measured 2026-11-08, ~270 µs a write)
+                    if (obj.equals(declarations.read(address)))
+                        return obj;
                     // a declaration is about an obj: only a decs::T is stored (noobj, the override, clears it)
                     if (!obj.isNoObj() && !obj.test(DECS_TYPE))
                         return fail(MTronException.of("%s is not a decs::T declaration", obj));
-                    final fURI address = vidBig.removeQ(DECQ);
-                    // a claim the store already holds changes nothing, so it evicts nothing: a read that misses re-writes
-                    // every staged sibling of its operation (PendingWrites.publish), most of them already published
-                    if (obj.equals(declarations.read(address)))
-                        return obj;
                     // ... and a new claim is stored only when it is sound: a law outside law::T, or an equation that cannot
                     // run both ways, is refused (a claim the store holds was admitted when it landed)
                     final Obj refused = obj.isNoObj() ? noobj() : VALIDATE.apply(obj.asRec());

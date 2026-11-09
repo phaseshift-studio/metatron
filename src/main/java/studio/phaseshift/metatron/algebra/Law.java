@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
@@ -386,19 +387,39 @@ public enum Law {
         /**
          * THE CLAIMS SNAPSHOT — the equations the registered instructions' {@code ?decq} claims state: each defining
          * equation keyed by the address it is declared at, each law's local equations ({@link #equations}) and the units
-         * their carriers' theories declare ({@link #units}), with the staging revision and the claim writes it was taken
-         * at. Retaken when a builder stages a claim (the revision moves), when a {@code ?decq} write lands
-         * ({@link #evict}), or while the machine was not yet up.
+         * their carriers' theories declare ({@link #units}), with each instruction's claim as the walk read it
+         * ({@link Claim}, keyed by its tid), and the staging revision and the claim writes it was taken at. Retaken when
+         * a builder stages anything (the revision moves), when a {@code ?decq} write lands ({@link #evict}), or while
+         * the machine was not yet up; a retake re-reads only the claims a change can have reached ({@link #claims}).
          */
         private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations, List<Rec> units,
-                              List<Map.Entry<Inst, Rec>> rows) {
+                              List<Map.Entry<Inst, Rec>> rows, Map<fURI, Claim> read) {
         }
 
-        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of());
+        /**
+         * AN INSTRUCTION'S CLAIM AS A WALK READ IT — whether the store answered with the instruction's own claim (an
+         * ancestor's, which a read falls back to by subsumption, is not its own), and what the answer states for it: its
+         * defining equation, its row ({@link #declaredRow(fURI, Obj)}) and its local equations by law, noobj (none) when
+         * it states none.
+         */
+        private record Claim(Inst inst, boolean own, Rec derivation, Rec row, Map<Law, Rec> equations) {
+        }
+
+        private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of(), Map.of());
         private static volatile List<PendingWrites.Write> CLAIMS_AT = null;
         private static volatile long CLAIMS_SEEN = -1;
         private static volatile boolean CLAIMS_LOADED = false;
         private static final AtomicLong CLAIM_WRITES = new AtomicLong();
+
+        /**
+         * WHERE A RETAKE MUST READ AGAIN — the base paths a {@code ?decq} write landed under since the last retake
+         * ({@link #evict}), and every base path a claim was ever staged or written under ({@code CLAIMED}, guarded by
+         * itself, the retake's lock). The store answers an instruction whose own claim it does not hold by subsumption
+         * over the claims under its base path, and type definitions decide that, so such an instruction is read again on
+         * every retake.
+         */
+        private static final Set<fURI> EVICTED = ConcurrentHashMap.newKeySet();
+        private static final Set<fURI> CLAIMED = new HashSet<>();
 
         /**
          * The inverse equations ({@link #inverses}) and the snapshot they were read off: an inverse is the carrier's
@@ -411,20 +432,25 @@ public enum Law {
          * A BOOT IS A FRESH WORLD — forget the claims snapshot ({@code BootLoader.resetMemos}, before any set mounts).
          */
         public static void reset() {
-            CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of());
-            CLAIMS_AT = null;
-            CLAIMS_SEEN = -1;
-            CLAIMS_LOADED = false;
-            INVERSES = List.of();
-            INVERSES_FOR = null;
+            synchronized (CLAIMED) {
+                CLAIMS = new Claims(Map.of(), Map.of(), List.of(), List.of(), Map.of());
+                CLAIMS_AT = null;
+                CLAIMS_SEEN = -1;
+                CLAIMS_LOADED = false;
+                EVICTED.clear();
+                CLAIMED.clear();
+                INVERSES = List.of();
+                INVERSES_FOR = null;
+            }
         }
 
         /**
-         * A {@code ?decq} DECLARATION LANDED ({@code QCollection.EVICT}, which a claim the store already held never
-         * reaches): the snapshot is retaken on its next read, since any changed claim can change an equation, a law or
-         * the instructions that state one.
+         * A {@code ?decq} DECLARATION LANDED at {@code address} ({@code QCollection.EVICT}, which a claim the store already
+         * held never reaches): the snapshot is retaken on its next read, and every instruction under the address's base
+         * path is read again, since a changed claim can change an equation, a law or the instructions that state one.
          */
-        public static void evict() {
+        public static void evict(final fURI address) {
+            EVICTED.add(address.basePath());
             CLAIM_WRITES.incrementAndGet();
         }
 
@@ -462,56 +488,95 @@ public enum Law {
          * local equations are built over its own op ({@link #op}): {@code involution} {@code f·f ⇝ ε} (the empty code),
          * {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. Instructions sharing an op share the rule. The units are
          * the theories of every carrier an instruction folds ({@link #units}).
+         * <p>
+         * A RETAKE READS AGAIN ONLY WHERE A CHANGE CAN REACH: an instruction under a base path a builder staged anything
+         * at, or a {@code ?decq} write landed under, since the last walk, and one the store answers without its own claim
+         * under a base path that holds claims ({@code CLAIMED}). Every other instruction keeps its {@link Claim} — a
+         * builder stages per test, and a walk of every claim per retake cost about half a second (2026-11-08). One
+         * retake at a time, so each change is taken once; the tables are rebuilt from the claims in the instset's order.
          */
         private static Claims claims() {
-            final List<PendingWrites.Write> revision = PendingWrites.writes();
-            final long written = CLAIM_WRITES.get();
-            if (CLAIMS_LOADED && revision == CLAIMS_AT && written == CLAIMS_SEEN)
+            if (CLAIMS_LOADED && PendingWrites.writes() == CLAIMS_AT && CLAIM_WRITES.get() == CLAIMS_SEEN)
                 return CLAIMS;
-            final boolean loaded = Machine.loaded();
-            final Map<fURI, Rec> derivations = new LinkedHashMap<>();
-            final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
-            final Set<fURI> carriers = new LinkedHashSet<>();
-            final List<Map.Entry<Inst, Rec>> rows = new ArrayList<>();
-            if (loaded)
-                for (final Inst inst : Machine.current().instset().insts()) {
-                    if (null != inst.tid() && null != inst.tid().dom() && null != algebraOf(inst.tid().dom()))
-                        carriers.add(inst.tid().dom().basePath());
-                    final Obj claim = null == inst.tid() ? noobj() : Machine.read(stagingAddress(inst.tid()));
-                    if (!claim.isRec())
-                        continue;
-                    final Rec derivation = declaredDerivation(claim.asRec());
-                    if (!derivation.isNoObj())
-                        derivations.putIfAbsent(Inst.Helper.operationTid(inst.tid()), derivation);
-                    final Rec row = declaredRow(inst.tid(), claim);
-                    if (!row.isNoObj())
-                        rows.add(Map.entry(inst, row));
-                    final Rec declared = declaredEntry(claim);
-                    final Inst op = op(inst);
-                    for (final Law law : List.of(Law.involution, Law.idempotent, Law.monoidic))
-                        if (declares(declared, law))
-                            equations.computeIfAbsent(law, key -> new LinkedHashSet<>())
-                                    .add(rec(code(List.of(op, op)), code(Law.involution == law ? List.<Inst>of() : List.of(op))));
+            synchronized (CLAIMED) {
+                final List<PendingWrites.Write> revision = PendingWrites.writes();
+                final long written = CLAIM_WRITES.get();
+                if (CLAIMS_LOADED && revision == CLAIMS_AT && written == CLAIMS_SEEN)
+                    return CLAIMS;
+                final Set<fURI> touched = new HashSet<>();
+                for (final Iterator<fURI> evicted = EVICTED.iterator(); evicted.hasNext(); ) {
+                    touched.add(evicted.next());
+                    evicted.remove();
                 }
-            final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
-            equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
-            final Set<Rec> units = new LinkedHashSet<>();
-            for (final fURI carrier : carriers)
-                for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values())
-                    for (final String[] roles : block.isRec() ? TheoryHelper.UNIT_ROLES : List.<String[]>of()) {
-                        final Inst unit = TheoryHelper.unit(block.asRec(), roles[0], roles[1]);
-                        if (!unit.isNoObj())
-                            units.add(rec(code(List.of(instB(unit.tid().basePath(), unit.args()))), code(List.<Inst>of())));
+                CLAIMED.addAll(touched);
+                // THE LOG ONLY APPENDS, so a write at an index the last revision held is the same address, re-staged
+                // when it is another write -- unless the log was cleared, and then no claim is kept
+                final List<PendingWrites.Write> was = null == CLAIMS_AT ? List.of() : CLAIMS_AT;
+                boolean cleared = revision.size() < was.size();
+                for (int i = 0; i < revision.size(); i++) {
+                    final PendingWrites.Write write = revision.get(i);
+                    if (i < was.size() && write == was.get(i))
+                        continue;
+                    cleared |= i < was.size() && !write.address().equals(was.get(i).address());
+                    touched.add(write.address().basePath());
+                    if (write.address().hasQ(QCollection.DECQ))
+                        CLAIMED.add(write.address().basePath());
+                }
+                final Map<fURI, Claim> held = cleared ? Map.of() : CLAIMS.read();
+                final boolean loaded = Machine.loaded();
+                final Map<fURI, Claim> read = new HashMap<>();
+                final Map<fURI, Rec> derivations = new LinkedHashMap<>();
+                final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
+                final Set<fURI> carriers = new LinkedHashSet<>();
+                final List<Map.Entry<Inst, Rec>> rows = new ArrayList<>();
+                if (loaded)
+                    for (final Inst inst : Machine.current().instset().insts()) {
+                        if (null == inst.tid())
+                            continue;
+                        if (null != inst.tid().dom() && null != algebraOf(inst.tid().dom()))
+                            carriers.add(inst.tid().dom().basePath());
+                        final fURI operation = Inst.Helper.operationTid(inst.tid());
+                        final fURI base = operation.basePath();
+                        Claim claim = held.get(inst.tid());
+                        if (null == claim || claim.inst() != inst || touched.contains(base) || !claim.own() && CLAIMED.contains(base)) {
+                            final Obj stored = Machine.read(PendingWrites.decq(operation));
+                            final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
+                            final Rec declared = declaredEntry(stored);
+                            final Inst op = stored.isRec() ? op(inst) : null;
+                            final Map<Law, Rec> stated = new EnumMap<>(Law.class);
+                            for (final Law law : List.of(Law.involution, Law.idempotent, Law.monoidic))
+                                if (declares(declared, law))
+                                    stated.put(law, rec(code(List.of(op, op)), code(Law.involution == law ? List.<Inst>of() : List.of(op))));
+                            claim = new Claim(inst, claimant.isInst() && Inst.Helper.operationTid(claimant.tid()).equals(operation),
+                                    stored.isRec() ? declaredDerivation(stored.asRec()) : noobjRec(), declaredRow(inst.tid(), stored), stated);
+                        }
+                        read.put(inst.tid(), claim);
+                        if (!claim.derivation().isNoObj())
+                            derivations.putIfAbsent(operation, claim.derivation());
+                        if (!claim.row().isNoObj())
+                            rows.add(Map.entry(inst, claim.row()));
+                        claim.equations().forEach((law, rule) -> equations.computeIfAbsent(law, key -> new LinkedHashSet<>()).add(rule));
                     }
-            final fURI identity = loaded ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
-            if (null != identity)
-                units.add(rec(code(List.of(instB(identity, lst()))), code(List.<Inst>of())));
-            final Claims snapshot = new Claims(derivations, rules, List.copyOf(units), List.copyOf(rows));
-            CLAIMS = snapshot;
-            CLAIMS_AT = revision;
-            CLAIMS_SEEN = written;
-            CLAIMS_LOADED = loaded;
-            return snapshot;
+                final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
+                equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
+                final Set<Rec> units = new LinkedHashSet<>();
+                for (final fURI carrier : carriers)
+                    for (final Obj block : TheoryHelper.instances(T(carrier)).jvm().values())
+                        for (final String[] roles : block.isRec() ? TheoryHelper.UNIT_ROLES : List.<String[]>of()) {
+                            final Inst unit = TheoryHelper.unit(block.asRec(), roles[0], roles[1]);
+                            if (!unit.isNoObj())
+                                units.add(rec(code(List.of(instB(unit.tid().basePath(), unit.args()))), code(List.<Inst>of())));
+                        }
+                final fURI identity = loaded ? TheoryHelper.compositionIdentity(T(CODE_TID)) : null;
+                if (null != identity)
+                    units.add(rec(code(List.of(instB(identity, lst()))), code(List.<Inst>of())));
+                final Claims snapshot = new Claims(derivations, rules, List.copyOf(units), List.copyOf(rows), read);
+                CLAIMS = snapshot;
+                CLAIMS_AT = revision;
+                CLAIMS_SEEN = written;
+                CLAIMS_LOADED = loaded;
+                return snapshot;
+            }
         }
 
         /**
