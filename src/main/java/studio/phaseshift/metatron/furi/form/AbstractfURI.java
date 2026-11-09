@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Component.HOST;
@@ -698,37 +699,19 @@ public abstract class AbstractfURI implements fURI {
         return fURI.of(this.b(), this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ, this.templates());
     }
 
+    /**
+     * The canonical sum of every term of both uris ({@link fURI.Helper#sum(Stream)}): like terms add
+     * their points, zero terms drop, and the rest branch. {@code a/b/c + a/d/c} is {@code a/{b,d}/c}, and
+     * {@link #branches()} gives each term back with its point.
+     */
     @Override
     public fURI plus(final fURI other) {
-        if (other.isEmpty())
-            return this;
-        if (this.isEmpty())
-            return other;
-        if (this.isZero())
-            return other;
-        if (other.isZero())
-            return this;
-        if (Objects.equals(this.scheme(), other.scheme()) &&
-                Objects.equals(this.host(), other.host()) &&
-                Objects.equals(this.port(), other.port())) {
-            final SortedMap<String, String> newQ = mutableQ(this.qMap());
-            newQ.putAll(other.qMap());
-            final boolean samePath = Objects.equals(this.path(), other.path());
-            final List<String> path = samePath ? this.path() : mergePaths(this.path(), other.path(), this.c(), other.c());
-            // same path → two copies, so the multiplicity is the coefficient sum; a factored branch already encodes
-            // the union in the `{…}` segment (per-element operand coefficients moved into it), so its coefficient stays one.
-            final cInt coefficient = samePath ? this.c().plus(other.c()) : cInt.ONE();
-            return fURI.of(this.b(), this.scheme(), this.host(), this.port(), path, coefficient, this.poly(), newQ, this.templates());
-        } else {
-            final SortedMap<String, String> newQ = mutableQ(this.qMap());
-            newQ.putAll(other.qMap());
-            return fURI.of(null, null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ, this.templates());
-            // throw MTronException.of("unable to add %s to %s", other, this);
-        }
+        return fURI.Helper.sum(Stream.concat(this.branches(), other.branches()));
     }
 
     /**
-     * Factored path union. The longest common prefix and suffix are factored out, and the divergent middles are
+     * Uri's path union ({@code Uri.plus}): it predates the branch algebra of {@link #plus(fURI)}, whose spelling it
+     * does not share. The longest common prefix and suffix are factored out, and the divergent middles are
      * collapsed into one flat branch — a middle that is itself a {@code {…}} branch is flattened into its elements, so
      * {@code a/{b,d}/c + a/c/c} → {@code a/{b,c,d}/c}. Two coefficient moves happen here: an operand's coefficient is
      * carried onto its branch element (so {@code a/b/c{2,3} + a/d/c{-3,-2}} → {@code a/{{2,3}b,{-3,-2}d}/c}), and when
