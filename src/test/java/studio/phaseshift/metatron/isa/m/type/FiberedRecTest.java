@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -43,7 +42,8 @@ public class FiberedRecTest extends AbstractMetatronTest {
      * </pre>
      * The bundle survives the call, so a chain keeps lifting; navigating to the fiber ({@code >>age}) is how a call
      * comes down. Every fiber the call is about runs it — the parallel fibers — and the answer is still one bundle,
-     * with a field that is no fiber ({@code tag}) left as it was.
+     * with a field that is no fiber ({@code tag}, {@code currency}, {@code device}) carried as it was, and the
+     * bundle's own multiplicity kept ({@code {2}person}).
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -55,38 +55,58 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "person -> rec[age]::T[?[name=>str::T,age=>int::T]]@person",
             "pair -> noobj",
             "pair -> rec[a,b]::T[?[a=>int::T,b=>int::T,tag=>str::T]]@pair",
+            "money -> noobj",
+            "money -> rec[amount]::T[?[amount=>real::T,currency=>str::T]]@money",
+            "reading -> noobj",
+            "reading -> rec[value]::T[?[value=>real::T,device=>str::T]]@reading",
             "marko -> person[int]::[name=>'marko',age=>29]@marko",
             "tick -> |inst?<=int(){ plus(1) }",
     })
     @CsvSource(value = {
-            "person[int]::[name=>'marko',age=>29].plus(1)           % person[int]::[name=>'marko',age=>30]",
-            "person[int]::[name=>'marko',age=>29] + 1               % person[int]::[name=>'marko',age=>30]",
-            "person[int]::[name=>'marko',age=>29].plus(1).plus(1)   % person[int]::[name=>'marko',age=>31]",
-            "*marko.plus(1)                                         % person[int]::[name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29].plus(1)                            % person[int]::[name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29] + 1                                % person[int]::[name=>'marko',age=>30]",
+            "person[int]::[name=>'marko',age=>29].plus(1).plus(1)                    % person[int]::[name=>'marko',age=>31]",
+            "{2}person[int]::[name=>'marko',age=>29].plus(1)                         % {2}person[int]::[name=>'marko',age=>30]",
+            "*marko.plus(1)                                                          % person[int]::[name=>'marko',age=>30]",
             // an instruction declared on the fiber's type lifts like a built-in one
-            "*marko.tick()                                          % person[int]::[name=>'marko',age=>30]",
-            "*marko.plus(1)>>age                                    % 30",
-            "*marko.plus(1).type()                                  % rec[age]::T[?[name=>str::T,age=>int::T]]@person[int]",
+            "*marko.tick()                                                           % person[int]::[name=>'marko',age=>30]",
+            "*marko.plus(1)>>age                                                     % 30",
+            "*marko.plus(1).type()                                                   % rec[age]::T[?[name=>str::T,age=>int::T]]@person[int]",
             // the parallel fibers: both ints move, in one bundle, and tag (a field, not a fiber) stays
-            "pair[int,int]::[a=>1,b=>2,tag=>'x'].plus(10)           % pair[int,int]::[a=>11,b=>12,tag=>'x']",
-            "pair[int,int]::[a=>8,b=>4,tag=>'x'].div(2)             % pair[int,int]::[a=>4,b=>2,tag=>'x']",
+            "pair[int,int]::[a=>1,b=>2,tag=>'x'].plus(10)                            % pair[int,int]::[a=>11,b=>12,tag=>'x']",
+            "pair[int,int]::[a=>8,b=>4,tag=>'x'].div(2)                              % pair[int,int]::[a=>4,b=>2,tag=>'x']",
+            // the fields that are no fiber ride along: a currency is never stripped, a reading keeps its device
+            "money[real]::[amount=>9.99,currency=>'USD'].mult(2.0)                   % money[real]::[amount=>19.98,currency=>'USD']",
+            "reading[real]::[value=>21.5,device=>'thermo-7'].mult(1.8).plus(32.0)    % reading[real]::[value=>70.7,device=>'thermo-7']",
     }, delimiter = '%', quoteCharacter = '~')
     public void testTheLiftKeepsTheBundle(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     /**
-     * A LIFT IS A VALUE, NOT A WRITE: the call made on {@code *marko}'s copy leaves {@code marko} as it was.
+     * {@code @} WRITES BACK, {@code *} DOES NOT. A lift keeps the address its bundle was read with, and a result that
+     * carries an address is written back to it — so a call on {@code @marko} is a state transition (two hits take the
+     * {@code hp} from 100 to 54), while the same call on the copy {@code *marko} is a value and the stored marko is
+     * untouched. A projection answers its results and writes nothing back: after {@code hurt(23).gt(50)} the stored
+     * {@code hp} is the hurt's 77.
      */
-    @Test
+    @Training.SkipTraining(reason = "each row is an evaluation followed by a separate read of the stored marko, not one expression->value pair")
+    @ParameterizedTest
     @TestData(value = {
-            "person -> noobj",
-            "person -> rec[age]::T[?[name=>str::T,age=>int::T]]@person",
-            "marko -> person[int]::[name=>'marko',age=>29]@marko",
+            "human -> noobj",
+            "human -> rec[hp]::T[?[name=>str::T,age=>int::T,hp=>int::T]]@human",
+            "marko -> human[int]::[name=>'marko',age=>29,hp=>100]@marko",
+            "|inst?int<=int(int::T){ minus(*0) }@hurt",
     })
-    public void testTheLiftIsAValueNotAWrite() {
-        AbstractMetatronTest.checkCodeParseApply(LOG, "*marko.plus(1)", "person[int]::[name=>'marko',age=>30]");
-        AbstractMetatronTest.checkCodeParseApply(LOG, "*marko>>age", "29");
+    @CsvSource(value = {
+            // evaluate                     % read back      % stored
+            "@marko.hurt(23)                % *marko>>hp     % 77",
+            "@marko.hurt(23).hurt(23)       % *marko>>hp     % 54",
+            "*marko.hurt(23)                % *marko>>hp     % 100",
+            "@marko.hurt(23).gt(50)         % *marko>>hp     % 77",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testAnAnchoredLiftWritesBack(final String evaluate, final String fetch, final String stored) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, evaluate, fetch, stored);
     }
 
     /**
@@ -153,12 +173,13 @@ public class FiberedRecTest extends AbstractMetatronTest {
 
     /**
      * A CALL THAT CHANGES A FIBER'S TYPE IS A PROJECTION (Marko, 2026-11-09): it answers the instruction's results,
-     * not the rec::T. {@code gt(18)} turns the int at {@code age} into a bool, so it answers {@code true}; {@code rank}
-     * turns the ninja at {@code lead} into an int, so it answers {@code 11}. ONE fiber that changes is enough: the
-     * filter {@code big} keeps both ints of {@code [a=>8,b=>9]} (a lift, the pair comes back) but drops the {@code 4}
-     * of {@code [a=>8,b=>4]} ({@code noobj} is a change of type), so that call projects to the {@code 8} it kept. A fail
-     * at a fiber is not the identity: it propagates — {@code div(0)} has no int answer, and a str {@code power} breaks
-     * {@code rank}'s range — or a call that broke on a fiber would read as a success.
+     * not the rec::T. {@code gt(18)} turns the int at {@code age} into a bool, so it answers {@code true} — and a
+     * {@code money} compared is a bool, not a money; {@code rank} turns the ninja at {@code lead} into an int, so it
+     * answers {@code 11}. ONE fiber that changes is enough: the filter {@code big} keeps both ints of
+     * {@code [a=>8,b=>9]} (a lift, the pair comes back) but drops the {@code 4} of {@code [a=>8,b=>4]} ({@code noobj}
+     * is a change of type), so that call projects to the {@code 8} it kept. A fail at a fiber is not the identity: it
+     * propagates — {@code div(0)} has no int answer, and a str {@code power} breaks {@code rank}'s range — or a call
+     * that broke on a fiber would read as a success.
      */
     @Training(
             instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
@@ -174,11 +195,14 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "squad -> rec[lead]::T[?[lead=>rec::T,name=>str::T]]@squad",
             "pair -> noobj",
             "pair -> rec[a,b]::T[?[a=>int::T,b=>int::T,tag=>str::T]]@pair",
+            "money -> noobj",
+            "money -> rec[amount]::T[?[amount=>real::T,currency=>str::T]]@money",
             "rank -> |inst?rng=int&dom=ninja(){ >>power }",
             "|inst?int{?}<=int(){ is(gt(5)) }@big",
     })
     @CsvSource(value = {
             "person[int]::[name=>'marko',age=>29].gt(18)                                       % true",
+            "money[real]::[amount=>9.99,currency=>'USD'].gt(5.0)                               % true",
             "squad[ninja]::[name=>'alpha',lead=>ninja::[name=>'kai',power=>11]].rank()         % 11",
             "pair[int,int]::[a=>8,b=>9,tag=>'x'].big()                                         % pair[int,int]::[a=>8,b=>9,tag=>'x']",
             "pair[int,int]::[a=>8,b=>4,tag=>'x'].big()                                         % 8",
@@ -186,6 +210,40 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "squad[ninja]::[name=>'alpha',lead=>ninja::[name=>'kai',power=>'feeble']].rank()   % <ERROR>",
     }, delimiter = '%', quoteCharacter = '~')
     public void testATypeChangingCallIsAProjection(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * WHERE THE LIFT DOES NOT REACH YET. Each row pins today's answer, and its TODO says what it should become, so a fix
+     * flips it:
+     * <ul>
+     *   <li>A bundle passed as an ARGUMENT is not lowered to its fiber: {@code person[int]} is accepted where an int is
+     *       expected, but nothing hands the int over, so {@code 5.plus(*marko)} fails.</li>
+     *   <li>An instance WITHOUT a bracket names no fiber types ({@link Type#recFibers()} is empty), so an untyped call
+     *       does not lift, while the same call typed ({@code ?<=int}) does.</li>
+     *   <li>A mapper over a MULTIPLICITY path fiber ({@code rec[geo/+]}) answers {@code noobj}, where mapping each
+     *       value and writing the lst back would lift.</li>
+     * </ul>
+     */
+    @Training.SkipTraining(reason = "the rows pin open gaps, not the answers mtron should give")
+    @ParameterizedTest
+    @TestData(value = {
+            "person -> noobj",
+            "person -> rec[age]::T[?[name=>str::T,age=>int::T]]@person",
+            "marko -> person[int]::[name=>'marko',age=>29]@marko",
+            "trail -> noobj",
+            "trail -> lst::T[?[real::T,real::T]]@trail",
+            "hiker -> noobj",
+            "hiker -> rec[geo/+]::T[?[name=>str::T,geo=>trail::T]]@hiker",
+            "rambler -> hiker[real{2}]::[name=>'marko',geo=>trail::[2.0,3.5]]@rambler",
+    })
+    @CsvSource(value = {
+            "5.plus(*marko)                                   % <ERROR>",   // TODO: 34
+            "person::[name=>'marko',age=>29].plus(1)          % <ERROR>",   // TODO: person::[name=>'marko',age=>30]
+            "person::[name=>'marko',age=>29].plus?<=int(1)    % person::[name=>'marko',age=>30]",
+            "*rambler.plus(1.0)                               % noobj",     // TODO: hiker[real{2}]::[name=>'marko',geo=>trail::[3.0,4.5]]
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testWhereTheLiftDoesNotReachYet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }
