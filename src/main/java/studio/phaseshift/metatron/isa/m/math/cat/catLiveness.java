@@ -28,13 +28,10 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
-import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter.comparisonOf;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
-import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.sameOp;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -95,7 +92,6 @@ public class catLiveness {
             case "theory_unit_removal" -> profile.unit;
             case "m_rewrite_table" -> profile.adjInvolution || profile.adjIdempotent || profile.adjMonoidFold;
             case "law_absorbing" -> profile.absorbing;
-            case "law_poset" -> profile.adjPoset;
             case "inverse_cancellation" -> profile.adjInverse;
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;
@@ -119,7 +115,6 @@ public class catLiveness {
         private boolean adjInvolution;   // an adjacent same-op pair declaring involution, or any adjacent same-op pair under a carrier with a declared inverse role
         private boolean adjIdempotent;   // an adjacent same-op pair declaring idempotent
         private boolean adjMonoidFold;   // an adjacent same-op reducer/join pair declaring monoidic
-        private boolean adjPoset;        // an adjacent pair of the same filter on the same poset comparison
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
         private boolean absorbing;       // an absorbing op with live code before it
         private boolean repeatedTerms;   // an occurrence of the additive witness with two or more members (like terms need a pair)
@@ -148,8 +143,6 @@ public class catLiveness {
             final List<Inst> contracts = null == typed ? null : contracts(typed);
             final Map<Type, Boolean> inverses = new HashMap<>();
             boolean priorCarrierInverse = false;
-            Inst priorComparison = null;
-            Type priorCarrier = T(ALL);
             String priorName = null;
             fURI priorInverse = null;
             boolean pastSeed = false;
@@ -196,11 +189,6 @@ public class catLiveness {
                         profile.adjInvolution = true;
                     if (laws.contains(Law.idempotent.name()))
                         profile.adjIdempotent = true;
-                    // two of the same filter on the same comparison, poset-declared at the first one's carrier
-                    final Inst comparison = null == keyed ? null : comparisonOf(keyed);
-                    if (null != comparison && null != priorComparison && sameOp(comparison, priorComparison)
-                            && declares(priorComparison, priorCarrier, Law.poset))
-                        profile.adjPoset = true;
                     if ((Inst.Form.reducer.name().equals(form) || Inst.Form.join.name().equals(form)) && laws.contains(Law.monoidic.name()))
                         profile.adjMonoidFold = true;
                 }
@@ -212,8 +200,6 @@ public class catLiveness {
                 priorName = name;
                 priorInverse = inverse;
                 priorCarrierInverse = carrierInverse;
-                priorComparison = null == keyed ? null : comparisonOf(keyed);
-                priorCarrier = carrier;
                 pastSeed = true;
             }
             return profile;

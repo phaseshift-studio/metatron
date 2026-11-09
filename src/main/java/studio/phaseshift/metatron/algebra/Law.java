@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
@@ -1179,24 +1180,35 @@ public enum Law {
         }
 
         /**
-         * A LAW'S RULE AS ITS CLAIMANTS BIND IT (Marko, 2026-11-09) — the rule is stated in the name {@code op}, the
-         * instruction whose claim states the law (/m's rewrite table), and every claimant fills {@code op} with its own
-         * term, holes and all, so a pair binds its operands equal: involution's {@code op·op ⇝ ε}, bound by {@code neg},
-         * is {@code neg()·neg() ⇝ ε}, and idempotent's {@code op·op ⇝ op}, bound by bool's {@code plus}, is
-         * {@code plus(a0)·plus(a0) ⇝ plus(a0)}. A rewrite matches and applies them in Java ({@code Call.Helper.update}),
+         * A LAW'S RULES AS ITS CLAIMANTS BIND THEM (Marko, 2026-11-09) — a law's rules are stated in the name {@code op},
+         * the instruction whose claim states the law (/m's rewrite table), and every claimant fills {@code op} wherever it
+         * stands. An {@code op} that states no argument is the claimant's term, holes and all, so a pair binds its operands
+         * equal: involution's {@code op·op ⇝ ε}, bound by {@code neg}, is {@code neg()·neg() ⇝ ε}, and idempotent's
+         * {@code op·op ⇝ op}, bound by bool's {@code plus}, is {@code plus(a0)·plus(a0) ⇝ plus(a0)}. An {@code op} that
+         * states its own arguments is the claimant's operation over them: poset's {@code is(op(#::T@a))}, bound by
+         * {@code gt}, is {@code is(gt(#::T@a))}. A rewrite matches and applies them in Java ({@code Call.Helper.update}),
          * where the law holds at the carrier.
          */
         public static List<Rec> claimed(final Rec rule, final Law law) {
-            final Rel equation = rule.<Rel>elements().findFirst().orElse(null);
-            if (null == equation || !equation.first().isCall() || !equation.second().isCall())
-                return List.of();
             final List<Rec> bound = new ArrayList<>();
-            for (final Inst term : claimants(law)) {
-                final Function<Obj, Code> fill = side -> code(side.asCall().insts().stream()
-                        .map(inst -> OP.equals(inst.tid().name()) ? term : inst).toList());
-                bound.add(rec(fill.apply(equation.first()), fill.apply(equation.second())));
-            }
+            for (final Rel equation : rule.<Rel>elements().toList())
+                if (equation.first().isCall() && equation.second().isCall())
+                    for (final Inst term : claimants(law))
+                        bound.add(rec(fill(equation.first(), term), fill(equation.second(), term)));
             return bound;
+        }
+
+        /**
+         * One side of a law's rule with {@code op} filled by a claimant's term, at any depth ({@link #claimed}).
+         */
+        private static Obj fill(final Obj side, final Inst term) {
+            if (side.isInst()) {
+                final Inst inst = side.asInst();
+                if (OP.equals(inst.tid().name()))
+                    return inst.args().isEmpty() ? term : instB(term.tid(), inst.args());
+                return inst.args().isLst() ? inst.args(lst(inst.args().<Obj>elements().map(arg -> fill(arg, term)).toList())) : inst;
+            }
+            return side.isCall() ? code(side.asCall().insts().stream().map(inst -> fill(inst, term).asInst()).toList()) : side;
         }
 
         /**
@@ -1233,15 +1245,19 @@ public enum Law {
          *   <li>{@code involution} {@code op·op ⇝ ε}, where the operation is an involution there, or the carrier's
          *       additive-group inverse ({@link #isInvolution});</li>
          *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
-         *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold}).</li>
+         *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold});</li>
+         *   <li>{@code poset} {@code is(op(a))·is(op(b)) ⇝ is(op(b))}, where {@code b} is the stricter bound
+         *       ({@link #isStricter}).</li>
          * </ul>
          * A law the table names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
-         * over named holes, and its holes range over the form: a matched run changes only where the operation of everything a
-         * hole captured, an instruction or the op symbol a chain carries before resolution, declares that form. A form is
+         * over named holes, and its holes range over the form: a matched run changes only where the operation of everything
+         * a hole captured, an instruction or the op symbol a chain carries before resolution, declares that form. A form is
          * declared per operation ({@code InstBuilder.declaredForm}), so no carrier is read. The {@code mapper} row's
-         * {@code map(#::T@f) ⇝ #::T@f} unwraps {@code map(neg)}, never {@code map(sum())}. A row keyed by anything else is PLAIN ({@code map_nest}, {@code else_after_count}): its rule is stated in the
-         * instructions themselves, so it applies as it stands, with no {@code op} to bind and no gate. {@code only} names the
-         * rows a pass applies (a plan's cut); naming none applies the whole table.
+         * {@code map(#::T@f) ⇝ #::T@f} unwraps {@code map(neg)}, never {@code map(sum())}. A row keyed by anything else is
+         * PLAIN ({@code map_nest}, {@code else_after_count}, {@code range_skip_take}): its rule is stated in the instructions
+         * themselves, so it applies as it stands, with no {@code op} to bind and no gate; a {@code ${...}} template in its
+         * change computes an argument from the names the run bound. {@code only} names the rows a pass applies (a plan's
+         * cut); naming none applies the whole table.
          */
         public static Code lawRemoval(final Code code, final Rec table, final Obj... only) {
             Code out = code;
@@ -1252,14 +1268,18 @@ public enum Law {
                 final Law law = Arrays.stream(Law.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
                 final Inst.Form form = Arrays.stream(Inst.Form.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
                 if (null != law) {
-                    final BiPredicate<Code, Integer> gate = switch (law) {
-                        case involution -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
-                        case idempotent -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
-                        case monoidic -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                    // a gate per bound rule, built from the rule's own pattern: the poset gate reads the bounds its run bound
+                    final Function<List<Inst>, BiPredicate<Code, Integer>> gate = switch (law) {
+                        case involution -> pattern -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
+                        case idempotent -> pattern -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
+                        case monoidic -> pattern -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                        case poset -> pattern -> (scanned, start) -> isStricter(Code.Helper.bind(scanned.insts().subList(start, start + pattern.size()), pattern),
+                                scanned.insts().get(start), carriers(scanned).get(start));
                         default -> null;
                     };
                     if (null != gate)
-                        out = rewrite(out, claimed(entry.second().asRec(), law), gate);
+                        for (final Rec bound : claimed(entry.second().asRec(), law))
+                            out = rewrite(out, List.of(bound), gate.apply(bound.<Rel>elements().findFirst().orElseThrow().first().asCall().insts()));
                 } else if (null != form)
                     for (final Rel rule : entry.second().asRec().<Rel>elements().toList()) {
                         final List<Inst> pattern = rule.first().asCall().insts();
@@ -1273,6 +1293,22 @@ public enum Law {
                     out = rewrite(out, List.of(entry.second().asRec()), (scanned, start) -> true);
             }
             return out;
+        }
+
+        /**
+         * THE POSET GATE — the bound a rule keeps, {@code b}, is the stricter of the pair: the comparison itself orders it
+         * past {@code a} ({@code b > a} under {@code gt}, {@code b < a} under {@code lt}), or the two are equal. The
+         * comparison is evaluated, so it must be declared {@code pure} as well as {@code poset} at the carrier, and both
+         * bounds must be values. A pair the order relates neither way (a partial order need not) stays.
+         */
+        private static boolean isStricter(final Map<fURI, Obj> names, final Inst filter, final Type carrier) {
+            final Obj a = null == names ? null : names.get(f("a"));
+            final Obj b = null == names ? null : names.get(f("b"));
+            if (null == a || null == b || a.isCall() || b.isCall())
+                return false;
+            final Inst comparison = filter.arg(0).asCall().insts().getFirst();
+            return declares(comparison, carrier, Law.poset) && declares(comparison, carrier, Law.pure)
+                    && (a.equals(b) || Processor.Helper.apply(b, comparison.args(lst(a))).booleanCheck());
         }
 
         /**
