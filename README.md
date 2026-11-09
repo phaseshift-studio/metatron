@@ -16,6 +16,15 @@ composition) and `+` (parallel branching).
 |-------------------------------------------------|---------------|----------|----------------|
 | mtron (`isa/m`), functional + fluent, type-safe | jvm, java 25+ | agpl-3.0 | `0.1-SNAPSHOT` |
 
+**mtron** boasts numerous novel concepts in language design. the language's algebraic specification is rooted in a novel algebra called **stream ring theory**.
+the algebra supports negative objs, constructive/destructive interference of monads, types specifying a magnitude and a span,
+barrier semantics encoded in inst dom coefficients, and data compression based on ring `+`. the compiler rewrites code at the level of the theorems associated with the algebra
+of the particular carrier set and ops being analyzed. distributed data structures and processes are a theorem, not a feature. the language is fully self-reflective 
+w/o altering the way in which it is conceptually understood, where writing code that writes code is natural to express and the compiler, rewriter, generic binder, inst resolver
+are themselves objs available for manipulation and re-composition within the universal address space. the type system is both structural and nominal in a meaningful way,
+supporting open-world semantics and providing useful object-oriented programming patterns such as fiber bundles, tensors, and typed paths. type checking can be made
+more or less strict at runtime. numerous utilitarian motifs are an epiphenomena of it's design, with surprising features continuing to be stumbled upon.
+
 ## Core Concepts
 
 | Concept       | Role                                                                                                                                                               |
