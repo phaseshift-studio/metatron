@@ -508,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">11</span><span class="instset-stat-l">rewrites</span></div><div class="instset-stat"><span class="instset-stat-n">5</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/cat-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 8, 2026</span>
+            <span class="instset-built">built November 9, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -529,7 +529,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 <div id="flush-collapseOne" class="accordion-collapse collapse"
                     aria-labelledby="flush-headingOne" data-bs-parent="#accordionInstSet">
                     <div class="accordion-body">
-                        <pre><code>/m/math/cat::[q=&gt;[
+                        <pre><code>/m/math/cat::[pattern=&gt;/m/math/cat/#,
+              q=&gt;[
                docq::[
                 pattern=&gt;docq,
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
@@ -541,7 +542,14 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 pre_read=&gt;inst(uri::T){&lt;j&gt;},
                 pre_write=&gt;inst(uri::T,#::T){&lt;j&gt;},
                 obj=&gt;/m/instset::[=&gt;]]],
-              pattern=&gt;/m/math/cat/#,
+              inst=&gt;[
+               lower?path&lt;=path(plan::T){&lt;j&gt;},
+               bind?path&lt;=path(plan::T){&lt;j&gt;},
+               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
+               as?object&lt;=#(object::T){&lt;j&gt;},
+               as?path&lt;=#(path::T){&lt;j&gt;},
+               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
+               as?place&lt;=#(place::T){&lt;j&gt;}],
               type=&gt;[
                rec[obj]::T[?[
                 obj=&gt;&lt;#&gt;::T,
@@ -573,7 +581,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 obj=&gt;&lt;T&gt;::T,
                 {?}morphed_to=&gt;[!*/m/math/cat/category/morphism],
                 {?}morphed_from=&gt;[!*/m/math/cat/category/morphism],
-                {?}theory=&gt;[uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form=&gt;rec::T@/m/theory]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object,
+                {?}theory=&gt;[uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form=&gt;rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object,
                category::T[?[
                 obj=&gt;code::T,
                 {?}origin=&gt;place::T,
@@ -618,15 +626,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                /m/math/cat/inst/rewrite/inverse_cancellation?code{?}&lt;=code(){&lt;j&gt;},
                /m/math/cat/inst/rewrite/form_map_unwrap?code{?}&lt;=code(){&lt;j&gt;},
                /m/math/cat/inst/rewrite/derivation_contraction?code{?}&lt;=code(){&lt;j&gt;},
-               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}],
-              inst=&gt;[
-               lower?path&lt;=path(plan::T){&lt;j&gt;},
-               bind?path&lt;=path(plan::T){&lt;j&gt;},
-               as?morphism&lt;=#(morphism::T){&lt;j&gt;},
-               as?object&lt;=#(object::T){&lt;j&gt;},
-               as?path&lt;=#(path::T){&lt;j&gt;},
-               as?abstraction&lt;=#(abstraction::T){&lt;j&gt;},
-               as?place&lt;=#(place::T){&lt;j&gt;}]]@/m/math/cat</code></pre>
+               /m/math/cat/inst/rewrite/law_shard?code{?}&lt;=code(){&lt;j&gt;}]]@/m/math/cat</code></pre>
                     </div>
                 </div>
             </div>
@@ -734,8 +734,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code lifted pointwise along \(\alpha\) into the classification alphabet — the pure search surface a plan&#39;s selector reads</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the α place-class word: the located path's places as a list (the α image of \(\mathrm{path}.\mathrm{where}\) __ \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads"" class="text-info"> \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads&quot;</a>
-  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code'" class="text-info">&#39;the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code'" class="text-info">&#39;the abstract word \(\alpha(f_1 \cdot \ldots \cdot f_n) = \alpha(f_1) \cdot \ldots \cdot \alpha(f_n)\): each chain instruction as its \(\mathrm{morphism}\) carrying law, form, class and analysis, with the ORIGINAL inst in \(\mathrm{obj}\) so \(\gamma\) (walk \(\mathrm{obj}\) in order) recovers the exact code&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the α place-class word: the located path's places as a list (the α image of \(\mathrm{path}.\mathrm{where}\) __ \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads"" class="text-info"> \(\mathrm{path}.\mathrm{origin}\)) — the surface a placement guard reads&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category">
@@ -827,7 +827,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">category::T[?[obj=&gt;&lt;T&gt;::T,
               {?}morphed_to=&gt;[!*/m/math/cat/category/morphism],
               {?}morphed_from=&gt;[!*/m/math/cat/category/morphism],
-              {?}theory=&gt;[uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form=&gt;rec::T@/m/theory]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object</code></pre></div>
+              {?}theory=&gt;[uri::T[/m/inst/union(ring,field,rig,boolean,lattice,near_ring,add_group,mul_group,add_monoid,mul_monoid,add_commutative_monoid,mul_commutative_monoid,add_semilattice,mul_semilattice,free_groupoid)]@/m/theory_form=&gt;rec::T[?[{?}law=&gt;lst[{+}law]::T]]@/m/theory]]][ctor?object&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/cat/category/object</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__math__cat__category" class="code inherited-link">category::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[obj=&gt;&lt;#&gt;::T,
  {?}instset=&gt;[uri::T],
@@ -836,9 +836,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a type as a categorical object incident to targeting morphisms and sourcing morphisms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#theory" class="text-light">theory</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
-  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#morphed_to" class="text-light">morphed_to</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)'" class="text-info">&#39;the morphisms sourced from this object (out-edges): \(\mathrm{morphed\_to}(A) = {f : \mathrm{src}(f) = A}\)&#39;</a>
   <a href="#morphed_from" class="text-light">morphed_from</a> <span class="text-light">=&gt;</span> <a href="#'the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)'" class="text-info">&#39;the morphisms targeted at this object (in-edges): \(\mathrm{morphed\_from}(A) = {f : \mathrm{trgt}(f) = A}\)&#39;</a>
+  <a href="#theory" class="text-light">theory</a> <span class="text-light">=&gt;</span> <a href="#'the structural theories \(\mathcal{T}\) the object models'" class="text-info">&#39;the structural theories \(\mathcal{T}\) the object models&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__path">
@@ -875,11 +875,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> code as a categorical path incident to iso-semantic rewritten forms</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
+    <pre class="mb-0 text-bright mathjax_process" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
+  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
+  <a href="#obj" class="text-light">obj</a> <span class="text-light">=&gt;</span> <a href="#'the code \(p\) itself — the vertex'" class="text-info">&#39;the code \(p\) itself — the vertex&#39;</a>
   <a href="#{?}origin" class="text-light">{?}origin</a> <span class="text-light">=&gt;</span> <a href="#"where the code starts — the machine's own place, attached on lift; absent means not placeable (bind requires it)"" class="text-info">&quot;where the code starts — the machine&#39;s own place, attached on lift; absent means not placeable (bind requires it)&quot;</a>
   <a href="#uri{?}::T" class="text-light">uri{?}::T</a> <span class="text-light">=&gt;</span> <a href="#"one out-edge per live rewrite \(r\), keyed by the rule's name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none"" class="text-info">&quot;one out-edge per live rewrite \(r\), keyed by the rule&#39;s name and holding its \(\mathrm{plan}\): \(\mathrm{lower}(\mathrm{plan}_r)(p) = r(p)\); a rule the abstraction proves the identity on \(p\) is no edge, so a normal form has none&quot;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#'the realized placement — span → place, written by the pass that applied a distribution rule'" class="text-info">&#39;the realized placement — span → place, written by the pass that applied a distribution rule&#39;</a>
-  <a href="#{?}peer" class="text-light">{?}peer</a> <span class="text-light">=&gt;</span> <a href="#'the peer recs the deployment used'" class="text-info">&#39;the peer recs the deployment used&#39;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__math__cat__category__place">

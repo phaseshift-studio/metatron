@@ -1242,7 +1242,7 @@ mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(throw()),max=&gt;
 mtron&gt; 15.band(10,20)     ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)     ​7​
-==&gt;fail::[noobj]@/processor/fail/4
+==&gt;fail::[noobj]@/processor/fail/6
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 mtron&gt; 15.band(10,20)     ​8​
 ==&gt;15
@@ -3291,7 +3291,7 @@ mtron&gt; natc::2 * -1     ​7​
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{b}}e{{m}}t{{r}}A{{c}}T{{b}}R{{b}}O{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}m{{g}}e{{r}}T{{y}}a{{g}}T{{c}}R{{g}}o{{g}}n{{X}}.</p>
 </div>
 <h4 id="sec-cascading-type-constructions" class="discrete">cascading type constructions</h4>
 <h3 id="sec-mono-types" class="discrete">mono types</h3>
@@ -5831,14 +5831,14 @@ mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     ​5​</code><
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; bin:bash('-c',df)
 ==&gt;'Filesystem     1K-blocks      Used Available Use% Mounted on'
-==&gt;'tmpfs            6355852      6524   6349328   1% /run'
+==&gt;'tmpfs            6355852      6456   6349396   1% /run'
 ==&gt;'efivarfs             128        42        82  34% /sys/firmware/efi/efivars'
-==&gt;'/dev/nvme1n1p2 959786032 605619056 305338768  67% /'
-==&gt;'tmpfs           31779244    302184  31477060   1% /dev/shm'
+==&gt;'/dev/nvme1n1p2 959786032 606160200 304797624  67% /'
+==&gt;'tmpfs           31779244    302504  31476740   1% /dev/shm'
 ==&gt;'tmpfs               5120        20      5100   1% /run/lock'
 ==&gt;'tmpfs           31779244         0  31779244   0% /run/qemu'
 ==&gt;'/dev/nvme1n1p1    523248      6288    516960   2% /boot/efi'
-==&gt;'tmpfs            6355848       248   6355600   1% /run/user/1000'
+==&gt;'tmpfs            6355848       260   6355588   1% /run/user/1000'
 ==&gt;'/dev/nvme0n1p2 976744444 251306824 725437620  26% /media/hdd0'
 mtron&gt; bin:bash('-c',ls)
 ==&gt;'AGENTS.md'
@@ -5866,7 +5866,7 @@ mtron&gt; bin:bash('-c',ls)
 ==&gt;src
 ==&gt;target
 mtron&gt; bin:bash('-c','ls -all').split(' ').count()
-==&gt;89</code></pre>
+==&gt;90</code></pre>
 </div>
 </div>
 <h3 id="sec-shell-scripts" class="discrete">Shell Scripts</h3>
@@ -6054,7 +6054,7 @@ mtron&gt; gB::1.0.lt(kB::12000000.0)
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; datetime_now()     ​1​
-==&gt;datetime::&lt;//2026.11:822/19/31/356?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:903/49/23/293?tz=-0700&gt;
 mtron&gt; &lt;//2024.12:25/09/00/00/000?tz=-0500&gt;?datetime::T     ​2​
 ==&gt;&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
 mtron&gt; datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;&gt;&gt;year     ​3​
@@ -7411,7 +7411,9 @@ mtron&gt; *v1     ​2​
     created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]
 mtron&gt; *v1.out(knows)     ​3​
 mtron&gt; *v1.out(knows).out(created)     ​4​
-mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​</code></pre>
+==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/4
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     ​5​
+==&gt;fail::[a gremlin suffix needs a graph element, not [name=&gt;'marko',age=&gt;29,outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2,outV_=&gt;!*v1],[weight=&gt;0.5,inV_=&gt;!*v4,outV_=&gt;!*v1]}],created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3,outV_=&gt;!*v1]]]@/processor/fail/5</code></pre>
 </div>
 </div>
 </div>
@@ -7895,7 +7897,7 @@ mtron&gt; virtual::[code  =&gt; @ab + 'B',
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
              lhs=&gt;noobj,
-             time=&gt;datetime::&lt;//2026.11:822/19/35/029?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:903/49/27/507?tz=-0700&gt;,
              ...(1 more)]@/sys/thread/b
 mtron&gt; virtual::[code  =&gt; @ab + 'A',
                  loop  =&gt; second::1.0,
@@ -7914,7 +7916,7 @@ mtron&gt; @/sys/thread/b &gt;&gt;= +[yield =&gt; !*/sys/thread/a]     ​5​
              state=&gt;run,
              source=&gt;!*/sys/thread/main,
              rhs=&gt;!λawait(){&lt;j&gt;},
-             time=&gt;datetime::&lt;//2026.11:822/19/35/029?tz=-0700&gt;,
+             time=&gt;datetime::&lt;//2026.11:903/49/27/507?tz=-0700&gt;,
              runtime=&gt;!λ(){&lt;j&gt;},
              ...(2 more)]@/sys/thread/b
 mtron&gt; sleep(second::5.0)</code></pre>
@@ -7941,7 +7943,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ab
-==&gt;'BABABABABAB'</code></pre>
+==&gt;'BABABABABABA'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8006,7 +8008,7 @@ shown for reference — thread control instructions (<code>stop</code>/<code>pau
 ==&gt;core::[code=&gt;λ(#{*}::T){&lt;j&gt;},
           rhs=&gt;!λawait(){&lt;j&gt;},
           state=&gt;stop,
-          time=&gt;datetime::&lt;//2026.11:822/19/14/259?tz=-0700&gt;,
+          time=&gt;datetime::&lt;//2026.11:903/49/04/756?tz=-0700&gt;,
           runtime=&gt;!λ(){&lt;j&gt;}]
 mtron&gt; */sys/thread/main?docq
 ==&gt;docs::[obj=&gt;core::[
@@ -8014,7 +8016,7 @@ mtron&gt; */sys/thread/main?docq
            rhs=&gt;!λawait(){&lt;j&gt;},
            lhs=&gt;noobj,
            state=&gt;stop,
-           time=&gt;datetime::&lt;//2026.11:822/19/14/259?tz=-0700&gt;,
+           time=&gt;datetime::&lt;//2026.11:903/49/04/756?tz=-0700&gt;,
            runtime=&gt;!λ(){&lt;j&gt;},
            result=&gt;noobj]@/sys/thread/main,
           desc=&gt;'this root thread waits till all ch...']</code></pre>
@@ -8735,13 +8737,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     ​3​
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person     ​4​
 mtron&gt; *lite:person/+/name     ​5​
-==&gt;'alex'
 ==&gt;'grant'
 ==&gt;'marko'
 mtron&gt; *lite:person/+/id     ​6​
 ==&gt;1
-==&gt;2
-==&gt;3</code></pre>
+==&gt;2</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8785,21 +8785,7 @@ mtron&gt; *lite:person/+/id     ​6​
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from?args=[/m/uri]::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -8809,21 +8795,7 @@ mtron&gt; *lite:person/+/id     ​6​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:person/3 -&gt; [name=&gt;'alex', age=&gt;25, skill=&gt;graph]
 ==&gt;[name=&gt;'alex',age=&gt;25,skill=&gt;graph]
-mtron&gt; *lite:+
-==&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/award
-==&gt;rec::T[?[{?}player=&gt;str::T,
-            {?}points=&gt;int::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/score
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            {?}age=&gt;int::T,
-            {?}skill=&gt;uri::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/person
-==&gt;rec::T[?[{?}name=&gt;str::T,
-            location=&gt;isa(area:V/+/id).!*id(),
-            {?}parent=&gt;auto_from?args=[/m/uri]::T,
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/lite/instset/venue</code></pre>
+mtron&gt; *lite:+</code></pre>
 </div>
 </div>
 </div>
