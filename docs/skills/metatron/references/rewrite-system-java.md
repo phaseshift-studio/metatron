@@ -13,7 +13,7 @@ algebra/rewrite/RewriteBuilder.java ← fluent builder for space-aware native re
 algebra/rewrite/CommonRewrites.java ← shared rewrite utilities
 isa/m/type/InstSet.java             ← InstSet interface, Helper.rewriter() factory
 isa/m/type/Code.java                ← Code.rewrite() — the rewrite loop
-isa/m/mInstSet.java                 ← /m rewrites (id_removal, map_nest, explain_profile, ...)
+isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, else_after_count, split_merge_collapse, ...)
 isa/tble/tbleInstSet.java           ← SQL rewrites (sql_count, sql_where, sql_limit, ...)
 isa/grph/grphInstSet.java           ← Gremlin rewrites (gremlin_count, gremlin_where, ...)
 isa/dcmnt/dcmntInstSet.java         ← MongoDB rewrites (mql_count, mql_where, ...)
@@ -74,26 +74,13 @@ instruction list. The rewrite function receives a `Map<Inst, Inst>`
 mapping pattern instructions to matched source instructions.
 
 ```java
-// Remove identity instructions
-InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
-
-code ->code.
-
-selfJVM(
-        Rewriter.search(code.insts())
-        .
-
-match(instA(ID_INST_TID).
-
-insts())   // match [_]
-        .
-
-rewrite(x ->List.
-
-of())              // replace with nothing
-        ).
-
-asCode())
+// a count is total, so an else after it is dead code: .count().else(x) => .count()
+InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
+        code -> code.selfJVM(
+                RewriterBuilder.search(code.insts())
+                        .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))   // match [count, else]
+                        .rewrite(map -> List.of(map.values().stream().toList().getFirst())))  // keep the count
+                .asCode())
 ```
 
 **`match(List<Inst>)`** — pattern instructions. `instA(tid)` creates a bare match instruction (no args, no f). Matching
