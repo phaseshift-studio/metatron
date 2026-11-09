@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -501,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">37</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">10</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/mach-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 7, 2026</span>
+            <span class="instset-built">built November 8, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -538,13 +545,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
              type=&gt;[
               rec::T[?[
                pattern=&gt;uri::T,
-               {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
-                               {?}pre_write=&gt;inst::T,
-                               {?}post_write=&gt;inst::T,
-                               {?}qless_write=&gt;inst::T,
-                               {?}pre_read=&gt;inst::T,
-                               {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
-               {?}route=&gt;[uri::T=&gt;uri::T],
+               {?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,
+                                  {?}pre_write=&gt;inst::T,
+                                  {?}post_write=&gt;inst::T,
+                                  {?}qless_write=&gt;inst::T,
+                                  {?}pre_read=&gt;inst::T,
+                                  {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+               {?}route=&gt;[uri{?}::T=&gt;uri::T],
                {?}schema=&gt;/m/instset::T,
                {?}on_close=&gt;&lt;#&gt;::T]]@/m/space,
               rec::T@/m/mach/factory,
@@ -552,11 +559,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               rec::T[?[{?}machine=&gt;machine::T]]@/m/mach/component,
               component::T[?[
                {?}state=&gt;union(stop,run,pause),
-               {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor,
+               {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor,
               processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm,
               component::T[?[code=&gt;&lt;#&gt;::T,{?}cache=&gt;rec::T]]@/m/mach/component/processor/computer,
-              computer::T[?[{?}cache=&gt;[{?}halted=&gt;&lt;#&gt;::T,
-                                       {?}run=&gt;&lt;#&gt;::T,
+              computer::T[?[{?}cache=&gt;[{?}halted=&gt;&lt;#{*}&gt;::T,
+                                       {?}run=&gt;&lt;#{*}&gt;::T,
                                        {?}barrier=&gt;lst::T]]][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm,
               component::T[?[
                {?}parser=&gt;parser::T,
@@ -574,13 +581,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}result=&gt;&lt;#&gt;::T,
                {?}cut=&gt;[
                 {?}form=&gt;uri::T,
-                {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+                {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
                 {?}role=&gt;uri::T],
                {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                               {?}target=&gt;&lt;#&gt;::T,
-                              {?}place=&gt;&lt;#&gt;::T,
-                              {?}hop=&gt;&lt;#&gt;::T,
-                              {?}split=&gt;&lt;#&gt;::T,
+                              {?}place=&gt;&lt;#{**}&gt;::T,
+                              {?}hop=&gt;&lt;#{**}&gt;::T,
+                              {?}split=&gt;&lt;#{**}&gt;::T,
                               {?}inst=&gt;[uri::T],
                               span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/plan,
               component::T[?[
@@ -624,8 +631,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}pattern=&gt;uri::T,
                {?}host=&gt;uri::T,
                {?}roster=&gt;[
-                {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                {?}machine=&gt;[uri::T=&gt;uri::T]],
+                {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+                {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
                {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
                 origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
                 {?}host=&gt;uri::T,
@@ -640,12 +647,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               rec::T[?[
                {?}instset=&gt;rec::T[?[
                 {?}pattern=&gt;uri::T,
-                {?}const=&gt;[&lt;#&gt;::T],
-                {?}type=&gt;{?}[&lt;#&gt;::T],
+                {?}const=&gt;[&lt;#{?}&gt;::T],
+                {?}type=&gt;{?}[&lt;#{*}&gt;::T],
                 {?}inst=&gt;{?}[inst::T],
                 {?}rewrite=&gt;{?}[inst::T],
                 {?}sugar=&gt;{?}[lst::T],
-                {?}reference=&gt;uri::T,
+                {?}reference=&gt;uri{*}::T,
                 {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
                {?}compiler=&gt;component::T[?[
                 {?}parser=&gt;parser::T,
@@ -657,8 +664,8 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}pattern=&gt;uri::T,
                 {?}host=&gt;uri::T,
                 {?}roster=&gt;[
-                 {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                 {?}machine=&gt;[uri::T=&gt;uri::T]],
+                 {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+                 {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
                 {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
                  origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
                  {?}host=&gt;uri::T,
@@ -672,7 +679,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                 {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
                {?}processor=&gt;component::T[?[
                 {?}state=&gt;union(stop,run,pause),
-                {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+                {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
               rec::T[?[run=&gt;[,],stop=&gt;[,]]]@/m/mach/thread_executor,
               /m/mach/thread::T[][ctor?core&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/core,
               /m/mach/thread::T[][ctor?virtual&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/thread/virtual],
@@ -885,10 +892,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> the compiler contract of machine::T — a machine&#39;s lowering axis, source to code::T, composed of four atomic overridable stages: the stages are the vocabulary and these rec entries are the wiring, all optional and each defaulting when absent, so a compiler is its composition rather than an algorithm. compiler.apply runs the default schedule — parse → rewrite → resolve → type — each stage handed the whole of what the last produced and returning the same, and the processor is the sibling that then runs what the compiler produced. Only the parse stage accepts anything but code — source text, or an already-parsed obj it lifts as it stands instead of re-reading; every stage returns code::T. A compiler is constructed from its stages, and a bare compiler::[=&gt;] is the default compiler.</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#"the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code __compiler__typer__check}, not a global registry"" class="text-info">check}, not a global registry&quot;</a>
-  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
-  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}resolver" class="text-light">{?}resolver</a> <span class="text-light">=&gt;</span> <a href="#"the third stage — the walk that threads each inst's range into the next inst's domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default"" class="text-info">&quot;the third stage — the walk that threads each inst&#39;s range into the next inst&#39;s domain, delegating per inst to a selector (which candidates) and a binder (make one concrete): scoring_resolver::T by default&quot;</a>
   <a href="#{?}rewriter" class="text-light">{?}rewriter</a> <span class="text-light">=&gt;</span> <a href="#'the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites'" class="text-info">&#39;the second stage — the code::T to code::T lowering that runs before any type is resolved: fixpoint_rewriter::T by default (every registered rewrite rule to a stable fixpoint), identity_rewriter::T for a compiler that wants no rewrites&#39;</a>
+  <a href="#{?}parser" class="text-light">{?}parser</a> <span class="text-light">=&gt;</span> <a href="#"the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program's text or its parsed obj alike: mtron_parser::T by default"" class="text-info">&quot;the first stage — source text to obj, and the identity for anything that is not a str, so a compiler accepts a program&#39;s text or its parsed obj alike: mtron_parser::T by default&quot;</a>
+  <a href="#{?}typer" class="text-light">{?}typer</a> <span class="text-light">=&gt;</span> <a href="#"the fourth stage — the per-machine runtime type assertions (inst_dom, inst_rng, type_pred), carried in the machine's {@code __compiler__typer__check}, not a global registry"" class="text-info">check}, not a global registry&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -937,7 +944,7 @@ compiler::[=&gt;]   [-- the default compiler: mtron parse, fixpoint, scoring, ty
  {?}loop=&gt;real::T@/m/math/time,
  {?}timeout=&gt;real::T@/m/math/time,
  {?}state=&gt;union(stop,run,pause),
- {?}result=&gt;&lt;#&gt;::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> run a concurrent core thread</p>
 </div><div class="card-body border-top py-2">
@@ -1072,9 +1079,9 @@ the local read.
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#status" class="text-light">status</a> <span class="text-light">=&gt;</span> <a href="#'true: the far side is this machine, live as long as the client exists'" class="text-info">&#39;true: the far side is this machine, live as long as the client exists&#39;</a>
+  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
   <a href="#close" class="text-light">close</a> <span class="text-light">=&gt;</span> <a href="#'nothing to hang up'" class="text-info">&#39;nothing to hang up&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'the dialed uri (identity: the local machine answers)'" class="text-info">&#39;the dialed uri (identity: the local machine answers)&#39;</a>
-  <a href="#inst" class="text-light">inst</a> <span class="text-light">=&gt;</span> <a href="#"the identity mini-instset: { eval, from, to } — the instructions a wire client serves; eval runs the shipped program at the RECEIVER's root and leaves the caller where it stood, from__to answer as the local read__write"" class="text-info">write&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -1155,12 +1162,12 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[{?}instset=&gt;rec::T[?[
   {?}pattern=&gt;uri::T,
-  {?}const=&gt;[&lt;#&gt;::T],
-  {?}type=&gt;{?}[&lt;#&gt;::T],
+  {?}const=&gt;[&lt;#{?}&gt;::T],
+  {?}type=&gt;{?}[&lt;#{*}&gt;::T],
   {?}inst=&gt;{?}[inst::T],
   {?}rewrite=&gt;{?}[inst::T],
   {?}sugar=&gt;{?}[lst::T],
-  {?}reference=&gt;uri::T,
+  {?}reference=&gt;uri{*}::T,
   {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
          {?}compiler=&gt;component::T[?[
           {?}parser=&gt;parser::T,
@@ -1172,8 +1179,8 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
           {?}pattern=&gt;uri::T,
           {?}host=&gt;uri::T,
           {?}roster=&gt;[
-           {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-           {?}machine=&gt;[uri::T=&gt;uri::T]],
+           {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+           {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
           {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
            origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
            {?}host=&gt;uri::T,
@@ -1187,7 +1194,7 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
           {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
          {?}processor=&gt;component::T[?[
           {?}state=&gt;union(stop,run,pause),
-          {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
+          {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine</code></pre></div>
     <div class="card-body py-2">
     <button type="button" class="law-chip theory-chip algebra-open" onclick="document.getElementById('algebra-__m__mach__machine').showModal();" title="show the whole algebra">algebra</button>
 </div>
@@ -1199,23 +1206,23 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
     <div class="algebra-tabs">
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="algebra-__m__mach__machine-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-theories" type="button" role="tab" aria-controls="algebra-__m__mach__machine-theories" aria-selected="true">theories</button>
+            <button class="nav-link active" id="algebra-__m__mach__machine-theories-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-theories" type="button" role="tab" aria-controls="algebra-__m__mach__machine-theories" aria-selected="true">theory</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="algebra-__m__mach__machine-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-mtron" type="button" role="tab" aria-controls="algebra-__m__mach__machine-mtron" aria-selected="false">mtron encoding</button>
+            <button class="nav-link" id="algebra-__m__mach__machine-mtron-tab" data-bs-toggle="tab" data-bs-target="#algebra-__m__mach__machine-mtron" type="button" role="tab" aria-controls="algebra-__m__mach__machine-mtron" aria-selected="false">mtron</button>
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active" id="algebra-__m__mach__machine-theories" role="tabpanel" aria-labelledby="algebra-__m__mach__machine-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-free_groupoid">free_groupoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">objects</th><td><span class="algebra-value">/m/mach/machine</span></td></tr><tr><th class="algebra-role">morphisms</th><td><span class="algebra-value">/m/uri</span></td></tr><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr><tr><th class="algebra-role">inv</th><td><span class="algebra-value">&lt;..&gt;</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mult_monoid">mult_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr></table></div></div></div>
+        <div class="tab-pane fade show active" id="algebra-__m__mach__machine-theories" role="tabpanel" aria-labelledby="algebra-__m__mach__machine-theories-tab"><div class="algebra-theories"><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__group_theory"><span class="theory-chip theory-free_groupoid">free_groupoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__group_theory">group_theory</a><span class="algebra-theory-desc">the theory of groups \(\langle G, \cdot, 1, {}^{-1} \rangle\): \(g \cdot g^{-1} = g^{-1} \cdot g = 1\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">objects</th><td><span class="algebra-value">/m/mach/machine</span></td></tr><tr><th class="algebra-role">morphisms</th><td><span class="algebra-value">/m/uri</span></td></tr><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr><tr><th class="algebra-role">inv</th><td><span class="algebra-value">&lt;..&gt;</span></td></tr></table></div><div class="algebra-theory"><div class="algebra-theory-head"><a class="text-decoration-none" href="m.html#__m__theory__monoid_theory"><span class="theory-chip theory-mul_monoid">mul_monoid</span></a><a class="algebra-theory-type code" href="m.html#__m__theory__monoid_theory">monoid_theory</a><span class="algebra-theory-desc">the theory of monoids \(\langle M, \cdot, 1 \rangle\): \(m \cdot 1 = 1 \cdot m = m\) and \((m \cdot n) \cdot p = m \cdot (n \cdot p)\)</span></div><table class="algebra-roles"><tr><th class="algebra-role">op</th><td><a class="text-decoration-none" href="m.html#__m__inst__mult"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">mult()</code></pre></a></td></tr><tr><th class="algebra-role">id</th><td><span class="algebra-value">&lt;.&gt;</span></td></tr></table></div></div></div>
         <div class="tab-pane fade" id="algebra-__m__mach__machine-mtron" role="tabpanel" aria-labelledby="algebra-__m__mach__machine-mtron-tab"><pre class="algebra-mtron"><code class="language-mtron">object[machine]::[obj=&gt;rec::T[?[
   {?}instset=&gt;rec::T[?[
    {?}pattern=&gt;uri::T,
-   {?}const=&gt;[&lt;#&gt;::T],
-   {?}type=&gt;{?}[&lt;#&gt;::T],
+   {?}const=&gt;[&lt;#{?}&gt;::T],
+   {?}type=&gt;{?}[&lt;#{*}&gt;::T],
    {?}inst=&gt;{?}[inst::T],
    {?}rewrite=&gt;{?}[inst::T],
    {?}sugar=&gt;{?}[lst::T],
-   {?}reference=&gt;uri::T,
+   {?}reference=&gt;uri{*}::T,
    {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
   {?}compiler=&gt;component::T[?[
    {?}parser=&gt;parser::T,
@@ -1227,8 +1234,8 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
    {?}pattern=&gt;uri::T,
    {?}host=&gt;uri::T,
    {?}roster=&gt;[
-    {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-    {?}machine=&gt;[uri::T=&gt;uri::T]],
+    {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+    {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
    {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
     origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
     {?}host=&gt;uri::T,
@@ -1242,15 +1249,15 @@ sharing the socket, and the peer it makes joins that machine&#39;s network.
    {?}status=&gt;inst::T]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
   {?}processor=&gt;component::T[?[
    {?}state=&gt;union(stop,run,pause),
-   {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
+   {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor]][ctor?machine&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/machine,
                   theory=&gt;[
-                   free_groupoid=&gt;/m/theory/group_theory::[
+                   free_groupoid=&gt;group_theory::[
                     objects=&gt;/m/mach/machine,
                     morphisms=&gt;/m/uri,
                     op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
                     id=&gt;&lt;.&gt;,
                     inv=&gt;&lt;..&gt;],
-                   mult_monoid=&gt;/m/theory/monoid_theory::[
+                   mul_monoid=&gt;monoid_theory::[
                     op=&gt;mult?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;},
                     id=&gt;&lt;.&gt;]],
                   morphed_to=&gt;!λ(){&lt;j&gt;},
@@ -1329,8 +1336,8 @@ machine is popped off the parent stack. the absolute root of the metatron graph
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}pattern=&gt;uri::T,
                {?}host=&gt;uri::T,
                {?}roster=&gt;[
-                {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-                {?}machine=&gt;[uri::T=&gt;uri::T]],
+                {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+                {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
                {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
                 origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
                 {?}host=&gt;uri::T,
@@ -1402,8 +1409,8 @@ reference that crossed a wire, known here and not reachable from here.
 </p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
-  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#client" class="text-light">client</a> <span class="text-light">=&gt;</span> <a href="#'the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up'" class="text-info">&#39;the protocol client the dial constructed: its inst is what the peer is talked to with, its status whether it is live — held so drop can hang it up&#39;</a>
+  <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'where to dial it from here, route included: ws:____host:port__mtron'" class="text-info">mtron&#39;</a>
   <a href="#origin" class="text-light">origin</a> <span class="text-light">=&gt;</span> <a href="#"the service this peer reaches, scheme:____host:port — the map key is the dial's path encoding, this is the service, and the one field a peer cannot do without"" class="text-info">host:port — the map key is the dial&#39;s path encoding, this is the service, and the one field a peer cannot do without&quot;</a>
 </pre>
 </div><div class="card-body border-top py-2">
@@ -1423,13 +1430,13 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
          {?}result=&gt;&lt;#&gt;::T,
          {?}cut=&gt;[
           {?}form=&gt;uri::T,
-          {?}law=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/law],
+          {?}law=&gt;[uri::T[/m/inst/union(absorbing,kleene,partial,floatable,blocked,pure,action,prime,left_distributive,right_distributive,semi_right_distributive,magmadic,monoidic,commutative,poset,unit,involution,complement,idempotent,nilpotent,zero_divisor,cyclic)]@/m/law],
           {?}role=&gt;uri::T],
          {?}where=&gt;{?}[[{?}shape=&gt;uri::T,
                         {?}target=&gt;&lt;#&gt;::T,
-                        {?}place=&gt;&lt;#&gt;::T,
-                        {?}hop=&gt;&lt;#&gt;::T,
-                        {?}split=&gt;&lt;#&gt;::T,
+                        {?}place=&gt;&lt;#{**}&gt;::T,
+                        {?}hop=&gt;&lt;#{**}&gt;::T,
+                        {?}split=&gt;&lt;#{**}&gt;::T,
                         {?}inst=&gt;[uri::T],
                         span=&gt;[[span=&gt;uri::T,{?}flags=&gt;[uri::T]]]]]]][ctor?plan&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/plan</code></pre></div>
     
@@ -1439,9 +1446,9 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}cut" class="text-light">{?}cut</a> <span class="text-light">=&gt;</span> <a href="#'the cut selector: the morphism classes (form + laws + theory) the plan anchors on'" class="text-info">&#39;the cut selector: the morphism classes (form + laws + theory) the plan anchors on&#39;</a>
-  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
-  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
   <a href="#name" class="text-light">name</a> <span class="text-light">=&gt;</span> <a href="#"the plan's name — the rewrite rule it embodies"" class="text-info">&quot;the plan&#39;s name — the rewrite rule it embodies&quot;</a>
+  <a href="#{?}result" class="text-light">{?}result</a> <span class="text-light">=&gt;</span> <a href="#'only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T'" class="text-info">&#39;only for a rewrite with no declarative plan: the lambda that applies the rewrite to yield the rewritten path::T&#39;</a>
+  <a href="#{?}where" class="text-light">{?}where</a> <span class="text-light">=&gt;</span> <a href="#"the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client's inst names them)"" class="text-info">&quot;the distribution: target + span regions the plan ships, and the instructions its target must serve (inst, as a client&#39;s inst names them)&quot;</a>
 </pre>
 </div>
 </div><div class="card mb-3" id="__m__mach__component__rewriter__plan_rewriter">
@@ -1470,7 +1477,7 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
         <small class="text-muted code">/m/mach/component/processor</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">component::T[?[{?}state=&gt;union(stop,run,pause),
-               {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor</code></pre></div>
+               {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     
@@ -1546,6 +1553,20 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">specificity_selector::[=&gt;]   [-- the default selector::T --]</code></pre>
 </div>
+</div><div class="card mb-3" id="__m__mach__component__processor__computer__swarm">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">swarm::T</span>
+            <span class="ms-2">refines <a href="#__m__mach__component__processor__computer" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/processor/computer::T</code></pre></a></span>
+        </span>
+        <small class="text-muted code">/m/mach/component/processor/computer/swarm</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">computer::T[?[{?}cache=&gt;[{?}halted=&gt;&lt;#{*}&gt;::T,
+                         {?}run=&gt;&lt;#{*}&gt;::T,
+                         {?}barrier=&gt;lst::T]]][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm</code></pre></div>
+    
+    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor__computer" class="code inherited-link">computer::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}cache=&gt;rec::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+    
 </div><div class="card mb-3" id="__m__mach__component__processor__swarm">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1557,24 +1578,10 @@ peer::[origin=&gt;&lt;ws://192.168.1.42:8555&gt;] [-- known, and not reachable f
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">processor::T[][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor" class="code inherited-link">processor::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}state=&gt;union(stop,run,pause),
- {?}result=&gt;&lt;#&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> the swarm architecture: mints a swarm computer per apply(code), which schedules independently executing monads across the code inst chain; barriers synchronize them, and the objects of the halted monads are the result</p>
 </div>
-</div><div class="card mb-3" id="__m__mach__component__processor__computer__swarm">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-primary fw-bold">swarm::T</span>
-            <span class="ms-2">refines <a href="#__m__mach__component__processor__computer" class="text-decoration-none text-reset"><pre class="d-inline mb-0 align-baseline mtron-inline"><code class="language-mtron">/m/mach/component/processor/computer::T</code></pre></a></span>
-        </span>
-        <small class="text-muted code">/m/mach/component/processor/computer/swarm</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">computer::T[?[{?}cache=&gt;[{?}halted=&gt;&lt;#&gt;::T,
-                         {?}run=&gt;&lt;#&gt;::T,
-                         {?}barrier=&gt;lst::T]]][ctor?swarm&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/processor/swarm</code></pre></div>
-    
-    <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component__processor__computer" class="code inherited-link">computer::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[code=&gt;&lt;#&gt;::T,{?}cache=&gt;rec::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__mach__component" class="code inherited-link">component::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[{?}machine=&gt;machine::T]</code></div></div>
-    
 </div><div class="card mb-3" id="__m__mach__thread_executor">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1656,7 +1663,7 @@ remove stages accordingly for increased performance.
  {?}loop=&gt;real::T@/m/math/time,
  {?}timeout=&gt;real::T@/m/math/time,
  {?}state=&gt;union(stop,run,pause),
- {?}result=&gt;&lt;#&gt;::T]</code></div></div>
+ {?}result=&gt;&lt;#{*}&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light"> run a concurrent virtual thread</p>
 </div><div class="card-body border-top py-2">
@@ -1667,15 +1674,14 @@ remove stages accordingly for increased performance.
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">10</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
-        labelled with the set that declared it, and documented on that set's page as well.
+        An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
     <div class="instset-inst-filter" role="search">
     <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
     <div class="d-flex align-items-center gap-2">
         <input type="search" id="instset-inst-filter"
             class="form-control form-control-sm instset-inst-filter-input"
-            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
             aria-live="polite" aria-atomic="true">showing 10 of 10</span>

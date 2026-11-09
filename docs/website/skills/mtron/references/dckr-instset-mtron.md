@@ -397,16 +397,16 @@ mtron> mydb:people/3 -> [name=>'metis',role=>oracle]
 ```mtron
 mtron> *mydb:people/+                                           [-- all rows              --]
 ==>[name=>'marko',role=>architect]
-==>[name=>'metis',role=>oracle]
 ==>[name=>'stynx',role=>developer]
+==>[name=>'metis',role=>oracle]
 mtron> *mydb:people/+/                                          [-- all rows keyed by uri --]
 ==>mydb:people/1=>[name=>'marko',role=>architect]
-==>mydb:people/3=>[name=>'metis',role=>oracle]
 ==>mydb:people/2=>[name=>'stynx',role=>developer]
+==>mydb:people/3=>[name=>'metis',role=>oracle]
 mtron> *mydb:people/+/name                                      [-- all names             --]
 ==>'stynx'
-==>'marko'
 ==>'metis'
+==>'marko'
 mtron> *mydb:people/+.?[role=>developer]==[name=>_]           [-- all developer names   --]
 ==>[name=>'stynx']
 mtron> *mydb:people/+.?[role=>developer]==[name=>_].explain() [-- sql rewrite usage     --]

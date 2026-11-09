@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -501,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">9</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 7, 2026</span>
+            <span class="instset-built">built November 8, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -657,13 +664,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqttspace::T[][inst?haos&lt;=#(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/iot/haos/space/haos</code></pre></div>
     
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="#__m__iot__space__mqttspace" class="code inherited-link">mqttspace::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[host=&gt;uri::T]</code></div><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
-                 {?}pre_write=&gt;inst::T,
-                 {?}post_write=&gt;inst::T,
-                 {?}qless_write=&gt;inst::T,
-                 {?}pre_read=&gt;inst::T,
-                 {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,
+                    {?}pre_write=&gt;inst::T,
+                    {?}post_write=&gt;inst::T,
+                    {?}qless_write=&gt;inst::T,
+                    {?}pre_read=&gt;inst::T,
+                    {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     
@@ -831,13 +838,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     </div>
     <div class="mt-2"><pre class="mb-0"><code class="language-mtron">/m/space::T[?[host=&gt;uri::T]][ctor?mqttspace&lt;=(#{*}::T){&lt;j&gt;}]@/m/iot/space/mqttspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
-                 {?}pre_write=&gt;inst::T,
-                 {?}post_write=&gt;inst::T,
-                 {?}qless_write=&gt;inst::T,
-                 {?}pre_read=&gt;inst::T,
-                 {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,
+                    {?}pre_write=&gt;inst::T,
+                    {?}post_write=&gt;inst::T,
+                    {?}qless_write=&gt;inst::T,
+                    {?}pre_read=&gt;inst::T,
+                    {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     

@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -501,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">2</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">spaces</span></div><div class="instset-stat"><span class="instset-stat-n">1</span><span class="instset-stat-l">consts</span></div><div class="instset-stat"><span class="instset-stat-n">9</span><span class="instset-stat-l">rewrites</span></div></div>
         <div class="instset-meta-foot">
             
-            <span class="instset-built">built November 7, 2026</span>
+            <span class="instset-built">built November 8, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -552,12 +559,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                {?}root=&gt;/m/type::T,
                {?}schema=&gt;rec::T[?[
                 {?}pattern=&gt;uri::T,
-                {?}const=&gt;[&lt;#&gt;::T],
-                {?}type=&gt;{?}[&lt;#&gt;::T],
+                {?}const=&gt;[&lt;#{?}&gt;::T],
+                {?}type=&gt;{?}[&lt;#{*}&gt;::T],
                 {?}inst=&gt;{?}[inst::T],
                 {?}rewrite=&gt;{?}[inst::T],
                 {?}sugar=&gt;{?}[lst::T],
-                {?}reference=&gt;uri::T,
+                {?}reference=&gt;uri{*}::T,
                 {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace],
              inst=&gt;[
               mql?rec{*}&lt;=dcmntspace(uri::T,rec::T){&lt;j&gt;},
@@ -675,21 +682,21 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               {?}root=&gt;/m/type::T,
               {?}schema=&gt;rec::T[?[
                {?}pattern=&gt;uri::T,
-               {?}const=&gt;[&lt;#&gt;::T],
-               {?}type=&gt;{?}[&lt;#&gt;::T],
+               {?}const=&gt;[&lt;#{?}&gt;::T],
+               {?}type=&gt;{?}[&lt;#{*}&gt;::T],
                {?}inst=&gt;{?}[inst::T],
                {?}rewrite=&gt;{?}[inst::T],
                {?}sugar=&gt;{?}[lst::T],
-               {?}reference=&gt;uri::T,
+               {?}reference=&gt;uri{*}::T,
                {?}prefix=&gt;[uri::T=&gt;uri::T]]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset]][inst?dcmntspace&lt;=(rec::T){&lt;j&gt;}]@/m/db/dcmnt/space/dcmntspace</code></pre></div>
     <div class="card-body p-2 inherited-fields"><hr class="my-1" style="opacity:0.3;"><div class="mb-1 inherited-row"><span class="text-muted instset-doc-small-code me-1">↳</span><a href="m.html#__m__space" class="code inherited-link">space::T</a> <code class="language-mtron inherited-code" style="white-space:pre-wrap">?[pattern=&gt;uri::T,
- {?}q=&gt;[rec::T[?[pattern=&gt;uri::T,
-                 {?}pre_write=&gt;inst::T,
-                 {?}post_write=&gt;inst::T,
-                 {?}qless_write=&gt;inst::T,
-                 {?}pre_read=&gt;inst::T,
-                 {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
- {?}route=&gt;[uri::T=&gt;uri::T],
+ {?}q=&gt;[rec{?}::T[?[pattern=&gt;uri::T,
+                    {?}pre_write=&gt;inst::T,
+                    {?}post_write=&gt;inst::T,
+                    {?}qless_write=&gt;inst::T,
+                    {?}pre_read=&gt;inst::T,
+                    {?}post_read=&gt;inst::T]][inst?qproc&lt;=(qproc::T){&lt;j&gt;}]@/m/qproc],
+ {?}route=&gt;[uri{?}::T=&gt;uri::T],
  {?}schema=&gt;/m/instset::T,
  {?}on_close=&gt;&lt;#&gt;::T]</code></div></div>
     <div class="card-body border-top py-2">
@@ -698,11 +705,11 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"><a href="#a rec describing a document database connection" class="text-info">a rec describing a document database connection</a> <span class="text-light">=&gt;</span> <a href="#a rec with fields for configuring a document database connection" class="text-success">a rec with fields for configuring a document database connection</a></pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <a href="#{?}schema" class="text-light">{?}schema</a> <span class="text-light">=&gt;</span> <a href="#'an instset of collection types auto-discovered from the live database'" class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</a>
+  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
   <a href="#host" class="text-light">host</a> <span class="text-light">=&gt;</span> <a href="#'connection uri (mongodb:____host:port__database?options)'" class="text-info">database?options)&#39;</a>
   <a href="#pattern" class="text-light">pattern</a> <span class="text-light">=&gt;</span> <a href="#'the pattern for accessing documents'" class="text-info">&#39;the pattern for accessing documents&#39;</a>
-  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
   <a href="#route" class="text-light">route</a> <span class="text-light">=&gt;</span> <a href="#'the route for accessing documents'" class="text-info">&#39;the route for accessing documents&#39;</a>
-  <a href="#{?}root" class="text-light">{?}root</a> <span class="text-light">=&gt;</span> <a href="#'the root type constraint — writes at document root must satisfy this type; defaults to rec::T'" class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</a>
+  <a href="#{?}serializer" class="text-light">{?}serializer</a> <span class="text-light">=&gt;</span> <a href="#'the serializer for BSON documents'" class="text-info">&#39;the serializer for BSON documents&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -719,15 +726,14 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">2</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
-        labelled with the set that declared it, and documented on that set's page as well.
+        An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
     <div class="instset-inst-filter" role="search">
     <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
     <div class="d-flex align-items-center gap-2">
         <input type="search" id="instset-inst-filter"
             class="form-control form-control-sm instset-inst-filter-input"
-            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
             aria-live="polite" aria-atomic="true">showing 2 of 2</span>

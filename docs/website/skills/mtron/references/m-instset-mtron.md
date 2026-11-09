@@ -246,7 +246,14 @@ mtron> {1,2,3}.(a=>+2){ +*a }                             [-- sugar syntax for t
 ==>4
 ==>6
 ==>8
+mtron> {1,2,3}.inst?int<=int(plus(2)@a){ plus(*a) }       [-- an argument named by its own vid is read by that name --]
+==>4
+==>6
+==>8
 ```
+A call that names every argument with `@name` keys the body's argument frame by those names, so `(plus(2)@a)` reads
+as `(a=>plus(2))` does. The instruction's own arguments stay positional.
+
 ### Boolean logic
 
 ```mtron
@@ -502,21 +509,24 @@ mtron> {1,2}-<|[?>1 => +100, _=> +2]>>    [-- 1=>3, 2=>102  (each member takes i
 
 ## 11. right-shift / left-shift (`>>`, `<<`)
 
-Traverse into structures:
+`>>` descends into an obj and `<<` ascends out of it. On a poly, `>>` selects children: by index on a `lst`, by key on
+a `rec`, the second of a `rel`. An obj reached by `>>` keeps a link to the poly it came from, and `<<` follows that link
+back. A `rec`'s keys and a `rel`'s first are its `dom()`, not its parent, so a literal has no parent.
 
 ### lsts
 
 ```mtron
-mtron> [1,2,[a=>3],4]<<2                  [-- [[a=>3],4] --]
-mtron> [1,2,[a=>3],4]>>2                  [-- [1,2] --]
+mtron> [1,2,[a=>3],4]>>2                  [-- [a=>3]            (by index) --]
 ==>[a=>3]
-mtron> [1,2,[a=>3],4]>>(-2)               [-- [a=>3] (negative indicies) --]
+mtron> [1,2,[a=>3],4]>>(-2)               [-- [a=>3]            (negative indices) --]
 ==>[a=>3]
-mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4} (selectors are uris) --]
+mtron> [1,2,[a=>3],4]>>+                  [-- {1,2,[a=>3],4}    (selectors are uris) --]
 ==>1
 ==>2
 ==>[a=>3]
 ==>4
+mtron> [1,2,[a=>3],4]>>2.<<               [-- [1,2,[a=>3],4]    (back to the lst) --]
+==>[1,2,[a=>3],4]
 ```
 ### recs
 
@@ -533,18 +543,33 @@ mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c      [-- [d=>[e=>3]]       (access by key) 
 ==>[d=>[e=>3]]
 mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c/d/e  [-- 3                 (walk nested structure) --]
 ==>3
+mtron> [a=>1,b=>2,c=>[d=>[e=>3]]]>>c>>d.<<.<<  [-- [a=>1,b=>2,c=>[d=>[e=>3]]]  (ascend twice) --]
+==>[a=>1,b=>2,c=>[d=>[e=>3]]]
+```
+### rels
+
+```mtron
+mtron> (1=>(2=>3))>>                      [-- (2=>3)            (the second) --]
+==>2=>3
+mtron> (1=>(2=>3)).dom()                  [-- 1                 (the first is the dom, not the parent) --]
+==>1
+mtron> (1=>(2=>3))>>1.<<                  [-- (1=>(2=>3))       (back to the rel) --]
+==>1=>(2=>3)
 ```
 ### uris
 
+On a uri both shifts are address arithmetic, and nothing resolves: `>>` enumerates the child uris in the address space,
+and `<<` drops trailing segments (a uri carries its parent in its segments).
+
 ```mtron
-mtron> a/b/c<<                   [-- b/c    (drop leftmost segment) --]
+mtron> a/b/c <<                  [-- a/b    (drop the rightmost segment) --]
 ==>a/b
-mtron> a/b/c>>                   [-- a/b    (drop rightmost segment) --]
-mtron> a/b/c<<1                  [-- b/c --]
-==>a/b
-mtron> a/b/c>>1                  [-- a/b --]
-mtron> a/b/c<<3                  [-- <.>    (empty) --]
+mtron> a/b/c << 2                [-- a --]
+==>a
+mtron> a/b/c << 3                [-- <>     (empty) --]
 ==><>
+mtron> a/b/c/d << c/d            [-- a/b    (retract a matching postfix) --]
+==>a/b
 ```
 ---
 
@@ -762,10 +787,20 @@ mtron> [plus(5).mult(2)]==[>>=[plus(int::T)=>[args=>[+10]]]]            [-- in p
 ```
 ### names and templates
 
-`@name` on a pattern element names what it matched. In a change, a `${...}` argument is a **template parameter**: it is
-evaluated against what the run holds in that place, it reads the names with `*name`, and its value (not its text) is
-the argument. Nest one template inside another by alternating `${...}` and `{{{...}}}`. Everything outside a template
-parameter is literal: `plus(+5)` stays `plus(plus(5))`.
+`@name` on a pattern element names what it matched, at any depth, the instructions of a code argument included. A run
+binds the pattern as any instruction binds its declaration, so a name met twice must meet the same value, and a
+generic is pinned for the whole run. A name in all capitals is a generic, which is a type, so it names no value:
+`int::T@A` binds `A` to `int`, and `int::T@a` captures the int. In a change, a `${...}` argument is a **template parameter**: it is evaluated against what the run
+holds in that place, it reads the names with `*name`, and its value (not its text) is the argument. Nest one template
+inside another by alternating `${...}` and `{{{...}}}`. A named hole in a change is what its name matched
+(`minus(#::T@b)` reads `${*b}`), so a rule and its reverse are one equation. Everything else in a change is literal:
+`plus(+5)` stays `plus(plus(5))`.
+
+A pattern's argument is matched as a value tests a type: a hole (`int::T`) takes what fits it, and a code argument is
+typed by its range, so a value of that range meets it. A rule fires only when every name its pattern declares binds,
+and a name inside a code argument binds only against code: `mult(2.0)` fits `mult(map(#::T@b).inv())` but binds no
+`b`, so the rule passes it by. An argument the call leaves out is noobj, which only a hole admitting zero takes:
+`order(#{?}::T@s)` takes a bare `order()`.
 
 ```mtron
 mtron> [plus(5).mult(2)]==[>>=[plus(int::T)=>plus(${+10})]]                                             [-- evaluated against the 5 --]
@@ -776,11 +811,22 @@ mtron> [plus(2).plus(3).mult(4)]==[>>=[plus(int::T@a).plus(int::T@b)=>plus(${*a.
 ==>[plus(5).mult(4)]
 mtron> [mult(plus(mult(3))).plus(1)]==[>>=[mult(#(mult(int::T@k)))=>mult(plus(mult(${*k.mult(2)})))]]   [-- a name bound at depth --]
 ==>[mult(plus(mult(6))).plus(1)]
+mtron> [plus(2).plus(3).mult(4)]==[>>=[plus(#::T@g).plus(#::T@h)=>plus(${*g.mult(10).plus(*h)})]]       [-- a g and an h that are anything --]
+==>[plus(23).mult(4)]
+mtron> [plus(map(3).neg()).mult(2)]==[>>=[plus(map(#::T@u).neg())=>minus(#::T@u)]]                    [-- a named hole reads its binding --]
+==>[minus(3).mult(2)]
+mtron> [minus(3).mult(2)]==[>>=[minus(#::T@u)=>plus(map(#::T@u).neg())]]                              [-- the rule reversed: the same equation --]
+==>[plus(map(3).neg()).mult(2)]
+mtron> [plus(2).mult(3).plus(2).mult(2)]==[>>=[plus(int::T@n).mult(int::T@n)=>mult(${*n.mult(*n)})]]   [-- n met twice: only plus(2).mult(2) --]
+==>[plus(2).mult(3).mult(4)]
+mtron> [mult(2.0).mult(map(3).inv())]==[>>=[mult(map(#::T@v).inv())=>div(#::T@v)]]                   [-- the 2.0 fits but binds no v: only the code folds --]
+==>[mult(2.0).div(3)]
 ```
 The names are the change's own argument uris: a frame on the thread's argument stack, pushed for the change and popped
 after it, so threads never see each other's names. A name on a **typed hole** is also a type of the machine.
 `int::T@a` defines `a::T` in the machine's root frame (the scope of relative uris), and a later plain `int::T@a` refers
-to whatever `a` already is. So:
+to whatever `a` already is. A hole over `#` is the exception: `#::T@b` is a b that is anything, which constrains
+nothing, so it defines no type. So:
 
 * within one machine, a name means one type: reuse `@a` only for the same type, and give a different refinement its
   own name.
@@ -799,8 +845,8 @@ to whatever `a` already is. So:
 | `@uri`    | `at(uri)`        | anchor to uri location   |
 | `_`       | `id()`           | identity function        |
 | `>>=`     | `update()`       | update-and-write-back    |
-| `>>`      | `rshift()`       | right-shift (drop last)  |
-| `<<`      | `lshift()`       | left-shift (drop first)  |
+| `>>`      | `rshift()`       | descend to the children  |
+| `<<`      | `lshift()`       | ascend to the parent     |
 | `>-`      | `merge()`        | flatten / merge barrier  |
 | `-<`      | `split()`        | distribute into branches |
 | `\|`      | `block()`        | block/prevent evaluation |

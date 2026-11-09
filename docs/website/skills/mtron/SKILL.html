@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -749,11 +756,11 @@ mtron&gt; {1,1,1,2,2,3}.plus(2).sum()
 </code></pre>
 <p><strong>Symmetry reduction</strong> -- <code>&gt;-</code> sums the coefficients of identical objs; a negative
 coefficient is the interference:</p>
-<pre><code class="language-mtron">mtron&gt; {1,1,1,2,2,3}.plus(2).sum?int&lt;=int{1,3}()
-==&gt;9
-==&gt;12
-==&gt;5
-==&gt;{-1}4
+<pre><code class="language-mtron">mtron&gt; [{2}5,{3}5,7]&gt;-     [-- constructive --]
+==&gt;{5}5
+==&gt;7
+mtron&gt; [{2}5,{-2}5,7]&gt;-    [-- destructive: the 5s cancel --]
+==&gt;7
 </code></pre>
 <p><strong>Map, filter, projection, and reduce</strong> (language reference section 8):</p>
 <pre><code class="language-mtron">mtron&gt; {1,2,3,4}.map(+2)

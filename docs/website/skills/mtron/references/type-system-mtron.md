@@ -399,11 +399,13 @@ a path the value is a chain, so a zero-admitting VERTEX is one the chain omits �
 `1=>'tally'` (the middle vertex skipped) while `rel[int,wayfarer{+},str]` does not. A present value must still be the
 entry's type at both: `{?}` is zero-or-one, not "anything when present".
 
-**Not yet supported: a PREFIX coefficient, and repetition.** `lst[{4}int]` — "the list is composed of four ints",
-spelled before the entry rather than after it — is not matchable today. Neither is a position *repetition*: a suffix
-coefficient judges the multiplicity of the value already at that position, and nothing reads it as "this entry
-repeats, so the chain is longer" (whether a repeated vertex should lengthen a path is not settled). A NEGATIVE (anti)
-coefficient is not a multiplicity at all, so a path reports it as not yet matched rather than judging it.
+**A PREFIX coefficient is the entry's span: how many positions in a row.** An entry is `{span}type{point}`, so
+`lst[{4}int]` is four int positions, `lst[{3}int{2}]` three positions that each hold an `int{2}`, and
+`lst[{?}int,{2}str]` an optional int then two strs. A ranged span takes any count it admits, and an unbounded span on
+the LAST entry claims the rest of the list: `lst[{*}int]` holds ints only. A type keeps both in its one id —
+`{2}int{3}::T` has tid `{2}/m/int{3}` — and its coefficient stays the point. A path does not read a prefix yet: whether
+a repeated vertex should lengthen a chain is not settled. A NEGATIVE (anti) coefficient is not a multiplicity at all, so
+a path reports it as not yet matched rather than judging it.
 
 ### declaring a fibered type vs instantiating one
 

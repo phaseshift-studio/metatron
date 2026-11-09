@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -524,7 +531,8 @@ menu, fix the five pieces a row names:</p>
 <ul>
 <li>a fold that declares <code>monoidic</code> + <code>commutative</code> is <strong>its own</strong> combiner (<code>sum</code>, <code>prod</code>);</li>
 <li>a fold defined by its <code>derivation</code> recombines through the fold that defines it (<code>count ↦ sum</code>,
-<code>order(s) ↦ kmerge(s)</code>);</li>
+<code>order(s) ↦ kmerge(s)</code>, and a bare <code>order()</code> ↦ <code>kmerge()</code>: an omitted argument is noobj, which the derivation's
+<code>s{?}</code> admits);</li>
 <li>a keyed fold <code>group([k ⇒ h])</code> recombines <strong>pointwise</strong> — <code>sum()==[_=&gt;combiner(h)]</code> — which no single edge names.</li>
 </ul>
 <h3>the theorem bindings</h3>
@@ -727,7 +735,7 @@ defined by its <code>derivation</code> recombines through the fold that defines 
 <tbody>
 <tr><td><code>sum</code>, <code>prod</code></td><td>itself</td><td>declares <code>monoidic</code> + <code>commutative</code></td></tr>
 <tr><td><code>count</code></td><td><code>sum</code></td><td><code>count ≡ map(1)·sum</code></td></tr>
-<tr><td><code>order(s)</code></td><td><code>kmerge(s)</code></td><td><code>order(s) ≡ split([_])·kmerge(s)</code>, and <code>kmerge</code> declares <code>monoidic</code> + <code>commutative</code></td></tr>
+<tr><td><code>order(s)</code></td><td><code>kmerge(s)</code></td><td><code>order(s{?}) ≡ split([_])·kmerge(s{?})</code>, so a bare <code>order()</code> recombines through <code>kmerge()</code>; <code>kmerge</code> declares <code>monoidic</code> + <code>commutative</code></td></tr>
 <tr><td>rec <code>sum</code></td><td>itself</td><td>the deep merge's fold declares <code>monoidic</code> + <code>commutative</code> — a <code>lst</code> is its atom, so colliding values bag in any order</td></tr>
 </tbody>
 </table>

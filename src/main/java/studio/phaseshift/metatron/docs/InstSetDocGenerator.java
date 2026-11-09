@@ -1021,12 +1021,12 @@ public class InstSetDocGenerator {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="%1$s-theories-tab" data-bs-toggle="tab" \
                 data-bs-target="#%1$s-theories" type="button" role="tab" \
-                aria-controls="%1$s-theories" aria-selected="true">theories</button>
+                aria-controls="%1$s-theories" aria-selected="true">theory</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="%1$s-mtron-tab" data-bs-toggle="tab" \
                 data-bs-target="#%1$s-mtron" type="button" role="tab" \
-                aria-controls="%1$s-mtron" aria-selected="false">mtron encoding</button>
+                aria-controls="%1$s-mtron" aria-selected="false">mtron</button>
                         </li>
                     </ul>
                     <div class="tab-content">

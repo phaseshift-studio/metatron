@@ -283,11 +283,11 @@ mtron> {1,1,1,2,2,3}.plus(2).sum()
 coefficient is the interference:
 
 ```mtron
-mtron> {1,1,1,2,2,3}.plus(2).sum?int<=int{1,3}()
-==>9
-==>12
-==>5
-==>{-1}4
+mtron> [{2}5,{3}5,7]>-     [-- constructive --]
+==>{5}5
+==>7
+mtron> [{2}5,{-2}5,7]>-    [-- destructive: the 5s cancel --]
+==>7
 ```
 **Map, filter, projection, and reduce** (language reference section 8):
 

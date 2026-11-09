@@ -56,7 +56,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE, STEP
     }
 
-    /** Column index of the {@code args} cell — the one with the inline selector. */
+    /**
+     * Column index of the {@code args} cell — the one with the inline selector.
+     */
     private static final int ARGS_COL = 3;
 
     /**
@@ -147,7 +149,6 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
     private final Deque<ExplainLevel> stack = new ArrayDeque<>();
     private final Code rootCode;
-    private String lastFrameMarkup = "";  // The last full frame, settled into the transcript on exit
 
     // ── Single-step rewrite state (ctrl+space) ─────────────────────
     private Map<String, List<Inst>> rewritesByCategory;  // category → ordered rewrites (lazily built)
@@ -163,7 +164,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
 
     @Override
     protected void onEnter() {
-        this.terminal.writer().print("\n");
+        // No leading newline here: CommandPalette's <tab> path already writes one, so the
+        // table starts immediately below the expression (a second newline left a blank line
+        // and, on exit, contributed to the cursor landing at the top of the screen).
         this.pushLevel(this.rootCode, 0, 0, -1, -1, -1);   // the root has no parent spawn position
     }
 
@@ -181,11 +184,6 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
     @Override
     protected void redraw() {
         this.redrawStack();
-    }
-
-    @Override
-    protected String finalFrame() {
-        return this.lastFrameMarkup;
     }
 
     private KeyMap<Action> buildKeyMap() {
@@ -232,7 +230,7 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
                 break;
 
             case UP_ROW:
-                if (current.selectedRow == 0 && stack.size() > 1) {
+                if (current.selectedRow == 0 /*&& stack.size() > 1*/) {
                     popLevel();   // top row of a nested window: back out like ctrl-d
                 } else {
                     current.selectedRow = Math.max(current.selectedRow - 1, 0);
@@ -300,7 +298,10 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         final int n = args == null ? 0 : (int) args.count();
         if (current.selectedArg < 0) {
             if (n == 0) current.selectedCol = Math.min(current.selectedCol + 1, lastCol);
-            else { current.selectedArg = 0; current.argPath.clear(); }
+            else {
+                current.selectedArg = 0;
+                current.argPath.clear();
+            }
             return;
         }
         final Obj node = atPath(args, current.selectedArg, current.argPath);
@@ -319,10 +320,16 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
             final int lastIdx = current.argPath.size() - 1;
             final int last = current.argPath.get(lastIdx);
             final Obj parent = atPath(args, current.selectedArg, current.argPath.subList(0, lastIdx));
-            if (last < (int) parent.<Poly<?, ?>>as().count() - 1) { current.argPath.set(lastIdx, last + 1); return true; }
+            if (last < (int) parent.<Poly<?, ?>>as().count() - 1) {
+                current.argPath.set(lastIdx, last + 1);
+                return true;
+            }
             current.argPath.remove(lastIdx);
         }
-        if (current.selectedArg < (int) args.count() - 1) { current.selectedArg++; return true; }
+        if (current.selectedArg < (int) args.count() - 1) {
+            current.selectedArg++;
+            return true;
+        }
         return false;
     }
 
@@ -796,7 +803,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         level.table.setCell(row, ARGS_COL, base + ProfileTool.argsSummary(args, level.argsWidth));
     }
 
-    /** Underline the arg that spawned a child window, marking the parent's spawn point. */
+    /**
+     * Underline the arg that spawned a child window, marking the parent's spawn point.
+     */
     private void applySpawnUnderline(final ExplainLevel level, final int row, final int arg) {
         final Poly<?, ?> args = getMetadataArgs(level, row);
         if (args == null) return;
@@ -889,7 +898,9 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         return sb.toString();
     }
 
-    /** Clip to {@code width} visual columns, carrying {@code {{…}}} markup spans through verbatim. */
+    /**
+     * Clip to {@code width} visual columns, carrying {@code {{…}}} markup spans through verbatim.
+     */
     private static String clipVisual(final String s, final int width) {
         final StringBuilder sb = new StringBuilder();
         int visible = 0;
@@ -1053,7 +1064,6 @@ public class ExplainTool extends AbstractTool<ExplainTool, ExplainTool.Action> {
         }
 
         this.settle(canvas);
-        this.lastFrameMarkup = canvas.frameText();
     }
 
     /**

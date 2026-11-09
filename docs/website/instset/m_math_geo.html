@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -501,7 +508,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <div class="instset-stats"><div class="instset-stat"><span class="instset-stat-n">7</span><span class="instset-stat-l">types</span></div><div class="instset-stat"><span class="instset-stat-n">6</span><span class="instset-stat-l">insts</span></div><div class="instset-stat"><span class="instset-stat-n">23</span><span class="instset-stat-l">defined elsewhere</span></div></div>
         <div class="instset-meta-foot">
             <div class="instset-formats"><span class="instset-formats-label">skill:</span><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.html">html</a><a class="article-format" href="../skills/mtron/references/geo-instset-mtron.md">md</a></div>
-            <span class="instset-built">built November 7, 2026</span>
+            <span class="instset-built">built November 8, 2026</span>
         </div>
     </div>
 </header><div class="instset-subnav" id="instset-subnav">
@@ -538,9 +545,9 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
               type=&gt;[
                lst::T@/m/math/geo/geometry,
                lst::T@/m/math/geo/bbox,
-               geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point,
-               geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line,
-               geometry::T[?[geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line]][ctor?polygon&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/polygon,
+               geometry::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point,
+               geometry::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line,
+               geometry::T[?[geometry{+}::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line]][ctor?polygon&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/polygon,
                bbox::T[?[real::T,real::T,real::T,real::T]][ctor?bbox2d&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/bbox2d,
                bbox::T[?[
                 real::T,
@@ -675,10 +682,10 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a 2D envelope — four reals, \([\lambda_{\min}, \varphi_{\min}, \lambda_{\max}, \varphi_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
-  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
-  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
   <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
+  <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
+  <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -704,12 +711,12 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
     <p class="mb-0 text-light"> a 3D envelope — six reals, \([\lambda_{\min}, \varphi_{\min}, h_{\min}, \lambda_{\max}, \varphi_{\max}, h_{\max}]\)</p>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">5</span> <span class="text-light">=&gt;</span> <a href="#'the maximum z'" class="text-info">&#39;the maximum z&#39;</a>
-  <span class="text-light">4</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  <span class="text-light">4</span> <span class="text-light">=&gt;</span> <a href="#'the maximum y'" class="text-info">&#39;the maximum y&#39;</a>
   <span class="text-light">3</span> <span class="text-light">=&gt;</span> <a href="#'the maximum x'" class="text-info">&#39;the maximum x&#39;</a>
   <span class="text-light">2</span> <span class="text-light">=&gt;</span> <a href="#'the minimum z'" class="text-info">&#39;the minimum z&#39;</a>
   <span class="text-light">1</span> <span class="text-light">=&gt;</span> <a href="#'the minimum y'" class="text-info">&#39;the minimum y&#39;</a>
   <span class="text-light">0</span> <span class="text-light">=&gt;</span> <a href="#'the minimum x'" class="text-info">&#39;the minimum x&#39;</a>
+  <span class="text-light">5</span> <span class="text-light">=&gt;</span> <a href="#'the maximum z'" class="text-info">&#39;the maximum z&#39;</a>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -737,7 +744,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         </span>
         <small class="text-muted code">/m/math/geo/line</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line</code></pre></div>
     
     
     <div class="card-body border-top py-2">
@@ -754,7 +761,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         </span>
         <small class="text-muted code">/m/math/geo/point</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point</code></pre></div>
     
     
     <div class="card-body border-top py-2">
@@ -778,7 +785,7 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
         </span>
         <small class="text-muted code">/m/math/geo/polygon</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry::T[?[geometry::T[?[real::T,real::T,real::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line]][ctor?polygon&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/polygon</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">geometry::T[?[geometry{+}::T[?[geometry{+}::T[?[real::T,real::T,real{?}::T]][ctor?point&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/point]][ctor?line&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/line]][ctor?polygon&lt;=(#{*}::T){&lt;j&gt;}]@/m/math/geo/polygon</code></pre></div>
     
     
     <div class="card-body border-top py-2">
@@ -791,15 +798,14 @@ geo:point::[-123.13,44.47,1240.0]</code></pre>
 </div><div class="container-xxl mb-4" id="instructions">
     <h3 class="text-primary mb-3">insts <span class="pill-label badge bg-success">6</span></h3>
     <p class="text-muted instset-doc-small-code" style="max-width:1100px;">
-        every contract whose ADDRESS this set holds. A row contributed by another instruction set is
-        labelled with the set that declared it, and documented on that set's page as well.
+        An inst::T contributed by another instruction set is documented at the set that declared it.
     </p>
     <div class="instset-inst-filter" role="search">
     <label class="form-label instset-doc-small-code mb-1" for="instset-inst-filter">filter insts</label>
     <div class="d-flex align-items-center gap-2">
         <input type="search" id="instset-inst-filter"
             class="form-control form-control-sm instset-inst-filter-input"
-            placeholder="filter insts…" autocomplete="off" spellcheck="false"
+            placeholder="filter by keyword" autocomplete="off" spellcheck="false"
             aria-controls="instructions" aria-describedby="instset-inst-filter-count">
         <span id="instset-inst-filter-count" class="instset-inst-filter-count text-muted"
             aria-live="polite" aria-atomic="true">showing 6 of 6</span>

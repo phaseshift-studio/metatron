@@ -5,7 +5,8 @@
     --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
     --linkcolor: #6C7293; /* hyperlink blue */
-    --linkcoloralternate: #4c5375;
+    --linkcoloralternate: #697093;
+    --codecolor: #797585;
     --white: #e8e8e8; /* body text (off-white) */
     --primary: #970207; /* accent red (interactive / hover / brand) */
     --secondary: #191C24;
@@ -448,7 +449,7 @@ code.hljs {
 }
 
 code {
-    color: #797585;
+    color: var(--codecolor);
 }
 
 em {
@@ -1628,7 +1629,6 @@ th {
     font-weight: bolder;
 }
 
-.hljs-mtron-uri,
 .hljs-mtron-at-vid,
 .hljs-mtron-real,
 .hljs-mtron-bytes,
@@ -1699,13 +1699,13 @@ th {
 .hljs-mtron-keyword,
 .hljs-mtron-query-value,
 .hljs-mtron-inst {
-    color: var(--tertiarycolor);
+    color: var(--linkcoloralternate);
 }
 
 .hljs-mtron-uri,
 .hljs-mtron-type,
 .hljs-mtron-type-prefix {
-    color: var(--mblue);
+    color: var(--linkcoloralternate);
 }
 
 .colist {
@@ -1975,8 +1975,8 @@ h6:hover .heading-anchor {
     /* never ligate multi-character operators (=> -< >= <= >>= etc.) into single
        look-alike glyphs — mtron source must read back as the exact characters */
     font-variant-ligatures: none;
-    color: var(--mblue);
-    background: rgba(70, 105, 221, 0.10);
+    color: var(--codecolor);
+    /*background: rgba(70, 105, 221, 0.10);*/
     padding: 0.15em 0.4em;
     border-radius: 3px;
     font-size: 0.9em;

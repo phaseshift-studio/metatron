@@ -54,12 +54,12 @@ is unobservable.
 mtron> */m/instset?docq
 ==>docs::[obj=>rec::T[?[
      {?}pattern=>uri::T,
-     {?}const=>[<#>::T],
-     {?}type=>{?}[<#>::T],
+     {?}const=>[<#{?}>::T],
+     {?}type=>{?}[<#{*}>::T],
      {?}inst=>{?}[inst::T],
      {?}rewrite=>{?}[inst::T],
      {?}sugar=>{?}[lst::T],
-     {?}reference=>uri::T,
+     {?}reference=>uri{*}::T,
      ...(1 more)]][ctor?/m/instset<=(#{*}::T){<j>}]@/m/instset,
           dom=>'an extension of space with structu...',
           rng=>'creates the instset and registers ...',
@@ -311,7 +311,7 @@ mtron> */m/mach/component/processor?docq
 ==>docs::[desc=>'no documentation available',
           obj=>component::T[?[
            {?}state=>union(stop,run,pause),
-           {?}result=><#>::T]]@/m/mach/component/processor]
+           {?}result=><#{*}>::T]]@/m/mach/component/processor]
 ```
 The compiler produces code; the `processor` runs it. The two are siblings rather than stages of one another, which is
 why the compiler's last stage hands off instead of invoking: what a program *means* and how it is *run* are separate
@@ -343,13 +343,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}loop=>'delay to repeat code evaluation (d...',
+           code=>"the thread's executing code",
            {?}runtime=>"computes the thread's current runn...",
+           {?}result=>'the last result produced by the th...',
            {?}state=>'current state of the thread',
            {?}timeout=>'how long a read of rhs waits for t...',
-           code=>"the thread's executing code",
-           {?}time=>'the datetime::T when the thread wa...',
-           {?}result=>'the last result produced by the th...'],
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}time=>'the datetime::T when the thread wa...'],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -399,8 +399,8 @@ mtron> */m/mach/component/network?docq
      {?}pattern=>uri::T,
      {?}host=>uri::T,
      {?}roster=>[
-      {?}discover=>rec::T[?[status=>bool::T]]@/m/web/discovery,
-      {?}machine=>[uri::T=>uri::T]],
+      {?}discover=>rec{*}::T[?[status=>bool::T]]@/m/web/discovery,
+      {?}machine=>[uri::T=>uri{+}::T]],
      {?}peer=>[uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/path_encoding=>rec::T[?[
       origin=>uri::T[/m/inst/pred?#{?}<=(<#{*}>::T)]@/m/uri/origin,
       {?}host=>uri::T,
@@ -413,10 +413,10 @@ mtron> */m/mach/component/network?docq
      {?}prefix=>{?}[uri::T=>uri::T],
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
-           {?}pattern=>'the branch this network answers as...',
-           {?}peer=>"machine's own connections, one per...",
-           {?}status=>'the health method — an auto inst c...',
            {?}listener=>'the sockets this machine serves th...',
+           {?}peer=>"machine's own connections, one per...",
+           {?}pattern=>'the branch this network answers as...',
+           {?}status=>'the health method — an auto inst c...',
            {?}roster=>'known machines, connectionless: <h...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
@@ -534,7 +534,7 @@ mtron> ws_client::[pattern=><ws://localhost:8555/mtron>]
     inst=>[
      /m/inst/eval=>eval?A{*}<=code(uri::T){<j>},
      /m/inst/from=>*uri::T,
-     /m/inst/to=>to?A{?}<=A{?}(uri::T){<j>}],
+     /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
     status=>!λstatus?bool<=(){<j>},
     close=>λ(){<j>},
     ...(1 more)]
@@ -759,8 +759,8 @@ mtron> [dog=>'mama',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/wa
 mtron> [dog=>'puppy',code=>|(*</usr/walk/${*workload/dog}/+/km>.sum().to(</usr/walk/total/${*workload/dog}>))](workload=>_){ !*workload/code.apply() }
 ==>9
 mtron> */usr/walk/total/+
-==>9
 ==>17
+==>9
 mtron> */usr/walk/total/+.sum()
 ==>26
 ```
@@ -835,7 +835,7 @@ computed:
 
 ```mtron
 mtron> *~/network/host       [-- localhost --]
-==>daa865e8c730
+==>booger
 ```
 Peers forked on one host share it; telling them apart takes their service authority.
 

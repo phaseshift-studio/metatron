@@ -71,16 +71,16 @@ mtron> bash('ls')
     'dist',
     ...(17 more)]
 mtron> bash(cmd=>'whoami')
-==>['ubuntu']
+==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'overlay         916G  577G  293G  ...',
-    'tmpfs            64M     0   64M  ...',
-    'shm              64M     0   64M  ...',
-    '/dev/nvme1n1p2  916G  577G  293G  ...',
-    'tmpfs           6.1G  6.5M  6.1G  ...',
+    'tmpfs           6.1G  6.4M  6.1G  ...',
+    'efivarfs        128K   42K   82K  ...',
+    '/dev/nvme1n1p2  916G  578G  292G  ...',
+    'tmpfs            31G  302M   31G  ...',
+    'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
-    ...(4 more)]
+    ...(3 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
@@ -111,7 +111,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'CONTRIBUTING.md',
            'dist',
            ...(17 more)]]
-==>['whoami'=>['ubuntu']]
+==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
     'AGENTSWARM.md',
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-07 07:00:26.813553...',
+    'Access: 2026-11-08 15:23:18.618535...',
    ...
 ```
 ### a shape of its own
@@ -252,15 +252,15 @@ One read each: the environment, the thread count, and the executor's own summary
 
 ```mtron
 mtron> */sys/env/HOME
-==>'/work'
+==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>21
+==>57
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::536.0,
-    free_mem_jvm=>mB::131.0808,
+==>[total_mem_jvm=>mB::648.0,
+    free_mem_jvm=>mB::281.4598,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::404.9191,
-    jvm=>'OpenJDK 64-Bit Server VM 25.0.4.1',
+    used_mem_jvm=>mB::366.5401,
+    jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',
     ...(4 more)]

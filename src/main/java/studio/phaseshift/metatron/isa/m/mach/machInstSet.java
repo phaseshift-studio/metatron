@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.MachinePerspective;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
@@ -1219,6 +1218,7 @@ public class machInstSet extends AbstractInstSet {
                     continue;
                 final Obj authority = target.equals(inst.arg(0).uriValue()) ? inst.arg(0) : uri(target);
                 final List<Inst> newCode = new ArrayList<>(insts.subList(0, i));
+                //newCode.add(branch_(authority.tid(authority.tid().q(HOP, 0)), code(new ArrayList<>(insts.subList(i + 1, insts.size())))).q(HOP, 0).tryToInst().asInst());
                 newCode.add(instB(CUT_INST_TID, lst(authority, code(new ArrayList<>(insts.subList(i + 1, insts.size()))))));
                 return code(newCode);
             }

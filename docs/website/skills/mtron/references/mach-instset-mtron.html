@@ -371,6 +371,13 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                                 <div class="skill-resource-group">assets</div>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/dsh_memory_loader.py">dsh_memory_loader.py</a>
                                 <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.jsonl">mtron_training_dataset.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.manifest.json">mtron_training_dataset.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.split.manifest.json">mtron_training_dataset.split.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verification.txt">mtron_training_dataset.verification.txt</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.dev.jsonl">mtron_training_dataset.verified.dev.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.jsonl">mtron_training_dataset.verified.jsonl</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.manifest.json">mtron_training_dataset.verified.manifest.json</a>
+                                <a class="skill-resource dropdown-item" href="../../../skills/mtron/assets/mtron_training_dataset.verified.train.jsonl">mtron_training_dataset.verified.train.jsonl</a>
                             </div>
                         </div>
                     </li>
@@ -542,12 +549,12 @@ is unobservable.</p>
 <pre><code class="language-mtron">mtron&gt; */m/instset?docq
 ==&gt;docs::[obj=&gt;rec::T[?[
      {?}pattern=&gt;uri::T,
-     {?}const=&gt;[&lt;#&gt;::T],
-     {?}type=&gt;{?}[&lt;#&gt;::T],
+     {?}const=&gt;[&lt;#{?}&gt;::T],
+     {?}type=&gt;{?}[&lt;#{*}&gt;::T],
      {?}inst=&gt;{?}[inst::T],
      {?}rewrite=&gt;{?}[inst::T],
      {?}sugar=&gt;{?}[lst::T],
-     {?}reference=&gt;uri::T,
+     {?}reference=&gt;uri{*}::T,
      ...(1 more)]][ctor?/m/instset&lt;=(#{*}::T){&lt;j&gt;}]@/m/instset,
           dom=&gt;'an extension of space with structu...',
           rng=&gt;'creates the instset and registers ...',
@@ -781,7 +788,7 @@ frame inherits the enclosing machine's compiler (it clones the machine rec), so 
 ==&gt;docs::[desc=&gt;'no documentation available',
           obj=&gt;component::T[?[
            {?}state=&gt;union(stop,run,pause),
-           {?}result=&gt;&lt;#&gt;::T]]@/m/mach/component/processor]
+           {?}result=&gt;&lt;#{*}&gt;::T]]@/m/mach/component/processor]
 </code></pre>
 <p>The compiler produces code; the <code>processor</code> runs it. The two are siblings rather than stages of one another, which is
 why the compiler's last stage hands off instead of invoking: what a program <em>means</em> and how it is <em>run</em> are separate
@@ -813,13 +820,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
-           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           code=&gt;&quot;the thread's executing code&quot;,
            {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
+           {?}result=&gt;'the last result produced by the th...',
            {?}state=&gt;'current state of the thread',
            {?}timeout=&gt;'how long a read of rhs waits for t...',
-           code=&gt;&quot;the thread's executing code&quot;,
-           {?}time=&gt;'the datetime::T when the thread wa...',
-           {?}result=&gt;'the last result produced by the th...'],
+           {?}loop=&gt;'delay to repeat code evaluation (d...',
+           {?}time=&gt;'the datetime::T when the thread wa...'],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -864,8 +871,8 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}pattern=&gt;uri::T,
      {?}host=&gt;uri::T,
      {?}roster=&gt;[
-      {?}discover=&gt;rec::T[?[status=&gt;bool::T]]@/m/web/discovery,
-      {?}machine=&gt;[uri::T=&gt;uri::T]],
+      {?}discover=&gt;rec{*}::T[?[status=&gt;bool::T]]@/m/web/discovery,
+      {?}machine=&gt;[uri::T=&gt;uri{+}::T]],
      {?}peer=&gt;[uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/path_encoding=&gt;rec::T[?[
       origin=&gt;uri::T[/m/inst/pred?#{?}&lt;=(&lt;#{*}&gt;::T)]@/m/uri/origin,
       {?}host=&gt;uri::T,
@@ -878,10 +885,10 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}pattern=&gt;'the branch this network answers as...',
-           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}status=&gt;'the health method — an auto inst c...',
            {?}listener=&gt;'the sockets this machine serves th...',
+           {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
+           {?}pattern=&gt;'the branch this network answers as...',
+           {?}status=&gt;'the health method — an auto inst c...',
            {?}roster=&gt;'known machines, connectionless: &lt;h...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
@@ -1001,7 +1008,7 @@ a background behavior of a valid construction.</p>
     inst=&gt;[
      /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
      /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}],
+     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
     status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
     close=&gt;λ(){&lt;j&gt;},
     ...(1 more)]
@@ -1189,8 +1196,8 @@ mtron&gt; [dog=&gt;'mama',code=&gt;|(*&lt;/usr/walk/${*workload/dog}/+/km&gt;.su
 mtron&gt; [dog=&gt;'puppy',code=&gt;|(*&lt;/usr/walk/${*workload/dog}/+/km&gt;.sum().to(&lt;/usr/walk/total/${*workload/dog}&gt;))](workload=&gt;_){ !*workload/code.apply() }
 ==&gt;9
 mtron&gt; */usr/walk/total/+
-==&gt;9
 ==&gt;17
+==&gt;9
 mtron&gt; */usr/walk/total/+.sum()
 ==&gt;26
 </code></pre>
@@ -1252,7 +1259,7 @@ sum of the round trips. The direction is a virtual thread per route,
 <p><strong>Where am I.</strong> <code>*~/network/host</code> answers the host the current machine runs on — for a result that says where it was
 computed:</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host       [-- localhost --]
-==&gt;daa865e8c730
+==&gt;booger
 </code></pre>
 <p>Peers forked on one host share it; telling them apart takes their service authority.</p>
 <h3>appendix — the registered types</h3>
