@@ -612,18 +612,20 @@ public class fURITest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{2}/m/int{3}     % 2   % 3   % /m/int{3}",
-            "{3}int{2}        % 3   % 2   % int{2}",
-            "{*}int           % *   % 1   % int",
-            "{1,3}/m/str      % 1,3 % 1   % /m/str",
-            "{0}/a            % 0   % 1   % /a",
-            "{2}/a/b[c]{?}    % 2   % ?   % /a/b[c]{?}",
-            "{-}/a?x=y        % -   % 1   % /a?x=y"},
+            "{2}/m/int{3}     % 2   % 3   % 6    % /m/int{3}",
+            "{3}int{2}        % 3   % 2   % 6    % int{2}",
+            "{*}int           % *   % 1   % *    % int",
+            "{1,3}/m/str      % 1,3 % 1   % 1,3  % /m/str",
+            "{0}/a            % 0   % 1   % 0    % /a",
+            "{2}/a/b[c]{?}    % 2   % ?   % 0,2  % /a/b[c]{?}",
+            "{-}/a?x=y        % -   % 1   % -    % /a?x=y"},
             delimiter = '%')
-    public void testSpan(final String furi, final String span, final String point, final String spanless) {
+    public void testSpan(final String furi, final String span, final String point, final String count, final String spanless) {
         for (final fURI parsed : List.of(f(furi), mParser.m_furi().parse("<" + furi + ">").<fURI>get())) {
             assertEquals(cInt.of(span), parsed.b());
-            assertEquals(cInt.of(point), parsed.c());
+            assertEquals(cInt.of(point), parsed.d());
+            // the count is the span times the point
+            assertEquals(cInt.of(count), parsed.c());
             assertEquals(f(spanless), parsed.b(null));
             assertNotEquals(f(spanless), parsed);
             assertEquals(furi, parsed.toString());
@@ -638,15 +640,17 @@ public class fURITest extends AbstractMetatronTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{0}a/b           % {0}a|b   % 1",
-            "{2}c/d/{e,f}     % {2}c|d|{e,f} % 1",
-            "{*}              %          % *"},
+            "{0}a/b           % {0}a|b       % 1 % 0",
+            "{2}c/d/{e,f}     % {2}c|d|{e,f} % 1 % 4",
+            "{*}              %              % * % *"},
             delimiter = '%')
-    public void testSpanNotRead(final String furi, final String path, final String point) {
+    public void testSpanNotRead(final String furi, final String path, final String point, final String count) {
         final fURI parsed = f(furi);
         assertEquals(cInt.ONE(), parsed.b());
         assertEquals(null == path ? List.of() : List.of(path.split("\\|")), parsed.path());
-        assertEquals(cInt.of(point), parsed.c());
+        assertEquals(cInt.of(point), parsed.d());
+        // a point marker counts every branch through it: {2}c/d/{e,f} is c/d/e{2} + c/d/f{2}
+        assertEquals(cInt.of(count), parsed.c());
     }
 
     // ── query parameter values (lst and rec) ────────────────────────
@@ -1059,7 +1063,7 @@ public class fURITest extends AbstractMetatronTest {
 
     private static Map<fURI, cInt> points(final Stream<fURI> terms) {
         final Map<fURI, cInt> points = new HashMap<>();
-        terms.forEach(term -> points.merge(term.c(cInt.ONE()), term.c(), cInt::plus));
+        terms.forEach(term -> points.merge(term.d(cInt.ONE()), term.d(), cInt::plus));
         points.values().removeIf(cInt::isZero);
         return points;
     }
@@ -2154,6 +2158,96 @@ public class fURITest extends AbstractMetatronTest {
     }, delimiter = '%')
     void testBranches(final String furi, final String expected) {
         assertEquals(Arrays.asList(expected.split("\\|")), f(furi).branches().map(fURI::toString).toList());
+    }
+
+    /**
+     * THE COUNT: {@code c()} multiplies the coefficients written in place, the span {@code b()} and the point
+     * {@code d()}, along each path and sums the paths, so it is the sum of the branches' counts.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b                                    % 1 % 1   % 1",
+            "a/b{3}                                 % 1 % 3   % 3",
+            "<{2}/m/int{3}>                         % 2 % 3   % 6",
+            "<{2}/m/{{3}int,str}>                   % 2 % 1   % 8",
+            "</m/{{3}int,str}{4}>                   % 1 % 4   % 16",
+            "<a/{b,c}/d{2}>                         % 1 % 2   % 4",
+            "<a/{{2,3}b,{-3,-2}d}/c>                % 1 % 1   % -1,1",
+            "<{{5}http://a.com/a,{4}ws://a.com/a}>  % 1 % 1   % 9",
+            "<a{,/b}>                               % 1 % 1   % 2",
+            "<a/{b,c}{0}>                           % 1 % 0   % 0",
+            "<{0}a/{{0}b,c}/d>                      % 1 % 1   % 0",
+            "<a/{b,c}/{2}d>                         % 1 % 1   % 4",
+    }, delimiter = '%')
+    void testCount(final String furi, final String span, final String point, final String count) {
+        final fURI parsed = f(furi);
+        assertEquals(cInt.of(span), parsed.b());
+        assertEquals(cInt.of(point), parsed.d());
+        assertEquals(cInt.of(count), parsed.c());
+        assertEquals(parsed.c(), parsed.branches().map(fURI::c).reduce(cInt.ZERO(), cInt::plus));
+    }
+
+    /**
+     * WRITING THE COUNT: a coefficient floats (Stream Ring Theory, Thm 6), so {@code c(k)} writes it into the point,
+     * over the span and the branch points when they divide it, else alone. A branched uri whose points do not divide
+     * it keeps them, and it becomes their common factor.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b                 % 3    % a/b{3}",
+            "a/b{3}              % 1    % a/b",
+            "<{2}/m/int{3}>      % 6    % {2}/m/int{3}",
+            "<{2}/m/int{3}>      % 8    % {2}/m/int{4}",
+            "<{2}/m/int{3}>      % 7    % /m/int{7}",
+            "<{2}/m/int{3}>      % 0,8  % {2}/m/int{0,4}",
+            "<a/{{2}b,c}>        % 6    % a/{{2}b,c}{2}",
+            "<a/{{2}b,c}>        % 3    % a/{{2}b,c}",
+            "<a/{b,c}{2}>        % 8    % a/{b,c}{4}",
+            "<a/{{2}b,c}>        % 5    % a/{{2}b,c}{5}",
+            "<a/{b,c}{2}>        % 1    % a/{b,c}",
+    }, delimiter = '%')
+    void testCountWrite(final String furi, final String count, final String expected) {
+        final fURI written = f(furi).c(cInt.of(count));
+        checkEquals(f(expected), written);
+        // the count reads back where the points divide it; where they do not, it is their common factor
+        assertEquals(f(expected).c(), written.c());
+    }
+
+    /**
+     * THE NORMAL FORM is made only on request: two spellings of one sum are two uris until {@code resolve()} folds
+     * each into the one spelling of its terms (Marko 2026-11-08). A span never moves, and a bracket is a sequence of
+     * slots, not a sum, so those stay apart.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // order, nesting, like terms and zero
+            "<a/{c,b}>                         % <a/{b,c}>              % a/{b,c}              % true",
+            "<a/{b,{c,d}}>                     % <a/{b,c,d}>            % a/{b,c,d}            % true",
+            "<a/{b,b}>                         % <a/{2}b>               % a/b{2}               % true",
+            "<a/{b,{0}c}>                      % a/b                    % a/b                  % true",
+            // a path distributes over a sum, and a shared point factors out of it
+            "<{a/b,a/c}>                       % <a/{b,c}>              % a/{b,c}              % true",
+            "<a/{b/d,c/d}>                     % <a/{b,c}/d>            % a/{b,c}/d            % true",
+            "<a/{{2}b,{2}c}>                   % <a/{b,c}{2}>           % a/{b,c}{2}           % true",
+            "<{2}a/b>                          % <a/{2}b>               % a/b{2}               % true",
+            "<a{/b,/c}>                        % <a/{b,c}>              % a/{b,c}              % true",
+            "<{http://a.com/x,http://a.com/y}> % <http://a.com/{x,y}>   % http://a.com/{x,y}   % true",
+            "<a/x/../{c,b}>                    % <a/{b,c}>              % a/{b,c}              % true",
+            // what the normal form keeps apart
+            "<{2}/m/int{3}>                    % /m/int{6}              % {2}/m/int{3}         % false",
+            "a/b[int,int{3},int{2}]            % a/b[int{4},int{2}]     % a/b[int,int{3},int{2}] % false",
+            "<a/{b,c}>                         % <a/{b,{2}c}>           % a/{b,c}              % false",
+            "a/b                               % b/a                    % a/b                  % false",
+    }, delimiter = '%')
+    void testResolveNormalForm(final String spelling, final String other, final String normal, final boolean same) {
+        // nothing resolves a branch for you
+        assertNotEquals(f(spelling), f(other));
+        final fURI resolved = f(spelling).resolve();
+        checkEquals(f(normal), resolved);
+        assertEquals(resolved, resolved.resolve());
+        assertEquals(same, resolved.equals(f(other).resolve()));
+        // the normal form is the same sum: its terms with their points
+        assertEquals(points(f(spelling).branches()), points(resolved.branches()));
     }
 
     @ParameterizedTest

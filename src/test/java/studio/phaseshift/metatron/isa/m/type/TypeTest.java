@@ -198,7 +198,8 @@ public class TypeTest extends AbstractMetatronTest {
             "{1,2,3,4}            | /m/int{3}                   | false",
             "{1,2,3,4}            | /m/int{0,5}                 | true",
             "{1,2,3,4}            | /m/int{*}                   | true",
-            "{1,2,3,'abc'}        | /m/{{3}int,str}{4}          | true",
+            "{1,2,3,'abc'}        | /m/{{3}int,str}             | true",
+            "{1,2,3,'abc'}        | /m/{{3}int,str}{4}          | false",
             "{1,2,3,'abc'}        | /m/+{*}                     | true",
             "{1,2,3,'abc'}        | /m/+{0,}                    | true",
             "{1,2,3,'abc'}        | /m/+{1,}                    | true",
@@ -2110,23 +2111,24 @@ public class TypeTest extends AbstractMetatronTest {
 
     /**
      * A TYPE IS {span}type{point}, and both live in its one id: {@code {2}int{3}::T} is two in a row of an int{3},
-     * with tid {@code {2}/m/int{3}}. The type's coefficient stays the point, so everything that asks a type how many
-     * values it admits is unchanged; the span is read off the id. It prints as it is written.
+     * with tid {@code {2}/m/int{3}}. The span and the point are read off the id as written; the type's coefficient is
+     * their product, the count (Marko 2026-11-08: {@code c()} is {@code b() * d()}). It prints as it is written.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{2}int{3}::T     % {2}/m/int{3}     % 3   % 2",
-            "{2}int::T        % {2}/m/int        % 1   % 2",
-            "int{3}::T        % /m/int{3}        % 3   % 1",
-            "{*}str::T        % {*}/m/str        % 1   % *",
-            "{1,3}int{?}::T   % {1,3}/m/int{?}   % ?   % 1,3"},
+            "{2}int{3}::T     % {2}/m/int{3}     % 3   % 2     % 6",
+            "{2}int::T        % {2}/m/int        % 1   % 2     % 2",
+            "int{3}::T        % /m/int{3}        % 3   % 1     % 3",
+            "{*}str::T        % {*}/m/str        % 1   % *     % *",
+            "{1,3}int{?}::T   % {1,3}/m/int{?}   % ?   % 1,3   % 0,3"},
             delimiter = '%')
-    public void testSpanType(final String type, final String tid, final String point, final String span) {
+    public void testSpanType(final String type, final String tid, final String point, final String span, final String count) {
         final Obj parsed = ObjmtronSerializer.parse(type);
         assertTrue(parsed.isType());
         assertEquals(f(tid), parsed.tid());
-        assertEquals(cInt.of(point), parsed.c());
+        assertEquals(cInt.of(point), parsed.tid().d());
         assertEquals(cInt.of(span), parsed.tid().b());
+        assertEquals(cInt.of(count), parsed.c());
         assertEquals(parsed, ObjmtronSerializer.parse(parsed.toString()));
         assertEquals(type, parsed.toString());
     }

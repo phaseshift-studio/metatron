@@ -195,7 +195,7 @@ public interface Component extends Rec {
             public static fURI substitute(final fURI value, final fURI spelling, final String remainder) {
                 final fURI extended = null == remainder || remainder.isEmpty() ? value : value.extend(remainder);
                 final fURI polyphonic = spelling.hasPoly() ? extended.poly(spelling.poly()) : extended;
-                return polyphonic.c(spelling.c()).q(spelling.qMap());
+                return polyphonic.d(spelling.d()).q(spelling.qMap());
             }
 
             /**
