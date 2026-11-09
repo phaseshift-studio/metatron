@@ -885,12 +885,6 @@ public final class mInsts {
      */
     public static Set<Inst> rec_insts() {
         return new LinkedHashSet<>(List.of(
-                InstBuilder.build().tid(AS_INST_TID, "convert an inst into the rec the argument rec type constructs")
-                        .dom(INST_TID, "the inst to convert").rng(REC_TID, "the lhs inst as the argument's rec type")
-                        .argLst(REC_TYPE, "the rec type whose constructor is applied to the lhs")
-                        .body((lhs, inst) -> inst.arg(0).asType().constructor().apply(lhs).tid(inst.arg(0).vidOrTid()))
-                        .law(Law.pure)
-                        .create(),
               /*  InstBuilder.build().tid(MAP_INST_TID, "apply arg to every rel of lhs lst. \\(\\mathsf{map} : \\big((k \\mapsto v) \\to (k' \\mapsto v')\\big) \\to \\mathrm{rec}(K,V) \\to \\mathrm{rec}(K',V')\\)")
                         .dom(REC_TID, "the lhs rec containing rel fields to map")
                         .rng(REC_TID, "the lhs rec with mapped rel fields")
@@ -1048,6 +1042,22 @@ public final class mInsts {
                         .law(Law.monoidic, Law.commutative, Law.pure)
                         .create()
         ));
+    }
+
+    public static Set<Inst> inst_insts() {
+        return new LinkedHashSet<>(List.of(
+                InstBuilder.build().tid(AS_INST_TID, "convert an inst into a rec by decomposing its components into keyed values of the rec")
+                        .dom(INST_TID, "the inst to convert")
+                        .rng(REC_TID, "the inst deconstructed into its args, body, and tid further deconstructed")
+                        .argLst(REC_TYPE, "the rec type")
+                        .body((lhs, _) -> {
+                            Inst lhsInst = lhs.asInst();
+                            return rec(uri(TID), Uri.Helper.uriToRec(uri(lhsInst.tid())),
+                                    uri(ARGS), lhsInst.args(),
+                                    uri(BODY), lhsInst.f().isLambda() ? uri(lhsInst.f().toString()) : (Obj) lhsInst.f().func());
+                        })
+                        .law(Law.pure)
+                        .create()));
     }
 
     /**
