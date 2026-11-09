@@ -109,6 +109,17 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "{,}",
             "<>",
             "<{2}>",
+            "{3}<{2}>",                         // the obj coefficient before the brackets, the value's point inside
+            "/a/a/b{6}",                        // a uri's own point: bare, a trailing {6} is the value's point
+            "{2}a/b/c{3}",                      // the obj coefficient before the value, the value's point after it
+            "</a/{{6}a/b,b/c}>",                // a branch that leads with a point
+            "{2}</a/{b,c}>",
+            "<{{5}http://a.com/a,{4}ws://a.com/a}>",   // a root branch: whole uris summed
+            "/a/b/c + /a/c/c/d + {2}/a/a/{3}b.-<",      // a split hands back pointed terms
+            "<{2}/a/b>",                        // a value that leads with its span: bare, a leading {2} is the obj coefficient
+            "<{2}/m/int{3}>",
+            "{3}<{2}/a/b{4}>",                  // an obj coefficient, a span and a point on one uri
+            "[<{2}/a/b>,{2}/a/b]",              // one uri spanning 2 beside one counted twice: two different slots
             "{[1,2],[3,4],[5,6]}",
             "{true,false,{1,0},{-100,12.35,-12.35}}"
     }, delimiter = '|')
@@ -127,6 +138,30 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
         assertFalse(readBack.isFail(), String.format("read-back failed: %s", written));
         assertEquals(obj, readBack, String.format("round-trip lost data: %s", written));
         assertEquals(obj.type(), readBack.type(), String.format("round-trip changed the type: %s", written));
+    }
+
+    /**
+     * A TYPE IS WRITTEN WITH ITS SPAN BEFORE IT. Applying a type tests its input, so a type row in the round trip
+     * above answers noobj and says nothing about how the type is written: these rows write the parsed type itself.
+     * A type is {span}type{point}, and before ::T a leading {n} is the span, so {2}int{3}::T needs no brackets, while
+     * a uri VALUE that leads with its span does (<{2}/a/b>: bare, its {2} is the obj coefficient).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "int::T             % int::T",
+            "{2}int{3}::T       % {2}int{3}::T",
+            "{3}int{2}::T       % {3}int{2}::T",        // the same count, 6, but another type: spans never compress
+            "<{2}int{3}>::T     % {2}int{3}::T",        // the bracketed spelling reads the same type
+            "{2}int::T          % {2}int::T",
+            "lst[{3}int{2}]::T  % lst[{3}int{2}]::T",   // a slot run's span lives in the poly, not before the name
+    }, delimiter = '%')
+    public void testATypeIsWrittenWithItsSpanBeforeIt(final String expr, final String expected) {
+        final Obj type = ObjmtronSerializer.parse(expr);
+        assertTrue(type.isType(), String.format("not a type: %s", type));
+        final String written = ObjmtronSerializer.single().write(type);
+        LOG.debug("%s ==> %s", expr, written);
+        assertEquals(expected, written);
+        assertEquals(type, ObjmtronSerializer.parse(written), String.format("the spelling reads another type: %s", written));
     }
 
     /**
