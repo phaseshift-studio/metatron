@@ -92,10 +92,10 @@ public class catRewrite {
                  *      belongs behind an explicit lowering flag/plan, never in the default rewrite set.
                  * ===================================================================================== */
 
-                // (1) the unit law, for EVERY theory instance the operand's type declares: op(id) |-> e,
-                // plus a bare identity operation (code's id) which is the identity morphism.
+                // (1) the unit law: monoid_theory's op(id) |-> e, as every monoid instance the operand's type declares
+                // binds it (code's mul_monoid binds id(), since composition is adjacency).
                 docWrap(InstSet.Helper.rewriter(rewriteTID("theory_unit_removal"),
-                        code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the unit law of every theory the operand's type models: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and a bare identity operation is the identity morphism. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
+                        code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\), \\(x \\cdot . \\leadsto x\\)"),
 
                 // ============ (1b/1c) THE BRANCH-SPECIFIC WARM-UP — SUPERSEDED, KEPT IN COMMENT FOR THE SIDE-BY-SIDE ============
                 // The two bodies below have moved into the law-indexed normalizers repeatedTerms / oneTerm

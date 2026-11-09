@@ -254,7 +254,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 
 | rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
 |--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `theory_unit_removal`    | every theory instance of the operand's type                                                 | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
+| `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule)                        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
 | `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
 | `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
@@ -279,11 +279,13 @@ rewriter's guards and for reasoning, with no rewrite of their own: `commutative`
 stream (`{3,1,2}` already equals `{1,2,3}`) — while for an `lst` it would be unsound, its order being
 semantic. The law stays declared (it is what licenses the inverse-pair search) without a rewrite.
 
-The first two generalize a *ring's* unit and a *group's* inverse to every declared structure: the unit law is read
-for each `(op, id)` role pair a theory names (`add`/`zero`, `mul`/`one`, `op`/`id`, `or`/`zero`, `and`/`one`,
-`join`/`bottom`, `meet`/`top`), so $x + 0$, $x \cdot 1$, $x \cdot \langle\rangle$ (uri), $x \cdot .$ (machine) and
-$x \cdot \mathrm{id}$ (code) all drop, and a bare identity *operation* (`code`'s $\mathrm{id}$) is the identity
-morphism. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
+The first two generalize a *monoid's* unit and a *group's* inverse to every declared structure. The unit law is a
+rule stated once, in the theory's role names, beside its law battery in `monoid_theory`'s `?decq`:
+`rewrite => [op(id) => ε]`. Every instance keyed by a monoid form binds the roles, so $x + 0$, $x \cdot 1$,
+$x + \texttt{''}$ (str), $x \cdot \langle\rangle$ (uri) and $x \cdot .$ (machine) all drop. Composition is
+adjacency in a chain, so code's `mul_monoid` binds $\mathrm{id}$ alone: the identity *operation* drops out. A theory
+refines no other, so the rule reaches only monoid instances, and code's `add_monoid` (whose `branch` takes lanes) binds
+none yet. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
 `conjugate` — not only the additive group's.
 
 ```mtron_pre
@@ -324,7 +326,7 @@ shape per line — so that every rewrite applied is visible:
 Only two instructions remain in the explain table: the seed and the one operation that survives. The other
 instructions were rewritten away:
 
-* `plus(0)` and `mult(1)` are the int ring's units (`theory_unit_removal`),
+* `plus(0)` and `mult(1)` are int's monoid units (`theory_unit_removal`),
 * `neg().neg()` is the additive group's involution (`theory_involution`),
 * `plus(3.neg())` folds to `minus(3)` (`derivation_contraction`), and
 * `mult(2).div(2)` is a declared inverse pair (`inverse_cancellation`).

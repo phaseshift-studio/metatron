@@ -24,6 +24,8 @@ import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -41,6 +44,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -335,36 +340,42 @@ public final class mTypes {
      *       that is an instruction claim about reducers (Thm 19), not an axiom of the theory (Thm 18).</li>
      * </ul>
      * <p>
+     * A THEORY ALSO STATES ITS REWRITE RULES ({@code rewrite => [[lhs => rhs], …]}), in its own role names, on the most
+     * specific theory that can hold them (Marko, 2026-11-08): the monoid's identity drops out, {@code op(id) ⇝ ε}, and
+     * every instance keyed by a monoid form fills the roles in with its own bindings ({@code Law.Helper.units}). A theory
+     * refines no other, so a rule reaches exactly the instances of its own theory.
+     * <p>
      * STAGED ONLY, like {@link #declareAlgebras()}: this is a method for the same class-initialisation reason — the
      * recs name the theory tids and {@code TypeBuilder.declare} writes the staged map the drain reads.
      */
     public static void declareAxioms() {
-        // monoid: an associative operation with an identity
-        axiom(MONOID_THEORY_TID, Law.monoidic, Law.unit);
+        // monoid: an associative operation with an identity, and the identity drops out: op(id) ⇝ ε
+        axiom(MONOID_THEORY_TID, lst(rec(code(List.of(instB(f(OP), lst(uri(ID))))), code(List.<Inst>of()))),
+                Law.monoidic, Law.unit);
         // commutative monoid: the monoid laws plus commutativity of the operation
-        axiom(COMMUTATIVE_MONOID_THEORY_TID, Law.monoidic, Law.unit, Law.commutative);
+        axiom(COMMUTATIVE_MONOID_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative);
         // group: a monoid whose operation has an inverse
-        axiom(GROUP_THEORY_TID, Law.monoidic, Law.unit, Law.involution);
+        axiom(GROUP_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.involution);
         // ring: an abelian additive group, a multiplicative monoid, distributing — the flat battery claims
         // commutativity of every operation (true of the commutative rings declared here: int and real)
-        axiom(RING_THEORY_TID, Law.monoidic, Law.unit, Law.commutative, Law.involution,
+        axiom(RING_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.involution,
                 Law.left_distributive, Law.right_distributive);
         // field: a commutative ring with a multiplicative inverse role — involution is the law that exercises it
-        axiom(FIELD_THEORY_TID, Law.monoidic, Law.unit, Law.commutative, Law.involution,
+        axiom(FIELD_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.involution,
                 Law.left_distributive, Law.right_distributive);
         // rig: monoids + distributivity, no additive inverse (no involution) and not necessarily idempotent
-        axiom(RIG_THEORY_TID, Law.monoidic, Law.unit, Law.commutative,
+        axiom(RIG_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative,
                 Law.left_distributive, Law.right_distributive);
         // boolean: a complemented distributive lattice — involution is the complement's self-inverse law and
         // complement the bound law (a∧¬a = ¬⊤, a∨¬a = ¬⊥)
-        axiom(BOOLEAN_THEORY_TID, Law.monoidic, Law.unit, Law.commutative, Law.idempotent,
+        axiom(BOOLEAN_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent,
                 Law.involution, Law.complement, Law.left_distributive, Law.right_distributive);
         // lattice: meet and join are each an idempotent commutative monoid (bounded by top/bottom)
-        axiom(LATTICE_THEORY_TID, Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
+        axiom(LATTICE_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
         // semilattice: one side of a lattice — the same laws on a single operation
-        axiom(SEMILATTICE_THEORY_TID, Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
+        axiom(SEMILATTICE_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
         // near-ring: associative multiplication, ONE-sided distributivity; no id and no inverse in its signature
-        axiom(NEAR_RING_THEORY_TID, Law.monoidic, Law.left_distributive);
+        axiom(NEAR_RING_THEORY_TID, lst(), Law.monoidic, Law.left_distributive);
     }
 
     /**
@@ -405,12 +416,15 @@ public final class mTypes {
     }
 
     /**
-     * DECLARE one theory's battery — {@code decs::[obj=>theory::T, law=>[…]]} at the theory's {@code ?decq}, keyed by
-     * its vid: a theory type is registered by the (optional) category.
+     * DECLARE one theory's battery and rules — {@code decs::[obj=>theory::T, law=>[…], rewrite=>[…]]} at the theory's
+     * {@code ?decq}, keyed by its vid. A theory that states no rule writes no {@code rewrite} facet.
      */
-    private static void axiom(final fURI theory, final Law... laws) {
-        PendingWrites.write(PendingWrites.decq(theory), rec(mutableMap(uri(OBJ), T(theory),
-                uri(LAW), lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList())), DECS_TID, null));
+    private static void axiom(final fURI theory, final Lst rewrite, final Law... laws) {
+        final Map<Obj, Obj> declaration = mutableMap(uri(OBJ), T(theory),
+                uri(LAW), lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList()));
+        if (!rewrite.isEmpty())
+            declaration.put(uri(REWRITE), rewrite);
+        PendingWrites.write(PendingWrites.decq(theory), rec(declaration, DECS_TID, null));
     }
 
     /**
