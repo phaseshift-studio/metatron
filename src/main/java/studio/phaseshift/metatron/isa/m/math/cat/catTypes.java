@@ -171,7 +171,7 @@ public class catTypes {
                                 uri(OBJ), TYPE_TYPE,
                                 uri(MORPHED_TO).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
                                 uri(MORPHED_FROM).maybe().asUri(), lst(auto_from_(MORPHISM_TID).tryToInst()),
-                                uri(THEORY).maybe().asUri(), rec(URI_TYPE, THEORY_TYPE)), Map.of(
+                                uri(THEORY).maybe().asUri(), rec(THEORY_FORM_TYPE, THEORY_TYPE)), Map.of(
                                 uri(MORPHED_TO), "the morphisms sourced from this object (out-edges): \\(\\mathrm{morphed\\_to}(A) = \\{f : \\mathrm{src}(f) = A\\}\\)",
                                 uri(MORPHED_FROM), "the morphisms targeted at this object (in-edges): \\(\\mathrm{morphed\\_from}(A) = \\{f : \\mathrm{trgt}(f) = A\\}\\)",
                                 uri(THEORY), "the structural theories \\(\\mathcal{T}\\) the object models"))

@@ -102,7 +102,7 @@ public final class mInsts {
                         .create(),
                 // NOT mult's inverse. Truncating division is not injective (7.div(2).mult(2) is 6, not 7), so no
                 // left inverse exists; the declared relation is PARTIAL (undefined at 0) and the honest law is
-                // `partial`, not `action` -- int models a mult_monoid, never a group.
+                // `partial`, not `action` -- int models a mul_monoid, never a group.
                 InstBuilder.build().tid(DIV_INST_TID, "divide the lhs int by the argument int")
                         .dom(INT_TID, "the dividend int").rng(INT_TID, "the truncated quotient")
                         .argLst(INT_TYPE, "the divisor int")
@@ -178,7 +178,7 @@ public final class mInsts {
                         .example("{1,2,3,4}.sum() [-- 10 --]")
                         .law(Law.monoidic, Law.commutative, Law.semi_right_distributive, Law.pure)
                         .create(),
-                // MULT DECLARES NO INVERSE. int is a mult_monoid, not a group: 5.div(2).mult(2) is 4, so div is a
+                // MULT DECLARES NO INVERSE. int is a mul_monoid, not a group: 5.div(2).mult(2) is 4, so div is a
                 // one-way retraction at best and never the two-sided inverse `?decq inverse` would claim. MINUS
                 // keeps its defining equation (minus ≡ plus ∘ neg), which is what lets int's add_group derive it
                 InstBuilder.build().tid(MULT_INST_TID, "multiply the lhs int by the argument int")

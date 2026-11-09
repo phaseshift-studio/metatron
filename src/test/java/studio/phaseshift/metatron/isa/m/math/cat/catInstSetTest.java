@@ -322,7 +322,7 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            // real is a field: the mult/div pair is a consequence of mult_group (op=mult, inv=inv) + div's definition
+            // real is a field: the mult/div pair is a consequence of mul_group (op=mult, inv=inv) + div's definition
             "|mult?real<=real(real::T).as(morphism::T)>>analysis>>inverse   % /m/inst/div?rng=/m/real&dom=/m/real",
             "|div?real<=real(real::T).as(morphism::T)>>analysis>>inverse    % /m/inst/mult?rng=/m/real&dom=/m/real",
             // its additive side is a group too, so plus/minus derives the same way on both carriers
@@ -671,20 +671,23 @@ public class catInstSetTest extends AbstractInstSetTest {
      * what makes a field renamed or an {@code auto_from_} pointer that no longer resolves a failure here rather
      * than a silently weaker rewrite policy elsewhere.
      * <p>
-     * {@code lst::T} and {@code rec::T} declare no algebra — neither ever had a branch — so neither is asserted:
-     * a type with no declaration gets none.
+     * Every key is a {@code theory_form::T} (Marko, 2026-11-08), and the {@code ?decq} store refuses a declaration keyed
+     * by anything else, so a key spelled the old way ({@code mult_monoid}, {@code concat_monoid}) leaves its carrier
+     * with no algebra here. rec declares its monoid and its commutative monoid apart: a theory refines no other.
      */
     @Test
     void testEveryCarrierShipsItsAlgebra() {
-        assertCarrierDeclares(INT_TYPE, "ring", "add_group", "add_monoid", "mult_monoid");
-        assertCarrierDeclares(REAL_TYPE, "field", "ring", "add_group", "mult_group", "add_monoid", "mult_monoid");
-        assertCarrierDeclares(BOOL_TYPE, "boolean", "rig", "lattice", "add_monoid", "mult_monoid");
-        assertCarrierDeclares(STR_TYPE, "concat_monoid");
-        assertCarrierDeclares(URI_TYPE, "mult_monoid");
-        assertCarrierDeclares(BYTES_TYPE, "concat_monoid");
-        assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mult_monoid");
+        assertCarrierDeclares(INT_TYPE, "ring", "add_group", "add_monoid", "mul_monoid");
+        assertCarrierDeclares(REAL_TYPE, "field", "ring", "add_group", "mul_group", "add_monoid", "mul_monoid");
+        assertCarrierDeclares(BOOL_TYPE, "boolean", "rig", "lattice", "add_monoid", "mul_monoid");
+        assertCarrierDeclares(STR_TYPE, "add_monoid");
+        assertCarrierDeclares(URI_TYPE, "mul_monoid");
+        assertCarrierDeclares(BYTES_TYPE, "add_monoid");
+        assertCarrierDeclares(LST_TYPE, "add_monoid");
+        assertCarrierDeclares(REC_TYPE, "add_monoid", "add_commutative_monoid");
+        assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mul_monoid");
         // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)
-        assertCarrierDeclares(T(f("/m/mach/machine")), "free_groupoid", "mult_monoid");
+        assertCarrierDeclares(T(f("/m/mach/machine")), "free_groupoid", "mul_monoid");
     }
 
     /**
@@ -701,12 +704,12 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * int's multiplicative side at the object-law level — a monoid ({@code op/mult, id/1}), but NO {@code mult_group}
+     * int's multiplicative side at the object-law level — a monoid ({@code op/mult, id/1}), but NO {@code mul_group}
      * (no 1/x — int division truncates). Mirrors the process-law asymmetry where int's {@code div} declares no
      * inverse but {@code mult}'s inverse is {@code div}. This was a stale
      * duplicate of testNatVsInt's int-ring row; retargeted to the one int object-law fact testNatVsInt does not pin.
      *
-     * <p>The parallel real row — {@code real::T.as(object::T) >> law >> mult_group} = {@code group_theory[op/id/inv]} —
+     * <p>The parallel real row — {@code real::T.as(object::T) >> law >> mul_group} = {@code group_theory[op/id/inv]} —
      * is intentionally held back: the real↔int {@code as} dispatch in catInstSet mis-resolves (the noobj()
      * tie-break between the generic {@code AS?A<=>B} cast and the category {@code AS?ALL=>object}), so it passes
      * live in the console but fails under the suite harness. Known stain, not chased here; the int side pins the
@@ -714,11 +717,11 @@ public class catInstSetTest extends AbstractInstSetTest {
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "int::T.as(object::T)>>theory>>mult_group   % noobj",
-            "int::T.as(object::T)>>theory>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
+            "int::T.as(object::T)>>theory>>mul_group   % noobj",
+            "int::T.as(object::T)>>theory>>mul_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
             // a theory refines no other: bool's rig and lattice do not make it a monoid, its own instances do
             "bool::T.as(object::T)>>theory>>add_monoid  % /m/theory/monoid_theory::[op=>!*/m/inst/plus?rng=/m/bool&dom=/m/bool,id=>false]",
-            "bool::T.as(object::T)>>theory>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/bool&dom=/m/bool,id=>true]",
+            "bool::T.as(object::T)>>theory>>mul_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/bool&dom=/m/bool,id=>true]",
             "bool::T.as(object::T)>>theory>>add_group   % noobj",
     }, delimiter = '%')
     void testObjectLaws(final String expr, final String expected) {
@@ -819,7 +822,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus(0).mult(3)  % start(5).mult(3)  % 15",
             "5.plus(2).plus(0)  % start(5).plus(2)  % 7",
             "-5.mult(1)         % start(-5)         % -5",
-            // str concat_monoid — op/plus, id = ""
+            // str add_monoid — op/plus, id = ""
             "\"ab\".plus(\"\")    % start(\"ab\")      % \"ab\"",
             // bool rig — add/zero = false, mul/one = true
             "true.plus(false)   % start(true)       % true",

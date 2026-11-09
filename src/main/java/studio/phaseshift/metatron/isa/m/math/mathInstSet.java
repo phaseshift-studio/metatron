@@ -800,7 +800,7 @@ public class mathInstSet extends AbstractInstSet {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                 uri(ID), jnt(0)),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(INT_TID).rng(INT_TID)).tryToInst(),
                                 uri(ID), jnt(1)),
                         MONOID_THEORY_TID, null)))));
@@ -823,7 +823,7 @@ public class mathInstSet extends AbstractInstSet {
                                 uri(ID), lst(real(0.0), real(0.0)),
                                 uri(INV), auto_from_(NEG_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst()),
                         GROUP_THEORY_TID, null),
-                uri("mult_group"), rec(mutableMap(
+                uri("mul_group"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
                                 uri(ID), lst(real(1.0), real(0.0)),
                                 uri(INV), auto_from_(INV_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst()),
@@ -832,7 +832,7 @@ public class mathInstSet extends AbstractInstSet {
                                 uri(OP), auto_from_(PLUS_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
                                 uri(ID), lst(real(0.0), real(0.0))),
                         MONOID_THEORY_TID, null),
-                uri("mult_monoid"), rec(mutableMap(
+                uri("mul_monoid"), rec(mutableMap(
                                 uri(OP), auto_from_(MULT_INST_TID.dom(CMPLX_TID).rng(CMPLX_TID)).tryToInst(),
                                 uri(ID), lst(real(1.0), real(0.0))),
                         MONOID_THEORY_TID, null)))));

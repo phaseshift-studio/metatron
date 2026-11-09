@@ -88,6 +88,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI LATTICE_THEORY_TID = THEORY_TID.extend("lattice_theory");
     public static final fURI SEMILATTICE_THEORY_TID = THEORY_TID.extend("semilattice_theory");
     public static final fURI NEAR_RING_THEORY_TID = THEORY_TID.extend("near_ring_theory");
+    public static final fURI THEORY_FORM_TID = M_ISA_TID.extend("theory_form");
 
     public static final Type INT_TYPE = mTypes.INT_TYPE;
 
@@ -302,6 +303,13 @@ public class mInstSet extends AbstractInstSet {
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE))
             .create();
+    public static final Type COMMUTATIVE_MONOID_THEORY_TYPE = TypeBuilder.build()
+            .tid(THEORY_TID)
+            .vid(COMMUTATIVE_MONOID_THEORY_TID, "the theory of commutative monoids \\(\\langle M, \\cdot, 1 \\rangle\\): a monoid whose operation commutes, \\(m \\cdot n = n \\cdot m\\)")
+            .isaPredicate(rec(
+                    uri(OP), INST_TYPE,
+                    uri(ID), ALL_TYPE))
+            .create();
     public static final Type FIELD_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)
             .vid(FIELD_THEORY_TID, "the theory of fields \\(\\langle F, +, \\cdot, 0, 1, {}^{-1} \\rangle\\): a commutative ring where every non-\\(0\\) element has a multiplicative inverse, \\(x \\cdot x^{-1} = 1\\)")
@@ -354,6 +362,23 @@ public class mInstSet extends AbstractInstSet {
                     uri(ADD), INST_TYPE,
                     uri(MUL), INST_TYPE,
                     uri(ZERO), ALL_TYPE))
+            .create();
+    /**
+     * {@code theory_form::T} — THE KEYS OF A TYPE'S THEORY BLOCK (Marko, 2026-11-08). A theory with several op roles is
+     * keyed by its own name ({@code ring}); a theory with one {@code op} role by the instruction family that op binds,
+     * {@code add} for {@code plus} and {@code mul} for {@code mult} ({@code add_group}, {@code mul_monoid}). The key is
+     * the only thing that tells two instances of one theory apart (int's {@code add_monoid} and {@code mul_monoid}), so
+     * it is stated in the theory's vocabulary, never in what an instruction does on a carrier. {@code free_groupoid} is
+     * the machine's frame groupoid, until the category instruction set has a groupoid theory. The union IS the
+     * predicate, as it is {@code law::T}'s, and a {@code ?decq} write keyed by anything else is refused.
+     */
+    public static final Type THEORY_FORM_TYPE = TypeBuilder.build()
+            .tid(URI_TID)
+            .vid(THEORY_FORM_TID)
+            .predicate(union_(Stream.of("ring", "field", "rig", "boolean", "lattice", "near_ring",
+                            "add_group", "mul_group", "add_monoid", "mul_monoid", "add_commutative_monoid",
+                            "mul_commutative_monoid", "add_semilattice", "mul_semilattice", "free_groupoid")
+                    .map(form -> (Obj) uri(form)).toList()).tryToInst())
             .create();
     public static final Type SPACE_TYPE = TypeBuilder.build()
             .tid(REC_TID)
@@ -567,7 +592,10 @@ public class mInstSet extends AbstractInstSet {
                                 "law::commutative      [-- a law: commutative is one of the union's labels --]",
                                 "law::not_a_law        [-- no law: the union names no such label          --]",
                                 "*/m/law/+             [-- every stored process law                       --]"),
-                        THEORY_TYPE, RING_THEORY_TYPE, GROUP_THEORY_TYPE, MONOID_THEORY_TYPE, FIELD_THEORY_TYPE, RIG_THEORY_TYPE, BOOLEAN_THEORY_TYPE, LATTICE_THEORY_TYPE, SEMILATTICE_THEORY_TYPE, NEAR_RING_THEORY_TYPE,
+                        THEORY_TYPE, RING_THEORY_TYPE, GROUP_THEORY_TYPE, MONOID_THEORY_TYPE, COMMUTATIVE_MONOID_THEORY_TYPE, FIELD_THEORY_TYPE, RIG_THEORY_TYPE, BOOLEAN_THEORY_TYPE, LATTICE_THEORY_TYPE, SEMILATTICE_THEORY_TYPE, NEAR_RING_THEORY_TYPE,
+                        docWrap(THEORY_FORM_TYPE, "a theory form — the key a type's theory block gives an instance: a theory's own name, or add_ or mul_ and a one-op theory's name; a union of uris",
+                                "theory_form::ring         [-- a theory with several op roles: its own name          --]",
+                                "theory_form::add_monoid   [-- a one-op theory: the instruction family its op binds  --]"),
                         docWrap(REL_TYPE, "a directed binary poly coupling two objs",
                                 "a=>b",
                                 "a=>b=>c=>d       [-- a=>(b=>(c=>d)) --]",
