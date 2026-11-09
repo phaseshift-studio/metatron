@@ -260,7 +260,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
+| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{poset}$ + the comparison orders one bound past the other         | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `m_rewrite_table` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
@@ -307,7 +307,12 @@ declares the mapper form (a form is declared per operation). `map` hands each ob
 `{1,2,3}.sum()` is 6. A row keyed by anything else is *plain*: its rule is stated in the instructions themselves, so it
 applies as it stands, with no `op` to bind and no law to gate it. `else_after_count => [count().else(#::T) => count()]`
 drops the dead `else` after a total `count`, and `map_nest => [map(map(#::T@f)) => map(#::T@f)]` drops a map of a map,
-whatever it maps.
+whatever it maps. A plain row may compute its change: a `${…}` template is evaluated with the names the run bound, so
+`range_skip_take => [range(int::T@i,int::T@n) => skip(#::T@i).take(${*n.minus(*i)})]` turns a window into a skip
+and a take. The poset law is a row too, stated over the bound each rule keeps:
+`poset => [is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
+kept is the one the comparison orders past the other ($\max$ under `gt`, $\min$ under `lt`), with no comparison
+named in the rule. The pair is also stated the other way round, and for `filter`.
 
 ```mtron_pre
 5.plus(0)

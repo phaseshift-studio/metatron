@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.algebra.rewrite.PlaceResolver.ResolvedPlace;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.network.Signatures;
 import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -43,7 +42,6 @@ import static studio.phaseshift.metatron.algebra.Law.Helper.rewrite;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
 import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.same;
-import static studio.phaseshift.metatron.isa.m.type.Inst.Helper.sameOp;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -169,7 +167,7 @@ public final class PlanInterpreter {
         if (cut.declares(Law.monoidic))
             return monoidicRemoval(code);
         if (cut.declares(Law.poset))
-            return posetRemoval(code);
+            return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.poset.name()));
         if (cut.declares(Law.absorbing))
             return absorbingRemoval(code);
         return code;
@@ -732,73 +730,6 @@ public final class PlanInterpreter {
                 && a.args().equals(b.args())
                 && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
                 .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
-    }
-
-    /**
-     * The poset law (local): adjacent FILTERS on comparisons of the same ordered type compose to the filter on the
-     * stricter bound — {@code is(gt(a))·is(gt(b)) ↦ is(gt(max(a,b)))}, since {@code x > a ∧ x > b ⇔ x > max(a,b)}.
-     * Only filters compose: a bare comparison answers a bool, so {@code x.gt(a).gt(b)} compares that bool with
-     * {@code b}, and reading it as {@code x.gt(max(a,b))} changed what it means.
-     */
-    private static Code posetRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        if (2 > insts.size())
-            return code;
-        final List<Inst> out = new ArrayList<>(insts.size());
-        boolean changed = false;
-        // a filter hands on what it passes, so both comparisons test the first filter's carrier
-        final List<Type> carriers = carriers(code);
-        for (int i = 0; i < insts.size(); i++) {
-            final Inst composed = (i + 1 < insts.size()) ? posetCompose(insts.get(i), insts.get(i + 1), carriers.get(i)) : null;
-            if (null != composed) {
-                out.add(composed);
-                changed = true;
-                i++;
-            } else
-                out.add(insts.get(i));
-        }
-        return changed ? code(out) : code;
-    }
-
-    /**
-     * Compose two adjacent filters — the same filter ({@code is} or {@code filter}), each on the same comparison,
-     * declared {@code poset} at their carrier — to one filter on the stricter bound, the poset law
-     * {@code x > a ∧ x > b ⇔ x > max(a, b)}. The bound is decided by evaluating the comparison, so it must also be
-     * declared {@code pure}. Null when the pair does not compose.
-     */
-    private static Inst posetCompose(final Inst a, final Inst b, final Type carrier) {
-        if (!sameOp(a, b))
-            return null;
-        final Inst first = comparisonOf(a);
-        final Inst second = comparisonOf(b);
-        if (null == first || null == second || !sameOp(first, second) || !declares(first, carrier, Law.poset)
-                || !declares(first, carrier, Law.pure) || 1 != first.args().count() || 1 != second.args().count())
-            return null;
-        final Obj bound = stricter(first, second);
-        if (null == bound)
-            return null;
-        // the composed comparison goes back in the shape the filter held it: an instruction, or a one-instruction code
-        final Inst comparison = first.args(lst(bound));
-        return a.args(lst(a.arg(0).isInst() ? comparison : code(List.of(comparison))));
-    }
-
-    /**
-     * The stricter of two bounds of one comparison, decided by THE COMPARISON ITSELF rather than by its name: the
-     * {@code poset} law makes it transitive, so when {@code b cmp a} holds, {@code x cmp b} implies {@code x cmp a} and
-     * the pair is {@code x cmp b} — the larger bound under {@code gt}, the smaller under {@code lt}, by the order's own
-     * answer. An equal pair is either bound. Null when the bounds are not values, or the order relates neither way (a
-     * partial order need not; a comparison that cannot be evaluated answers a fail).
-     */
-    private static Obj stricter(final Inst first, final Inst second) {
-        final Obj a = first.arg(0);
-        final Obj b = second.arg(0);
-        if (a.isCall() || b.isCall())
-            return null;
-        if (Processor.Helper.apply(b, first).booleanCheck())
-            return b;
-        if (Processor.Helper.apply(a, second).booleanCheck())
-            return a;
-        return a.equals(b) ? a : null;
     }
 
     /**

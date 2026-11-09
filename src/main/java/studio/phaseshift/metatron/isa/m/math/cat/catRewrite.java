@@ -183,10 +183,8 @@ public class catRewrite {
                 docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
                         code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(g \\cdot f = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
 
-                // (2f) the poset law: adjacent filters on comparisons of the same order -- the stricter
-                // bound wins, so the two filters are one filter. Bare comparisons answer bools and never compose.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
-                        code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent filters on comparisons of the same ordered type compose to the filter on the stricter bound -- \\(\\mathrm{is}(\\mathrm{gt}(a)) \\cdot \\mathrm{is}(\\mathrm{gt}(b)) \\leadsto \\mathrm{is}(\\mathrm{gt}(\\max(a, b)))\\), \\(\\mathrm{is}(\\mathrm{lt}(a)) \\cdot \\mathrm{is}(\\mathrm{lt}(b)) \\leadsto \\mathrm{is}(\\mathrm{lt}(\\min(a, b)))\\); a bare comparison answers a bool, so \\(x.\\mathrm{gt}(a).\\mathrm{gt}(b)\\) is left as it is"),
+                // (2f) the poset law is /m's: the poset row of /m's rewrite table, is(op(a))·is(op(b)) ⇝ is(op(b)) where the
+                // comparison orders b past a, stated both ways round and for filter too.
 
                 // (3) inverse cancellation and derivation contraction are /m's: their rules are already data
                 // (group_theory's rules, each instruction's derivation), so /m applies them on the base path too.

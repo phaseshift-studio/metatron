@@ -977,6 +977,12 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.map(sum())             % start({1,2,3}).map(sum())",
             // what the hole captured is gated, not whatever else the chain names
             "{1,2,3}.neg().map(sum())       % start({1,2,3}).neg().map(sum())",
+            // the poset row keeps the stricter bound, whichever side it is on
+            "{1,2,3,4,5}.is(gt(1)).is(gt(3))  % start({1,2,3,4,5}).is(gt(3))",
+            "{1,2,3,4,5}.is(gt(3)).is(gt(1))  % start({1,2,3,4,5}).is(gt(3))",
+            "{1,2,3,4,5}.range(1,4)         % start({1,2,3,4,5}).skip(1).take(3)",
+            // a computed bound is no int, so the window stays range
+            "{1,2,3,4,5}.range(1,plus(3))   % start({1,2,3,4,5}).range(1,plus(3))",
     }, delimiter = '%')
     void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
         final Inst table = Machine.current().instset().rewrites().stream()
@@ -1012,7 +1018,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "idempotent  % plus(3).plus(4)               % plus(3).plus(4)",
             "monoidic    % sum().sum().plus(1)           % sum().plus(1)",
             // a law with no local equation has no table
-            "poset       % is(gt(1)).is(gt(1))           % is(gt(1)).is(gt(1))",
+            "commutative % plus(1).plus(2)               % plus(1).plus(2)",
+            // ungated, the poset pair keeps its second bound: only the gate reads which bound is the stricter
+            "poset       % is(gt(1)).is(gt(3))           % is(gt(3))",
+            // one claimant binds both filters, so two comparisons never pair
+            "poset       % is(gt(1)).is(lt(3))           % is(gt(1)).is(lt(3))",
             "units       % plus(1).plus(0).mult(1).plus(2)  % plus(1).plus(2)",
             "units       % plus(\"\").plus(false).id().neg()  % neg()",
             // a match type-tests the operand, so a computed one passes as the unit here; the rewrite compares it
@@ -1040,13 +1050,15 @@ public class catInstSetTest extends AbstractInstSetTest {
             "map_nest    % map(map(plus(2))).neg()       % map(plus(2)).neg()",
             // a map of a map is the map whatever it maps, a stream's fold among them
             "map_nest    % map(map(sum()))               % map(sum())",
+            // a computed change: the template reads the names the run bound
+            "range_skip_take % range(2,5).plus(1)        % skip(2).take(3).plus(1)",
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
         final List<Rec> rules = switch (table) {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
-            case "mapper", "map_nest" -> List.of(M_REWRITE_TABLE.atDirect(uri(table)).asRec());
+            case "mapper", "map_nest", "range_skip_take" -> List.of(M_REWRITE_TABLE.atDirect(uri(table)).asRec());
             default -> M_REWRITE_TABLE.atDirect(uri(table)).isRec()
                     ? Law.Helper.claimed(M_REWRITE_TABLE.atDirect(uri(table)).asRec(), Law.valueOf(table)) : List.<Rec>of();
         };
@@ -1305,6 +1317,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             // only the same comparison composes
             "{1,2,3,4,5}.is(gt(1)).is(lt(4))            % start({1,2,3,4,5}).is(gt(1)).is(lt(4))  % {2,3}",
             "{1,2,3,4,5}.is(gt(1)).is(gte(3))           % start({1,2,3,4,5}).is(gt(1)).is(gte(3)) % {3,4,5}",
+            // a run of filters composes pair by pair to the strictest
+            "{1,2,3,4,5}.is(gt(1)).is(gt(3)).is(gt(2))  % start({1,2,3,4,5}).is(gt(3))            % {4,5}",
+            // an is and a filter are different filters
+            "{1,2,3,4,5}.is(gt(1)).filter(gt(3))        % start({1,2,3,4,5}).is(gt(1)).filter(gt(3)) % {4,5}",
     }, delimiter = '%')
     public void testPoset(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
@@ -1603,10 +1619,6 @@ public class catInstSetTest extends AbstractInstSetTest {
             // a chain with no branch carries neither edge
             "start(5).plus(0).neg().neg()                              % branch_collapse  % false",
             "start(5).plus(0).neg().neg()                              % branch_inline    % false",
-            // law_poset composes filters on the same comparison, never bare comparisons
-            "start({1,2,3}).is(gt(1)).is(gt(2))                        % law_poset        % true",
-            "start({1,2,3}).is(gt(1)).is(lt(3))                        % law_poset        % false",
-            "start(\"m\").gt(\"a\").gt(\"z\")                              % law_poset        % false",
     }, delimiter = '%')
     void testAprioriPruning(final String code, final String rule, final boolean live) {
         final Obj path = catInstSet.PATH_TYPE.constructor().apply(ObjmtronSerializer.parse(code));

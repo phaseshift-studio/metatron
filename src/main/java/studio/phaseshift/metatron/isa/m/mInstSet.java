@@ -421,10 +421,12 @@ public class mInstSet extends AbstractInstSet {
     /**
      * THE /m REWRITE TABLE (Marko, 2026-11-09) — rows of {@code [lhs => rhs]} rules, applied in order. A row keyed by a LAW
      * states its rule in the name {@code op}, the instruction whose claim states the law: an involution pair drops out,
-     * {@code op·op ⇝ ε}, and an idempotent pair or a fold of a fold is one, {@code op·op ⇝ op}. A row keyed by a FORM
+     * {@code op·op ⇝ ε}, an idempotent pair or a fold of a fold is one, {@code op·op ⇝ op}, and two filters on one
+     * poset comparison are the filter on the stricter bound, {@code is(op(a))·is(op(b)) ⇝ is(op(b))}. A row keyed by a FORM
      * states it over a named hole that ranges over the form its operation declares: a mapping of a mapper is the
      * mapper, {@code map(#::T@f) ⇝ #::T@f}. A row keyed by anything else is PLAIN: its rule applies as it stands, with no
-     * {@code op} to bind and no gate ({@code map_nest}, {@code else_after_count}). The table is the declared ARGUMENT of
+     * {@code op} to bind and no gate ({@code map_nest}, {@code else_after_count}), and a {@code ${...}} template in its
+     * change computes an argument from the names the run bound ({@code range_skip_take}). The table is the declared ARGUMENT of
      * /m's rewrite instruction {@code m_rewrite_table}: a value, not a type, so the instruction resolves with its table
      * already bound and no type resolution takes place. A law's claimants bind {@code op} ({@code Law.Helper.claimed}).
      */
@@ -450,10 +452,29 @@ public class mInstSet extends AbstractInstSet {
             uri(Law.involution.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of())),
             uri(Law.idempotent.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
             uri(Law.monoidic.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
+            // the POSET law: two filters on one comparison are the filter on the stricter bound, x > a ∧ x > b ⇔ x > max(a, b).
+            // The comparison decides which bound that is, not its name, so the gate evaluates it (Law.Helper's poset gate):
+            // a rule holds where the bound it keeps, b, is ordered past a or equals it. The pair is stated both ways round,
+            // so the bound kept is the second (b second) or the first (b first). Only filters compose: a bare comparison
+            // answers a bool, and x.gt(a).gt(b) compares that bool with b
+            uri(Law.poset.name()), rec(
+                    MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))), instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
+                    MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
+                    MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))), instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))))),
+                    MCode.code(List.of(instB(IS_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
+                    MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))), instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
+                    MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
+                    MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))), instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))))),
+                    MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null)))))))),
             // a PLAIN row, keyed by its own name: no claimant to bind and no gate. count is total, so an else after it
             // is dead code
             uri("else_after_count"), rec(MCode.code(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst(T(ALL))))),
-                    MCode.code(List.of(instB(COUNT_INST_TID, lst())))));
+                    MCode.code(List.of(instB(COUNT_INST_TID, lst())))),
+            // a PLAIN row whose change is COMPUTED: a ${...} template is evaluated with the names the run bound, so a window
+            // is a skip and a take, range(i, n) ⇝ skip(i)·take(n - i). Only literal bounds match (int::T refuses an
+            // instruction), so a computed range stays range
+            uri("range_skip_take"), rec(MCode.code(List.of(instB(RANGE_INST_TID, lst(T(INT_TID, f("i"), null, null), T(INT_TID, f("n"), null, null))))),
+                    MCode.code(List.of(instB(SKIP_INST_TID, lst(T(ALL, f("i"), null, null))), instB(TAKE_INST_TID, lst(uri("${*n.minus(*i)}")))))));
 
     /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
@@ -887,7 +908,7 @@ public class mInstSet extends AbstractInstSet {
                         // bound; a law's or a form's rule binds op to its claimants and holds where its gate does
                         docWrap(instC(M_ISA_REWRITE_TID.extend("m_rewrite_table").dom(CODE_TID).rng(CODE_TID.maybe()), lst(M_REWRITE_TABLE),
                                         (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
-                                "the rewrite rules carried as the instruction's own argument: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims its form or law at the chain's carrier. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
+                                "the rewrite rules carried as the instruction's own argument: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), two filters on one poset comparison are the stricter one, and a range is a skip and a take, each where the operation claims its form or law at the chain's carrier. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
                         // instance a carrier declares binds them (Law.Helper.rules), and the plan cancels an adjacent pair
@@ -1105,19 +1126,6 @@ public class mInstSet extends AbstractInstSet {
                                                     // No optimization possible, return original
                                                     return matched;
                                                 })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left: \\(\\mathrm{split}([d \\cdot r, e \\cdot r]) \\cdot \\mathrm{merge} \\leadsto \\mathrm{split}([d, e]) \\cdot \\mathrm{merge} \\cdot r\\)"),
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("range_skip_take"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.asCode().insts())
-                                                .match(List.of(instA(RANGE_INST_TID)))
-                                                .repeat()
-                                                .rewrite(map -> {
-                                                    final List<Inst> matched = map.values().stream().toList();
-                                                    final Inst rangeInst = matched.getFirst();
-                                                    return Stream.of(
-                                                            instB(SKIP_INST_TID, lst(rangeInst.arg(0))),
-                                                            instB(TAKE_INST_TID, lst(jnt(rangeInst.arg(1).intValue() - rangeInst.arg(0).intValue())))).toList();
-                                                })).asCode()), "rewrites a range inst to skip/take: \\(\\mathrm{range}(i, n) \\leadsto \\mathrm{skip}(i) \\cdot \\mathrm{take}(n - i)\\)"),
-
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("explain_analysis").addQ("analysis"),
                                 code -> {
                                     final List<Inst> insts = code.insts();
