@@ -84,11 +84,49 @@ public class FiberedRecTest extends AbstractMetatronTest {
     }
 
     /**
+     * THE PARALLEL FIBERS EACH TAKE THEIR OWN OVERLOAD. A call that is not about the bundle itself is resolved by every
+     * fiber against the object it holds, so fibers of different types each run the overload of their own type:
+     * {@code bump} adds 1 at the int {@code hits} and {@code '!'} at the str {@code label}, in one call. That holds for a
+     * bundle read at run time ({@code *tg}) and for a literal, whose call is resolved when the code compiles — there the
+     * call compiles to its lift, never to the one overload the bundle's type happened to bind. When one fiber's type
+     * changes, the call projects to every fiber's result ({@code shout}: the int stays an int, the str becomes a bool).
+     * Three fibers lift as two do.
+     */
+    @Training(
+            instruction = "given the definitions in the test data, what does {{{code}}} evaluate to?",
+            input = "{{{@TestData}}}; {{{code}}}",
+            output = "{{{expected}}}")
+    @ParameterizedTest
+    @TestData(value = {
+            "tagged -> noobj",
+            "tagged -> rec[hits,label]::T[?[hits=>int::T,label=>str::T]]@tagged",
+            "tg -> tagged[int,str]::[hits=>1,label=>'hi']@tg",
+            "bump?dom=int -> |inst?<=int(){ plus(1) }",
+            "bump?dom=str -> |inst?<=str(){ plus('!') }",
+            "shout?dom=int -> |inst?<=int(){ plus(1) }",
+            "shout?dom=str -> |inst?<=str(){ true }",
+            "trio -> noobj",
+            "trio -> rec[a,b,c]::T[?[a=>int::T,b=>int::T,c=>int::T]]@trio",
+    })
+    @CsvSource(value = {
+            "*tg.bump()                                              % tagged[int,str]::[hits=>2,label=>'hi!']",
+            "tagged[int,str]::[hits=>1,label=>'hi'].bump()           % tagged[int,str]::[hits=>2,label=>'hi!']",
+            "*tg.bump().bump()                                       % tagged[int,str]::[hits=>3,label=>'hi!!']",
+            "tagged[int,str]::[hits=>1,label=>'hi'].bump().bump()    % tagged[int,str]::[hits=>3,label=>'hi!!']",
+            "*tg.shout()                                             % {2,true}",
+            "tagged[int,str]::[hits=>1,label=>'hi'].shout()          % {2,true}",
+            "trio[int,int,int]::[a=>1,b=>2,c=>3].plus(1)             % trio[int,int,int]::[a=>2,b=>3,c=>4]",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTheParallelFibersEachTakeTheirOwnOverload(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * {@code @} WRITES BACK, {@code *} DOES NOT. A lift keeps the address its bundle was read with, and a result that
      * carries an address is written back to it — so a call on {@code @marko} is a state transition (two hits take the
      * {@code hp} from 100 to 54), while the same call on the copy {@code *marko} is a value and the stored marko is
      * untouched. A projection answers its results and writes nothing back: after {@code hurt(23).gt(50)} the stored
-     * {@code hp} is the hurt's 77.
+     * {@code hp} is the hurt's 77. Fibers moved by one call are written back together ({@code @px.plus(10)}).
      */
     @Training.SkipTraining(reason = "each row is an evaluation followed by a separate read of the stored marko, not one expression->value pair")
     @ParameterizedTest
@@ -97,6 +135,9 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "human -> rec[hp]::T[?[name=>str::T,age=>int::T,hp=>int::T]]@human",
             "marko -> human[int]::[name=>'marko',age=>29,hp=>100]@marko",
             "|inst?int<=int(int::T){ minus(*0) }@hurt",
+            "pair -> noobj",
+            "pair -> rec[a,b]::T[?[a=>int::T,b=>int::T,tag=>str::T]]@pair",
+            "px -> pair[int,int]::[a=>1,b=>2,tag=>'x']@px",
     })
     @CsvSource(value = {
             // evaluate                     % read back      % stored
@@ -104,6 +145,7 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "@marko.hurt(23).hurt(23)       % *marko>>hp     % 54",
             "*marko.hurt(23)                % *marko>>hp     % 100",
             "@marko.hurt(23).gt(50)         % *marko>>hp     % 77",
+            "@px.plus(10)                   % *px            % pair[int,int]::[a=>11,b=>12,tag=>'x']",
     }, delimiter = '%', quoteCharacter = '~')
     public void testAnAnchoredLiftWritesBack(final String evaluate, final String fetch, final String stored) {
         AbstractMetatronTest.checkCodeEvaluate(LOG, evaluate, fetch, stored);
@@ -223,6 +265,9 @@ public class FiberedRecTest extends AbstractMetatronTest {
      *       does not lift, while the same call typed ({@code ?<=int}) does.</li>
      *   <li>A mapper over a MULTIPLICITY path fiber ({@code rec[geo/+]}) answers {@code noobj}, where mapping each
      *       value and writing the lst back would lift.</li>
+     *   <li>A fiber NAMED LIKE AN INSTRUCTION ({@code count}) is resolved to the instruction's address — the bracket
+     *       reads {@code rec[/m/inst/count]} — so the bundle has no fiber at {@code count} and the call answers
+     *       {@code noobj}.</li>
      * </ul>
      */
     @Training.SkipTraining(reason = "the rows pin open gaps, not the answers mtron should give")
@@ -236,12 +281,15 @@ public class FiberedRecTest extends AbstractMetatronTest {
             "hiker -> noobj",
             "hiker -> rec[geo/+]::T[?[name=>str::T,geo=>trail::T]]@hiker",
             "rambler -> hiker[real{2}]::[name=>'marko',geo=>trail::[2.0,3.5]]@rambler",
+            "counted -> noobj",
+            "counted -> rec[count]::T[?[count=>int::T]]@counted",
     })
     @CsvSource(value = {
             "5.plus(*marko)                                   % <ERROR>",   // TODO: 34
             "person::[name=>'marko',age=>29].plus(1)          % <ERROR>",   // TODO: person::[name=>'marko',age=>30]
             "person::[name=>'marko',age=>29].plus?<=int(1)    % person::[name=>'marko',age=>30]",
             "*rambler.plus(1.0)                               % noobj",     // TODO: hiker[real{2}]::[name=>'marko',geo=>trail::[3.0,4.5]]
+            "counted[int]::[count=>1].plus(1)                 % noobj",     // TODO: counted[int]::[count=>2]
     }, delimiter = '%', quoteCharacter = '~')
     public void testWhereTheLiftDoesNotReachYet(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

@@ -26,6 +26,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.Tokens.ALL_STAR;
 import static studio.phaseshift.metatron.Tokens.REC_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFiberedRec.fiberedRec;
@@ -52,8 +53,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
  * An instruction about the bundle ITSELF — a typer, a generic domain, the rec form, or the bundle's own name — is the
  * bundle's, applied to it alone as any instruction is applied to any rec, and the fibers are not asked.
  * <p>
- * The {@link Processor} knows none of this: resolution ({@link Selector.Helper#resolve}) hands it the instruction a
- * call refers to, which on a bundle is either the bundle's own or the lift ({@link Helper#resolve}).
+ * The {@link Processor} knows none of this: resolution — when code compiles, and at run time
+ * ({@link Selector.Helper#resolve}) — hands it the instruction a call refers to, which on a bundle is either the
+ * bundle's own or the lift ({@link Helper#resolve}). The lift carries the call unbound, so fibers of different types
+ * each resolve their own overload of it.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -81,22 +84,25 @@ public interface FiberedRec extends Rec {
         }
 
         /**
-         * IS THIS VALUE A BUNDLE? A value of a named FIBERED declaration ({@code rec[role]::T[…]@person}, instantiated
-         * as {@code person[ninja]} or not). An anonymous bracket ({@code rec[k1,k2]}) names the fields a literal
-         * carries and exposes no fibers.
+         * IS THIS VALUE A BUNDLE? A rec of a named FIBERED declaration ({@link #isBundle(Type)}).
          */
         public static boolean isBundle(final Obj lhs) {
-            if (!lhs.isRec())
-                return false;
-            final Type type = lhs.type();
+            return lhs.isRec() && isBundle(lhs.type());
+        }
+
+        /**
+         * IS THIS A BUNDLE'S TYPE? A named FIBERED declaration ({@code rec[role]::T[…]@person}, instantiated as
+         * {@code person[ninja]} or not). An anonymous bracket ({@code rec[k1,k2]}) names the fields a literal carries
+         * and exposes no fibers.
+         */
+        public static boolean isBundle(final Type type) {
             return type.isFibered() && null != type.vid() && !type.vid().basePath().equals(type.tid().basePath());
         }
 
         /**
          * THE INSTRUCTION A CALL ON {@code lhs} REFERS TO, given {@code cinst}, the one it resolved to there: itself,
          * unless {@code lhs} is a bundle that is not the subject of {@code cinst} ({@link #applicable}) — then it is
-         * the LIFT of the call, an instruction from the bundle whose function is {@link FiberedRec#lift}. Its range is
-         * any obj, since the call answers the bundle when it lifts and the results when it projects.
+         * the LIFT of the call ({@link FiberedRec#lift}).
          *
          * @param lhs   the value the call is applied to
          * @param cinst the instruction the call resolved to against {@code lhs} (noobj, or f-less, when none bound)
@@ -104,8 +110,30 @@ public interface FiberedRec extends Rec {
          * @return {@code cinst}, or its lift on a bundle
          */
         public static Inst resolve(final Obj lhs, final Inst cinst, final Inst inst) {
-            return !isBundle(lhs) || applicable(true, lhs, cinst, inst) ? cinst :
-                    instC(inst.tid().basePath().dom(lhs.tid()).rng(ALL_STAR), lst(), (bundle, lifted) -> fiberedRec(bundle.asRec()).lift(inst));
+            return !isBundle(lhs) || applicable(true, lhs, cinst, inst) ? cinst : lift(inst);
+        }
+
+        /**
+         * The same question when code compiles, asked of the TYPE the call's values have: a call a bundle's type binds
+         * through one of its fibers compiles to the LIFT of the call, never to the overload bound for that one fiber.
+         *
+         * @param type  the type the call is resolved against
+         * @param cinst the instruction the call resolved to against {@code type}
+         * @param inst  the call before resolution
+         * @return {@code cinst}, or its lift on a bundle's type
+         */
+        public static Inst resolve(final Type type, final Inst cinst, final Inst inst) {
+            return !isBundle(type) || applicable(true, type, cinst, inst) ? cinst : lift(inst);
+        }
+
+        /**
+         * The LIFT of a call: it carries the CALL, unbound, so every fiber resolves its own overload of it (the
+         * parallel fibers) — an instruction bound for one subject would be offered to fibers it is not about. It takes
+         * one obj and answers any (the bundle when it lifts, the results when it projects), and shipped without its
+         * function it re-resolves to the same lift.
+         */
+        private static Inst lift(final Inst inst) {
+            return instC(inst.tid().basePath().dom(ALL).rng(ALL_STAR), lst(), (bundle, lifted) -> fiberedRec(bundle.asRec()).lift(inst));
         }
 
         /**
