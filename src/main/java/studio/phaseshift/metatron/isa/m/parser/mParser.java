@@ -1269,8 +1269,14 @@ public class mParser {
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
-                .map(t -> mParser.<fURI>pick(t, 0).qString(mParser.pick(t, 1)));
+        // AN INSTRUCTION IS {span}inst{point}, as a type is: a leading coefficient is a run of the instruction (Marko,
+        // 2026-11-09: {2}plus{3}(34) is plus{3}(34).plus{3}(34)), so it is the tid's span, not the point m_furi_bare
+        // would read it as. m_code unfolds a finite run; a ranged one stays on the tid, a run a code pattern matches
+        return seq(opt(m_furi_coefficient(), null), m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
+                .map(t -> {
+                    final fURI tid = mParser.<fURI>pick(t, 1).qString(mParser.pick(t, 2));
+                    return null == pick(t, 0) ? tid : tid.b(coefficientOrOne(pick(t, 0)));
+                });
     }
 
     public static Parser m_obj(final boolean allowParens) {
@@ -1544,13 +1550,27 @@ public class mParser {
     }
 
     public static Parser m_code() {
-        return seq(m_type_prefix(Tokens.CODE_TID), opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
-                .map(t -> ((List<Object>) pick(t, 2)).size() == 1 ?
-                        ((List<Inst>) pick(t, 2)).get(0) :
-                        new MCode((List) ((List<Object>) pick(t, 2))
-                                .stream()
-                                .filter(x -> x instanceof Inst)
-                                .toList(), pick(t, 0), pick(t, 4)).tryToInst());
+        // only a typed prefix (code{2}::…) is the code's own: a bare leading coefficient is the first instruction's
+        // span (m_inst_furi), so it is not read here as the code's coefficient
+        return seq(opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), Tokens.CODE_TID),
+                opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
+                .map(t -> {
+                    // A FINITE SPAN IS THAT MANY IN A ROW: {2}plus{3}(34) is plus{3}(34).plus{3}(34), and {0}plus(1) is no
+                    // instruction at all. A ranged span ({+}, {*}) stays on its instruction, a run a code pattern matches
+                    final List<Object> elements = new ArrayList<>();
+                    for (final Object element : (List<Object>) pick(t, 2)) {
+                        final cInt span = element instanceof Inst inst ? inst.tid().b() : cInt.ONE();
+                        if (span.isOne() || null == span.min() || !span.min().equals(span.max()))
+                            elements.add(element);
+                        else
+                            for (long k = 0; k < span.min(); k++)
+                                elements.add(((Inst) element).tid(((Inst) element).tid().b(null)));
+                    }
+                    return elements.size() == 1 ? elements.getFirst() : new MCode((List) elements
+                            .stream()
+                            .filter(x -> x instanceof Inst)
+                            .toList(), pick(t, 0), pick(t, 4)).tryToInst();
+                });
     }
 
     public static Parser m_inst() {
