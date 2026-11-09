@@ -46,8 +46,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
  * <p>A subclass names the TYPE under test ({@link #carrier()}) and the ELEMENT its equations are written over
  * ({@link #sample()}). The inherited test derives the CLAIMS from the type itself; no Java marker interface is
  * consulted. A type models a set of theory instances ({@code object::T ?decq}: {@code ring => {add, mul, zero, one},
- * …}); each instance names its theory (the instance rec's tid), each theory declares its LAW BATTERY
- * ({@code mTypes.declareAxioms()}), and their union is what the carrier must satisfy. The union goes to
+ * …}); each instance names its theory (the instance rec's tid), each theory states its LAW BATTERY in its own type
+ * ({@code mTypes.axiomsOf}), and their union is what the carrier must satisfy. The union goes to
  * {@link AlgebraTool#analyzeType(Type, List)}, which tests every claim against every operation the type binds and
  * answers in a report. That derivation is the point: a carrier DECLARES its algebra, so the test reads the
  * declaration instead of restating it, and a theory added to a carrier is validated without touching Java.

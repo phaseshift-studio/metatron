@@ -21,11 +21,8 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Algebra;
 import studio.phaseshift.metatron.algebra.Law;
+import studio.phaseshift.metatron.algebra.TheoryHelper;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.algebra.PendingWrites;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -36,16 +33,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.DECQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.DECS_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
-import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -67,8 +59,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * space exists.
  * <p>
  * The ADDRESSES below are declared against the {@code Tokens} addresses only, so the fields depend on nothing in
- * {@link mInstSet} — no class-initialisation cycle, whatever loads first. The ALGEBRAS and the THEORY BATTERIES are
- * the exception and deliberately methods ({@link #declareAlgebras()}, {@link #declareAxioms()}): a rec names
+ * {@link mInstSet} — no class-initialisation cycle, whatever loads first. The ALGEBRAS are the exception and
+ * deliberately a method ({@link #declareAlgebras()}): a rec names
  * instruction and theory addresses that only exist
  * once {@code mInstSet} has initialised, so it can be written here but not <em>initialised</em> here.
  * {@code mInstSet} re-exports the types by name for the (many) call sites that read {@code mInstSet.INT_TYPE}.
@@ -306,103 +298,22 @@ public final class mTypes {
     }
 
     /**
-     * THE LAW BATTERY EVERY THEORY ENTAILS — one declaration per theory type, so a validator can take a carrier's
-     * declared instances and turn them into a claim list: an instance names its theory (the instance rec's tid),
-     * the theory names its laws ({@code law => [monoidic, unit, …]}), and the union is what the carrier must
-     * satisfy. This is DATA — the process-law vocabulary a structural theory licenses, written once beside the
-     * theory rather than restated in every carrier.
-     * <p>
-     * DECLARED CONSERVATIVELY, and each entry is defensible on its own terms:
-     * <ul>
-     *   <li>MONOID — an associative operation with an identity: {@code monoidic} (associativity) + {@code unit}.</li>
-     *   <li>COMMUTATIVE_MONOID — the monoid laws plus {@code commutative}: the operation commutes. {@code lst} under
-     *       concatenation is NOT one (append is ordered), {@code rec} under deep merge is (merge is keyed).</li>
-     *   <li>GROUP — a monoid with inverses: those two + {@code involution} (the tool reads {@code a·a⁻¹ = id} for the
-     *       operation and {@code inv(inv(a)) = a} for the inverse itself).</li>
-     *   <li>RING — the additive side is an abelian group (associativity, identity, commutativity, inverse) and the
-     *       multiplicative side a monoid distributing over it: {@code left_distributive} and {@code right_distributive}.
-     *       NOTE the battery is FLAT — a law is not attributed to a role — so {@code commutative} is a claim about
-     *       every operation of the carrier. That holds for the commutative rings this repo declares (int, real); a
-     *       ring whose multiplication does not commute would be flagged, and that is the validator doing its job.</li>
-     *   <li>FIELD — a commutative ring whose non-zero elements are a multiplicative group. The extra structure over a
-     *       ring is the {@code inv} ROLE (not a new law), which {@code involution} exercises as {@code a·a⁻¹ = 1}, so
-     *       the law list is the ring's.</li>
-     *   <li>RIG — an additive and a multiplicative monoid with distributivity and NO additive inverse:
-     *       {@code involution} is absent on purpose (a rig has none), {@code idempotent} is absent too (nat is a rig
-     *       and is not idempotent).</li>
-     *   <li>BOOLEAN — a complemented distributive lattice: commutative idempotent monoids, distributivity,
-     *       {@code involution} for the complement ({@code ¬¬b = b}), and {@code complement} for the
-     *       complemented-lattice law ({@code b∧¬b = ¬⊤ = ⊥}, {@code b∨¬b = ¬⊥ = ⊤}).</li>
-     *   <li>LATTICE / SEMILATTICE — join and meet are each an idempotent commutative monoid bounded by bottom/top.</li>
-     *   <li>NEAR_RING — one-sided distributivity only ({@code left_distributive}). Its signature is
-     *       {@code {add, mul, zero}}: there is no declared identity and no declared inverse, so {@code unit} and
-     *       {@code involution} would be unchecked, and {@code semi_right_distributive} is deliberately NOT here —
-     *       that is an instruction claim about reducers (Thm 19), not an axiom of the theory (Thm 18).</li>
-     * </ul>
-     * <p>
-     * A THEORY ALSO STATES ITS REWRITE RULES ({@code rewrite => [[lhs => rhs], …]}), in its own role names, on the most
-     * specific theory that can hold them (Marko, 2026-11-08): the monoid's identity drops out, {@code op(id) ⇝ ε}, and
-     * every instance keyed by a monoid form fills the roles in with its own bindings ({@code Law.Helper.units}). A theory
-     * refines no other, so a rule reaches exactly the instances of its own theory.
-     * <p>
-     * STAGED ONLY, like {@link #declareAlgebras()}: this is a method for the same class-initialisation reason — the
-     * recs name the theory tids and {@code TypeBuilder.declare} writes the staged map the drain reads.
-     */
-    public static void declareAxioms() {
-        // monoid: an associative operation with an identity, and the identity drops out: op(id) ⇝ ε
-        axiom(MONOID_THEORY_TID, lst(rec(code(List.of(instB(f(OP), lst(uri(ID))))), code(List.<Inst>of()))),
-                Law.monoidic, Law.unit);
-        // commutative monoid: the monoid laws plus commutativity of the operation
-        axiom(COMMUTATIVE_MONOID_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative);
-        // group: a monoid whose operation has an inverse
-        axiom(GROUP_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.involution);
-        // ring: an abelian additive group, a multiplicative monoid, distributing — the flat battery claims
-        // commutativity of every operation (true of the commutative rings declared here: int and real)
-        axiom(RING_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.involution,
-                Law.left_distributive, Law.right_distributive);
-        // field: a commutative ring with a multiplicative inverse role — involution is the law that exercises it
-        axiom(FIELD_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.involution,
-                Law.left_distributive, Law.right_distributive);
-        // rig: monoids + distributivity, no additive inverse (no involution) and not necessarily idempotent
-        axiom(RIG_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative,
-                Law.left_distributive, Law.right_distributive);
-        // boolean: a complemented distributive lattice — involution is the complement's self-inverse law and
-        // complement the bound law (a∧¬a = ¬⊤, a∨¬a = ¬⊥)
-        axiom(BOOLEAN_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent,
-                Law.involution, Law.complement, Law.left_distributive, Law.right_distributive);
-        // lattice: meet and join are each an idempotent commutative monoid (bounded by top/bottom)
-        axiom(LATTICE_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
-        // semilattice: one side of a lattice — the same laws on a single operation
-        axiom(SEMILATTICE_THEORY_TID, lst(), Law.monoidic, Law.unit, Law.commutative, Law.idempotent);
-        // near-ring: associative multiplication, ONE-sided distributivity; no id and no inverse in its signature
-        axiom(NEAR_RING_THEORY_TID, lst(), Law.monoidic, Law.left_distributive);
-    }
-
-    /**
-     * THE LAWS A THEORY ENTAILS — the battery its {@code ?decq} declares. Empty when the theory declares none.
+     * THE LAWS A THEORY ENTAILS — the battery its type states beside its roles ({@code TheoryHelper.stated}: a theory's
+     * laws are its own data, Marko, 2026-11-08). Empty when the theory states none.
      */
     public static List<Law> axiomsOf(final fURI theory) {
         if (null == theory)
             return List.of();
-        final fURI address = null == theory.basePath() ? theory : theory.basePath();
-        final Obj declared = Machine.read(address.addQ(DECQ));
-        if (declared.isRec()) {
-            final Obj battery = declared.asRec().atDirect(uri(LAW));
-            // A TYPE-VALUED SLOT MEANS "ANY LAW": a battery may state law => uri(Law.LAW_TID) (law::T) instead of a
-            // list, so the reader expands it to the vocabulary rather than answering "no battery declared".
-            if (battery.isUri() && Law.LAW_TID.equals(battery.uriValue()))
-                return List.of(Law.values());
-            if (battery.isLst()) {
-                final List<Law> laws = battery.lstValue().stream()
-                        .filter(Obj::isUri)
-                        .map(obj -> law(obj.uriValue().name()))
-                        .filter(Objects::nonNull)
-                        .toList();
-                if (!laws.isEmpty())
-                    return laws;
-            }
-        }
-        return List.of();
+        final Obj battery = TheoryHelper.stated(null == theory.basePath() ? theory : theory.basePath(), LAW);
+        // A TYPE-VALUED SLOT MEANS "ANY LAW": a battery may state law => uri(Law.LAW_TID) (law::T) instead of a list,
+        // so the reader expands it to the vocabulary rather than answering "no battery declared".
+        if (battery.isUri() && Law.LAW_TID.equals(battery.uriValue()))
+            return List.of(Law.values());
+        return battery.isLst() ? battery.lstValue().stream()
+                .filter(Obj::isUri)
+                .map(obj -> law(obj.uriValue().name()))
+                .filter(Objects::nonNull)
+                .toList() : List.of();
     }
 
     /**
@@ -413,18 +324,6 @@ public final class mTypes {
             if (law.name().equals(name))
                 return law;
         return null;
-    }
-
-    /**
-     * DECLARE one theory's battery and rules — {@code decs::[obj=>theory::T, law=>[…], rewrite=>[…]]} at the theory's
-     * {@code ?decq}, keyed by its vid. A theory that states no rule writes no {@code rewrite} facet.
-     */
-    private static void axiom(final fURI theory, final Lst rewrite, final Law... laws) {
-        final Map<Obj, Obj> declaration = mutableMap(uri(OBJ), T(theory),
-                uri(LAW), lst(Arrays.stream(laws).map(law -> (Obj) uri(law.name())).toList()));
-        if (!rewrite.isEmpty())
-            declaration.put(uri(REWRITE), rewrite);
-        PendingWrites.write(PendingWrites.decq(theory), rec(declaration, DECS_TID, null));
     }
 
     /**

@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -123,6 +124,20 @@ public class TheoryHelper extends MRec {
 
     public static Inst inst(final Type type, final fURI theoryTID, final String role) {
         return inst(type, nameOf(theoryTID), role);
+    }
+
+    /**
+     * A THEORY'S OWN DATA — what its type states beside its roles (Marko, 2026-11-08): its law battery ({@code law})
+     * and its rules ({@code rewrite}). They are the theory's, never an instance's, so its type holds them under optional
+     * keys no instance carries, and they are read off the registered type. noobj when the theory states none.
+     */
+    public static Obj stated(final fURI theory, final String key) {
+        final Obj shape = T(theory).isPredicateObj();
+        return null == shape || !shape.isRec() ? noobj() : shape.asRec().jvm().entrySet().stream()
+                .filter(entry -> entry.getKey().isUri() && key.equals(entry.getKey().uriValue().toString()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(noobj());
     }
 
     /**

@@ -572,8 +572,7 @@ public enum Law {
                         if (!block.isRec() || null == block.asRec().tid())
                             continue;
                         for (final Obj rule : stated.computeIfAbsent(block.asRec().tid().basePath(), theory -> {
-                            final Obj declared = Machine.read(PendingWrites.decq(theory));
-                            final Obj rewrite = declared.isRec() ? declared.asRec().atDirect(uri(REWRITE)) : noobj();
+                            final Obj rewrite = TheoryHelper.stated(theory, REWRITE);
                             return rewrite.isLst() ? rewrite.lstValue() : List.of();
                         })) {
                             final Rel equation = rule.isRec() ? rule.asRec().<Rel>elements().findFirst().orElse(null) : null;
@@ -1170,8 +1169,8 @@ public enum Law {
         }
 
         /**
-         * THE UNIT EQUATIONS AS DATA — monoid_theory's {@code op(id) ⇝ ε}, stated once in the theory's {@code ?decq}
-         * ({@code rewrite}) and bound by every monoid instance a carrier declares ({@link #bind}): {@code plus(0)},
+         * THE UNIT EQUATIONS AS DATA — monoid_theory's {@code op(id) ⇝ ε}, stated once in the theory type itself
+         * ({@code rewrite}, its own data) and bound by every monoid instance a carrier declares ({@link #bind}): {@code plus(0)},
          * {@code mult(1)}, {@code plus("")}, …, and code's {@code id()}, since composition is adjacency. A rewrite compares
          * the operand, which a match only type-tests. Read off the carriers of the registered instructions ({@link #claims}).
          */
