@@ -254,7 +254,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 
 | rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
 |--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule)                        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
+| `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule; `/m`'s rewrite)        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
 | `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
 | `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
@@ -285,7 +285,8 @@ rule stated once, in the theory's role names, beside its law battery in `monoid_
 $x + \texttt{''}$ (str), $x \cdot \langle\rangle$ (uri) and $x \cdot .$ (machine) all drop. Composition is
 adjacency in a chain, so code's `mul_monoid` binds $\mathrm{id}$ alone: the identity *operation* drops out. A theory
 refines no other, so the rule reaches only monoid instances, and code's `add_monoid` (whose `branch` takes lanes) binds
-none yet. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
+none yet. The theories are `/m`'s, so `theory_unit_removal` is `/m`'s rewrite and runs on the base path too, with or
+without the category. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
 `conjugate` — not only the additive group's.
 
 ```mtron_pre

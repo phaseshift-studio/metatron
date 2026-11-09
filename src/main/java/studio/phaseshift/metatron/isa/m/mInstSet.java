@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.UNIT_PLAN;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
@@ -775,18 +776,16 @@ public class mInstSet extends AbstractInstSet {
                                     return code.jvm(bundledCode);
                                 }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
-                        // Remove identity instructions (no-op)
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
-                                code -> 1 == code.insts().size() ? code : code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(instA(ID_INST_TID).insts())
-                                                .rewrite(x -> List.of())).asCode()), "removes identity instructions: \\(g \\cdot \\mathrm{id} \\leadsto g\\)"),
+                        // THE UNIT LAW (Marko, 2026-11-08): monoid_theory states op(id) ⇝ ε, every monoid instance a carrier
+                        // declares binds it (Law.Helper.units), and the plan drops each bound unit from a chain. The
+                        // theories are /m's, so the law runs on the base path, the category imported or not: it is the
+                        // id_removal and the plus_zero / mult_one this table once spelled syntactically, now read off the
+                        // declared algebras (code's mul_monoid binds id(), since composition is adjacency).
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"),
+                                code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
 
-                        // NOTE: map_nest / map_inst / plus_zero / mult_one have been removed — they are the
-                        // syntactic shadows of catInstSet's `form_map_unwrap` (the transparent `map` lift)
-                        // and `theory_unit_removal` (op(id) for the operand's declared algebra). id_removal
-                        // stays: the category is only present when `/m/math/cat` is imported, and the identity
-                        // instruction has to be dropped on the base path too (testSplitMergeCode needs it).
+                        // NOTE: map_nest / map_inst have been removed — they are the syntactic shadows of catInstSet's
+                        // `form_map_unwrap` (the transparent `map` lift).
 
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
@@ -813,11 +812,6 @@ public class mInstSet extends AbstractInstSet {
                         //                                 return run;
                         //                             return List.of(instB(RSHIFT_INST_TID, lst(jnt(run.size()))));
                         //                         })).asCode()),
-
-                        // plus_zero / mult_one are gone — `plus(0)` and `mult(1)` are exactly the unit
-                        // patterns of the operand's declared ring/monoid, which is what catInstSet's
-                        // `theory_unit_removal` removes (and it does so only when the type actually declares
-                        // that identity, which is why the syntactic versions had to be disabled).
 
                         // Collapse identical branches in split-merge by summing coefficients
                         // Pattern: -<[inst,inst,...]>- → inst{n}

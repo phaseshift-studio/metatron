@@ -793,10 +793,11 @@ public class catInstSetTest extends AbstractInstSetTest {
         int hash = code.hashCode();
         int done = 2;
         while (done != 0) {
-            // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25)
+            // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
+            // The theory laws are the category's rewrites and /m's unit law: the theories are /m's, so it is /m's rewrite
             Machine.current().instset().members().stream()
-                    .filter(isa -> isa instanceof catInstSet)
-                    .flatMap(isa -> isa.rewrites().stream())
+                    .flatMap(isa -> isa.rewrites().stream()
+                            .filter(r -> isa instanceof catInstSet || "theory_unit_removal".equals(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
@@ -810,8 +811,8 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code theory_unit_removal} — the unit law of every theory the operand's type models: {@code op(id)}
-     * drops out, and a bare identity operation (the code ring's {@code id}) is the identity morphism.
+     * {@code theory_unit_removal} — monoid_theory's {@code op(id) ⇝ ε}, as every monoid instance of the operand's
+     * type binds it, and code's {@code id()}, composition being adjacency. It is /m's rewrite: the theories are /m's.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -862,10 +863,9 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code explain()} REPORTS THE COMPILED CHAIN. The int ring's unit law — catInstSet's own
-     * {@code theory_unit_removal} — drops {@code plus(0)}, so the reported metadata and table must be that
-     * collapsed chain, not the expression as written. This is the case the base-ISA explain rows cannot reach:
-     * {@code mInstSetTest} mounts no cat laws, so nothing there collapses and the two stages coincide.
+     * {@code explain()} REPORTS THE COMPILED CHAIN. int's unit law — {@code theory_unit_removal}, /m's rewrite of the
+     * monoid's {@code op(id) ⇝ ε} — drops {@code plus(0)}, so the reported metadata and table must be that collapsed
+     * chain, not the expression as written.
      * <p>
      * The SHIPPED schedule is installed for this one test: rewrite BEFORE resolve. This class's
      * {@link CatTheoryCompiler} resolves first, and under that order the unit law's guard — written against the
