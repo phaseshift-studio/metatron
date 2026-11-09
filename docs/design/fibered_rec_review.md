@@ -1,7 +1,8 @@
 # Fibered `rec::T` — review, recommendations and ideas
 
 **Status:** review written 2026-11-09, after the lift landed on main (`c540e782b`, `cbdac5dc3`, `60a15e326`).
-**See also:** `docs/skills/mtron/references/type-system-mtron.md` (*lifting*),
+**See also:** `docs/design/categorical_theories.md` (the algebra over fibers, and theories beyond one carrier),
+`docs/skills/mtron/references/type-system-mtron.md` (*lifting*),
 `docs/skills/metatron/references/machine-architecture-java.md` (*the processor*), `FiberedRecTest`, `RecTest`
 (delegation rows); Hindsight: *Ruling: a fibered rec keeps its lift*, *Ruling: a type-changing call on a fibered rec is
 a projection*, *Findings: fibered rec behavior after the lift landed*.
