@@ -74,7 +74,8 @@ public class InstParseTest extends AbstractMetatronTest {
             "int{4}::10.plus(mult(20))% int{4}::210",
             // "int{4}::10.plus(mult?int{+}<=int{+}(20))% int{4}::210", // todo: doesn't work because of the forced domain/range on mult
             "\"abc\".plus(\"def\")% \"abcdef\"",
-            "uri{0,2}::abc.plus?uri{*}<=(uri::abc)% uri{0,4}::abc",
+            // a uri sum counts in its value (abc + abc is abc{2}) and this uri's {0,2} floats over it: still {0,4} abcs
+            "uri{0,2}::abc.plus?uri{*}<=(uri::abc)% uri{0,2}::abc{2}",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
