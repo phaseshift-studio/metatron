@@ -156,6 +156,31 @@ public class CodeTest extends AbstractMetatronTest {
     }
 
     /**
+     * AN INSTRUCTION IS {span}inst{point}, as a type is (Marko, 2026-11-09): a leading coefficient is a run of the
+     * instruction, so {@code {2}plus{3}(34)} is {@code plus{3}(34).plus{3}(34)}, and a trailing one is its point, how
+     * many it emits. The leading one was read as the code's coefficient (and lost) at the head of a chain, and as the
+     * point mid-chain.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.{2}plus{3}(34)                % {9}69",
+            "1.plus{3}(34).plus{3}(34)       % {9}69",
+            "1.{2}plus{3}(34).count()        % 9",
+            "1.{2}plus(34)                   % 69",
+            "1.{3}plus(1)                    % 4",
+            "1.{1}plus(1)                    % 2",
+            "1.{0}plus(1)                    % 1",
+            "1.{2}plus(1).mult(2)            % 6",
+            "1.plus(1).{2}mult(2)            % 8",
+            "1.plus(1).mult{2}(2)            % {2}4",
+            "1.{2}plus(1).{2}mult(2)         % 12",
+            "{1,2}.{2}plus(10)               % {21,22}",
+    }, delimiter = '%')
+    public void testAnInstructionsSpanIsARun(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, from either side of a test, and nothing longer or emptier is: asserted in
      * Java because the parser reads {@code plus(2)} as the instruction itself, never as a one-instruction code.
      */
