@@ -1233,8 +1233,10 @@ public enum Law {
          *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
          *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold}).</li>
          * </ul>
-         * A law the table names but no gate knows is not applied. {@code only} restricts the pass to one law (a law plan's
-         * cut), null applies the whole table.
+         * A law the table names but no gate knows is not applied. A row keyed by anything but a law is PLAIN
+         * ({@code else_after_count}): its rule is stated in the instructions themselves, so it applies as it stands, with no
+         * {@code op} to bind and no gate. {@code only} restricts the pass to one law (a law plan's cut, which no plain row
+         * belongs to), null applies the whole table.
          */
         public static Code lawRemoval(final Code code, final Rec table, final Law only) {
             Code out = code;
@@ -1249,6 +1251,8 @@ public enum Law {
                 };
                 if (null != gate)
                     out = rewrite(out, claimed(entry.second().asRec(), law), gate);
+                else if (null == law && null == only && entry.second().isRec())
+                    out = rewrite(out, List.of(entry.second().asRec()), (scanned, start) -> true);
             }
             return out;
         }

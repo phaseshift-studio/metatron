@@ -794,10 +794,12 @@ public class catInstSetTest extends AbstractInstSetTest {
         int done = 2;
         while (done != 0) {
             // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
-            // The theory laws are the category's rewrites and /m's unit law and rewrite table: the theories and laws are /m's
+            // The theory laws are the category's rewrites and /m's law rewrites (the unit law, the rewrite table, inverse
+            // cancellation and derivation contraction): the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
-                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "m_rewrite_table").contains(r.tid().basePath().name())))
+                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "m_rewrite_table",
+                                    "inverse_cancellation", "derivation_contraction").contains(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
@@ -954,7 +956,9 @@ public class catInstSetTest extends AbstractInstSetTest {
      * /m'S REWRITE TABLE IS ITS INSTRUCTION'S ARGUMENT (Marko, 2026-11-09) — {@code m_rewrite_table}'s declared argument is
      * the table itself, a value rather than a type, so the instruction resolves with the table bound; applied to a chain
      * it folds each law it carries where the operation claims the law at the chain's carrier. A pair that is not adjacent,
-     * or not one law's claimant, stays. Each row: the chain % the chain the instruction leaves.
+     * or not one law's claimant, stays. A PLAIN row ({@code else_after_count}) applies as it stands: the else after a
+     * total count drops whatever its fallback, and only as the run the rule states, so an else before the count, or one
+     * apart from it, stays. Each row: the chain % the chain the instruction leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -963,6 +967,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.sum().sum()            % start({1,2,3}).sum()",
             "5.neg().plus(1).neg()          % start(5).neg().plus(1).neg()",
             "5.plus(3).plus(3)              % start(5).plus(3).plus(3)",
+            "{1,2,3}.count().else(0)        % start({1,2,3}).count()",
+            "{1,2,3}.count().else(neg())    % start({1,2,3}).count()",
+            "{1,2,3}.else(0).count()        % start({1,2,3}).else(0).count()",
+            "{1,2,3}.count().plus(1).else(0) % start({1,2,3}).count().plus(1).else(0)",
     }, delimiter = '%')
     void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
         final Inst table = Machine.current().instset().rewrites().stream()

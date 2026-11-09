@@ -53,6 +53,8 @@ import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.DERIVATION_PLAN;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.INVERSE_PLAN;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter.UNIT_PLAN;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MILLIS_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -421,12 +423,17 @@ public class mInstSet extends AbstractInstSet {
      * instruction whose claim states the law: an involution pair drops out, {@code op·op ⇝ ε}, and an idempotent pair or
      * a fold of a fold is one, {@code op·op ⇝ op}. It is the declared ARGUMENT of /m's rewrite instruction
      * {@code m_rewrite_table}: a value, not a type, so the instruction resolves with its table already bound and no type
-     * resolution takes place. Each law's claimants bind {@code op} ({@code Law.Helper.claimed}).
+     * resolution takes place. Each law's claimants bind {@code op} ({@code Law.Helper.claimed}). A row keyed by anything
+     * but a law is PLAIN: its rule applies as it stands, with no {@code op} to bind and no gate ({@code else_after_count}).
      */
     public static final Rec M_REWRITE_TABLE = rec(
             uri(Law.involution.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of())),
             uri(Law.idempotent.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
-            uri(Law.monoidic.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))));
+            uri(Law.monoidic.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
+            // a PLAIN row, keyed by its own name: no claimant to bind and no gate. count is total, so an else after it
+            // is dead code
+            uri("else_after_count"), rec(MCode.code(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst(T(ALL))))),
+                    MCode.code(List.of(instB(COUNT_INST_TID, lst())))));
 
     /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
@@ -848,7 +855,7 @@ public class mInstSet extends AbstractInstSet {
                                 }), "rewrites a().b().c().profile() to profile_analysis(a().b().c()): \\(\\mathrm{profile} \\leadsto \\mathrm{profile\\_analysis}(\\ldots)\\)"),
 
                         // THE UNIT LAW (Marko, 2026-11-08): monoid_theory states op(id) ⇝ ε, every monoid instance a carrier
-                        // declares binds it (Law.Helper.units), and the plan drops each bound unit from a chain. The
+                        // declares binds it (Law.Helper.rules), and the plan drops each bound unit from a chain. The
                         // theories are /m's, so the law runs on the base path, the category imported or not: it is the
                         // id_removal and the plus_zero / mult_one this table once spelled syntactically, now read off the
                         // declared algebras (code's mul_monoid binds id(), since composition is adjacency).
@@ -862,20 +869,21 @@ public class mInstSet extends AbstractInstSet {
                                         (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec(), null)),
                                 "the process laws' rules, carried as the instruction's own argument: an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims the law at the chain's carrier. e.g. \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
 
+                        // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
+                        // instance a carrier declares binds them (Law.Helper.rules), and the plan cancels an adjacent pair
+                        // with equal operands where the chain's carrier derives that inverse. The theories are /m's.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("inverse_cancellation"),
+                                code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+
+                        // DERIVATION CONTRACTION: a derived instruction's primitive composition folds back to the derived
+                        // operation (plus . neg |-> minus, mult . inv |-> div), read off the derivations instructions declare
+                        // beside themselves (Law.Helper.derivations), where the derivation's contract runs.
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"),
+                                code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
+
                         // NOTE: map_nest / map_inst have been removed — they are the syntactic shadows of catInstSet's
                         // `form_map_unwrap` (the transparent `map` lift).
 
-                        // Eliminate else() after non-maybe instruction (dead code)
-                        // Pattern: .count().else(x) → .count() (count always returns a value)
-                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
-                                code -> code.selfJVM(
-                                        RewriterBuilder.search(code.insts())
-                                                .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))
-                                                .rewrite(map -> {
-                                                    final List<Inst> matched = map.values().stream().toList();
-                                                    // COUNT always returns int, so ELSE is dead code
-                                                    return List.of(matched.getFirst());
-                                                })).asCode()), "removes the else following a count — \\(\\mathrm{count}\\) is total, so the fallback is dead code: \\(\\mathrm{count}(x) \\cdot \\mathrm{else}(y) \\leadsto \\mathrm{count}(x)\\)"),
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where
                         // >> N is a depth walk); on a rec >> N is still positional, so
