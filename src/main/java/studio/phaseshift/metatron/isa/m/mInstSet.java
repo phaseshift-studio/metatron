@@ -858,7 +858,7 @@ public class mInstSet extends AbstractInstSet {
                         // argument IS the table (M_REWRITE_TABLE), a value rather than a type, so it resolves with the table
                         // bound; each law's rule binds op to the law's claimants and holds where its gate does
                         docWrap(instC(M_ISA_REWRITE_TID.extend("m_rewrite_table").dom(CODE_TID).rng(CODE_TID.maybe()), lst(M_REWRITE_TABLE),
-                                        (lhs, inst) -> PlanInterpreter.lawRemoval(lhs.asCode(), inst.arg(0).asRec(), null)),
+                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec(), null)),
                                 "the process laws' rules, carried as the instruction's own argument: an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims the law at the chain's carrier. e.g. \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
 
                         // NOTE: map_nest / map_inst have been removed — they are the syntactic shadows of catInstSet's

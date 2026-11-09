@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -26,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -1193,6 +1196,84 @@ public enum Law {
                 bound.add(rec(fill.apply(equation.first()), fill.apply(equation.second())));
             }
             return bound;
+        }
+
+        /**
+         * A LAW'S LOCAL EQUATIONS, APPLIED IN JAVA (Marko, 2026-11-08): each {@code [lhs => rhs]} rule is a
+         * {@link Call.Helper#update} over the chain's Code objects (matched and changed there, nothing evaluated), and a
+         * matched run changes only where {@code admits} the code at the run's start, the law read at the carrier there. A
+         * run whose instructions carry a coefficient stays: the rule's terms are unscaled, and {@code f{2}·f{2}} is no
+         * {@code f·f}.
+         */
+        public static Code rewrite(final Code code, final List<Rec> rules, final BiPredicate<Code, Integer> admits) {
+            Code out = code;
+            for (final Rec rule : rules) {
+                final Code scanned = out;
+                final List<Inst> pattern = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts()).orElse(List.of());
+                // a rule whose head op the chain does not hold cannot match it, so it is not scanned at all
+                if (pattern.isEmpty() || scanned.insts().stream().noneMatch(inst -> inst.tid().basePath().test(pattern.getFirst().tid().basePath())))
+                    continue;
+                final int window = pattern.size();
+                final List<Inst> next = Call.Helper.update(scanned.insts(), rule, start ->
+                        scanned.insts().subList(start, start + window).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
+                                && admits.test(scanned, start));
+                out = next.equals(scanned.insts()) ? scanned : code(next);
+            }
+            return out;
+        }
+
+        /**
+         * THE LAW TABLE (Marko, 2026-11-09) — /m's rewrite table instruction, {@code m_rewrite_table}, carries its table as
+         * its declared argument: a value, not a type, so the instruction resolves with the table already bound. Each entry
+         * is a law and its rule in the name {@code op}, bound to every instruction whose claim states the law
+         * ({@link #claimed}) and applied under that law's gate at the chain's carrier:
+         * <ul>
+         *   <li>{@code involution} {@code op·op ⇝ ε}, where the operation is an involution there, or the carrier's
+         *       additive-group inverse ({@link #isInvolution});</li>
+         *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
+         *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold}).</li>
+         * </ul>
+         * A law the table names but no gate knows is not applied. {@code only} restricts the pass to one law (a law plan's
+         * cut), null applies the whole table.
+         */
+        public static Code lawRemoval(final Code code, final Rec table, final Law only) {
+            Code out = code;
+            for (final Rel entry : table.<Rel>elements().toList()) {
+                final Law law = entry.first().isUri() ? Arrays.stream(Law.values())
+                        .filter(candidate -> candidate.name().equals(entry.first().uriValue().name())).findFirst().orElse(null) : null;
+                final BiPredicate<Code, Integer> gate = null == law || (null != only && only != law) || !entry.second().isRec() ? null : switch (law) {
+                    case involution -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
+                    case idempotent -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
+                    case monoidic -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                    default -> null;
+                };
+                if (null != gate)
+                    out = rewrite(out, claimed(entry.second().asRec(), law), gate);
+            }
+            return out;
+        }
+
+        /**
+         * The involution test: the operation's own declared {@code involution} law, or the carrier's declared
+         * additive-group inverse.
+         */
+        private static boolean isInvolution(final Inst inst, final Type carrier) {
+            if (declares(inst, carrier, Law.involution))
+                return true;
+            final Inst inv = TheoryHelper.invInst(carrier);
+            return !inv.isNoObj() && inv.test(inst);
+        }
+
+        /**
+         * A fold: the declared coefficient shape gathers many to one ({@code reducer} or {@code join}) and the
+         * operation is declared {@code monoidic} — the shape a repeated fold is idempotent on.
+         */
+        private static boolean isFold(final Inst inst, final Type carrier) {
+            final Rec declared = declared(inst.tid().basePath(), carrier);
+            if (declared.isNoObj())
+                return false;
+            final Inst.Form form = Inst.Form.of(inst.tid(declared.atDirect(OBJ).tid()));
+            return (Inst.Form.reducer == form || Inst.Form.join == form) && declares(inst, carrier, Law.monoidic);
         }
 
         /**
