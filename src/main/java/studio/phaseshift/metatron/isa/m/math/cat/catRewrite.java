@@ -191,12 +191,8 @@ public class catRewrite {
                 // (3) inverse cancellation and derivation contraction are /m's: their rules are already data
                 // (group_theory's rules, each instruction's derivation), so /m applies them on the base path too.
 
-                // (5) the stream lift: `map` is transparent on the value it wraps, so map(f) |-> f.
-                // This stays WITH map (its shape {?} -> {?} also matches `is`, so a shape-only
-                // generalization would unwrap a predicate); one rule covers both map(f) |-> f and the
-                // nesting map(map(f)) |-> map(f) (the outer unwrap exposes the inner map, next pass).
-                docWrap(InstSet.Helper.rewriter(rewriteTID("form_map_unwrap"),
-                        code -> PlanInterpreter.lower(MAP_UNWRAP_PLAN, code)), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
+                // (5) the stream lift is /m's too: a mapping of a mapper is the mapper, the mapper row of /m's rewrite
+                // table (map(#::T@f) ⇝ #::T@f, where f's operation declares the mapper form), with map_nest beside it.
 
                 // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                 // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a

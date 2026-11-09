@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -1223,35 +1224,52 @@ public enum Law {
         }
 
         /**
-         * THE LAW TABLE (Marko, 2026-11-09) — /m's rewrite table instruction, {@code m_rewrite_table}, carries its table as
-         * its declared argument: a value, not a type, so the instruction resolves with the table already bound. Each entry
-         * is a law and its rule in the name {@code op}, bound to every instruction whose claim states the law
-         * ({@link #claimed}) and applied under that law's gate at the chain's carrier:
+         * THE REWRITE TABLE (Marko, 2026-11-09) — /m's rewrite table instruction, {@code m_rewrite_table}, carries its table
+         * as its declared argument: a value, not a type, so the instruction resolves with the table already bound. Each
+         * entry is a ROW, a key and its rules, and the rows apply in the table's order. A row keyed by a LAW states its rule
+         * in the name {@code op}, bound to every instruction whose claim states the law ({@link #claimed}) and applied under
+         * that law's gate at the chain's carrier:
          * <ul>
          *   <li>{@code involution} {@code op·op ⇝ ε}, where the operation is an involution there, or the carrier's
          *       additive-group inverse ({@link #isInvolution});</li>
          *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
          *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold}).</li>
          * </ul>
-         * A law the table names but no gate knows is not applied. A row keyed by anything but a law is PLAIN
-         * ({@code else_after_count}): its rule is stated in the instructions themselves, so it applies as it stands, with no
-         * {@code op} to bind and no gate. {@code only} restricts the pass to one law (a law plan's cut, which no plain row
-         * belongs to), null applies the whole table.
+         * A law the table names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
+         * over named holes, and its holes range over the form: a matched run changes only where the operation of everything a
+         * hole captured, an instruction or the op symbol a chain carries before resolution, declares that form. A form is
+         * declared per operation ({@code InstBuilder.declaredForm}), so no carrier is read. The {@code mapper} row's
+         * {@code map(#::T@f) ⇝ #::T@f} unwraps {@code map(neg)}, never {@code map(sum())}. A row keyed by anything else is PLAIN ({@code map_nest}, {@code else_after_count}): its rule is stated in the
+         * instructions themselves, so it applies as it stands, with no {@code op} to bind and no gate. {@code only} names the
+         * rows a pass applies (a plan's cut); naming none applies the whole table.
          */
-        public static Code lawRemoval(final Code code, final Rec table, final Law only) {
+        public static Code lawRemoval(final Code code, final Rec table, final Obj... only) {
             Code out = code;
             for (final Rel entry : table.<Rel>elements().toList()) {
-                final Law law = entry.first().isUri() ? Arrays.stream(Law.values())
-                        .filter(candidate -> candidate.name().equals(entry.first().uriValue().name())).findFirst().orElse(null) : null;
-                final BiPredicate<Code, Integer> gate = null == law || (null != only && only != law) || !entry.second().isRec() ? null : switch (law) {
-                    case involution -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
-                    case idempotent -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
-                    case monoidic -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
-                    default -> null;
-                };
-                if (null != gate)
-                    out = rewrite(out, claimed(entry.second().asRec(), law), gate);
-                else if (null == law && null == only && entry.second().isRec())
+                if (!entry.second().isRec() || (0 != only.length && Arrays.stream(only).noneMatch(entry.first()::equals)))
+                    continue;
+                final String key = entry.first().isUri() ? entry.first().uriValue().name() : null;
+                final Law law = Arrays.stream(Law.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
+                final Inst.Form form = Arrays.stream(Inst.Form.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
+                if (null != law) {
+                    final BiPredicate<Code, Integer> gate = switch (law) {
+                        case involution -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
+                        case idempotent -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
+                        case monoidic -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                        default -> null;
+                    };
+                    if (null != gate)
+                        out = rewrite(out, claimed(entry.second().asRec(), law), gate);
+                } else if (null != form)
+                    for (final Rel rule : entry.second().asRec().<Rel>elements().toList()) {
+                        final List<Inst> pattern = rule.first().asCall().insts();
+                        out = rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start) -> {
+                            final Map<fURI, Obj> captured = Code.Helper.bind(scanned.insts().subList(start, start + pattern.size()), pattern);
+                            return null != captured && !captured.isEmpty() && captured.values().stream().allMatch(hole -> form == InstBuilder.declaredForm(
+                                    hole.isInst() ? hole.asInst().tid() : hole.isUri() ? Machine.current().memory().alignPrefix(hole.uriValue()) : null));
+                        });
+                    }
+                else
                     out = rewrite(out, List.of(entry.second().asRec()), (scanned, start) -> true);
             }
             return out;

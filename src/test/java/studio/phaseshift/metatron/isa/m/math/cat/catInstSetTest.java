@@ -971,6 +971,12 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.count().else(neg())    % start({1,2,3}).count()",
             "{1,2,3}.else(0).count()        % start({1,2,3}).else(0).count()",
             "{1,2,3}.count().plus(1).else(0) % start({1,2,3}).count().plus(1).else(0)",
+            // the map rows come first, so an unwrapped pair meets the involution row in the same pass
+            "5.map(neg)                     % start(5).neg()",
+            "5.neg().map(neg)               % start(5)",
+            "{1,2,3}.map(sum())             % start({1,2,3}).map(sum())",
+            // what the hole captured is gated, not whatever else the chain names
+            "{1,2,3}.neg().map(sum())       % start({1,2,3}).neg().map(sum())",
     }, delimiter = '%')
     void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
         final Inst table = Machine.current().instset().rewrites().stream()
@@ -987,7 +993,9 @@ public class catInstSetTest extends AbstractInstSetTest {
      * {@code idempotent} and {@code monoidic} {@code op·op ⇝ op}. The theories
      * add their rules as each instance binds them ({@link Law.Helper#rules}): monoid_theory's {@code op(id) ⇝ ε}
      * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
-     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. Each row runs a whole table over a bare
+     * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. The {@code mapper} row's {@code map(#::T@f) ⇝ #::T@f}
+     * and the plain {@code map_nest} row are their own rules: ungated, the mapper's hole takes any function, a stream's fold
+     * among them, and only the row's form gate keeps {@code map(sum())} ({@link #testMapUnwrap}). Each row runs a whole table over a bare
      * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
      * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
      * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the table % the
@@ -1023,12 +1031,22 @@ public class catInstSetTest extends AbstractInstSetTest {
             "inverses    % div(2).mult(2)                % noobj",
             // an involution's pair is the involution law's, not the group's
             "inverses    % neg().neg()                   % neg().neg()",
+            "mapper      % map(neg()).plus(1)            % neg().plus(1)",
+            "mapper      % map(plus(2))                  % plus(2)",
+            // the op symbol a chain carries before resolution is the instruction it names
+            "mapper      % map(neg)                      % neg()",
+            // ungated, the hole takes a stream's fold too: only the form gate keeps it
+            "mapper      % map(sum())                    % sum()",
+            "map_nest    % map(map(plus(2))).neg()       % map(plus(2)).neg()",
+            // a map of a map is the map whatever it maps, a stream's fold among them
+            "map_nest    % map(map(sum()))               % map(sum())",
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
         final List<Rec> rules = switch (table) {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
+            case "mapper", "map_nest" -> List.of(M_REWRITE_TABLE.atDirect(uri(table)).asRec());
             default -> M_REWRITE_TABLE.atDirect(uri(table)).isRec()
                     ? Law.Helper.claimed(M_REWRITE_TABLE.atDirect(uri(table)).asRec(), Law.valueOf(table)) : List.<Rec>of();
         };
@@ -1357,26 +1375,40 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code form_map_unwrap} — the stream lift {@code map} is transparent on the value it wraps, so a
-     * mapping of an instruction is that instruction.
+     * THE MAPPER ROW (Marko, 2026-11-09: mapper only) — {@code map} hands each obj to its argument one at a time, so a
+     * mapping of a MAPPER is the mapper, {@code map(op) ⇝ op}, where the contract the carrier dispatches to declares the
+     * mapper form, and a map of a map is the map whatever it maps ({@code map_nest}). A mapping of a function that
+     * consumes the stream stays: {@code {1,2,3}.map(sum())} sums each element alone, where {@code {1,2,3}.sum()} is 6.
+     * A filter's mapping stays as well (mapper only), though it means the same. Each row: the chain % the chain the
+     * category leaves % what it evaluates to.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "5.map(neg)     % start(5).neg()    % -5",
-            "5.map(neg).map(neg)  % start(5)    % 5",
+            "5.map(neg)                % start(5).neg()                  % -5",
+            "5.map(neg).map(neg)       % start(5)                        % 5",
+            "5.map(neg())              % start(5).neg()                  % -5",
+            "5.map(plus(2))            % start(5).plus(2)                % 7",
+            "5.map(map(neg))           % start(5).neg()                  % -5",
+            "{1,2,3}.map(sum())        % start({1,2,3}).map(sum())       % {1,2,3}",
+            "{1,2,3}.map(map(sum()))   % start({1,2,3}).map(sum())       % {1,2,3}",
+            "{1,2,3}.map(is(gt(1)))    % start({1,2,3}).map(is(gt(1)))   % {2,3}",
+            "{1,2,3}.neg().map(sum())  % start({1,2,3}).neg().map(sum()) % {-1,-2,-3}",
+            // a value is no function: map applies it, and the mapping stays
+            "5.map(6)                  % start(5).map(6)                 % 6",
     }, delimiter = '%')
     public void testMapUnwrap(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);
     }
 
     /**
-     * The lift's unfolding — {@code map} whose argument is an instruction ({@code map(*0)}) must unwrap for
-     * the enclosing chain to resolve, which is {@code form_map_unwrap}'s job. Only the rows that require
-     * that unfolding live here; a plain {@code map(+2)} resolves without the category.
+     * A DEREFERENCED FUNCTION APPLIES AS A STEP — an instruction argument read back ({@code *0}) applies to each obj
+     * where it stands in the chain. It is not lifted through {@code map}: {@code map(*0)} unwrapped only while the
+     * stream lift unwrapped every function, and a mapping unwraps only a mapper now (Marko, 2026-11-09), which a
+     * dereference ({@code from}, {@code #{?} → B{*}}) does not declare, its function arriving at run time.
      */
     @ParameterizedTest
     @CsvSource(value = {
-            "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }   % {6,9,12,15}",
+            "{1,2,3,4}.inst(_,+1,+2){ *0.plus(*1).plus(*2) }        % {6,9,12,15}",
     }, delimiter = '%')
     public void testMapUnfolding(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

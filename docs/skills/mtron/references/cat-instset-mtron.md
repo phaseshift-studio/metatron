@@ -262,7 +262,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
-| `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
+| `m_rewrite_table` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
 | `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
@@ -300,9 +300,14 @@ type resolution takes place. The table states each law's rule in the name `op`, 
 `[involution => [op.op => ], idempotent => [op.op => op], monoidic => [op.op => op]]`. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
-`conjugate` — not only the additive group's. A row keyed by anything but a law is *plain*: its rule is stated in the
-instructions themselves, so it applies as it stands, with no `op` to bind and no law to gate it.
-`else_after_count => [count().else(#::T) => count()]` drops the dead `else` after a total `count`.
+`conjugate` — not only the additive group's. A row keyed by a *form* states its rule over a named hole, and the hole
+ranges over that form: `mapper => [map(#::T@f) => #::T@f]` unwraps a mapping where the operation `map` wraps
+declares the mapper form (a form is declared per operation). `map` hands each obj to its argument one at a time, so a mapper
+(`map(neg)` is `neg`) unwraps and a stream's fold does not: `{1,2,3}.map(sum())` sums each element alone, where
+`{1,2,3}.sum()` is 6. A row keyed by anything else is *plain*: its rule is stated in the instructions themselves, so it
+applies as it stands, with no `op` to bind and no law to gate it. `else_after_count => [count().else(#::T) => count()]`
+drops the dead `else` after a total `count`, and `map_nest => [map(map(#::T@f)) => map(#::T@f)]` drops a map of a map,
+whatever it maps.
 
 ```mtron_pre
 5.plus(0)
