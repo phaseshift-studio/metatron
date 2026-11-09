@@ -1101,6 +1101,8 @@ public class mParser {
         return choice(
                 of("{0}").trim().map(t -> NOOBJ),
                 seq(of("<>").trim()).map(x -> empty()),
+                // the empty uri counting something: <{2}> is <> + <>
+                seq(of('<'), m_furi_coefficient(), of('>')).map(x -> empty().d(coefficientOrOne(pick(x, 1)))),
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query, true), labeledCloser(of('>'), "'>' to close the uri")).pick(1),
                 m_furi_bare(furiCharacterSet, polynomial, coefficient, query));
     }

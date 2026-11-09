@@ -107,6 +107,8 @@ public class ObjmtronSerializerPurityTest extends AbstractMetatronTest {
             "start(1).plus(2).mult(7)",
             "{1,2,3,4,5}",
             "{,}",
+            "<>",
+            "<{2}>",
             "{[1,2],[3,4],[5,6]}",
             "{true,false,{1,0},{-100,12.35,-12.35}}"
     }, delimiter = '|')

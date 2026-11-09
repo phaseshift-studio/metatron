@@ -273,7 +273,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     }
 
     private static String wrapUri(final fURI furi) {
-        if (furi.isEmpty()) return "<>";
+        // the empty uri is <>, and one that counts carries its point inside: <> + <> is <{2}>
+        if (furi.isEmpty()) return "<" + furi + ">";
         return requiresQuoting(furi) ? ("<" + furi + ">") : furi.toString();
     }
 
