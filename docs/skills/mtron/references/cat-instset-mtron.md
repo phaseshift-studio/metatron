@@ -261,9 +261,9 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
-| `inverse_cancellation`   | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
+| `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
-| `derivation_contraction` | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
+| `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
 | `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
 | `law_shard`              | `form = reducer` with a `combiner` declaring `monoidic`, `commutative` + a live peer roster | the seed partitions, each peer folds its shard, and the master recombines the partials through the `combiner` (Thm 19) — `sum`, `prod`, `count`, `order`, rec `sum` (distributed rec merging), and a keyed `group` pointwise (see *the deep merge*) |
@@ -291,7 +291,8 @@ without the category. The group states its inverse rules the same way, on both s
 `op(a)·op(inv(a)) ⇝ ε` and `op(inv(a))·op(a) ⇝ ε`. The compound `op(inv(a))` binds the instruction *defined* that
 way, so int's `add_group` gives `plus(a)·minus(a)` and `minus(a)·plus(a)` (`minus ≡ plus∘neg`), and real's
 `mul_group` gives `mult·div` and `div·mult` (`div ≡ mult∘inv`); `inverse_cancellation` fires only where the chain's
-carrier derives that inverse.
+carrier derives that inverse. It is `/m`'s rewrite too, and so is `derivation_contraction`, whose rules are the
+derivations instructions declare beside themselves: both are data already, so both run on the base path.
 
 The process laws' rules are `/m`'s too, and they live in one instruction: `m_rewrite_table`, whose declared
 argument *is* the rewrite table, a value rather than a type, so the instruction resolves with its table bound and no
@@ -299,7 +300,9 @@ type resolution takes place. The table states each law's rule in the name `op`, 
 `[involution => [op.op => ], idempotent => [op.op => op], monoidic => [op.op => op]]`. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
-`conjugate` — not only the additive group's.
+`conjugate` — not only the additive group's. A row keyed by anything but a law is *plain*: its rule is stated in the
+instructions themselves, so it applies as it stands, with no `op` to bind and no law to gate it.
+`else_after_count => [count().else(#::T) => count()]` drops the dead `else` after a total `count`.
 
 ```mtron_pre
 5.plus(0)

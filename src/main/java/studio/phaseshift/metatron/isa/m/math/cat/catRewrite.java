@@ -188,10 +188,8 @@ public class catRewrite {
                 docWrap(InstSet.Helper.rewriter(rewriteTID("law_poset"),
                         code -> PlanInterpreter.lower(POSET_PLAN, code)), "the poset law \\(x > a \\wedge x > b \\iff x > \\max(a, b)\\): adjacent filters on comparisons of the same ordered type compose to the filter on the stricter bound -- \\(\\mathrm{is}(\\mathrm{gt}(a)) \\cdot \\mathrm{is}(\\mathrm{gt}(b)) \\leadsto \\mathrm{is}(\\mathrm{gt}(\\max(a, b)))\\), \\(\\mathrm{is}(\\mathrm{lt}(a)) \\cdot \\mathrm{is}(\\mathrm{lt}(b)) \\leadsto \\mathrm{is}(\\mathrm{lt}(\\min(a, b)))\\); a bare comparison answers a bool, so \\(x.\\mathrm{gt}(a).\\mathrm{gt}(b)\\) is left as it is"),
 
-                // (3a) inverse cancellation: an adjacent declared inverse pair with equal operands
-                // cancels to the identity -- the group law g . g^-1 = 1, read off Entry.inverse.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("inverse_cancellation"),
-                        code -> PlanInterpreter.lower(INVERSE_PLAN, code)), "the inverse law \\(f \\cdot f^{-1} \\leadsto \\varepsilon\\) on the declared opposing edge: an adjacent inverse pair with equal operands cancels -- \\(x + 3 - 3 \\leadsto x\\), \\(x \\cdot 2 \\div 2 \\leadsto x\\)"),
+                // (3) inverse cancellation and derivation contraction are /m's: their rules are already data
+                // (group_theory's rules, each instruction's derivation), so /m applies them on the base path too.
 
                 // (5) the stream lift: `map` is transparent on the value it wraps, so map(f) |-> f.
                 // This stays WITH map (its shape {?} -> {?} also matches `is`, so a shape-only
@@ -199,11 +197,6 @@ public class catRewrite {
                 // nesting map(map(f)) |-> map(f) (the outer unwrap exposes the inner map, next pass).
                 docWrap(InstSet.Helper.rewriter(rewriteTID("form_map_unwrap"),
                         code -> PlanInterpreter.lower(MAP_UNWRAP_PLAN, code)), "the stream lift \\(\\mathrm{map}\\) is the identity on a scalar, so a mapping of an instruction unwraps: \\(\\mathrm{map}(f) \\leadsto f\\), which also collapses \\(\\mathrm{map}(\\mathrm{map}(f)) \\leadsto \\mathrm{map}(f)\\)"),
-
-                // (3b) derivation contraction: fold a derived instruction's primitive composition back
-                // to the derived operation -- plus . neg |-> minus, mult . inv |-> div.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("derivation_contraction"),
-                        code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
 
                 // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                 // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a
