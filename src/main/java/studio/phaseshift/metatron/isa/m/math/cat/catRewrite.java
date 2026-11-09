@@ -30,7 +30,6 @@ import static studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanR
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.CAT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
-
 /**
  * The law-driven rewrite machinery of the category — the {@code /rewrite} rules and the equation
  * tests and helpers each rule's guard is built from.
@@ -176,26 +175,13 @@ public class catRewrite {
                                 code -> PlanInterpreter.lower(BRANCH_INLINE_PLAN, code)),
                         "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
-                // (2a) the involution law: an adjacent pair of the SAME self-inverse operation is the
-                // identity -- neg.neg, reverse.reverse, not.not, conj.conj, inv.inv.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("theory_involution"),
-                        code -> PlanInterpreter.lower(INVOLUTION_PLAN, code)), "the involution law \\(f \\cdot f \\leadsto \\varepsilon\\) (period two) for any operation whose declared process laws include \\(\\mathrm{involution}\\) -- \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{reverse} \\cdot \\mathrm{reverse} \\leadsto \\varepsilon\\), \\(\\mathrm{not} \\cdot \\mathrm{not} \\leadsto \\varepsilon\\)"),
-
-                // (2b) the idempotent law: an adjacent pair of the SAME idempotent operation is that
-                // operation -- ucase.ucase, zero.zero, one.one, an idempotent join (bool or/and).
-                docWrap(InstSet.Helper.rewriter(rewriteTID("law_idempotent"),
-                        code -> PlanInterpreter.lower(IDEMPOTENT_PLAN, code)), "the idempotent law \\(f \\cdot f \\leadsto f\\) for any operation whose declared process laws include \\(\\mathrm{idempotent}\\) -- \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{zero} \\cdot \\mathrm{zero} \\leadsto \\mathrm{zero}\\)"),
+                // (2) the involution, idempotent and monoidic laws are /m's m_rewrite_table: their rules are the table
+                // that instruction carries as its own argument (M_REWRITE_TABLE).
 
                 // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
                 // the pure run before it that hands it one obj per obj is dead code.
                 docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
                         code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(g \\cdot f = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
-
-                // (2d) the monoidic law on a fold: a fold of a fold is the fold (reducing one element is
-                // the identity of the reduction), so an adjacent identical reducer/join collapses.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("law_monoidic"),
-                        code -> PlanInterpreter.lower(MONOIDIC_PLAN, code)), "the monoidic law on a fold (\\(\\mathrm{reducer}\\)/\\(\\mathrm{join}\\) form): a fold of a fold is the fold, \\(f \\cdot f \\leadsto f\\) -- \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\(\\mathrm{merge} \\cdot \\mathrm{merge} \\leadsto \\mathrm{merge}\\)"),
-
 
                 // (2f) the poset law: adjacent filters on comparisons of the same order -- the stricter
                 // bound wins, so the two filters are one filter. Bare comparisons answer bools and never compose.

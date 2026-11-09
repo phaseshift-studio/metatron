@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
@@ -389,22 +390,22 @@ public enum Law {
 
         /**
          * THE CLAIMS SNAPSHOT — the equations the registered instructions' {@code ?decq} claims state: each defining
-         * equation keyed by the address it is declared at, each law's local equations ({@link #equations}) and each
+         * equation keyed by the address it is declared at, each law's claimants ({@link #claimants}) and each
          * theory's rules as its carriers' instances bind them ({@link #rules}), with each instruction's claim as the walk read it
          * ({@link Claim}, keyed by its tid), and the staging revision and the claim writes it was taken at. Retaken when
          * a builder stages anything (the revision moves), when a {@code ?decq} write lands ({@link #evict}), or while
          * the machine was not yet up; a retake re-reads only the claims a change can have reached ({@link #claims}).
          */
-        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Rec>> equations, Map<fURI, List<Rec>> rules,
+        private record Claims(Map<fURI, Rec> derivations, Map<Law, List<Inst>> claimants, Map<fURI, List<Rec>> rules,
                               Map<fURI, Claim> read) {
         }
 
         /**
          * AN INSTRUCTION'S CLAIM AS A WALK READ IT — whether the store answered with the instruction's own claim (an
          * ancestor's, which a read falls back to by subsumption, is not its own), and what the answer states for it: its
-         * defining equation and its local equations by law, noobj (none) when it states none.
+         * defining equation (noobj when it states none), and its term ({@link #op}) under every law it claims.
          */
-        private record Claim(Inst inst, boolean own, Rec derivation, Map<Law, Rec> equations) {
+        private record Claim(Inst inst, boolean own, Rec derivation, Map<Law, Inst> claimed) {
         }
 
         private static volatile Claims CLAIMS = new Claims(Map.of(), Map.of(), Map.of(), Map.of());
@@ -477,10 +478,9 @@ public enum Law {
 
         /**
          * EVERY EQUATION THE CLAIMS STATE — a walk of the registered instructions through {@code Machine.read}, kept as the
-         * {@link #CLAIMS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression. A claimant's
-         * local equations are built over its own op ({@link #op}): {@code involution} {@code f·f ⇝ ε} (the empty code),
-         * {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. Instructions sharing an op share the rule. The units are
-         * the theories of every carrier an instruction folds ({@link #units}).
+         * {@link #CLAIMS} snapshot: a rewrite pass asks per evaluation, and a walk per pass is a regression. Every law an
+         * instruction claims records its term ({@link #op}), which a law's rule binds ({@link #claimed}); instructions
+         * sharing an op share the term. The theories' rules are bound per carrier instance ({@link #rules}).
          * <p>
          * A RETAKE READS AGAIN ONLY WHERE A CHANGE CAN REACH: an instruction under a base path a builder staged anything
          * at, or a {@code ?decq} write landed under, since the last walk, and one the store answers without its own claim
@@ -519,7 +519,7 @@ public enum Law {
                 final boolean loaded = Machine.loaded();
                 final Map<fURI, Claim> read = new HashMap<>();
                 final Map<fURI, Rec> derivations = new LinkedHashMap<>();
-                final Map<Law, Set<Rec>> equations = new EnumMap<>(Law.class);
+                final Map<Law, Set<Inst>> claimants = new EnumMap<>(Law.class);
                 final Set<fURI> carriers = new LinkedHashSet<>();
                 if (loaded)
                     for (final Inst inst : Machine.current().instset().insts()) {
@@ -535,20 +535,20 @@ public enum Law {
                             final Obj claimant = stored.isRec() ? stored.asRec().atDirect(uri(OBJ)) : noobj();
                             final Rec declared = declaredEntry(stored);
                             final Inst op = stored.isRec() ? op(inst) : null;
-                            final Map<Law, Rec> stated = new EnumMap<>(Law.class);
-                            for (final Law law : List.of(Law.involution, Law.idempotent, Law.monoidic))
+                            final Map<Law, Inst> stated = new EnumMap<>(Law.class);
+                            for (final Law law : Law.values())
                                 if (declares(declared, law))
-                                    stated.put(law, rec(code(List.of(op, op)), code(Law.involution == law ? List.<Inst>of() : List.of(op))));
+                                    stated.put(law, op);
                             claim = new Claim(inst, claimant.isInst() && Inst.Helper.operationTid(claimant.tid()).equals(operation),
                                     stored.isRec() ? declaredDerivation(stored.asRec()) : noobjRec(), stated);
                         }
                         read.put(inst.tid(), claim);
                         if (!claim.derivation().isNoObj())
                             derivations.putIfAbsent(operation, claim.derivation());
-                        claim.equations().forEach((law, rule) -> equations.computeIfAbsent(law, key -> new LinkedHashSet<>()).add(rule));
+                        claim.claimed().forEach((law, term) -> claimants.computeIfAbsent(law, key -> new LinkedHashSet<>()).add(term));
                     }
-                final Map<Law, List<Rec>> rules = new EnumMap<>(Law.class);
-                equations.forEach((law, rule) -> rules.put(law, List.copyOf(rule)));
+                final Map<Law, List<Inst>> terms = new EnumMap<>(Law.class);
+                claimants.forEach((law, term) -> terms.put(law, List.copyOf(term)));
                 // THE THEORIES' RULES, FILLED IN BY EVERY INSTANCE A CARRIER DECLARES: a theory states its rules in its own
                 // role names (monoid_theory's op(id) ⇝ ε) and an instance of that theory binds them (int's add_monoid
                 // gives plus(0) ⇝ ε). A theory refines no other, so an instance answers only its own theory's rules, kept
@@ -572,7 +572,7 @@ public enum Law {
                     }
                 final Map<fURI, List<Rec>> theories = new LinkedHashMap<>();
                 bound.forEach((theory, rule) -> theories.put(theory, List.copyOf(rule)));
-                final Claims snapshot = new Claims(derivations, rules, theories, read);
+                final Claims snapshot = new Claims(derivations, terms, theories, read);
                 CLAIMS = snapshot;
                 CLAIMS_AT = revision;
                 CLAIMS_SEEN = written;
@@ -1166,13 +1166,33 @@ public enum Law {
         }
 
         /**
-         * A LAW'S LOCAL EQUATIONS AS DATA (Marko, 2026-11-08) — {@code [lhs => rhs]} over the op of every instruction whose
-         * claim states {@code law} ({@link #claims}): {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and
-         * {@code monoidic} {@code f·f ⇝ f}; no rule for any other law. A rewrite matches and applies them in Java
-         * ({@code Call.Helper.update}), where the law holds at the carrier.
+         * A LAW'S CLAIMANTS — the term ({@link #op}: its address with one named hole per argument slot) of every
+         * registered instruction whose claim states {@code law} ({@link #claims}). Instructions sharing an op share the
+         * term.
          */
-        public static List<Rec> equations(final Law law) {
-            return claims().equations().getOrDefault(law, List.of());
+        public static List<Inst> claimants(final Law law) {
+            return claims().claimants().getOrDefault(law, List.of());
+        }
+
+        /**
+         * A LAW'S RULE AS ITS CLAIMANTS BIND IT (Marko, 2026-11-09) — the rule is stated in the name {@code op}, the
+         * instruction whose claim states the law (/m's rewrite table), and every claimant fills {@code op} with its own
+         * term, holes and all, so a pair binds its operands equal: involution's {@code op·op ⇝ ε}, bound by {@code neg},
+         * is {@code neg()·neg() ⇝ ε}, and idempotent's {@code op·op ⇝ op}, bound by bool's {@code plus}, is
+         * {@code plus(a0)·plus(a0) ⇝ plus(a0)}. A rewrite matches and applies them in Java ({@code Call.Helper.update}),
+         * where the law holds at the carrier.
+         */
+        public static List<Rec> claimed(final Rec rule, final Law law) {
+            final Rel equation = rule.<Rel>elements().findFirst().orElse(null);
+            if (null == equation || !equation.first().isCall() || !equation.second().isCall())
+                return List.of();
+            final List<Rec> bound = new ArrayList<>();
+            for (final Inst term : claimants(law)) {
+                final Function<Obj, Code> fill = side -> code(side.asCall().insts().stream()
+                        .map(inst -> OP.equals(inst.tid().name()) ? term : inst).toList());
+                bound.add(rec(fill.apply(equation.first()), fill.apply(equation.second())));
+            }
+            return bound;
         }
 
         /**

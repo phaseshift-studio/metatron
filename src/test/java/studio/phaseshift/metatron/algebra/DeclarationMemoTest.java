@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 
 /**
  * THE ALGEBRA MEMOS FOLLOW THE STORE: a {@code ?decq} write evicts what {@link TheoryHelper#instances},
- * {@link Law.Helper#derivations()} and {@link Law.Helper#equations} derived from the declaration it replaced, before the
+ * {@link Law.Helper#derivations()} and {@link Law.Helper#claimants} derived from the declaration it replaced, before the
  * write returns, so a declaration made at runtime is read at once. A relative type is a machine's own, so its algebra is
  * never memoized for others.
  */
@@ -64,33 +64,33 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
     @Test
     public void aLawDeclaredAtRuntimeLicensesItsEquation() {
         // int mod declares pure alone, so mod·mod stays. Declared idempotent at runtime (x % m % m is x % m), the claim
-        // licenses its f·f ⇝ f at once; the restored claim takes the rule away again. The snapshot reads mod again and
-        // keeps every other claim: one rule joins the table, another law's table stands, and the restored table is the
-        // one it was, in its order
+        // licenses /m's rewrite table's op·op ⇝ op at once; the restored claim takes the rule away again. The snapshot reads
+        // mod again and keeps every other claim: one claimant joins the law, another law's claimants stand, and the
+        // restored claimants are the ones they were, in their order
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
         final Obj original = Machine.read(address);
         final Plan idempotent = PlanRewriter.planOf("law_idempotent");
         final Code chain = ObjmtronSerializer.parse("5.mod(3).mod(3)").asCode();
         assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "mod declares no idempotent law");
-        final List<Rec> idempotents = Law.Helper.equations(Law.idempotent);
-        final List<Rec> involutions = Law.Helper.equations(Law.involution);
+        final List<Inst> idempotents = Law.Helper.claimants(Law.idempotent);
+        final List<Inst> involutions = Law.Helper.claimants(Law.involution);
         final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
         claim.put(uri(LAW), ObjmtronSerializer.parse("[pure,idempotent]"));
         try {
             Machine.write(address, noobj());
             Machine.write(address, rec(claim, DECS_TID, null));
             assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), PlanInterpreter.lower(idempotent, chain),
-                    "the declared law licenses its equation, got the table " + Law.Helper.equations(Law.idempotent));
-            final List<Rec> declared = Law.Helper.equations(Law.idempotent);
-            assertEquals(idempotents.size() + 1, declared.size(), "mod's rule joins the table alone, got " + declared);
-            assertTrue(declared.containsAll(idempotents), "every other op keeps its rule, got " + declared);
-            assertEquals(involutions, Law.Helper.equations(Law.involution), "a law the claim does not state keeps its table");
+                    "the declared law licenses its rule, got the claimants " + Law.Helper.claimants(Law.idempotent));
+            final List<Inst> declared = Law.Helper.claimants(Law.idempotent);
+            assertEquals(idempotents.size() + 1, declared.size(), "mod joins the law's claimants alone, got " + declared);
+            assertTrue(declared.containsAll(idempotents), "every other claimant stays, got " + declared);
+            assertEquals(involutions, Law.Helper.claimants(Law.involution), "a law the claim does not state keeps its claimants");
         } finally {
             Machine.write(address, noobj());
             Machine.write(address, original);
         }
         assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "the restored claim takes the rule away");
-        assertEquals(idempotents, Law.Helper.equations(Law.idempotent), "the restored table is the one it was, in its order");
+        assertEquals(idempotents, Law.Helper.claimants(Law.idempotent), "the restored claimants are the ones they were, in their order");
     }
 
     @Test
@@ -105,20 +105,19 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
                         && !Machine.read(Inst.Helper.operationTid(inst.tid()).addQ(DECQ)).isRec())
                 .findFirst().orElseThrow();
         final fURI address = Inst.Helper.operationTid(bare.tid()).addQ(DECQ);
-        final List<Rec> idempotents = Law.Helper.equations(Law.idempotent);
+        final List<Inst> idempotents = Law.Helper.claimants(Law.idempotent);
         try {
             PendingWrites.write(address, rec(mutableMap(uri(LAW), ObjmtronSerializer.parse("[pure,idempotent]"), uri(OBJ), bare), DECS_TID, null));
-            final List<Rec> declared = Law.Helper.equations(Law.idempotent);
-            assertTrue(declared.stream().anyMatch(rule -> rule.elements().findFirst().orElseThrow().first().asCall().insts().getFirst()
-                            .tid().basePath().equals(bare.tid().basePath())),
-                    "the staged claim of " + bare.tid() + " licenses its rule, got " + declared);
+            final List<Inst> declared = Law.Helper.claimants(Law.idempotent);
+            assertTrue(declared.stream().anyMatch(term -> term.tid().basePath().equals(bare.tid().basePath())),
+                    "the staged claim of " + bare.tid() + " makes it a claimant, got " + declared);
         } finally {
             // the log keeps every write it staged, so the claim is withdrawn by staging noobj in its place, and noobj
             // written to ?decq clears the claim the read published
             PendingWrites.write(address, noobj());
             Machine.write(address, noobj());
         }
-        assertEquals(idempotents, Law.Helper.equations(Law.idempotent), "the withdrawn claim leaves the table as it was");
+        assertEquals(idempotents, Law.Helper.claimants(Law.idempotent), "the withdrawn claim leaves the claimants as they were");
     }
 
     /**
