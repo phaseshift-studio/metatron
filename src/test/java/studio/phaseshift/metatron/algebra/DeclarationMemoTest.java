@@ -33,9 +33,11 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -62,12 +64,16 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
     @Test
     public void aLawDeclaredAtRuntimeLicensesItsEquation() {
         // int mod declares pure alone, so mod·mod stays. Declared idempotent at runtime (x % m % m is x % m), the claim
-        // licenses its f·f ⇝ f at once; the restored claim takes the rule away again
+        // licenses its f·f ⇝ f at once; the restored claim takes the rule away again. The snapshot reads mod again and
+        // keeps every other claim: one rule joins the table, another law's table stands, and the restored table is the
+        // one it was, in its order
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
         final Obj original = Machine.read(address);
         final Plan idempotent = PlanRewriter.planOf("law_idempotent");
         final Code chain = ObjmtronSerializer.parse("5.mod(3).mod(3)").asCode();
         assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "mod declares no idempotent law");
+        final List<Rec> idempotents = Law.Helper.equations(Law.idempotent);
+        final List<Rec> involutions = Law.Helper.equations(Law.involution);
         final Map<Obj, Obj> claim = mutableMap(original.asRec().jvm());
         claim.put(uri(LAW), ObjmtronSerializer.parse("[pure,idempotent]"));
         try {
@@ -75,11 +81,44 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
             Machine.write(address, rec(claim, DECS_TID, null));
             assertEquals(ObjmtronSerializer.parse("5.mod(3)").asCode(), PlanInterpreter.lower(idempotent, chain),
                     "the declared law licenses its equation, got the table " + Law.Helper.equations(Law.idempotent));
+            final List<Rec> declared = Law.Helper.equations(Law.idempotent);
+            assertEquals(idempotents.size() + 1, declared.size(), "mod's rule joins the table alone, got " + declared);
+            assertTrue(declared.containsAll(idempotents), "every other op keeps its rule, got " + declared);
+            assertEquals(involutions, Law.Helper.equations(Law.involution), "a law the claim does not state keeps its table");
         } finally {
             Machine.write(address, noobj());
             Machine.write(address, original);
         }
         assertEquals(chain, PlanInterpreter.lower(idempotent, chain), "the restored claim takes the rule away");
+        assertEquals(idempotents, Law.Helper.equations(Law.idempotent), "the restored table is the one it was, in its order");
+    }
+
+    @Test
+    public void aClaimABuilderStagesIsReadByTheNextSnapshot() {
+        // a builder stages its claim and writes nothing to ?decq, so only the staging revision tells the snapshot, and the
+        // claim lands when the walk reads it again. The instruction is one the store answers without a claim, under a
+        // base path no claim is staged under: nothing but the staged write can make the walk read it again
+        final Set<fURI> claimed = PendingWrites.writes().stream().map(PendingWrites.Write::address)
+                .filter(staged -> staged.hasQ(DECQ)).map(fURI::basePath).collect(Collectors.toSet());
+        final Inst bare = Machine.current().instset().insts().stream()
+                .filter(inst -> null != inst.tid() && inst.args().isEmpty() && !claimed.contains(inst.tid().basePath())
+                        && !Machine.read(Inst.Helper.operationTid(inst.tid()).addQ(DECQ)).isRec())
+                .findFirst().orElseThrow();
+        final fURI address = Inst.Helper.operationTid(bare.tid()).addQ(DECQ);
+        final List<Rec> idempotents = Law.Helper.equations(Law.idempotent);
+        try {
+            PendingWrites.write(address, rec(mutableMap(uri(LAW), ObjmtronSerializer.parse("[pure,idempotent]"), uri(OBJ), bare), DECS_TID, null));
+            final List<Rec> declared = Law.Helper.equations(Law.idempotent);
+            assertTrue(declared.stream().anyMatch(rule -> rule.elements().findFirst().orElseThrow().first().asCall().insts().getFirst()
+                            .tid().basePath().equals(bare.tid().basePath())),
+                    "the staged claim of " + bare.tid() + " licenses its rule, got " + declared);
+        } finally {
+            // the log keeps every write it staged, so the claim is withdrawn by staging noobj in its place, and noobj
+            // written to ?decq clears the claim the read published
+            PendingWrites.write(address, noobj());
+            Machine.write(address, noobj());
+        }
+        assertEquals(idempotents, Law.Helper.equations(Law.idempotent), "the withdrawn claim leaves the table as it was");
     }
 
     /**
