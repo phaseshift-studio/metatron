@@ -601,7 +601,9 @@ public final class mInsts {
                         .dom(URI_TID.maybeSome(), "zero or more uris").rng(URI_TID, "a single plus reduced uri")
                         .argLst()
                         .seed(uri(NOOBJ))
-                        .body((lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()))
+                        // one uri whose value counts every member by its own coefficient, summed at once: a fold from the
+                        // seed floats the seed's zero over the whole sum (and re-typed the seed, so main's answered noobj)
+                        .body((lhs, inst) -> uri(fURI.Helper.sum(lhs.stream().map(o -> o.uriValue().d(o.uriValue().d().mult(o.c()))))))
                         .law(Law.monoidic, Law.pure)
                         .create(),
                 InstBuilder.build().tid(PROD_INST_TID, "multiply a uri stream into a single uri")
