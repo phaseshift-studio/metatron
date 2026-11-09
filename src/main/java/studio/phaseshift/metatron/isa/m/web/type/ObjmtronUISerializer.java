@@ -870,13 +870,16 @@ public class ObjmtronUISerializer extends ObjmtronSerializer {
         // read the VALUE PLUS ITS VID — an addressed value ends with the vid, so the answer was FALSE and the
         // brackets were dropped: `<user@mail>@abc` was drawn as `user@mail`, a spelling that does not parse.
         final boolean quoted = requiresQuoting(uri.uriValue());
+        // THE VALUE'S OWN POINT IS PART OF THE VALUE: a uri sum counts in its value (</a/{{6}a/b,b/c}>, and a split
+        // hands back /a/a/b{6}), while the obj's coefficient is drawn by handleTID. Drawing one() dropped the count.
+        final fURI value = big ? uri.uriValue().big() : uri.uriValue();
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, uri, true);
         sb.append(quoted ? "<" : "");
         if (this.linking())
-            sb.append("{{").append(color).append("}}{{link}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/link}}{{/").append(color).append("}}");
+            sb.append("{{").append(color).append("}}{{link}}").append(value).append("{{/link}}{{/").append(color).append("}}");
         else
-            sb.append("{{").append(color).append("}}").append(big ? uri.uriValue().one().big() : uri.uriValue().one()).append("{{/").append(color).append("}}");
+            sb.append("{{").append(color).append("}}").append(value).append("{{/").append(color).append("}}");
 
         sb.append(quoted ? ">" : "");
         // THE VID IS PART OF THE VALUE'S SPELLING, so the renderer appends it exactly as every other type's does —
