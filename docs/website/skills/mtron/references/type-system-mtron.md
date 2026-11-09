@@ -103,6 +103,7 @@ mtron> posint::T[is(gt(100))]@hundreds
 mtron> int::T[is(gt(0))][mult(10)]@int2x
 mtron> rec::T[?[name=>str::T,age=>int::T]]@being
 ```
+
 A created type is first-class: it refines (`posint` refines `int`), is refined (`hundreds` refines `posint`), builds
 values under its own name, and other values can be cast onto it. The stock types the VM ships with (base types,
 `person`, and the module types the boot loads) are created the same way — you just don't spell the creation.
@@ -124,6 +125,7 @@ mtron> being::[name=>'marko',age=>29] [-- a rec built under its type --]
 mtron> int::42@the_answer             [-- a plain value, addressed in the space --]
 ==>42@the_answer
 ```
+
 ## predicates
 
 A predicate is a **constraint** that values must satisfy to be members of the type. Two families:
@@ -137,6 +139,7 @@ mtron> rec::T[?[age=>int::T]]                              [-- a lambda type: a 
 mtron> rec::T[?[name=>str::T, address=>str{?}::T]]         [-- address optional (str{?}::T) --]
 mtron> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]@roster
 ```
+
 A field's type can be any type — including a lambda type or a created one like `being`.
 
 **Multi-level stacking**: every refinement inherits the **whole predicate stack** of its ancestors, and the stack is
@@ -150,6 +153,7 @@ mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is
 ==>fail::[parse error at line 1, col 1: 50 is not a posint::T[/m/inst/is(/m/inst/gt(100))]@hundreds
    	while parsing: hundreds::50]
 ```
+
 ### non-isa predicates (nominal)
 
 Freeform functional constraints using instructions:
@@ -160,6 +164,7 @@ mtron> int::T[?>0]
 mtron> int::T[?=42]
 mtron> int::T[?>0.?<120]
 ```
+
 The `.` operator chains predicates: `p1.p2` means "apply p1, then apply p2 to the result." Both must succeed (AND
 semantics).
 
@@ -169,6 +174,7 @@ semantics).
 mtron> [-- value must be > 0 OR < 120 --]
 mtron> int::T[-<[?>0,?<120]>-]
 ```
+
 ### predicate vs no predicate
 
 A type **without** a predicate is the most general type at its level — it accepts any value with the correct base type
@@ -178,6 +184,7 @@ and coefficient:
 mtron> int::T        [-- accepts any integer --]
 mtron> int::T[?>0]   [-- only accepts positive integers --]
 ```
+
 ### type constructors
 
 A type can also carry a **constructor** — an instruction the type applies to values. The constructor sits alongside
@@ -204,6 +211,7 @@ mtron> intabs::-2                       [-- intabs::2  (the constructor ran on t
 mtron> intabs::2                        [-- intabs::2 --]
 ==>intabs::2
 ```
+
 **Casting tests first.** `.as(type)` checks the predicate before the constructor gets a turn, so a value that cannot
 fit is refused rather than coerced; a value that does fit still goes through the constructor:
 
@@ -217,6 +225,7 @@ mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch 
 mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/choose([/m/inst/is(/m/inst/lt(0))=>/m/inst/mult(-1),/m/inst/id()=>/m/inst/id()])./m/inst/rshift()]@intabs [structural] (at /m/inst/as@1)]
 ```
+
 A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
 
 ```mtron
@@ -228,6 +237,7 @@ mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, th
 mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/mult(10)]@int2x [structural] (at /m/inst/as@1)]
 ```
+
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.
 
@@ -265,6 +275,13 @@ mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
 ==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 ```
+
+Realize the distinction between structural and nominal types is one of convenience. It is true that there exists
+structural features of marko that make this person not a chicken (e.g. DNA, weight and size, etc.).
+However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an
+explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate
+effectively using said classification.
+
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
 
@@ -314,6 +331,7 @@ mtron> 'mtron'.isa(#{*}::T)             [-- 'mtron' --]
 ==>'mtron'
 mtron> int::T.isa(#{*}::T)              [-- noobj  (the `isa` rows admit values, not types) --]
 ```
+
 Note the direction: values test against `#{*}::T` and pass, while type-vs-type — "is `posint` a refinement of
 `int`?" — is asked of the type *hierarchy* (see *type hierarchy and refinement* above), not of a value.
 
@@ -324,11 +342,11 @@ types**; `lst`, `rec` and `rel` are its *readings*, not three words for the same
 
 ### the three readings
 
-| construct    | name         | poly denotes                                                                                   | verb     |
-|--------------|--------------|------------------------------------------------------------------------------------------------|----------|
+| construct    | name         | poly denotes                                                                                       | verb     |
+|--------------|--------------|----------------------------------------------------------------------------------------------------|----------|
 | `lst[A,B]`   | TENSOR TYPE  | the position types — the coordinates of an A × B (rank = bracket length, extent = the coefficient) | CONTAINS |
-| `rec[F1,F2]` | FIBERED TYPE | the FIBERS (named, distinct objects)                                                           | EXPOSES  |
-| `rel[A,B,C]` | PATH TYPE    | the vertices of the right-nested chain `A => (B => C)`                                         | CHAINS   |
+| `rec[F1,F2]` | FIBERED TYPE | the FIBERS (named, distinct objects)                                                               | EXPOSES  |
+| `rel[A,B,C]` | PATH TYPE    | the vertices of the right-nested chain `A => (B => C)`                                             | CHAINS   |
 
 **graded** says something about rank × extent — how many coordinates, and how far each one runs. It is a property of a
 tensor, never a synonym for *poly*.
@@ -384,19 +402,21 @@ mtron> rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])   [-- one wayfarer is 
      predicate apply failed on poly
    	while parsing: rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])]
 ```
+
 The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:
 
-| entry         | value at that position                                  |
-|---------------|---------------------------------------------------------|
-| `T` / `T{1}`  | exactly one                                             |
-| `T{n}`        | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)           |
-| `T{n,m}`      | an inclusive range — n, …, m                            |
-| `T{+}`        | at least one, so the position is REQUIRED               |
-| `T{?}`        | zero or one — ABSENT, or one that is still its type     |
-| `T{*}`        | zero or more — absent is legal, and so is a multiplicity |
+| entry        | value at that position                                   |
+|--------------|----------------------------------------------------------|
+| `T` / `T{1}` | exactly one                                              |
+| `T{n}`       | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)            |
+| `T{n,m}`     | an inclusive range — n, …, m                             |
+| `T{+}`       | at least one, so the position is REQUIRED                |
+| `T{?}`       | zero or one — ABSENT, or one that is still its type      |
+| `T{*}`       | zero or more — absent is legal, and so is a multiplicity |
 
 **Absence** is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
-list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`. In
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`.
+In
 a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — `rel[int,wayfarer{?},str]` accepts
 `1=>'tally'` (the middle vertex skipped) while `rel[int,wayfarer{+},str]` does not. A present value must still be the
 entry's type at both: `{?}` is zero-or-one, not "anything when present".
@@ -496,8 +516,8 @@ instruction run on* (dispatch).
   `rec[role,position{?}]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
 - **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the bundle's fibers
   (`person[ninja]` puts a ninja at the field the declaration calls `role`), so the object a trait's shape is about
-  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A
-  *shaped nominal* trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A *shaped
+  nominal* trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
   asked of `bundle>>role`, which is why `kestrel[falconer]` is a `falconer` although the bundle itself declares no
   `name`. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
   value, and a field the bundle's declaration itself types incompatibly (`name=>str` where the trait wants
@@ -531,6 +551,7 @@ mtron> skald -> kestrel[falconer]::[role=>[name=>7]]@skald
 ==>kestrel[falconer]::[role=>[name=>7]]@skald
 mtron> *skald.isa(falconer::T)
 ```
+
 The claim rule is what keeps the declaration/instance asymmetry valid at the uri layer:
 
 | lhs             | rhs             | test  |
@@ -568,6 +589,7 @@ mtron> [-- a bundle's own field reads alone --]
 mtron> *marko>>age
 ==>29
 ```
+
 The instantiation is carried by the value's own type, so `*marko.type()` reports the DECLARATION instantiated with
 both arguments — `rec[role,position]::T[?[…]]@person[ninja,position]` — while `*marko` still prints the value under
 that type.
@@ -586,6 +608,7 @@ mtron> *marko.aim?<=position()         [-- the same call with its type named at 
 mtron> *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
 ==>'dark_assassin'
 ```
+
 An untyped call is about every subject, so an instruction both fibers declare answers twice; `?<=T` narrows it, and
 a typer stays on the bundle alone:
 
@@ -604,6 +627,7 @@ mtron> *marko.as(person::T)            [-- a typer is opaque: the bundle alone, 
             role=>ninja::[name=>'dark_assassin'],
             position=>position::[title=>'sniper',rank=>5]]
 ```
+
 ## type checking and casting
 
 ### `.test()` — predicate membership
@@ -618,6 +642,7 @@ mtron> 2.isa(posint::T)        [-- 2  (admitted: 2 > 0) --]
 ==>2
 mtron> -1.isa(posint::T)       [-- noobj  (refused: -1 is not > 0) --]
 ```
+
 So the filter's verdict doubles as its output: admit and the value comes back, refuse and there is nothing to
 print. (Refining *type against type* — "is `hundreds` a refinement of `posint`?" — is a question for the type
 hierarchy, seen in *type hierarchy and refinement*.)
@@ -637,6 +662,7 @@ mtron> [-- Without a constructor the cast is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))] [structural] (at /m/inst/as@1)]
 ```
+
 `.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:
 
@@ -646,6 +672,7 @@ mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy 
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
 ==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 ```
+
 Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 `chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`
 and `chicken` are *siblings* under `being`, and a sibling does not refine a sibling. Nominal fit follows the actual
