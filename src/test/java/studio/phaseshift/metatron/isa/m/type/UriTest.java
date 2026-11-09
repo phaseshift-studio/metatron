@@ -391,6 +391,8 @@ public class UriTest extends AbstractAlgebraTest {
     @CsvSource(value = {
             "<{a}> + <>                     % <{,a}>",
             "<{a}> + <{b}>                  % <{a,b}>",
+            "<> + <>                        % <{2}>",
+            "<> + <> + <>                   % <{3}>",
             "/a + /a + /a                   % </a{3}>",
             "/a + /a + a/                   % <{{2}/a,a/}>",
             "{2}a/b/c + <> + <>             % {2}<{{2},a/b/c}>",
