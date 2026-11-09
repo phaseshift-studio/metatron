@@ -417,6 +417,18 @@ public class mInstSet extends AbstractInstSet {
             .create();
 
     /**
+     * THE /m REWRITE TABLE (Marko, 2026-11-09) — the process laws' rules, each stated in the name {@code op}, the
+     * instruction whose claim states the law: an involution pair drops out, {@code op·op ⇝ ε}, and an idempotent pair or
+     * a fold of a fold is one, {@code op·op ⇝ op}. It is the declared ARGUMENT of /m's rewrite instruction
+     * {@code m_rewrite_table}: a value, not a type, so the instruction resolves with its table already bound and no type
+     * resolution takes place. Each law's claimants bind {@code op} ({@code Law.Helper.claimed}).
+     */
+    public static final Rec M_REWRITE_TABLE = rec(
+            uri(Law.involution.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of())),
+            uri(Law.idempotent.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
+            uri(Law.monoidic.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))));
+
+    /**
      * A theory's law battery as its type states it: the labels, a lst of {@code law::T}.
      */
     private static Lst laws(final Law... laws) {
@@ -841,6 +853,13 @@ public class mInstSet extends AbstractInstSet {
                         // declared algebras (code's mul_monoid binds id(), since composition is adjacency).
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"),
                                 code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
+
+                        // THE PROCESS LAWS' RULES (Marko, 2026-11-09): /m's rewrite table is an instruction whose declared
+                        // argument IS the table (M_REWRITE_TABLE), a value rather than a type, so it resolves with the table
+                        // bound; each law's rule binds op to the law's claimants and holds where its gate does
+                        docWrap(instC(M_ISA_REWRITE_TID.extend("m_rewrite_table").dom(CODE_TID).rng(CODE_TID.maybe()), lst(M_REWRITE_TABLE),
+                                        (lhs, inst) -> PlanInterpreter.lawRemoval(lhs.asCode(), inst.arg(0).asRec(), null)),
+                                "the process laws' rules, carried as the instruction's own argument: an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims the law at the chain's carrier. e.g. \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
 
                         // NOTE: map_nest / map_inst have been removed — they are the syntactic shadows of catInstSet's
                         // `form_map_unwrap` (the transparent `map` lift).

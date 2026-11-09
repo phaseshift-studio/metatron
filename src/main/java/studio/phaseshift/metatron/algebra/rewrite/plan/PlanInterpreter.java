@@ -706,13 +706,42 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The involution law (local): an adjacent pair of the SAME self-inverse operation is the identity —
-     * {@code f·f ↦ ε} for any operation declaring {@code involution} (or the carrier's declared inverse), the
-     * equation each declaring instruction states ({@link Law.Helper#equations}).
+     * THE LAW TABLE (Marko, 2026-11-09) — /m's rewrite table instruction, {@code m_rewrite_table}, carries its table as
+     * its declared argument: a value, not a type, so the instruction resolves with the table already bound. Each entry
+     * is a law and its rule in the name {@code op}, bound to every instruction whose claim states the law
+     * ({@link Law.Helper#claimed}) and applied under that law's gate at the chain's carrier:
+     * <ul>
+     *   <li>{@code involution} {@code op·op ⇝ ε}, where the operation is an involution there, or the carrier's
+     *       additive-group inverse ({@link #isInvolution});</li>
+     *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
+     *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold}).</li>
+     * </ul>
+     * A law the table names but no gate knows is not applied. {@code only} restricts the pass to one law (a law plan's
+     * cut), null applies the whole table.
+     */
+    public static Code lawRemoval(final Code code, final Rec table, final Law only) {
+        Code out = code;
+        for (final Rel entry : table.<Rel>elements().toList()) {
+            final Law law = entry.first().isUri() ? Arrays.stream(Law.values())
+                    .filter(candidate -> candidate.name().equals(entry.first().uriValue().name())).findFirst().orElse(null) : null;
+            final BiPredicate<Code, Integer> gate = null == law || (null != only && only != law) || !entry.second().isRec() ? null : switch (law) {
+                case involution -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
+                case idempotent -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
+                case monoidic -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                default -> null;
+            };
+            if (null != gate)
+                out = rewrite(out, Law.Helper.claimed(entry.second().asRec(), law), gate);
+        }
+        return out;
+    }
+
+    /**
+     * The involution law (local): an adjacent pair of the SAME self-inverse operation is the identity, the
+     * {@code involution} rule of /m's rewrite table ({@link #lawRemoval}).
      */
     private static Code involutionRemoval(final Code code) {
-        return rewrite(code, Law.Helper.equations(Law.involution),
-                (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start)));
+        return lawRemoval(code, M_REWRITE_TABLE, Law.involution);
     }
 
     /**
@@ -727,21 +756,19 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The idempotent law (local): an adjacent pair of the SAME idempotent operation is that operation —
-     * {@code f·f ↦ f} for any operation declaring {@code idempotent} ({@link Law.Helper#equations}).
+     * The idempotent law (local): an adjacent pair of the SAME idempotent operation is that operation, the
+     * {@code idempotent} rule of /m's rewrite table ({@link #lawRemoval}).
      */
     private static Code idempotentRemoval(final Code code) {
-        return rewrite(code, Law.Helper.equations(Law.idempotent),
-                (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent));
+        return lawRemoval(code, M_REWRITE_TABLE, Law.idempotent);
     }
 
     /**
-     * The monoidic law on a fold (local): an adjacent identical reducer/join collapses — {@code f·f ↦ f} for a
-     * fold whose declared process laws include {@code monoidic} ({@link Law.Helper#equations}).
+     * The monoidic law on a fold (local): an adjacent identical reducer/join collapses, the {@code monoidic} rule of /m's
+     * rewrite table ({@link #lawRemoval}).
      */
     private static Code monoidicRemoval(final Code code) {
-        return rewrite(code, Law.Helper.equations(Law.monoidic),
-                (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start)));
+        return lawRemoval(code, M_REWRITE_TABLE, Law.monoidic);
     }
 
     /**

@@ -256,10 +256,10 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
 |--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule; `/m`'s rewrite)        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
-| `theory_involution`      | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
-| `law_idempotent`         | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
+| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
-| `law_monoidic`           | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `law_poset`              | $\mathrm{law} \ni \mathrm{poset}$                                                           | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation`   | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
 | `form_map_unwrap`        | the stream lift `map`                                                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
@@ -291,7 +291,14 @@ without the category. The group states its inverse rules the same way, on both s
 `op(a)·op(inv(a)) ⇝ ε` and `op(inv(a))·op(a) ⇝ ε`. The compound `op(inv(a))` binds the instruction *defined* that
 way, so int's `add_group` gives `plus(a)·minus(a)` and `minus(a)·plus(a)` (`minus ≡ plus∘neg`), and real's
 `mul_group` gives `mult·div` and `div·mult` (`div ≡ mult∘inv`); `inverse_cancellation` fires only where the chain's
-carrier derives that inverse. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
+carrier derives that inverse.
+
+The process laws' rules are `/m`'s too, and they live in one instruction: `m_rewrite_table`, whose declared
+argument *is* the rewrite table, a value rather than a type, so the instruction resolves with its table bound and no
+type resolution takes place. The table states each law's rule in the name `op`, the instruction that claims the law:
+`[involution => [op.op => ], idempotent => [op.op => op], monoidic => [op.op => op]]`. Every claimant binds `op` to
+its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
+carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
 `conjugate` — not only the additive group's.
 
 ```mtron_pre
@@ -333,7 +340,7 @@ Only two instructions remain in the explain table: the seed and the one operatio
 instructions were rewritten away:
 
 * `plus(0)` and `mult(1)` are int's monoid units (`theory_unit_removal`),
-* `neg().neg()` is the additive group's involution (`theory_involution`),
+* `neg().neg()` is the additive group's involution (`m_rewrite_table`'s involution rule),
 * `plus(3.neg())` folds to `minus(3)` (`derivation_contraction`), and
 * `mult(2).div(2)` is a declared inverse pair (`inverse_cancellation`).
 

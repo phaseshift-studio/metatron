@@ -794,10 +794,10 @@ public class catInstSetTest extends AbstractInstSetTest {
         int done = 2;
         while (done != 0) {
             // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
-            // The theory laws are the category's rewrites and /m's unit law: the theories are /m's, so it is /m's rewrite
+            // The theory laws are the category's rewrites and /m's unit law and rewrite table: the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
-                            .filter(r -> isa instanceof catInstSet || "theory_unit_removal".equals(r.tid().basePath().name())))
+                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "m_rewrite_table").contains(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
                         STATIC_LOG.debug(Graphitty.strip("%s: %s => %s".formatted(r, rewrittenCode.get(), rewritten)));
@@ -951,9 +951,32 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-08) — {@link Law.Helper#equations} answers {@code [lhs => rhs]}
-     * over the op of every instruction whose claim states the law, one hole per argument slot pinning the pair's operands
-     * equal: {@code involution} {@code f·f ⇝ ε}, {@code idempotent} and {@code monoidic} {@code f·f ⇝ f}. The theories
+     * /m'S REWRITE TABLE IS ITS INSTRUCTION'S ARGUMENT (Marko, 2026-11-09) — {@code m_rewrite_table}'s declared argument is
+     * the table itself, a value rather than a type, so the instruction resolves with the table bound; applied to a chain
+     * it folds each law it carries where the operation claims the law at the chain's carrier. A pair that is not adjacent,
+     * or not one law's claimant, stays. Each row: the chain % the chain the instruction leaves.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.neg().neg()                  % start(5)",
+            "\"ab\".ucase().ucase()          % start(\"ab\").ucase()",
+            "{1,2,3}.sum().sum()            % start({1,2,3}).sum()",
+            "5.neg().plus(1).neg()          % start(5).neg().plus(1).neg()",
+            "5.plus(3).plus(3)              % start(5).plus(3).plus(3)",
+    }, delimiter = '%')
+    void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
+        final Inst table = Machine.current().instset().rewrites().stream()
+                .filter(rewrite -> "m_rewrite_table".equals(rewrite.tid().basePath().name()))
+                .findFirst().orElseThrow();
+        checkEquality(LOG, M_REWRITE_TABLE, table.arg(0), true);
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), table.apply(ObjmtronSerializer.parse(code)).asCode().tryToInst(), true);
+    }
+
+    /**
+     * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-09) — /m's rewrite table ({@code M_REWRITE_TABLE}) states each
+     * law's rule in the name {@code op}, and {@link Law.Helper#claimed} binds it to every instruction whose claim states the
+     * law, one hole per argument slot pinning the pair's operands equal: {@code involution} {@code op·op ⇝ ε},
+     * {@code idempotent} and {@code monoidic} {@code op·op ⇝ op}. The theories
      * add their rules as each instance binds them ({@link Law.Helper#rules}): monoid_theory's {@code op(id) ⇝ ε}
      * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
      * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. Each row runs a whole table over a bare
@@ -998,7 +1021,8 @@ public class catInstSetTest extends AbstractInstSetTest {
         final List<Rec> rules = switch (table) {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
-            default -> Law.Helper.equations(Law.valueOf(table));
+            default -> M_REWRITE_TABLE.atDirect(uri(table)).isRec()
+                    ? Law.Helper.claimed(M_REWRITE_TABLE.atDirect(uri(table)).asRec(), Law.valueOf(table)) : List.<Rec>of();
         };
         for (final Rec rule : rules)
             out = Call.Helper.update(out, rule);
