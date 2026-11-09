@@ -419,14 +419,34 @@ public class mInstSet extends AbstractInstSet {
             .create();
 
     /**
-     * THE /m REWRITE TABLE (Marko, 2026-11-09) — the process laws' rules, each stated in the name {@code op}, the
-     * instruction whose claim states the law: an involution pair drops out, {@code op·op ⇝ ε}, and an idempotent pair or
-     * a fold of a fold is one, {@code op·op ⇝ op}. It is the declared ARGUMENT of /m's rewrite instruction
-     * {@code m_rewrite_table}: a value, not a type, so the instruction resolves with its table already bound and no type
-     * resolution takes place. Each law's claimants bind {@code op} ({@code Law.Helper.claimed}). A row keyed by anything
-     * but a law is PLAIN: its rule applies as it stands, with no {@code op} to bind and no gate ({@code else_after_count}).
+     * THE /m REWRITE TABLE (Marko, 2026-11-09) — rows of {@code [lhs => rhs]} rules, applied in order. A row keyed by a LAW
+     * states its rule in the name {@code op}, the instruction whose claim states the law: an involution pair drops out,
+     * {@code op·op ⇝ ε}, and an idempotent pair or a fold of a fold is one, {@code op·op ⇝ op}. A row keyed by a FORM
+     * states it over a named hole that ranges over the form its operation declares: a mapping of a mapper is the
+     * mapper, {@code map(#::T@f) ⇝ #::T@f}. A row keyed by anything else is PLAIN: its rule applies as it stands, with no
+     * {@code op} to bind and no gate ({@code map_nest}, {@code else_after_count}). The table is the declared ARGUMENT of
+     * /m's rewrite instruction {@code m_rewrite_table}: a value, not a type, so the instruction resolves with its table
+     * already bound and no type resolution takes place. A law's claimants bind {@code op} ({@code Law.Helper.claimed}).
      */
     public static final Rec M_REWRITE_TABLE = rec(
+            // a PLAIN row: a map of a map is the map, whatever it maps -- map hands each obj to its argument one at a
+            // time, so the outer map adds nothing. map(map(+2)) ⇝ map(+2), and the mapper row below unwraps the rest.
+            // A pattern's map states map's own endpoints, maybe in and maybe out (#{?}), so a RESOLVED map
+            // (map?/m/int{?}<=...) tests it too: an endpoint a pattern leaves out reads as #, which an int{?} is not
+            uri("map_nest"), rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))))),
+                    MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null)))))),
+            // a FORM row (Marko, 2026-11-09: mapper only): its hole ranges over the form, so map(f) unwraps where the
+            // operation of f, an instruction or the op symbol a chain carries before resolution (map(neg)), declares the
+            // mapper form. map(neg) ⇝ neg(), while map(sum()) stays.
+            //
+            // FOR ANY FUNCTION, not just mapper forms, it is the same rule under a PLAIN key, which no gate reads:
+            //     map_unwrap => [map(#::T@f) => #::T@f]
+            //     uri("map_unwrap"), rec(MCode.code(List.of(instB(MAP_INST_TID, lst(T(ALL, f("f"), null, null))))),
+            //             T(ALL, f("f"), null, null)),
+            // That is the Java fold this row replaced, and it is unsound for a function that consumes the stream:
+            // {1,2,3}.map(sum()) sums each element alone, {1,2,3}, while {1,2,3}.sum() is 6.
+            uri(Inst.Form.mapper.name()), rec(MCode.code(List.of(instB(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL, f("f"), null, null))))),
+                    T(ALL, f("f"), null, null)),
             uri(Law.involution.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.<Inst>of())),
             uri(Law.idempotent.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
             uri(Law.monoidic.name()), rec(MCode.code(List.of(instB(f(OP), lst()), instB(f(OP), lst()))), MCode.code(List.of(instB(f(OP), lst())))),
@@ -862,12 +882,12 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("theory_unit_removal"),
                                 code -> PlanInterpreter.lower(UNIT_PLAN, code)), "the monoid's identity rule, stated once on monoid_theory and bound by every monoid instance of the operand's type: an operation applied to its own identity drops out, \\(\\mathrm{op}(\\mathrm{id}) \\leadsto \\varepsilon\\), and code's identity operation drops out of a chain, composition being adjacency. e.g. \\(x + 0 \\leadsto x\\), \\(x \\cdot 1 \\leadsto x\\), \\(x \\cdot \\langle\\rangle \\leadsto x\\), \\(x \\cdot \\mathrm{id} \\leadsto x\\)"),
 
-                        // THE PROCESS LAWS' RULES (Marko, 2026-11-09): /m's rewrite table is an instruction whose declared
+                        // THE REWRITE TABLE (Marko, 2026-11-09): /m's rewrite table is an instruction whose declared
                         // argument IS the table (M_REWRITE_TABLE), a value rather than a type, so it resolves with the table
-                        // bound; each law's rule binds op to the law's claimants and holds where its gate does
+                        // bound; a law's or a form's rule binds op to its claimants and holds where its gate does
                         docWrap(instC(M_ISA_REWRITE_TID.extend("m_rewrite_table").dom(CODE_TID).rng(CODE_TID.maybe()), lst(M_REWRITE_TABLE),
-                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec(), null)),
-                                "the process laws' rules, carried as the instruction's own argument: an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims the law at the chain's carrier. e.g. \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
+                                        (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
+                                "the rewrite rules carried as the instruction's own argument: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), and an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), each where the operation claims its form or law at the chain's carrier. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
                         // instance a carrier declares binds them (Law.Helper.rules), and the plan cancels an adjacent pair
@@ -880,9 +900,6 @@ public class mInstSet extends AbstractInstSet {
                         // beside themselves (Law.Helper.derivations), where the derivation's contract runs.
                         docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("derivation_contraction"),
                                 code -> PlanInterpreter.lower(DERIVATION_PLAN, code)), "folds a derived instruction's primitive composition back to the derived operation, from the type's declared \\(\\mathrm{derivation}\\): \\(\\mathrm{plus} \\cdot \\mathrm{neg} \\leadsto \\mathrm{minus}\\), \\(\\mathrm{mult} \\cdot \\mathrm{inv} \\leadsto \\mathrm{div}\\)"),
-
-                        // NOTE: map_nest / map_inst have been removed — they are the syntactic shadows of catInstSet's
-                        // `form_map_unwrap` (the transparent `map` lift).
 
                         // Compress a bare rshift chain into a single walk: >>.>>.>> => >> 3.
                         // DISABLED: the fold is only referentially sound on a uri (where

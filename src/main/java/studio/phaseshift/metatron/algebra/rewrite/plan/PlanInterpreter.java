@@ -157,7 +157,7 @@ public final class PlanInterpreter {
             return ADD.equals(role) ? branchCollapse(code)
                     : ZERO.equals(role) ? branchInline(code)
                     : INVERSE.equals(role) ? inverseCancellation(code)
-                    : MAP_INST_TID.name().equals(role) ? mapUnwrap(code)
+                    : MAP_INST_TID.name().equals(role) ? Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri("map_nest"), uri(Inst.Form.mapper.name()))
                     : DERIVATION.equals(role) ? derivationContraction(code)
                     : code;
         // the law-classified folds: involution (drop), idempotent/monoidic (keep), poset (compose),
@@ -686,7 +686,7 @@ public final class PlanInterpreter {
      * {@code involution} rule of /m's rewrite table ({@link Law.Helper#lawRemoval}).
      */
     private static Code involutionRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, Law.involution);
+        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.involution.name()));
     }
 
     /**
@@ -694,7 +694,7 @@ public final class PlanInterpreter {
      * {@code idempotent} rule of /m's rewrite table ({@link Law.Helper#lawRemoval}).
      */
     private static Code idempotentRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, Law.idempotent);
+        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.idempotent.name()));
     }
 
     /**
@@ -702,7 +702,7 @@ public final class PlanInterpreter {
      * rewrite table ({@link Law.Helper#lawRemoval}).
      */
     private static Code monoidicRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, Law.monoidic);
+        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.monoidic.name()));
     }
 
     /**
@@ -799,26 +799,6 @@ public final class PlanInterpreter {
         if (Processor.Helper.apply(a, second).booleanCheck())
             return a;
         return a.equals(b) ? a : null;
-    }
-
-    /**
-     * The stream lift (local): {@code map} is transparent on the value it wraps, so {@code map(f) ↦ f}, which
-     * also collapses {@code map(map(f)) ↦ map(f)}.
-     */
-    private static Code mapUnwrap(final Code code) {
-        final List<Inst> insts = code.insts();
-        boolean changed = false;
-        final List<Inst> out = new ArrayList<>(insts.size());
-        final List<Type> carriers = carriers(code);
-        for (int i = 0; i < insts.size(); i++) {
-            final Obj wrapped = mapArgument(insts.get(i), carriers.get(i));
-            if (null != wrapped) {
-                out.add(wrapped.asInst());
-                changed = true;
-            } else
-                out.add(insts.get(i));
-        }
-        return changed ? code(out) : code;
     }
 
     /**
@@ -1093,36 +1073,6 @@ public final class PlanInterpreter {
             return code(headed);
         }
         return member.c(c);
-    }
-
-    /**
-     * The stream lift, {@code map} — kept keyed on the operation itself: its {@code {?} → {?}} coefficient
-     * shape is shared by other instructions ({@code is} is also {@code {?} → {?}}), so a shape-only test
-     * would unwrap a predicate. The chain instruction carries no endpoints, so the op <em>address</em> is
-     * what identifies it.
-     */
-    private static boolean isMap(final Inst inst) {
-        return inst.tid().basePath().equals(MAP_INST_TID);
-    }
-
-    /**
-     * The instruction a {@code map} wraps, or null when it wraps no instruction. Before resolution the
-     * wrapped operand arrives as a uri (the op symbol), so it is read back as an instruction.
-     */
-    public static Obj mapArgument(final Inst inst, final Type carrier) {
-        if (1 != inst.args().count() || !isMap(inst))
-            return null;
-        final Obj arg = inst.arg(0);
-        if (arg.isObjInst())
-            return arg;
-        if (!arg.isUri())
-            return null;
-        final fURI op = arg.uriValue().isAbsolute() ? arg.uriValue() : M_ISA_TID.extend(INST).extend(arg.uriValue().name());
-        final Inst wrapped = instB(op, lst());
-        // keep the chain's pre-resolution form (the op address), but only when the address is a real op
-        if (!Machine.read(op).isNoObj())
-            return wrapped;
-        return null;
     }
 
     /**

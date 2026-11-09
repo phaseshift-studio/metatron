@@ -30,7 +30,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.algebra.Law.Helper.declares;
 import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter.comparisonOf;
-import static studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter.mapArgument;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
@@ -98,7 +97,6 @@ public class catLiveness {
             case "law_absorbing" -> profile.absorbing;
             case "law_poset" -> profile.adjPoset;
             case "inverse_cancellation" -> profile.adjInverse;
-            case "form_map_unwrap" -> profile.mapWrap;
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;
             case "derivation_contraction" -> Law.Helper.derivations().values().stream()
@@ -124,7 +122,6 @@ public class catLiveness {
         private boolean adjPoset;        // an adjacent pair of the same filter on the same poset comparison
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
         private boolean absorbing;       // an absorbing op with live code before it
-        private boolean mapWrap;         // a map(f) wrapping an unwrappable instruction
         private boolean repeatedTerms;   // an occurrence of the additive witness with two or more members (like terms need a pair)
         private boolean oneTerm;         // an occurrence of the additive witness with exactly one member
         private boolean shard;           // a seed + a reducer with a combiner (law_shard's anchor)
@@ -180,8 +177,6 @@ public class catLiveness {
                         profile.unit = true;  // a bare op may be a theory's identity morphism
                     else if (models(keyed.dom(), modeled) || models(keyed.arg(0).type(), modeled))
                         profile.unit = true;  // op(id) needs an operand whose type models a theory
-                    if (null != mapArgument(keyed, carrier))
-                        profile.mapWrap = true;
                     // the additive normalizers read the members' count; whether two members are like terms is the
                     // value residue, so a pair only licenses the collapse while a lone member inlines -- unless it is
                     // keyed to a remote place, which runs there. A keyed pair never collapses: its rec already summed

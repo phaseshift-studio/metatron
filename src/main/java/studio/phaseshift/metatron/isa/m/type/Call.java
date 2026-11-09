@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Memory;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
@@ -208,7 +209,9 @@ public interface Call extends Obj {
          * change's {@code ${...}} argument is a template parameter, evaluated against what the run holds in that place
          * and reading the names: {@code plus(int::T@a).plus(int::T@b) => plus(${*a.plus(*b)})}. A named hole in the
          * change is what its name matched ({@code minus(#::T@b)} reads {@code ${*b}}), so a rule reversed is the same
-         * equation (2026-11-08). All else is literal.
+         * equation (2026-11-08). All else is literal. A change that is a NAMED HOLE ALONE is what the hole matched
+         * (2026-11-09): {@code [map(#::T@f) => #::T@f]} turns {@code map(neg())} into {@code neg()}, and the op symbol a chain
+         * carries before resolution ({@code map(neg)}) into the instruction it names.
          * <p>
          * COMPONENTS (Marko, 2026-11-06). A rule keyed by the uri {@code args}, not a pattern, updates the arguments of
          * every instruction in the run in place, as {@code >>=} updates a lst. So {@code [plus(int::T)=>[args=>[+10]]]}
@@ -239,6 +242,17 @@ public interface Call extends Obj {
                 return IntStream.range(0, template.size())
                         .mapToObj(k -> expand(template.get(k), k < insts.size() ? insts.get(k) : noobj(), names).asInst())
                         .toList();
+            }
+            // a change that is a named hole alone is what the hole matched: an instruction or a code in the run's place, and
+            // an op symbol the instruction it names
+            final fURI hole = rules.isType() ? Inst.Helper.name(rules) : null;
+            if (null != hole) {
+                final Obj matched = names.get(hole);
+                if (null != matched && matched.isCall())
+                    return matched.asCall().insts();
+                if (null == matched || !matched.isUri())
+                    throw MTronException.of("a hole changes a run into the instruction it matched, not %s", matched);
+                return List.of(MInst.instB(Machine.current().memory().alignPrefix(matched.uriValue()), lst()));
             }
             if (!rules.isRec())
                 throw MTronException.of("a matched run of code changes into a code or a rec of rules, not %s", rules);

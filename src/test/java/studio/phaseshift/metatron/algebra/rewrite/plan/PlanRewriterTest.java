@@ -92,8 +92,9 @@ public class PlanRewriterTest extends AbstractMetatronTest {
             // inverse_cancellation — one-sided: int div truncates, so div·mult stays
             "5.plus(3).minus(3)               % start(5)                          % 5",
             "5.div(2).mult(2)                 % start(5).div(2).mult(2)           % 4",
-            // form_map_unwrap
+            // form_map_unwrap: /m's mapper and map_nest rows; a stream's fold is no mapper, so its mapping stays
             "5.map(neg)                       % start(5).neg()                    % -5",
+            "{1,2,3}.map(map(sum()))          % start({1,2,3}).map(sum())         % {1,2,3}",
             // derivation_contraction
             "6.plus(3.neg())                  % start(6).minus(3)                 % 3",
             // branch_collapse, then branch_inline on the lone survivor
