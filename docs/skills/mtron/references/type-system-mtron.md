@@ -418,49 +418,53 @@ layer, by that bound substitution rather than by the bracket claim.
 
 ### lifting (dispatch into a fiber)
 
-An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: `fight?<=ninja()` on a
-`person[ninja]` bundle reaches the `ninja` object inside it, not the bundle.
+An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level. When every fiber it
+reaches keeps its type, the answer is the BUNDLE with those fibers moved — the call is **lifted** from `dom => rng` on
+the fiber to `bundle => bundle`. When it changes a fiber's type, the call is a **projection** and answers the
+instruction's results instead of the bundle:
 
-Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE **plus the values
-of its FIBERS**, and each subject is selected and invoked on its own — so the "selection" is ordinary resolution, not
-a lookup table keyed by the declaration:
+```
+person[int]::[name=>'marko',age=>29].plus(1)       [-- person[int]::[name=>'marko',age=>30] --]
+person[int]::[name=>'marko',age=>29] + 1 + 1       [-- person[int]::[name=>'marko',age=>31] --]
+person[int]::[name=>'marko',age=>29].plus(1)>>age  [-- 30 --]
+person[int]::[name=>'marko',age=>29].gt(18)        [-- true  (int => bool: a projection) --]
+```
 
-- an **untyped call lifts over all fibers**; `?<=T` selects one subject, because a named domain is the subject the
-  call is about.
-- a **base-typed domain is about a subject's own form, never its name**: `?<=rec(...)` reaches the bundle AND a
-  fiber whose own type refines `rec` — `ninja::T` is a `rec::T`, so the ninja answers a rec-typed instruction as
-  itself — while `?<=lst(...)` reaches neither, and `?<=int(...)` reaches only an int-valued fiber
-  (`ex::[o=>12].plus?<=int` adds at `o`, since the bundle is a rec, not an int).
-- a **named domain** splits the two levels. The **bundle** answers as the very type it instantiates — a bracket does
-  not change the name (`dojo[master]` is a `dojo`; a predicated domain additionally requires the same predicates) —
-  and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A **fiber** answers as the
-  value it holds, so a *structural* type (`weaponed -> rec::T[?[weapon=>str::T]]`) is also satisfied by a fiber's own
-  shape: the ninja at `role` carrying a weapon answers `?<=weaponed(...)` as itself. That is why `?<=weaponed` reaches
-  the ninja and never the bundle.
-- **the fiber bundle speaks first**: when the domain NAMES a type the bundle itself is, the bundle is the subject
-  and its fibers are not asked — `weaponed[weaponed]::[weapon=>'axe',role=>weaponed::[weapon=>'knife']]` answers
-  `?<=weaponed(weapon)` with `'axe'` alone, not `{'axe','knife'}`. A domain that names no single subject — a generic
-  one, or a base FORM (about every subject of that form) — does not supersede: `?<=rec` and an untyped read still
-  sum over both levels.
-- **a FILTER asks the bundle first too**: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
-  so `*marko.?weaponed::T` answers `*marko` (the bundle is accepted as a weaponed through the ninja it exposes; the
-  filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
-  fibers, and a `fail::` from the bundle still propagates.
-- `noobj` is the multiplicity identity, so `{noobj, 29}` = `29`: a subject the instruction is not about contributes
-  nothing. A `fail::` is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
-  would read as a success.
-- subjects are **one level deep**: a fiber that is itself a bundle is applied to as the object it is, never expanded
-  again.
-- `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**. A typer retypes the one object it is given,
-  so it is opaque: `as(person::T)` is both the narrowing escape from a fan-out and the exception to it (it changes the
-  basis, so it cannot be distributed over the old one).
-- ref-writes (`<uri> -> obj`) are address-precise and never lift. `update` (`>>=`) does fan out, since its domain is
-  any obj; `as(T)` first, or `?<=T` on the call, is what narrows it back to one basis.
-- a fan-out result is an **unordered multiplicity**. When order or provenance matters the user writes the keyed rec
-  explicitly — one key per fiber, each narrowing its own call (`[role => *marko.describe?<=ninja(), position =>
-  *marko.describe?<=position()]`). There is no keyed projection that does it for you.
-- a bundle on which **no subject** applies yields `noobj` — a miss is not a failure. The same miss on a non-bundle
-  value is still a loud `unable to locate inst-f`, because there is nothing else to try.
+The processor knows nothing of fibers: resolution hands it the instruction a call on a bundle refers to, which is
+either the bundle's own or its lift. Each call is about one of two things:
+
+- **the bundle itself** — a typer, a generic domain (`>>name`, `?<=#`), the rec form (`?<=rec`, a rec `plus`), or
+  the bundle's own name (`ponder?<=person`). It runs on the bundle alone, as any instruction runs on any rec, and the
+  fibers are not asked: `*marko>>name` is the person's name, and a key only a fiber carries (`*marko>>weapon`) is
+  `noobj`. A bracket does not change the name (`dojo[master]` is a `dojo`).
+- **its fibers** — any other domain. Every fiber the call is about runs it (the parallel fibers); when the results
+  keep their fibers' types they are written back, and a fiber the call is not about is left as it is, as is every
+  field that is no fiber:
+  - a **base-typed domain is about a fiber's own form**: `?<=int(...)` reaches an int-valued fiber
+    (`ex::[o=>12].plus?<=int(45)` is `ex::[o=>57]`), `?<=lst(...)` reaches none of a ninja's.
+  - a **named domain** reaches the fiber whose own type IDENTITY is that name (`fight?<=ninja()` reaches the ninja,
+    and the body's `>>weapon` reads the ninja's). The bundle is *accepted* where a ninja is expected, but acceptance is
+    not dispatch identity.
+  - a **structural** type (`weaponed -> rec::T[?[weapon=>str::T]]`) is satisfied by a fiber's own shape: the ninja
+    at `role` carrying a weapon answers `?<=weaponed(...)` as itself, while the bundle answers by identity only.
+
+The rest of the rules:
+
+- a call that **changes a fiber's type** is a PROJECTION: it answers the instruction's results, summed as a
+  multiplicity, not the bundle — `fight: ninja => str` answers the str, and `*twin.rank()` (two ninjas, `rank` an int)
+  answers `{11,3}`. The type is the one the replaced value had, its multiplicity included, so a `sum` over the
+  `real{2}` at `rec[geo/+]` projects too, and a filter that drops one fiber's value (`noobj`) projects to what it
+  kept. One changed fiber is enough. `noobj` is the sum's identity.
+- a `fail::` from a fiber the call DID apply to is not the identity — it PROPAGATES — or a call that broke on one
+  fiber would read as a success.
+- a lift is **one level deep**: each fiber resolves the call against the object it holds, so a fiber that is itself a
+  bundle is applied to as itself and never lifted again. One `>>` makes it the bundle.
+- `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**: a typer retypes the one object it is given.
+- ref-writes (`<uri> -> obj`) are address-precise and never lift, and `update` (`>>=`), whose domain is any obj, is
+  the bundle's own.
+- a lift is a VALUE, not a write: a lifted `*marko` copy leaves `marko` untouched.
+- a bundle whose fibers the call is about none of yields `noobj` — a miss is not a failure. The same miss on a
+  non-bundle value is still a loud `unable to locate inst-f`, because there is nothing else to try.
 
 ### acceptance and covariance
 

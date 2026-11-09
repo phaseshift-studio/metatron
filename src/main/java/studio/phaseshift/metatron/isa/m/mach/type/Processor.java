@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -118,82 +117,20 @@ public interface Processor extends Component {
         }
 
         /**
-         * The machine's single entry for applying one inst against a runtime lhs: take the subjects the typer names
-         * ({@link Typer.Helper#bundleAndFibers} — the BUNDLE and its FIBERS, or the value alone when it is no
-         * bundle), let the {@link Selector} say which instruction each one refers to
-         * ({@link Selector.Helper#resolve}), and run them (guards, computeArgs, f().apply, checks, coefficient).
-         * <p>
-         * WHAT is a subject is NOT DECIDED HERE: a fibered type's bundle-vs-fiber choice is a type-system answer
-         * ({@link Typer.Helper#applicable}, {@link Typer.Helper#supersedes}); this class executes what it names.
+         * The machine's single entry for applying one inst against a runtime lhs: let the {@link Selector} say which
+         * instruction the call refers to ({@link Selector.Helper#resolve}) and run it (guards, computeArgs,
+         * f().apply, checks, coefficient). On a fibered rec that instruction may be the LIFT of the call
+         * ({@code FiberedRec}), which this class runs like any other.
          */
         public static Obj apply(final Obj lhs, final Inst inst) {
             // A ONE-MEMBER STREAM IS ITS MEMBER. `objs()` collapses a single element everywhere else, but a BARRIER
             // (a reducer/gather) accumulates its input into a stream, so a single upstream value arrives wrapped in a
-            // one-member objs. Unwrap it, or the delegation would be skipped for a wrapper that a reducer gathered
-            // (`*marko.sum?<=real{*}` sums the reals at its fiber, not the wrapper).
+            // one-member objs. Unwrap it, or the lift would be skipped for a bundle that a reducer gathered
+            // (`*marko.sum?<=real{*}` sums the reals at its fiber, not the bundle).
             final Obj subject = lhs.isObjs() && lhs.c().isOne() && 1L == lhs.objsValue().spliterator().getExactSizeIfKnown()
                     ? lhs.objsValue().iterator().next()
                     : lhs;
-            final List<Obj> candidates = Typer.Helper.bundleAndFibers(subject, inst);
-            return candidates.size() == 1 ?
-                    invoke(subject, Selector.Helper.resolve(subject, inst), inst) :
-                    applyFiberedRec(subject, candidates, inst);
-        }
-
-        /**
-         * A BUNDLE AND ITS FIBERS — applying an instruction to a fibered value is applying it to the bundle and to
-         * the values of its fibers, summed.
-         * <pre>
-         * person[ninja]::[…].xyz()   ==   { person::[…], ninja::[…] }.xyz()
-         * </pre>
-         * WHAT that set holds is the {@link Typer}'s answer ({@link Typer.Helper#bundleAndFibers}): the bundle plus
-         * the fibers its declaration exposes, one level deep. WHETHER the instruction is about each subject is the
-         * Typer's too ({@link Typer.Helper#applicable}). This class keeps only the loop — ask the {@link Selector}
-         * which instruction the subject refers to, invoke it.
-         * <p>
-         * The results are SUMMED as a multiplicity — the stream the fibered type promises — with {@code noobj} as the
-         * identity ({@code {noobj, 29} = 29}). A subject the instruction is not about contributes nothing: the
-         * identity, NOT a failure. A {@code fail::} from a subject the instruction DID apply to is not the identity
-         * and propagates, or an instruction that broke on one fiber would read as a success.
-         * <p>
-         * THE BUNDLE SPEAKS FIRST: when the domain NAMES a type the bundle itself is, the bundle is the subject and
-         * its fibers are not asked at all ({@link Typer.Helper#supersedes}). A domain that names no single subject —
-         * a generic one or a base form, which is about every subject of that form — still sums over both levels.
-         * <p>
-         * A FILTER is the other form of the same precedence: it KEEPS OR DROPS its subject, and the subject is the
-         * fibered rec itself — so when the bundle qualifies ({@code *marko.?weaponed::T} on a bundle that is
-         * accepted as a weaponed through the ninja it exposes), the bundle IS the answer and its fibers are not
-         * asked. When it does not qualify, the fibers are offered the filter as usual.
-         */
-        private static Obj applyFiberedRec(final Obj lhs, final List<Obj> candidates, final Inst inst) {
-            final Inst bundleInst = Selector.Helper.resolve(lhs, inst);
-            if (Typer.Helper.supersedes(lhs, bundleInst, inst))
-                return invoke(lhs, bundleInst, inst);
-            // the filter's verdict on the bundle is the answer when it passes; a decline (noobj) falls through, and
-            // a fail is left to the loop below, which propagates it exactly as it does for any candidate
-            if (Inst.Form.of(bundleInst) == Inst.Form.filter) {
-                final Obj filtered = invoke(lhs, bundleInst, inst);
-                if (!filtered.isNoObj() && !filtered.isFail())
-                    return filtered;
-            }
-            final List<Obj> results = new ArrayList<>(candidates.size());
-            for (final Obj candidate : candidates) {
-                final Inst cinst = candidate == lhs ? bundleInst : Selector.Helper.resolve(candidate, inst);
-                // NOT APPLICABLE IS THE IDENTITY, NOT A FAIL: a resolution miss, a resolution that could not
-                // produce a callable instruction, or a domain about another subject contributes noobj.
-                if (!Typer.Helper.applicable(candidate == lhs, candidate, cinst, inst))
-                    continue;
-                // invoke, not apply: the fan-out is ONE level, so a candidate that is itself a wrapper is applied
-                // to as the object it is, never re-expanded into its own components
-                final Obj rhs = invoke(candidate, cinst, inst);
-                if (rhs.isUncaughtFail())
-                    return rhs;
-                if (!rhs.isNoObj())
-                    results.add(rhs);
-            }
-            // objs() IS the multiplicity sum: empty is noobj (the identity), one is itself, and equal results
-            // collapse into a coefficient (a bulked wrapper's parts count like any other stream)
-            return objs(results.iterator());
+            return invoke(subject, Selector.Helper.resolve(subject, inst), inst);
         }
 
         /**
