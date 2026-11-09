@@ -919,7 +919,13 @@ public enum Law {
             if (null == fold || !fold.isInst() || !folds.stream().allMatch(f -> f.isInst() && Inst.Helper.same(f.asInst(), fold.asInst())))
                 return null;
             final Obj perKey = perKey(fold, laws);
-            return null == perKey ? null : sum_().select_(rec(id_().tryToInst(), perKey));
+            if (null == perKey)
+                return null;
+            // THE PARTIALS ARE RECS, one per part, so the merge is rec's sum, keyed at rec as a chain instruction is
+            // before resolution (keyed). Left bare behind a branch that hands on #{*}, the merge kept no range, and
+            // the select after it bound the first contract of its family, uri's projection, which a rec cannot enter
+            final Call merge = sum_().select_(rec(id_().tryToInst(), perKey));
+            return code(List.of(keyed(merge.insts().getFirst(), T(REC_TID)), merge.insts().getLast()));
         }
 
         /**
