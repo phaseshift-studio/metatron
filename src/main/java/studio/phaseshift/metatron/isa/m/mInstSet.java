@@ -324,7 +324,17 @@ public class mInstSet extends AbstractInstSet {
                     uri(OP), INST_TYPE,
                     uri(ID), ALL_TYPE,
                     uri(INV), INST_TYPE,
-                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.involution)))
+                    uri(LAW).maybe(), laws(Law.monoidic, Law.unit, Law.involution),
+                    // an element and its inverse cancel on either side, a·a⁻¹ = 1 and a⁻¹·a = 1, in the theory's own
+                    // role names over a named operand: op(inv(a)) binds the instruction DEFINED that way (minus ≡
+                    // plus∘neg, div ≡ mult∘inv), so int's add_group gives plus(a)·minus(a) and minus(a)·plus(a)
+                    uri(REWRITE).maybe(), lst(
+                            rec(MCode.code(List.of(instB(f(OP), lst(T(ALL, f("a"), null, null))),
+                                            instB(f(OP), lst(instB(f(INV), lst(T(ALL, f("a"), null, null))))))),
+                                    MCode.code(List.<Inst>of())),
+                            rec(MCode.code(List.of(instB(f(OP), lst(instB(f(INV), lst(T(ALL, f("a"), null, null))))),
+                                            instB(f(OP), lst(T(ALL, f("a"), null, null))))),
+                                    MCode.code(List.<Inst>of())))))
             .create();
     public static final Type MONOID_THEORY_TYPE = TypeBuilder.build()
             .tid(THEORY_TID)

@@ -661,8 +661,8 @@ public final class PlanInterpreter {
 
     /**
      * The unit law (local, no distribution): an operation applied to its own theory identity drops out, and a
-     * bare identity operation is the identity morphism — the equations {@link Law.Helper#units} states, read from
-     * {@code object::T.theory}, so the one rule set covers every declared monoid/group/ring/…
+     * bare identity operation is the identity morphism — monoid_theory's rule as every monoid instance binds it
+     * ({@link Law.Helper#rules}), so the one rule covers every declared monoid
      * <p>
      * THE IDENTITY IS A VALUE, SO THE OPERAND IS COMPARED, one rule at a time: a match is a type test, under which a
      * computed operand passes by its range ({@code plus(map(3).neg())} would pass as {@code plus(0)}, and
@@ -673,7 +673,7 @@ public final class PlanInterpreter {
      */
     private static Code unitRemoval(final Code code) {
         Code out = code;
-        for (final Rec unit : Law.Helper.units()) {
+        for (final Rec unit : Law.Helper.rules(MONOID_THEORY_TID)) {
             final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
             out = rewrite(out, List.of(unit), (scanned, start) -> term.args().equals(scanned.insts().get(start).args())
                     && (!term.args().isEmpty() || 1 < scanned.insts().size()));
@@ -746,13 +746,13 @@ public final class PlanInterpreter {
 
     /**
      * The inverse law (local): an adjacent declared inverse pair with equal operands cancels to the identity —
-     * {@code f·f⁻¹ ↦ ε} for the declared opposing edge, the equations {@link Law.Helper#inverses} states, cancelled
-     * only where the chain's carrier derives that inverse ({@link #isInverseOf}). Its terms are unscaled as every local
-     * equation's are ({@link #rewrite}): an involution is its own inverse, so a scaled {@code neg{2}·neg{2}} stays here
-     * too.
+     * {@code f·f⁻¹ ↦ ε} and {@code f⁻¹·f ↦ ε}, group_theory's two rules as every group instance binds them
+     * ({@link Law.Helper#rules}), cancelled only where the chain's carrier derives that inverse ({@link #isInverseOf}).
+     * An involution's pair is the involution law's ({@link #involutionRemoval}). Its terms are unscaled as every local
+     * equation's are ({@link #rewrite}).
      */
     private static Code inverseCancellation(final Code code) {
-        return rewrite(code, Law.Helper.inverses(),
+        return rewrite(code, Law.Helper.rules(GROUP_THEORY_TID),
                 (scanned, start) -> isInverseOf(scanned.insts().get(start), scanned.insts().get(start + 1), carriers(scanned).get(start)));
     }
 
