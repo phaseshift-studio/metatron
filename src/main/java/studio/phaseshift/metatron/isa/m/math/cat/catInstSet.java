@@ -105,35 +105,6 @@ public class catInstSet extends AbstractInstSet {
      */
     public static Type PLACE_TYPE;
 
-    /// //////////////////////////////////////////////////////////////
-    // the algebraic theories — a theory is a named tuple of op-edges (role => op-tid); algebraic_theory::T
-    // is the nominal (structure-blind) super-type grouping them for bookkeeping and inference
-
-    /**
-     * {@code theory::T} — nominal super-type of the algebraic theories
-     */
-    public static Type THEORY_TYPE;
-
-    /**
-     * {@code ring_theory::T} — (add, mul, zero, one): additive and multiplicative ops with their identities
-     */
-    public static Type RING_THEORY_TYPE;
-
-    /**
-     * {@code group_theory::T} — (op, id, inv): an operation with its identity and inverse
-     */
-    public static Type GROUP_THEORY_TYPE;
-
-    /**
-     * {@code monoid_theory::T} — (op, id): an associative operation with its identity
-     */
-    public static Type MONOID_THEORY_TYPE;
-    public static Type RIG_THEORY_TYPE;
-    public static Type BOOLEAN_THEORY_TYPE;
-    public static Type SEMILATTICE_THEORY_TYPE;
-    public static Type NEAR_RING_THEORY_TYPE;
-    public static Type FIELD_THEORY_TYPE;
-    public static Type LATTICE_THEORY_TYPE;
     /**
      * {@code law::T} — the process-law union: one label from the morphism's declared process laws
      */

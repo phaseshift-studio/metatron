@@ -678,11 +678,11 @@ public class catInstSetTest extends AbstractInstSetTest {
     void testEveryCarrierShipsItsAlgebra() {
         assertCarrierDeclares(INT_TYPE, "ring", "add_group", "add_monoid", "mult_monoid");
         assertCarrierDeclares(REAL_TYPE, "field", "ring", "add_group", "mult_group", "add_monoid", "mult_monoid");
-        assertCarrierDeclares(BOOL_TYPE, "boolean", "rig", "lattice");
+        assertCarrierDeclares(BOOL_TYPE, "boolean", "rig", "lattice", "add_monoid", "mult_monoid");
         assertCarrierDeclares(STR_TYPE, "concat_monoid");
         assertCarrierDeclares(URI_TYPE, "mult_monoid");
         assertCarrierDeclares(BYTES_TYPE, "concat_monoid");
-        assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "mult_monoid");
+        assertCarrierDeclares(CODE_TYPE, "ring", "add_group", "add_monoid", "mult_monoid");
         // the machine's algebra is declared with the /m carriers although its type is mach's (machInstSet builds it)
         assertCarrierDeclares(T(f("/m/mach/machine")), "free_groupoid", "mult_monoid");
     }
@@ -716,6 +716,10 @@ public class catInstSetTest extends AbstractInstSetTest {
     @CsvSource(value = {
             "int::T.as(object::T)>>theory>>mult_group   % noobj",
             "int::T.as(object::T)>>theory>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/int&dom=/m/int,id=>1]",
+            // a theory refines no other: bool's rig and lattice do not make it a monoid, its own instances do
+            "bool::T.as(object::T)>>theory>>add_monoid  % /m/theory/monoid_theory::[op=>!*/m/inst/plus?rng=/m/bool&dom=/m/bool,id=>false]",
+            "bool::T.as(object::T)>>theory>>mult_monoid % /m/theory/monoid_theory::[op=>!*/m/inst/mult?rng=/m/bool&dom=/m/bool,id=>true]",
+            "bool::T.as(object::T)>>theory>>add_group   % noobj",
     }, delimiter = '%')
     void testObjectLaws(final String expr, final String expected) {
         checkCodeParseApply(LOG, expr, expected);
