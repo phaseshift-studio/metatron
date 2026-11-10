@@ -63,13 +63,14 @@ public class BasicCompiler extends MRec implements Compiler {
     /**
      * The default stage entries — mtron parse, fixpoint rewrite, scoring resolution, type assertions.
      * Every defaulting path goes through here, so a compiler's stages live in its rec rather than in
-     * a Java-side {@code orElse}.
+     * a Java-side {@code orElse}. Every stage a write can reach is the compiler's own (a write under
+     * {@code ~/compiler} changes it in place), so only the stateless parser is shared.
      */
     public static Map<Obj, Obj> defaultStages() {
         return mutableMap(
                 uri(PARSER), mtronParser.single(),
-                uri(REWRITER), FixPointRewriter.single(),
-                uri(RESOLVER), ScoringResolver.single(),
+                uri(REWRITER), new FixPointRewriter(),
+                uri(RESOLVER), new ScoringResolver(),
                 uri(TYPER), new BasicTyper());
     }
 
