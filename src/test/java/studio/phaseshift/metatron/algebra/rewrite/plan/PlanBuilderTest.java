@@ -239,7 +239,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "theory_unit_removal     % 5.plus(0)                          % start(5)",
-            "theory_involution       % 5.neg().neg()                       % start(5)",
+            "law_involution          % 5.neg().neg()                       % start(5)",
             "law_idempotent          % \"ab\".ucase().ucase()                % start(\"ab\").ucase()",
             "law_absorbing           % 5.plus(3).zero()                    % start(5).zero()",
             "law_monoidic            % {1,2,3}.sum().sum()                 % start({1,2,3}).sum()",

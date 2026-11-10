@@ -155,21 +155,21 @@ public final class PlanInterpreter {
             return ADD.equals(role) ? branchCollapse(code)
                     : ZERO.equals(role) ? branchInline(code)
                     : INVERSE.equals(role) ? inverseCancellation(code)
-                    : MAP_INST_TID.name().equals(role) ? Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri("map_nest"), uri(Inst.Form.mapper.name()))
+                    : MAP_INST_TID.name().equals(role) ? Law.Helper.lawRemoval(code, FORM_MAP_UNWRAP)
                     : DERIVATION.equals(role) ? derivationContraction(code)
                     : code;
         // the law-classified folds: involution (drop), idempotent/monoidic (keep), poset (compose),
         // absorbing (swallow the prefix)
         if (cut.declares(Law.involution))
-            return involutionRemoval(code);
+            return Law.Helper.lawRemoval(code, LAW_INVOLUTION);
         if (cut.declares(Law.idempotent))
-            return idempotentRemoval(code);
+            return Law.Helper.lawRemoval(code, LAW_IDEMPOTENT);
         if (cut.declares(Law.monoidic))
-            return monoidicRemoval(code);
+            return Law.Helper.lawRemoval(code, LAW_MONOIDIC);
         if (cut.declares(Law.poset))
-            return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.poset.name()));
+            return Law.Helper.lawRemoval(code, LAW_POSET);
         if (cut.declares(Law.absorbing))
-            return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.absorbing.name()));
+            return Law.Helper.lawRemoval(code, LAW_ABSORBING);
         return code;
     }
 
@@ -680,34 +680,10 @@ public final class PlanInterpreter {
     }
 
     /**
-     * The involution law (local): an adjacent pair of the SAME self-inverse operation is the identity, the
-     * {@code involution} rule of /m's rewrite table ({@link Law.Helper#lawRemoval}).
-     */
-    private static Code involutionRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.involution.name()));
-    }
-
-    /**
-     * The idempotent law (local): an adjacent pair of the SAME idempotent operation is that operation, the
-     * {@code idempotent} rule of /m's rewrite table ({@link Law.Helper#lawRemoval}).
-     */
-    private static Code idempotentRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.idempotent.name()));
-    }
-
-    /**
-     * The monoidic law on a fold (local): an adjacent identical reducer/join collapses, the {@code monoidic} rule of /m's
-     * rewrite table ({@link Law.Helper#lawRemoval}).
-     */
-    private static Code monoidicRemoval(final Code code) {
-        return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.monoidic.name()));
-    }
-
-    /**
      * The inverse law (local): an adjacent declared inverse pair with equal operands cancels to the identity —
      * {@code f·f⁻¹ ↦ ε} and {@code f⁻¹·f ↦ ε}, group_theory's two rules as every group instance binds them
      * ({@link Law.Helper#rules}), cancelled only where the chain's carrier derives that inverse ({@link #isInverseOf}).
-     * An involution's pair is the involution law's ({@link #involutionRemoval}). Its terms are unscaled as every local
+     * An involution's pair is the involution law's ({@code law_involution}). Its terms are unscaled as every local
      * equation's are ({@link Law.Helper#rewrite}).
      */
     private static Code inverseCancellation(final Code code) {

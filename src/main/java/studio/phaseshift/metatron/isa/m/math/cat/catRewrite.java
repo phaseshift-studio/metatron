@@ -175,20 +175,20 @@ public class catRewrite {
                                 code -> PlanInterpreter.lower(BRANCH_INLINE_PLAN, code)),
                         "the one-term sum law, law-indexed: an occurrence of the algebra's additive op with a single member is that member added to nothing -- \\(\\mathrm{a} \\cdot \\mathrm{branch}(b) \\cdot \\mathrm{c} \\leadsto \\mathrm{a} \\cdot b \\cdot \\mathrm{c}\\), the frame's own coefficient folded into the member, \\(\\mathrm{branch}\\{c\\}(b) \\leadsto b\\{c\\}\\) -- a non-call member unwraps as the map that emits it, \\(\\mathrm{branch}(x) \\leadsto \\mathrm{map}(x)\\)"),
 
-                // (2) the involution, idempotent and monoidic laws are /m's m_rewrite_table: their rules are the table
-                // that instruction carries as its own argument (M_REWRITE_TABLE).
+                // (2) the involution, idempotent and monoidic laws are /m's: one rewrite per rule (law_involution,
+                // law_idempotent, law_monoidic), each carrying its rules as its own argument.
 
-                // (2c) the absorbing law is /m's: the absorbing row of /m's rewrite table, {+}#·op ⇝ op, a spanned run of
+                // (2c) the absorbing law is /m's: its rewrite, law_absorbing, states {+}#·op ⇝ op, a spanned run of
                 // instructions before an absorbing op, where the op's gate admits it (pure, one obj per obj, the carrier kept).
 
-                // (2f) the poset law is /m's: the poset row of /m's rewrite table, is(op(a))·is(op(b)) ⇝ is(op(b)) where the
+                // (2f) the poset law is /m's: its rewrite, law_poset, states is(op(a))·is(op(b)) ⇝ is(op(b)) where the
                 // comparison orders b past a, stated both ways round and for filter too.
 
                 // (3) inverse cancellation and derivation contraction are /m's: their rules are already data
                 // (group_theory's rules, each instruction's derivation), so /m applies them on the base path too.
 
-                // (5) the stream lift is /m's too: a mapping of a mapper is the mapper, the mapper row of /m's rewrite
-                // table (map(#::T@f) ⇝ #::T@f, where f's operation declares the mapper form), with map_nest beside it.
+                // (5) the stream lift is /m's too: its rewrite, form_map_unwrap, unwraps a mapping of a mapper to the mapper
+                // (map(#::T@f) ⇝ #::T@f, where f's operation declares the mapper form), with map_nest beside it.
 
                 // (6) the distribution kernel -- Thm 19 of Stream Ring Theory, registered as a rewrite:
                 // (a+b)·r = (a·r + b·r)·combiner(r) for a reducer whose partials recombine through a

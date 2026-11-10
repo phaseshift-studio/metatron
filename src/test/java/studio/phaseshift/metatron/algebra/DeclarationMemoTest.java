@@ -64,7 +64,7 @@ public class DeclarationMemoTest extends AbstractMetatronTest {
     @Test
     public void aLawDeclaredAtRuntimeLicensesItsEquation() {
         // int mod declares pure alone, so mod·mod stays. Declared idempotent at runtime (x % m % m is x % m), the claim
-        // licenses /m's rewrite table's op·op ⇝ op at once; the restored claim takes the rule away again. The snapshot reads
+        // licenses /m's law_idempotent rewrite, op·op ⇝ op, at once; the restored claim takes the rule away again. The snapshot reads
         // mod again and keeps every other claim: one claimant joins the law, another law's claimants stand, and the
         // restored claimants are the ones they were, in their order
         final fURI address = Inst.Helper.operationTid(MOD_INST_TID.dom(INT_TID).rng(INT_TID)).addQ(DECQ);
