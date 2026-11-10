@@ -181,6 +181,29 @@ public class CodeTest extends AbstractMetatronTest {
     }
 
     /**
+     * A ZERO POINT ANNIHILATES (Marko, 2026-11-10): an instruction's output, times zero, is nothing, so the monad it
+     * reaches dies. The rest of its chain never runs, a reducer after it counts nothing, a branch adds its zero, and
+     * the next statement still runs. The swarm read a zero-pointed instruction as the end of the code, so the obj the
+     * monad held joined the answer: {@code 2.plus{0}(2)} was {@code 2}.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "2.plus{0}(2)                    % noobj",
+            "2.id{0}()                       % noobj",
+            "2.plus{0}(2).plus(1)            % noobj",
+            "2.id{2}().id{0}()               % noobj",
+            "2.{2}id{0}()                    % noobj",
+            "{1,2,3}.plus{0}(1)              % noobj",
+            "2.branch(id{0}(),id())          % 2",
+            "2.branch(id{0}(),id{0}())       % noobj",
+            "2.id{0}().count()               % 0",
+            "2.plus{0}(2); 5                 % 5",
+    }, delimiter = '%')
+    public void testAZeroPointAnnihilates(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
      * A ONE-INSTRUCTION CODE IS ITS INSTRUCTION, from either side of a test, and nothing longer or emptier is: asserted in
      * Java because the parser reads {@code plus(2)} as the instruction itself, never as a one-instruction code.
      */
