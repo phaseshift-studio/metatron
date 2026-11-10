@@ -163,10 +163,10 @@ public final class MachineSpace extends memSpace {
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
         if (NETWORK.equals(part))
             return this.owner.network().write(vid, obj);
-        // the instset writes its rewrite door, ~/instset/rewrite/<name>, into this machine's own level (BasicInstSet)
+        // the instset writes its table doors, ~/instset/<table>/<name>, into this machine's own level (BasicInstSet)
         if (INSTSET.equals(part) && !vid.hasQ()) {
             final List<String> segments = vid.qLess().resolve().segments();
-            if (segments.size() > this.depth + 1 && REWRITE.equals(segments.get(this.depth + 1)))
+            if (segments.size() == this.depth + 3 && Set.of(REWRITE, INST, TYPE, CONST).contains(segments.get(this.depth + 1)))
                 return this.owner.instset().write(f(String.join("/", segments.subList(this.depth + 1, segments.size()))), obj);
         }
         // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which is
