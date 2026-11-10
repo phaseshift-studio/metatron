@@ -631,7 +631,9 @@ mtron&gt; person::[name=&gt;'marko',geo:location=&gt;geo:point::[-123.0,44.5]]@m
             geo:location=&gt;geo:point::[-123.0,44.5]]@marko
 mtron&gt; *marko.type()                                         [-- the point type: the geometry at the fiber answers --]
 mtron&gt; *marko.inside(geo:bbox2d::[-123.2,44.4,-122.9,44.6])  [-- the point itself, since the filter answers the contained --]
-==&gt;geo:point::[-123.0,44.5]
+==&gt;person::[name=&gt;'marko',
+            geo:location=&gt;geo:point::[-123.0,44.5],
+            location=&gt;geo:point::[-123.0,44.5]]
 mtron&gt; *marko&gt;&gt;geo:location                                   [-- the point itself --]
 ==&gt;geo:point::[-123.0,44.5]
 </code></pre>

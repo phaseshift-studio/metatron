@@ -3,7 +3,6 @@ name: drstynx
 description: a metatron agent
 ---
 
-
 # Dr.Stynx Agent
 
 This skill describes how to spawn the metatron agent named dr.stynx. The boot file `assets/drstynx.boot.mtron` defines

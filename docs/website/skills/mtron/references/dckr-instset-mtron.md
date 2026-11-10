@@ -4,7 +4,6 @@ description: |
   manipulating docker's graph of images, containers, volumes, networks, and the lifecycle of what it creates
 ---
 
-
 # dckrspace
 
 ## architecture
@@ -373,7 +372,6 @@ command permissions.
 ### step 2: mount the database via tbleSpace
 
 ```mtron
-mtron> [-- on a live daemon step 1 created this directory; here the loop creates the same scratch path itself --]
 mtron> bash('mkdir -p /tmp/mtron-dbs')
 ==>['']
 mtron> tblespace::[pattern => mydb:#,
@@ -385,7 +383,6 @@ mtron> tblespace::[pattern => mydb:#,
 ### step 3: create tables and insert data
 
 ```mtron
-mtron> [-- insert tble rows --]
 mtron> mydb:people/1 -> [name=>'marko',role=>architect]
 ==>[name=>'marko',role=>architect]
 mtron> mydb:people/2 -> [name=>'stynx',role=>developer]

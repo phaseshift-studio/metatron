@@ -561,10 +561,10 @@ mtron&gt; bash(cmd=&gt;'whoami')
 ==&gt;['killswitch']
 mtron&gt; bash('df -h')
 ==&gt;['Filesystem      Size  Used Avail U...',
-    'tmpfs           6.1G  6.3M  6.1G  ...',
+    'tmpfs           6.1G  6.4M  6.1G  ...',
     'efivarfs        128K   42K   82K  ...',
-    '/dev/nvme1n1p2  916G  578G  292G  ...',
-    'tmpfs            31G  296M   31G  ...',
+    '/dev/nvme1n1p2  916G  580G  290G  ...',
+    'tmpfs            31G   13M   31G  ...',
     'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
     ...(3 more)]
@@ -644,7 +644,7 @@ mtron&gt; bash('ls').&gt;&gt;.bash(&quot;stat ${_}&quot;)    [-- drain: the full
     '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-08 15:23:18.618535...',
+    'Access: 2026-11-09 15:37:39.118300...',
    ...
 </code></pre>
 <h4>a shape of its own</h4>
@@ -716,10 +716,10 @@ no input to take, so it is shown rather than run:</p>
 mtron&gt; */sys/thread/+.count()
 ==&gt;57
 mtron&gt; sys_stat()
-==&gt;[total_mem_jvm=&gt;mB::648.0,
-    free_mem_jvm=&gt;mB::424.6033,
+==&gt;[total_mem_jvm=&gt;mB::672.0,
+    free_mem_jvm=&gt;mB::334.9540,
     max_mem_mach=&gt;gB::15.1562,
-    used_mem_jvm=&gt;mB::223.3966,
+    used_mem_jvm=&gt;mB::337.0459,
     jvm=&gt;'Java HotSpot(TM) 64-Bit Server VM ...',
     os=&gt;'Linux 7.0.0-42-generic',
     arch=&gt;'amd64',
@@ -774,7 +774,7 @@ into its structural form. Where in doubt, <code>?docq</code> and <code>.explain(
 is doing — the sugar is short precisely because it is legible once:</p>
 <pre><code class="language-mtron">mtron&gt; *&lt;mfs:README.md?mimeq=text/markdown&gt;                    [-- explicit tag, same referent typed --]
 ==&gt;fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]
-*&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
+       *&lt;mfs:boot/docs.mtron&gt;                   [-- the doc boot, read as its code --]
 </code></pre>
 <h3>walking the tree</h3>
 <p>Wildcards are space-side. <code>+</code> is one segment, <code>#</code> is the recursion:</p>

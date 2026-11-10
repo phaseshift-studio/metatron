@@ -504,8 +504,7 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
         <a href="type-system-mtron.md" class="text-decoration-none text-light small"><i class="bi bi-file-earmark-code me-1"></i>type-system-mtron.md</a>
     </div>
     <div class="markdown-body">
-<div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-type-checks" aria-label="watch this terminal recording"><i class="bi bi-terminal-split" aria-hidden="true"></i><span>watch</span></button><div class="modal fade asciinema-modal" id="cast-type-checks" tabindex="-1" aria-labelledby="cast-type-checks-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-type-checks-title">type-system-mtron</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/type-checks.cast" data-cols="100" data-rows="22" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div>
-<h2>mtron type system</h2>
+<div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-type-checks" aria-label="watch type-checks"><i class="bi bi-play-fill" aria-hidden="true"></i><span>type-checks</span></button></div><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-type-constructors" aria-label="watch type-constructors"><i class="bi bi-play-fill" aria-hidden="true"></i><span>type-constructors</span></button></div><div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-mini-fiber-bundle" aria-label="watch fiber bundles: typing recs with polynomial URIs"><i class="bi bi-play-fill" aria-hidden="true"></i><span>fiber bundles: typing recs with polynomial URIs</span></button></div><h2>mtron type system</h2>
 <h3>core concepts</h3>
 <h4>vid and tid</h4>
 <p>Every type in mtron is defined by two URIs:</p>
@@ -602,6 +601,7 @@ values under its own name, and other values can be cast onto it. The stock types
 (<code>xxx::T</code>) still resolve to the real type when one exists. A refinement built on a bare reference with no type behind
 it (<code>xxx::T[?]@yyy</code>) lands off the type hierarchy; types refine types, not references.</p>
 <h4>instantiation</h4>
+
 <pre><code class="language-mtron">mtron&gt; hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
 ==&gt;hundreds::150
 mtron&gt; 23.as(posint::T)               [-- posint::23 --]
@@ -622,8 +622,7 @@ mtron&gt; rec::T[?[flag=&gt;str{2}::T, member=&gt;being{+}::T]]@roster
 <p>A field's type can be any type — including a lambda type or a created one like <code>being</code>.</p>
 <p><strong>Multi-level stacking</strong>: every refinement inherits the <strong>whole predicate stack</strong> of its ancestors, and the stack is
 checked level by level:</p>
-<pre><code class="language-mtron">mtron&gt; [-- hundreds::T = [is(gt(100))] on top of posint's [is(gt(0))] on top of int --]
-mtron&gt; hundreds::150                [-- 150  (passes both levels) --]
+<pre><code class="language-mtron">mtron&gt; hundreds::150                [-- 150  (passes both levels) --]
 ==&gt;hundreds::150
 mtron&gt; hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
 ==&gt;fail::[parse error at line 1, col 1: 50 is not a posint::T[/m/inst/is(/m/inst/gt(100))]@hundreds
@@ -631,6 +630,7 @@ mtron&gt; hundreds::50         [-- dies at posint's level — the ancestor stack
 </code></pre>
 <h4>non-isa predicates (nominal)</h4>
 <p>Freeform functional constraints using instructions:</p>
+
 <pre><code class="language-mtron">mtron&gt; int::T[is(gt(0))]
 mtron&gt; int::T[?&gt;0]
 mtron&gt; int::T[?=42]
@@ -639,8 +639,7 @@ mtron&gt; int::T[?&gt;0.?&lt;120]
 <p>The <code>.</code> operator chains predicates: <code>p1.p2</code> means &quot;apply p1, then apply p2 to the result.&quot; Both must succeed (AND
 semantics).</p>
 <p><strong>OR semantics</strong> use split/merge:</p>
-<pre><code class="language-mtron">mtron&gt; [-- value must be &gt; 0 OR &lt; 120 --]
-mtron&gt; int::T[-&lt;[?&gt;0,?&lt;120]&gt;-]
+<pre><code class="language-mtron">mtron&gt; int::T[-&lt;[?&gt;0,?&lt;120]&gt;-]
 </code></pre>
 <h4>predicate vs no predicate</h4>
 <p>A type <strong>without</strong> a predicate is the most general type at its level — it accepts any value with the correct base type
@@ -718,7 +717,6 @@ from other structurally-identical types.</p>
 types prevent this:</p>
 <pre><code class="language-mtron">mtron&gt; being::T@human                 [-- nominal siblings under being --]
 mtron&gt; being::T@chicken
-mtron&gt; [-- A human is NOT a chicken, despite identical structure --]
 mtron&gt; human::[name=&gt;'marko',age=&gt;29].as(chicken::T)
 ==&gt;fail::[inst apply failure: human::[name=&gt;'marko',age=&gt;29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 </code></pre>
@@ -841,7 +839,8 @@ mtron&gt; rel[int,wayfarer{2}]::(1=&gt;wayfarer::[name=&gt;'bob'])   [-- one way
 </tbody>
 </table>
 <p><strong>Absence</strong> is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
-list, so a zero-admitting TRAILING position is one the shorter list does not fill — <code>lst[str,int{?}]</code> accepts <code>['a']</code>. In
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — <code>lst[str,int{?}]</code> accepts <code>['a']</code>.
+In
 a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — <code>rel[int,wayfarer{?},str]</code> accepts
 <code>1=&gt;'tally'</code> (the middle vertex skipped) while <code>rel[int,wayfarer{+},str]</code> does not. A present value must still be the
 entry's type at both: <code>{?}</code> is zero-or-one, not &quot;anything when present&quot;.</p>
@@ -879,47 +878,56 @@ a request that names nothing leaves the declaration as it stands (<code>Type.Hel
 as false: the lhs is a specialization and <code>role</code> is not the name <code>ninja</code>. The two are still related, at the type
 layer, by that bound substitution rather than by the bracket claim.</p>
 <h4>lifting (dispatch into a fiber)</h4>
-<p>An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: <code>fight?&lt;=ninja()</code> on a
-<code>person[ninja]</code> bundle reaches the <code>ninja</code> object inside it, not the bundle.</p>
-<p>Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE <strong>plus the values
-of its FIBERS</strong>, and each subject is selected and invoked on its own — so the &quot;selection&quot; is ordinary resolution, not
-a lookup table keyed by the declaration:</p>
+<p>An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level. When every fiber it
+reaches keeps its type, the answer is the BUNDLE with those fibers moved — the call is <strong>lifted</strong> from <code>dom =&gt; rng</code> on
+the fiber to <code>bundle =&gt; bundle</code>. When it changes a fiber's type, the call is a <strong>projection</strong> and answers the
+instruction's results instead of the bundle:</p>
+<pre><code>person[int]::[name=&gt;'marko',age=&gt;29].plus(1)       [-- person[int]::[name=&gt;'marko',age=&gt;30] --]
+person[int]::[name=&gt;'marko',age=&gt;29] + 1 + 1       [-- person[int]::[name=&gt;'marko',age=&gt;31] --]
+person[int]::[name=&gt;'marko',age=&gt;29].plus(1)&gt;&gt;age  [-- 30 --]
+person[int]::[name=&gt;'marko',age=&gt;29].gt(18)        [-- true  (int =&gt; bool: a projection) --]
+</code></pre>
+<p>The processor knows nothing of fibers: resolution hands it the instruction a call on a bundle refers to, which is
+either the bundle's own or its lift. Each call is about one of two things:</p>
 <ul>
-<li>an <strong>untyped call lifts over all fibers</strong>; <code>?&lt;=T</code> selects one subject, because a named domain is the subject the
-call is about.</li>
-<li>a <strong>base-typed domain is about a subject's own form, never its name</strong>: <code>?&lt;=rec(...)</code> reaches the bundle AND a
-fiber whose own type refines <code>rec</code> — <code>ninja::T</code> is a <code>rec::T</code>, so the ninja answers a rec-typed instruction as
-itself — while <code>?&lt;=lst(...)</code> reaches neither, and <code>?&lt;=int(...)</code> reaches only an int-valued fiber
-(<code>ex::[o=&gt;12].plus?&lt;=int</code> adds at <code>o</code>, since the bundle is a rec, not an int).</li>
-<li>a <strong>named domain</strong> splits the two levels. The <strong>bundle</strong> answers as the very type it instantiates — a bracket does
-not change the name (<code>dojo[master]</code> is a <code>dojo</code>; a predicated domain additionally requires the same predicates) —
-and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A <strong>fiber</strong> answers as the
-value it holds, so a <em>structural</em> type (<code>weaponed -&gt; rec::T[?[weapon=&gt;str::T]]</code>) is also satisfied by a fiber's own
-shape: the ninja at <code>role</code> carrying a weapon answers <code>?&lt;=weaponed(...)</code> as itself. That is why <code>?&lt;=weaponed</code> reaches
-the ninja and never the bundle.</li>
-<li><strong>the fiber bundle speaks first</strong>: when the domain NAMES a type the bundle itself is, the bundle is the subject
-and its fibers are not asked — <code>weaponed[weaponed]::[weapon=&gt;'axe',role=&gt;weaponed::[weapon=&gt;'knife']]</code> answers
-<code>?&lt;=weaponed(weapon)</code> with <code>'axe'</code> alone, not <code>{'axe','knife'}</code>. A domain that names no single subject — a generic
-one, or a base FORM (about every subject of that form) — does not supersede: <code>?&lt;=rec</code> and an untyped read still
-sum over both levels.</li>
-<li><strong>a FILTER asks the bundle first too</strong>: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
-so <code>*marko.?weaponed::T</code> answers <code>*marko</code> (the bundle is accepted as a weaponed through the ninja it exposes; the
-filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
-fibers, and a <code>fail::</code> from the bundle still propagates.</li>
-<li><code>noobj</code> is the multiplicity identity, so <code>{noobj, 29}</code> = <code>29</code>: a subject the instruction is not about contributes
-nothing. A <code>fail::</code> is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
-would read as a success.</li>
-<li>subjects are <strong>one level deep</strong>: a fiber that is itself a bundle is applied to as the object it is, never expanded
-again.</li>
-<li><code>Inst.Form.typer</code> — <code>as</code>, <code>::</code>, <code>type</code>, <code>vid</code>, <code>tid</code> — <strong>never lifts</strong>. A typer retypes the one object it is given,
-so it is opaque: <code>as(person::T)</code> is both the narrowing escape from a fan-out and the exception to it (it changes the
-basis, so it cannot be distributed over the old one).</li>
-<li>ref-writes (<code>&lt;uri&gt; -&gt; obj</code>) are address-precise and never lift. <code>update</code> (<code>&gt;&gt;=</code>) does fan out, since its domain is
-any obj; <code>as(T)</code> first, or <code>?&lt;=T</code> on the call, is what narrows it back to one basis.</li>
-<li>a fan-out result is an <strong>unordered multiplicity</strong>. When order or provenance matters the user writes the keyed rec
-explicitly — one key per fiber, each narrowing its own call (<code>[role =&gt; *marko.describe?&lt;=ninja(), position =&gt; *marko.describe?&lt;=position()]</code>). There is no keyed projection that does it for you.</li>
-<li>a bundle on which <strong>no subject</strong> applies yields <code>noobj</code> — a miss is not a failure. The same miss on a non-bundle
-value is still a loud <code>unable to locate inst-f</code>, because there is nothing else to try.</li>
+<li><strong>the bundle itself</strong> — a typer, a generic domain (<code>&gt;&gt;name</code>, <code>?&lt;=#</code>), the rec form (<code>?&lt;=rec</code>, a rec <code>plus</code>), or
+the bundle's own name (<code>ponder?&lt;=person</code>). It runs on the bundle alone, as any instruction runs on any rec, and the
+fibers are not asked: <code>*marko&gt;&gt;name</code> is the person's name, and a key only a fiber carries (<code>*marko&gt;&gt;weapon</code>) is
+<code>noobj</code>. A bracket does not change the name (<code>dojo[master]</code> is a <code>dojo</code>).</li>
+<li><strong>its fibers</strong> — any other domain. Every fiber the call is about runs it (the parallel fibers); when the results
+keep their fibers' types they are written back, and a fiber the call is not about is left as it is, as is every
+field that is no fiber. Each fiber resolves the CALL against the value it holds, so fibers of different types each
+run their own overload of it — with <code>bump</code> declared on int and on str, <code>tagged[int,str]::[hits=&gt;1,label=&gt;'hi'].bump()</code>
+is <code>tagged[int,str]::[hits=&gt;2,label=&gt;'hi!']</code>, written as a literal or read with <code>*</code>:
+<ul>
+<li>a <strong>base-typed domain is about a fiber's own form</strong>: <code>?&lt;=int(...)</code> reaches an int-valued fiber
+(<code>ex::[o=&gt;12].plus?&lt;=int(45)</code> is <code>ex::[o=&gt;57]</code>), <code>?&lt;=lst(...)</code> reaches none of a ninja's.</li>
+<li>a <strong>named domain</strong> reaches the fiber whose own type IDENTITY is that name (<code>fight?&lt;=ninja()</code> reaches the ninja,
+and the body's <code>&gt;&gt;weapon</code> reads the ninja's). The bundle is <em>accepted</em> where a ninja is expected, but acceptance
+is
+not dispatch identity.</li>
+<li>a <strong>structural</strong> type (<code>weaponed -&gt; rec::T[?[weapon=&gt;str::T]]</code>) is satisfied by a fiber's own shape: the ninja
+at <code>role</code> carrying a weapon answers <code>?&lt;=weaponed(...)</code> as itself, while the bundle answers by identity only.</li>
+</ul>
+</li>
+</ul>
+<p>The rest of the rules:</p>
+<ul>
+<li>a call that <strong>changes a fiber's type</strong> is a PROJECTION: it answers the instruction's results, summed as a
+multiplicity, not the bundle — <code>fight: ninja =&gt; str</code> answers the str, and <code>*twin.rank()</code> (two ninjas, <code>rank</code> an int)
+answers <code>{11,3}</code>. The type is the one the replaced value had, its multiplicity included, so a <code>sum</code> over the
+<code>real{2}</code> at <code>rec[geo/+]</code> projects too, and a filter that drops one fiber's value (<code>noobj</code>) projects to what it
+kept. One changed fiber is enough. <code>noobj</code> is the sum's identity.</li>
+<li>a <code>fail::</code> from a fiber the call DID apply to is not the identity — it PROPAGATES — or a call that broke on one
+fiber would read as a success.</li>
+<li>a lift is <strong>one level deep</strong>: each fiber resolves the call against the object it holds, so a fiber that is itself a
+bundle is applied to as itself and never lifted again. One <code>&gt;&gt;</code> makes it the bundle.</li>
+<li><code>Inst.Form.typer</code> — <code>as</code>, <code>::</code>, <code>type</code>, <code>vid</code>, <code>tid</code> — <strong>never lifts</strong>: a typer retypes the one object it is given.</li>
+<li>ref-writes (<code>&lt;uri&gt; -&gt; obj</code>) are address-precise and never lift, and <code>update</code> (<code>&gt;&gt;=</code>), whose domain is any obj, is
+the bundle's own.</li>
+<li>a lift is a VALUE, not a write: a lifted <code>*marko</code> copy leaves <code>marko</code> untouched.</li>
+<li>a bundle whose fibers the call is about none of yields <code>noobj</code> — a miss is not a failure. The same miss on a
+non-bundle value is still a loud <code>unable to locate inst-f</code>, because there is nothing else to try.</li>
 </ul>
 <h4>acceptance and covariance</h4>
 <p>Two questions, and they must not be confused: <em>may I pass this value here</em> (acceptance) and <em>which object does this
@@ -930,8 +938,8 @@ does not have fails that test. Absence is legal only where the fiber's coefficie
 <code>rec[role,position{?}]</code> — and reading a missing key still yields <code>noobj</code>. <code>noobj</code> is a value, not a hole.</li>
 <li><strong>A predicated fiber type is satisfied by the FIBER'S VALUE.</strong> A poly entry types one of the bundle's fibers
 (<code>person[ninja]</code> puts a ninja at the field the declaration calls <code>role</code>), so the object a trait's shape is about
-(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>bundle&gt;&gt;role</code> — not the bundle's declaration. A
-<em>shaped nominal</em> trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+(<code>ninja::T[?[name=&gt;str::T]]</code>) is the value AT that fiber — <code>bundle&gt;&gt;role</code> — not the bundle's declaration. A <em>shaped
+nominal</em> trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
 asked of <code>bundle&gt;&gt;role</code>, which is why <code>kestrel[falconer]</code> is a <code>falconer</code> although the bundle itself declares no
 <code>name</code>. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
 value, and a field the bundle's declaration itself types incompatibly (<code>name=&gt;str</code> where the trait wants
@@ -949,16 +957,12 @@ identities, and neither is a bundle's own field bag: the bundle is what it insta
 </ul>
 <p>A shaped nominal trait asks the value at the fiber, not the bundle:</p>
 <pre><code class="language-mtron">acceptance is asked of the fiber's value, not the bundle's declaration
-mtron&gt; [-- the bundle declares ONLY the fiber it exposes --]
 mtron&gt; kestrel -&gt; rec[role]::T[?[role=&gt;rec::T]]@kestrel
-mtron&gt; [-- the shaped nominal trait declares the shape of the fiber's value --]
 mtron&gt; falconer -&gt; rec::T[?[name=&gt;str::T]]@falconer
 mtron&gt; jarl -&gt; kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
 ==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]@jarl
-mtron&gt; [-- the bundle declares no name; the falconer at `role` carries one, so jarl is a falconer --]
 mtron&gt; *jarl.isa(falconer::T)
 ==&gt;kestrel[falconer]::[role=&gt;falconer::[name=&gt;'sigrid']]
-mtron&gt; [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
 mtron&gt; skald -&gt; kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
 ==&gt;kestrel[falconer]::[role=&gt;[name=&gt;7]]@skald
 mtron&gt; *skald.isa(falconer::T)
@@ -976,6 +980,7 @@ mtron&gt; *skald.isa(falconer::T)
 </tbody>
 </table>
 <h4>worked example: two fibers</h4>
+<div class="asciinema-embed"><button type="button" class="asciinema-launch" data-bs-toggle="modal" data-bs-target="#cast-mini-fiber-bundle" aria-label="watch fiber bundles: typing recs with polynomial URIs"><i class="bi bi-play-fill" aria-hidden="true"></i><span>fiber bundles: typing recs with polynomial URIs</span></button></div>
 <p>The declaration names both fibers; the instance types them. <code>position</code> is declared <strong>bare</strong> (<code>rec::T@position</code>) on
 purpose — a trait declared <em>with</em> a shape asks the bundle's declaration to pass its test, and this bundle declares
 <code>name</code>, <code>age</code>, <code>role</code> and <code>position</code>, not a position's <code>title</code>/<code>rank</code>:</p>
@@ -989,14 +994,9 @@ mtron&gt; marko -&gt; person[ninja,position]::[name=&gt;'marko',age=&gt;29,role=
     age=&gt;29,
     role=&gt;ninja::[name=&gt;'dark_assassin'],
     position=&gt;position::[title=&gt;'sniper',rank=&gt;5]]@marko
-mtron&gt; [-- untyped: both the bundle and the role fiber carry a name --]
 mtron&gt; *marko&gt;&gt;name
 ==&gt;'marko'
-==&gt;'dark_assassin'
-mtron&gt; [-- only the position fiber carries a title; noobj is the identity --]
 mtron&gt; *marko&gt;&gt;title
-==&gt;'sniper'
-mtron&gt; [-- a bundle's own field reads alone --]
 mtron&gt; *marko&gt;&gt;age
 ==&gt;29
 </code></pre>
@@ -1047,12 +1047,10 @@ hierarchy, seen in <em>type hierarchy and refinement</em>.)</p>
 <h4><code>.as()</code> — the cast</h4>
 <p><code>.as(type)</code> is the cast: the type's predicate tests the value first, and only an admitted value is re-stamped
 with the type's vid (and, if the type carries one, run through its constructor — see <em>type constructors</em> above):</p>
-<pre><code class="language-mtron">mtron&gt; [-- intabs has a constructor (absolute value), but the gate still runs first --]
-mtron&gt; 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
+<pre><code class="language-mtron">mtron&gt; 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==&gt;intabs::2
 mtron&gt; -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
 ==&gt;fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/choose([/m/inst/is(/m/inst/lt(0))=&gt;/m/inst/mult(-1),/m/inst/id()=&gt;/m/inst/id()])./m/inst/rshift()]@intabs [structural] (at /m/inst/as@1)]
-mtron&gt; [-- Without a constructor the cast is a pure test --]
 mtron&gt; -2.as(int::T[?&gt;0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
 ==&gt;fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))] [structural] (at /m/inst/as@1)]
 </code></pre>
@@ -1083,7 +1081,7 @@ lcd(bb::T,cc::T)
 <p><code>type + type</code> itself has no instruction — summing types is refused (the fail text you get today, shown not run):</p>
 <pre><code class="language-mtron">posint::T + hundreds::T         [-- fail: int::T[is(gt(0))]@posint [type] unable to convert int::T (at plus) --]
 </code></pre>
-
+<div class="modal fade asciinema-modal" id="cast-type-checks" style="--cols: 40" tabindex="-1" aria-labelledby="cast-type-checks-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-type-checks-title">type-checks</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/type-checks.cast" data-cols="40" data-rows="22" data-speed-rates="0.5,1,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-type-constructors" style="--cols: 40" tabindex="-1" aria-labelledby="cast-type-constructors-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-type-constructors-title">type-constructors</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/type-constructors.cast" data-cols="40" data-rows="22" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div><div class="modal fade asciinema-modal" id="cast-mini-fiber-bundle" style="--cols: 97" tabindex="-1" aria-labelledby="cast-mini-fiber-bundle-title" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="cast-mini-fiber-bundle-title">fiber bundles: typing recs with polynomial URIs</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="close"></button></div><div class="modal-body"><div class="asciinema-cast" data-cast="../../../asciinema/mini-fiber-bundle.cast" data-cols="97" data-rows="35" data-speed-rates="0.5,1,1.5,2" data-speed-default="1" data-autoplay></div><div class="asciinema-caption" aria-live="polite"></div></div></div></div></div></div>
     </div>
     <script src="../../../js/asciinema.js" defer></script>
 </main>

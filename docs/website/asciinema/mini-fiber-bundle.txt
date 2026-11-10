@@ -1,0 +1,18 @@
+[== rec polynomials are called fiber bundles ==];
+[== type definitions ==];
+rec[hp,role]::T[?[name=>str::T,hp=>int::T]]@human;
+rec::T@warrior;
+warrior::T@ninja;
+warrior::T@sumo;
+[== instruction definitions ==];
+|inst?int<=int(int::T){-*0}@damage;
+|inst?human{?}<=human(){.?[hp=>?>0]}@is_dead;
+|inst?warrior<=warrior(){>>=[weapon=>none]}@no_more_war;
+[== type values ==];
+human[int,ninja]::[name=>'marko',hp=>100,role=>ninja::[weapon=>bulldozer]]@marko;
+human[int,sumo]::[name=>'thunder down under',hp=>100,role=>sumo::[weapon=>self]]@thunder;
+@thunder.damage(10).is_dead().else('dead');
+@marko.damage(1).is_dead().else('dead');
+@thunder.damage(90).is_dead().else('dead');
+@marko.no_more_war();
+[== marko must find new meaning in life...for his trusty bulldozer is no longer ==];

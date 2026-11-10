@@ -288,6 +288,7 @@ cmd_build() {
             ;;
         docs)
             target="${1:-docs/skills/mtron}"
+            cast_flags=""
             case "$target" in
                 *.md)
                     case "$target" in
@@ -305,6 +306,12 @@ cmd_build() {
                             # skills) so --html, which walks up from the OUTPUT, finds
                             # the website articles container and renders the pages there
                             out_dir=".metatron/articles"
+                            ;;
+                        docs/asciinema/*.md)
+                            # a CAST-ONLY source: evaluate the tagged blocks and emit
+                            # the recordings; no page is rendered
+                            out_dir="target/temp/casts"
+                            cast_flags="--cast-out docs/website/asciinema --no-page"
                             ;;
                         *)
                             out_dir="_probe"
@@ -326,6 +333,8 @@ cmd_build() {
             bundle="echo \"==> bundling bin/wsplus into the skill scripts dir(s)\"
                 python3 bin/build-wsplus.py docs/website/skills/mtron/scripts docs/website/skills/metatron/scripts"
             if [ "${NO_HTML:-0}" = "1" ]; then html_flag=""; bundle=":"; fi
+            # cast-only sources render no page and bundle nothing
+            if [ -n "$cast_flags" ]; then html_flag=""; bundle=":"; fi
             # MarkdownRunner: markdown pass (+ site-html render in one VM run, unless NO_HTML).
             # The jar name carries the pom version, so it is resolved by glob inside
             # the container (a version bump must not leave us pointing at a missing jar).
@@ -338,7 +347,7 @@ cmd_build() {
                     mvn $MVN_OPTS -DskipTests package
                     JAR=\$(ls -1 target/metatron-*-jar-with-dependencies.jar | head -1)
                 fi
-                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir $html_flag
+                java $JVM_FLAGS -cp \"\$JAR\" $DOCS_RUNNER $target -o $out_dir $html_flag $cast_flags
                 $bundle"
             build_run /bin/sh -c "$cmd"
             ;;

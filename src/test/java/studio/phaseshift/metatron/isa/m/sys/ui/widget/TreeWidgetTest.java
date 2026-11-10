@@ -20,20 +20,26 @@ package studio.phaseshift.metatron.isa.m.sys.ui.widget;
 
 import org.jline.utils.AttributedString;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.sys.ui.Border;
 import studio.phaseshift.metatron.isa.m.sys.ui.Stylable;
 import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,6 +64,17 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class TreeWidgetTest extends AbstractMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(TreeWidgetTest.class);
+
+    /**
+     * The last row a supplied-entries tree answered with. A STATIC field on purpose: the {@code on_select} call
+     * must close over nothing — a Java closure in the rec fails the tree type's contract check.
+     */
+    private static fURI SELECTED;
+
+    @BeforeEach
+    void clearSelection() {
+        SELECTED = null;
+    }
 
     @BeforeAll
     static void setUp() {
@@ -323,5 +340,60 @@ public class TreeWidgetTest extends AbstractMetatronTest {
         first.style().foreground("{{b}}").applyStyle();
         assertEquals("{{b}}", first.getStyle().foreground(), "a style write lands in the rec");
         assertTrue(first.format().contains("{{b}}"), "and the render picks it up: " + first.format());
+    }
+
+    /**
+     * A HOST MAY SUPPLY THE ROWS. A tree whose children are not one space subtree (the machine tree's links hang in
+     * each frame's own space) is walked by its host, which adds the entries itself; the widget draws those rows —
+     * rails and all — and a row click answers {@code on_select} with the row's {@code rel::T}, the same contract
+     * TreeSelectTool's Enter gives.
+     */
+    @Test
+    void testSuppliedEntriesAreDrawnAndAnswerOnSelect() {
+        final List<CommonUtil.TreeEntry> entries = List.of(
+                new CommonUtil.TreeEntry(f("/"), ".", uri("/"), 0, true, 1),
+                new CommonUtil.TreeEntry(f("/a"), "a", uri("/a"), 1, true, 0));
+        final TreeWidget tree = new TreeWidget(mutableMap(
+                uri(ROOT), uri("/"),
+                uri(MAX), jnt(0),
+                uri(ON_SELECT), instLambda((lhs, inst) -> {
+                    // guard: the contract check may apply the call to a probe value, so this must be total
+                    if (lhs.isRel()) SELECTED = lhs.asRel().first().uriValue();
+                    return noobj();
+                })), UI_TREE_TID, null, new ArrayList<>(entries));
+
+        assertEquals(List.of(".", "└─ a"), tree.rowStrings(), "supplied entries are the rows, drawn by the tree");
+        assertTrue(tree.onClick(1, 0), "a row click is consumed when the rec carries on_select");
+        assertEquals(f("/a"), SELECTED, "and it answers with the clicked row's rel");
+        assertFalse(tree.onClick(2, 0), "a row past the entries is inert");
+    }
+
+    /**
+     * A PANEL FRAMES AN ATTACHMENT. A {@code style} attachment is the panel's content: its rows are the body,
+     * drawn as the attachment formatted them inside the panel's border (no re-wrap — that would break the row a
+     * click maps to), and a click inside the frame is the attachment's click. That is how a popup gets a border and
+     * a background without giving up the row clicks of the widget it frames.
+     */
+    @Test
+    void testAPanelFramesItsAttachmentAndPassesTheClick() {
+        final TreeWidget tree = new TreeWidget(mutableMap(
+                uri(ROOT), uri("/"),
+                uri(MAX), jnt(0),
+                uri(ON_SELECT), instLambda((lhs, inst) -> {
+                    // guard: the contract check may apply the call to a probe value, so this must be total
+                    if (lhs.isRel()) SELECTED = lhs.asRel().first().uriValue();
+                    return noobj();
+                })), UI_TREE_TID, null, new ArrayList<>(List.of(
+                new CommonUtil.TreeEntry(f("/"), ".", uri("/"), 0, true, 1),
+                new CommonUtil.TreeEntry(f("/a"), "a", uri("/a"), 1, true, 0))));
+        final PanelWidget panel = new PanelWidget("machines", "").style()
+                .border(Border.continuous).attachment(tree, true).applyStyle();
+
+        final String rendered = Graphitty.strip(Graphitty.string(panel.format()));
+        assertTrue(rendered.contains("machines"), "the panel's title frames it: " + rendered);
+        assertTrue(rendered.contains("└─ a"), "and the attachment's rows are its body: " + rendered);
+        assertTrue(panel.onClick(2, 1), "a click inside the frame is the attachment's (row 2 is its second row)");
+        assertEquals(f("/a"), SELECTED, "so the row's on_select fires");
+        assertFalse(panel.onClick(0, 1), "the title row is the panel's chrome, not the attachment's");
     }
 }

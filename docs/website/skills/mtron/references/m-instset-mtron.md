@@ -3,7 +3,6 @@ name: mtron-language-reference
 description: a practical mtron language reference — mono, poly, and call types, operators, expression chaining, and syntax.
 ---
 
-
 # mtron language reference
 
 A data-flow language over the metatron object graph. Every value is an **Obj** — int, str, real, bool, uri, rec, lst,

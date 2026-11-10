@@ -653,10 +653,7 @@ mtron&gt; mcp_client::[host=&gt;http://localhost:8777/mcp]@a
 ==&gt;fail::[parse error at line 1, col 1: unable to construct mcp_client::T: fail::['inst apply failure: java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.util.concurrent.ExecutionException: java.net.ConnectException. The server answered neither the 2025-03-26 protocol detection request nor the 2025-03-26 initialization that followed it. If the server does not tolerate being sent a method it does not know, skip detection by setting the protocol version explicitly, for example .protocolVersion(&quot;2025-03-26&quot;). [SocketChannelImpl&lt;204&gt;]']['fail']['fail']
    	while parsing: mcp_client::[host=&gt;http://localhost:8777/mcp]@a]
 mtron&gt; *a&gt;&gt;tool
-mtron&gt; [-- =&gt; [m_inst_eval_mtron=&gt;tool::[inst=&gt;..., name=&gt;m_inst_eval_mtron, desc=&gt;..., arg=&gt;...], ...] --]
-mtron&gt; [-- invoke a tool by applying its inst field --]
 mtron&gt; a/tool/m_inst_eval_mtron/inst(&quot;1+2&quot;)
-mtron&gt; [-- =&gt; 3 --]
 </code></pre>
 <h4>WebSocket</h4>
 <pre><code>mcp_client::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;]@/usr/ai/mcp/index-mcp;

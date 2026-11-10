@@ -31,6 +31,7 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tracer;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.LogObj;
 import studio.phaseshift.metatron.isa.m.sys.ui.Border;
@@ -49,21 +50,18 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.io.PrintStream;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_CONSOLE_TID;
-import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_NETWORK_PANEL_TID;
+import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -749,17 +747,18 @@ public final class CommandPalette extends MRec {
         final int height = Math.clamp(history.size() + 2, 4, HISTORY_HEIGHT);
         final StringBuilder body = new StringBuilder();
         for (int i = 0; i < history.size(); i++) {
-            if (i > 0)
-                body.append('\n');
+            if (i > 0) body.append('\n');
             // newest first, in the banner's accent; the rest read as history behind it
-            body.append(i == 0 ? "{{Y}}" : "{{w}}").append("• ").append(history.get(i));
+            body.append("{{y}}").append(StatusLine.MESSAGE_DOT).append("{{b}}").append(history.get(i));
         }
-        final PanelWidget popup = new PanelWidget("messages (" + history.size() + ")", body.toString());
+        final PanelWidget popup = new PanelWidget(StatusLine.ENVELOPE + "  {{m}}messages{{g}} (" + history.size() + "){{b}}", body.toString());
         final Stylable.Style<PanelWidget> style = Stylable.Style.empty();
         // BOTTOM_LEFT with a row offset of one puts the bottom border on the row above the status bar; the left
         // edge is the envelope's own column, and the surface clamps the box into the terminal when it overflows
         style.floatAt(FloatingSurface.Anchor.BOTTOM_LEFT, width, 1, envelope.start());
         style.height(height);
+        style.width(width);
+        style.foreground("{{b}}");
         // ONE LINE PER MESSAGE: the panel elides an overlong entry with … rather than wrapping it into several
         // rows, so every sighting stays a row the reader can scan (the popup scrolls when the list outgrows it)
         style.wordWrap(false);
@@ -771,6 +770,160 @@ public final class CommandPalette extends MRec {
         surface.dismissPopups();   // one popup at a time
         popup.run();
         surface.popup(popup);
+    }
+
+    /**
+     * The machine tree popup's natural size — the status bar's machine segment opens it, capped to the terminal.
+     */
+    private static final int MACHINE_TREE_WIDTH = 60;
+    private static final int MACHINE_TREE_HEIGHT = 25;
+    /**
+     * The child-link segment: written by {@link Machine#push(fURI)} and read by the walk, so the two cannot disagree
+     * about where a frame's children hang.
+     */
+    private static final String CHILD = "child";
+    /**
+     * How deep the popup walks the frame tree. Depth is the tree's own budget ({@code max}); the ROW budget is the
+     * terminal's, and the walk stops at it (the popup sizes itself to the rows it got, so nothing is ever windowed).
+     */
+    private static final int MACHINE_TREE_DEPTH = 12;
+
+    /**
+     * THE MACHINE TREE — the status bar's machine segment opens it: the VM's frames as a {@link TreeWidget}, one row
+     * per frame, rooted at {@code /.}.
+     * <p>
+     * THE ENTRIES ARE THE WALK. A frame's children are not under one space subtree — {@link Machine#push(fURI)}
+     * writes each link into the PUSHING frame's own space ({@code <vid>/child/<relative>}) — so the tree is walked
+     * here and handed to the widget as entries ({@link TreeWidget#entries()}); the widget draws them (rails, labels,
+     * style), so nothing is formatted by hand.
+     * <p>
+     * It is a POPUP: a pointer click outside it dismisses it, and a click on a row submits {@code move(<uri>)} at the
+     * prompt (the tree's {@code on_select}) and closes it.
+     *
+     * @param segment the clicked status-bar segment, whose start column the popup aligns to
+     */
+    public static void showMachineTree(final SpanUI segment) {
+        final Console console = Console.LOCAL_INSTANCE;
+        final Terminal terminal = Console.getTerminal();
+        if (null == console || null == Machine.root() || null == terminal)
+            return;
+        final int terminalWidth = terminal.getColumns() <= 0 ? 100 : terminal.getColumns();
+        final int terminalHeight = terminal.getRows() <= 0 ? 24 : terminal.getRows();
+        final FloatingSurface surface = console.getFloatingSurface();
+        surface.dismissPopups();   // one popup at a time
+        // THE PANEL'S INTERIOR IS THE ROW BUDGET: its top (title) and bottom borders are not rows of tree, and the
+        // popup is sized to exactly the rows it got so the surface never windows a row a click maps by index
+        final int boxHeight = Math.max(4, Math.min(MACHINE_TREE_HEIGHT, terminalHeight - 3));
+        final TreeWidget tree = new TreeWidget(mutableMap(
+                uri(ROOT), uri(Machine.root().vid()),
+                uri(MAX), jnt(MACHINE_TREE_DEPTH),
+                uri(ON_SELECT), instLambda((lhs, _) -> {
+                    // the contract check may apply a call to a probe value, so this stays total: only a node rel acts
+                    if (lhs.isRel())
+                        moveTo(lhs.asRel().first().uriValue());
+                    return noobj();
+                })), UI_TREE_TID, null, new ArrayList<>());
+        // THE FRAMES ARE THIS TREE'S ENTRIES: walk the child links and add them, no strings involved
+        walkFrames(tree.entries(), Math.max(1, boxHeight - 2));
+        final PanelWidget panelWidget = new PanelWidget(StatusLine.MACHINE + "  {{m}}machine{{b}}", "")
+                .style()
+                .border(Border.continuous)
+                .foreground("{{b}}")
+                .floatAt(FloatingSurface.Anchor.BOTTOM_LEFT, Math.max(1, Math.min(MACHINE_TREE_WIDTH, terminalWidth - segment.start())), 1, segment.start())
+                // the panel PADS nothing: its height is a viewport cap, so it must cover every row it was given
+                .height(Math.max(4, tree.entries().size() + 2))
+                // the tree is the panel's CONTENT (see PanelWidget: a style attachment is drawn as the body and
+                // answers the panel's clicks), which is how the popup gets a border and a background
+                .attachment(tree, true).applyStyle();
+        panelWidget.run();
+        surface.popup(panelWidget);
+    }
+
+    /**
+     * The VM's frames walked into {@code entries}, depth-first and parents before children: each frame's children
+     * are the leaf addresses of its {@code child} table, read through THAT frame's own memory (the links hang in its
+     * own space) and with the {@code child} segment removed again — the link
+     * {@code <vid>/child/<relative>} is the child's address {@code <vid>/<relative>}.
+     *
+     * @param entries    the tree's entries ({@link TreeWidget#entries()})
+     * @param maxEntries the row budget: the walk stops once the popup could not draw another row
+     */
+    static void walkFrames(final List<CommonUtil.TreeEntry> entries, final int maxEntries) {
+        if (null == Machine.root())
+            return;
+        walkFrame(Machine.root(), Machine.root().vid().resolve(), Machine.root().vid(), 0, true, entries, maxEntries);
+    }
+
+    /**
+     * Visit one frame and its subtree, parents before children.
+     */
+    private static void walkFrame(final Machine machine, final fURI base, final fURI display, final int depth,
+                                  final boolean isLast, final List<CommonUtil.TreeEntry> entries,
+                                  final int maxEntries) {
+        if (entries.size() >= maxEntries)
+            return;
+        final List<fURI> children = childFrames(machine, base);
+        // THE ROW LABEL IS THE ADDRESS: a frame tree is read by address (that is what a click will move to), and a
+        // name alone is ambiguous once two frames share a label at different depths
+        entries.add(new CommonUtil.TreeEntry(display, display.toString(), display.toUri(),
+                depth, isLast, children.size()));
+        if (depth >= MACHINE_TREE_DEPTH)
+            return;
+        for (int i = 0; i < children.size(); i++) {
+            final fURI childVID = children.get(i);
+            final Obj child = Machine.read(childVID);
+            walkFrame(child.isMachine() ? child.asMachine() : null, childVID, childVID, depth + 1,
+                    i == children.size() - 1, entries, maxEntries);
+        }
+    }
+
+    /**
+     * The frames directly under {@code machine}: the leaf addresses of its {@code child} table. Read as a branch
+     * ({@code .../child/#/}) so every stored link comes back as a rel whose first is the CONCRETE address the child
+     * hangs at — which also keeps a multi-segment push ({@code push(<a/b>)}) one node rather than an invented
+     * intermediate one. A frame whose memory no longer answers (a popped frame's link outlives it) is a leaf.
+     */
+    private static List<fURI> childFrames(final Machine machine, final fURI vid) {
+        if (null == machine)
+            return List.of();
+        final List<fURI> children = new ArrayList<>();
+        final fURI table = vid.extend(CHILD);
+        machine.memory().read(table.extend("#/")).stream()
+                .map(Obj::asRel)
+                .forEach(link -> {
+                    final fURI relative = link.first().uriValue().removePrefix(table);
+                    if (!relative.isEmpty())
+                        children.add(vid.extend(relative).resolve());
+                });
+        children.sort(Comparator.comparing(fURI::toString));
+        return children;
+    }
+
+    /**
+     * The line a row click submits: {@code move(<uri>)}, the frame instruction that walks to a machine without
+     * closing the one it leaves.
+     *
+     * @param vid the machine's address
+     */
+    static String moveLine(final fURI vid) {
+        return "move(<%s>)".formatted(vid);
+    }
+
+    /**
+     * Submit a row's move at the prompt, the way a typed line would — the console's own executor runs it in the
+     * frame the prompt runs in — and close the popup.
+     */
+    private static void moveTo(final fURI vid) {
+        final Console console = Console.LOCAL_INSTANCE;
+        // a pointer click is read while the prompt owns the terminal, so this guard is the normal path — it is the
+        // same one a transcript link makes before submitting a line
+        if (null == console || !console.inReadLine())
+            return;
+        console.getFloatingSurface().dismissPopups();   // the pick closes the popup ...
+        final var buffer = console.getReader().getBuffer();
+        buffer.clear();
+        buffer.write(moveLine(vid));
+        console.getWidgets().callWidget("accept-line");   // ... and the move runs where a typed line would
     }
 
     /**

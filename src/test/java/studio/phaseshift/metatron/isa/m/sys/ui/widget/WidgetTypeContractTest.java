@@ -189,6 +189,22 @@ public class WidgetTypeContractTest extends AbstractInstSetTest {
                 "tree_select.max is an int under a declared key (TreeSelectTool.maxDepth writes it)");
     }
 
+    /**
+     * The machine tree popup writes a tree over the frame child links: root, max, the label call, and the click
+     * call the status bar wires to {@code move}. That is the shape the tree type declares, and the type is checked
+     * here rather than only in the console, where type predicates are off.
+     */
+    @Test
+    void testMachineTreeTypeAcceptsTheTreeThePopupWrites() {
+        assertDoesNotThrow(() -> new TreeWidget(mutableMap(
+                        uri(ROOT), uri("/no/such/frame"),
+                        uri(MAX), jnt(0),
+                        uri(CODE), instLambda((lhs, inst) -> lhs),
+                        uri(ON_SELECT), instLambda((lhs, inst) -> lhs)),
+                UI_TREE_TID, null).format(),
+                "the machine tree written the way the status-bar popup writes it must satisfy /m/sys/ui/widget/tree_widget");
+    }
+
     @Test
     void testPanelTypeRejectsAListBody() {
         final Map<Obj, Obj> jvm = mutableMap(uri(BODY), (Obj) lst(str("alpha"), str("beta")));

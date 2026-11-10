@@ -64,7 +64,7 @@ the same declarations the type checker uses:
 | `accordion_widget::T`      | `title`, `body`                                               |
 | `panel_widget::T`          | `title`, `body`                                               |
 | `table_widget::T`          | `header`, `row`, `metadata` (rows of data behind the display) |
-| `tree_widget::T`           | `root`, `max`, `code`, `flatten`, `xref`, `expand`            |
+| `tree_widget::T`           | `root`, `max`, `code`, `on_select`, `flatten`, `xref`, `expand` |
 | `progress_table_widget::T` | `header`, `row`                                               |
 | `label_line_widget::T`     | `body`, `key`, `on_key`                                       |
 | `menu_bar_widget::T`       | `height`, `lines`                                             |

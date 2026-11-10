@@ -1001,19 +1001,7 @@ public final class CommonUtil {
     public static void treeConsumer(final fURI root, final int maxDepth,
                                     final Set<fURI> forceExpand,
                                     final Consumer<TreeEntry> consumer) {
-        _treeWalk(root, maxDepth, forceExpand, 0, true, consumer);
-    }
-
-    private static void _treeWalk(final fURI uri, final int maxDepth, final int depth,
-                                  final boolean isLast, final Consumer<TreeEntry> consumer) {
-        _treeWalk(uri, maxDepth, Set.of(), depth, isLast, null, consumer);
-    }
-
-    private static void _treeWalk(final fURI uri, final int maxDepth,
-                                  final Set<fURI> forceExpand,
-                                  final int depth, final boolean isLast,
-                                  final Consumer<TreeEntry> consumer) {
-        _treeWalk(uri, maxDepth, forceExpand, depth, isLast, null, consumer);
+        _treeWalk(root, maxDepth, forceExpand, 0, true, null, consumer);
     }
 
     private static void _treeWalk(final fURI uri, final int maxDepth,
@@ -1025,8 +1013,8 @@ public final class CommonUtil {
         // segment, so strip the branch marker before naming (keep the branch uri for navigation).
         final String name = uri.asNode().name();
 
-        final java.util.List<fURI> childUris = new java.util.ArrayList<>();
-        final java.util.Map<fURI, fURI> childXrefs = new java.util.HashMap<>();
+        final List<fURI> childUris = new ArrayList<>();
+        final Map<fURI, fURI> childXrefs = new HashMap<>();
         if (depth < maxDepth || forceExpand.contains(uri)) {
             // Read direct children via +/ on the specific parent URI.
             // Each space implements +/ to return the immediate children
@@ -1037,8 +1025,8 @@ public final class CommonUtil {
             // so a child whose value is an auto pointer (!* / !@) reveals its
             // canonical target here with no extra reads.  Spaces without a native
             // override fall back to the resolved read listing below.
-            final java.util.List<fURI> streamedUris = new java.util.ArrayList<>();
-            final java.util.Map<fURI, fURI> streamedXrefs = new java.util.HashMap<>();
+            final List<fURI> streamedUris = new ArrayList<>();
+            final Map<fURI, fURI> streamedXrefs = new HashMap<>();
             try {
                 Machine.current().memory().readStream(uri.extend("+/")).forEach(id -> {
                     final fURI childUri = id.furi();
@@ -1065,7 +1053,7 @@ public final class CommonUtil {
                             Obj.Helper.getAutoPointer(rel.secondDirect()).ifPresent(target -> childXrefs.put(childUri, target));
                         });
             }
-            childUris.sort(java.util.Comparator.comparing(f -> f.asNode().name()));
+            childUris.sort(Comparator.comparing(f -> f.asNode().name()));
         }
 
         consumer.accept(new TreeEntry(uri, name, obj, depth, isLast, childUris.size(), xref));

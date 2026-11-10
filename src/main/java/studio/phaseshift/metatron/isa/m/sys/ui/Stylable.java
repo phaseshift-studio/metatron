@@ -18,21 +18,23 @@
 
 package studio.phaseshift.metatron.isa.m.sys.ui;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_STYLE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.sys.ui.uiInstSet.UI_STYLE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -271,7 +273,7 @@ public interface Stylable<T extends Stylable<T>> {
 
         public Style<T> attachment(final Widget attachment, final boolean overlap) {
             this.jvm().put(uri("attachment"), (Obj) attachment);
-            this.jvm().put(uri("overlapAttachment"), studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(overlap));
+            this.jvm().put(uri("overlapAttachment"), bool(overlap));
             return this;
         }
 
@@ -384,6 +386,12 @@ public interface Stylable<T extends Stylable<T>> {
                     : null;
         }
 
+
+        public Style<T> anchor(final fURI anchor) {
+            this.jvm().put(uri("anchor"), uri(anchor));
+            return this;
+        }
+
         /**
          * Display width override.  0 = use the widget's natural width.
          */
@@ -425,7 +433,7 @@ public interface Stylable<T extends Stylable<T>> {
          * @param wrap false keeps each body line on one row and elides what does not fit (see {@link #wordWrap()})
          */
         public Style<T> wordWrap(final boolean wrap) {
-            this.jvm().put(uri("wordWrap"), studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(wrap));
+            this.jvm().put(uri("wordWrap"), bool(wrap));
             return this;
         }
 

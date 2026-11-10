@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.isa.m.type.reflect;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +31,7 @@ import java.util.Map;
  * A rec whose state is <b>only</b> its own map — and, when it is anchored (has a
  * {@link #vid()}), the space that map is stored in.
  *
- * <p>This is the base the widgets are built on, and it exists because
- * {@link JRec} offers three homes for state (a Java field, the local map, and the
- * space) with no rule about which wins; a widget built on it can hold the new
+ * <p>This is the base the widgets are built on; a widget built on it can hold the new
  * value and the old one at the same time, depending on which accessor a caller
  * happened to use. A {@code SpaceRec} has exactly two rules:
  *

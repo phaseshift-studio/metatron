@@ -3,8 +3,6 @@ name: type-system-mtron
 description: mtron type system fundamentals — vid/tid, base types, coefficients, isa vs non-isa predicates, nominal vs structural types, type definition syntax, pattern/generic types, poly types and their three readings (tensor, fibered, path), lifting and covariance
 ---
 
-<!-- cast: type-checks -->
-
 # mtron type system
 
 ## core concepts
@@ -103,7 +101,6 @@ mtron> posint::T[is(gt(100))]@hundreds
 mtron> int::T[is(gt(0))][mult(10)]@int2x
 mtron> rec::T[?[name=>str::T,age=>int::T]]@being
 ```
-
 A created type is first-class: it refines (`posint` refines `int`), is refined (`hundreds` refines `posint`), builds
 values under its own name, and other values can be cast onto it. The stock types the VM ships with (base types,
 `person`, and the module types the boot loads) are created the same way — you just don't spell the creation.
@@ -115,6 +112,7 @@ it (`xxx::T[?]@yyy`) lands off the type hierarchy; types refine types, not refer
 
 ### instantiation
 
+<!-- cast: type-checks speed_rates="0.5,1,2" speed_default="1" -->
 ```mtron
 mtron> hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
 ==>hundreds::150
@@ -125,7 +123,6 @@ mtron> being::[name=>'marko',age=>29] [-- a rec built under its type --]
 mtron> int::42@the_answer             [-- a plain value, addressed in the space --]
 ==>42@the_answer
 ```
-
 ## predicates
 
 A predicate is a **constraint** that values must satisfy to be members of the type. Two families:
@@ -139,42 +136,37 @@ mtron> rec::T[?[age=>int::T]]                              [-- a lambda type: a 
 mtron> rec::T[?[name=>str::T, address=>str{?}::T]]         [-- address optional (str{?}::T) --]
 mtron> rec::T[?[flag=>str{2}::T, member=>being{+}::T]]@roster
 ```
-
 A field's type can be any type — including a lambda type or a created one like `being`.
 
 **Multi-level stacking**: every refinement inherits the **whole predicate stack** of its ancestors, and the stack is
 checked level by level:
 
 ```mtron
-mtron> [-- hundreds::T = [is(gt(100))] on top of posint's [is(gt(0))] on top of int --]
 mtron> hundreds::150                [-- 150  (passes both levels) --]
 ==>hundreds::150
 mtron> hundreds::50         [-- dies at posint's level — the ancestor stack is enforced, not just the top --]
 ==>fail::[parse error at line 1, col 1: 50 is not a posint::T[/m/inst/is(/m/inst/gt(100))]@hundreds
    	while parsing: hundreds::50]
 ```
-
 ### non-isa predicates (nominal)
 
 Freeform functional constraints using instructions:
 
+<!-- cast: type-constructors -->
 ```mtron
 mtron> int::T[is(gt(0))]
 mtron> int::T[?>0]
 mtron> int::T[?=42]
 mtron> int::T[?>0.?<120]
 ```
-
 The `.` operator chains predicates: `p1.p2` means "apply p1, then apply p2 to the result." Both must succeed (AND
 semantics).
 
 **OR semantics** use split/merge:
 
 ```mtron
-mtron> [-- value must be > 0 OR < 120 --]
 mtron> int::T[-<[?>0,?<120]>-]
 ```
-
 ### predicate vs no predicate
 
 A type **without** a predicate is the most general type at its level — it accepts any value with the correct base type
@@ -184,7 +176,6 @@ and coefficient:
 mtron> int::T        [-- accepts any integer --]
 mtron> int::T[?>0]   [-- only accepts positive integers --]
 ```
-
 ### type constructors
 
 A type can also carry a **constructor** — an instruction the type applies to values. The constructor sits alongside
@@ -211,7 +202,6 @@ mtron> intabs::-2                       [-- intabs::2  (the constructor ran on t
 mtron> intabs::2                        [-- intabs::2 --]
 ==>intabs::2
 ```
-
 **Casting tests first.** `.as(type)` checks the predicate before the constructor gets a turn, so a value that cannot
 fit is refused rather than coerced; a value that does fit still goes through the constructor:
 
@@ -225,7 +215,6 @@ mtron> 2.as(intabs::T)                  [-- intabs::2  (admitted; the id branch 
 mtron> -2.as(intabs::T)         [-- refused: the predicate tests before the constructor could run --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/choose([/m/inst/is(/m/inst/lt(0))=>/m/inst/mult(-1),/m/inst/id()=>/m/inst/id()])./m/inst/rshift()]@intabs [structural] (at /m/inst/as@1)]
 ```
-
 A converting constructor is visible the same way — it runs on the admitted value, and on nothing else:
 
 ```mtron
@@ -237,7 +226,6 @@ mtron> 2.as(int2x::T)                   [-- int2x::20  (admitted at the gate, th
 mtron> -2.as(int2x::T)          [-- refused for the same reason — the gate runs first --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/mult(10)]@int2x [structural] (at /m/inst/as@1)]
 ```
-
 A type with no constructor is a pure constraint — values must already satisfy the predicate to be members; there is
 nothing to run them through.
 
@@ -271,17 +259,9 @@ types prevent this:
 ```mtron
 mtron> being::T@human                 [-- nominal siblings under being --]
 mtron> being::T@chicken
-mtron> [-- A human is NOT a chicken, despite identical structure --]
 mtron> human::[name=>'marko',age=>29].as(chicken::T)
 ==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 ```
-
-Realize the distinction between structural and nominal types is one of convenience. It is true that there exists
-structural features of marko that make this person not a chicken (e.g. DNA, weight and size, etc.).
-However, if the system operating with such types can not make that distinction (perhaps no sensors to do so), then an
-explicit statement of the fact that marko is not a chicken allows such unrefined systems (literally) to operate
-effectively using said classification.
-
 This is the difference between **experiential knowledge** (structural — what can be observed) and **authoritative
 knowledge** (nominal — what has been declared).
 
@@ -331,7 +311,6 @@ mtron> 'mtron'.isa(#{*}::T)             [-- 'mtron' --]
 ==>'mtron'
 mtron> int::T.isa(#{*}::T)              [-- noobj  (the `isa` rows admit values, not types) --]
 ```
-
 Note the direction: values test against `#{*}::T` and pass, while type-vs-type — "is `posint` a refinement of
 `int`?" — is asked of the type *hierarchy* (see *type hierarchy and refinement* above), not of a value.
 
@@ -402,7 +381,6 @@ mtron> rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])   [-- one wayfarer is 
      predicate apply failed on poly
    	while parsing: rel[int,wayfarer{2}]::(1=>wayfarer::[name=>'bob'])]
 ```
-
 The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:
 
 | entry        | value at that position                                   |
@@ -462,49 +440,56 @@ layer, by that bound substitution rather than by the bracket claim.
 
 ### lifting (dispatch into a fiber)
 
-An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level: `fight?<=ninja()` on a
-`person[ninja]` bundle reaches the `ninja` object inside it, not the bundle.
+An instruction declared on a fiber's type applies to the fiber's VALUE as if it were top-level. When every fiber it
+reaches keeps its type, the answer is the BUNDLE with those fibers moved — the call is **lifted** from `dom => rng` on
+the fiber to `bundle => bundle`. When it changes a fiber's type, the call is a **projection** and answers the
+instruction's results instead of the bundle:
 
-Mechanically there is nothing trait-aware anywhere in the processor. The dispatch set is the BUNDLE **plus the values
-of its FIBERS**, and each subject is selected and invoked on its own — so the "selection" is ordinary resolution, not
-a lookup table keyed by the declaration:
+```
+person[int]::[name=>'marko',age=>29].plus(1)       [-- person[int]::[name=>'marko',age=>30] --]
+person[int]::[name=>'marko',age=>29] + 1 + 1       [-- person[int]::[name=>'marko',age=>31] --]
+person[int]::[name=>'marko',age=>29].plus(1)>>age  [-- 30 --]
+person[int]::[name=>'marko',age=>29].gt(18)        [-- true  (int => bool: a projection) --]
+```
 
-- an **untyped call lifts over all fibers**; `?<=T` selects one subject, because a named domain is the subject the
-  call is about.
-- a **base-typed domain is about a subject's own form, never its name**: `?<=rec(...)` reaches the bundle AND a
-  fiber whose own type refines `rec` — `ninja::T` is a `rec::T`, so the ninja answers a rec-typed instruction as
-  itself — while `?<=lst(...)` reaches neither, and `?<=int(...)` reaches only an int-valued fiber
-  (`ex::[o=>12].plus?<=int` adds at `o`, since the bundle is a rec, not an int).
-- a **named domain** splits the two levels. The **bundle** answers as the very type it instantiates — a bracket does
-  not change the name (`dojo[master]` is a `dojo`; a predicated domain additionally requires the same predicates) —
-  and nothing else counts for it: not its own field bag, and not a fiber it merely borrows. A **fiber** answers as the
-  value it holds, so a *structural* type (`weaponed -> rec::T[?[weapon=>str::T]]`) is also satisfied by a fiber's own
-  shape: the ninja at `role` carrying a weapon answers `?<=weaponed(...)` as itself. That is why `?<=weaponed` reaches
-  the ninja and never the bundle.
-- **the fiber bundle speaks first**: when the domain NAMES a type the bundle itself is, the bundle is the subject
-  and its fibers are not asked — `weaponed[weaponed]::[weapon=>'axe',role=>weaponed::[weapon=>'knife']]` answers
-  `?<=weaponed(weapon)` with `'axe'` alone, not `{'axe','knife'}`. A domain that names no single subject — a generic
-  one, or a base FORM (about every subject of that form) — does not supersede: `?<=rec` and an untyped read still
-  sum over both levels.
-- **a FILTER asks the bundle first too**: a filter keeps or drops its SUBJECT, and the subject is the fibered rec —
-  so `*marko.?weaponed::T` answers `*marko` (the bundle is accepted as a weaponed through the ninja it exposes; the
-  filter does not also hand back the ninja). Only when the bundle declines does the filter fall through to the
-  fibers, and a `fail::` from the bundle still propagates.
-- `noobj` is the multiplicity identity, so `{noobj, 29}` = `29`: a subject the instruction is not about contributes
-  nothing. A `fail::` is not the identity — it PROPAGATES — or an instruction that broke on one part of the bundle
-  would read as a success.
-- subjects are **one level deep**: a fiber that is itself a bundle is applied to as the object it is, never expanded
-  again.
-- `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**. A typer retypes the one object it is given,
-  so it is opaque: `as(person::T)` is both the narrowing escape from a fan-out and the exception to it (it changes the
-  basis, so it cannot be distributed over the old one).
-- ref-writes (`<uri> -> obj`) are address-precise and never lift. `update` (`>>=`) does fan out, since its domain is
-  any obj; `as(T)` first, or `?<=T` on the call, is what narrows it back to one basis.
-- a fan-out result is an **unordered multiplicity**. When order or provenance matters the user writes the keyed rec
-  explicitly — one key per fiber, each narrowing its own call (`[role => *marko.describe?<=ninja(), position =>
-  *marko.describe?<=position()]`). There is no keyed projection that does it for you.
-- a bundle on which **no subject** applies yields `noobj` — a miss is not a failure. The same miss on a non-bundle
-  value is still a loud `unable to locate inst-f`, because there is nothing else to try.
+The processor knows nothing of fibers: resolution hands it the instruction a call on a bundle refers to, which is
+either the bundle's own or its lift. Each call is about one of two things:
+
+- **the bundle itself** — a typer, a generic domain (`>>name`, `?<=#`), the rec form (`?<=rec`, a rec `plus`), or
+  the bundle's own name (`ponder?<=person`). It runs on the bundle alone, as any instruction runs on any rec, and the
+  fibers are not asked: `*marko>>name` is the person's name, and a key only a fiber carries (`*marko>>weapon`) is
+  `noobj`. A bracket does not change the name (`dojo[master]` is a `dojo`).
+- **its fibers** — any other domain. Every fiber the call is about runs it (the parallel fibers); when the results
+  keep their fibers' types they are written back, and a fiber the call is not about is left as it is, as is every
+  field that is no fiber. Each fiber resolves the CALL against the value it holds, so fibers of different types each
+  run their own overload of it — with `bump` declared on int and on str, `tagged[int,str]::[hits=>1,label=>'hi'].bump()`
+  is `tagged[int,str]::[hits=>2,label=>'hi!']`, written as a literal or read with `*`:
+    - a **base-typed domain is about a fiber's own form**: `?<=int(...)` reaches an int-valued fiber
+      (`ex::[o=>12].plus?<=int(45)` is `ex::[o=>57]`), `?<=lst(...)` reaches none of a ninja's.
+    - a **named domain** reaches the fiber whose own type IDENTITY is that name (`fight?<=ninja()` reaches the ninja,
+      and the body's `>>weapon` reads the ninja's). The bundle is *accepted* where a ninja is expected, but acceptance
+      is
+      not dispatch identity.
+    - a **structural** type (`weaponed -> rec::T[?[weapon=>str::T]]`) is satisfied by a fiber's own shape: the ninja
+      at `role` carrying a weapon answers `?<=weaponed(...)` as itself, while the bundle answers by identity only.
+
+The rest of the rules:
+
+- a call that **changes a fiber's type** is a PROJECTION: it answers the instruction's results, summed as a
+  multiplicity, not the bundle — `fight: ninja => str` answers the str, and `*twin.rank()` (two ninjas, `rank` an int)
+  answers `{11,3}`. The type is the one the replaced value had, its multiplicity included, so a `sum` over the
+  `real{2}` at `rec[geo/+]` projects too, and a filter that drops one fiber's value (`noobj`) projects to what it
+  kept. One changed fiber is enough. `noobj` is the sum's identity.
+- a `fail::` from a fiber the call DID apply to is not the identity — it PROPAGATES — or a call that broke on one
+  fiber would read as a success.
+- a lift is **one level deep**: each fiber resolves the call against the object it holds, so a fiber that is itself a
+  bundle is applied to as itself and never lifted again. One `>>` makes it the bundle.
+- `Inst.Form.typer` — `as`, `::`, `type`, `vid`, `tid` — **never lifts**: a typer retypes the one object it is given.
+- ref-writes (`<uri> -> obj`) are address-precise and never lift, and `update` (`>>=`), whose domain is any obj, is
+  the bundle's own.
+- a lift is a VALUE, not a write: a lifted `*marko` copy leaves `marko` untouched.
+- a bundle whose fibers the call is about none of yields `noobj` — a miss is not a failure. The same miss on a
+  non-bundle value is still a loud `unable to locate inst-f`, because there is nothing else to try.
 
 ### acceptance and covariance
 
@@ -537,21 +522,16 @@ A shaped nominal trait asks the value at the fiber, not the bundle:
 
 ```mtron
 acceptance is asked of the fiber's value, not the bundle's declaration
-mtron> [-- the bundle declares ONLY the fiber it exposes --]
 mtron> kestrel -> rec[role]::T[?[role=>rec::T]]@kestrel
-mtron> [-- the shaped nominal trait declares the shape of the fiber's value --]
 mtron> falconer -> rec::T[?[name=>str::T]]@falconer
 mtron> jarl -> kestrel[falconer]::[role=>falconer::[name=>'sigrid']]@jarl
 ==>kestrel[falconer]::[role=>falconer::[name=>'sigrid']]@jarl
-mtron> [-- the bundle declares no name; the falconer at `role` carries one, so jarl is a falconer --]
 mtron> *jarl.isa(falconer::T)
 ==>kestrel[falconer]::[role=>falconer::[name=>'sigrid']]
-mtron> [-- a fiber value that CONTRADICTS the trait's field type is refused, however the poly names it --]
 mtron> skald -> kestrel[falconer]::[role=>[name=>7]]@skald
 ==>kestrel[falconer]::[role=>[name=>7]]@skald
 mtron> *skald.isa(falconer::T)
 ```
-
 The claim rule is what keeps the declaration/instance asymmetry valid at the uri layer:
 
 | lhs             | rhs             | test  |
@@ -562,6 +542,8 @@ The claim rule is what keeps the declaration/instance asymmetry valid at the uri
 | `person[ninja]` | `person[role]`  | false |
 
 ### worked example: two fibers
+
+<!-- cast: mini-fiber-bundle title="fiber bundles: typing recs with polynomial URIs" speed_rates="0.5,1,1.5,2" speed_default="1" place="both" -->
 
 The declaration names both fibers; the instance types them. `position` is declared **bare** (`rec::T@position`) on
 purpose — a trait declared *with* a shape asks the bundle's declaration to pass its test, and this bundle declares
@@ -578,18 +560,12 @@ mtron> marko -> person[ninja,position]::[name=>'marko',age=>29,role=>ninja::[nam
     age=>29,
     role=>ninja::[name=>'dark_assassin'],
     position=>position::[title=>'sniper',rank=>5]]@marko
-mtron> [-- untyped: both the bundle and the role fiber carry a name --]
 mtron> *marko>>name
 ==>'marko'
-==>'dark_assassin'
-mtron> [-- only the position fiber carries a title; noobj is the identity --]
 mtron> *marko>>title
-==>'sniper'
-mtron> [-- a bundle's own field reads alone --]
 mtron> *marko>>age
 ==>29
 ```
-
 The instantiation is carried by the value's own type, so `*marko.type()` reports the DECLARATION instantiated with
 both arguments — `rec[role,position]::T[?[…]]@person[ninja,position]` — while `*marko` still prints the value under
 that type.
@@ -608,7 +584,6 @@ mtron> *marko.aim?<=position()         [-- the same call with its type named at 
 mtron> *marko.shadow()                 [-- dom=ninja: the role fiber's own name, never the position's title --]
 ==>'dark_assassin'
 ```
-
 An untyped call is about every subject, so an instruction both fibers declare answers twice; `?<=T` narrows it, and
 a typer stays on the bundle alone:
 
@@ -627,7 +602,6 @@ mtron> *marko.as(person::T)            [-- a typer is opaque: the bundle alone, 
             role=>ninja::[name=>'dark_assassin'],
             position=>position::[title=>'sniper',rank=>5]]
 ```
-
 ## type checking and casting
 
 ### `.test()` — predicate membership
@@ -642,7 +616,6 @@ mtron> 2.isa(posint::T)        [-- 2  (admitted: 2 > 0) --]
 ==>2
 mtron> -1.isa(posint::T)       [-- noobj  (refused: -1 is not > 0) --]
 ```
-
 So the filter's verdict doubles as its output: admit and the value comes back, refuse and there is nothing to
 print. (Refining *type against type* — "is `hundreds` a refinement of `posint`?" — is a question for the type
 hierarchy, seen in *type hierarchy and refinement*.)
@@ -653,16 +626,13 @@ hierarchy, seen in *type hierarchy and refinement*.)
 with the type's vid (and, if the type carries one, run through its constructor — see *type constructors* above):
 
 ```mtron
-mtron> [-- intabs has a constructor (absolute value), but the gate still runs first --]
 mtron> 2.as(intabs::T)          [-- intabs::2  (admitted, re-stamped) --]
 ==>intabs::2
 mtron> -2.as(intabs::T) [-- refused: -2 is not an intabs — construction (intabs::-2) is the door that coerces --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))][/m/inst/choose([/m/inst/is(/m/inst/lt(0))=>/m/inst/mult(-1),/m/inst/id()=>/m/inst/id()])./m/inst/rshift()]@intabs [structural] (at /m/inst/as@1)]
-mtron> [-- Without a constructor the cast is a pure test --]
 mtron> -2.as(int::T[?>0])  [-- fails: a lambda type, no constructor, nothing to coerce --]
 ==>fail::[inst apply failure: -2 is not a int::T[/m/inst/is(/m/inst/gt(0))] [structural] (at /m/inst/as@1)]
 ```
-
 `.as()` is also used for nominal type casting — a rec is admitted to a nominal rec type when it nominally fits,
 and the stamp records the fit:
 
@@ -672,7 +642,6 @@ mtron> [name=>'fuzzy feet',age=>2].as(chicken::T)    [-- chicken::[name=>'fuzzy 
 mtron> human::[name=>'marko',age=>29].as(chicken::T)  [-- refused: a human is not a chicken, nominally --]
 ==>fail::[inst apply failure: human::[name=>'marko',age=>29] is not a being::T@chicken [nominal] (at /m/inst/as)]
 ```
-
 Note the asymmetry: an anonymous rec has no lineage to contradict it, so its fields alone decide the fit — the
 `chicken` demands `age=>int::T`, and the rec supplies it. A stamped `human`, though, carries a lineage — `human`
 and `chicken` are *siblings* under `being`, and a sibling does not refine a sibling. Nominal fit follows the actual

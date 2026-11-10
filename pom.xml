@@ -53,6 +53,8 @@
         <skipAsciidoc>false</skipAsciidoc>
         <skipInstSet>false</skipInstSet>
         <skipMarkdown>false</skipMarkdown>
+        <!-- cast-only sources (docs/asciinema): evaluate + emit recordings, no page -->
+        <skipCasts>false</skipCasts>
         <skipHeaderMenu>false</skipHeaderMenu>
         <skipSiteScripts>false</skipSiteScripts>
         <!-- doc-generation experiment toggles: fresh VM per file by default -->
@@ -734,6 +736,59 @@
                                 <argument>/m/db/grph</argument>
                                 <argument>/m/db/vec</argument>
                                 <argument>/m/dev/ide</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- CAST-ONLY SOURCES (docs/asciinema/**.md): a file of tagged
+                             ```mtron_pre blocks with no prose. Evaluate them and emit
+                             one recording per tag straight into the served directory;
+                             NO page and no markdown copy is produced, and the cast-out
+                             option names the destination instead of deriving it from a
+                             website container. Runs BEFORE the markdown pass: a page that
+                             embeds a recording reads that cast's header for its terminal
+                             size, so the file must exist first. -->
+                        <id>run-asciinema-casts</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipCasts}</skip>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>--add-modules</argument>
+                                <argument>jdk.incubator.vector</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.invoke=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util.concurrent.atomic=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.io=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.nio=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.net=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>-Dmtron.singleBoot=${mtron.singleBoot}</argument>
+                                <argument>-Dmtron.reverse=${mtron.reverse}</argument>
+                                <argument>studio.phaseshift.metatron.docs.MarkdownRunner</argument>
+                                <argument>${project.basedir}/docs/asciinema</argument>
+                                <argument>-o</argument>
+                                <argument>${project.build.directory}/temp/casts</argument>
+                                <argument>--cast-out</argument>
+                                <argument>${project.basedir}/docs/website/asciinema</argument>
+                                <argument>--no-page</argument>
                             </arguments>
                         </configuration>
                     </execution>

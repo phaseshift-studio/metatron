@@ -1057,6 +1057,7 @@ public final class mInsts {
                                     uri(BODY), lhsInst.f().isLambda() ? uri(lhsInst.f().toString()) : (Obj) lhsInst.f().func());
                         })
                         .law(Law.pure)
+                        .form(Inst.Form.mapper)
                         .create()));
     }
 
@@ -1168,7 +1169,8 @@ public final class mInsts {
                         // declaration states the SHAPE of the caller's keys, so the caller supplies them all and
                         // the resolver keeps every one (a rec is open-world: it may carry more than its contract
                         // names). An ordered call is still the local branch, so one definition serves both.
-                        .args(rec(URI_TYPE, T(B.some())))
+                        .args(rec(T(URI_TID.b(cInt.MAYBESOME())), T(B.b(cInt.MAYBESOME()).some())))
+                        .argDocs(Map.of(T(URI_TID.b(cInt.MAYBESOME())), "the individual branches key'd by evaluation location"))
                         .desc("""
                                 a branching function: the lhs applied to each argument.
                                 an ordered call is the local branch: each member applied at current machine.

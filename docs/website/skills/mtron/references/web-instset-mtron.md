@@ -8,7 +8,6 @@ description: |
   a route, an image, or a css file does not serve.
 ---
 
-
 # web instruction set (`/m/web`)
 
 `/m/web` is the instruction set that carries the web *transport protocol* types, *MIME*
@@ -20,7 +19,6 @@ http(s) read goes through. A read never dials, so a machine with no gateway read
 
 ```mtron
 mtron> dckrspace::[pattern => docker:#, route => [docker: => <>]]@/sys/space/docker
-mtron> [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/web_basic
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
                 status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/web_basic
@@ -30,15 +28,12 @@ mtron> http_server::[origin => http://localhost:8777,
                                /usr    => /usr]]
 ==>http_server::[origin=>http://localhost:8777,
                  status=>!λstatus?bool<=(){<j>}]
-mtron> [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron> http_client::[host => <http://#>]
 ==>http_client::[host=>http://#,inst=>[/m/inst/from=>*uri::T,
                                        /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
 mtron> http_client::[host => <https://#>]
 ==>http_client::[host=>https://#,inst=>[/m/inst/from=>*uri::T,
                                         /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],status=>!λstatus?bool<=(){<j>}]
-mtron> [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
-mtron> [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron> ws_server::[origin  => ws://localhost:8555,
                    route  => [/basic   => !*</sys/space/mcp/web_basic>]]
 ==>ws_server::[origin=>ws://localhost:8555,status=>!λstatus?bool<=(){<j>}]
@@ -92,7 +87,6 @@ A mount is only as real as the space behind it, so this document builds one firs
 blocks are executed by the docs pipeline and inlined with their results; a plain `mtron` block is only shown.)
 
 ```mtron
-mtron> [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
 mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
 ==>fail::[parse error at line 1, col 1: obj does not match person::T

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.docs;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.isa.m.sys.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.m.sys.type.ThreadExecutor;
@@ -101,12 +102,19 @@ public class MarkdownRunner {
         boolean singleBoot = Boolean.parseBoolean(System.getProperty("mtron.singleBoot", "false"));
         boolean reverse = Boolean.parseBoolean(System.getProperty("mtron.reverse", "false"));
         boolean html = Boolean.parseBoolean(System.getProperty("mtron.html", "false"));
+        // cast-only sources (docs/asciinema/**.md): evaluate the blocks, emit the
+        // recordings, and render NO page — the file is a screencast definition, not
+        // a document. --cast-out names the served directory directly.
+        Path castOutDir = null;
+        boolean pages = true;
 
         int i = 0;
         while (i < args.length) {
             switch (args[i]) {
                 case "-b", "--boot" -> boot = args[++i];
                 case "-o", "--out" -> outDir = Path.of(args[++i]);
+                case "--cast-out" -> castOutDir = Path.of(args[++i]);
+                case "--no-page" -> pages = false;
                 case "--single-boot" -> singleBoot = true;
                 case "--reverse" -> reverse = true;
                 case "--html" -> html = true;
@@ -114,6 +122,7 @@ public class MarkdownRunner {
             }
             i++;
         }
+        final Path castOut = castOutDir == null ? null : castOutDir.toAbsolutePath().normalize();
         LOG.info("\n[Markdown Runner v" + VERSION + "]\n\targs: " + String.join(" ", args));
 
         final Path skillDir = Path.of(input).toAbsolutePath().normalize();
@@ -138,7 +147,8 @@ public class MarkdownRunner {
         Files.createDirectories(out);
 
         // ── Collect: a single probe .md, or a skill dir's SKILL.md + references/*.md
-        final List<Path> files = collectMarkdownFiles(skillDir);
+        final List<Path> files = castOut == null
+                ? collectMarkdownFiles(skillDir) : collectAnyMarkdown(skillDir);
         if (files.isEmpty()) {
             LOG.info("no skill markdown files found in " + skillDir);
             // An --html run over a container holding no skill docs is still a valid
@@ -146,7 +156,7 @@ public class MarkdownRunner {
             // out (neither SKILL.md nor under references/), and the html pass below
             // renders them from the articles container the output resolves into. That
             // pass needs no VM, so returning here skips boot *and* teardown.
-            if (html) {
+            if (html && pages) {
                 renderHtmlPass(out);
             }
             return;
@@ -159,6 +169,10 @@ public class MarkdownRunner {
 
         ////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////
+
+        // one tag, one recording: a cast's URI is a pure function of its tag, so
+        // the same tag cannot be claimed twice (in a doc or across the tree)
+        final java.util.Map<String, String> castTags = new java.util.HashMap<>();
 
         for (final Path file : files) {
             // ── Bootstrap metatron VM ────────────────────────────────────
@@ -173,22 +187,26 @@ public class MarkdownRunner {
                     new MtronPreprocessor(MtronPreprocessor.MARKDOWN_HEADER, false).compile(content);
             final String processed = compiled.text();
 
-            final Path target = out.resolve(rel);
-            // Written when the *copy* is out of date, not when evaluation changed the
-            // text: a doc whose blocks all render as written (or that has no mtron_pre
-            // block at all) still has to pick up its own frontmatter and prose edits,
-            // and a new such doc still has to reach the website tree.
-            if (isCurrent(target, processed)) {
-                LOG.info("  unchanged " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
+            if (pages) {
+                final Path target = out.resolve(rel);
+                // Written when the *copy* is out of date, not when evaluation changed the
+                // text: a doc whose blocks all render as written (or that has no mtron_pre
+                // block at all) still has to pick up its own frontmatter and prose edits,
+                // and a new such doc still has to reach the website tree.
+                if (isCurrent(target, processed)) {
+                    LOG.info("  unchanged " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
+                } else {
+                    Files.createDirectories(target.getParent());
+                    Files.writeString(target, processed.stripTrailing());
+                    LOG.info("  processed " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
+                }
             } else {
-                Files.createDirectories(target.getParent());
-                Files.writeString(target, processed.stripTrailing());
-                LOG.info("  processed " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
+                LOG.info("  casts-only " + rel + " (" + DocsUtil.elapsedMs(t0) + "ms)");
             }
             // The blocks that opted into a recording are emitted beside the website
             // (even when the markdown copy did not change: the cast is a separate
             // artifact with its own freshness rule).
-            writeCasts(compiled, out, rel);
+            writeCasts(compiled, out, rel, castTags, castOut);
             ThreadExecutor.instance().shutdownNow();
         }
 
@@ -196,7 +214,8 @@ public class MarkdownRunner {
         ////////////////////////////////////////////////////////////////////////////////////
 
         // ── Optional site-html pass over the skills container (was SkillHtmlRenderer) ──
-        if (html) {
+        // cast-only sources have no page to render
+        if (html && pages) {
             renderHtmlPass(out);
         }
 
@@ -220,6 +239,22 @@ public class MarkdownRunner {
             stream.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".md"))
                     .filter(MarkdownRunner::isSkillDoc)
+                    .sorted()
+                    .forEach(files::add);
+        }
+        return files;
+    }
+
+    /**
+     * Every {@code .md} under the tree — the CAST-ONLY sources ({@code docs/asciinema/})
+     * are cast definitions, not skill docs, so none of the skill-doc rules apply.
+     */
+    static List<Path> collectAnyMarkdown(final Path dir) throws IOException {
+        if (Files.isRegularFile(dir)) return List.of(dir);
+        final List<Path> files = new ArrayList<>();
+        try (var stream = Files.walk(dir)) {
+            stream.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".md"))
                     .sorted()
                     .forEach(files::add);
         }
@@ -346,7 +381,7 @@ public class MarkdownRunner {
         final String bodyLinks = MD_HREF.matcher(body).replaceAll(mr ->
                 "href=\"" + mr.group(1) + ".html" + (mr.group(2) == null ? "" : mr.group(2)) + "\"");
         final String bodyShifted = shiftHeadingsDown(bodyLinks);
-        final String bodyCasts = castEmbeds(bodyShifted, websiteRoot, depth, fm.name());
+        final String bodyCasts = castEmbeds(bodyShifted, websiteRoot, depth);
         final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
 
         final StringBuilder page = new StringBuilder();
@@ -531,29 +566,64 @@ public class MarkdownRunner {
      * @return the number of recordings actually written (changed)
      */
     static int writeCasts(final MtronPreprocessor.Result compiled, final Path out,
-                          final Path source) throws IOException {
+                          final Path source, final java.util.Map<String, String> tags,
+                          final Path castDir) throws IOException {
         if (compiled.blocks().isEmpty()) return 0;
-        final Path skillsDir = skillsContainer(out);
-        if (skillsDir == null) return 0;
-        final Path asciinemaDir = skillsDir.getParent().resolve("asciinema");
+        final Path asciinemaDir;
+        if (castDir != null) {
+            // cast-only source: the served directory is named explicitly
+            asciinemaDir = castDir;
+        } else {
+            final Path skillsDir = skillsContainer(out);
+            if (skillsDir == null) return 0;
+            asciinemaDir = skillsDir.getParent().resolve("asciinema");
+        }
 
         int written = 0;
+        int blockNumber = 0;
         for (final MtronPreprocessor.Block block : compiled.blocks()) {
+            blockNumber++;
             final String name = block.attributes().get("cast");
             if (name == null) continue;
-            final Asciicast cast = Asciicast.of(attribute(block, "cols", 100),
+            // a tag names exactly one recording, and the recording's URI is the
+            // tag: refuse a collision instead of silently overwriting a cast
+            final String where = source + " (block " + blockNumber + ")";
+            final String owner = tags.putIfAbsent(name, where);
+            if (owner != null) {
+                throw new IllegalStateException("cast tag '" + name + "' is used by "
+                        + owner + " and by " + where + " — a tag names one recording");
+            }
+            // the terminal is only as wide as its widest line needs (plus a
+            // little air), capped by the width the block declares
+            final Asciicast cast = Asciicast.of(contentCols(block, attribute(block, "cols", 100)),
                             attribute(block, "rows", 30))
                     .prompt("mtron> ")
                     .typingDelay(attribute(block, "typing_delay", 0.05));
             for (final String header : block.headers()) {
                 cast.marker(header);
             }
+            // the pasteable script: the typed statements, one per line, no results
+            final StringBuilder script = new StringBuilder();
             for (final MtronPreprocessor.Statement statement : block.statements()) {
-                if (statement.hidden()) continue;
                 // the annotation is a caption, not a keystroke: it becomes a
-                // marker the page turns into the caption bar
+                // marker the page turns into the caption bar. A statement that is
+                // ONLY an annotation (hidden, no input) is that marker alone.
                 if (statement.caption() != null) cast.marker(statement.caption());
+                if (statement.hidden()) continue;
                 cast.statement(statement.input(), statement.output(), !statement.noPrompt());
+                if (!statement.input().isEmpty()) {
+                    // one statement per line, terminated: a console that receives
+                    // the paste as a single line still parses the ';' separators
+                    script.append(statement.input().replaceAll("\\n\\s*", " ").stripTrailing())
+                            .append(";\n");
+                }
+            }
+            final Path scriptTarget = asciinemaDir.resolve(name + ".txt");
+            if (!script.isEmpty() && (!Files.exists(scriptTarget)
+                    || !Files.readString(scriptTarget, StandardCharsets.UTF_8).equals(script.toString()))) {
+                Files.createDirectories(scriptTarget.getParent());
+                Files.writeString(scriptTarget, script.toString(), StandardCharsets.UTF_8);
+                LOG.info("[cast] wrote %s", scriptTarget);
             }
             final Asciicast.Rendered rendered = cast.render(source.toString());
             final Path target = asciinemaDir.resolve(name + ".cast");
@@ -570,6 +640,27 @@ public class MarkdownRunner {
         return written;
     }
 
+    /**
+     * The narrowest terminal that shows every line unwrapped: the widest visual
+     * line (prompt+input and each rendered result), plus two columns of air, but
+     * never wider than the block asked for. Measured with {@link Highlighter#visualLength}
+     * so ANSI/markup adds no columns.
+     */
+    static int contentCols(final MtronPreprocessor.Block block, final int declared) {
+        int widest = 0;
+        for (final MtronPreprocessor.Statement statement : block.statements()) {
+            if (statement.hidden()) continue;
+            widest = Math.max(widest, Highlighter.visualLength("mtron> " + statement.input()));
+            for (final String output : statement.output()) {
+                // a rendered value may itself be multi-line: measure each line
+                for (final String line : output.split("\n")) {
+                    widest = Math.max(widest, Highlighter.visualLength(line));
+                }
+            }
+        }
+        return widest == 0 ? declared : Math.max(40, Math.min(declared, widest + 2));
+    }
+
     private static int attribute(final MtronPreprocessor.Block block, final String key, final int absent) {
         final String value = block.attributes().get(key);
         return value == null || value.isBlank() ? absent : Integer.parseInt(value);
@@ -583,46 +674,84 @@ public class MarkdownRunner {
     // The markdown pass plants this marker in front of an opted-in block; the
     // html pass turns it into the player container (which needs the page depth,
     // known only at render time).
-    private static final Pattern CAST_MARKER = Pattern.compile("<!-- cast: ([A-Za-z0-9._-]+) -->");
+    private static final Pattern CAST_MARKER = Pattern.compile(
+            "<!-- cast: ([A-Za-z0-9._-]+)((?:[ \\t]+[a-z_]+=\"[^\"]*\")*)[ \\t]*-->");
+    private static final Pattern CAST_ATTR = Pattern.compile("([a-z_]+)=\"([^\"]*)\"");
 
     /**
-     * Replace every {@code <!-- cast: name -->} marker with a launcher and the
-     * modal its player lives in. The recording's own header supplies cols/rows,
-     * so a page never repeats the terminal geometry; the player itself is
-     * mounted when the modal opens (a page with a demo costs nothing until
-     * somebody watches it). The id is also the deep link: {@code #cast-<name>}
-     * opens that recording.
+     * Replace every {@code <!-- cast: tag -->} marker with a launcher and the
+     * modal its player lives in. The tag is the recording's URI
+     * ({@code asciinema/<tag>.cast}) AND its label, so one file with several
+     * tagged blocks yields several distinguishable recordings. The recording's
+     * own header supplies cols/rows; the player mounts when the modal opens. The
+     * id is also the deep link: {@code #cast-<tag>} opens that recording.
      */
-    private static String castEmbeds(final String body, final Path websiteRoot, final String depth,
-                                     final String pageTitle) {
+    private static String castEmbeds(final String body, final Path websiteRoot, final String depth) {
         if (!body.contains("<!-- cast: ")) return body;
         final String pre = depth == null || depth.isEmpty() ? "" : depth + "/";
-        return CAST_MARKER.matcher(body).replaceAll(mr -> {
-            final String name = mr.group(1);
+        final Matcher marker = CAST_MARKER.matcher(body);
+        final StringBuilder inline = new StringBuilder();   // body with inline pills
+        final StringBuilder top = new StringBuilder();      // pills for place=top|both
+        final StringBuilder modals = new StringBuilder();   // one hidden modal per cast
+        while (marker.find()) {
+            final java.util.LinkedHashMap<String, String> cast = new java.util.LinkedHashMap<>();
+            cast.put("cast", marker.group(1));
+            final Matcher attribute = CAST_ATTR.matcher(marker.group(2) == null ? "" : marker.group(2));
+            while (attribute.find()) cast.put(attribute.group(1), attribute.group(2));
+
+            final String name = cast.get("cast");
+            final String title = cast.getOrDefault("title", name)
+                    .replace("&", "&amp;").replace("<", "&lt;");
             final String id = "cast-" + name;
             final String[] term = termSize(websiteRoot.resolve("asciinema").resolve(name + ".cast"));
-            return "<div class=\"asciinema-embed\">"
+            final String place = cast.getOrDefault("place", "top");
+            if (!java.util.Set.of("top", "inline", "both").contains(place)) {
+                throw new IllegalStateException("cast '" + name + "': place must be top, inline or both (was '" + place + "')");
+            }
+
+            final String pill = "<div class=\"asciinema-embed\">"
                     + "<button type=\"button\" class=\"asciinema-launch\" data-bs-toggle=\"modal\""
                     + " data-bs-target=\"#" + id + "\""
-                    + " aria-label=\"watch this terminal recording\">"
-                    + "<i class=\"bi bi-terminal-split\" aria-hidden=\"true\"></i>"
-                    + "<span>watch</span></button>"
-                    + "<div class=\"modal fade asciinema-modal\" id=\"" + id + "\" tabindex=\"-1\""
-                    + " aria-labelledby=\"" + id + "-title\" aria-hidden=\"true\">"
-                    + "<div class=\"modal-dialog modal-xl modal-dialog-centered\">"
-                    + "<div class=\"modal-content\">"
-                    + "<div class=\"modal-header\">"
-                    + "<h5 class=\"modal-title\" id=\"" + id + "-title\">" + pageTitle + "</h5>"
-                    + "<button type=\"button\" class=\"btn-close btn-close-white\""
-                    + " data-bs-dismiss=\"modal\" aria-label=\"close\"></button>"
-                    + "</div>"
-                    + "<div class=\"modal-body\">"
-                    + "<div class=\"asciinema-cast\" data-cast=\"" + pre + "asciinema/" + name + ".cast\""
-                    + " data-cols=\"" + term[0] + "\" data-rows=\"" + term[1] + "\""
-                    + " data-autoplay></div>"
-                    + "<div class=\"asciinema-caption\" aria-live=\"polite\"></div>"
-                    + "</div></div></div></div></div>";
-        });
+                    + " aria-label=\"watch " + title + "\">"
+                    + "<i class=\"bi bi-play-fill\" aria-hidden=\"true\"></i>"
+                    + "<span>" + title + "</span></button></div>";
+
+            if ("inline".equals(place) || "both".equals(place)) {
+                if ("both".equals(place)) top.append(pill);
+                marker.appendReplacement(inline, Matcher.quoteReplacement(pill));
+            } else {
+                top.append(pill);
+                marker.appendReplacement(inline, "");
+            }
+
+            modals.append("<div class=\"modal fade asciinema-modal\" id=\"").append(id)
+                    .append("\" style=\"--cols: ").append(term[0]).append("\"")
+                    .append(" tabindex=\"-1\" aria-labelledby=\"").append(id)
+                    .append("-title\" aria-hidden=\"true\">")
+                    .append("<div class=\"modal-dialog modal-xl modal-dialog-centered\">")
+                    .append("<div class=\"modal-content\">")
+                    .append("<div class=\"modal-header\">")
+                    .append("<h5 class=\"modal-title\" id=\"").append(id).append("-title\">")
+                    .append(title).append("</h5>")
+                    .append("<button type=\"button\" class=\"btn-close btn-close-white\"")
+                    .append(" data-bs-dismiss=\"modal\" aria-label=\"close\"></button>")
+                    .append("</div>")
+                    .append("<div class=\"modal-body\">")
+                    .append("<div class=\"asciinema-cast\" data-cast=\"").append(pre)
+                    .append("asciinema/").append(name).append(".cast\"")
+                    .append(" data-cols=\"").append(term[0]).append("\" data-rows=\"").append(term[1]).append("\"");
+            if (cast.get("speed_rates") != null) {
+                modals.append(" data-speed-rates=\"").append(cast.get("speed_rates")).append("\"");
+            }
+            if (cast.get("speed_default") != null) {
+                modals.append(" data-speed-default=\"").append(cast.get("speed_default")).append("\"");
+            }
+            modals.append(" data-autoplay></div>")
+                    .append("<div class=\"asciinema-caption\" aria-live=\"polite\"></div>")
+                    .append("</div></div></div></div></div>");
+        }
+        marker.appendTail(inline);
+        return top + inline.toString() + modals;
     }
 
     /** The recording's term size from its header line; 80x24 when unreadable. */

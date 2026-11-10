@@ -113,7 +113,7 @@ it (`xxx::T[?]@yyy`) lands off the type hierarchy; types refine types, not refer
 
 ### instantiation
 
-```mtron_pre cast=type-checks cols=100 rows=22 typing_delay=0.05
+```mtron_pre cast=type-checks cols=100 rows=22 typing_delay=0.05 speed_rates="0.5,1,2" speed_default="1"
 hundreds::150                  [-- 150, checked against the whole predicate stack, stamped --]
 23.as(posint::T)               [-- posint::23 --]
 being::[name=>'marko',age=>29] [-- a rec built under its type --]
@@ -149,7 +149,7 @@ hundreds::150                [-- 150  (passes both levels) --]
 
 Freeform functional constraints using instructions:
 
-```mtron_pre
+```mtron_pre cast=type-constructors cols=100 rows=22 typing_delay=0.05
 int::T[is(gt(0))]
 int::T[?>0]
 int::T[?=42]
@@ -317,11 +317,11 @@ types**; `lst`, `rec` and `rel` are its *readings*, not three words for the same
 
 ### the three readings
 
-| construct    | name         | poly denotes                                                                                   | verb     |
-|--------------|--------------|------------------------------------------------------------------------------------------------|----------|
+| construct    | name         | poly denotes                                                                                       | verb     |
+|--------------|--------------|----------------------------------------------------------------------------------------------------|----------|
 | `lst[A,B]`   | TENSOR TYPE  | the position types — the coordinates of an A × B (rank = bracket length, extent = the coefficient) | CONTAINS |
-| `rec[F1,F2]` | FIBERED TYPE | the FIBERS (named, distinct objects)                                                           | EXPOSES  |
-| `rel[A,B,C]` | PATH TYPE    | the vertices of the right-nested chain `A => (B => C)`                                         | CHAINS   |
+| `rec[F1,F2]` | FIBERED TYPE | the FIBERS (named, distinct objects)                                                               | EXPOSES  |
+| `rel[A,B,C]` | PATH TYPE    | the vertices of the right-nested chain `A => (B => C)`                                             | CHAINS   |
 
 **graded** says something about rank × extent — how many coordinates, and how far each one runs. It is a property of a
 tensor, never a synonym for *poly*.
@@ -362,17 +362,18 @@ rel[int,wayfarer{2}]::(1=>{wayfarer::[name=>'bob'],wayfarer::[name=>'marko']})  
 
 The coefficient forms say how many values that position admits, exactly as they do anywhere else in a type:
 
-| entry         | value at that position                                  |
-|---------------|---------------------------------------------------------|
-| `T` / `T{1}`  | exactly one                                             |
-| `T{n}`        | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)           |
-| `T{n,m}`      | an inclusive range — n, …, m                            |
-| `T{+}`        | at least one, so the position is REQUIRED               |
-| `T{?}`        | zero or one — ABSENT, or one that is still its type     |
-| `T{*}`        | zero or more — absent is legal, and so is a multiplicity |
+| entry        | value at that position                                   |
+|--------------|----------------------------------------------------------|
+| `T` / `T{1}` | exactly one                                              |
+| `T{n}`       | exactly n (`lst[int{2},str]` ⇒ `[{1,2},'a']`)            |
+| `T{n,m}`     | an inclusive range — n, …, m                             |
+| `T{+}`       | at least one, so the position is REQUIRED                |
+| `T{?}`       | zero or one — ABSENT, or one that is still its type      |
+| `T{*}`       | zero or more — absent is legal, and so is a multiplicity |
 
 **Absence** is the zero end of the range, and it reads differently in the two readings. In a tensor the value is a
-list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`. In
+list, so a zero-admitting TRAILING position is one the shorter list does not fill — `lst[str,int{?}]` accepts `['a']`.
+In
 a path the value is a chain, so a zero-admitting VERTEX is one the chain omits — `rel[int,wayfarer{?},str]` accepts
 `1=>'tally'` (the middle vertex skipped) while `rel[int,wayfarer{+},str]` does not. A present value must still be the
 entry's type at both: `{?}` is zero-or-one, not "anything when present".
@@ -442,13 +443,14 @@ either the bundle's own or its lift. Each call is about one of two things:
   field that is no fiber. Each fiber resolves the CALL against the value it holds, so fibers of different types each
   run their own overload of it — with `bump` declared on int and on str, `tagged[int,str]::[hits=>1,label=>'hi'].bump()`
   is `tagged[int,str]::[hits=>2,label=>'hi!']`, written as a literal or read with `*`:
-  - a **base-typed domain is about a fiber's own form**: `?<=int(...)` reaches an int-valued fiber
-    (`ex::[o=>12].plus?<=int(45)` is `ex::[o=>57]`), `?<=lst(...)` reaches none of a ninja's.
-  - a **named domain** reaches the fiber whose own type IDENTITY is that name (`fight?<=ninja()` reaches the ninja,
-    and the body's `>>weapon` reads the ninja's). The bundle is *accepted* where a ninja is expected, but acceptance is
-    not dispatch identity.
-  - a **structural** type (`weaponed -> rec::T[?[weapon=>str::T]]`) is satisfied by a fiber's own shape: the ninja
-    at `role` carrying a weapon answers `?<=weaponed(...)` as itself, while the bundle answers by identity only.
+    - a **base-typed domain is about a fiber's own form**: `?<=int(...)` reaches an int-valued fiber
+      (`ex::[o=>12].plus?<=int(45)` is `ex::[o=>57]`), `?<=lst(...)` reaches none of a ninja's.
+    - a **named domain** reaches the fiber whose own type IDENTITY is that name (`fight?<=ninja()` reaches the ninja,
+      and the body's `>>weapon` reads the ninja's). The bundle is *accepted* where a ninja is expected, but acceptance
+      is
+      not dispatch identity.
+    - a **structural** type (`weaponed -> rec::T[?[weapon=>str::T]]`) is satisfied by a fiber's own shape: the ninja
+      at `role` carrying a weapon answers `?<=weaponed(...)` as itself, while the bundle answers by identity only.
 
 The rest of the rules:
 
@@ -478,8 +480,8 @@ instruction run on* (dispatch).
   `rec[role,position{?}]` — and reading a missing key still yields `noobj`. `noobj` is a value, not a hole.
 - **A predicated fiber type is satisfied by the FIBER'S VALUE.** A poly entry types one of the bundle's fibers
   (`person[ninja]` puts a ninja at the field the declaration calls `role`), so the object a trait's shape is about
-  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A
-  *shaped nominal* trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
+  (`ninja::T[?[name=>str::T]]`) is the value AT that fiber — `bundle>>role` — not the bundle's declaration. A *shaped
+  nominal* trait therefore accepts a bundle that only exposes the trait-carrying fiber: the trait's shape is
   asked of `bundle>>role`, which is why `kestrel[falconer]` is a `falconer` although the bundle itself declares no
   `name`. The two fallbacks: with no value at hand (a type-vs-type question) the fiber's DECLARED type answers for its
   value, and a field the bundle's declaration itself types incompatibly (`name=>str` where the trait wants
@@ -521,6 +523,8 @@ The claim rule is what keeps the declaration/instance asymmetry valid at the uri
 | `person[ninja]` | `person[role]`  | false |
 
 ### worked example: two fibers
+
+<!-- cast: mini-fiber-bundle title="fiber bundles: typing recs with polynomial URIs" speed_rates="0.5,1,1.5,2" speed_default="1" place="both" -->
 
 The declaration names both fibers; the instance types them. `position` is declared **bare** (`rec::T@position`) on
 purpose — a trait declared *with* a shape asks the bundle's declaration to pass its test, and this bundle declares

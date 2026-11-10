@@ -3,7 +3,6 @@ name: mtron
 description: understanding the language used to control the metatron
 ---
 
-
 # mtron: traversing the metatron graph
 
 mtron is a functional, fluent, monadic language that manipulates the metatron environment.

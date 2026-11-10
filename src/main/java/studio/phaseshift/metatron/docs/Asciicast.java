@@ -174,18 +174,22 @@ public final class Asciicast {
                 events++;
                 continue;
             }
-            if (step.prompted()) {
-                final double promptDelay = first ? this.startDelay : this.promptDelay;
-                event(out, promptDelay, "o", this.prompt);
-                seconds += promptDelay;
-                events++;
-            }
+            // a [NO_PROMPT] line is not typed at column 0: emit the prompt's
+            // width as blanks, then type where the expression would start
+            final double promptDelay = first ? this.startDelay : this.promptDelay;
+            event(out, promptDelay, "o",
+                    step.prompted() ? this.prompt : " ".repeat(this.prompt.length()));
+            seconds += promptDelay;
+            events++;
             first = false;
 
             for (int i = 0; i < step.input().length(); ) {
                 final int codePoint = step.input().codePointAt(i);
                 i += Character.charCount(codePoint);
-                event(out, this.typingDelay, "o", new String(Character.toChars(codePoint)));
+                // a bare \n keeps the cursor's column; the terminal needs CR LF
+                final String typed = codePoint == '\n'
+                        ? "\r\n" : new String(Character.toChars(codePoint));
+                event(out, this.typingDelay, "o", typed);
                 seconds += this.typingDelay;
                 events++;
             }
@@ -194,7 +198,13 @@ public final class Asciicast {
             events++;
 
             if (!step.output().isEmpty()) {
-                event(out, this.postEnterDelay, "o", String.join("\r\n", step.output()) + "\r\n");
+                // the SAME rule for the rendered value: its continuation lines are
+                // real \n's, and joining alone does not fix them (a multi-line rec
+                // would staircase to the right instead of starting under its ==>
+                final String block = String.join("\n", step.output())
+                        .replace("\r\n", "\n")
+                        .replace("\n", "\r\n");
+                event(out, this.postEnterDelay, "o", block + "\r\n");
                 seconds += this.postEnterDelay;
                 events++;
             }

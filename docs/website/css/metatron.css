@@ -5,12 +5,12 @@
     --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
     --linkcolor: #6C7293; /* hyperlink blue */
-    --linkcoloralternate: #697093;
-    --codecolor: #797585;
+    --linkcoloralternate: #b1abc2;
+    --codecolor: #b1abc2;
     --white: #e8e8e8; /* body text (off-white) */
     --primary: #970207; /* accent red (interactive / hover / brand) */
     --secondary: #191C24;
-    --light: #6C7293;
+    --light: #b1abc2;
     --dark: #000000;
     /*------------------------*/
     --mblue: #4669dd;
@@ -18,10 +18,10 @@
     --mred: #7a2518;
     --mgreen: #457b02;
     --mdarkgray: #494554;
-    --mlightgray: #797585;
+    --mlightgray: #b1abc2;
     --myellow: #edbf73;
     --maqua: #0082ae;
-    --mbrown: #ffffff80;
+    --mbrown: #b1abc2;
     --mheading: #f5f5f5; /* headings */
 }
 
@@ -90,6 +90,15 @@ h2[id], h3[id], h4[id], h5[id], h6[id] {
 .bg-warning {
     background-color: #b98b00 !important
 }
+
+.text-info {
+    color: #3864ac !important;
+}
+
+.bg-info {
+    background-color: #3864ac !important
+}
+
 
 .btn:disabled {
     border-color: var(--bs-gray-dark);
@@ -1705,7 +1714,7 @@ th {
 .hljs-mtron-uri,
 .hljs-mtron-type,
 .hljs-mtron-type-prefix {
-    color: var(--linkcoloralternate);
+    color: #3864ac;
 }
 
 .colist {
@@ -2084,6 +2093,7 @@ h6:hover .heading-anchor {
     padding-left: 2.4rem;
     font-size: 0.95rem;
 }
+
 /* ── terminal screencasts (asciinema) ─────────────────────────────────── */
 .asciinema-figure {
     margin: 1.25rem 0 1.75rem;
@@ -2097,7 +2107,8 @@ h6:hover .heading-anchor {
 }
 
 .asciinema-caption {
-    display: none;
+    display: block;
+    min-height: 1.9rem;
     padding: .45rem .9rem;
     background: #141414;
     border: 1px solid #2a2a2a;
@@ -2125,8 +2136,8 @@ h6:hover .heading-anchor {
     padding: .38rem .85rem .38rem .65rem;
     border: 1px solid var(--mred);
     border-radius: 999px;
-    background: #fff;
-    color: var(--mred);
+    background: var(--dark);
+    color: var(--white);
     font-family: 'IBM Plex Sans', system-ui, sans-serif;
     font-size: .75rem;
     font-weight: 600;
@@ -2182,7 +2193,7 @@ h6:hover .heading-anchor {
    its content — give the player dialog an explicit width and centering */
 .asciinema-modal .modal-dialog {
     width: calc(100% - 2rem);
-    max-width: 1080px;
+    max-width: 984px; /* 120% of the previous 820px: fit:width scales the type */
     margin: 1.75rem auto;
 }
 
@@ -2205,7 +2216,7 @@ h6:hover .heading-anchor {
 
 .asciinema-modal .modal-title {
     color: var(--mred);
-    font-size: .975rem;   /* 125% of the original .78rem */
+    font-size: .975rem; /* 125% of the original .78rem */
     max-width: calc(100% - 2.5rem);
     white-space: nowrap;
     overflow: hidden;
@@ -2213,14 +2224,15 @@ h6:hover .heading-anchor {
 }
 
 /* the terminal at 75% of the player's own fit-to-width size */
-.asciinema-modal .asciinema-player,
-.asciinema-modal .ap-term {
-    font-size: 12.5px !important;
-}
+/* NB: do not shrink the glyphs with font-size — the player sizes its ROWS from
+   its own font metrics, so an override leaves rows twice as tall as the text.
+   A smaller terminal comes from a narrower dialog (fit:width scales to it). */
 
 /* the marker banner reads as a warning strip */
 .asciinema-caption {
-    color: var(--bs-warning, #ffc107);
+    font-size: 1.0rem;
+    text-align: center;
+    color: #B68905FF;
 }
 
 /* the close control belongs in the header row, not floating above it */
@@ -2252,4 +2264,136 @@ h6:hover .heading-anchor {
     margin: 0 0 0 auto;
     padding: .25rem;
     align-self: center;
+}
+
+/* ── playback speed strip under a recording ─────────────────────────── */
+.asciinema-controls {
+    display: flex;
+    gap: .35rem;
+    justify-content: flex-end;
+    padding: .3rem .6rem;
+    background: #0d0d0d;
+    border: 1px solid #2a2a2a;
+    border-top: 0;
+}
+
+.asciinema-speed {
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    background: transparent;
+    color: #b9b3a8;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: .7rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: .25rem .5rem;
+    cursor: pointer;
+}
+
+.asciinema-speed:hover,
+.asciinema-speed:focus-visible {
+    color: #fff;
+    border-color: var(--mred);
+}
+
+.asciinema-speed.active {
+    background: var(--mred);
+    border-color: var(--mred);
+    color: #fff;
+}
+
+/* a recording's terminal is exactly its row count tall: do NOT stretch the
+   dialog to the viewport (the extra black was .modal-content, so the terminal
+   scrolled at the middle of the box); centre the content-sized dialog instead */
+.asciinema-modal .modal-dialog {
+    min-height: auto;
+}
+
+.asciinema-modal.show {
+    display: flex;
+    align-items: center;
+}
+
+.asciinema-modal.show .modal-dialog {
+    margin: 1.75rem auto;
+}
+
+/* the speed strip lives in the layout but is only revealed over the marker bar
+   (and stays while you are on it, so moving up from the bar does not close it) */
+.asciinema-controls {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+}
+
+.asciinema-embed:has(.asciinema-caption:hover) .asciinema-controls,
+.asciinema-figure:has(.asciinema-caption:hover) .asciinema-controls,
+.asciinema-modal:has(.asciinema-caption:hover) .asciinema-controls,
+.asciinema-controls:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* the player's own "keyboard shortcuts" control is not usable chrome for a
+   docs recording; the speed strip is our replacement (it lives under the
+   terminal, revealed over the marker bar) */
+.asciinema-player [aria-label="keyboard shortcuts"],
+.asciinema-player [title="keyboard shortcuts"] {
+    display: none !important;
+}
+
+/* the player budgets each row at its own line-height (1.4333); the page's 1.6
+   inherits into the terminal and makes rows taller than the space reserved, so
+   the last rows of a tall recording fall outside the wrapper. Pin the metric. */
+.asciinema-player .ap-term,
+.asciinema-modal .ap-term {
+    line-height: 1.4333 !important;
+}
+
+/* the modal's copy-script control (one ';'-terminated statement per line) */
+.asciinema-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-left: auto;
+    margin-right: .5rem;
+    padding: .3rem .55rem;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    background: transparent;
+    color: #b9b3a8;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: .7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.asciinema-copy:hover,
+.asciinema-copy:focus-visible {
+    color: #fff;
+    border-color: var(--mred);
+}
+
+.asciinema-modal .modal-title {
+    max-width: calc(100% - 8rem); /* room for copy + close */
+}
+
+/* the copy control lives in the hover strip, not the header */
+.asciinema-controls .asciinema-copy {
+    margin: 0 .25rem 0 0;
+}
+
+/* each recording's dialog is sized from its own column count (--cols, emitted
+   with the modal): the cell is 9.84px at the fit width, so the type size stays
+   constant and only the widget grows/shrinks with the content */
+.asciinema-modal .modal-dialog {
+    width: calc(var(--cols, 100) * 9.84px + 2px);
+    max-width: min(984px, calc(100vw - 2rem));
+}
+
+/* launchers flow side by side (wrapping) instead of defaulting to a stack */
+.asciinema-embed {
+    display: inline-flex;
+    vertical-align: middle;
+    margin: .4rem .5rem .4rem 0;
 }

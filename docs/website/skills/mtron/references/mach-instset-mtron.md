@@ -7,7 +7,6 @@ description: |
   code — to their peers.
 ---
 
-
 # mach instruction set (`/m/mach`)
 
 A **machine** is metatron's unit of process: everything runs in one, and `/` is the root machine.
@@ -344,13 +343,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}state=>'current state of the thread',
-           {?}timeout=>'how long a read of rhs waits for t...',
-           {?}loop=>'delay to repeat code evaluation (d...',
-           {?}time=>'the datetime::T when the thread wa...',
            code=>"the thread's executing code",
-           {?}runtime=>"computes the thread's current runn...",
-           {?}result=>'the last result produced by the th...'],
+           {?}time=>'the datetime::T when the thread wa...',
+           {?}loop=>'delay to repeat code evaluation (d...',
+           {?}timeout=>'how long a read of rhs waits for t...',
+           {?}state=>'current state of the thread',
+           {?}result=>'the last result produced by the th...',
+           {?}runtime=>"computes the thread's current runn..."],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -415,10 +414,10 @@ mtron> */m/mach/component/network?docq
      ...(1 more)]][ctor?network<=(#{*}::T){<j>}]@/m/mach/component/network,
           args=>[
            {?}roster=>'known machines, connectionless: <h...',
-           {?}listener=>'the sockets this machine serves th...',
-           {?}peer=>"machine's own connections, one per...",
+           {?}status=>'the health method — an auto inst c...',
            {?}pattern=>'the branch this network answers as...',
-           {?}status=>'the health method — an auto inst c...'],
+           {?}peer=>"machine's own connections, one per...",
+           {?}listener=>'the sockets this machine serves th...'],
           desc=>"a machine's network: the endpoints...",
           example=>[
            'network::[roster=>[b=><ws://192.16...',
