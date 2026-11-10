@@ -476,6 +476,11 @@ public interface Machine extends Rec, AutoCloseable {
         // child's space is mounted, so its write at <child>/processor is the child's.
         final Processor processor = this.processor();
         child.jvm().put(uri(PROCESSOR), processor.clone(new LinkedHashMap<>(), processor.tid(), childVID.extend(PROCESSOR)).parent(child));
+        // ... and its own COMPILER (Marko, 2026-11-10): a deep clone of this machine's, stages and all, so a write under
+        // the child's ~/compiler (its selector, a typer check) is the child's alone, and a write this machine makes after
+        // the push stays this machine's. The child compiles as this machine did at the push. Through the setter, which
+        // drops the compiler the clone carried in its cache.
+        child.compiler(Obj.Helper.deepClone(this.compiler()).<Compiler>as());
         // register the child rec in the ROOT's space (global): read(childVID) from ANY machine reaches it, so
         // move(childVID) works from a sibling at any depth. the child's data stays in its own infra, so isolation holds.
         Machine.root().memory().write(childVID, child);

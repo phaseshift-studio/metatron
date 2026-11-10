@@ -81,7 +81,7 @@ public interface Resolver extends Component {
             return code;
         final fURI typeId = Obj.Helper.specificTypeId(lhs);
         if (!typeId.isGeneric()) {
-            final Resolver.Helper.ResolveKey key = new Resolver.Helper.ResolveKey(code, typeId);
+            final Resolver.Helper.ResolveKey key = new Resolver.Helper.ResolveKey(code, typeId, this.selector(), this.binder());
             final Code cached = Resolver.Helper.RESOLVE_CACHE.get(key);
             if (cached != null)
                 return cached;
@@ -110,7 +110,8 @@ public interface Resolver extends Component {
             // do nothing
         }
 
-        // compile-once memo of nested-code resolution, keyed by (code identity, runtime lhs type id).
+        // compile-once memo of nested-code resolution, keyed by (code identity, runtime lhs type id, and the selector and
+        // binder that resolve it): every machine owns its compiler, so one code resolved by two machines is two entries
         public static final ConcurrentHashMap<ResolveKey, Code> RESOLVE_CACHE = new ConcurrentHashMap<>();
         public static final int RESOLVE_CACHE_MAX = 4096;
 
@@ -130,12 +131,16 @@ public interface Resolver extends Component {
         public static final class ResolveKey {
             final Code code;
             final fURI typeId;
+            final Selector selector;
+            final Binder binder;
             final int identity;
 
-            ResolveKey(final Code code, final fURI typeId) {
+            ResolveKey(final Code code, final fURI typeId, final Selector selector, final Binder binder) {
                 this.code = code;
                 this.typeId = typeId;
-                this.identity = System.identityHashCode(code);
+                this.selector = selector;
+                this.binder = binder;
+                this.identity = 31 * (31 * System.identityHashCode(code) + System.identityHashCode(selector)) + System.identityHashCode(binder);
             }
 
             @Override
@@ -145,7 +150,8 @@ public interface Resolver extends Component {
 
             @Override
             public boolean equals(final Object other) {
-                return other instanceof ResolveKey k && k.code == this.code && k.typeId.equals(this.typeId);
+                return other instanceof ResolveKey k && k.code == this.code && k.selector == this.selector && k.binder == this.binder
+                        && k.typeId.equals(this.typeId);
             }
         }
 
