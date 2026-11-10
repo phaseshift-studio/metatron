@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.thread.FutureObj;
 import studio.phaseshift.metatron.isa.m.sys.type.ExecutionStack;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.web.type.ObjmtronUISerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -256,12 +258,17 @@ public interface Processor extends Component {
                             return rhs;
                         Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                     } catch (final Exception e) {
-                        if (!cinst.args().test(original.args())) {
-                            final Fail child = Poly.Helper.failChild(original.args());
-                            final String text = "args do not match inst args: " + Poly.Helper.mismatchText(cinst.args(), original.args());
-                            throw null == child ? MTronException.of(text) : MTronException.of(child.jvm(), text);
-                        } else
-                            throw MTronException.funnel(e, Inst.Helper.instContext(cinst));
+                        // AN ARGUMENT MISMATCH IS THE CONTRACT'S TO CLAIM, AND THE BODY'S EXCEPTION IS ALWAYS KEPT. The
+                        // computed args are held to the types the contract DECLARES (Inst.Helper.admitsArgs), never to
+                        // the args as written, which a computed one (a block, a deref, a nested chain) never matches: a
+                        // write refused inside ref read "args do not match inst args", and the refusal was dropped
+                        if (!Inst.Helper.admitsArgs(cinst, cinst)) {
+                            // the declared types against the computed args, drawn as the type mismatch draws its diff
+                            final Lst declared = lst(cinst.tid().args().stream().map(type -> (Obj) T(type)).toList());
+                            throw MTronException.of(e, "args do not match inst args %s\n%s", declared,
+                                    ObjmtronUISerializer.diagnostic().write(Poly.Helper.diffObjRecursion(cinst.args(), declared)));
+                        }
+                        throw MTronException.funnel(e, Inst.Helper.instContext(cinst));
                     } finally {
                         Memory.argStack().pop();
                     }
