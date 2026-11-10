@@ -13,7 +13,7 @@ algebra/rewrite/RewriteBuilder.java ← fluent builder for space-aware native re
 algebra/rewrite/CommonRewrites.java ← shared rewrite utilities
 isa/m/type/InstSet.java             ← InstSet interface, Helper.rewriter() factory
 isa/m/type/Code.java                ← Code.rewrite() — the rewrite loop
-isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, m_rewrite_table, split_merge_collapse, ...)
+isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, law_involution, law_absorbing, ..., split_merge_collapse, ...)
 isa/tble/tbleInstSet.java           ← SQL rewrites (sql_count, sql_where, sql_limit, ...)
 isa/grph/grphInstSet.java           ← Gremlin rewrites (gremlin_count, gremlin_where, ...)
 isa/dcmnt/dcmntInstSet.java         ← MongoDB rewrites (mql_count, mql_where, ...)
@@ -86,10 +86,10 @@ InstSet.Helper.rewriter(GEO_REWRITE_TID.extend("native_" + nativeTid.name()), co
 })
 ```
 
-A rewrite whose rule is only instructions needs no Java at all. It is a `[lhs => rhs]` row of `/m`'s rewrite table, the
-declared argument of `m_rewrite_table`, which `Call.Helper.update` matches and applies:
-`[count().else(#::T) => count()]` drops the dead `else` after a total `count`. The table and its law rows are described
-in the `cat-instset-mtron` reference.
+A rewrite whose rule is only instructions needs no Java at all. It is a `[lhs => rhs]` row in the declared argument of
+its own `/m` rewrite (one rewrite per rule), which `Call.Helper.update` matches and applies: `else_after_count`'s
+`[count().else(#::T) => count()]` drops the dead `else` after a total `count`. The rule rewrites and their law rows are
+described in the `cat-instset-mtron` reference.
 
 **`match(List<Inst>)`** — pattern instructions. `instA(tid)` creates a bare match instruction (no args, no f). Matching
 uses `instsMatch()`: TIDs must be compatible via `tid.test()`, args are compared by position, and `?.test(source)` tests

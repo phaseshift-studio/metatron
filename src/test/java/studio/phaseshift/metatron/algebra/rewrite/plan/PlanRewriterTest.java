@@ -58,7 +58,7 @@ public class PlanRewriterTest extends AbstractMetatronTest {
         assertInstanceOf(PlanRewriter.class, rewriter, "plan_rewriter::[=>] mints the plan engine");
         assertEquals(MACH_PLAN_REWRITER_TID, rewriter.tid());
         assertEquals(jnt(3), rewriter.at(uri(MAX)), "a fixpoint_rewriter::T refinement keeps the convergence window");
-        assertIterableEquals(Stream.of("theory_unit_removal", "branch_collapse", "branch_inline", "theory_involution",
+        assertIterableEquals(Stream.of("theory_unit_removal", "branch_collapse", "branch_inline", "law_involution",
                                 "law_idempotent", "law_absorbing", "law_monoidic", "law_poset", "inverse_cancellation",
                                 "form_map_unwrap", "derivation_contraction", "law_shard")
                         .map(name -> MACH_INST_TID.extend(REWRITE).extend(name)).toList(),
@@ -77,7 +77,7 @@ public class PlanRewriterTest extends AbstractMetatronTest {
             "5.plus(0)                        % start(5)                          % 5",
             "5.plus(0).mult(3)                % start(5).mult(3)                  % 15",
             "5.id()                           % start(5)                          % 5",
-            // theory_involution
+            // law_involution
             "5.neg().neg().plus(2)            % start(5).plus(2)                  % 7",
             // law_idempotent
             "2.zero().zero()                  % start(2).zero()                   % 0",

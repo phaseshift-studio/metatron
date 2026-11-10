@@ -44,11 +44,13 @@ import studio.phaseshift.metatron.isa.m.type.impl.TypeBuilder;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -794,11 +796,12 @@ public class catInstSetTest extends AbstractInstSetTest {
         int done = 2;
         while (done != 0) {
             // the machine's vocabulary, not memory's index: an instruction set lives in the instset (Marko, 2026-10-25).
-            // The theory laws are the category's rewrites and /m's law rewrites (the unit law, the rewrite table, inverse
+            // The theory laws are the category's rewrites and /m's law rewrites (the unit law, one rewrite per rule, inverse
             // cancellation and derivation contraction): the theories and laws are /m's
             Machine.current().instset().members().stream()
                     .flatMap(isa -> isa.rewrites().stream()
-                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "m_rewrite_table",
+                            .filter(r -> isa instanceof catInstSet || Set.of("theory_unit_removal", "form_map_unwrap", "law_involution",
+                                    "law_idempotent", "law_monoidic", "law_poset", "law_absorbing", "else_after_count", "range_skip_take",
                                     "inverse_cancellation", "derivation_contraction").contains(r.tid().basePath().name())))
                     .forEach(r -> {
                         final Obj rewritten = r.apply(rewrittenCode.get());
@@ -890,7 +893,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code theory_involution} — any operation declared {@code involution} (period two) collapses an
+     * {@code law_involution} — any operation declared {@code involution} (period two) collapses an
      * adjacent pair to identity, not just the additive group's {@code neg}. The carrier comes from the
      * seed (an argless involution has no arg to derive the type from).
      */
@@ -953,13 +956,14 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * /m'S REWRITE TABLE IS ITS INSTRUCTION'S ARGUMENT (Marko, 2026-11-09) — {@code m_rewrite_table}'s declared argument is
-     * the table itself, a value rather than a type, so the instruction resolves with the table bound; applied to a chain
-     * it folds each law it carries where the operation claims the law at the chain's carrier. A pair that is not adjacent,
-     * or not one law's claimant, stays. A PLAIN row ({@code else_after_count}) applies as it stands: the else after a
-     * total count drops whatever its fallback, and only as the run the rule states, so an else before the count, or one
-     * apart from it, stays. The absorbing row's run is a SPANNED element, so it is as long as the gate admits, not a fixed
-     * pair. Each row: the chain % the chain the instruction leaves.
+     * /m'S RULES ARE ITS REWRITES, ONE PER RULE (Marko, 2026-11-10) — each rewrite's declared argument is its rules, a value
+     * rather than a type, so it resolves with its rules bound, and every rule is a rewrite of the machine's pool. Applied to
+     * a chain, a law's rewrite folds where the operation claims the law at the chain's carrier. Applied once here, in the
+     * pool's order: the map unwrap runs first, so an unwrapped pair meets the involution rewrite in the same pass. A pair
+     * that is not adjacent, or not one law's claimant, stays. A PLAIN rule ({@code else_after_count}) applies as it stands:
+     * the else after a total count drops whatever its fallback, and only as the run the rule states, so an else before
+     * the count, or one apart from it, stays. The absorbing rule's run is a SPANNED element, so it is as long as the gate
+     * admits, not a fixed pair. Each row: the chain % the chain the rewrites leave.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -993,16 +997,26 @@ public class catInstSetTest extends AbstractInstSetTest {
             // obj's coefficient today ({2}8.zero() is 0, where {2}8.neg() is {2}-8), so the chain answers 0 either way
             "5.plus{2}(3).plus(1).zero()    % start(5).plus{2}(3).zero()",
     }, delimiter = '%')
-    void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
-        final Inst table = Machine.current().instset().rewrites().stream()
-                .filter(rewrite -> "m_rewrite_table".equals(rewrite.tid().basePath().name()))
-                .findFirst().orElseThrow();
-        checkEquality(LOG, M_REWRITE_TABLE, table.arg(0), true);
-        checkEquality(LOG, ObjmtronSerializer.parse(expected), table.apply(ObjmtronSerializer.parse(code)).asCode().tryToInst(), true);
+    void testEachRuleIsARewrite(final String code, final String expected) {
+        final Map<String, Rec> rules = Map.of("form_map_unwrap", FORM_MAP_UNWRAP, "law_involution", LAW_INVOLUTION,
+                "law_idempotent", LAW_IDEMPOTENT, "law_monoidic", LAW_MONOIDIC, "law_poset", LAW_POSET, "law_absorbing", LAW_ABSORBING,
+                "else_after_count", ELSE_AFTER_COUNT, "range_skip_take", RANGE_SKIP_TAKE);
+        final Set<String> applied = new HashSet<>();
+        Obj out = ObjmtronSerializer.parse(code);
+        for (final Inst rewrite : Machine.current().instset().rewrites()) {
+            final String name = rewrite.tid().basePath().name();
+            if (!rules.containsKey(name))
+                continue;
+            checkEquality(LOG, rules.get(name), rewrite.arg(0), true);
+            out = rewrite.apply(out);
+            applied.add(name);
+        }
+        assertEquals(rules.keySet(), applied, "every rule is a rewrite of the machine's pool");
+        checkEquality(LOG, ObjmtronSerializer.parse(expected), out.asCode().tryToInst(), true);
     }
 
     /**
-     * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-09) — /m's rewrite table ({@code M_REWRITE_TABLE}) states each
+     * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-09) — each of /m's law rewrites ({@code LAW_INVOLUTION}, …) states its
      * law's rule in the name {@code op}, and {@link Law.Helper#claimed} binds it to every instruction whose claim states the
      * law, one hole per argument slot pinning the pair's operands equal: {@code involution} {@code op·op ⇝ ε},
      * {@code idempotent} and {@code monoidic} {@code op·op ⇝ op}, and {@code absorbing} {@code {+}#·op ⇝ op}, whose
@@ -1011,11 +1025,11 @@ public class catInstSetTest extends AbstractInstSetTest {
      * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
      * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. The {@code mapper} row's {@code map(#::T@f) ⇝ #::T@f}
      * and the plain {@code map_nest} row are their own rules: ungated, the mapper's hole takes any function, a stream's fold
-     * among them, and only the row's form gate keeps {@code map(sum())} ({@link #testMapUnwrap}). Each row runs a whole table over a bare
+     * among them, and only the row's form gate keeps {@code map(sum())} ({@link #testMapUnwrap}). Each row runs one rule's rows over a bare
      * chain with {@link Call.Helper#update}, in Java and UNGATED: the rules are op-level, so {@code plus(3).plus(3)} folds
      * here under bool's idempotent plus and {@code mult(2).div(2)} under real's mult group, and only the carrier's law
-     * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the table % the
-     * chain % the chain the table leaves.
+     * stops them in a rewrite ({@link #testIdempotent}, {@link #testInverseCancellation}). Each row: the row % the chain %
+     * the chain the row leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -1027,7 +1041,7 @@ public class catInstSetTest extends AbstractInstSetTest {
             // the operands are pinned: a pair with different operands is no f·f
             "idempotent  % plus(3).plus(4)               % plus(3).plus(4)",
             "monoidic    % sum().sum().plus(1)           % sum().plus(1)",
-            // a law with no local equation has no table
+            // a law with no local equation has no rewrite
             "commutative % plus(1).plus(2)               % plus(1).plus(2)",
             // ungated, the poset pair keeps its second bound: only the gate reads which bound is the stricter
             "poset       % is(gt(1)).is(gt(3))           % is(gt(3))",
@@ -1073,12 +1087,14 @@ public class catInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
+        // the row, wherever one of /m's rule rewrites carries it
+        final Obj row = Stream.of(FORM_MAP_UNWRAP, LAW_INVOLUTION, LAW_IDEMPOTENT, LAW_MONOIDIC, LAW_POSET, LAW_ABSORBING, ELSE_AFTER_COUNT, RANGE_SKIP_TAKE)
+                .<Obj>map(rewrite -> rewrite.atDirect(uri(table))).filter(Obj::isRec).findFirst().orElse(noobj());
         final List<Rec> rules = switch (table) {
             case "units" -> Law.Helper.rules(MONOID_THEORY_TID);
             case "inverses" -> Law.Helper.rules(GROUP_THEORY_TID);
-            case "mapper", "map_nest", "range_skip_take" -> List.of(M_REWRITE_TABLE.atDirect(uri(table)).asRec());
-            default -> M_REWRITE_TABLE.atDirect(uri(table)).isRec()
-                    ? Law.Helper.claimed(M_REWRITE_TABLE.atDirect(uri(table)).asRec(), Law.valueOf(table)) : List.<Rec>of();
+            case "mapper", "map_nest", "range_skip_take" -> List.of(row.asRec());
+            default -> row.isRec() ? Law.Helper.claimed(row.asRec(), Law.valueOf(table)) : List.<Rec>of();
         };
         for (final Rec rule : rules)
             out = Call.Helper.update(out, rule);
@@ -1106,7 +1122,7 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * THE ABSORBING ROW of /m's rewrite table, {@code {+}#·op ⇝ op} — an operation declared {@code absorbing} is a constant
+     * THE ABSORBING RULE, /m's {@code law_absorbing}, {@code {+}#·op ⇝ op} — an operation declared {@code absorbing} is a constant
      * of the chain ({@code f ∘ g = f}), so the run before it is dead code — but only the run that cannot change what it
      * answers: a pure instruction that hands it one obj per obj (a mapper of its carrier) and keeps that carrier. The run
      * is a spanned element, tried longest first and shortened where the gate refuses it, and a scaled instruction is no

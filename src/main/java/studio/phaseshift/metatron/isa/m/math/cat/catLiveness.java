@@ -90,7 +90,9 @@ public class catLiveness {
     static boolean live(final Profile profile, final Inst rewrite) {
         return switch (rewrite.tid().basePath().name()) {
             case "theory_unit_removal" -> profile.unit;
-            case "m_rewrite_table" -> profile.adjInvolution || profile.adjIdempotent || profile.adjMonoidFold;
+            case "law_involution" -> profile.adjInvolution;
+            case "law_idempotent" -> profile.adjIdempotent;
+            case "law_monoidic" -> profile.adjMonoidFold;
             case "inverse_cancellation" -> profile.adjInverse;
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;

@@ -109,7 +109,7 @@ public class PlanRewriter extends FixPointRewriter {
      * The involution plan — cut the self-inverse op ({@code law => [involution]}): the f·f ↦ ε fold.
      */
     private static final Cut INVOLUTION_CUT = Cut.law(Law.involution);
-    public static final Plan INVOLUTION_PLAN = PlanBuilder.plan("theory_involution")
+    public static final Plan INVOLUTION_PLAN = PlanBuilder.plan("law_involution")
             .cut(INVOLUTION_CUT)
             .where(Placement.local(Span.at()))
             .create();

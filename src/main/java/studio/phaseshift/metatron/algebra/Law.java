@@ -1182,7 +1182,7 @@ public enum Law {
 
         /**
          * A LAW'S RULES AS ITS CLAIMANTS BIND THEM (Marko, 2026-11-09) — a law's rules are stated in the name {@code op},
-         * the instruction whose claim states the law (/m's rewrite table), and every claimant fills {@code op} wherever it
+         * the instruction whose claim states the law (the law's rewrite, one of /m's), and every claimant fills {@code op} wherever it
          * stands. An {@code op} that states no argument is the claimant's term, holes and all, so a pair binds its operands
          * equal: involution's {@code op·op ⇝ ε}, bound by {@code neg}, is {@code neg()·neg() ⇝ ε}, and idempotent's
          * {@code op·op ⇝ op}, bound by bool's {@code plus}, is {@code plus(a0)·plus(a0) ⇝ plus(a0)}. An {@code op} that
@@ -1238,9 +1238,9 @@ public enum Law {
         }
 
         /**
-         * THE REWRITE TABLE (Marko, 2026-11-09) — /m's rewrite table instruction, {@code m_rewrite_table}, carries its table
-         * as its declared argument: a value, not a type, so the instruction resolves with the table already bound. Each
-         * entry is a ROW, a key and its rules, and the rows apply in the table's order. A row keyed by a LAW states its rule
+         * A REWRITE'S RULES (Marko, 2026-11-10: one rewrite per rule) — each of /m's rule rewrites carries its rules as its
+         * declared argument, a rec of ROWS, a key and its rules: a value, not a type, so the rewrite resolves with its rules
+         * already bound. The rows apply in order ({@code form_map_unwrap} has two). A row keyed by a LAW states its rule
          * in the name {@code op}, bound to every instruction whose claim states the law ({@link #claimed}) and applied under
          * that law's gate at the chain's carrier:
          * <ul>
@@ -1253,20 +1253,19 @@ public enum Law {
          *   <li>{@code absorbing} {@code {+}#·op ⇝ op}, a run of one or more instructions of any name and arguments before
          *       the op, where the op absorbs it there ({@link #isAbsorbed}).</li>
          * </ul>
-         * A law the table names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
+         * A law a row names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
          * over named holes, and its holes range over the form: a matched run changes only where the operation of everything
          * a hole captured, an instruction or the op symbol a chain carries before resolution, declares that form. A form is
          * declared per operation ({@code InstBuilder.declaredForm}), so no carrier is read. The {@code mapper} row's
          * {@code map(#::T@f) ⇝ #::T@f} unwraps {@code map(neg)}, never {@code map(sum())}. A row keyed by anything else is
          * PLAIN ({@code map_nest}, {@code else_after_count}, {@code range_skip_take}): its rule is stated in the instructions
          * themselves, so it applies as it stands, with no {@code op} to bind and no gate; a {@code ${...}} template in its
-         * change computes an argument from the names the run bound. {@code only} names the rows a pass applies (a plan's
-         * cut); naming none applies the whole table.
+         * change computes an argument from the names the run bound.
          */
-        public static Code lawRemoval(final Code code, final Rec table, final Obj... only) {
+        public static Code lawRemoval(final Code code, final Rec table) {
             Code out = code;
             for (final Rel entry : table.<Rel>elements().toList()) {
-                if (!entry.second().isRec() || (0 != only.length && Arrays.stream(only).noneMatch(entry.first()::equals)))
+                if (!entry.second().isRec())
                     continue;
                 final String key = entry.first().isUri() ? entry.first().uriValue().name() : null;
                 final Law law = Arrays.stream(Law.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
