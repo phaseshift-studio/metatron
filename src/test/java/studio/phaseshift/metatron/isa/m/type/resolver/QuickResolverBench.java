@@ -23,7 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 
 import java.util.ArrayList;
@@ -115,7 +115,7 @@ public class QuickResolverBench extends AbstractMetatronTest {
         }));
 
         System.out.println("\n========================================");
-        System.out.println("RESOLVER: " + Selector.get().getClass().getSimpleName());
+        System.out.println("RESOLVER: " + Machine.current().compiler().resolver().selector().getClass().getSimpleName());
         System.out.println("========================================");
         results.forEach(r -> System.out.println(r.toString()));
         System.out.println("========================================");

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Network;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.GraphittyLogger;
@@ -336,15 +337,19 @@ public interface Inst extends Call {
         return base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID);
     }
 
+    /**
+     * RUNTIME RESOLUTION GOES THROUGH THE MACHINE (Marko, 2026-11-10): the current machine's resolver, its selector and
+     * binder ({@code ~/compiler/resolver}), so an instruction resolved at run time meets the strategy its compile did.
+     */
     @Override
     default Inst resolve(final Obj lhs) {
-        return this.resolve(lhs, Selector.get(), Binder.get());
+        final Resolver resolver = Machine.current().compiler().resolver();
+        return this.resolve(lhs, resolver.selector(), resolver.binder());
     }
 
     /**
-     * Resolve against an explicit {@link Selector} and {@link Binder} — the seam the compiler's
-     * resolution stage uses to pin per-instruction selection and binding without touching the
-     * active globals. The one-arg overload delegates to the active selector and binder.
+     * Resolve against an explicit {@link Selector} and {@link Binder}: one step of a resolver's walk, which hands each
+     * instruction its own two sub-stages.
      */
     default Inst resolve(final Obj lhs, final Selector sel, final Binder binder) {
         if (this.hasf())

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mach.machInstSet;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.BasicCompiler;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Parser;
 import studio.phaseshift.metatron.isa.m.mach.type.instset.BasicInstSet;
 import studio.phaseshift.metatron.isa.m.mach.type.machine.AbstractMachine;
@@ -949,6 +950,17 @@ public interface Machine extends Rec, AutoCloseable {
                 if (null == this.instset)
                     this.instset = new BasicInstSet();
                 return this.instset;
+            }
+
+            // instruction sets load before the root machine is minted, and resolution goes through the current
+            // machine's compiler, so the bootstrap answers one as it answers its other components
+            private Compiler compiler = null;
+
+            @Override
+            public Compiler compiler() {
+                if (null == this.compiler)
+                    this.compiler = BasicCompiler.defaults();
+                return this.compiler;
             }
 
             public Obj read(final fURI vid) {

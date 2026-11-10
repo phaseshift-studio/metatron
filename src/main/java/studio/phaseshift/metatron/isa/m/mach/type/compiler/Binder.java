@@ -19,12 +19,10 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.GenericBinder;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Binder — the collaborator of a {@link Selector} that makes one chosen candidate concrete against
@@ -45,34 +43,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Binder extends Component {
-
-    /**
-     * Holder for the currently active binder. Lazily defaults to the {@code generic_binder::T} —
-     * the algorithm the machine has always used, extracted into its own strategy.
-     */
-    AtomicReference<Binder> INSTANCE = new AtomicReference<>();
-
-    /**
-     * Get the currently active binder (defaulting to {@code generic_binder::T}).
-     *
-     * @return the current Binder instance
-     */
-    static Binder get() {
-        final Binder binder = INSTANCE.get();
-        if (null != binder)
-            return binder;
-        return INSTANCE.updateAndGet(b -> null == b ? GenericBinder.single() : b);
-    }
-
-    /**
-     * Set the active binder implementation.
-     *
-     * @param binder the new binder to use
-     * @return the previous binder
-     */
-    static Binder set(final Binder binder) {
-        return INSTANCE.getAndSet(binder);
-    }
 
     /**
      * Bind one candidate instruction against the call being resolved — bind its generics to the

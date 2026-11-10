@@ -19,9 +19,23 @@
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.SpecificitySelector;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /**
  * Test suite for {@link ScoringResolver} — the compiler's {@code scoring_resolver::T}, which
@@ -132,5 +146,33 @@ public class ScoringResolverTest extends AbstractResolverTest {
     @DisplayName("count(): should use type-specific implementations")
     public void testCountSpecificity(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
+    }
+
+    /**
+     * RUNTIME RESOLUTION GOES THROUGH THE MACHINE (Marko, 2026-11-10): a call resolved against a value asks the selector
+     * the machine's resolver holds at that moment, {@code ~/compiler/resolver/selector}, never a process-wide default.
+     * A selector written there is asked, and once another is written in its place it is asked no more. Each call is
+     * parsed fresh, so each must be resolved.
+     */
+    @Test
+    public void testRuntimeResolutionAsksTheMachinesSelector() {
+        final AtomicInteger asked = new AtomicInteger();
+        final Selector recording = new SpecificitySelector() {
+            @Override
+            public Inst apply(final Obj lhs, final Inst userInst, final Binder binder) {
+                asked.incrementAndGet();
+                return super.apply(lhs, userInst, binder);
+            }
+        };
+        final Selector installed = Machine.current().compiler().resolver().selector();
+        Machine.write(f("~/compiler/resolver/selector"), recording);
+        final Obj first = mParser.m_obj().parse("plus(2)").get();
+        assertEquals(jnt(3), first.apply(jnt(1)), "the call resolves at run time");
+        final int seen = asked.get();
+        assertTrue(0 < seen, "through the selector the machine's resolver holds");
+        Machine.write(f("~/compiler/resolver/selector"), installed);
+        final Obj second = mParser.m_obj().parse("plus(2)").get();
+        assertEquals(jnt(5), second.apply(jnt(3)), "a fresh call resolves again");
+        assertEquals(seen, asked.get(), "and a selector the machine no longer holds is asked no more");
     }
 }

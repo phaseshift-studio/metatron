@@ -1171,7 +1171,7 @@ public interface Network extends Addressable, Component.Prefix, Closeable {
          */
         public static Obj dispatch(final Inst override, final Inst user, final Obj lhs) {
             final Inst definition = Helper.nativeOf(user.tid().basePath());
-            final Inst call = Binder.get().apply(lhs, user, null == definition ? override : definition);
+            final Inst call = Machine.current().compiler().resolver().binder().apply(lhs, user, null == definition ? override : definition);
             return null == call
                     ? fail("unable to bind %s to its definition at %s", user, lhs)
                     : call.f(override.f()).apply(lhs);
