@@ -1,0 +1,46 @@
+#!/bin/bash
+# bin/nanorc-hljs — regenerate docs/website/highlight/languages/mtron.min.js
+# from conf/nanorc/mtron.nanorc. The nanorc is the standard of truth for mtron
+# syntax highlighting: the terminal (jline) reads it directly, and this runs
+# the compiled NanorcToHljs generator against it for the browser grammar, so a
+# nanorc tweak is one command:
+#
+#   bin/nanorc-hljs
+#
+# Extra args pass through to the generator (-o/--output, --nanorc, --overlay),
+# e.g. bin/nanorc-hljs -o /tmp/probe.js. The pom runs the same generator during
+# `bin/metatron-docker build docs`; this script is for the iterate loop.
+# -------------------------------------------------------------------
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+cd "$DIR"
+
+CLASSPATH=""
+NEWEST=""
+for candidate in target/classes .docker-target/classes; do
+    classfile="$candidate/studio/phaseshift/metatron/docs/NanorcToHljs.class"
+    if [ -f "$classfile" ] && { [ -z "$NEWEST" ] || [ "$classfile" -nt "$NEWEST" ]; }; then
+        NEWEST="$classfile"
+        CLASSPATH="$candidate"
+    fi
+done
+if [ -z "$CLASSPATH" ]; then
+    echo "NanorcToHljs is not compiled yet — run: bin/metatron-docker build" >&2
+    exit 1
+fi
+if [ "src/main/java/studio/phaseshift/metatron/docs/NanorcToHljs.java" -nt "$NEWEST" ]; then
+    echo "warning: the generator source is newer than the compiled class — run: bin/metatron-docker build" >&2
+fi
+
+java -cp "$CLASSPATH" studio.phaseshift.metatron.docs.NanorcToHljs "$@"
+
+# refresh the built site's copies — pages served from the built tree only see the grammar and
+# palette the pom's copy step put there, so a `build docs` is otherwise required for a refresh
+for served in .docker-target/temp/src target/temp/src; do
+    if [ -d "$served/highlight/languages" ]; then
+        cp docs/website/highlight/languages/mtron.min.js "$served/highlight/languages/mtron.min.js"
+        cp docs/website/css/metatron.css "$served/css/metatron.css"
+        echo "refreshed $served/highlight/languages/mtron.min.js + $served/css/metatron.css"
+    fi
+done

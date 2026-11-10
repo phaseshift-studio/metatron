@@ -305,13 +305,13 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | rewrite                  | reads                                                                                       | rule                                                                                                                                                                                                                                                |
 |--------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule; `/m`'s rewrite)        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
-| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
-| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $\{+\}\# \cdot f \leadsto f$, a run of one or more instructions before $f$ (a spanned element): each a pure $g$ handing $f$ one obj per obj, a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj; never the seed |
-| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{poset}$ + the comparison orders one bound past the other         | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
+| `law_involution` (/m)    | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
+| `law_idempotent` (/m)    | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_absorbing` (/m)     | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $\{+\}\# \cdot f \leadsto f$, a run of one or more instructions before $f$ (a spanned element): each a pure $g$ handing $f$ one obj per obj, a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj; never the seed |
+| `law_monoidic` (/m)      | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
+| `law_poset` (/m)         | $\mathrm{law} \ni \mathrm{poset}$ + the comparison orders one bound past the other         | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
-| `m_rewrite_table` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
+| `form_map_unwrap` (/m)   | `form = mapper` declared by the operation `map` wraps                                       | $\mathrm{map}(f) \leadsto f$                                                                                                                                                                                                                        |
 | `derivation_contraction` (/m) | the `derivation` of the contract the carrier dispatches to                                  | $\mathrm{plus} \cdot \mathrm{neg} \leadsto \mathrm{minus}$, $\mathrm{mult} \cdot \mathrm{inv} \leadsto \mathrm{div}$                                                                                                                                |
 | `branch_collapse`        | the additive role of the operand's algebra — `cut => [role => add]`                         | $\mathrm{S}(x, \ldots, x) \leadsto \mathrm{S}(x\{n\})$ — equal terms collapse, summing the coefficients                                                                                                                                             |
 | `branch_inline`          | the additive role — `cut => [role => zero]`                                                 | $a \cdot \mathrm{S}(b) \cdot c \leadsto a \cdot b \cdot c$, $\mathrm{S}_{\{c\}}(b) \leadsto b\{c\}$, $\mathrm{S}(x) \leadsto \mathrm{map}(x)$                                                                                                       |
@@ -320,7 +320,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
 distribution plan may anchor (its spans). `pure` constrains every rule that moves, drops or replicates code: only a
-declared-pure instruction is swallowed by `m_rewrite_table`'s absorbing row or replicated into `law_shard`'s floatable run, and an
+declared-pure instruction is swallowed by `law_absorbing` or replicated into `law_shard`'s floatable run, and an
 instruction that does not declare it is effectful (`to`, `print`, `side` stay where they are). The remaining labels
 are classification predicates, recorded for the
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,
@@ -343,27 +343,29 @@ way, so int's `add_group` gives `plus(a)·minus(a)` and `minus(a)·plus(a)` (`mi
 carrier derives that inverse. It is `/m`'s rewrite too, and so is `derivation_contraction`, whose rules are the
 derivations instructions declare beside themselves: both are data already, so both run on the base path.
 
-The process laws' rules are `/m`'s too, and they live in one instruction: `m_rewrite_table`, whose declared
-argument *is* the rewrite table, a value rather than a type, so the instruction resolves with its table bound and no
-type resolution takes place. The table states each law's rule in the name `op`, the instruction that claims the law:
-`[involution => [op.op => ], idempotent => [op.op => op], monoidic => [op.op => op]]`. Every claimant binds `op` to
+The process laws' rules are `/m`'s too, one rewrite per rule (Marko, 2026-11-10), so each can be added to or
+removed from the machine's rewrite pool on its own, and `path::T` draws one edge per rule. A rewrite's declared
+argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
+place. A law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
+`[involution => [op.op => ]]`, `law_idempotent` `[idempotent => [op.op => op]]` and `law_monoidic`
+`[monoidic => [op.op => op]]`. Every claimant binds `op` to
 its own term (`neg`, `ucase`, `sum`, …), and each rule fires where the operation claims its law at the chain's
 carrier. The involution law holds for every operation declared `involution` — `neg`, `inv`, `not`, `reverse`,
 `conjugate` — not only the additive group's. A row keyed by a *form* states its rule over a named hole, and the hole
-ranges over that form: `mapper => [map(#::T@f) => #::T@f]` unwraps a mapping where the operation `map` wraps
+ranges over that form: `form_map_unwrap`'s `mapper => [map(#::T@f) => #::T@f]` unwraps a mapping where the operation `map` wraps
 declares the mapper form (a form is declared per operation). `map` hands each obj to its argument one at a time, so a mapper
 (`map(neg)` is `neg`) unwraps and a stream's fold does not: `{1,2,3}.map(sum())` sums each element alone, where
 `{1,2,3}.sum()` is 6. A row keyed by anything else is *plain*: its rule is stated in the instructions themselves, so it
 applies as it stands, with no `op` to bind and no law to gate it. `else_after_count => [count().else(#::T) => count()]`
-drops the dead `else` after a total `count`, and `map_nest => [map(map(#::T@f)) => map(#::T@f)]` drops a map of a map,
+drops the dead `else` after a total `count`, and `form_map_unwrap`'s first row, `map_nest => [map(map(#::T@f)) => map(#::T@f)]`, drops a map of a map,
 whatever it maps. A plain row may compute its change: a `${…}` template is evaluated with the names the run bound, so
 `range_skip_take => [range(int::T@i,int::T@n) => skip(#::T@i).take(${*n.minus(*i)})]` turns a window into a skip
-and a take. The poset law is a row too, stated over the bound each rule keeps:
+and a take. The poset law's rewrite, `law_poset`, is stated over the bound each rule keeps:
 `poset => [is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
 kept is the one the comparison orders past the other ($\max$ under `gt`, $\min$ under `lt`), with no comparison
 named in the rule. The pair is also stated the other way round, and for `filter`.
 
-The absorbing law's row is stated over a *run*, not a pair: `absorbing => [{+}#{*}<=#{*}({*}#::T).op => op]`. Its
+The absorbing law's rewrite, `law_absorbing`, is stated over a *run*, not a pair: `absorbing => [{+}#{*}<=#{*}({*}#::T).op => op]`. Its
 first element is an instruction with a **span**, `{span}inst{point}`, read as a type's span is read over a lst's slots:
 `{+}#({*}#::T)` is one or more instructions of any name and arguments, laid over the chain as a lst type's entries are
 laid over its indices. A rewrite tries the longest run first and shortens it where the gate refuses it. The run never
@@ -433,7 +435,7 @@ Only two instructions remain in the explain table: the seed and the one operatio
 instructions were rewritten away:
 
 * `plus(0)` and `mult(1)` are int's monoid units (`theory_unit_removal`),
-* `neg().neg()` is the additive group's involution (`m_rewrite_table`'s involution rule),
+* `neg().neg()` is the additive group's involution (`law_involution`),
 * `plus(3.neg())` folds to `minus(3)` (`derivation_contraction`), and
 * `mult(2).div(2)` is a declared inverse pair (`inverse_cancellation`).
 
@@ -568,11 +570,23 @@ three steps below are the same vertex after each application — the path shrink
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]
-==>[path::[obj=>start(5).plus(0).neg().neg()]]
-mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]
-==>[path::[obj=>start(5).plus(0).neg().neg()]]
-mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>theory_involution)]==[lower(>>theory_unit_removal)]
-==>[path::[obj=>start(5).plus(0).neg().neg()]]
+==>[path::[obj=>start(5).plus(0).neg().neg(),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]],
+           law_involution=>plan::[
+            name=>law_involution,
+            cut=>[law=>[involution]],
+            where=>[[shape=>local,span=>[[span=>at]]]]]]]
+mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>law_involution)]
+==>[path::[obj=>start(5).plus(0),
+           theory_unit_removal=>plan::[
+            name=>theory_unit_removal,
+            cut=>[role=>id],
+            where=>[[shape=>none,span=>[[span=>at]]]]]]]
+mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[lower(>>law_involution)]==[lower(>>theory_unit_removal)]
+==>[path::[obj=>start(5)]]
 ```
 **A-priori pruning.** Whether an edge is live is decided from declarations alone — no match is attempted. Each
 rule's guard factors into a *type-part* (laws, forms, adjacency of classifications) and a *value-residue* (operand
@@ -597,46 +611,46 @@ and computes its cut/span/where without consulting the code below; the descent (
 
 ```mtron
 mtron> [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==>[abstraction::[obj=>[
-                   morphism[start?args=[/m/int]]::[
-                    name=>start,
-                    form=>initial,
-                    src=>!λ#(){<j>},
-                    trgt=>!λ#(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>start(5)],
-                   morphism[plus?rng=int&dom=int&args=[/m/int]]::[
-                    name=>plus,
-                    form=>mapper,
-                    class=>[endo],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>plus(0),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
-                     section,
-                     retraction,
-                     mono,
-                     epi],
-                    src=>!λint(){<j>},
-                    trgt=>!λint(){<j>},
-                    analysis=>!λ(){<j>},
-                    obj=>neg(),
-                    ...(1 more)],
-                   morphism[neg?rng=int&dom=int&args]::[
-                    name=>neg,
-                    form=>mapper,
-                    class=>[
-                     endo,
-                     iso,
-                     auto,
+==>[abstraction::[obj=>[morphism[start?args=[/m/int]]::[
+                         name=>start,
+                         form=>initial,
+                         src=>!λ#(){<j>},
+                         trgt=>!λ#(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>start(5)],
+                        morphism[plus?rng=int&dom=int&args=[/m/int]]::[
+                         name=>plus,
+                         form=>mapper,
+                         class=>[endo],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>plus(0),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
+                          retraction,
+                          mono,
+                          epi],
+                         src=>!λint(){<j>},
+                         trgt=>!λint(){<j>},
+                         analysis=>!λ(){<j>},
+                         obj=>neg(),
+                         ...(1 more)],
+                        morphism[neg?rng=int&dom=int&args]::[
+                         name=>neg,
+                         form=>mapper,
+                         class=>[
+                          endo,
+                          iso,
+                          auto,
+                          section,
    ...
 ```
 ### `plan::T` — a rewrite rule as a value
@@ -709,27 +723,7 @@ now holding that `peer::T`, the `path::T` lists the distribution plan among its 
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              place=>[local],
-              hop=>0,
-              split=>stream,
-              span=>[[span=>at],[span=>post]]],
-             [
-              place=>[peer],
-              hop=>1,
-              split=>stream,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
 ```
 `law_shard` is Theorem 19 of the stream-ring algebra ([Stream Ring Theory](../../../articles/stream-ring-theory.html)):
 monoidic reducers are **semi-right distributive**,
@@ -753,27 +747,7 @@ that licenses it are the same value: every rule is `lower(plan::T)`, and the rew
 
 ```mtron
 mtron> [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum(),
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              place=>[local],
-              hop=>0,
-              split=>stream,
-              span=>[[span=>at],[span=>post]]],
-             [
-              place=>[peer],
-              hop=>1,
-              split=>stream,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+==>[path::[obj=>start({1,2,3,4,5}).plus(10).sum()]]
 ```
 A keyed fold lowers the same way, its master recombining pointwise: the `sum()` after the branch deep-merges the partial
 recs and
@@ -781,27 +755,7 @@ recs and
 
 ```mtron
 mtron> [start({1,2,3,4,5,6}).group([mod(3)=>sum()])]==[as(cat:path::T)]==[lower(>>law_shard)]
-==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()]),
-           law_shard=>plan::[
-            name=>law_shard,
-            cut=>[
-             form=>reducer,
-             law=>[monoidic,commutative]],
-            where=>[
-             [
-              place=>[local],
-              hop=>0,
-              split=>stream,
-              span=>[[span=>at],[span=>post]]],
-             [
-              place=>[peer],
-              hop=>1,
-              split=>stream,
-              span=>[
-               [span=>seed,flags=>[partition]],
-               [span=>pre,flags=>[floatable,no_seed]],
-               [span=>at]],
-              inst=>[/m/inst/eval]]]]]]
+==>[path::[obj=>start({1,2,3,4,5,6}).group([mod(3)=>sum()])]]
 ```
 ### may / must — the fiber modality
 

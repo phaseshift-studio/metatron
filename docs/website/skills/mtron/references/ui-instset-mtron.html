@@ -800,11 +800,11 @@ mtron&gt; board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anch
      predicate apply failed on execution (at /m/inst/ctor)&quot;&quot;&quot;]
    	while parsing: board -&gt; matrix_widget::[grid=&gt;!*/usr/uidoc/g10, style=&gt;[anchor=&gt;top_right,border=&gt;continuous]]@/usr/uidoc/board]
 mtron&gt; @/usr/uidoc/board.display()             [-- pin it once --]
-==&gt;fail::[inst apply failure: Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null (at /m/sys/ui/inst/display@1) [Widget&lt;102&gt;]][Cannot invoke &quot;org.jline.terminal.Terminal.output()&quot; because the return value of &quot;studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()&quot; is null [Widget&lt;102&gt;]]
+==&gt;fail::[lhs range does not match inst domain: rec::T =&gt; rec::T[?[{?}style=&gt;rec::T[?[{?}border=&gt;str::T,{?}background=&gt;str::T,{?}foreground=&gt;str::T,{?}divider=&gt;str::T,{?}headerDivider=&gt;str::T,{?}pointer=&gt;str::T,{?}leftMargin=&gt;int::T,{?}rightMargin=&gt;int::T,{?}topMargin=&gt;int::T,{?}bottomMargin=&gt;int::T,{?}anchor=&gt;uri::T[?/m/inst/union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=&gt;int::T,{?}height=&gt;int::T,{?}top=&gt;int::T,{?}left=&gt;int::T,{?}zIndex=&gt;int::T,{?}scroll=&gt;&lt;#&gt;::T,{?}scrollX=&gt;int::T,{?}scrollY=&gt;int::T,{?}wordWrap=&gt;bool::T]][/m/inst/ctor?/m/sys/ui/style&lt;=(&lt;#{*}&gt;::T)]@style]]@widget [/m/sys/ui/inst/display?{0}&lt;=/m/sys/ui/widget()@&lt;1&gt;]]
 mtron&gt; @/usr/uidoc/g10/1/0 &gt;&gt;= '@'             [-- one cell of the REFERENT --]
 ==&gt;'@'
 mtron&gt; @/usr/uidoc/g10/+/0 &gt;&gt;= ''             [-- every row's column 0 --]
-==&gt;{2}''
+==&gt;{10}''
 </code></pre>
 <p>The referent must be an <strong>absolute</strong> uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,
@@ -1007,9 +1007,13 @@ suites that drive the pointer and the viewport in a real console.</li>
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

@@ -19,7 +19,7 @@ color red "\{\?\}"
 ### int
 color yellow "(0)|(-?[1-9][0-9]*)"
 # common sugars
-color green "[.:;,+|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
+color green "[.:;,+|=!\%@#]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
 color yellow "[*]"
 ### real
 icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+(E[-+]?[0-9]+)?"
@@ -28,20 +28,20 @@ color green "\[" "\]" "\(" "\)" "\{" "\}"
 # real exponent
 icolor yellow "(\.|[0-9])+E[-+]?[0-9]+"
 # uri slash or schema
-icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+icolor blue "(/|([a-z]+(://))|[a-z]|_)([0-9]|[a-z]|\.|-|_)*(:(?!:))?[0-9]*(/)?([a-z]|/|\_|[0-9]|\.|:(?!:))*"
 # rec/rel uri key — applied after generic <> coloring below
 color green "=>"
 ### bytes
-icolor yellow "0x([0-9]|[A-F]|[a-f])+"
-color yellow,underline "0x"
+icolor yellow "(?<=0x)([0-9]|[A-F]|[a-f])+"
+color green "0x"
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
 # qProc keys
-icolor cyan "&?(|#|\+|[a-z]|-|_|\{.\})+(&|=|<=)(?!>)"
-icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
+icolor cyan "&?(#|\+|[a-z]|-|_|\{.\})+(?=(?:&|=|<=)(?!>))"
+icolor blue "(?<==)([a-z]|[0-9]|\.|_|-|/|#|\+)+"
 icolor cyan "(<=|&)([a-z]|[0-9]|_|-|/|#|\+)+"
-icolor blue "([a-z]|[0-9]|/|#|\+)+::"
+icolor blue "([a-z]|[0-9]|/|#|\+)+::(?!T)"
 color green "=" "::"
 # c coefficients
 color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
@@ -59,13 +59,13 @@ color green "\{|\}"
 color green "\{\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
-icolor blue "[,a-z0-9_/-]+::"
+icolor blue "[,a-z0-9_/-]+::(?!T)"
 color green "::"
 ### bool
 color yellow "(^|[^/])(true|false)([^/]|$)"
 ### uri key — overrides generic <> cyan before =>
-icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>\s*=>"
-icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*\s*=>"
+icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\.|\s)*>(?=\s*=>)"
+icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:|\.)*(?=\s*=>)"
 color yellow "\$\{[^}]*\}" "<="
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
@@ -85,10 +85,10 @@ color yellow "@<(/|[a-zA-Z0-9]|\.|#|\+| |:|-|_|~|\?|\^)+>" "@(/|[a-zA-Z0-9]|:|#|
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
-color gray "<[^>]>"
+color bright-black "<[^>]>"
 ### comments
-color gray start="\[--" end="--]"
-color gray start="\[==" end="==]"
+color bright-black start="\[--" end="--]"
+color bright-black start="\[==" end="==]"
 
 
 ### X=> match marker vs identifiers ending in X (e.g. PREFIX=>)

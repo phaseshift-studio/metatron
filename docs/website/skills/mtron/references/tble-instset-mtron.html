@@ -584,36 +584,15 @@ keeps what SQL cannot say:</p>
     base_vid=&gt;'/m/rec',
     obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'person',
-    column_name=&gt;'skill',
+    column_name=&gt;'name',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
-==&gt;[table_name=&gt;'award',
-    column_name=&gt;'$table',
-    base_vid=&gt;'/m/rec',
-    obj_tid=&gt;'/m/rec']
-==&gt;[table_name=&gt;'award',
-    column_name=&gt;'trophy',
-    base_vid=&gt;'/m/str',
-    obj_tid=&gt;'/m/str']
-==&gt;[table_name=&gt;'award',
-    column_name=&gt;'recipient',
-    base_vid=&gt;'/m/inst',
-    obj_tid=&gt;'/m/inst/auto_from?args=[/m/uri]',
-    ref_table=&gt;'person']
-==&gt;[table_name=&gt;'note',
-    column_name=&gt;'$table',
-    base_vid=&gt;'/m/rec',
-    obj_tid=&gt;'/m/rec']
 ==&gt;[table_name=&gt;'person',
     column_name=&gt;'age',
     base_vid=&gt;'/m/int',
     obj_tid=&gt;'/m/int']
 ==&gt;[table_name=&gt;'person',
-    column_name=&gt;'name',
-    base_vid=&gt;'/m/str',
-    obj_tid=&gt;'/m/str']
-==&gt;[table_name=&gt;'note',
-    column_name=&gt;'body',
+    column_name=&gt;'skill',
     base_vid=&gt;'/m/str',
     obj_tid=&gt;'/m/str']
 </code></pre>
@@ -624,7 +603,6 @@ reconstructs the lst rather than a string that looks like one.</p>
 ==&gt;[name=&gt;'grant',age=&gt;25]
 ==&gt;[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']
 ==&gt;[name=&gt;'metis',age=&gt;41]
-==&gt;[name=&gt;'vela',age=&gt;53]
 ==&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *tbledoc:person/1              [-- one row --]
 ==&gt;[name=&gt;'marko',age=&gt;29]
@@ -632,19 +610,16 @@ mtron&gt; *tbledoc:person/+/             [-- vid =&gt; row --]
 ==&gt;tbledoc:person/2=&gt;[name=&gt;'grant',age=&gt;25]
 ==&gt;tbledoc:person/4=&gt;[name=&gt;'xilo',age=&gt;33,skill=&gt;'graph']
 ==&gt;tbledoc:person/3=&gt;[name=&gt;'metis',age=&gt;41]
-==&gt;tbledoc:person/5=&gt;[name=&gt;'vela',age=&gt;53]
 ==&gt;tbledoc:person/1=&gt;[name=&gt;'marko',age=&gt;29]
 mtron&gt; *tbledoc:person/+/name         [-- one column, across rows --]
 ==&gt;'xilo'
 ==&gt;'metis'
 ==&gt;'grant'
 ==&gt;'marko'
-==&gt;'vela'
 mtron&gt; *tbledoc:person/1/name         [-- one field: the row is unrolled --]
 ==&gt;'marko'
 mtron&gt; *tbledoc:person/+/id           [-- the keys: they live in the vid, not in the body --]
 ==&gt;2
-==&gt;5
 ==&gt;4
 ==&gt;1
 ==&gt;3
@@ -664,8 +639,6 @@ matters.</p>
 ==&gt;'marko'
 ==&gt;41
 ==&gt;'graph'
-==&gt;53
-==&gt;'vela'
 mtron&gt; @tbledoc:person/+/+      [-- anchor: the same fields, each still addressed to its row --]
 ==&gt;'xilo'@tbledoc:person/4/name
 ==&gt;'metis'@tbledoc:person/3/name
@@ -676,21 +649,23 @@ mtron&gt; @tbledoc:person/+/+      [-- anchor: the same fields, each still addre
 ==&gt;'marko'@tbledoc:person/1/name
 ==&gt;41@tbledoc:person/3/age
 ==&gt;'graph'@tbledoc:person/4/skill
-==&gt;53@tbledoc:person/5/age
-==&gt;'vela'@tbledoc:person/5/name
 </code></pre>
 <p>The same holds for a rewrite's result — it is the clone path that hands rows back with a placeholder vid, which is why
 the anchored form is the one to keep when the rows might be written back:</p>
 <pre><code class="language-mtron">mtron&gt; *tbledoc:person/+.take(2)     [-- clone path --]
-==&gt;person::[name=&gt;'marko',
-            age=&gt;29]@tbledoc:person/1
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@tbledoc:person/2
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'marko',
+    age=&gt;29]@tbledoc:person/1
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'grant',
+    age=&gt;25]@tbledoc:person/2
 mtron&gt; @tbledoc:person/+.take(2)     [-- anchor path --]
-==&gt;person::[name=&gt;'marko',
-            age=&gt;29]@tbledoc:person/1
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@tbledoc:person/2
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'marko',
+    age=&gt;29]@tbledoc:person/1
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'grant',
+    age=&gt;25]@tbledoc:person/2
 </code></pre>
 <h3>the rewrites — reads that become SQL</h3>
 <p>The interesting half of <code>/m/db/tble</code>: a read that matches a table is rewritten to SQL before it runs, so <code>count()</code> is
@@ -702,16 +677,15 @@ same expression over a <code>memspace</code> stays in mtron.</p>
 ==&gt;[name=&gt;'grant',
     age=&gt;25]@tbledoc:person/noobj
 mtron&gt; *tbledoc:person/+.count()               [-- SELECT COUNT(*) FROM person --]
-==&gt;5
+==&gt;4
 mtron&gt; *tbledoc:person/+/age.sum()             [-- SELECT SUM(age) FROM person --]
-==&gt;181
+==&gt;128
 mtron&gt; *tbledoc:person/+/age.mean()            [-- SELECT AVG(age) FROM person --]
-==&gt;36.2
+==&gt;32.0
 mtron&gt; *tbledoc:person/+.==[name=&gt;_]           [-- SELECT name FROM person --]
 ==&gt;[name=&gt;'grant']
 ==&gt;[name=&gt;'xilo']
 ==&gt;[name=&gt;'metis']
-==&gt;[name=&gt;'vela']
 ==&gt;[name=&gt;'marko']
 mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
 ==&gt;[[
@@ -726,31 +700,30 @@ mtron&gt; *tbledoc:person/+.order(select(age))    [-- ... ORDER BY age --]
      skill=&gt;'graph']@tbledoc:person/noobj,
     [
      name=&gt;'metis',
-     age=&gt;41]@tbledoc:person/noobj,
-    [
-     name=&gt;'vela',
-     age=&gt;53]@tbledoc:person/noobj]
+     age=&gt;41]@tbledoc:person/noobj]
 mtron&gt; *tbledoc:person/+.dedup(select(name))   [-- SELECT DISTINCT name FROM person --]
 ==&gt;'marko'
 ==&gt;'grant'
 ==&gt;'metis'
 ==&gt;'xilo'
-==&gt;'vela'
 mtron&gt; *tbledoc:person/+.take(2)               [-- ... LIMIT 2 --]
-==&gt;person::[name=&gt;'marko',
-            age=&gt;29]@tbledoc:person/1
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@tbledoc:person/2
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'marko',
+    age=&gt;29]@tbledoc:person/1
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'grant',
+    age=&gt;25]@tbledoc:person/2
 mtron&gt; *tbledoc:person/+.skip(1)               [-- ... OFFSET 1 --]
-==&gt;person::[name=&gt;'grant',
-            age=&gt;25]@tbledoc:person/2
-==&gt;person::[name=&gt;'metis',
-            age=&gt;41]@tbledoc:person/3
-==&gt;person::[name=&gt;'xilo',
-            age=&gt;33,
-            skill=&gt;'graph']@tbledoc:person/4
-==&gt;person::[name=&gt;'vela',
-            age=&gt;53]@tbledoc:person/5
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'grant',
+    age=&gt;25]@tbledoc:person/2
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'metis',
+    age=&gt;41]@tbledoc:person/3
+==&gt;/sys/space/tbledoc/instset/person::[
+    name=&gt;'xilo',
+    age=&gt;33,
+    skill=&gt;'graph']@tbledoc:person/4
 </code></pre>
 <table>
 <thead>
@@ -864,14 +837,13 @@ kinds may sit in one row.</p>
 <pre><code class="language-mtron">mtron&gt; */sys/space/tbledoc/schema/pattern      [-- where the discovered types are published --]
 ==&gt;/sys/space/tbledoc/instset/#
 mtron&gt; */sys/space/tbledoc/instset/+/          [-- the types as addressed objs --]
-==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
-            recipient=&gt;isa(person/+/id).!*id(),
-            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/award
-==&gt;/sys/space/tbledoc/instset/note=&gt;rec::T[?[{?}body=&gt;str::T,uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/note
 ==&gt;/sys/space/tbledoc/instset/person=&gt;rec::T[?[{?}name=&gt;str::T,
             {?}age=&gt;int::T,
             {?}skill=&gt;str::T,
             uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/person
+==&gt;/sys/space/tbledoc/instset/award=&gt;rec::T[?[{?}trophy=&gt;str::T,
+            recipient=&gt;isa(person/+/id).!*id(),
+            uri{?}::T=&gt;&lt;#&gt;::T]]@/sys/space/tbledoc/instset/award
 </code></pre>
 <p>Reading the schema is how you meet a table you have never seen: each entry is an <code>isa([{?}name=&gt;str::T,…])</code> refinement
 of <code>rec::T</code>, and a foreign-key column appears as <code>recipient=&gt;isa(person/+/id).!*id()</code> — the column <em>is</em> the pointer.
@@ -915,26 +887,12 @@ mtron&gt; *tbledoc:person/5
 database says <em>what its key is</em>. Two things have to be true for it to work: the space must declare the <code>incrq</code> query
 processor (<code>q =&gt; [incrq::[=&gt;]]</code>, in the setup block above), and the write must ask for it with <code>?incrq</code>:</p>
 <pre><code class="language-mtron">mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'a note with a database-assigned key']
-==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/15
+==&gt;[body=&gt;'a note with a database-assigned key']@tbledoc:note/1
 mtron&gt; tbledoc:note/_?incrq -&gt; [body=&gt;'another one']
-==&gt;[body=&gt;'another one']@tbledoc:note/16
+==&gt;[body=&gt;'another one']@tbledoc:note/2
 mtron&gt; *tbledoc:note/+/id                                    [-- the keys the backend picked --]
-==&gt;8
-==&gt;12
-==&gt;15
-==&gt;9
-==&gt;11
-==&gt;14
-==&gt;3
-==&gt;6
-==&gt;4
-==&gt;16
-==&gt;7
 ==&gt;1
 ==&gt;2
-==&gt;5
-==&gt;13
-==&gt;10
 </code></pre>
 <h3>taking the space down</h3>
 <p>A space is a <strong>mount</strong>, not a copy. Writing <code>noobj</code> to its vid takes it down: the pattern stops routing, the JDBC
@@ -1064,9 +1022,13 @@ stamping, <code>ExistingTableSchema</code>, schema generation, dialect handling.
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

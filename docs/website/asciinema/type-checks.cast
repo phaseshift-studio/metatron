@@ -1,5 +1,5 @@
 {"version":3,"term":{"cols":40,"rows":22,"type":"xterm-256color"}}
-# generated from mtron/references/type-system-mtron.md — edit the source, not this recording
+# generated from references/type-system-mtron.md — edit the source, not this recording
 [0.2,"m","150, checked against the whole predicate stack, stamped"]
 [0.35,"o","mtron> "]
 [0.05,"o","h"]

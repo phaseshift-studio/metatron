@@ -518,13 +518,11 @@ mtron&gt; model::[provider=&gt; ollama,
                protocol=&gt; ollama,
                host    =&gt; &lt;http://localhost:11434&gt;,
                llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3
-==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
-           size=&gt;gB::3.1571,
-           context=&gt;262144,
-           provider=&gt;ollama,
-           protocol=&gt;ollama,
-           host=&gt;http://localhost:11434,
-           llm=&gt;&lt;qwen3.5:4b&gt;]@qwen3
+==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
+   	while parsing: model::[provider=&gt; ollama,
+                  protocol=&gt; ollama,
+                  host    =&gt; &lt;http://localhost:11434&gt;,
+                  llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3]
 </code></pre>
 <p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:</p>
@@ -872,9 +870,13 @@ spawned subprocess) inside a single <code>tool_feature</code>.</li>
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

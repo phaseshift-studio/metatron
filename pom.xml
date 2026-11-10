@@ -52,6 +52,7 @@
         <skipTests>false</skipTests>
         <skipAsciidoc>false</skipAsciidoc>
         <skipInstSet>false</skipInstSet>
+        <skipHljs>false</skipHljs>
         <skipMarkdown>false</skipMarkdown>
         <!-- cast-only sources (docs/asciinema): evaluate + emit recordings, no page -->
         <skipCasts>false</skipCasts>
@@ -628,6 +629,22 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>generate-mtron-hljs</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipHljs}</skip>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>studio.phaseshift.metatron.docs.NanorcToHljs</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>run-asciidoc-runner</id>

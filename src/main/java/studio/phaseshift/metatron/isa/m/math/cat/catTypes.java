@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.algebra.rewrite.plan.PlanInterpreter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.mTypes;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.rewriter.PlanRewriter;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -43,10 +42,7 @@ import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helpe
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.cat.catInstSet.PATH_TID;
-import static studio.phaseshift.metatron.isa.m.math.cat.catLiveness.maybeNotIdentity;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.union_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
@@ -228,14 +224,16 @@ public class catTypes {
                             final Obj abstraction = ABSTRACTION_TYPE.constructor().apply(code);
                             final List<Obj> morphisms = abstraction.isNoObj() ? List.of() : abstraction.asRec().at(OBJ).asLst().elements().toList();
                             final Obj reach = Places.reachable();   // the distribution candidates, read once per lift
-                            for (final Inst rewrite : self.rewrites()) {
+                            for (final Inst rewrite : Machine.current().instset().rewrites()) {
                                 try {
-                                    if (!maybeNotIdentity(morphisms, rewrite))
-                                        continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
+                                    if (rewrite.apply(code).equals(code)) // TODO: move back to provable identity (for now, exact determination of identity through evaluation)
+                                        continue;
+                                    //if (!maybeNotIdentity(morphisms, rewrite))
+                                    //    continue; // a provably-identity edge is not materialized -- the vertex lists only its live out-edges
                                     final Plan plan = PlanRewriter.planOf(rewrite.tid().name());
                                     if (null != plan && plan.distributed() && (reach.isNoObj() || 1 > PlanInterpreter.hop(plan, code)))
                                         continue; // a distribution rule needs reach AND a hop budget: no peers or ?hop=0 → identity
-                                    final Obj result = auto_(instLambda(lhs -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
+                                    final Obj result = auto_(instLambda(_ -> PATH_TYPE.constructor().apply(rewrite.apply(code)))).tryToInst();
                                     final Obj outEdge = null == plan ? rec(mutableMap(uri(NAME), uri(rewrite.tid().name()), uri(RESULT), result), MACH_PLAN_TID, null) : plan;
                                     path.at(uri(rewrite.tid().name()), outEdge, MUTABLE);
                                 } catch (final Exception e) {
