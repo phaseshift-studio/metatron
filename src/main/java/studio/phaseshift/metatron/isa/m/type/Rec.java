@@ -226,7 +226,9 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                     return singleSegment ? up.c(c -> c.mult(cKey)).as()
                             : (OBJ) (up.isPoly() ? up.<Poly<?, ?>>as().at(uri(isBranch ? keyF.pretract(1).asBranch() : keyF.pretract(1))) : noobj());
                 } else if (step.equals("+") || step.equals("#")) {
-                    result = objs(isBranch ?
+                    // a trailing '/' asks for rels at the LAST step only: an earlier step hands its values on, and the
+                    // walk below carries the branch to the step it belongs to (z/+/ is z's entries, not z as a rel)
+                    result = objs(isBranch && singleSegment ?
                             arec.jvm().entrySet().stream().map(e -> rel(
                                             autoToggle(arec, e.getKey(), doAuto),
                                             autoToggle(arec, e.getValue(), doAuto)))
@@ -265,7 +267,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>> {
                                         kv.getKey(), autoToggle(arec, kv.getValue(), doAuto)) :
                                         autoToggle(arec, kv.getValue(), doAuto)));
                     } else {
-                        result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(arec);
+                        result = (isBranch && singleSegment ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(arec);
                     }
                 }
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////////

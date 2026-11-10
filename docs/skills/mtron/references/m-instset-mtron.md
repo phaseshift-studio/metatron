@@ -232,7 +232,7 @@ as `(a=>plus(2))` does. The instruction's own arguments stay positional.
 ```mtron
 */path/to/obj              [-- read obj at uri (detached) --]
 @/path/to/obj              [-- real obj at uri (attached) --]
-*local:software/           [-- read with trailing --]
+*local:software/           [-- the relation local:software=>obj --]
 *</pa.th/to/o b .j>        [-- angle-bracket handles special chars --]
 ```
 

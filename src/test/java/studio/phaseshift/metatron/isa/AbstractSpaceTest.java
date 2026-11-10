@@ -172,7 +172,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *<$$/2>                            % c",
             ".                                                     % *<$$/+>                            % {a,b,c}",
             ".                                                     % *<$$/+/>                           % [<$$/0>=>a,<$$/1>=>b,<$$/2>=>c]>-",
-            ".                                                     % *<$$/>                             % [<$$/0>=>a,<$$/1>=>b,<$$/2>=>c]>-",
+            // a trailing '/' names the relation from the address to its obj (Marko, 2026-11-10), not its entries
+            ".                                                     % *<$$/>                             % [<$$>=>[a,b,c]]>-",
             ".                                                     % *<$$/+>                            % [a,b,c]>-",
             ".                                                     % *<$$/0>                            % a",
             ".                                                     % *<$$/1>                            % b",
@@ -712,7 +713,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$/a/.>>                       % {$$/a/b/}",
             "$$/a/.>>.>>                    % {$$/a/b/c/}",
             "$$/a/.>>.>>.>>                 % {$$/a/b/c/d/,$$/a/b/c/e/}",
-            "$$/a/.>>.>>.*_                 % ($$/a/b/c/=>[d=>42,e=>54])",
+            "$$/a/.>>.>>.*_                 % ($$/a/b/c=>[d=>42,e=>54])",
             "$$/x.>>                        %  $$/x/y",
             "$$/x/y.>>                      % {$$/x/y/z,$$/x/y/zz}",
             "$$/x/y.>>.*_                   % {1,[2,3]}",

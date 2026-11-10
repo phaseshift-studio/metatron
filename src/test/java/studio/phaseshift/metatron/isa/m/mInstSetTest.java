@@ -917,6 +917,34 @@ public class mInstSetTest extends AbstractInstSetTest {
             "a -> noobj                    % a -> noobj                      % a            % noobj",
             "a -> [1,2,3]                  % a -> 4                          % a            % 4",
             "a -> noobj                    % a -> noobj                      % a            % noobj",
+            // a path names an obj, and the same path with a trailing '/' names the RELATION from that address to the obj
+            // (Marko, 2026-11-10): *z/0 is 1 and *z/0/ is z/0=>1, while a wildcard's *z/+/ is each match at its own
+            // address. A rel is keyed by its full address, relative (a machine variable) or absolute (a space path),
+            // never by a position inside the value (0, a)
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/+          % {1,2,3}",
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/+/         % [z/0=>1,z/1=>2,z/2=>3]>-",
+            "z -> [a=>1,b=>2]              % z -> [a=>1,b=>2]                % z/+/         % [z/a=>1,z/b=>2]>-",
+            "z -> [[a=>1],[b=>2]]          % z -> [[a=>1],[b=>2]]            % z/+/+/       % [z/0/a=>1,z/1/b=>2]>-",
+            "z -> [[1,2],[3,4]]            % z -> [[1,2],[3,4]]              % z/1/+/       % [z/1/0=>3,z/1/1=>4]>-",
+            "z -> [a=>[b=>1]]              % z -> [a=>[b=>1]]                % z/a/         % [z/a=>[b=>1]]>-",
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/0/         % [z/0=>1]>-",
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/           % [z=>[1,2,3]]>-",
+            "z -> [[1,2],[3,4]]            % z -> [[1,2],[3,4]]              % z/1/         % [z/1=>[3,4]]>-",
+            "z -> [[a=>1,b=>2],[a=>3]]     % z -> [[a=>1,b=>2],[a=>3]]       % z/+/a/       % [z/0/a=>1,z/1/a=>3]>-",
+            "z -> [1=>a,2=>b]              % z -> [1=>a,2=>b]                % z/+/         % [z/1=>a,z/2=>b]>-",
+            "z -> 7                        % z -> 7                          % z/           % [z=>7]>-",
+            "z -> 7                        % z -> 7                          % z/+/         % noobj",
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/5/         % noobj",
+            "z -> [1,2,3]                  % z -> [1,2,3]                    % z/+/+/       % noobj",
+            "z -> noobj                    % z -> noobj                      % z/           % noobj",
+            "/zz -> [1,2,3]                % /zz -> [1,2,3]                  % /zz/+/       % [/zz/0=>1,/zz/1=>2,/zz/2=>3]>-",
+            "/zz -> [1,2,3]                % /zz -> [1,2,3]                  % /zz/         % [/zz=>[1,2,3]]>-",
+            "/zz -> [a=>1]                 % /zz -> [a=>1]                   % /zz/         % [/zz=>[a=>1]]>-",
+            "/zz -> [1,2,3]                % /zz -> [1,2,3]                  % /zz/0/       % [/zz/0=>1]>-",
+            "/zz -> [[1,2],[3,4]]          % /zz -> [[1,2],[3,4]]            % /zz/1/       % [/zz/1=>[3,4]]>-",
+            "/zz -> [1,2,3]                % /zz -> [1,2,3]                  % /zz/5/       % noobj",
+            // an address that holds nothing itself relates to the entries written below it, nested into a rec
+            "/zdir -> noobj                % /zdir/ -> [a=>1,b=>2]           % /zdir/       % [/zdir=>[a=>1,b=>2]]>-",
     }, delimiter = '%')
     public void testPolySpace(final String stateCode, final String mutationCode, final String vid, final String expected) {
         super.checkSpaceMutation(LOG, stateCode, mutationCode, Map.of(f(vid), expected));
