@@ -140,12 +140,14 @@ public class BasicMachine extends AbstractMachine {
         return proto.isCall() ? proto.apply().as() : proto.as();
     }
 
+    // the compiler ITSELF, as every view of it answers (~/compiler, the rec's slot): a copy per call took a write at
+    // ~/compiler/<stage> into a throwaway, so a replaced stage never reached the machine (MachineComponentScriptTest)
     @Override
     public Compiler compiler() {
         if (null != this.cachedCompiler)
-            return this.cachedCompiler.clone().as();
-        final Obj proto = this.at(COMPILER).orThrow(MTronException.of("machine has no processor: %s", this.type().vid()));
-        return (this.cachedCompiler = proto.isCall() ? proto.apply().as() : proto.as()).clone().as();
+            return this.cachedCompiler;
+        final Obj proto = this.at(COMPILER).orThrow(MTronException.of("machine has no compiler: %s", this.type().vid()));
+        return this.cachedCompiler = proto.isCall() ? proto.apply().as() : proto.as();
     }
 
     /*@Override

@@ -506,6 +506,11 @@ public interface Machine extends Rec, AutoCloseable {
             return this;
         machine.close();
         CURRENT.set(parentMachine);
+        // POP DISCARDS THE ADDRESS: the two links push wrote go with the frame (the root's registration of its vid, and
+        // the pushing frame's child link), or the closed frame and its components still answer at its vid and the
+        // console's machine tree still lists it. Only a move leaves a frame standing at its address.
+        Machine.root().memory().write(machine.vid(), noobj());
+        Machine.write(parentMachine.vid().extend("child").extend(machine.vid().removePrefix(parentMachine.vid())), noobj());
         return parentMachine;
     }
 
