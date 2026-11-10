@@ -24,7 +24,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.Binder;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
+import studio.phaseshift.metatron.isa.m.mach.type.compiler.Resolver;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Selector;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -36,6 +37,7 @@ import java.util.LongSummaryStatistics;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -60,8 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
     protected final Supplier<Selector> resolverSupplier;
-    private Selector previousResolver;
-    private Binder previousBinder;
+    private Selector previousSelector;
 
     protected AbstractResolverTest(final Supplier<Selector> resolverSupplier) {
         this.resolverSupplier = resolverSupplier;
@@ -69,21 +70,17 @@ public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
     @BeforeEach
     protected void setupResolver() {
-        // Save current selector/binder and install the test selector with the default binder
-        this.previousResolver = Selector.get();
-        this.previousBinder = Binder.get();
-        Selector.set(this.resolverSupplier.get());
+        // the selector under test goes into the machine's own resolver, which compile time and run time both resolve
+        // through; the resolve cache is keyed by code and type alone, so each swap starts it empty
+        this.previousSelector = Machine.current().compiler().resolver().selector();
+        Machine.write(f("~/compiler/resolver/selector"), this.resolverSupplier.get());
+        Resolver.Helper.RESOLVE_CACHE.clear();
     }
 
     @AfterEach
     protected void restoreResolver() {
-        // Restore previous selector and binder
-        if (this.previousResolver != null) {
-            Selector.set(this.previousResolver);
-        }
-        if (this.previousBinder != null) {
-            Binder.set(this.previousBinder);
-        }
+        Machine.write(f("~/compiler/resolver/selector"), this.previousSelector);
+        Resolver.Helper.RESOLVE_CACHE.clear();
     }
 
     // ========================================================================
@@ -216,10 +213,8 @@ public abstract class AbstractResolverTest extends AbstractMetatronTest {
 
     @Test
     public void testResolverIsInstalled() {
-        // Verify the correct selector is active
-        Selector current = Selector.get();
-        assertNotNull(current);
-        assertEquals(resolverSupplier.get().getClass(), current.getClass());
+        // the machine's own resolver holds the selector under test
+        assertEquals(this.resolverSupplier.get().getClass(), Machine.current().compiler().resolver().selector().getClass());
     }
 
     @Test

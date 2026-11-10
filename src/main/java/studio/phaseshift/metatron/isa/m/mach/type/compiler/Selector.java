@@ -19,13 +19,10 @@
 package studio.phaseshift.metatron.isa.m.mach.type.compiler;
 
 import studio.phaseshift.metatron.isa.m.mach.type.Component;
-import studio.phaseshift.metatron.isa.m.mach.type.compiler.resolver.SpecificitySelector;
 import studio.phaseshift.metatron.isa.m.type.FiberedRec;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Selector — the per-call strategy of the resolution stage: given a left-hand-side and the user
@@ -49,34 +46,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Selector extends Component {
-
-    /**
-     * Holder for the currently active selector. Lazily defaults to the
-     * {@code specificity_selector::T} — the scoring strategy the machine has always used.
-     */
-    AtomicReference<Selector> INSTANCE = new AtomicReference<>();
-
-    /**
-     * Get the currently active selector (defaulting to {@code specificity_selector::T}).
-     *
-     * @return the current Selector instance
-     */
-    static Selector get() {
-        final Selector selector = INSTANCE.get();
-        if (null != selector)
-            return selector;
-        return INSTANCE.updateAndGet(s -> null == s ? SpecificitySelector.single() : s);
-    }
-
-    /**
-     * Set the active selector implementation.
-     *
-     * @param selector the new selector to use
-     * @return the previous selector
-     */
-    static Selector set(final Selector selector) {
-        return INSTANCE.getAndSet(selector);
-    }
 
     /**
      * Resolve one user instruction against {@code lhs}: fetch and order its candidates, bind each in

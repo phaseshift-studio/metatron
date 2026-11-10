@@ -38,8 +38,8 @@ import static studio.phaseshift.metatron.Tokens.*;
  *       parser emitting mtron code IS another language hosted on metatron;</li>
  *   <li>{@link #rewriter()} — the {@link Rewriter} (fixpoint over the rewrite rules);</li>
  *   <li>{@link #resolver()} — the {@link Resolver} (threads the type, resolves one inst at a
- *       time; generic binding runs inside per-candidate selection, so there is no separate
- *       binder);</li>
+ *       time through its two sub-stages, the {@code selector} and the {@code binder}; binding
+ *       runs inside the selector's candidate walk, so it is no stage of this schedule);</li>
  *   <li>{@link #typer()} — the {@link Typer} (runtime type assertions).</li>
  * </ul>
  * {@link #apply} is the default schedule over that vocabulary —
