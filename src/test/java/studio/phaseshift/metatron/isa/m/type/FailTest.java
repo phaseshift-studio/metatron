@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -374,4 +375,34 @@ public class FailTest extends AbstractObjTest {
                 "reading the fail stack must not append to it");
     }
 
+    /**
+     * A BODY'S EXCEPTION IS THE FAIL'S REASON (Marko, 2026-11-10). The processor claims an argument mismatch only when
+     * the COMPUTED arguments contradict the types the contract declares, and it keeps the body's exception as the cause
+     * either way. It held the computed arguments to the arguments AS WRITTEN, which a computed one (a block, a deref, a
+     * nested chain) never matches, and dropped the body's exception: a write refused inside ref read "args do not match
+     * inst args", and the refusal never surfaced.
+     */
+    @Test
+    public void testABodysExceptionIsTheFailsReason() {
+        // one door refuses a literal and a blocked (computed) argument alike, and both fails carry the door's reason
+        for (final String refused : List.of("~/instset/type/int -> 5", "~/instset/type/int -> |plus(1)")) {
+            final Obj result = ObjmtronSerializer.parse(refused).apply();
+            final Fail failed = result.stream().filter(Obj::isFail).map(Obj::asFail).findFirst()
+                    .orElseThrow(() -> new AssertionError(refused + " did not fail: " + result));
+            assertTrue(failed.message().contains("holds a"), () -> refused + " keeps the door's reason: " + failed.message());
+            assertFalse(failed.message().contains("args do not match"), () -> refused + " is no args mismatch: " + failed.message());
+        }
+        // an argument the declared types refuse is still a mismatch, now with the body's exception as its cause
+        ObjmtronSerializer.parse("~/fail_test/count -> 'three'").apply();
+        try {
+            final Obj result = ObjmtronSerializer.parse("{1,2,3}.take(*~/fail_test/count)").apply();
+            final Fail failed = result.stream().filter(Obj::isFail).map(Obj::asFail).findFirst()
+                    .orElseThrow(() -> new AssertionError("take of a str did not fail: " + result));
+            assertTrue(failed.message().contains("args do not match inst args"), failed::message);
+            assertTrue(failed.message().contains("X=>"), () -> "the diff marks the refused arg: " + failed.message());
+            assertTrue(failed.cause().isPresent(), () -> "the body's exception is kept: " + failed.message());
+        } finally {
+            ObjmtronSerializer.parse("~/fail_test/count -> noobj").apply();
+        }
+    }
 }

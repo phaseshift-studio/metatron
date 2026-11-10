@@ -303,13 +303,12 @@ pattern, and reads of an unmounted scheme fall through to the router's catch-all
 
 ## not available yet
 
-* **`.explain()` on a rewritten read fails.** The rewrite replaces the code with a rewrite inst that is not itself
-  callable, so a `count()` read explains as
-  `fail::[args do not match inst args: [X=>/m/db/tble/inst/rewrite/sql_count?int<=#{0}(person/+)]]`.
+* **`.explain()` on a rewritten read fails.** The rewrite replaces the code with a rewrite inst
+  (`/m/db/tble/inst/rewrite/sql_count`) that is not itself callable, so explaining a `count()` read fails.
   Ask the rewrite instead — `*/m/db/tble?docq` prints the family, and each entry documents its own before/after code:
 
 ```mtron
-*tbledoc:person/+.count().explain()    [-- fail:: args do not match inst args --]
+*tbledoc:person/+.count().explain()    [-- fails: the rewrite inst is not callable --]
 ```
 
 * **`kv_limit` is broken on the typed key/value schema.** `*tbledoc:kv/+.take(n)` compiles to
