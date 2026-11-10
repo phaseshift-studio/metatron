@@ -111,9 +111,15 @@ public class MObjs implements Objs {
     private MObjs attemptBulk(final boolean force) {
         if (force || this.jvm.size() > BULK_TRIGGER) {
             final Map<Obj, cInt> map = new LinkedHashMap<>();
-            this.jvm.forEach(o -> map.merge(o.c(studio.phaseshift.metatron.furi.C::one), o.c(), cInt::plus));
+            // A SPAN IS PART OF THE OBJ ({b}inst{d}, Marko 2026-11-10): a spanned obj bulks by its point d and keeps its
+            // span. c(one) folds a span into the point and drops it, so {?}plus(2) bulked with plus(2)
+            for (final Obj o : this.jvm) {
+                final boolean spanned = !o.tid().b().isOne();
+                map.merge(spanned ? o.<Obj>clone(o.jvm(), o.tid().d(cInt.ONE()), o.vid()) : o.c(studio.phaseshift.metatron.furi.C::one),
+                        spanned ? o.tid().d() : o.c(), cInt::plus);
+            }
             this.jvm.clear();
-            map.forEach((k, v) -> this.jvm.add(k.c(v)));
+            map.forEach((k, v) -> this.jvm.add(k.tid().b().isOne() ? k.c(v) : k.<Obj>clone(k.jvm(), k.tid().d(v), k.vid())));
             assert this.jvm.size() == map.size();
             map.clear();
         }

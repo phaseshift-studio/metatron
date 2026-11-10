@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.Training;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.web.type.ObjmtronSerializer;
@@ -35,6 +36,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -131,6 +133,21 @@ public class ObjsTest extends AbstractObjTest {
         AbstractMetatronTest.checkEquality(LOG, jnt(1), compressed, true);
         assertEquals(cInt.of(3), bag.c(), "the bag still counts every copy");
         assertEquals(List.of(jnt(1).c(cInt.of(3))), bag.stream().toList(), "the bag still holds every copy");
+    }
+
+    /**
+     * LIKE INSTRUCTIONS BULK, as like objs do (the bulk axiom of stream ring theory): two copies of plus(2), at points
+     * 10 and 5, are plus(2) at point 15 (Marko, 2026-11-10). An instruction is {b}inst{d}: the point d is what bulks,
+     * and the span b is part of the instruction, so {?}plus(2) is no copy of plus(2), as plus(3) is none.
+     */
+    @Test
+    public void testInstructionsBulkTheirPoints() {
+        final Inst plus2 = plus_(jnt(2)).tryToInst().asInst();
+        assertEquals(plus2.c(cInt.of(15)), objs(plus2.c(cInt.of(10)), plus2.c(cInt.of(5))));
+        assertEquals(2L, objs(plus2.c(cInt.of(10)), plus_(jnt(3)).tryToInst().c(cInt.of(5))).stream().count(), "plus(2) and plus(3) stay two");
+        final fURI run = plus2.tid().b(cInt.MAYBE());
+        assertEquals(2L, objs(plus2.tid(run.d(cInt.of(10))), plus2.c(cInt.of(5))).stream().count(), "{?}plus(2) and plus(2) stay two");
+        assertEquals(plus2.tid(run.d(cInt.of(15))), objs(plus2.tid(run.d(cInt.of(10))), plus2.tid(run.d(cInt.of(5)))), "two {?}plus(2) bulk their points and keep their span");
     }
 
     @ParameterizedTest
