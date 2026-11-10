@@ -122,6 +122,10 @@ public interface Processor extends Component {
          * f().apply, checks, coefficient).
          */
         public static Obj apply(final Obj lhs, final Inst inst) {
+            // A ZERO POINT ANNIHILATES (0a = 0, Marko 2026-11-10): the inst's output, times zero, is nothing for any
+            // lhs, so the inst is neither resolved nor run
+            if (inst.isNoObj())
+                return noobj();
             // A ONE-MEMBER STREAM IS ITS MEMBER. `objs()` collapses a single element everywhere else, but a BARRIER
             // (a reducer/gather) accumulates its input into a stream, so a single upstream value arrives wrapped in a
             // one-member objs. Unwrap it, so the call is resolved against the value the reducer gathered rather than

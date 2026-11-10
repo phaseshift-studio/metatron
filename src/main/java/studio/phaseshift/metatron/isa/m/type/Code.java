@@ -100,7 +100,9 @@ public interface Code extends Call {
      * the successor is then in range by construction, with no bounds check to borrow.
      */
     default Inst nextInst(final Inst inst) {
-        if (inst.isNoObj()) return noobj();
+        // the end of the code (the zero that maps to nothing) has no successor. A zero-point inst has one: the dead
+        // monad its zero leaves walks on to an initial inst, as one a filter drops does
+        if (inst.isNoObj() && inst.isTerminal()) return noobj();
         final List<Inst> insts = this.jvm();
         final fURI vid = inst.vid();
         final int hash = null == vid ? 0 : vid.hashCode();          // memoized in fURI (volatile int read)

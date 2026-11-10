@@ -39,7 +39,10 @@ public interface Monad<OBJ extends Obj> extends Obj {
     /// //////////////////////////////////////////////
 
     default boolean halted() {
-        return this.inst().isNoObj();
+        // HALTED IS THE END OF THE CODE: the inst is the zero that maps to nothing (rng {0}). An inst that only
+        // carries a zero point (plus{0}(2), rng int) is no end: it is applied, and its output, times zero, kills the
+        // monad (0a = 0, Marko 2026-11-10), so the obj the monad held never joins the answer
+        return this.inst().isNoObj() && this.inst().isTerminal();
     }
 
     default boolean dead() {
