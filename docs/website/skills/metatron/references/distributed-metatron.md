@@ -3,7 +3,6 @@ name: distributed-metatron
 description: Index of metatron's distributed primitives — the dispatch seam, every wire transport, the remote endpoints, the in-VM concurrency motifs, and the wire format. Each row is a composable motif with its witness.
 ---
 
-
 # Distributed primitives (Java)
 
 An index of every place metatron crosses a process boundary. Each motif is atomic and user-composable; the witness

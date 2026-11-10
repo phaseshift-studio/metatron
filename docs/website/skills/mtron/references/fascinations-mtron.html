@@ -515,9 +515,7 @@ one machine can send a <code>ws_client</code> to another, and the receiver ends 
 crosses the wire is an address.</p>
 <p>The block builds a websocket rec here, with no far side (<code>ws_handler</code> is <code>ws_client</code> without the dial), and reads it
 twice:</p>
-<pre><code class="language-mtron">mtron&gt; [-- a space for this page, with the mimeq q-proc so a read can choose its rendering --]
-mtron&gt; memspace::[pattern=&gt;/fascination/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/fascination
-mtron&gt; [-- a built websocket rec: its constructor derives status, send, close and the overrides in Java --]
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/fascination/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/fascination
 mtron&gt; ws_handler::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/fascination/socket
 ==&gt;ws_handler::[host=&gt;ws://localhost:8555/mtron,
                 send=&gt;λ(){&lt;j&gt;},
@@ -528,10 +526,8 @@ mtron&gt; ws_handler::[host=&gt;&lt;ws://localhost:8555/mtron&gt;]@/fascination/
                  /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
                 close=&gt;λ(){&lt;j&gt;}]@/fascination/socket
-mtron&gt; [-- the derived status, computed on read from a socket that is not open --]
 mtron&gt; *&lt;/fascination/socket/status&gt;
 ==&gt;false
-mtron&gt; [-- the wire form: what a machine sends when it ships this obj --]
 mtron&gt; *&lt;/fascination/socket?mimeq=application/x-mtron&gt;
 ==&gt;'ws_handler::[host=&gt;ws://localhost:8555/mtron]@/fascination/socket'
 </code></pre>
@@ -569,19 +565,14 @@ poly it stays unevaluated, it is tested like data, it is rewritten by the same <
 rec, and it runs again afterwards. The pattern a rewrite looks for is code too. Its instruction names are uri patterns,
 its arguments are types, and the code tests the pattern exactly as a value tests a type.</p>
 <p>The block rewrites four programs, then takes a fifth apart as a list, edits it, and runs it:</p>
-<pre><code class="language-mtron">mtron&gt; [-- a name is a uri pattern, so one rule rewrites every plus and every mult --]
-mtron&gt; [plus(1).mult(2).plus(3)]==[update([&lt;/m/inst/{plus,mult}&gt;(int::T)=&gt;id()])]
+<pre><code class="language-mtron">mtron&gt; [plus(1).mult(2).plus(3)]==[update([&lt;/m/inst/{plus,mult}&gt;(int::T)=&gt;id()])]
 ==&gt;[id().id().id()]
-mtron&gt; [-- an argument is a type, its coefficient included: a bag of ints is an int{*}, never an int --]
 mtron&gt; [start({1,2}).plus(1)]==[update([start(int{*}::T)=&gt;start(0)])]
 ==&gt;[start(0).plus(1)]
-mtron&gt; [-- an argument rewritten in place, as an update rewrites a lst --]
 mtron&gt; [plus(5).mult(2)]==[update([plus(int::T)=&gt;[args=&gt;[+10]]])]
 ==&gt;[plus(15).mult(2)]
-mtron&gt; [-- named groups and a template: the monoid law of plus, written as data --]
 mtron&gt; [plus(2).plus(3).mult(4)]==[update([plus(int::T@a).plus(int::T@b)=&gt;plus(${*a.plus(*b)})])]
 ==&gt;[plus(5).mult(4)]
-mtron&gt; [-- the same program as a list of instructions: replace the seed, keep the rest, rebuild the code, run it --]
 mtron&gt; [start({1,2,3}).plus(10).order(mult(-1))]==[as(lst::T)]==[==[|start({-9,-8,-7}),#::T,#::T]]==[as(code::T)]&gt;-
 ==&gt;[3,2,1]
 </code></pre>

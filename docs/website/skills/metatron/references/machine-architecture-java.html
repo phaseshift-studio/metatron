@@ -732,28 +732,32 @@ parser's contract.</p>
 (<code>RESOLVE_CACHE</code>), delegating to <code>ScoringResolver.resolveCode</code> + <code>FixPointRewriter</code>.</p>
 <h3>The processor (monadic execution)</h3>
 <p><code>Processor</code> is both an <code>mThread</code> and an <code>Obj</code>. <code>Processor.Helper</code> holds the runtime core that used to live on <code>Inst</code>:
-<code>apply</code> (ask the typer for the subjects → ask the selector for the instruction → <code>invoke</code>/<code>fanOut</code>), <code>invoke</code>
-(noobj/domain guards, coefficient compression, range check), <code>applyArgs</code> (computeArgs). The <em>resolution</em> is the
-selector's (<code>Selector.Helper.resolve</code>, which holds the <code>code_resolve</code>-gated dynamic escape), and the delegation
-<em>decisions</em> are type-system decisions, so they live on <code>Typer.Helper</code> in the compiler — <code>bundleAndFibers</code> derives what
-the fan-out is over and <code>applicable</code> answers whether the resolved instruction is about a subject.
-<code>Processor.Helper.fanOut</code> keeps only the loop.</p>
-<p><code>fanOut</code> is the <strong>bundle's fan-out</strong> — applying an instruction to a fibered value is applying it to the bundle and its
-fibers, <code>person[ninja]::[…].xyz()</code> = <code>{ person::[…], ninja::[…] }.xyz()</code>. A BUNDLE is a <code>rec</code> whose type INSTANTIATES
-a declaration that names the fibers it lifts (<code>rec[role]::T[?[…,role=&gt;rec::T]]@person</code> names <code>role</code>; the instance's
-poly is the fiber TYPES, <code>Type#recFibers</code>), so <code>Typer.Helper.bundleAndFibers</code> yields the bundle <em>plus</em> each fiber
-that is present — one level deep, since a fiber's own fibers never join.</p>
-<p>EACH CANDIDATE GOES THROUGH THE WHOLE NORMAL PATH: the Processor resolves against THAT candidate, then invokes.
-There is nothing special about a poly type — the resolver and the type checker do what they do, only on the value of
-the field keyed by the poly name — and <code>Typer.Helper.applicable</code> asks the type system whether the resolved instruction
-is about the candidate at all: a generic/pattern domain is about every candidate, a base-typed domain is about the
-wrapper as that form, and any other domain reaches the candidate whose own type IDENTITY is that name (the field's
-value for <code>fight?dom=ninja</code>, the wrapper for <code>ponder?dom=person</code>). The wrapper is acceptable where a fiber's type is
-expected (the fiber check at the top of <code>Type.test</code> and <code>Obj.Helper.testObjs</code>), which is type acceptance and not
-identity, so that rule is not consulted
-for dispatch. A candidate the instruction is not applicable to contributes <code>noobj</code> — the multiplicity's identity
-(<code>{noobj,29} = 29</code>), not a failure; a <code>fail::</code> from a candidate it DID apply to propagates. <code>Inst.Form.typer</code> (<code>as</code>,
-<code>type</code>, <code>vid</code>, <code>tid</code>) is opaque and applies to the wrapper alone.</p>
+<code>apply</code> (ask the selector for the instruction → <code>invoke</code>), <code>invoke</code> (noobj/domain guards, coefficient compression,
+range check), <code>applyArgs</code> (computeArgs). The <em>resolution</em> is the selector's (<code>Selector.Helper.resolve</code>, which holds
+the <code>code_resolve</code>-gated dynamic escape), and the processor knows nothing of fibered recs: on a bundle, the selector
+hands it the instruction the call refers to, which is the bundle's own or the call's LIFT.</p>
+<p><strong>Fibered recs</strong> (<code>FiberedRec</code>, <code>MFiberedRec</code>). A BUNDLE is a <code>rec</code> whose type INSTANTIATES a declaration that names
+the fibers it lifts (<code>rec[role]::T[?[…,role=&gt;rec::T]]@person</code> names <code>role</code>; the instance's poly is the fiber TYPES,
+<code>Type#recFibers</code>). <code>FiberedRec.Helper.resolve</code> decides what a call on a bundle refers to: an instruction about the
+bundle ITSELF — a typer (<code>as</code>, <code>type</code>, <code>vid</code>, <code>tid</code>), a generic domain, the rec form, or the bundle's own name
+(<code>FiberedRec.Helper.applicable</code> with <code>bundle=true</code>) — is the bundle's and runs on it alone, as on any rec; any other
+is LIFTED, an instruction from the bundle whose function, <code>FiberedRec#lift</code>, runs the call on every fiber it is about
+and writes each result back at its fiber, so <code>person[int]::[name=&gt;'marko',age=&gt;29].plus(1)</code> answers
+<code>person[int]::[name=&gt;'marko',age=&gt;30]</code>. The lift carries the CALL, unbound, and each fiber resolves it against the
+object it holds, so fibers of different types each run their own overload (one level deep: a bundle at a fiber is
+applied to as itself). The compiler asks the same question of the type it resolves against:
+<code>Resolver.Helper.resolveCode</code> passes every binding through <code>FiberedRec.Helper.resolve(Type, …)</code>, so a call a
+bundle's type binds through one fiber compiles to the lift, never to that fiber's overload. <code>applicable</code> with
+<code>bundle=false</code> says whether the call is about that
+fiber: a base-typed domain reaches a fiber of that form, a named one the fiber whose own type IDENTITY is that name
+(<code>fight?dom=ninja</code>), a structural one a fiber whose own value is shaped like it. The wrapper is acceptable where a
+fiber's type is expected (the fiber check at the top of <code>Type.test</code> and <code>Obj.Helper.testObjs</code>), which is type
+acceptance and not identity, so that rule is not consulted for dispatch. A fiber the call is not about is left as it
+is; a <code>fail::</code> from a fiber it DID apply to propagates. A call that CHANGES a fiber's type is a PROJECTION: <code>lift</code>
+answers the instruction's results, summed, rather than the bundle (<code>fight: ninja =&gt; str</code> answers the str). The type
+is the one the replaced value had, multiplicity included, and it is asked of the fiber, never of the rebuilt bundle,
+since a bundle also passes as any of its fibers' types; one changed fiber projects the whole call.
+<code>MFiberedRec.fiberedRec(rec)</code> wraps a bundle's fields without a copy, a check or a write.</p>
 <p>The default processor is <strong><code>SwarmProcessor</code></strong> (extends <code>VirtualThread</code>, implements <code>MonadProcessor</code>), a monadic step
 loop over three queues stored in its rec:</p>
 <ul>

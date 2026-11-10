@@ -121,6 +121,28 @@ public interface Border {
         return p.length > 11 ? p[11] : this.rightSide();
     }
 
+    /**
+     * The box-drawing prefix that puts one TREE row at {@code depth} under its ancestors, in this border's glyphs:
+     * every ancestor that was NOT its parent's last child contributes a vertical rail, and the row itself is teed
+     * off its parent with {@code └} (last child) or {@code ├} (anything else) plus a horizontal arm and one space.
+     * <p>
+     * It lives here rather than in a widget because the rails ARE the border's glyph vocabulary — a tree drawn
+     * inside a continuous box and one drawn inside a rounded box differ only in which characters the border names.
+     *
+     * @param depth      the row's depth, 0 being the tree's root (which has no prefix)
+     * @param lastStack  per-level "was this the last child", filled in DFS order as rows are visited
+     * @param isLast     whether this row is its parent's last child
+     * @return the prefix (empty at depth 0)
+     */
+    default String treePrefix(final int depth, final boolean[] lastStack, final boolean isLast) {
+        if (depth == 0) return "";
+        final StringBuilder sb = new StringBuilder();
+        for (int level = 1; level < depth; level++)
+            sb.append(lastStack[level - 1] ? "    " : this.leftSide() + "   ");
+        return sb.append(isLast ? this.bottomLeftCorner() : this.leftIntersection())
+                .append(this.topSide()).append(" ").toString();
+    }
+
     default Border foreground(final String color) {
         final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b).reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;

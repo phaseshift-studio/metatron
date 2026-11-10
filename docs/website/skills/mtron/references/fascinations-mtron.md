@@ -10,7 +10,6 @@ description: |
   data; when showing code as data, pattern matching on code, or a rewrite rule written in mtron.
 ---
 
-
 # fascinations — the surprising things mtron does
 
 Each section is one thing mtron does that most languages cannot, or can only with a framework: the phenomenon, a
@@ -28,9 +27,7 @@ The block builds a websocket rec here, with no far side (`ws_handler` is `ws_cli
 twice:
 
 ```mtron
-mtron> [-- a space for this page, with the mimeq q-proc so a read can choose its rendering --]
 mtron> memspace::[pattern=>/fascination/#, q=>[mimeq::[=>]]]@/sys/space/fascination
-mtron> [-- a built websocket rec: its constructor derives status, send, close and the overrides in Java --]
 mtron> ws_handler::[host=><ws://localhost:8555/mtron>]@/fascination/socket
 ==>ws_handler::[host=>ws://localhost:8555/mtron,
                 send=>λ(){<j>},
@@ -41,10 +38,8 @@ mtron> ws_handler::[host=><ws://localhost:8555/mtron>]@/fascination/socket
                  /m/inst/to=>to?A{*}<=A{?}(uri::T){<j>}],
                 status=>!λstatus?bool<=(){<j>},
                 close=>λ(){<j>}]@/fascination/socket
-mtron> [-- the derived status, computed on read from a socket that is not open --]
 mtron> *</fascination/socket/status>
 ==>false
-mtron> [-- the wire form: what a machine sends when it ships this obj --]
 mtron> *</fascination/socket?mimeq=application/x-mtron>
 ==>'ws_handler::[host=>ws://localhost:8555/mtron]@/fascination/socket'
 ```
@@ -88,19 +83,14 @@ its arguments are types, and the code tests the pattern exactly as a value tests
 The block rewrites four programs, then takes a fifth apart as a list, edits it, and runs it:
 
 ```mtron
-mtron> [-- a name is a uri pattern, so one rule rewrites every plus and every mult --]
 mtron> [plus(1).mult(2).plus(3)]==[update([</m/inst/{plus,mult}>(int::T)=>id()])]
 ==>[id().id().id()]
-mtron> [-- an argument is a type, its coefficient included: a bag of ints is an int{*}, never an int --]
 mtron> [start({1,2}).plus(1)]==[update([start(int{*}::T)=>start(0)])]
 ==>[start(0).plus(1)]
-mtron> [-- an argument rewritten in place, as an update rewrites a lst --]
 mtron> [plus(5).mult(2)]==[update([plus(int::T)=>[args=>[+10]]])]
 ==>[plus(15).mult(2)]
-mtron> [-- named groups and a template: the monoid law of plus, written as data --]
 mtron> [plus(2).plus(3).mult(4)]==[update([plus(int::T@a).plus(int::T@b)=>plus(${*a.plus(*b)})])]
 ==>[plus(5).mult(4)]
-mtron> [-- the same program as a list of instructions: replace the seed, keep the rest, rebuild the code, run it --]
 mtron> [start({1,2,3}).plus(10).order(mult(-1))]==[as(lst::T)]==[==[|start({-9,-8,-7}),#::T,#::T]]==[as(code::T)]>-
 ==>[3,2,1]
 ```

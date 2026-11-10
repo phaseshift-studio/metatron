@@ -1,0 +1,2 @@
+int::42@the_answer;
+being::[name=>'marko',age=>29];

@@ -8,7 +8,6 @@ description: >
   `tool_feature`, or asking how a tool gets its name.
 ---
 
-
 # llm instruction set (`/m/ai/llm`)
 
 Three ideas carry the package.
@@ -68,7 +67,6 @@ live carrier the way a boot file does, at `http://localhost:8777` and `ws://loca
 ```mtron
 mtron> import(/m/ai/llm)
 mtron> import(/m/web,web)
-mtron> [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron> mcp_server::[tool => [!*eval]]@/sys/space/mcp/basic_server
 ==>mcp_server::[tool=>[m_inst_eval=>eval?A{*}<=code(uri::T){<j>}],
                 status=>!λstatus?bool<=(){<j>}]@/sys/space/mcp/basic_server

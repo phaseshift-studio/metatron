@@ -239,6 +239,7 @@ public class uiInstSet extends AbstractInstSet {
                                                 uri(ROOT), URI_TYPE,
                                                 uri(MAX), INT_TYPE,
                                                 uri(CODE).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
+                                                uri(ON_SELECT).maybe(), ALL_TYPE.orElse(id_().tryToInst()),
                                                 // keys the widget reads: declaring them makes the
                                                 // contract explicit and their value types checked
                                                 uri(FLATTEN).maybe(), BOOL_TYPE,
@@ -248,6 +249,7 @@ public class uiInstSet extends AbstractInstSet {
                                         .refinement("maybe an obj", "a tree widget", Map.of(uri(ROOT), "the root uri to traverse from",
                                         uri(MAX), "the max depth to traverse",
                                         uri(CODE).maybe(), "transform obj prior to insertion into tree (default _)",
+                                        uri(ON_SELECT).maybe(), "instruction called on a row click with the row's rel::T (default: no click affordance)",
                                         uri(FLATTEN).maybe(), "fold single-folder chains into one path row (default false)",
                                         uri(XREF).maybe(), "xref=>[max=>N, code=><call>] cross-reference decoration",
                                         uri(EXPAND).maybe(), "branch uris whose children are read regardless of max"))

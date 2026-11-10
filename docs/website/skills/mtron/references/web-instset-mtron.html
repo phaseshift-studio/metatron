@@ -512,7 +512,6 @@ types, and <em>endpoint</em> types that provide the server logic. The two server
 Reading the web is a client's: <code>http_client::[host =&gt; &lt;http://#&gt;]</code> (and <code>&lt;https://#&gt;</code>) is the gateway, a peer every
 http(s) read goes through. A read never dials, so a machine with no gateway reads no web.</p>
 <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
-mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/web_basic
@@ -522,15 +521,12 @@ mtron&gt; http_server::[origin =&gt; http://localhost:8777,
                                /usr    =&gt; /usr]]
 ==&gt;http_server::[origin=&gt;http://localhost:8777,
                  status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
-mtron&gt; [-- the web gateway: the http(s) reads below go through these two clients --]
 mtron&gt; http_client::[host =&gt; &lt;http://#&gt;]
 ==&gt;http_client::[host=&gt;http://#,inst=&gt;[/m/inst/from=&gt;*uri::T,
                                        /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
 mtron&gt; http_client::[host =&gt; &lt;https://#&gt;]
 ==&gt;http_client::[host=&gt;https://#,inst=&gt;[/m/inst/from=&gt;*uri::T,
                                         /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
-mtron&gt; [-- the live profile mounts the drstynx agent at /drstynx (a route *building* its target); here we point the --]
-mtron&gt; [-- same kind of route at the server we just built, because the agent is not part of this docs environment     --]
 mtron&gt; ws_server::[origin  =&gt; ws://localhost:8555,
                    route  =&gt; [/basic   =&gt; !*&lt;/sys/space/mcp/web_basic&gt;]]
 ==&gt;ws_server::[origin=&gt;ws://localhost:8555,status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]
@@ -579,8 +575,7 @@ mtron&gt; *&lt;http://metatron.phaseshift.studio/skills/mtron/references/web-ins
 <p>A mount is only as real as the space behind it, so this document builds one first. Everything below addresses
 <code>/usr/person/1</code> and <code>/usr/person/2</code>, and every block after this one runs against these objs. (<code>mtron_pre</code>
 blocks are executed by the docs pipeline and inlined with their results; a plain <code>mtron</code> block is only shown.)</p>
-<pre><code class="language-mtron">mtron&gt; [-- the mimeq qproc is what makes ?mimeq= renderings below possible — the q-procs are the space's own --]
-mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
+<pre><code class="language-mtron">mtron&gt; memspace::[pattern=&gt;/usr/#, q=&gt;[mimeq::[=&gt;]]]@/sys/space/usr
 mtron&gt; person::[name=&gt;'marko',age=&gt;29]@/usr/person/1
 ==&gt;fail::[parse error at line 1, col 1: obj does not match person::T
      [[name=&gt;'marko',age=&gt;29]@/usr/person/1

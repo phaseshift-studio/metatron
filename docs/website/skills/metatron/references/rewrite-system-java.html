@@ -511,7 +511,7 @@ algebra/rewrite/RewriteBuilder.java ← fluent builder for space-aware native re
 algebra/rewrite/CommonRewrites.java ← shared rewrite utilities
 isa/m/type/InstSet.java             ← InstSet interface, Helper.rewriter() factory
 isa/m/type/Code.java                ← Code.rewrite() — the rewrite loop
-isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, else_after_count, split_merge_collapse, ...)
+isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, m_rewrite_table, split_merge_collapse, ...)
 isa/tble/tbleInstSet.java           ← SQL rewrites (sql_count, sql_where, sql_limit, ...)
 isa/grph/grphInstSet.java           ← Gremlin rewrites (gremlin_count, gremlin_where, ...)
 isa/dcmnt/dcmntInstSet.java         ← MongoDB rewrites (mql_count, mql_where, ...)
@@ -558,14 +558,21 @@ current code for the next iteration. If the result is not a
 <p>Matches a concrete sequence of instruction TIDs against a sliding window, then replaces the matched slice with a new
 instruction list. The rewrite function receives a <code>Map&lt;Inst, Inst&gt;</code>
 mapping pattern instructions to matched source instructions.</p>
-<pre><code class="language-java">// a count is total, so an else after it is dead code: .count().else(x) =&gt; .count()
-InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend(&quot;else_after_count&quot;),
-        code -&gt; code.selfJVM(
-                RewriterBuilder.search(code.insts())
-                        .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))   // match [count, else]
-                        .rewrite(map -&gt; List.of(map.values().stream().toList().getFirst())))  // keep the count
-                .asCode())
+<pre><code class="language-java">// geoRewrite.pushdown: over a space with native spatial support, the generic operator becomes the space's own
+InstSet.Helper.rewriter(GEO_REWRITE_TID.extend(&quot;native_&quot; + nativeTid.name()), code -&gt; {
+    if (!readsNativeSpace(code, nativeSupport))
+        return code;
+    return code.selfJVM(RewriterBuilder.search(code.insts())
+            .match(instA(genericTid).insts())                       // match [generic]
+            .rewrite(matched -&gt; matched.values().stream()
+                    .map(actual -&gt; instB(nativeTid, actual.args()))  // the native operator, same args
+                    .toList())).asCode();
+})
 </code></pre>
+<p>A rewrite whose rule is only instructions needs no Java at all. It is a <code>[lhs =&gt; rhs]</code> row of <code>/m</code>'s rewrite table, the
+declared argument of <code>m_rewrite_table</code>, which <code>Call.Helper.update</code> matches and applies:
+<code>[count().else(#::T) =&gt; count()]</code> drops the dead <code>else</code> after a total <code>count</code>. The table and its law rows are described
+in the <code>cat-instset-mtron</code> reference.</p>
 <p><strong><code>match(List&lt;Inst&gt;)</code></strong> — pattern instructions. <code>instA(tid)</code> creates a bare match instruction (no args, no f). Matching
 uses <code>instsMatch()</code>: TIDs must be compatible via <code>tid.test()</code>, args are compared by position, and <code>?.test(source)</code> tests
 unresolved args against source.</p>

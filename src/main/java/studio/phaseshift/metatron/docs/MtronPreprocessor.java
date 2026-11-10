@@ -100,7 +100,8 @@ public final class MtronPreprocessor {
             Pattern.DOTALL);
 
     /** The fence attributes a markdown block may carry. */
-    private static final Set<String> FENCE_ATTRIBUTES = Set.of("cast", "cols", "rows", "typing_delay");
+    private static final Set<String> FENCE_ATTRIBUTES = Set.of(
+            "cast", "cols", "rows", "typing_delay", "speed_rates", "speed_default", "title", "place");
 
     /**
      * One evaluated statement: what was typed, the exact listing line the page
@@ -187,7 +188,6 @@ public final class MtronPreprocessor {
         // A recording's launcher belongs at the TOP of the page (it opens a
         // modal, so its position in the prose is irrelevant) — collect the
         // markers and prepend them once the body is assembled.
-        final StringBuilder markers = new StringBuilder();
         final List<Block> blocks = new ArrayList<>();
         while (m.find()) {
             final String first = m.group(1);
@@ -199,8 +199,22 @@ public final class MtronPreprocessor {
                     ? String.join("\n", lines(result))
                     : (this.adoc ? wrapAdoc(role, lines(result)) : wrapMarkdown(lines(result)));
             final String cast = attributes.get("cast");
-            if (cast != null) markers.append("<!-- cast: ").append(cast).append(" -->\n");
-            m.appendReplacement(sb, Matcher.quoteReplacement(listing));
+            final StringBuilder marker = new StringBuilder();
+            if (cast != null) {
+                marker.append("<!-- cast: ").append(cast)
+                        .append(attributes.containsKey("speed_rates")
+                                ? " speed_rates=\"" + attributes.get("speed_rates") + "\"" : "")
+                        .append(attributes.containsKey("speed_default")
+                                ? " speed_default=\"" + attributes.get("speed_default") + "\"" : "")
+                        .append(attributes.containsKey("title")
+                                ? " title=\"" + attributes.get("title") + "\"" : "")
+                        .append(attributes.containsKey("place")
+                                ? " place=\"" + attributes.get("place") + "\"" : "")
+                        .append(" -->\n");
+            }
+            // in place: the html pass decides whether this pill stays here (inline),
+            // moves to the top row (top) or appears in both places (both)
+            m.appendReplacement(sb, Matcher.quoteReplacement(marker + listing));
             blocks.add(new Block(result.statements, result.headers, attributes));
         }
         m.appendTail(sb);
@@ -209,13 +223,7 @@ public final class MtronPreprocessor {
         // frontmatter, which the site pass reads the page title from (a comment
         // before the opening '---' would hide it). Rainbow [metatron]
         // replacement is adoc-only.
-        final String processed = sb.toString();
-        final int frontMatterClose = processed.startsWith("---")
-                ? processed.indexOf("\n---", 3) : -1;
-        final String out = frontMatterClose < 0
-                ? markers + processed
-                : processed.substring(0, frontMatterClose + 5) + "\n" + markers
-                        + processed.substring(frontMatterClose + 5);
+        final String out = sb.toString();
         return new Result(this.adoc && out.contains("[metatron]")
                 ? out.replace("[metatron]", Graphitty.sillyPrint("metatron", true, true))
                 : out, blocks);
@@ -230,19 +238,40 @@ public final class MtronPreprocessor {
             return Map.of();
         }
         final Map<String, String> out = new LinkedHashMap<>();
-        for (final String token : raw.strip().split("\\s+")) {
-            final int eq = token.indexOf('=');
-            final String key = eq < 0 ? token : token.substring(0, eq);
-            final String value = eq < 0 ? "" : token.substring(eq + 1);
-            if (!FENCE_ATTRIBUTES.contains(key)) {
-                throw new IllegalArgumentException("unknown mtron_pre attribute '" + token + "'");
+        final String text = raw.strip();
+        int i = 0;
+        while (i < text.length()) {
+            while (i < text.length() && Character.isWhitespace(text.charAt(i))) i++;
+            if (i >= text.length()) break;
+            final int eq = text.indexOf('=', i);
+            if (eq < 0) {
+                throw new IllegalArgumentException("attribute needs a value: '" + text.substring(i) + "'");
             }
-            if ("cast".equals(key)) {
-                if (!value.matches("[A-Za-z0-9._-]+")) {
-                    throw new IllegalArgumentException("cast= needs a name of [A-Za-z0-9._-]+, got '" + value + "'");
+            final String key = text.substring(i, eq).strip();
+            final String value;
+            final int next;
+            if (eq + 1 < text.length() && text.charAt(eq + 1) == '"') {
+                // quoted: a title may contain spaces and punctuation
+                final int close = text.indexOf('"', eq + 2);
+                if (close < 0) {
+                    throw new IllegalArgumentException("unterminated quoted value for '" + key + "'");
                 }
+                value = text.substring(eq + 2, close);
+                next = close + 1;
+            } else {
+                int end = eq + 1;
+                while (end < text.length() && !Character.isWhitespace(text.charAt(end))) end++;
+                value = text.substring(eq + 1, end);
+                next = end;
+            }
+            if (!FENCE_ATTRIBUTES.contains(key)) {
+                throw new IllegalArgumentException("unknown mtron_pre attribute '" + key + "'");
+            }
+            if ("cast".equals(key) && !value.matches("[A-Za-z0-9._-]+")) {
+                throw new IllegalArgumentException("cast= needs a name of [A-Za-z0-9._-]+, got '" + value + "'");
             }
             out.put(key, value);
+            i = next;
         }
         return out;
     }
@@ -413,9 +442,25 @@ public final class MtronPreprocessor {
             if (!outputs.isEmpty())
                 MtronPreprocessor.clipOutputs(outputs, maxOutput);
 
+            // ── An annotation-only line ([-- text --]) is the recording's
+            //    status-bar note, not a typed statement: no prompt, no listing
+            //    line, just a marker. ([== text ==] stays an inline comment,
+            //    because mtron itself treats it as one.) ──
+            if (typed.isEmpty() && caption != null) {
+                statements.add(new Statement("", "", List.of(), true, true, caption));
+                noPrompt = false;
+                noOutput = false;
+                error = false;
+                hidden = false;
+                maxOutput = 100;
+                continue;
+            }
+
             // ── The statement: the exact line the page shows, and the raw
             //    expression a recording would type ──
-            final String listing = (noPrompt ? "" : "mtron> ") + expr
+            // [NO_PROMPT] drops the prompt but keeps its width as indent, so a
+            // section-break comment still lines up with the statements
+            final String listing = (noPrompt ? " ".repeat("mtron> ".length()) : "mtron> ") + expr
                     + (calloutNumber == null ? "" : " ".repeat(5) + "\u200B" + calloutNumber + "\u200B");
             statements.add(new Statement(typed, listing, List.copyOf(outputs), hidden, noPrompt,
                     caption == null || caption.isEmpty() ? null : caption));

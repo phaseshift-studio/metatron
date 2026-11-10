@@ -77,7 +77,8 @@ public class StatusLine implements Runnable, AutoCloseable {
      * The banner's envelope glyph — also the history popup's click target, so the drawn glyph and the hit-test
      * width are measured from one constant rather than retyped.
      */
-    private static final String ENVELOPE = "✉️";
+    public static final String ENVELOPE = "✉️";
+    public static final String MACHINE = "\uD83D\uDDA5️";
     /**
      * Divides one banner message from the next: a bullet rather than the hairline
      * {@code ·}, since a status line is read at a glance.  It wears the color of
@@ -87,7 +88,7 @@ public class StatusLine implements Runnable, AutoCloseable {
      * {@code ⬤} U+2B24 — both ambiguous-width, so a CJK-wide terminal renders
      * them two columns and the bar outgrows the row.
      */
-    private static final String MESSAGE_DOT = "•";
+    public static final String MESSAGE_DOT = "•";
 
     /**
      * The type-check widget's name — both its segment key and, through {@code CommandPalette.cycleTyper}, what a
@@ -101,6 +102,7 @@ public class StatusLine implements Runnable, AutoCloseable {
      * is swapped whole on each repaint, so the pointer thread never walks a half-built one.
      */
     private volatile List<SpanUI> segments = List.of();
+
     /**
      * What a click on one segment does. {@code columns} bounds the hot spot to the first N columns of the widget's
      * label (0 = the whole label), so a glyph can be the affordance while the text behind it stays inert; the
@@ -147,6 +149,10 @@ public class StatusLine implements Runnable, AutoCloseable {
         // a peer's frame; the published perspective is where the VM actually is (see Machine.perspective()).
         this.addWidget(f("machine"), () -> "{{w}}\uD83D\uDDA5️ {{%s}}%s ".formatted(getForegroundColor(),
                 machineText(MachinePerspective.vid())));
+        // THE FRAME IS THE TREE'S SUBJECT: the bar names the machine you stand in, so it is also the way to walk
+        // to another one (see CommandPalette.showMachineTree). The whole label answers (columns 0), unlike the
+        // envelope's narrow target, because the address behind the glyph is as good a place to aim as the glyph.
+        this.onSegment("machine", 0, CommandPalette::showMachineTree);
         this.addWidget(f("message"), () -> StatusLine.bannerMarkup(getForegroundColor(), getBackgroundColor()));
         // THE ENVELOPE ALONE IS THE HISTORY'S DOOR: the glyph is the hot spot, the banner text behind it stays
         // inert, so a click on a message never opens the list by accident.

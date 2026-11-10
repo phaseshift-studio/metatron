@@ -30,6 +30,17 @@
 //
 // `data-cols`/`data-rows` should match the cast header: without them the player
 // paints at 80x24 and resizes once the recording loads.
+//
+// ── mtron syntax highlighting ───────────────────────────────────────────────
+// The player paints terminal CELLS, not DOM text, so highlight.js cannot touch
+// it directly.  Instead, when the page already carries highlight.js and the
+// mtron grammar (the site header loads both), a recording is colourised before
+// it reaches the player: each plain-text line is run through the SAME mtron
+// grammar the listings use, its token classes are mapped to ANSI SGR, and the
+// recording is re-emitted character-for-character with the original timings.
+// The result is the site's colour scheme inside the terminal, with typing still
+// animated; a recording that already carries ANSI is passed through untouched.
+// `data-highlight="off"` disables the pass for one container.
 
 (function () {
     "use strict";
@@ -40,6 +51,86 @@
     var base = script ? new URL("../lib/asciinema-player/", script.src).href
                       : "lib/asciinema-player/";
     var loading = null;
+
+    // ── the palette comes from the PAGE, not from a table ───────────────────
+    // A listing is styled by CSS (night-owl's generic tokens + metatron.css's
+    // .hljs-mtron-* overrides); the terminal can only receive ANSI. So instead
+    // of re-declaring colours, ask the browser what each token actually
+    // computes to and emit that as 24-bit SGR: the terminal then renders the
+    // very stylesheet the code blocks render, overrides, italics and all.
+    var probe = null;
+    var baseColor = null;
+    var tokenSGR = {};
+
+    function probeElement() {
+        if (probe) return probe;
+        probe = document.createElement("div");
+        probe.className = "hljs";
+        probe.setAttribute("aria-hidden", "true");
+        probe.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden;"
+            + "white-space:nowrap;padding:0;border:0;";
+        // inside the content area, so rules scoped to it still apply
+        (document.querySelector(".markdown-body") || document.body).appendChild(probe);
+        baseColor = window.getComputedStyle(probe).color;
+        return probe;
+    }
+
+    function hexOf(cssColor) {
+        var m = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(cssColor || "");
+        if (!m) return null;
+        return "#" + [m[1], m[2], m[3]].map(function (n) {
+            var h = Number(n).toString(16);
+            return h.length === 1 ? "0" + h : h;
+        }).join("");
+    }
+
+    // the SGR prefix for one token class; null means "terminal default"
+    function styleOf(className) {
+        if (!className) return null;
+        if (Object.prototype.hasOwnProperty.call(tokenSGR, className)) return tokenSGR[className];
+        var sgr = null;
+        try {
+            var holder = probeElement();
+            var span = document.createElement("span");
+            span.className = className;
+            holder.appendChild(span);
+            var cs = window.getComputedStyle(span);
+            var hex = hexOf(cs.color);
+            var italic = cs.fontStyle === "italic";
+            var bold = parseInt(cs.fontWeight, 10) >= 600;
+            if (cs.color !== baseColor || italic || bold) {
+                sgr = "0";
+                if (hex) {
+                    sgr += ";38;2;" + parseInt(hex.slice(1, 3), 16)
+                        + ";" + parseInt(hex.slice(3, 5), 16)
+                        + ";" + parseInt(hex.slice(5, 7), 16);
+                }
+                if (italic) sgr += ";3";
+                if (bold) sgr += ";1";
+            }
+            holder.removeChild(span);
+        } catch (e) {
+            sgr = null;
+        }
+        tokenSGR[className] = sgr;
+        return sgr;
+    }
+
+    // the recording's theme: the listing's own background and foreground
+    function theme() {
+        var holder = probeElement();
+        var cs = window.getComputedStyle(holder);
+        var fg = hexOf(cs.color) || "#d6deeb";
+        var bg = hexOf(cs.backgroundColor) || "#011627";
+        return {
+            fg: fg,
+            bg: bg,
+            palette: [bg, "#ff5874", "#addb67", "#f78c6c",
+                      "#82aaff", "#c792ea", "#7fdbca", fg,
+                      "#637777", "#ff6363", "#ecc48d", "#ffcb8b",
+                      "#dcdcaa", "#ff869a", "#80cbc4", "#ffffff"].join(":")
+        };
+    }
 
     function loadPlayer() {
         if (window.AsciinemaPlayer) return Promise.resolve(window.AsciinemaPlayer);
@@ -63,7 +154,15 @@
         var d = el.dataset;
         var opts = {
             fit: "width",
-            controls: "auto",
+            controls: false,      // the player's bar reserves ~2.5 rows inside the
+                                  // terminal; our own strip controls playback instead
+            // pin the family we measure: a late font swap changes cell metrics and
+            // the wrapper keeps the pre-swap row budget (last rows fall off)
+            terminalFontFamily: "'JetBrains Mono', 'Fira Mono', monospace",
+            // budget and render the SAME row height: the player's default budget
+            // is 1.3333 while the page's line-height renders 1.6, so the tail
+            // rows of a tall recording fall outside the wrapper
+            terminalLineHeight: 1.4333,
             preload: true,
             theme: d.theme || "auto/asciinema"
         };
@@ -78,6 +177,109 @@
         return opts;
     }
 
+    // ── mtron highlighting: cast text → SGR-coloured cast text ──────────────
+
+    // one line → one SGR prefix per character (null = terminal default)
+    function lineStyles(line) {
+        var styles = new Array(line.length);
+        var html;
+        try {
+            html = window.hljs.highlight(line, { language: "mtron", ignoreIllegals: true }).value;
+        } catch (e) {
+            return styles;
+        }
+        var holder = document.createElement("div");
+        holder.innerHTML = html;
+        var pos = 0;
+        (function walk(node, style) {
+            for (var i = 0; i < node.childNodes.length; i++) {
+                var child = node.childNodes[i];
+                if (child.nodeType === 3) {
+                    var text = child.nodeValue || "";
+                    for (var k = 0; k < text.length; k++) {
+                        if (pos < styles.length) styles[pos++] = style;
+                    }
+                } else if (child.nodeType === 1) {
+                    walk(child, styleOf(child.getAttribute("class")) || style);
+                }
+            }
+        })(holder, null);
+        return styles;
+    }
+
+    // the whole recording, re-emitted with a style at every character
+    function highlightCast(text) {
+        var lines = text.split("\n");
+        if (lines.length < 2) return text;
+        var header = lines[0];
+        var items = [];
+        var time = 0;
+        for (var i = 1; i < lines.length; i++) {
+            var raw = lines[i].trim();
+            if (!raw || raw.charAt(0) !== "[") continue;      // comments/blanks
+            var ev;
+            try { ev = JSON.parse(raw); } catch (e) { continue; }
+            time += Number(ev[0]) || 0;
+            items.push({ t: time, code: ev[1], data: ev[2] });
+        }
+        if (items.length === 0) return text;
+
+        var plain = "";
+        items.forEach(function (it) { if (it.code === "o") plain += it.data; });
+        if (plain.indexOf("\u001b") !== -1) return text;       // already coloured
+
+        var styles = [];
+        var offset = 0;
+        plain.split("\n").forEach(function (line, idx, all) {
+            var st = lineStyles(line);
+            for (var k = 0; k < line.length; k++) styles[offset + k] = st[k];
+            offset += line.length;
+            if (idx < all.length - 1) { styles[offset] = null; offset++; }   // newline resets
+        });
+
+        // the player resolves "auto/…" from the RECORDING's theme, so put the
+        // listing's computed background/foreground in the header
+        try {
+            var head = JSON.parse(header);
+            if (head && head.term && !head.term.theme) {
+                head.term.theme = theme();
+                header = JSON.stringify(head);
+            }
+        } catch (e) {
+            // a malformed header is the player's problem, not the colouriser's
+        }
+
+        var out = [header];
+        var last = 0, cursor = 0, current = null;
+        items.forEach(function (it) {
+            if (it.code !== "o") {
+                out.push(JSON.stringify([it.t - last, it.code, it.data]));
+                last = it.t;
+                return;
+            }
+            for (var k = 0; k < it.data.length; k++) {
+                var ch = it.data.charAt(k);
+                var style = styles[cursor++] || null;
+                var prefix = "";
+                if (style !== current) {
+                    prefix = "\u001b[" + (style || "0") + "m";
+                    current = style;
+                }
+                out.push(JSON.stringify([it.t - last, "o", prefix + ch]));
+                last = it.t;
+            }
+        });
+        return out.join("\n") + "\n";
+    }
+
+    function canHighlight(el) {
+        return el.dataset.highlight !== "off"
+            && window.hljs && window.hljs.getLanguage
+            && window.hljs.getLanguage("mtron");
+    }
+
+    // ── mounting ────────────────────────────────────────────────────────────
+
     // the caption bar lives beside the cast, in the same embed/figure
     function captionFor(el) {
         var host = el.closest
@@ -86,28 +288,159 @@
         return host ? host.querySelector(".asciinema-caption") : null;
     }
 
-    function mount(el, player) {
-        if (!el.dataset.cast || el.dataset.mounted) return null;
-        el.dataset.mounted = "1";
-        var instance = player.create(el.dataset.cast, el, options(el));
-        el.__player = instance;
+    function bindCaption(instance, el) {
         var caption = captionFor(el);
-        if (caption && instance && instance.addEventListener) {
-            // markers carry the doc's [-- ... --] annotations (and [HEADER] lines)
-            instance.addEventListener("marker", function (marker) {
-                if (marker && marker.label) {
-                    caption.textContent = marker.label;
-                    caption.classList.add("show");
-                }
+        if (!caption || !instance || !instance.addEventListener) return;
+        // markers carry the doc's [-- ... --] annotations (and [HEADER] lines)
+        instance.addEventListener("marker", function (marker) {
+            if (marker && marker.label) {
+                caption.textContent = marker.label;
+                caption.classList.add("show");
+            }
+        });
+    }
+
+    // ── playback speed ──────────────────────────────────────────────────────
+    // The player takes a `speed` option but exposes no runtime setter, so a rate
+    // change re-mounts the same source at the current position.
+    function setSpeed(el, rate) {
+        var player = window.AsciinemaPlayer;
+        if (!player || !el.__source) return;
+        var at = 0;
+        try {
+            at = (el.__player && el.__player.getCurrentTime) ? el.__player.getCurrentTime() : 0;
+        } catch (e) {
+            at = 0;
+        }
+        if (el.__player && el.__player.dispose) el.__player.dispose();
+        var opts = Object.assign({}, el.__opts, { speed: rate, startAt: at });
+        var instance = player.create(el.__source, el, opts);
+        el.__player = instance;
+        el.__rate = rate;
+        bindCaption(instance, el);
+        if (instance.play) instance.play();
+        Array.prototype.forEach.call(el.__speedBar ? el.__speedBar.children : [], function (button) {
+            var active = Number(button.getAttribute("data-speed")) === rate;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+    }
+
+    function rates(el) {
+        // data-speed-rates="0.25,0.5,1,2" — the knob; default 0.5/1/2
+        var raw = el.dataset.speedRates;
+        if (!raw) return [0.5, 1, 2];
+        var out = raw.split(/[,\s]+/).map(Number).filter(function (n) {
+            return isFinite(n) && n > 0;
+        });
+        return out.length ? out : [0.5, 1, 2];
+    }
+
+    function speedControls(el, instance) {
+        if (el.dataset.speed === "off" || el.__speedBar) return;
+        var bar = document.createElement("div");
+        bar.className = "asciinema-controls";
+        // the player's own control bar reserves rows inside the terminal, so it
+        // is off; play/pause lives here instead
+        var play = document.createElement("button");
+        play.type = "button";
+        play.className = "asciinema-speed asciinema-play";
+        play.title = "play / pause";
+        play.textContent = "\u23F8";
+        play.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            if (!el.__player) return;
+            if (play.dataset.playing === "1") el.__player.pause();
+            else el.__player.play();
+        });
+        if (instance && instance.addEventListener) {
+            instance.addEventListener("play", function () {
+                play.dataset.playing = "1";
+                play.textContent = "\u23F8";
+            });
+            instance.addEventListener("pause", function () {
+                play.dataset.playing = "0";
+                play.textContent = "\u25B6";
             });
         }
-        return instance;
+        bar.appendChild(play);
+
+        // copy the tutorial's pasteable script (the .txt sidecar beside the cast)
+        var copy = document.createElement("button");
+        copy.type = "button";
+        copy.className = "asciinema-speed asciinema-copy";
+        copy.title = "copy this tutorial's commands to the clipboard";
+        copy.setAttribute("data-copy-script", el.dataset.cast.replace(/\.cast$/, ".txt"));
+        copy.innerHTML = "<i class=\"bi bi-clipboard\" aria-hidden=\"true\"></i><span>copy</span>";
+        bar.appendChild(copy);
+        rates(el).forEach(function (rate) {
+            var button = document.createElement("button");
+            button.type = "button";
+            button.className = "asciinema-speed" + (rate === el.__rate ? " active" : "");
+            button.setAttribute("data-speed", rate);
+            button.setAttribute("aria-pressed", rate === el.__rate ? "true" : "false");
+            button.textContent = rate + "×";
+            button.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                if (rate !== el.__rate) setSpeed(el, rate);
+            });
+            bar.appendChild(button);
+        });
+        el.insertAdjacentElement("afterend", bar);
+        el.__speedBar = bar;
+    }
+
+    function mount(el, player) {
+        if (!el.dataset.cast || el.dataset.mounted) return;
+        el.dataset.mounted = "1";
+        el.__alive = true;
+        var opts = options(el);
+        if (el.__rate === undefined) {
+            // data-speed-default="1.5" — the knob; default 1x
+            var start = Number(el.dataset.speedDefault);
+            el.__rate = isFinite(start) && start > 0 ? start : 1;
+        }
+        opts.speed = el.__rate;
+
+        function create(source) {
+            if (!el.__alive) return;
+            el.__source = source;
+            el.__opts = opts;
+            var instance = player.create(source, el, opts);
+            el.__player = instance;
+            bindCaption(instance, el);
+            speedControls(el, instance);
+            // the modal's final width lands after `shown`; the player otherwise
+            // keeps a wrapper height computed from a pre-layout width, and the
+            // terminal loses rows at the bottom
+            requestAnimationFrame(function () {
+                window.dispatchEvent(new Event("resize"));
+            });
+        }
+
+        if (!canHighlight(el)) {
+            create(el.dataset.cast);
+            return;
+        }
+        // fetch once (the player would fetch anyway), colour it, hand it over
+        fetch(el.dataset.cast)
+            .then(function (r) {
+                if (!r.ok) throw new Error(r.status + " " + r.statusText);
+                return r.text();
+            })
+            .then(function (txt) { create({ data: highlightCast(txt) }); })
+            .catch(function () { create(el.dataset.cast); });
     }
 
     function unmount(el) {
+        el.__alive = false;
         if (el.__player && el.__player.dispose) el.__player.dispose();
         delete el.__player;
         delete el.dataset.mounted;
+        if (el.__speedBar) {
+            el.__speedBar.remove();
+            delete el.__speedBar;
+        }
         var caption = captionFor(el);
         if (caption) {
             caption.textContent = "";
@@ -126,6 +459,9 @@
                 ? document.fonts.load('1em "JetBrains Mono"').catch(function () {})
                 : Promise.resolve();
             fonts.then(function () {
+                return document.fonts && document.fonts.ready
+                    ? document.fonts.ready : null;
+            }).then(function () {
                 // Bootstrap wants a modal at the top of the document: nested in
                 // the page's content it can be trapped below the page's stacking
                 // context — the dialog dims and the backdrop swallows every click
@@ -165,6 +501,38 @@
             });
         });
     }
+
+    // ── copy a tutorial's pasteable script ──────────────────────────────────
+    // the script is a .txt sidecar the docs pass writes beside the recording
+    // (one ';'-terminated statement per line, no results)
+    document.addEventListener("click", function (ev) {
+        var button = ev.target.closest ? ev.target.closest("[data-copy-script]") : null;
+        if (!button) return;
+        ev.preventDefault();
+        var path = button.getAttribute("data-copy-script");
+        var done = function () {
+            var span = button.querySelector("span");
+            if (!span) return;
+            var before = span.textContent;
+            span.textContent = "copied";
+            setTimeout(function () { span.textContent = before; }, 1400);
+        };
+        fetch(path)
+            .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+            .then(function (text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+                var area = document.createElement("textarea");
+                area.value = text;
+                document.body.appendChild(area);
+                area.select();
+                document.execCommand("copy");
+                area.remove();
+            })
+            .then(done)
+            .catch(function () { button.title = "could not copy the script"; });
+    });
 
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", init);

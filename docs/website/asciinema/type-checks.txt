@@ -1,0 +1,4 @@
+hundreds::150;
+23.as(posint::T);
+being::[name=>'marko',age=>29];
+int::42@the_answer;

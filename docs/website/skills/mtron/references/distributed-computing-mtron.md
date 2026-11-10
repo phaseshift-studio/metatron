@@ -12,7 +12,6 @@ description: |
   entries (A–S); when wiring a `plan::T` / `PlanBuilder` / `PlanInterpreter` / `Law.Helper` combiner.
 ---
 
-
 # distributed computing — the pattern menu
 
 Distribution in metatron is not a subsystem you add: it is what a fold's *declared algebra* already licenses. A

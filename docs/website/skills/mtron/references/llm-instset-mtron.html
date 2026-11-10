@@ -549,7 +549,6 @@ out. The examples that <em>talk to a carrier</em> — a client reaching a mounte
 live carrier the way a boot file does, at <code>http://localhost:8777</code> and <code>ws://localhost:8555</code>.</p>
 <pre><code class="language-mtron">mtron&gt; import(/m/ai/llm)
 mtron&gt; import(/m/web,web)
-mtron&gt; [-- a server is a selection over instructions; `!*eval` is dereferenced as this is constructed --]
 mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/basic_server
 ==&gt;mcp_server::[tool=&gt;[m_inst_eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;}],
                 status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;}]@/sys/space/mcp/basic_server

@@ -35,6 +35,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -46,6 +47,7 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
     private static final Obj K_ROOT = uri(ROOT);
     private static final Obj K_MAX = uri(MAX);
     private static final Obj K_CODE = uri(CODE);
+    private static final Obj K_ON_SELECT = uri(ON_SELECT);
     private static final Obj K_XREF = uri(XREF);
     private static final Obj K_FLATTEN = uri(FLATTEN);
     private static final Obj K_EXPAND = uri(EXPAND);
@@ -61,10 +63,31 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
         }
     }
 
+    /**
+     * The entries a HOST supplied for this tree, or null when the rec's own space walk draws it. A widget object is
+     * rebuilt from the rec on every display, so this is a render-time view the host owns — not state the rec is
+     * missing.
+     */
+    private final List<CommonUtil.TreeEntry> supplied;
+
     // ── constructor ────────────────────────────────────────────────
 
     public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        this(jvm, tid, vid, null);
+    }
+
+    /**
+     * A tree drawn from ENTRIES the host computed itself — the escape from a rec whose children are not a single
+     * space subtree (the machine tree's child links hang in each frame's own space). The host walks and
+     * {@link #entries() adds} them; the rec's walk is not run, and {@code flatten} does not apply (the rows are
+     * drawn as given).
+     *
+     * @param entries the host's row list, drawn in order; null keeps the rec's walk
+     */
+    public TreeWidget(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid,
+                      final List<CommonUtil.TreeEntry> entries) {
         super(jvm, tid, vid);
+        this.supplied = entries;
         this.readStyle();
     }
 
@@ -90,21 +113,25 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
      * ================================================================ */
 
     /**
-     * The rows of the tree, as a pure function of the rec.  There is no row cache:
-     * the widget's Java object is re-created whenever the rec changes, so a field
-     * could only ever hold a stale tree.  One {@link #read()} per pass, everything
-     * below derived from it.
+     * The rows of the tree: the entries a HOST supplied when it walked its own tree, otherwise the rec's space
+     * walk. There is no row cache — the widget's Java object is re-created whenever the rec changes, so a walked
+     * row list could only ever hold a stale tree. One {@link #read()} per pass, everything below derived from it.
      */
     private List<TreeRow> buildRows(final Map<Obj, Obj> fields) {
         final List<TreeRow> rows = new ArrayList<>();
-        final Obj r = this.get(fields, K_ROOT);
-        final fURI root = (r != null && r.isUri()) ? r.uriValue() : null;
-        if (null == root) return rows;
-        final int max = this.getInt(fields, K_MAX, 0);
+        // THE ENTRIES ARE THE ROWS: a host that walked its own tree supplies them, otherwise the rec walks.
+        final List<CommonUtil.TreeEntry> entries = new ArrayList<>();
+        if (null != this.supplied) {
+            entries.addAll(this.supplied);
+        } else {
+            final Obj r = this.get(fields, K_ROOT);
+            if (r == null || !r.isUri()) return rows;
+            CommonUtil.treeConsumer(r.uriValue(), this.getInt(fields, K_MAX, 0), expansions(fields), entries::add);
+        }
+        if (entries.isEmpty()) return rows;
         final Obj c = this.get(fields, K_CODE);
         final Call code = (c != null && c.isObjCall()) ? c.as() : noobj();
         final Border border = Style.from(this.get(fields, STYLE_KEY)).border();
-        final Set<fURI> expand = expansions(fields);
 
         // xref config: xref=>[max=>N, code=><call>].  Present (as a rec) enables the
         // cross-reference pass; absent keeps the historical behavior byte-for-byte.
@@ -120,20 +147,18 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
             if (xc != null && xc.isObjCall()) xrefCode = xc.as();
         }
 
-        if (this.getBool(fields, K_FLATTEN, false)) {
-            final List<CommonUtil.TreeEntry> entries = new ArrayList<>();
-            CommonUtil.treeConsumer(root, max, expand, entries::add);
+        // FLATTEN IS A WALK TRANSFORM, so it does not apply to rows a host supplied: those are drawn as given.
+        if (null == this.supplied && this.getBool(fields, K_FLATTEN, false)) {
             this.buildFlattenedRows(rows, entries, code, border);
         } else {
-            final boolean[] lastStack = new boolean[Math.max(max, 1) + 32]; // generous upper bound for expanded branches
-            CommonUtil.treeConsumer(root, max, expand, entry -> {
+            final boolean[] lastStack = new boolean[entries.size() + 1];
+            for (final CommonUtil.TreeEntry entry : entries) {
                 final int d = entry.depth();
                 if (d > 0) lastStack[d - 1] = entry.isLast();
-                final String prefix = treePrefix(d, lastStack, entry.isLast(), border);
+                final String prefix = border.treePrefix(d, lastStack, entry.isLast());
                 final Obj mapped = code.isNoObj() ? noobj() : code.apply(entry.obj());
-                final String suffix = stringSuffix(mapped);
-                rows.add(new TreeRow(entry, prefix, entry.name(), suffix));
-            });
+                rows.add(new TreeRow(entry, prefix, entry.name(), stringSuffix(mapped)));
+            }
         }
         if (xrefEnabled) this.decorateXrefs(rows, xrefMax, xrefCode);
         return rows;
@@ -405,10 +430,10 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
             final String prefix;
             final String name;
             if (pending.isEmpty()) {
-                prefix = treePrefix(disp, lastStack, entry.isLast(), border);
+                prefix = border.treePrefix(disp, lastStack, entry.isLast());
                 name = entry.name();
             } else {
-                prefix = treePrefix(pendingStartDisplay, lastStack, pendingIsLast, border);
+                prefix = border.treePrefix(pendingStartDisplay, lastStack, pendingIsLast);
                 name = String.join("/", pending) + "/" + entry.name();
                 // This node's subtree displays one level under the flattened path.
                 final int folded = pending.size();
@@ -419,19 +444,6 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
             final String suffix = stringSuffix(code.apply(entry.obj()));
             rows.add(new TreeRow(entry, prefix, name, suffix));
         }
-    }
-
-    private static String treePrefix(final int depth, final boolean[] lastStack,
-                                     final boolean isLast, final Border border) {
-        if (depth == 0) return "";
-        final StringBuilder sb = new StringBuilder();
-        for (int level = 1; level < depth; level++) {
-            sb.append(lastStack[level - 1] ? "    " : border.leftSide() + "   ");
-        }
-        final String tee = isLast ? border.bottomLeftCorner() : border.leftIntersection();
-        final String arm = border.topSide();
-        sb.append(tee)/*.append(arm)*/.append(arm).append(" ");
-        return sb.toString();
     }
 
     private static String stringSuffix(final Obj obj) {
@@ -460,6 +472,24 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
         if (s.border() == Border.none) s.border(Border.continuous);
         this.put(STYLE_KEY, s);
         return this;
+    }
+
+    /**
+     * A click on a row answers the rec's {@code on_select} call with that row's {@code rel::T} — the same contract
+     * TreeSelectTool's Enter gives — so a host can make a tree answer the pointer. With no call the click is not
+     * consumed (the console focuses the widget, as it always did).
+     */
+    @Override
+    public boolean onClick(final int row, final int col) {
+        final Obj select = this.get(this.read(), K_ON_SELECT);
+        if (null == select || !select.isObjCall())
+            return false;
+        final List<CommonUtil.TreeEntry> rows = this.entries();
+        if (row < 0 || row >= rows.size())
+            return false;
+        final CommonUtil.TreeEntry entry = rows.get(row);
+        select.as().apply(rel(uri(entry.uri()), entry.obj()));
+        return true;
     }
 
     @Override
@@ -504,7 +534,9 @@ public class TreeWidget extends SpaceRec<TreeWidget> implements Widget<TreeWidge
      * ================================================================ */
 
     public List<CommonUtil.TreeEntry> entries() {
-        return this.buildRows(this.read()).stream().map(TreeRow::entry).toList();
+        return null != this.supplied
+                ? this.supplied
+                : this.buildRows(this.read()).stream().map(TreeRow::entry).toList();
     }
 
     public int rowCount() {

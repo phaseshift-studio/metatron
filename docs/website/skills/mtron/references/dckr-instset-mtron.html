@@ -785,8 +785,7 @@ docker:container/sqlite -&gt; [/
 <p>The bind mount <code>'/tmp/mtron-dbs:/data'</code> maps the host directory into the container. The user <code>root</code> is necessary for
 command permissions.</p>
 <h4>step 2: mount the database via tbleSpace</h4>
-<pre><code class="language-mtron">mtron&gt; [-- on a live daemon step 1 created this directory; here the loop creates the same scratch path itself --]
-mtron&gt; bash('mkdir -p /tmp/mtron-dbs')
+<pre><code class="language-mtron">mtron&gt; bash('mkdir -p /tmp/mtron-dbs')
 ==&gt;['']
 mtron&gt; tblespace::[pattern =&gt; mydb:#,
                    host    =&gt; &lt;sqlite:/tmp/mtron-dbs/mydb.sqlite&gt;,
@@ -795,8 +794,7 @@ mtron&gt; tblespace::[pattern =&gt; mydb:#,
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;]@/sys/space/mydb
 </code></pre>
 <h4>step 3: create tables and insert data</h4>
-<pre><code class="language-mtron">mtron&gt; [-- insert tble rows --]
-mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
+<pre><code class="language-mtron">mtron&gt; mydb:people/1 -&gt; [name=&gt;'marko',role=&gt;architect]
 ==&gt;[name=&gt;'marko',role=&gt;architect]
 mtron&gt; mydb:people/2 -&gt; [name=&gt;'stynx',role=&gt;developer]
 ==&gt;[name=&gt;'stynx',role=&gt;developer]

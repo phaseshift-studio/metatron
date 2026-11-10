@@ -3,7 +3,6 @@ name: math instruction set
 description: numeric constants, dates, time, distance, space, and currency.
 ---
 
-
 # math instruction set (`/m/math`)
 
 The math instset provides numeric constants, unit-of-measurement types, and datetime handling. All types are registered
@@ -75,14 +74,11 @@ under `/m/math/+` and available via the standard type resolution system.
 #### construction
 
 ```mtron
-mtron> [-- current system time --]
 mtron> datetime_now()
-==>datetime::<//2026.11:907/01/29/164?tz=-0700>
-mtron> [-- from record (goes through .as(uri::T) first) --]
+==>datetime::<//2026.11:920/30/32/957?tz=-0700>
 mtron> [host=><2024.12>,port=>25,path=>[<>,<09>,<00>,<00>,<000>],
         c=>[min=>1,max=>1],q=>[tz=>'-0500']].as(uri::T).as(datetime::T)
 ==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
-mtron> [-- from string-encoded URI --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(datetime::T)
 ==>datetime::<//2024.12:25/09/00/00/000?tz=-0500>
 ```
@@ -92,12 +88,10 @@ Bare URIs like `<//2024.12:25/...>` work with standard URI operations (`>>host`,
 vocabulary (`year`, `month`, `day`, etc.) only works on explicitly typed datetimes:
 
 ```mtron
-mtron> [-- rec projections of uri components --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>host
 ==><2024.12>
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>port
 ==>25
-mtron> [-- vocabulary projections require datetime::T typing --]
 mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>year
 ==>2024
 mtron> datetime::<//2024.12:25/09/00/00/000?tz=-0500>>>month
@@ -152,10 +146,8 @@ mtron> <//2024.12:25/09/00/00>.?datetime::T              [-- missing tz (bad) --
 All standard uri operations apply: `==` (select), `?` (is), plus `>>=` (rec update) after `.as(rec::T)`.
 
 ```mtron
-mtron> [-- select mutation: change day --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)==[port=>31]>>port
 ==>31
-mtron> [-- where filter: match day 25 --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25]
 ==>[host=><2024.12>,
     port=>25,
@@ -164,7 +156,6 @@ mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>25]
     c=>[min=>1,max=>1],
     q=>[tz=>'-0500']]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)?[port=>26]
-mtron> [-- rec update: change timezone --]
 mtron> <//2024.12:25/09/00/00/000?tz=-0500>.as(rec::T)>>=[q=>[tz=>'+0000']]>>q>>tz
 ==>'+0000'
 ```
@@ -176,7 +167,6 @@ conversion preserves the total millis, changing only the unit label.
 #### conversion
 
 ```mtron
-mtron> [-- upward: value shrinks, unit grows --]
 mtron> nanos::1000.0.as(micros::T)
 ==>micros::1.0
 mtron> micros::1000.0.as(millis::T)
@@ -189,7 +179,6 @@ mtron> minute::60.0.as(hour::T)
 ==>hour::1.0
 mtron> hour::24.0.as(day::T)
 ==>day::1.0
-mtron> [-- downward: value grows, unit shrinks --]
 mtron> micros::1.0.as(nanos::T)
 ==>nanos::1000.0
 mtron> millis::1.0.as(micros::T)
@@ -202,7 +191,6 @@ mtron> hour::1.0.as(minute::T)
 ==>minute::60.0
 mtron> day::1.0.as(hour::T)
 ==>hour::24.0
-mtron> [-- multi-step: levels can be skipped --]
 mtron> nanos::3600000000000.0.as(hour::T)
 ==>hour::1.0
 mtron> micros::3600000000.0.as(hour::T)
@@ -211,7 +199,6 @@ mtron> millis::3600000.0.as(hour::T)
 ==>hour::1.0
 mtron> millis::86400000.0.as(day::T)
 ==>day::1.0
-mtron> [-- fractional values are preserved --]
 mtron> hour::36.0.as(day::T)
 ==>day::1.5
 mtron> second::90.0.as(minute::T)
@@ -224,7 +211,6 @@ mtron> micros::1500000.0.as(second::T)
 ==>second::1.5
 mtron> hour::0.5.as(nanos::T)
 ==>nanos::1.8E12
-mtron> [-- bare real: re-label only, no conversion --]
 mtron> 30000.0.as(minute::T)
 ==>minute::30000.0
 ```
@@ -259,7 +245,6 @@ mtron> micros::2.as(millis::T)      [-- int-backed time (bad) --]
 `eq`, `neq`, `lt`, `gt`, `lte`, and `gte` auto-convert across units before comparing:
 
 ```mtron
-mtron> [-- equality across units --]
 mtron> nanos::1000.0.eq(micros::1.0)
 ==>true
 mtron> micros::1000.0.eq(millis::1.0)
@@ -272,7 +257,6 @@ mtron> minute::60.0.eq(hour::1.0)
 ==>true
 mtron> day::1.0.eq(hour::24.0)
 ==>true
-mtron> [-- ordering across units --]
 mtron> nanos::500000.0.lt(millis::1.0)
 ==>true
 mtron> micros::500.0.lt(millis::1.0)
@@ -300,14 +284,12 @@ mtron> minute::60.0.gte(hour::1.0)
 | hour   | ≥ 48      | day    |
 
 ```mtron
-mtron> [-- below threshold: unchanged --]
 mtron> nanos::1999.0.normalize()
 ==>nanos::1999.0
 mtron> micros::1999.0.normalize()
 ==>micros::1999.0
 mtron> millis::1500.0.normalize()
 ==>millis::1500.0
-mtron> [-- cascade until stable --]
 mtron> nanos::2000.0.normalize()
 ==>micros::2.0
 mtron> micros::2000.0.normalize()
@@ -327,7 +309,6 @@ at a 1024 (binary) base; a conversion preserves the total bytes, changing only t
 #### conversion
 
 ```mtron
-mtron> [-- upward: value shrinks, unit grows --]
 mtron> bB::1024.0.as(kB::T)
 ==>kB::1.0
 mtron> kB::1024.0.as(mB::T)
@@ -338,7 +319,6 @@ mtron> gB::1024.0.as(tB::T)
 ==>tB::1.0
 mtron> tB::1024.0.as(pB::T)
 ==>pB::1.0
-mtron> [-- downward: value grows, unit shrinks --]
 mtron> kB::1.0.as(bB::T)
 ==>bB::1024.0
 mtron> mB::1.0.as(kB::T)
@@ -349,19 +329,16 @@ mtron> tB::1.0.as(gB::T)
 ==>gB::1024.0
 mtron> pB::1.0.as(tB::T)
 ==>tB::1024.0
-mtron> [-- multi-step: levels can be skipped --]
 mtron> bB::1073741824.0.as(gB::T)
 ==>gB::1.0
 mtron> bB::1125899906842624.0.as(pB::T)
 ==>pB::1.0
 mtron> kB::1099511627776.0.as(pB::T)
 ==>pB::1.0
-mtron> [-- larger values, both directions --]
 mtron> kB::2048.0.as(mB::T)
 ==>mB::2.0
 mtron> mB::2.0.as(kB::T)
 ==>kB::2048.0
-mtron> [-- bare real: re-label only, no conversion --]
 mtron> 1024.0.as(kB::T)
 ==>kB::1024.0
 ```
@@ -374,7 +351,6 @@ mtron> bB::1024.0.as(kB::T).matches(kB::T)
 #### relational operators
 
 ```mtron
-mtron> [-- equality across units --]
 mtron> bB::1024.0.eq(kB::1.0)
 ==>true
 mtron> bB::1048576.0.eq(mB::1.0)
@@ -383,7 +359,6 @@ mtron> gB::1024.0.eq(tB::1.0)
 ==>true
 mtron> tB::1024.0.eq(pB::1.0)
 ==>true
-mtron> [-- ordering of equal values --]
 mtron> kB::1024.0.lte(mB::1.0)
 ==>true
 mtron> kB::1024.0.gte(mB::1.0)
@@ -404,12 +379,10 @@ note: relational operators on non-exact unit conversions are a known bug (see th
 | tB   | ≥ 2048    | pB |
 
 ```mtron
-mtron> [-- below threshold: unchanged --]
 mtron> bB::1500.0.normalize()
 ==>bB::1500.0
 mtron> kB::1000.0.normalize()
 ==>kB::1000.0
-mtron> [-- cascade until stable --]
 mtron> bB::1048576.0.normalize()
 ==>kB::1024.0
 mtron> kB::2048.0.normalize()
@@ -426,38 +399,32 @@ only the unit label.
 #### conversion
 
 ```mtron
-mtron> [-- upward: value shrinks, unit grows --]
 mtron> mm::1000.0.as(meter::T)
 ==>meter::1.0
 mtron> cm::100.0.as(meter::T)
 ==>meter::1.0
 mtron> dm::10.0.as(meter::T)
 ==>meter::1.0
-mtron> [-- downward: value grows, unit shrinks --]
 mtron> meter::1.0.as(cm::T)
 ==>cm::100.0
 mtron> km::1.0.as(meter::T)
 ==>meter::1000.0
-mtron> [-- multi-step: levels can be skipped --]
 mtron> mm::1500000.0.as(km::T)
 ==>km::1.5
 mtron> km::0.5.as(cm::T)
 ==>cm::50000.0
-mtron> [-- cross-system: metric → imperial (25.4 mm = 1 inch) --]
 mtron> meter::1.0.as(inch::T)
 ==>inch::39.3700
 mtron> mm::127.0.as(inch::T)
 ==>inch::5.0
 mtron> km::1.0.as(mile::T)
 ==>mile::0.6213
-mtron> [-- cross-system: imperial → metric --]
 mtron> inch::1.0.as(cm::T)
 ==>cm::2.54
 mtron> yard::1.0.as(meter::T)
 ==>meter::0.9144
 mtron> mile::1.0.as(km::T)
 ==>km::1.6093
-mtron> [-- bare real: re-label only, no conversion --]
 mtron> 5.0.as(meter::T)
 ==>meter::5.0
 ```
@@ -470,7 +437,6 @@ mtron> mm::1000.0.as(meter::T).matches(meter::T)
 #### relational operators
 
 ```mtron
-mtron> [-- equality across units --]
 mtron> mm::1000.0.eq(meter::1.0)
 ==>true
 mtron> cm::100.0.eq(meter::1.0)
@@ -490,12 +456,10 @@ mtron> km::1.0.eq(mm::1000000.0)
 | meter | ≥ 2000    | km    |
 
 ```mtron
-mtron> [-- below threshold: unchanged --]
 mtron> mm::19.0.normalize()
 ==>mm::19.0
 mtron> km::1.5.normalize()
 ==>km::1.5
-mtron> [-- cascade until stable --]
 mtron> mm::150.0.normalize()
 ==>cm::15.0
 mtron> cm::25.0.normalize()
@@ -514,35 +478,30 @@ unit label.
 #### conversion
 
 ```mtron
-mtron> [-- upward: value shrinks, unit grows --]
 mtron> inch::12.0.as(foot::T)
 ==>foot::1.0
 mtron> foot::3.0.as(yard::T)
 ==>yard::1.0
 mtron> yard::1760.0.as(mile::T)
 ==>mile::1.0
-mtron> [-- downward: value grows, unit shrinks --]
 mtron> foot::1.0.as(inch::T)
 ==>inch::12.0
 mtron> yard::1.0.as(foot::T)
 ==>foot::3.0
 mtron> mile::1.0.as(yard::T)
 ==>yard::1760.0
-mtron> [-- multi-step: levels can be skipped --]
 mtron> inch::18.0.as(foot::T)
 ==>foot::1.5
 mtron> yard::2200.0.as(mile::T)
 ==>mile::1.25
 mtron> mile::1.5.as(inch::T)
 ==>inch::95040.0
-mtron> [-- cross-system: imperial → metric (25.4 mm = 1 inch) --]
 mtron> inch::1.0.as(mm::T)
 ==>mm::25.4
 mtron> foot::1.0.as(meter::T)
 ==>meter::0.3047
 mtron> mile::1.0.as(km::T)
 ==>km::1.6093
-mtron> [-- bare real: re-label only, no conversion --]
 mtron> 5.0.as(foot::T)
 ==>foot::5.0
 ```
@@ -555,7 +514,6 @@ mtron> inch::12.0.as(foot::T).matches(foot::T)
 #### relational operators
 
 ```mtron
-mtron> [-- equality across units --]
 mtron> inch::12.0.eq(foot::1.0)
 ==>true
 mtron> yard::1.0.eq(foot::3.0)
@@ -574,12 +532,10 @@ mtron> mile::1.0.eq(yard::1760.0)
 | yard | ≥ 3520    | mile |
 
 ```mtron
-mtron> [-- below threshold: unchanged --]
 mtron> inch::23.0.normalize()
 ==>inch::23.0
 mtron> mile::1.5.normalize()
 ==>mile::1.5
-mtron> [-- cascade until stable --]
 mtron> inch::48.0.normalize()
 ==>foot::4.0
 mtron> foot::15.0.normalize()

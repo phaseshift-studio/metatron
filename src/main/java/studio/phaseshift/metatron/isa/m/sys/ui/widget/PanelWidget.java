@@ -169,6 +169,18 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
     public void close() {
     }
 
+    /**
+     * A style ATTACHMENT answers the panel's clicks: the frame is chrome (the top border carries the title, the
+     * left side is the border), so a click inside it is translated into the attachment's own coordinates. A panel
+     * without an attachment is display-only, as it always was.
+     */
+    @Override
+    public boolean onClick(final int row, final int col) {
+        final Widget<?> attachment = this.getStyle().attachment();
+        // row 0 is the top border (the title rides it) and column 0 the left border
+        return null != attachment && row > 0 && col > 0 && attachment.onClick(row - 1, col - 1);
+    }
+
     @Override
     public String renderInPlace() {
         return this.format() + "\n";
@@ -195,13 +207,26 @@ public class PanelWidget extends SpaceRec<PanelWidget> implements Widget<PanelWi
         // A panel's declared width is its CONTENT width (the border sides sit outside
         // it), so none of it is chrome — see Utilities.titleClip.
         final String title = Utilities.titleClip(this.getStr(fields, K_TITLE), maxWidth, 0);
-        // a body is a str or a list of lines — both are lines here
-        final List<String> rawLines = this.getLines(fields, K_BODY).stream()
+        // A STYLE ATTACHMENT IS THE PANEL'S CONTENT: a widget the panel frames (a tree, a table, a grid). Its rows
+        // are the body exactly as it formatted them — the panel never RE-WRAPS another widget's rows, because a
+        // wrapped row would push its neighbours down and the row a click maps to would no longer be the row that
+        // widget drew (an overflowing row is elided instead, which keeps one row per attachment row). With no
+        // attachment the rec's own body is the content.
+        final Widget<?> attachment = style.attachment();
+        final List<String> rawLines = null != attachment
+                ? attachment.rowStrings()
+                : this.getLines(fields, K_BODY).stream()
                 .map(l -> l.endsWith("\r") ? l.substring(0, l.length() - 1) : l)
                 .toList();
 
         final List<String> lines;
-        if (maxWidth > 0) {
+        if (null != attachment) {
+            // AN ATTACHMENT'S ROWS ARE NEVER RE-WRAPPED: eliding keeps one row per attachment row (so a click
+            // still maps to the row it was drawn on), while wrapping would push its neighbours down.
+            lines = maxWidth > 0
+                    ? rawLines.stream().map(line -> MiniWidget.clip(line, maxWidth)).toList()
+                    : rawLines;
+        } else if (maxWidth > 0) {
             lines = new ArrayList<>();
             for (final String raw : rawLines) {
                 // WRAP OR ELIDE: with wrapping on, a long line breaks across rows; with it off (wordWrap=>false) a

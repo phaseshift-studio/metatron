@@ -3,7 +3,6 @@ name: type-system-java
 description: Java-side type system API — Type interface, MType factory, Fluent/StartLess, predicates, isRefinementOf vs test, generateLCD, coefficients, base types, Call/Inst/Code, gotchas
 ---
 
-
 # Java Type System API
 
 ## Package overview

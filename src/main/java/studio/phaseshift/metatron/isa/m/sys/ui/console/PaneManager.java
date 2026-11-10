@@ -117,6 +117,7 @@ public final class PaneManager {
         // Switch focus to new pane
         this.activePane = newPane;
         console.requestRedraw();
+
         JInst.Helper.processInst(console);
         return newPane;
     }

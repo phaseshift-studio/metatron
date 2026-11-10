@@ -52,6 +52,8 @@ import static studio.phaseshift.metatron.BootLoader.ROOT_MACHINE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.move_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -421,6 +423,7 @@ public interface Machine extends Rec, AutoCloseable {
         // the machine that holds it, so the rec holding it must be the machine's too. The child still starts with a
         // SNAPSHOT of this machine's keys (clone() copies them), which is all the machine rec ever offered — `at()`
         // does not walk the parent chain.
+        Machine.write(this.vid().extend("child").extend(childVID.removePrefix(this.vid())), auto_(move_(uri(childVID)).tryToInst()));
         final Machine child = (Machine) this.clone(null, this.tid(), childVID);
         if (child == this)
             throw MTronException.of("push(%s) cannot mint a child: clone() returned this machine, so the child would BE the parent", extension);

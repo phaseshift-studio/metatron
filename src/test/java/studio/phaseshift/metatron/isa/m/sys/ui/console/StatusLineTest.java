@@ -31,14 +31,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.compiler.Typer;
 import studio.phaseshift.metatron.isa.m.sys.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.m.sys.ui.tool.NetworkPanelTool;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.FloatingSurface;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.MiniWidget.SpanUI;
 import studio.phaseshift.metatron.isa.m.sys.ui.widget.PanelWidget;
+import studio.phaseshift.metatron.isa.m.sys.ui.widget.TreeWidget;
 import studio.phaseshift.metatron.isa.m.web.space.ws.WireStats;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -296,6 +300,88 @@ public class StatusLineTest extends AbstractMetatronTest {
             console.getFloatingSurface().clear();
             closeConsole(console);
         }
+    }
+
+    /**
+     * THE MACHINE SEGMENT OPENS THE FRAME TREE: a bordered popup whose bottom border sits one row above the bar and
+     * whose rows are the VM's frame tree, rooted at the root machine the bar spells {@code /.}. It is the same
+     * popup rule as the message history — a click outside dismisses it — so the only way it changes what you see is
+     * a click on one of its nodes.
+     */
+    @Test
+    void shouldOpenTheMachineTreeFromTheMachineSegment() {
+        final Console console = new Console(rec(), f("/sys/console_status_test"));
+        try {
+            Console.getTerminal().setSize(new Size(120, 40));
+            final StatusLine bar = console.getStatus();
+            bar.compileWidgets();
+            final int row = Console.getTerminal().getHeight();
+            final SpanUI machine = bar.segments().stream()
+                    .filter(segment -> segment.key().equals("machine"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("no machine segment: " + bar.segments()));
+            assertTrue(bar.clickAt(row, machine.start() + 1), "the machine segment opens the frame tree");
+            final PanelWidget popup = console.getFloatingWidgets().stream()
+                    .filter(w -> w instanceof PanelWidget)
+                    .map(PanelWidget.class::cast)
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("no machine tree popup: " + console.getFloatingWidgets()));
+            final TreeWidget tree = popup.getStyle().attachment();
+            assertNotNull(tree, "the panel frames the frame tree as its style attachment");
+            assertEquals(FloatingSurface.Anchor.BOTTOM_LEFT, popup.getStyle().anchor(), "it opens upward from the bar");
+            assertEquals(1, popup.getStyle().top(), "its bottom row sits one row above the status line");
+            assertEquals(machine.start(), popup.getStyle().left(), "its left edge is the clicked segment");
+            assertFalse(tree.entries().isEmpty(), "the popup's rows are the walk's entries");
+            assertEquals(Machine.root().vid(), tree.entries().getFirst().uri(), "rooted at the root machine");
+            assertTrue(Graphitty.strip(Graphitty.string(popup.format())).contains("/."),
+                    "the panel draws the tree's rows inside its frame: " + popup.format());
+            assertFalse(console.clickAt(row - 6, 2), "a click outside the popup is not consumed");
+            assertTrue(console.getFloatingWidgets().stream().noneMatch(w -> w instanceof PanelWidget),
+                    "and it dismisses the popup");
+        } finally {
+            console.getFloatingSurface().clear();
+            closeConsole(console);
+        }
+    }
+
+    /**
+     * THE TREE IS THE CHILD LINKS, walked here rather than read as one space subtree: each frame's links live in its
+     * OWN space ({@code <vid>/child/...}, written by push), so a grandchild hangs under its parent — not under the
+     * parent's link in the grandparent's table. The walk hands those frames to the tree as its entries.
+     */
+    @Test
+    void shouldWalkTheMachineTreeThroughChildLinks() {
+        final Machine a = Machine.current().push(f("mt_palette_a"));
+        Machine.current().push(f("mt_palette_b"));
+        Machine.current(a).push(f("mt_palette_c"));
+        Machine.current(Machine.root());
+        try {
+            final List<CommonUtil.TreeEntry> entries = new ArrayList<>();
+            CommandPalette.walkFrames(entries, 1000);
+            // the walk starts at the root, so the VM's other frames ride along — this fixture's subtree is the test
+            final List<CommonUtil.TreeEntry> mine = entries.stream()
+                    .filter(entry -> entry.uri().toString().startsWith("/mt_palette_a"))
+                    .toList();
+            assertEquals(List.of(
+                            f("/mt_palette_a"),
+                            f("/mt_palette_a/mt_palette_b"),
+                            f("/mt_palette_a/mt_palette_c")),
+                    mine.stream().map(CommonUtil.TreeEntry::uri).toList(),
+                    "parents before children, one entry per frame");
+            assertEquals(List.of(1, 2, 2), mine.stream().map(CommonUtil.TreeEntry::depth).toList(),
+                    "a sibling is a child of the shared parent, not of its neighbour");
+            assertFalse(mine.get(1).isLast(), "the first of two siblings draws an arm");
+            assertTrue(mine.get(2).isLast(), "the last of two siblings draws the corner");
+        } finally {
+            Machine.current(Machine.root());
+        }
+        assertEquals("move(</mt_palette_a/mt_palette_b>)",
+                CommandPalette.moveLine(f("/mt_palette_a/mt_palette_b")), "a row's click line is its move");
+        Machine.evaluate(CommandPalette.moveLine(f("/mt_palette_a/mt_palette_b")));
+        assertEquals(f("/mt_palette_a/mt_palette_b"), Machine.current().vid(),
+                "the submitted line walks the thread to the frame");
+        Machine.evaluate(CommandPalette.moveLine(Machine.root().vid()));
+        assertEquals(Machine.root().vid(), Machine.current().vid(), "and the root row's line walks home");
     }
 
     /**
