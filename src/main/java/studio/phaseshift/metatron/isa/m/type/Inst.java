@@ -1143,6 +1143,16 @@ public interface Inst extends Call {
                     && (null == variable.maxName() || bind.test(variable.maxName(), stated.max()));
         }
 
+        /**
+         * THE REWRITE A SHADOW SWITCHES OFF, or noobj when the rewrite is no shadow (Marko, 2026-11-10). A shadow is the
+         * identity on code under a rewrite's own tid, carrying that rewrite as its one argument, {@code [inactive=>rewrite]}:
+         * a pool keys its rewrites by tid, and a machine's own level wins over what it imports, so a shadow written there
+         * stands in the rewrite's place, listed and switched off.
+         */
+        public static Obj shadowed(final Inst rewrite) {
+            return 1 == rewrite.args().count() && rewrite.arg(0).isRec() ? rewrite.arg(0).asRec().<Obj>atDirect(uri(INACTIVE)) : noobj();
+        }
+
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
             return bindGenerics(lhs, apiInst, userInst, new HashMap<>(), new HashMap<>());
         }
@@ -1402,7 +1412,23 @@ public interface Inst extends Call {
                     instC(ARGS_INST_TID.dom(M_ISA_INST_TID).rng(LST_TID), lst(), (lhs, inst) -> inst.args()),
                     instC(AS_INST_TID.dom(INST_TID).rng(CODE_TID), lst(CODE_TYPE), (lhs, _) -> code(List.of(lhs.asInst()))),
                     // an inst updates its own args as a code updates a run (Call.Helper.update): plus(5) >>= [args=>[+10]]
-                    instC(UPDATE_INST_TID.dom(INST_TID).rng(INST_TID), lst(REC_TYPE), (lhs, inst) -> code(Call.Helper.update(List.of(lhs.asInst()), inst.arg(0))).tryToInst())));
+                    instC(UPDATE_INST_TID.dom(INST_TID).rng(INST_TID), lst(REC_TYPE), (lhs, inst) -> code(Call.Helper.update(List.of(lhs.asInst()), inst.arg(0))).tryToInst()),
+                    // A REWRITE SWITCHED OFF STAYS IN THE POOL (Marko, 2026-11-10): inactive answers the rewrite's shadow
+                    // (Helper.shadowed), and a shadow is already off. Written where the rewrite is, it switches the rewrite
+                    // off there; active answers the rewrite a shadow carries, and an active rewrite as it is
+                    instC(INACTIVE_INST_TID.dom(INST_TID).rng(INST_TID), lst(), (lhs, inst) -> {
+                        final Inst rewrite = lhs.asInst();
+                        // noobj is the zero inst, so a shadow is told by isObjInst
+                        if (Helper.shadowed(rewrite).isObjInst())
+                            return rewrite;
+                        if (Machine.current().instset().rewrites().stream().noneMatch(pooled -> pooled.tid().equals(rewrite.tid())))
+                            throw MTronException.of("only a rewrite of the pool is switched off, not %s", rewrite);
+                        return instC(rewrite.tid(), lst(rec(uri(INACTIVE), rewrite)), (code, shadow) -> code);
+                    }),
+                    instC(ACTIVE_INST_TID.dom(INST_TID).rng(INST_TID), lst(), (lhs, inst) -> {
+                        final Obj carried = Helper.shadowed(lhs.asInst());
+                        return carried.isObjInst() ? carried : lhs;
+                    })));
             //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),

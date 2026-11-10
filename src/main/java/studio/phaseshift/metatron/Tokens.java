@@ -539,8 +539,8 @@ public final class Tokens {
     public static final String ENV = "env";
     public static final String MCP_SERVERS = "mcpServers";
     public static final String ACTIVE = "active";
-   /* public static final String INACTIVE = "inactive";
-    public static final String ACTIVE = "active";
+    public static final String INACTIVE = "inactive";
+   /* public static final String ACTIVE = "active";
     public static final String DESKTOP = "desktop";
     public static final String LAYOUT = "layout";
     public static final String PANELS = "panels";

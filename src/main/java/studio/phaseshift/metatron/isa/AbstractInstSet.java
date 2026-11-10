@@ -335,6 +335,22 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return new LinkedHashSet<>(REWRITE_TABLE.values());
     }
 
+    /**
+     * THE REWRITE DOOR READS THE LIVE TABLE (Marko, 2026-11-10): {@code rewrite} answers the rewrites this set applies,
+     * in order (a union's effective pool, shadows among them), and {@code rewrite/<name>} the ones by that name. The rec's
+     * own {@code rewrite} is the list the set was declared with, which setup may have moved to another set and a write may
+     * have shadowed since, so the door never answers it. Every other key is the rec's.
+     */
+    @Override
+    public <O extends Obj> O at(final Obj key) {
+        final List<String> door = key.isUri() ? key.uriValue().resolve().segments() : List.of();
+        if (!door.isEmpty() && door.size() <= 2 && REWRITE.equals(door.getFirst()))
+            return (O) (1 == door.size()
+                    ? lst(this.rewrites().stream().map(rewrite -> (Obj) rewrite).toList())
+                    : objs(this.rewrites().stream().filter(rewrite -> door.get(1).equals(rewrite.tid().name())).map(rewrite -> (Obj) rewrite)));
+        return super.at(key);
+    }
+
     @Override
     public fURI vidToTid(final fURI vid) {
         if (null == vid)
@@ -430,7 +446,15 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))));
-            return QProc.Helper.processPostRead(this.qs(), pattern, result);
+            // A PATH BELOW THE SET WALKS ITS REC (Marko, 2026-11-10): what no table holds is the rec's, so
+            // */m/math/cat/rewrite answers what */m/math/cat>>rewrite does. A pattern or a query read is the tables' alone
+            final int depth = null == this.vid ? 0 : this.vid.segments().size();
+            final List<String> below = pattern.segments();
+            final Obj walked = result.isNoObj() && 0 < depth && !pattern.hasQ() && !pattern.hasPattern()
+                    && pattern.hasPrefix(this.vid) && below.size() > depth
+                    ? this.at(uri(String.join("/", below.subList(depth, below.size()))))
+                    : result;
+            return QProc.Helper.processPostRead(this.qs(), pattern, walked);
         });
     }
 
@@ -487,9 +511,15 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             // EVERY BRANCH BELOW LANDS IN A TABLE, so the version advances once, here, where the
                             // mutation begins — a version bumped per branch is a version a new branch can forget.
                             this.vocabularyChanged();
-                            if (obj.isInst()) {
+                            // noobj is the zero inst, so an actual instruction is told by isObjInst: an isInst() here took
+                            // every noobj write for an instruction, filed noobj in INST_TABLE, and never reached the delete
+                            if (obj.isObjInst()) {
                                 final Inst inst = obj.as();
-                                if (inst.dom().isCode()) {
+                                // AN INSTRUCTION WRITTEN UNDER A REWRITE'S TID IS THAT REWRITE (Marko, 2026-11-10): a
+                                // rewrite's identity is its tid, so what is written there replaces it here, or shadows
+                                // what this set imports, as any re-declared identity does (its inactive shadow, or the
+                                // rewrite itself). A code dom alone makes no rewrite: code's own operations are insts
+                                if (this.rewrites().stream().anyMatch(rewrite -> rewrite.tid().equals(inst.tid()))) {
                                     REWRITE_TABLE.put(inst.tid(), inst);
                                 } else {
                                     Machine.current().memory().registerRedirect(f(vid.name()), vid);
@@ -498,8 +528,17 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             } else if (obj.isType()) {
                                 TYPE_TABLE.put(vid, obj.as());
                             } else if (obj.isNoObj()) {
-                                final Set<Inst> insts = INST_TABLE.get(vid.basePath());
-                                insts.removeIf(i -> i.tid().test(vid));
+                                // A NOOBJ WRITE IS A DELETE: every instruction at the address goes, and every rewrite,
+                                // which is keyed by its tid (Marko, 2026-11-10: a rewrite is switched off and on in the
+                                // pool). An address that holds no instruction holds none to remove. A write the q-procs
+                                // speak (?decq resets a declaration with noobj) is theirs, and deletes no entry here: the
+                                // contract's own tid tests that address, so it would delete the instruction it declares
+                                if (!vid.hasNonDomRngQ()) {
+                                    final Set<Inst> insts = INST_TABLE.get(vid.basePath());
+                                    if (null != insts)
+                                        insts.removeIf(i -> i.tid().test(vid));
+                                    REWRITE_TABLE.keySet().removeIf(tid -> tid.test(vid));
+                                }
                             } else if (!Objects.isNull(vid)) {
                                 CONST_TABLE.put(vid, obj);
                                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);

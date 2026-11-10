@@ -31,6 +31,7 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MEM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -162,6 +163,12 @@ public final class MachineSpace extends memSpace {
         // the network writes its own branch: a field in place, a member's deletion its retraction, a value refused
         if (NETWORK.equals(part))
             return this.owner.network().write(vid, obj);
+        // the instset writes its rewrite door, ~/instset/rewrite/<name>, into this machine's own level (BasicInstSet)
+        if (INSTSET.equals(part) && !vid.hasQ()) {
+            final List<String> segments = vid.qLess().resolve().segments();
+            if (segments.size() > this.depth + 1 && REWRITE.equals(segments.get(this.depth + 1)))
+                return this.owner.instset().write(f(String.join("/", segments.subList(this.depth + 1, segments.size()))), obj);
+        }
         // a component is the machine's own rec, so its write folds there — through the COMPONENT's own rec, which is
         // the object the machine holds (writing the machine rec itself would re-type the whole machine). The compiler
         // holds the typer's state; the processor indexes its computers and holds the fail stacks, written through the
