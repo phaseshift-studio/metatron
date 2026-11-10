@@ -117,12 +117,12 @@ identity. metatron preserves type information transparently on the way in and re
 farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <1> --]
 *farm:animals/1                                                               [-- <2> --]
 *farm:animals/1/name                                                          [-- <3> --]
-*farm:animals/                                                                [-- <4> --]
+*farm:animals/+/                                                              [-- <4> --]
 ----
 <1> write a `chicken::T` document to the `animals` collection.
 <2> read it back — `chicken::T` is preserved through the round-trip.
 <3> subfield reads navigate into the document without loading the whole record.
-<4> a branch read lists all documents in `animals` as a `uri\=>obj` map.
+<4> `+/` lists every document in `animals`, each as the `uri\=>obj` relation from its address.
 
 An `auto_from` cell in a dcmntspace document is stored as a native MongoDB
 https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs[DBRef] — `$ref` carries the collection
