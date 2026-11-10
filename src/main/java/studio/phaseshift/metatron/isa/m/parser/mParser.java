@@ -354,12 +354,22 @@ public class mParser {
             ));
         } else {
             // Standard space-insensitive sugar (uses .trim())
-            PARSERS.put(key, generate_sugar_parser(
+            final Parser parser = generate_sugar_parser(
                     sugar.getInstChain(),
                     of(startToken),
                     sugar.getArgCount(),
                     null == endToken ? null : of(endToken)
-            ));
+            );
+            // A DEREF'S LEADING COEFFICIENT IS ITS SPAN (Marko, 2026-11-10: read left to right, greedy until a syntax
+            // error): {2}*a is {2}from(a), the run from(a).from(a), as {2}from(a) is. '*' is a bare-uri char, so without
+            // this the uri *a took the coefficient as its point. A deref reads its address, never its lhs, so no stream
+            // before it is lost; a sugar that takes its lhs keeps a leading brace as that stream ({1,2}-<[...])
+            final boolean deref = sugar.getPosition() == Sugar.Position.PREFIX && sugar.getInstChain().size() == 1
+                    && (FROM_INST_TID.equals(sugar.getInstChain().getFirst()) || AUTO_FROM_INST_TID.equals(sugar.getInstChain().getFirst()));
+            PARSERS.put(key, !deref ? parser : seq(opt(m_furi_coefficient(), null), parser).map(t -> {
+                final Inst inst = pick(t, 1);
+                return null == pick(t, 0) ? inst : inst.tid(inst.tid().b(coefficientOrOne(pick(t, 0))));
+            }));
         }
         return Collections.unmodifiableCollection(PARSERS.values());
     }
@@ -651,12 +661,15 @@ public class mParser {
             final Obj second = mParser.pick(t, 2);
             if (null == first)
                 return second;
+            // a spanned instruction at the head of an expression is its run, as it is in a chain (m_code): {2}*a is
+            // from(a).from(a), never one from(a) that keeps the span
+            final List<Inst> head = !first.isInst() ? List.of() : runs(List.<Object>of(first)).stream().map(h -> (Inst) h).toList();
             if (null == second)
-                return first;
+                return !first.isInst() || head.size() == 1 ? first : MCode.of(head, Tokens.CODE_TID, pick(t, 3)).tryToInst();
             final List<Inst> newCode = new ArrayList<>();
             if (first.isNoObj() || !first.isInst())
                 newCode.add(instB(headTID, lst(first.isInst() ? noobj() : first)));
-            else if (first.isInst()) newCode.add(first.as());
+            else newCode.addAll(head);
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, Tokens.CODE_TID, pick(t, 3)).tryToInst();
         });
@@ -1555,22 +1568,30 @@ public class mParser {
         return seq(opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of(":").repeat(2, Integer.MAX_VALUE)).pick(0), Tokens.CODE_TID),
                 opt(of("|["), "|["), m_chain_element().plus(), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> {
-                    // A FINITE SPAN IS THAT MANY IN A ROW: {2}plus{3}(34) is plus{3}(34).plus{3}(34), and {0}plus(1) is no
-                    // instruction at all. A ranged span ({+}, {*}) stays on its instruction, a run a code pattern matches
-                    final List<Object> elements = new ArrayList<>();
-                    for (final Object element : (List<Object>) pick(t, 2)) {
-                        final cInt span = element instanceof Inst inst ? inst.tid().b() : cInt.ONE();
-                        if (span.isOne() || null == span.min() || !span.min().equals(span.max()))
-                            elements.add(element);
-                        else
-                            for (long k = 0; k < span.min(); k++)
-                                elements.add(((Inst) element).tid(((Inst) element).tid().b(null)));
-                    }
+                    final List<Object> elements = runs(pick(t, 2));
                     return elements.size() == 1 ? elements.getFirst() : new MCode((List) elements
                             .stream()
                             .filter(x -> x instanceof Inst)
                             .toList(), pick(t, 0), pick(t, 4)).tryToInst();
                 });
+    }
+
+    /**
+     * A FINITE SPAN IS THAT MANY IN A ROW: {2}plus{3}(34) is plus{3}(34).plus{3}(34), and {0}plus(1) is no instruction at
+     * all. A ranged span ({+}, {*}) stays on its instruction, a run a code pattern matches. A chain's elements
+     * ({@link #m_code}) and an expression's head ({@link #m_call_prefix}) are laid out alike.
+     */
+    private static List<Object> runs(final List<Object> elements) {
+        final List<Object> runs = new ArrayList<>();
+        for (final Object element : elements) {
+            final cInt span = element instanceof Inst inst ? inst.tid().b() : cInt.ONE();
+            if (span.isOne() || null == span.min() || !span.min().equals(span.max()))
+                runs.add(element);
+            else
+                for (long k = 0; k < span.min(); k++)
+                    runs.add(((Inst) element).tid(((Inst) element).tid().b(null)));
+        }
+        return runs;
     }
 
     public static Parser m_inst() {
