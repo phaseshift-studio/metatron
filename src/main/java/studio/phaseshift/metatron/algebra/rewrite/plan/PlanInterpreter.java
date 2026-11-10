@@ -798,8 +798,10 @@ public final class PlanInterpreter {
             if (reps.size() < inst.args().count()) {
                 changed = true;
                 final List<Obj> merged = new ArrayList<>(reps.size());
+                // a representative is kept as written only when it already carries the sum: the first member may be
+                // zero-pointed (branch(id{0}(),id()) sums to 1 on id{0}()), so a sum of 1 is no proof of an unpointed rep
                 for (int i = 0; i < reps.size(); i++)
-                    merged.add(cInt.ONE().equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
+                    merged.add(multiplicity(reps.get(i)).equals(sums.get(i)) ? reps.get(i) : coeff(reps.get(i), sums.get(i)));
                 out.add(inst.args(lst(merged)));
             } else
                 out.add(inst);
@@ -889,23 +891,25 @@ public final class PlanInterpreter {
      * the inst's own coefficient; for a code member it rides the chain's first inst.
      */
     private static cInt multiplicity(final Obj member) {
+        // an inst's multiplicity is its POINT d, never its whole coefficient b·d: a span is part of the function (like
+        // terms share it), so summing it as a point read {?}plus(1) + plus(1) as plus{1,2}(1)
         if (member.isCode() && !member.asCode().insts().isEmpty())
-            return member.asCode().insts().getFirst().c();
-        return member.c();
+            return member.asCode().insts().getFirst().tid().d();
+        return member.isInst() ? member.asInst().tid().d() : member.c();
     }
 
     /**
-     * The member carrying its summed coefficient, at the anchor {@link #multiplicity(Obj)} reads it from — the
-     * inst's tid, or the head of the chain for a code.
+     * The member carrying its summed point, at the anchor {@link #multiplicity(Obj)} reads it from — the inst's tid
+     * (its span untouched), or the head of the chain for a code.
      */
     private static Obj coeff(final Obj member, final cInt c) {
         if (member.isCode() && !member.asCode().insts().isEmpty()) {
             final List<Inst> insts = member.asCode().insts();
             final List<Inst> headed = new ArrayList<>(insts);
-            headed.set(0, insts.getFirst().c(c));
+            headed.set(0, insts.getFirst().tid(insts.getFirst().tid().d(c)));
             return code(headed);
         }
-        return member.c(c);
+        return member.isInst() ? member.asInst().tid(member.asInst().tid().d(c)) : member.c(c);
     }
 
     /**
