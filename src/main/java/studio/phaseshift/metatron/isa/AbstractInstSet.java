@@ -336,19 +336,38 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     }
 
     /**
-     * THE REWRITE DOOR READS THE LIVE TABLE (Marko, 2026-11-10): {@code rewrite} answers the rewrites this set applies,
-     * in order (a union's effective pool, shadows among them), and {@code rewrite/<name>} the ones by that name. The rec's
-     * own {@code rewrite} is the list the set was declared with, which setup may have moved to another set and a write may
-     * have shadowed since, so the door never answers it. Every other key is the rec's.
+     * WHAT A CANDIDATE <em>IS</em>: an inst is its tid (its dom/rng contract — two overloads of one name are two
+     * candidates), a type or a const is its vid. A candidate carried as a rel is judged by the obj inside it,
+     * because a non-node read wraps each hit as {@code uri => obj}. noobj is the zero inst (the halted monad), so an
+     * actual instruction is told by {@code isObjInst}.
+     */
+    protected static fURI identity(final Obj candidate) {
+        final Obj obj = candidate.isRel() ? candidate.asRel().second() : candidate;
+        return obj.isObjInst() ? obj.tid() : obj.vid();
+    }
+
+    /**
+     * THE TABLE DOORS READ THE LIVE TABLES (Marko, 2026-11-10): {@code rewrite}, {@code inst}, {@code type} and
+     * {@code const} answer what this set holds now (a union answers its effective view, shadows among its rewrites),
+     * and {@code <table>/<name>} the entries by that name, an entry named by its {@link #identity}. The rec's own entries
+     * are the lists the set was declared with, which setup may have moved to another set and a write may have overridden
+     * since, so a door never answers them. Every other key is the rec's.
      */
     @Override
     public <O extends Obj> O at(final Obj key) {
         final List<String> door = key.isUri() ? key.uriValue().resolve().segments() : List.of();
-        if (!door.isEmpty() && door.size() <= 2 && REWRITE.equals(door.getFirst()))
-            return (O) (1 == door.size()
-                    ? lst(this.rewrites().stream().map(rewrite -> (Obj) rewrite).toList())
-                    : objs(this.rewrites().stream().filter(rewrite -> door.get(1).equals(rewrite.tid().name())).map(rewrite -> (Obj) rewrite)));
-        return super.at(key);
+        final Set<? extends Obj> table = door.isEmpty() || door.size() > 2 ? null : switch (door.getFirst()) {
+            case REWRITE -> this.rewrites();
+            case INST -> this.insts();
+            case TYPE -> this.types();
+            case CONST -> this.consts();
+            default -> null;
+        };
+        if (null == table)
+            return super.at(key);
+        return (O) (1 == door.size()
+                ? lst(table.stream().map(entry -> (Obj) entry).toList())
+                : objs(table.stream().filter(entry -> null != identity(entry) && door.get(1).equals(identity(entry).name())).map(entry -> (Obj) entry)));
     }
 
     @Override

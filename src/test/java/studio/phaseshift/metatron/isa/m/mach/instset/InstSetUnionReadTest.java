@@ -180,9 +180,11 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
      * THE REWRITE DOOR (Marko, 2026-11-10) — mtron reaches a machine's rewrites at {@code ~/instset/rewrite}. A read there
      * answers the effective pool, and {@code rewrite/<name>} a rewrite by its name, walked as a path or projected with
      * {@code >>}. A write there lands in the machine's own level. So a rewrite is switched off and back on in mtron, in a
-     * child and only there. And a set's own path walks its rec as {@code >>} projects it. An instruction is written with
-     * {@code to}, which writes the obj flowing in: an argument that is an instruction is code, applied to the lhs, so
-     * {@code addr -> inst} would write what the instruction answers, never the instruction.
+     * child and only there. And a set's own path walks its rec as {@code >>} projects it. An argument that is an
+     * instruction is code, applied to the lhs, so a LITERAL instruction is written blocked, {@code addr -> |inst}
+     * ({@code addr.ref(block(inst))}). A COMPUTED one is not: {@code |} takes the next element only, so in
+     * {@code ->(|*…/x.inactive())} inactive meets the blocked reference, and a grouped {@code |(*…/x.inactive())} hands
+     * over the chain unevaluated. {@code to} writes the obj flowing in, so the shadow is written with it.
      */
     @Test
     public void testARewriteIsSwitchedOffThroughTheInstsetDoor() {
@@ -218,6 +220,40 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
     }
 
     /**
+     * EVERY TABLE HAS A DOOR (Marko, 2026-11-10) — insts, types and consts open as rewrites do. {@code <table>} answers the
+     * live table and {@code <table>/<name>} its entries by name, and a write at {@code <table>/<name>} is the machine's own
+     * entry, cleared by noobj, while the enclosing machine keeps its own.
+     */
+    @Test
+    public void testEveryTableHasADoor() {
+        final Machine parent = Machine.current();
+        assertTrue(1 < Machine.evaluate("*~/instset/inst/plus").stream().count(), "plus's overloads are read by name");
+        assertEquals(Machine.evaluate("*/m/inst/plus").stream().count(), Machine.evaluate("*/m>>inst/plus").stream().count(),
+                "an address and the door name the same instructions");
+        assertEquals(f("/m/int"), Machine.evaluate("*~/instset/type/int").vid(), "a type is read by its name");
+
+        // a name no other test declares: the shadowing tests leave their unionTest contracts in the root's own level
+        final Inst declared = contract(f("/m/inst/doorTest").dom(f("/m/int")).rng(f("/m/int")), 2);
+        final Obj answer = jnt(42).vid(f("/t/door/answer"));
+        final Machine child = parent.push(f("table_doors"));
+        try {
+            Machine.write(f("~/instset/inst/doorTest"), declared);
+            Machine.write(f("~/instset/const/answer"), answer);
+            assertEquals(declared, Machine.evaluate("*~/instset/inst/doorTest"), "an instruction is declared in the child");
+            assertEquals(jnt(42), Machine.evaluate("*~/instset/const/answer"), "and a const, read as its value");
+            assertTrue(parent.instset().insts().stream().noneMatch(inst -> "doorTest".equals(inst.tid().name())), "the parent declares neither");
+            assertTrue(parent.instset().consts().stream().noneMatch(constant -> answer.vid().equals(constant.vid())), "nor the const");
+
+            Machine.write(f("~/instset/inst/doorTest"), noobj());
+            Machine.write(f("~/instset/const/answer"), noobj());
+            assertTrue(Machine.evaluate("*~/instset/inst/doorTest").isNoObj(), "noobj clears the child's instruction");
+            assertTrue(Machine.evaluate("*~/instset/const/answer").isNoObj(), "and its const");
+        } finally {
+            child.pop();
+        }
+    }
+
+    /**
      * Only a rewrite of the pool is switched off: plus is an instruction, so {@code inactive} refuses it, while
      * {@code active} answers an instruction that is no shadow as it is. Each row: the code % what it answers.
      */
@@ -227,7 +263,10 @@ public class InstSetUnionReadTest extends AbstractMetatronTest {
             "[plus(1)]==[active()]        % [plus(1)]",
             // the door holds rewrites by name: a value is no rewrite, and a name the pool lacks names nothing
             "~/instset/rewrite/law_absorbing -> 5      % <ERROR>",
-            "~/instset/rewrite/no_such_rule -> noobj   % <ERROR>",
+            "~/instset/inst/plus -> 5                  % <ERROR>",
+            "~/instset/type/int -> 5                   % <ERROR>",
+            // ... and an entry is written under its own name
+            "*~/instset/rewrite/law_absorbing.to(~/instset/rewrite/wrong_name)   % <ERROR>",
     }, delimiter = '%')
     public void testOnlyAPooledRewriteIsSwitchedOff(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);

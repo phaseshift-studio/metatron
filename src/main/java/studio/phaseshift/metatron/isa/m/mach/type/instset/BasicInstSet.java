@@ -455,45 +455,59 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
     }
 
     /**
-     * WHAT A CANDIDATE <em>IS</em>: an inst is its tid (its dom/rng contract — two overloads of one name are two
-     * candidates), a type or a const is its vid. A candidate carried as a rel is judged by the obj inside it,
-     * because a non-node read wraps each hit as {@code uri => obj}.
-     */
-    private static fURI identity(final Obj candidate) {
-        final Obj obj = candidate.isRel() ? candidate.asRel().second() : candidate;
-        return obj.isInst() ? obj.tid() : obj.vid();
-    }
-
-    /**
      * Writes reach only this machine's own structure: the enclosing level and the libraries are read-only here.
      * <p>
-     * THE REWRITE DOOR (Marko, 2026-11-10): {@code rewrite/<name>} names the rewrites of this machine's pool by that name
-     * ({@code ~/instset/rewrite/law_absorbing}), and a write there is this level's own, so it declares a DIFFERENCE. A
-     * rewrite under one of their tids (its inactive shadow, say) overrides what this level inherits; noobj, or the very
-     * rewrite this level inherits, removes the override, so a rewrite read and written back changes nothing.
+     * THE TABLE DOORS (Marko, 2026-11-10): {@code <table>/<name>} ({@code rewrite}, {@code inst}, {@code type} or
+     * {@code const}) names the entries of a table by name ({@code ~/instset/rewrite/law_absorbing}), and a write there is
+     * this level's own, so it declares a DIFFERENCE. An entry (a rewrite's inactive shadow, say) replaces this level's
+     * own entry of its identity and overrides what the level inherits, while the very entry this level inherits adds
+     * nothing, and noobj clears this level's entries of that name, so a read written back changes nothing.
      */
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final List<String> door = vid.isRelative() ? vid.segments() : List.of();
-        if (2 != door.size() || !REWRITE.equals(door.getFirst()))
+        if (2 != door.size() || !List.of(REWRITE, INST, TYPE, CONST).contains(door.getFirst()))
             return super.write(vid, obj);
-        final List<fURI> named = this.rewrites().stream().map(Inst::tid).filter(tid -> door.get(1).equals(tid.name())).toList();
-        if (named.isEmpty())
-            throw MTronException.of("no rewrite of the pool is named %s", door.get(1));
-        // written at the q-less address: the table keys a rewrite by its own tid, and a contract-shaped address
-        // (?dom=…&rng=…) is a declaration the q-procs answer, never a table entry
-        if (obj.isNoObj()) {
-            named.forEach(tid -> super.write(tid.qLess(), noobj()));
-            return obj;
+        final String table = door.getFirst();
+        final String name = door.get(1);
+        if (!obj.isNoObj() && !((REWRITE.equals(table) || INST.equals(table) ? obj.isObjInst() : TYPE.equals(table) ? obj.isType() : null != obj.vid())
+                && null != identity(obj) && name.equals(identity(obj).name())))
+            throw MTronException.of("%s/%s holds a %s named %s, not %s", table, name, table, name, obj);
+        // this level's own entries the write replaces: all of that name for noobj, else the one of the entry's identity
+        final java.util.function.Predicate<Obj> replaced = obj.isNoObj()
+                ? entry -> null != identity(entry) && name.equals(identity(entry).name())
+                : entry -> identity(obj).equals(identity(entry));
+        this.vocabularyChanged();
+        switch (table) {
+            case REWRITE -> REWRITE_TABLE.values().removeIf(replaced::test);
+            case INST -> INST_TABLE.values().forEach(insts -> insts.removeIf(replaced::test));
+            case TYPE -> TYPE_TABLE.values().removeIf(replaced::test);
+            default -> CONST_TABLE.values().removeIf(replaced::test);
         }
-        if (!obj.isObjInst() || !named.contains(obj.tid()))
-            throw MTronException.of("only a rewrite named %s is written at %s, not %s", door.get(1), vid, obj);
-        // what this level inherits under that tid: its imports' rewrite, else the enclosing machine's
+        if (obj.isNoObj())
+            return obj;
+        // what this level inherits under that identity, its imports' entry else the enclosing machine's: restated, it adds nothing
+        final java.util.function.Function<InstSet, Set<? extends Obj>> entries = switch (table) {
+            case REWRITE -> InstSet::rewrites;
+            case INST -> InstSet::insts;
+            case TYPE -> InstSet::types;
+            default -> InstSet::consts;
+        };
         final Obj inherited = Stream.concat(this.ownReferences().stream(), Stream.ofNullable(this.previous))
-                .flatMap(isa -> isa.rewrites().stream())
-                .filter(rewrite -> rewrite.tid().equals(obj.tid()))
-                .findFirst().map(Obj.class::cast).orElse(noobj());
-        super.write(obj.tid().qLess(), obj.equals(inherited) ? noobj() : obj);
+                .flatMap(isa -> entries.apply(isa).stream().map(Obj.class::cast))
+                .filter(entry -> identity(obj).equals(identity(entry)))
+                .findFirst().orElse(noobj());
+        if (obj.equals(inherited))
+            return obj;
+        switch (table) {
+            case REWRITE -> REWRITE_TABLE.put(obj.tid(), obj.asInst());
+            case INST -> {
+                INST_TABLE.computeIfAbsent(obj.tid().basePath(), base -> new LinkedHashSet<>()).add(obj.asInst());
+                Machine.current().memory().registerRedirect(f(name), obj.tid().basePath());
+            }
+            case TYPE -> TYPE_TABLE.put(obj.vid(), obj.asType());
+            default -> CONST_TABLE.put(obj.vid(), obj);
+        }
         return obj;
     }
 

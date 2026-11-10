@@ -299,8 +299,9 @@ removed from the machine's rewrite pool on its own, and `path::T` draws one edge
 its shadow, `inactive()`: the identity on code under the rule's own tid, listed in the pool in the rule's place, and
 `active()` answers the rule back. The pool is `~/instset/rewrite`, and a rule is written there by name, in the
 machine's own level: `*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)` switches it
-off for that machine, and writing back `.active()`, or `-> noobj`, switches it on. The rule is written with `to`, since
-an argument that is an instruction is code, applied to the lhs. A rewrite's declared
+off for that machine, and writing back `.active()`, or `-> noobj`, switches it on. The shadow is written with `to`, the
+obj flowing in: an argument that is an instruction is code, and a block (`-> |inst`) hands over a literal instruction,
+not the value an expression computes. A rewrite's declared
 argument *is* its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place. A law's rule is stated in the name `op`, the instruction that claims the law: `law_involution` carries
 `[involution => [op.op => ]]`, `law_idempotent` `[idempotent => [op.op => op]]` and `law_monoidic`
