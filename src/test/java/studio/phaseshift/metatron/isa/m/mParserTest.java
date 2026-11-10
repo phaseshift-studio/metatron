@@ -372,6 +372,15 @@ public class mParserTest extends AbstractMetatronTest {
             "1.plus(2).{plus(4),plus(10),plus(20)} % 1.plus(2).branch(plus(4),plus(10),plus(20))",
             "1.plus(2).{plus(4)}             % 1.plus(2).branch(plus(4))",
             "1.plus(2).{7,3}                 % 1.plus(2).branch(7,3)",
+            // a deref's leading coefficient is its span, as a named instruction's is (Marko, 2026-11-10: read left to
+            // right, greedy until a syntax error), never the point of a bare uri *a
+            "{2}*a                           % from(a).from(a)",
+            "{2}*a                           % {2}from(a)",
+            "{3}*/x/y                        % from(/x/y).from(/x/y).from(/x/y)",
+            "1.{2}*a                         % 1.from(a).from(a)",
+            "1.{2}*a.plus(1)                 % 1.from(a).from(a).plus(1)",
+            "{2}!*a                          % auto_from(a).auto_from(a)",
+            "{0}*a                           % {0}from(a)",
     }, delimiter = '%')
     void testParsesToTheSameObjAs(final String code, final String equivalent) {
         checkEquality(LOG, mParser.parse(code), mParser.parse(equivalent), true);
