@@ -219,6 +219,8 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI CASCADE_INST_TID = M_ISA_INST_TID.extend("cascade");
     public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
+    public static final fURI ACTIVE_INST_TID = M_ISA_INST_TID.extend(ACTIVE);
+    public static final fURI INACTIVE_INST_TID = M_ISA_INST_TID.extend(INACTIVE);
     public static final fURI GROUP_INST_TID = M_ISA_INST_TID.extend("group");
     public static final fURI ELSE_INST_TID = M_ISA_INST_TID.extend("else");
     public static final fURI END_INST_TID = M_ISA_INST_TID.extend("end");

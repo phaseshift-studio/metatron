@@ -44,26 +44,59 @@ Rewrites run **before** instruction resolution. This means domains/ranges in the
 
 ## Registration
 
-Rewrites are registered in an `InstSet` under the `uri(REWRITE)` key during `setup()`. Every `InstSet` space contributes
-its rewrites to the global pool — the `Code.rewrite()`
-loop iterates all of them:
+Rewrites are registered in an `InstSet` under the `uri(REWRITE)` key during `setup()`. A machine's pool is its
+instruction set's union, `Machine.current().instset().rewrites()` (the default of `Rewriter.rewrites()`): its own
+level first, then the instruction sets it imported, then the enclosing machine's, each rewrite once by its tid, so a
+nearer level SHADOWS the same tid. The default compiler stage, `fixpoint_rewriter::T`, applies the pool in order to a
+fixpoint (`FixPointRewriter.apply`):
 
 ```java
-Router.global().spaces()
-    .elements()
-    .filter(r -> r.second() instanceof InstSet)
-    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
-    .forEach(r -> {
-        final Obj rewritten = r.apply(rewrittenCode.get());
-        if (rewritten.isCode()) {
-            rewrittenCode.set(rewritten.asCode());
-        }
-    });
+for (final Inst r : orderedRules(this.rewrites())) {     // analysis rules last, registration order otherwise
+    final Obj rewritten = r.apply(code);
+    if (rewritten.isCode())
+        code = rewritten.asCode();
+}
 ```
 
 A rewrite is an `Inst` whose function takes a `Code` and returns a `Code`. If the result is a `Code`, it replaces the
 current code for the next iteration. If the result is not a
 `Code` (e.g., `noobj`, a single `Inst`), it is discarded and the code is left unchanged.
+
+### Switching a rewrite off
+
+A rewrite is switched off by its **shadow** (Marko, 2026-11-10), so the pool still lists what is off.
+`inactive?inst<=inst` answers the identity on code under the rewrite's own tid, carrying the rewrite as
+`[inactive=>rewrite]`. `active?inst<=inst` answers the rewrite a shadow carries (`Inst.Helper.shadowed`), and an active
+rewrite as it is. Written into a machine's own level, the shadow is the same identity as the inherited rewrite. So it
+stands in the rewrite's place for that machine and its children, and the fixpoint applies it as the identity, while
+every other machine keeps the rewrite. A `noobj` write at the rewrite's address deletes the shadow, and the inherited
+rewrite answers again:
+
+```java
+final Inst shadow = Processor.Helper.apply(rule, instB(INACTIVE_INST_TID, lst())).asInst();
+child.instset().write(rule.tid(), shadow);       // off in the child, and listed in its pool
+child.instset().write(rule.tid(), noobj());      // on again: the inherited rewrite answers
+```
+
+An instruction written under the tid of a rewrite the set answers IS that rewrite (`AbstractInstSet.write`). A code dom
+alone makes no rewrite: code's own operations (`end`, `id`, `update`) are instructions.
+
+From mtron, a machine's rewrites are reached at `~/instset/rewrite`. A read there answers the effective pool, and
+`~/instset/rewrite/<name>` a rewrite by its name, walked as a path or projected with `>>` (`AbstractInstSet.at`). A
+write at `~/instset/rewrite/<name>` lands in the machine's own level (`MachineSpace` routes it to `BasicInstSet.write`)
+and declares a difference: a shadow overrides the inherited rewrite, while the inherited rewrite itself, or noobj,
+removes the override, so a rewrite read and written back changes nothing. An instruction is written with `to`, which
+writes the obj flowing in: an argument that is an instruction is code, applied to the lhs, so `addr -> inst` writes
+what the instruction answers, never the instruction:
+
+```text
+*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)    off here, and listed
+*~/instset/rewrite/law_absorbing.active().to(~/instset/rewrite/law_absorbing)      on again: the override goes
+~/instset/rewrite/law_absorbing -> noobj                                           on again, the same way
+```
+
+An instruction set's own path walks its rec: what no table holds is the rec's, so `*/m/math/cat/rewrite` answers what
+`*/m/math/cat>>rewrite` does, the set's live rewrites.
 
 ## Rewrite styles
 

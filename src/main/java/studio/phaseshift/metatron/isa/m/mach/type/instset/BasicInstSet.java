@@ -30,8 +30,10 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -464,10 +466,35 @@ public class BasicInstSet extends AbstractInstSet implements ComponentUnion<Inst
 
     /**
      * Writes reach only this machine's own structure: the enclosing level and the libraries are read-only here.
+     * <p>
+     * THE REWRITE DOOR (Marko, 2026-11-10): {@code rewrite/<name>} names the rewrites of this machine's pool by that name
+     * ({@code ~/instset/rewrite/law_absorbing}), and a write there is this level's own, so it declares a DIFFERENCE. A
+     * rewrite under one of their tids (its inactive shadow, say) overrides what this level inherits; noobj, or the very
+     * rewrite this level inherits, removes the override, so a rewrite read and written back changes nothing.
      */
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return super.write(vid, obj);
+        final List<String> door = vid.isRelative() ? vid.segments() : List.of();
+        if (2 != door.size() || !REWRITE.equals(door.getFirst()))
+            return super.write(vid, obj);
+        final List<fURI> named = this.rewrites().stream().map(Inst::tid).filter(tid -> door.get(1).equals(tid.name())).toList();
+        if (named.isEmpty())
+            throw MTronException.of("no rewrite of the pool is named %s", door.get(1));
+        // written at the q-less address: the table keys a rewrite by its own tid, and a contract-shaped address
+        // (?dom=…&rng=…) is a declaration the q-procs answer, never a table entry
+        if (obj.isNoObj()) {
+            named.forEach(tid -> super.write(tid.qLess(), noobj()));
+            return obj;
+        }
+        if (!obj.isObjInst() || !named.contains(obj.tid()))
+            throw MTronException.of("only a rewrite named %s is written at %s, not %s", door.get(1), vid, obj);
+        // what this level inherits under that tid: its imports' rewrite, else the enclosing machine's
+        final Obj inherited = Stream.concat(this.ownReferences().stream(), Stream.ofNullable(this.previous))
+                .flatMap(isa -> isa.rewrites().stream())
+                .filter(rewrite -> rewrite.tid().equals(obj.tid()))
+                .findFirst().map(Obj.class::cast).orElse(noobj());
+        super.write(obj.tid().qLess(), obj.equals(inherited) ? noobj() : obj);
+        return obj;
     }
 
     /**
