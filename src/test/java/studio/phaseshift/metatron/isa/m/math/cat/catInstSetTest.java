@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.Law;
 import studio.phaseshift.metatron.algebra.PendingWrites;
 import studio.phaseshift.metatron.algebra.rewrite.InstPattern;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
@@ -1534,6 +1535,11 @@ public class catInstSetTest extends AbstractInstSetTest {
             "1+2.branch(+2,+4,+8)  % start(1).plus(2).branch(plus(2),plus(4),plus(8)) % {5,7,11}",
             // like terms at different multiplicities — the coefficient is summed, not part of the identity
             "1.branch({3}10,{2}10,13)  % start(1).branch({5}10,13)  % {{5}10,13}",
+            // a zero-pointed first member is still the representative, and the sum is written onto it (Marko,
+            // 2026-11-10: 5.branch(id{0}(),id()) answered nothing, as the collapse kept id{0}() for the sum 1)
+            "1.branch(plus{0}(2),plus(2))     % start(1).plus(2)     % 3",
+            "1.branch(plus(2),plus{0}(2))     % start(1).plus(2)     % 3",
+            "1.branch(plus{0}(2),plus{2}(2))  % start(1).plus{2}(2)  % {2}3",
             // mixed: a code pair and an inst trio each sum their own like terms, the distinct singletons
             // keep their positions, and with four members left the branch stays (no inline)
             "1.branch(+2.+2,plus{2}(2).+2,plus(2),plus{4}(2),plus(3),plus(2),mult(10))  % start(1).branch(plus{3}(2).plus(2),plus{6}(2),plus(3),mult(10))  % {{3}5,{6}3,4,10}",
@@ -1560,6 +1566,25 @@ public class catInstSetTest extends AbstractInstSetTest {
         assertEquals(ObjmtronSerializer.parse("start(1).branch(map{2}(2).neg(),map(4).neg())").asCode().insts().get(1), branch);
         // the collapse is stream-transparent: -2 twice, -4 once
         assertEquals(ObjmtronSerializer.parse("{{2}-2,-4}"), code.apply(noobj()));
+    }
+
+    /**
+     * LIKE TERMS SHARE THEIR SPAN (Marko, 2026-11-10: the equality of instructions accounts for {b}inst{d}). The span
+     * is part of the function, so {@code {?}plus(1)} is no like term of {@code plus(1)}; the point is the multiplicity
+     * the law sums, so two {@code {?}plus(1)} are one {@code {?}plus{2}(1)}. Read as a point, the span made
+     * {@code 5.branch({?}plus(1),plus(1))} answer {@code {1,2}6}. Pinned by structure: a ranged span's run is open.
+     */
+    @Test
+    public void testBranchCollapseKeepsSpans() {
+        final Inst unlike = catRewrite(ObjmtronSerializer.parse("1.branch({?}plus(1),plus(1))")).insts().stream()
+                .filter(i -> BRANCH_INST_TID.equals(i.tid().basePath()))
+                .findFirst().orElseThrow();
+        assertEquals(2, unlike.args().count(), "a spanned member is no like term of the unspanned one");
+        final Inst last = catRewrite(ObjmtronSerializer.parse("1.branch({?}plus(1),{?}plus(1))")).insts().getLast();
+        final Inst like = BRANCH_INST_TID.equals(last.tid().basePath()) ? last.args().elements().findFirst().orElseThrow().asInst() : last;
+        assertEquals(PLUS_INST_TID, like.tid().basePath(), "two spanned like terms collapse to one");
+        assertEquals(cInt.MAYBE(), like.tid().b(), "the collapse keeps their span");
+        assertEquals(cInt.of(2), like.tid().d(), "and sums their points");
     }
 
     /**

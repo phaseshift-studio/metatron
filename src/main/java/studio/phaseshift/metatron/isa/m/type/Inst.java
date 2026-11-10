@@ -576,11 +576,12 @@ public interface Inst extends Call {
         }
 
         /**
-         * Two chain elements are the same operation AND the same operands — the guard for a law that relates an
-         * operation to itself (involution, idempotent, monoidic fold).
+         * Two chain elements are the same operation AND the same operands, as {b}inst{d} instructions (Marko,
+         * 2026-11-10): the span b is part of the function, so {@code {?}plus(1)} is not {@code plus(1)}. The point d is
+         * not: it is the multiplicity the like-term law sums, so {@code plus{4}(2)} and {@code plus(2)} are like terms.
          */
         public static boolean same(final Inst a, final Inst b) {
-            return sameOp(a, b) && a.args().equals(b.args());
+            return sameOp(a, b) && a.tid().b().equals(b.tid().b()) && a.args().equals(b.args());
         }
 
         private Helper() {
