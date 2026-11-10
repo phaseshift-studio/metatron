@@ -178,10 +178,8 @@ public class catRewrite {
                 // (2) the involution, idempotent and monoidic laws are /m's m_rewrite_table: their rules are the table
                 // that instruction carries as its own argument (M_REWRITE_TABLE).
 
-                // (2c) the absorbing law: an absorbing operation is a constant of the chain (f . g = f), so
-                // the pure run before it that hands it one obj per obj is dead code.
-                docWrap(InstSet.Helper.rewriter(rewriteTID("law_absorbing"),
-                        code -> PlanInterpreter.lower(ABSORBING_PLAN, code)), "the absorbing law \\(g \\cdot f = f\\): an operation whose declared process laws include \\(\\mathrm{absorbing}\\) is a constant of the chain, so the pure run before it that hands it one obj per obj is dead code -- a mapper of the carrier, a filter too when the absorber's dom is non-strict, and any pure operation when the absorber answers noobj -- \\(\\ldots \\cdot g \\cdot \\mathrm{zero} \\leadsto \\ldots \\cdot \\mathrm{zero}\\), \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\), while \\(\\{1,2,3\\}.\\mathrm{is}(\\mathrm{gt}(1)).\\mathrm{zero}\\) keeps its filter"),
+                // (2c) the absorbing law is /m's: the absorbing row of /m's rewrite table, {+}#·op ⇝ op, a spanned run of
+                // instructions before an absorbing op, where the op's gate admits it (pure, one obj per obj, the carrier kept).
 
                 // (2f) the poset law is /m's: the poset row of /m's rewrite table, is(op(a))·is(op(b)) ⇝ is(op(b)) where the
                 // comparison orders b past a, stated both ways round and for filter too.

@@ -125,6 +125,36 @@ public class CodeUpdateTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    /**
+     * AN INSTRUCTION'S SPAN IS A RUN OF INSTRUCTIONS (Marko, 2026-11-09: {@code {span}inst{point}}) — a pattern element
+     * with a ranged span takes as many instructions as its span allows, laid over the code as a lst type's entries are
+     * laid over its indices ({@link Code.Helper#bind}): {@code {+}} one or more, {@code {*}} any, {@code {?}} none or one.
+     * The longest run is tried first, and a run whose names do not bind gives way to a shorter one
+     * ({@link Call.Helper#update}).
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the longest run first: one change for the three plus, and the mult is no plus
+            "[plus(1).plus(2).plus(3).mult(4)]==[update([{+}plus(int::T)=>neg()])]                                    % [neg().mult(4)]",
+            // any instructions before a fixed one, and nothing after it
+            "[plus(1).neg().zero().plus(2)]==[update([{+}#({*}#::T).zero()=>zero()])]                                  % [zero().plus(2)]",
+            // {+} takes one at least, so an op with nothing before it is no run
+            "[zero().plus(2)]==[update([{+}#({*}#::T).zero()=>neg()])]                                                 % [zero().plus(2)]",
+            // {*} may take none, so the fixed elements either side of it meet ...
+            "[plus(1).mult(2)]==[update([plus(int::T).{*}#({*}#::T).mult(int::T)=>neg()])]                             % [neg()]",
+            // ... or it takes every instruction between them
+            "[plus(1).neg().neg().mult(2)]==[update([plus(int::T).{*}#({*}#::T).mult(int::T)=>neg()])]                 % [neg()]",
+            // {?} takes none or one, never two
+            "[plus(1).neg().mult(2)]==[update([plus(int::T).{?}neg().mult(int::T)=>neg()])]                            % [neg()]",
+            "[plus(1).neg().neg().mult(2)]==[update([plus(int::T).{?}neg().mult(int::T)=>neg()])]                      % [plus(1).neg().neg().mult(2)]",
+            // a name met twice must meet what it bound: n meets 1, 1 and then 2, so the run of three gives way to the two
+            // ones, and the 2 is a run of its own
+            "[plus(1).plus(1).plus(2)]==[update([{+}plus(int::T@n)=>mult(${*n})])]                                     % [mult(1).mult(2)]",
+    }, delimiter = '%')
+    public void testSpans(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
     private static final int THREADS = 10;
     private static final int ROUNDS = 25;
 

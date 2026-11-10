@@ -218,17 +218,28 @@ public interface Code extends Call {
          * it ({@code mult(2.0)} is {@code mult(real::T)}, as {@code mult(map(#::T@b).inv())} is), but a name declared inside
          * the code has nothing to bind in a value. A pattern that leaves one of its names unbound does not match: whatever
          * reads the binding would read nothing in that name's place.
+         * <p>
+         * AN INSTRUCTION'S SPAN IS A RUN OF INSTRUCTIONS (Marko, 2026-11-09: {@code {span}inst{point}}, as a type's span is a
+         * run of slots): {@code {+}#({*}#::T)} is one or more instructions of any name and arguments. A spanned pattern is laid
+         * over the code as a lst type's entries are laid over its indices ({@link Type.Helper#unfold}), and each instruction
+         * binds the slot it falls under, its span removed. A finite span unfolds in the parser, so only a ranged one
+         * reaches here.
          */
         public static Map<fURI, Obj> bind(final List<Inst> users, final List<Inst> patterns) {
             final Set<fURI> declared = new HashSet<>();
             final Map<fURI, fURI> generics = Inst.Helper.declarations(patterns, declared);
-            if (null == generics || users.size() != patterns.size())
+            if (null == generics)
+                return null;
+            final List<? extends Obj> slots = patterns.stream().allMatch(pattern -> pattern.tid().b().isOne())
+                    ? (users.size() == patterns.size() ? patterns : null) : Type.Helper.unfold(users, patterns);
+            if (null == slots)
                 return null;
             final Map<fURI, Obj> names = new LinkedHashMap<>();
             for (int i = 0; i < users.size(); i++) {
+                final Inst slot = slots.get(i).asInst();
                 // a span in the pattern is a run of args: it binds at the user's shape, as a declaration does at a call's
-                final Inst pattern = Inst.Helper.unfold(patterns.get(i), users.get(i));
-                if (null == pattern || !users.get(i).test(patterns.get(i)) || null == Inst.Helper.bindGenerics(noobj(), pattern, users.get(i), generics, names))
+                final Inst pattern = Inst.Helper.unfold(slot, users.get(i));
+                if (null == pattern || !users.get(i).test(slot) || null == Inst.Helper.bindGenerics(noobj(), pattern, users.get(i), generics, names))
                     return null;
             }
             return names.keySet().containsAll(declared) ? names : null;

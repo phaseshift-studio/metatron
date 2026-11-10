@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -48,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -1104,6 +1106,43 @@ public interface Inst extends Call {
             return null == prior || prior.equals(matched);
         }
 
+        /**
+         * COEFFICIENT VARIABLES BIND (Marko, 2026-11-09) — a pattern endpoint whose coefficient names its bounds
+         * ({@code X{a,b}::T} a minimum and a maximum, {@code X{a}} a point) binds each name to what the call states there,
+         * into {@code names} as a value name binds, so a name met twice must meet what it bound: {@code inst?X{a}<=Y{a}()}
+         * holds where the dom and rng are one point ({@code plus?int<=int}), not where they differ
+         * ({@code is?int{?}<=int}) or are no point. A variable binds only an endpoint the call states, and an unresolved
+         * instruction states none.
+         */
+        private static boolean coefficients(final Map<fURI, Obj> names, final Obj pattern, final Obj call) {
+            if (!pattern.isInst() || !call.isInst())
+                return true;
+            final fURI declared = pattern.tid();
+            final fURI stated = call.tid();
+            return coefficient(names, declared.hasDom() ? declared.dom().c() : null, stated.hasDom() ? stated.dom().c() : null)
+                    && coefficient(names, declared.hasRng() ? declared.rng().c() : null, stated.hasRng() ? stated.rng().c() : null);
+        }
+
+        /**
+         * One endpoint's coefficient variable bound to the coefficient the call states there ({@link #coefficients}).
+         */
+        private static boolean coefficient(final Map<fURI, Obj> names, final cInt variable, final cInt stated) {
+            if (null == variable || !variable.isVariable())
+                return true;
+            if (null == stated)
+                return false;
+            final BiPredicate<String, Long> bind = (name, bound) -> {
+                final Obj value = null == bound ? noobj() : jnt(bound);
+                final Obj prior = names.putIfAbsent(fURI.Singleton.f(name), value);
+                return null == prior || prior.equals(value);
+            };
+            // a point names both bounds alike, and binds only a point
+            if (null != variable.minName() && variable.minName().equals(variable.maxName()))
+                return null != stated.min() && stated.min().equals(stated.max()) && bind.test(variable.minName(), stated.min());
+            return (null == variable.minName() || bind.test(variable.minName(), stated.min()))
+                    && (null == variable.maxName() || bind.test(variable.maxName(), stated.max()));
+        }
+
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
             return bindGenerics(lhs, apiInst, userInst, new HashMap<>(), new HashMap<>());
         }
@@ -1120,7 +1159,7 @@ public interface Inst extends Call {
          */
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst, final Map<fURI, fURI> generics, final Map<fURI, Obj> names) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
-            if (!Helper.named(names, apiInst, userInst))
+            if (!Helper.named(names, apiInst, userInst) || !Helper.coefficients(names, apiInst, userInst))
                 return null;
             Inst apiInstTemp = apiInst;
             if (apiInstTemp.dom().typeId().one().isGeneric() && !lhs.isNoObj()

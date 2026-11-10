@@ -421,8 +421,9 @@ public class mInstSet extends AbstractInstSet {
     /**
      * THE /m REWRITE TABLE (Marko, 2026-11-09) — rows of {@code [lhs => rhs]} rules, applied in order. A row keyed by a LAW
      * states its rule in the name {@code op}, the instruction whose claim states the law: an involution pair drops out,
-     * {@code op·op ⇝ ε}, an idempotent pair or a fold of a fold is one, {@code op·op ⇝ op}, and two filters on one
-     * poset comparison are the filter on the stricter bound, {@code is(op(a))·is(op(b)) ⇝ is(op(b))}. A row keyed by a FORM
+     * {@code op·op ⇝ ε}, an idempotent pair or a fold of a fold is one, {@code op·op ⇝ op}, two filters on one
+     * poset comparison are the filter on the stricter bound, {@code is(op(a))·is(op(b)) ⇝ is(op(b))}, and an absorbing op
+     * swallows the run before it, {@code {+}#·op ⇝ op}, an instruction whose span is a run of instructions. A row keyed by a FORM
      * states it over a named hole that ranges over the form its operation declares: a mapping of a mapper is the
      * mapper, {@code map(#::T@f) ⇝ #::T@f}. A row keyed by anything else is PLAIN: its rule applies as it stands, with no
      * {@code op} to bind and no gate ({@code map_nest}, {@code else_after_count}), and a {@code ${...}} template in its
@@ -466,6 +467,14 @@ public class mInstSet extends AbstractInstSet {
                     MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))))),
                     MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null))))), instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("a"), null, null))))))),
                     MCode.code(List.of(instB(FILTER_INST_TID, lst(instB(f(OP), lst(T(ALL, f("b"), null, null)))))))),
+            // the ABSORBING law: an absorbing op is a constant of the chain, so a run before it that cannot change what it
+            // answers is dead code, …·g·zero ⇝ …·zero. The run is a SPANNED element (Marko, 2026-11-09: {span}inst{point}),
+            // {+}#{*}<=#{*}({*}#::T): one or more instructions of any name, endpoints and arguments, laid over the chain as
+            // a lst type's entries are laid over its indices. The longest run is tried first, and one the gate refuses (the
+            // seed, an effectful instruction, a filter before a strict op) gives way to a shorter one (Law.Helper's
+            // absorbing gate)
+            uri(Law.absorbing.name()), rec(MCode.code(List.of(instB(ALL.b(cInt.SOME()).dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(ALL.b(cInt.MAYBESOME()), null, null, null))), instB(f(OP), lst()))),
+                    MCode.code(List.of(instB(f(OP), lst())))),
             // a PLAIN row, keyed by its own name: no claimant to bind and no gate. count is total, so an else after it
             // is dead code
             uri("else_after_count"), rec(MCode.code(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst(T(ALL))))),
@@ -908,7 +917,7 @@ public class mInstSet extends AbstractInstSet {
                         // bound; a law's or a form's rule binds op to its claimants and holds where its gate does
                         docWrap(instC(M_ISA_REWRITE_TID.extend("m_rewrite_table").dom(CODE_TID).rng(CODE_TID.maybe()), lst(M_REWRITE_TABLE),
                                         (lhs, inst) -> Law.Helper.lawRemoval(lhs.asCode(), inst.arg(0).asRec())),
-                                "the rewrite rules carried as the instruction's own argument: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), two filters on one poset comparison are the stricter one, and a range is a skip and a take, each where the operation claims its form or law at the chain's carrier. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\)"),
+                                "the rewrite rules carried as the instruction's own argument: a mapping of a mapper is the mapper, \\(\\mathrm{map}(f) \\leadsto f\\), an involution pair drops out, \\(f \\cdot f \\leadsto \\varepsilon\\), an idempotent pair or a fold of a fold is one, \\(f \\cdot f \\leadsto f\\), two filters on one poset comparison are the stricter one, an absorbing operation swallows the pure run before it that hands it one obj per obj, \\(g \\cdot f \\leadsto f\\), and a range is a skip and a take, each where the operation claims its form or law at the chain's carrier. e.g. \\(\\mathrm{map}(\\mathrm{neg}) \\leadsto \\mathrm{neg}\\), \\(\\mathrm{neg} \\cdot \\mathrm{neg} \\leadsto \\varepsilon\\), \\(\\mathrm{ucase} \\cdot \\mathrm{ucase} \\leadsto \\mathrm{ucase}\\), \\(\\mathrm{sum} \\cdot \\mathrm{sum} \\leadsto \\mathrm{sum}\\), \\((x + 3) \\cdot \\mathrm{zero} \\leadsto x \\cdot \\mathrm{zero}\\)"),
 
                         // THE INVERSE LAW: group_theory states op(a)·op(inv(a)) ⇝ ε and op(inv(a))·op(a) ⇝ ε, every group
                         // instance a carrier declares binds them (Law.Helper.rules), and the plan cancels an adjacent pair

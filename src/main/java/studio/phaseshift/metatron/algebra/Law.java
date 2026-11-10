@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.algebra;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.TriFunction;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.mach.type.Machine;
 import studio.phaseshift.metatron.isa.m.mach.type.Processor;
@@ -29,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.InstBuilder;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.carriers;
+import static studio.phaseshift.metatron.isa.m.mach.type.compiler.Rewriter.Helper.contracts;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -109,7 +110,7 @@ public enum Law {
     /**
      * the effect axis: the result is a function of the lhs and args alone, and applying it changes nothing else — no
      * write, no print, no spawn. Declared, never inferred: an instruction that does not declare {@code pure} is
-     * effectful, so a rule that moves, drops or replicates code ({@code law_absorbing}'s swallowed prefix,
+     * effectful, so a rule that moves, drops or replicates code (the absorbing row's swallowed prefix,
      * {@code law_shard}'s floatable run) admits only declared-pure instructions
      */
     pure,
@@ -270,7 +271,7 @@ public enum Law {
             case blocked -> "cannot float past a barrier — a reduce anchors the coefficient in place";
             case pure -> "the effect axis: the result is a function of the lhs and args alone, and applying it changes "
                     + "nothing else — no write, no print, no spawn. Declared, never inferred: an instruction that does not "
-                    + "declare pure is effectful, so a rule that moves, drops or replicates code (law_absorbing's swallowed "
+                    + "declare pure is effectful, so a rule that moves, drops or replicates code (the absorbing row's swallowed "
                     + "prefix, law_shard's floatable run) admits only declared-pure instructions";
             case action -> "a monoid/group acting on a carrier — f(gh)x = f(g)f(h)x";
             case prime -> "an atomic/indecomposable element — no nontrivial factorization";
@@ -1218,18 +1219,19 @@ public enum Law {
          * run whose instructions carry a coefficient stays: the rule's terms are unscaled, and {@code f{2}·f{2}} is no
          * {@code f·f}.
          */
-        public static Code rewrite(final Code code, final List<Rec> rules, final BiPredicate<Code, Integer> admits) {
+        public static Code rewrite(final Code code, final List<Rec> rules, final TriFunction<Code, Integer, Integer, Boolean> admits) {
             Code out = code;
             for (final Rec rule : rules) {
                 final Code scanned = out;
                 final List<Inst> pattern = rule.elements().findFirst().map(lhs -> lhs.first().asCall().insts()).orElse(List.of());
-                // a rule whose head op the chain does not hold cannot match it, so it is not scanned at all
-                if (pattern.isEmpty() || scanned.insts().stream().noneMatch(inst -> inst.tid().basePath().test(pattern.getFirst().tid().basePath())))
+                // a rule naming an op the chain does not hold cannot match it, so it is not scanned at all: every element a
+                // run must take ({+}# takes one at least, {*}# may take none) tests an instruction of the chain
+                if (pattern.isEmpty() || !pattern.stream().allMatch(element -> element.tid().b().isZeroable()
+                        || scanned.insts().stream().anyMatch(inst -> inst.tid().basePath().test(element.tid().basePath()))))
                     continue;
-                final int window = pattern.size();
-                final List<Inst> next = Call.Helper.update(scanned.insts(), rule, start ->
-                        scanned.insts().subList(start, start + window).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
-                                && admits.test(scanned, start));
+                final List<Inst> next = Call.Helper.update(scanned.insts(), rule, (start, length) ->
+                        scanned.insts().subList(start, start + length).stream().allMatch(inst -> cInt.ONE().equals(inst.c()))
+                                && admits.apply(scanned, start, length));
                 out = next.equals(scanned.insts()) ? scanned : code(next);
             }
             return out;
@@ -1247,7 +1249,9 @@ public enum Law {
          *   <li>{@code idempotent} {@code op·op ⇝ op}, where it is declared idempotent there;</li>
          *   <li>{@code monoidic} {@code op·op ⇝ op}, on a fold ({@link #isFold});</li>
          *   <li>{@code poset} {@code is(op(a))·is(op(b)) ⇝ is(op(b))}, where {@code b} is the stricter bound
-         *       ({@link #isStricter}).</li>
+         *       ({@link #isStricter});</li>
+         *   <li>{@code absorbing} {@code {+}#·op ⇝ op}, a run of one or more instructions of any name and arguments before
+         *       the op, where the op absorbs it there ({@link #isAbsorbed}).</li>
          * </ul>
          * A law the table names but no gate knows is not applied. A row keyed by a FORM ({@link Inst.Form}) states its rules
          * over named holes, and its holes range over the form: a matched run changes only where the operation of everything
@@ -1269,12 +1273,13 @@ public enum Law {
                 final Inst.Form form = Arrays.stream(Inst.Form.values()).filter(candidate -> candidate.name().equals(key)).findFirst().orElse(null);
                 if (null != law) {
                     // a gate per bound rule, built from the rule's own pattern: the poset gate reads the bounds its run bound
-                    final Function<List<Inst>, BiPredicate<Code, Integer>> gate = switch (law) {
-                        case involution -> pattern -> (scanned, start) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
-                        case idempotent -> pattern -> (scanned, start) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
-                        case monoidic -> pattern -> (scanned, start) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
-                        case poset -> pattern -> (scanned, start) -> isStricter(Code.Helper.bind(scanned.insts().subList(start, start + pattern.size()), pattern),
+                    final Function<List<Inst>, TriFunction<Code, Integer, Integer, Boolean>> gate = switch (law) {
+                        case involution -> pattern -> (scanned, start, length) -> isInvolution(scanned.insts().get(start), carriers(scanned).get(start));
+                        case idempotent -> pattern -> (scanned, start, length) -> declares(scanned.insts().get(start), carriers(scanned).get(start), Law.idempotent);
+                        case monoidic -> pattern -> (scanned, start, length) -> isFold(scanned.insts().get(start), carriers(scanned).get(start));
+                        case poset -> pattern -> (scanned, start, length) -> isStricter(Code.Helper.bind(scanned.insts().subList(start, start + length), pattern),
                                 scanned.insts().get(start), carriers(scanned).get(start));
+                        case absorbing -> pattern -> Helper::isAbsorbed;
                         default -> null;
                     };
                     if (null != gate)
@@ -1283,14 +1288,14 @@ public enum Law {
                 } else if (null != form)
                     for (final Rel rule : entry.second().asRec().<Rel>elements().toList()) {
                         final List<Inst> pattern = rule.first().asCall().insts();
-                        out = rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start) -> {
-                            final Map<fURI, Obj> captured = Code.Helper.bind(scanned.insts().subList(start, start + pattern.size()), pattern);
+                        out = rewrite(out, List.of(rec(rule.first(), rule.second())), (scanned, start, length) -> {
+                            final Map<fURI, Obj> captured = Code.Helper.bind(scanned.insts().subList(start, start + length), pattern);
                             return null != captured && !captured.isEmpty() && captured.values().stream().allMatch(hole -> form == InstBuilder.declaredForm(
                                     hole.isInst() ? hole.asInst().tid() : hole.isUri() ? Machine.current().memory().alignPrefix(hole.uriValue()) : null));
                         });
                     }
                 else
-                    out = rewrite(out, List.of(entry.second().asRec()), (scanned, start) -> true);
+                    out = rewrite(out, List.of(entry.second().asRec()), (scanned, start, length) -> true);
             }
             return out;
         }
@@ -1332,6 +1337,51 @@ public enum Law {
                 return false;
             final Inst.Form form = Inst.Form.of(inst.tid(declared.atDirect(OBJ).tid()));
             return (Inst.Form.reducer == form || Inst.Form.join == form) && declares(inst, carrier, Law.monoidic);
+        }
+
+        /**
+         * THE ABSORBING GATE — an absorbing op is a constant of the chain, so the run before it that cannot change what it
+         * answers is dead code, {@code …·g·zero ⇝ …·zero}. The run is the rule's {@code {+}#}, which a rewrite takes as long
+         * as it can and shortens where this refuses it ({@link Call.Helper#update}), and never holds the seed: the chain's
+         * initial form, read off the contract its typing resolved it to. The op must be absorbing at the carrier flowing
+         * into it, and dropping each instruction of the run must not change what the op answers, read off declarations
+         * alone, so an undeclared op (no legible form) is never dropped:
+         * <ul>
+         *   <li><b>pure</b> — the instruction declares {@link Law#pure}. One that does not is effectful, so an undeclared
+         *       op (side, print, to) stops the run.</li>
+         *   <li><b>multiplicity</b> — a terminal op (rng {@code {0}}) answers noobj whatever reaches it, so any pure
+         *       instruction goes. Any other answers a constant PER OBJ, so the instruction must hand it one obj per obj: a
+         *       {@code mapper}, or a {@code filter} when the op is non-strict — its {@code {?}} dom fires on the noobj the
+         *       filter leaves, while a strict op ({@code {1}}, {@code {+}} dom) never sees it
+         *       ({@code {1,2,3}.is(gt(1)).zero()} is {@code {2}0}, and {@code {1,2,3}.sum().zero()} is {@code 0}).</li>
+         *   <li><b>carrier</b> — the op's law was read for the chain's carrier, so the instruction must map its own carrier
+         *       to itself: dom and rng both the carrier's base type, or both the one generic ({@code A ⇒ A}). Both ends,
+         *       because a declaration is found by EITHER end matching the carrier ({@code as?int<=str} answers an int
+         *       carrier too), and {@code 5.as(str::T).zero()} is str's zero, {@code ''}, not int's.</li>
+         * </ul>
+         * A scaled instruction is no term of a rule ({@link #rewrite}), so a run holding one, or a scaled op, stays.
+         */
+        private static boolean isAbsorbed(final Code scanned, final int start, final int length) {
+            final List<Type> carriers = carriers(scanned);
+            final int last = start + length - 1;
+            final Inst seed = contracts(scanned).getFirst();
+            if ((0 == start && null != seed && seed.isInitial()) || !declares(scanned.insts().get(last), carriers.get(last), Law.absorbing))
+                return false;
+            final fURI op = declared(scanned.insts().get(last).tid().basePath(), carriers.get(last)).atDirect(OBJ).tid();
+            final Long least = op.dom().c().min();
+            return IntStream.range(start, last).allMatch(i -> {
+                final Rec prior = declared(scanned.insts().get(i).tid().basePath(), carriers.get(i));
+                if (!declares(prior, Law.pure))
+                    return false;
+                if (op.rng().c().isZero())
+                    return true;
+                final fURI tid = prior.atDirect(OBJ).tid();
+                final fURI dom = tid.dom().basePath();
+                if (!dom.equals(tid.rng().basePath()) || !(dom.isGeneric() || (null != carriers.get(i).vid() && dom.equals(carriers.get(i).vid().basePath()))))
+                    return false;
+                final Inst.Form form = Inst.Form.of(scanned.insts().get(i).tid(tid));
+                return Inst.Form.mapper == form || (Inst.Form.filter == form && (null == least || 0L >= least));
+            });
         }
 
         /**

@@ -91,7 +91,6 @@ public class catLiveness {
         return switch (rewrite.tid().basePath().name()) {
             case "theory_unit_removal" -> profile.unit;
             case "m_rewrite_table" -> profile.adjInvolution || profile.adjIdempotent || profile.adjMonoidFold;
-            case "law_absorbing" -> profile.absorbing;
             case "inverse_cancellation" -> profile.adjInverse;
             case "branch_collapse" -> profile.repeatedTerms;
             case "branch_inline" -> profile.oneTerm;
@@ -116,7 +115,6 @@ public class catLiveness {
         private boolean adjIdempotent;   // an adjacent same-op pair declaring idempotent
         private boolean adjMonoidFold;   // an adjacent same-op reducer/join pair declaring monoidic
         private boolean adjInverse;      // an adjacent pair on a declared opposing edge
-        private boolean absorbing;       // an absorbing op with live code before it
         private boolean repeatedTerms;   // an occurrence of the additive witness with two or more members (like terms need a pair)
         private boolean oneTerm;         // an occurrence of the additive witness with exactly one member
         private boolean shard;           // a seed + a reducer with a combiner (law_shard's anchor)
@@ -181,8 +179,6 @@ public class catLiveness {
                             profile.repeatedTerms = true;
                     }
                 }
-                if (pastSeed && laws.contains(Law.absorbing.name()))
-                    profile.absorbing = true;
                 if (pastSeed && null != name && name.equals(priorName)) {
                     // the pair's carrier is its first member's, as the rule reads it
                     if (priorCarrierInverse || laws.contains(Law.involution.name()))

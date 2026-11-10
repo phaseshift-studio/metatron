@@ -958,7 +958,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * it folds each law it carries where the operation claims the law at the chain's carrier. A pair that is not adjacent,
      * or not one law's claimant, stays. A PLAIN row ({@code else_after_count}) applies as it stands: the else after a
      * total count drops whatever its fallback, and only as the run the rule states, so an else before the count, or one
-     * apart from it, stays. Each row: the chain % the chain the instruction leaves.
+     * apart from it, stays. The absorbing row's run is a SPANNED element, so it is as long as the gate admits, not a fixed
+     * pair. Each row: the chain % the chain the instruction leaves.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -983,6 +984,14 @@ public class catInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4,5}.range(1,4)         % start({1,2,3,4,5}).skip(1).take(3)",
             // a computed bound is no int, so the window stays range
             "{1,2,3,4,5}.range(1,plus(3))   % start({1,2,3,4,5}).range(1,plus(3))",
+            // an absorbing op swallows the run before it, the longest the gate admits, and never the seed
+            "5.plus(3).zero()               % start(5).zero()",
+            "5.plus(1).zero().plus(2).zero() % start(5).zero()",
+            "5.zero()                       % start(5).zero()",
+            "{1,2,3}.is(gt(1)).zero()       % start({1,2,3}).is(gt(1)).zero()",
+            // a scaled instruction is no term of the rule, so it stops the run. Shape only: evaluated, zero drops a bulked
+            // obj's coefficient today ({2}8.zero() is 0, where {2}8.neg() is {2}-8), so the chain answers 0 either way
+            "5.plus{2}(3).plus(1).zero()    % start(5).plus{2}(3).zero()",
     }, delimiter = '%')
     void testTheRewriteTableIsItsInstructionsArgument(final String code, final String expected) {
         final Inst table = Machine.current().instset().rewrites().stream()
@@ -996,7 +1005,8 @@ public class catInstSetTest extends AbstractInstSetTest {
      * A LAW'S LOCAL EQUATIONS ARE DATA (Marko, 2026-11-09) — /m's rewrite table ({@code M_REWRITE_TABLE}) states each
      * law's rule in the name {@code op}, and {@link Law.Helper#claimed} binds it to every instruction whose claim states the
      * law, one hole per argument slot pinning the pair's operands equal: {@code involution} {@code op·op ⇝ ε},
-     * {@code idempotent} and {@code monoidic} {@code op·op ⇝ op}. The theories
+     * {@code idempotent} and {@code monoidic} {@code op·op ⇝ op}, and {@code absorbing} {@code {+}#·op ⇝ op}, whose
+     * {@code {+}#} is a spanned element, a run of one or more instructions of any name and arguments. The theories
      * add their rules as each instance binds them ({@link Law.Helper#rules}): monoid_theory's {@code op(id) ⇝ ε}
      * (code's {@code id() ⇝ ε} among them, since composition is adjacency) and group_theory's
      * {@code op(a)·op(inv(a)) ⇝ ε} and {@code op(inv(a))·op(a) ⇝ ε}. The {@code mapper} row's {@code map(#::T@f) ⇝ #::T@f}
@@ -1052,6 +1062,14 @@ public class catInstSetTest extends AbstractInstSetTest {
             "map_nest    % map(map(sum()))               % map(sum())",
             // a computed change: the template reads the names the run bound
             "range_skip_take % range(2,5).plus(1)        % skip(2).take(3).plus(1)",
+            // a spanned element, {+}#, is a run of one or more instructions of any name and arguments: ungated, the op
+            // swallows the longest run before it, an absorbing op of its own kind among them, and nothing after it
+            "absorbing   % plus(1).neg().zero()          % zero()",
+            "absorbing   % zero().plus(1).zero()         % zero()",
+            "absorbing   % plus(1).zero().neg()          % zero().neg()",
+            "absorbing   % plus(1).end()                 % end()",
+            // {+} takes one at least, so a lone op has no run
+            "absorbing   % zero()                        % zero()",
     }, delimiter = '%')
     void testALawsEquationsAreData(final String table, final String chain, final String expected) {
         List<Inst> out = ObjmtronSerializer.<Call>parse(chain).insts();
@@ -1088,9 +1106,11 @@ public class catInstSetTest extends AbstractInstSetTest {
     }
 
     /**
-     * {@code law_absorbing} — an operation declared {@code absorbing} is a constant of the chain
-     * ({@code f ∘ g = f}), so the run before it is dead code — but only the run that cannot change what it answers:
-     * a pure instruction that hands it one obj per obj (a mapper of its carrier) and keeps that carrier.
+     * THE ABSORBING ROW of /m's rewrite table, {@code {+}#·op ⇝ op} — an operation declared {@code absorbing} is a constant
+     * of the chain ({@code f ∘ g = f}), so the run before it is dead code — but only the run that cannot change what it
+     * answers: a pure instruction that hands it one obj per obj (a mapper of its carrier) and keeps that carrier. The run
+     * is a spanned element, tried longest first and shortened where the gate refuses it, and a scaled instruction is no
+     * term of the rule.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -1108,6 +1128,10 @@ public class catInstSetTest extends AbstractInstSetTest {
             "5.plus(1).is(gt(0)).plus(2).zero()   % start(5).plus(1).is(gt(0)).zero()   % 0",
             // every absorber takes its own run, in one pass
             "5.plus(1).zero().plus(2).zero()      % start(5).zero()                     % 0",
+            // the longest run holds the effectful side, so the run after it is taken
+            "5.plus(1).side(plus(1)).plus(2).zero()  % start(5).plus(1).side(plus(1)).zero()  % 0",
+            // a scaled instruction is no term of the rule, so a scaled absorber stays
+            "5.plus(3).zero{2}()                  % start(5).plus(3).zero{2}()          % {2}0",
     }, delimiter = '%')
     public void testAbsorbing(final String code, final String expected, final String expectedResult) throws Exception {
         rewriteAssert(code, expected, expectedResult);

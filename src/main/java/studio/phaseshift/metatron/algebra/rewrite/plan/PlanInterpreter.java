@@ -169,7 +169,7 @@ public final class PlanInterpreter {
         if (cut.declares(Law.poset))
             return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.poset.name()));
         if (cut.declares(Law.absorbing))
-            return absorbingRemoval(code);
+            return Law.Helper.lawRemoval(code, M_REWRITE_TABLE, uri(Law.absorbing.name()));
         return code;
     }
 
@@ -673,7 +673,7 @@ public final class PlanInterpreter {
         Code out = code;
         for (final Rec unit : Law.Helper.rules(MONOID_THEORY_TID)) {
             final Inst term = unit.elements().findFirst().orElseThrow().first().asCall().insts().getFirst();
-            out = rewrite(out, List.of(unit), (scanned, start) -> term.args().equals(scanned.insts().get(start).args())
+            out = rewrite(out, List.of(unit), (scanned, start, length) -> term.args().equals(scanned.insts().get(start).args())
                     && (!term.args().isEmpty() || 1 < scanned.insts().size()));
         }
         return out;
@@ -712,7 +712,7 @@ public final class PlanInterpreter {
      */
     private static Code inverseCancellation(final Code code) {
         return rewrite(code, Law.Helper.rules(GROUP_THEORY_TID),
-                (scanned, start) -> isInverseOf(scanned.insts().get(start), scanned.insts().get(start + 1), carriers(scanned).get(start)));
+                (scanned, start, length) -> isInverseOf(scanned.insts().get(start), scanned.insts().get(start + 1), carriers(scanned).get(start)));
     }
 
     /**
@@ -730,80 +730,6 @@ public final class PlanInterpreter {
                 && a.args().equals(b.args())
                 && a.args().elements().noneMatch(arg -> TheoryHelper.instances(arg.type()).jvm().values().stream()
                 .anyMatch(block -> block.isRec() && arg.equals(block.asRec().at(ZERO))));
-    }
-
-    /**
-     * The absorbing law (local): an absorbing op is a constant of the chain, so the run before it that cannot change
-     * what it answers is dead code — {@code …·g·zero ↦ …·zero}. Each absorbing op swallows its predecessors back to
-     * the first one that is not {@link #absorbable}, and never the seed — the chain's initial form, read off the
-     * contract its typing resolved it to.
-     */
-    private static Code absorbingRemoval(final Code code) {
-        final List<Inst> insts = code.insts();
-        final List<Type> carriers = carriers(code);
-        final Inst initial = insts.isEmpty() ? null : contracts(code).getFirst();
-        final int seed = null != initial && initial.isInitial() ? 1 : 0;
-        final List<Integer> kept = new ArrayList<>(insts.size());   // positions, so each reads its own carrier
-        for (int i = 0; i < insts.size(); i++) {
-            final Inst inst = insts.get(i);
-            if (i >= seed && declares(inst, carriers.get(i), Law.absorbing)) {
-                final fURI absorber = Law.Helper.declared(inst.tid().basePath(), carriers.get(i)).atDirect(OBJ).tid();
-                while (kept.size() > seed && absorbable(insts.get(kept.getLast()), absorber, carriers.get(kept.getLast())))
-                    kept.removeLast();
-            }
-            kept.add(i);
-        }
-        return kept.size() == insts.size() ? code : code(kept.stream().map(insts::get).toList());
-    }
-
-    /**
-     * Whether an absorbing op may swallow the instruction before it: removing {@code prior} must not change what the
-     * absorber answers. Read off declarations alone, so an undeclared op (no legible form) is never swallowed:
-     * <ul>
-     *   <li><b>pure</b> — {@code prior} declares {@link Law#pure}. An instruction that does not is effectful, so
-     *       an undeclared op (side, print, to) stops the run.</li>
-     *   <li><b>multiplicity</b> — a terminal absorber (rng {@code {0}}) answers noobj whatever reaches it, so any
-     *       pure op goes. Any other absorber answers a constant PER OBJ, so {@code prior} must hand it one obj per
-     *       obj: a coefficient-one {@code mapper}, or a {@code filter} when the absorber is non-strict — its
-     *       {@code {?}} dom fires on the noobj the filter leaves, while a strict absorber never sees it
-     *       ({@code {1,2,3}.is(gt(1)).zero()} is {@code {2}0}, and {@code {1,2,3}.sum().zero()} is {@code 0}).</li>
-     *   <li><b>carrier</b> — the absorber's law was read for the chain's carrier, so {@code prior} must map that
-     *       carrier to itself: {@code 5.as(str::T).zero()} is str's zero, {@code ''}, not int's.</li>
-     * </ul>
-     */
-    private static boolean absorbable(final Inst prior, final fURI absorber, final Type carrier) {
-        final Rec declared = Law.Helper.declared(prior.tid().basePath(), carrier);
-        if (!declares(declared, Law.pure))
-            return false;
-        if (absorber.rng().c().isZero())
-            return true;
-        final fURI tid = declared.atDirect(OBJ).tid();
-        if (!cInt.ONE().equals(prior.c()) || !isEndo(tid, carrier))
-            return false;
-        final Inst.Form form = Inst.Form.of(prior.tid(tid));
-        return Inst.Form.mapper == form || (Inst.Form.filter == form && !isStrict(absorber));
-    }
-
-    /**
-     * Whether the declared op maps the chain's carrier to itself — dom and rng both the carrier's base type, or both
-     * the one generic ({@code A ⇒ A}). Both ends, because the declaration was found by EITHER end matching the
-     * carrier: {@code as?int<=str} answers an int carrier too.
-     */
-    private static boolean isEndo(final fURI declared, final Type carrier) {
-        final fURI dom = declared.dom().basePath();
-        final fURI rng = declared.rng().basePath();
-        if (!dom.equals(rng))
-            return false;
-        return dom.isGeneric() || (null != carrier.vid() && dom.equals(carrier.vid().basePath()));
-    }
-
-    /**
-     * Whether the declared op is strict — its dom excludes noobj ({@code {1}}, {@code {+}}), so the noobj a filter
-     * leaves never fires it; a {@code {?}} or {@code {*}} dom fires on it.
-     */
-    private static boolean isStrict(final fURI declared) {
-        final Long min = declared.dom().c().min();
-        return null != min && 0L < min;
     }
 
     /**
@@ -825,7 +751,7 @@ public final class PlanInterpreter {
         Code out = code;
         for (final Map.Entry<fURI, Rec> d : Law.Helper.derivations().entrySet())
             out = rewrite(out, List.of(rec(d.getValue().atDirect(uri(RHS)).asCode(), d.getValue().atDirect(uri(LHS)).asCode())),
-                    (scanned, start) -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
+                    (scanned, start, length) -> Law.Helper.selects(carriers(scanned).get(start), d.getKey()));
         return out;
     }
 
