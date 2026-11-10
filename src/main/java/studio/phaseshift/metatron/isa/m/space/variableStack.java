@@ -42,7 +42,9 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -99,6 +101,13 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
 
     @Override
     public Obj read(final fURI vid) {
+        // A TRAILING '/' NAMES THE RELATION from an address to its obj (Marko, 2026-11-10), keyed by the full relative
+        // address as a space keys it: z/0/ is the one rel z/0 => *z/0, the node read as any node is
+        if (vid.isBranch() && !vid.hasPattern()) {
+            final fURI node = vid.asNode();
+            final Obj obj = this.read(node);
+            return obj.isNoObj() ? obj : rel(node.toUri(), obj);
+        }
         for (int i = this.sjvm().size() - 2; i >= 0; i--) {
             final Poly<?, ?> layer = this.sjvm().get(i);
             if (vid.path().getFirst().equals(ARGS_FURI.toString()))
@@ -108,7 +117,14 @@ public class variableStack extends AbstractSpace<Stack<Poly<?, ?>>> {
             if (!o.isNoObj())
                 return o;
         }
-        return rootFrame().at(vid.toUri());
+        // ... and a wildcard's z/+/ is each match at its own address (z/0 => 1): the frame is unrolled from the
+        // relative root (the empty address) as a space unrolls a poly. A value-level at() walk keys its rels by the
+        // positions inside the value (0 => 1), because a value has no address
+        return vid.isBranch()
+                ? objs(Space.Helper.unrollPoly(fURI.Singleton.empty(), rootFrame(), vid.qLess().resolve().asNode()).stream()
+                        .filter(id -> !id.obj().isNoObj())
+                        .map(id -> rel(id.furi().toUri(), id.obj())))
+                : rootFrame().at(vid.toUri());
     }
 
     @Override

@@ -317,10 +317,13 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                     return (OBJ) noobj();
                 final String step = key.uriValue().segments().getFirst();
                 final boolean isBranch = key.uriValue().isBranch();
+                // a trailing '/' asks for rels at the LAST step only: an earlier step hands its elements on, and the
+                // walk below carries the branch to the step it belongs to (+/+/ is each inner lst's entries)
+                final boolean rels = isBranch && key.uriValue().segmentLength() == 1;
                 Stream<Obj> result;
                 // LOG.info("step: %s", step);
                 if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
-                    result = isBranch ? (Stream) alst.indexedStream() : alst.elements();
+                    result = rels ? (Stream) alst.indexedStream() : alst.elements();
                 } else {
                     if (!CommonUtil.isInt(step))
                         return (OBJ) noobj();
@@ -328,7 +331,7 @@ public interface Lst extends Poly<Lst, List<Obj>> {
                     final Int k = jnt(Long.parseLong(step));
                     if (alst.jvm().size() <= k.intValue().intValue())
                         return (OBJ) noobj();
-                    result = isBranch ? Stream.of(rel(uri(step),
+                    result = rels ? Stream.of(rel(uri(step),
                             autoToggle(alst, alst.jvm().get(k.intValue().intValue()), doAuto))) :
                             Stream.of(autoToggle(alst, alst.jvm().get(k.intValue().intValue()), doAuto));
                 }

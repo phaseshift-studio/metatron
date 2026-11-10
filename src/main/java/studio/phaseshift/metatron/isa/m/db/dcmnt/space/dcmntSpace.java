@@ -519,11 +519,12 @@ public class dcmntSpace extends AbstractDataPathSpace<MongoClient> implements Sc
 
             final DataPath dp = this.resolveDataPath(alignedPattern);
 
-            // A bare branch deref (`…/field/`, no wildcard) must materialize its children, so
-            // return empty and let resolveRead's branch-nesting build `branch => [child =>
-            // value, …]`.  The `!hasPattern()` is essential: the >> walk itself issues
-            // branch-shaped patterns (`…/+/`) that must still reach field-level access to
-            // unroll their descendants.
+            // A bare branch (`…/field/`, no wildcard) is resolveRead's to answer: it names the
+            // relation `node => *node`, and when the node holds nothing itself, resolveRead
+            // nests the entries written below it (`node => [child => value, …]`). So the
+            // pattern itself reads as empty here. The `!hasPattern()` is essential: the >>
+            // walk issues branch-shaped patterns (`…/+/`) that must still reach field-level
+            // access to unroll their descendants.
             if (alignedPattern.isBranch() && !alignedPattern.hasPattern())
                 return IteratorUtil.of();
 

@@ -302,30 +302,31 @@ public interface Space extends Addressable, Rec, Closeable {
         }
 
         public static Obj resolveRead(final Space space, final fURI patternPre, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
-            final Set<UriObj> listing = new HashSet<>();
             final fURI pattern = patternPre;//.qLessExceptDomRng();
+            // A TRAILING '/' ON AN ADDRESS NAMES THE RELATION from it to its obj (Marko, 2026-11-10): x/ is the one rel
+            // x => *x, the node read as any node is, and never x's entries, which are x/+/ (each at its own address).
+            // An address that holds nothing itself relates to the entries written below it, nested into a rec: a space
+            // that keeps no container of its own (tble, dcmnt) answers those only to a pattern
+            if (pattern.isBranch() && !pattern.hasPattern()) {
+                final fURI node = pattern.asNode();
+                final Obj obj = resolveRead(space, node, directReader);
+                final Rec nestRec = rec();
+                if (obj.isNoObj())
+                    directReader.apply(pattern.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(kv ->
+                            nestRec.at(kv.furi().pretract(node.segmentLength()).toUri(), kv.obj(), MUTABLE));
+                return !obj.isNoObj() ? rel(uri(node), obj) : nestRec.isEmpty() ? obj : rel(uri(node), nestRec);
+            }
+            final Set<UriObj> listing = new HashSet<>();
             directReader.apply(pattern).forEachRemaining(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
             if (listing.isEmpty()) {
-                if (pattern.isBranch() && !pattern.hasPattern()) {
-                    final Rec nestRec = rec();
-                    directReader.apply(pattern.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(kv -> {
-                        if (CommonUtil.isInt(kv.furi().name()))
-                            listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
-                        else
-                            nestRec.at(kv.furi().pretract(pattern.segmentLength()).toUri(), kv.obj(), MUTABLE);
-                    });
-                    if (!nestRec.isEmpty())
-                        listing.add(UriObj.of(uri(pattern), nestRec));
-                } else {
-                    /*if(pattern.hasPattern()) {
-                        directReader.apply(pattern.retractPattern()).forEachRemaining(kv -> {
-                            listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
-                        });
-                    }*/
-                    directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
+                /*if(pattern.hasPattern()) {
+                    directReader.apply(pattern.retractPattern()).forEachRemaining(kv -> {
                         listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
                     });
-                }
+                }*/
+                directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
+                    listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
+                });
             }
             if (listing.isEmpty() || pattern.hasPattern("#")) {
                 Helper.locateBasePoly(space, pattern.basePath()).forEach(base -> {
