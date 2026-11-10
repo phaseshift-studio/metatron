@@ -27,19 +27,25 @@ import java.util.function.LongBinaryOperator;
 public class cInt implements C<Long, cInt> {
     private final Long min;
     private final Long max;
+    // a COEFFICIENT VARIABLE names a bound rather than stating it (null when the bound is stated)
+    private final String minName;
+    private final String maxName;
 
     private cInt(final long min, final long max) {
-        if (min > max)
-            throw MTronException.of("c min is greater than c max: %s > %s", min, max);
-        this.min = min;
-        this.max = max;
+        this((Long) min, (Long) max);
     }
 
     private cInt(final Long min, final Long max) {
+        this(min, max, null, null);
+    }
+
+    private cInt(final Long min, final Long max, final String minName, final String maxName) {
         if (null != min & null != max && min > max)
             throw MTronException.of("c min is greater than c max: %s > %s", min, max);
         this.min = min;
         this.max = max;
+        this.minName = minName;
+        this.maxName = maxName;
     }
 
     public static final cInt C_ZERO = cInt.of(0L);
@@ -102,9 +108,22 @@ public class cInt implements C<Long, cInt> {
         return cInt.of(null == exact ? null : exact.longValue());
     }
 
+    /**
+     * A coefficient body. A bound may be NAMED rather than stated (Marko, 2026-11-09): {@code {a}} names a point, both
+     * bounds alike, {@code {a,b}} a minimum and a maximum, and a stated bound may sit beside a named one ({@code {1,b}}).
+     * A named bound is unbounded, so the variable admits any coefficient there, and a pattern's binder binds each name
+     * to what a call states ({@code Inst.Helper.bindGenerics}): {@code inst?X{a}<=Y{a}()} is an instruction whose dom
+     * and rng are one point. Arithmetic on a variable answers an unknown, without the names.
+     */
     public static cInt of(final String parse) {
         if (null == parse || parse.isEmpty())
             return cInt.ONE();
+        final int comma = parse.indexOf(',');
+        final String low = -1 == comma ? parse : parse.substring(0, comma);
+        final String high = -1 == comma ? parse : parse.substring(comma + 1);
+        if (isName(low) || isName(high))
+            return new cInt(isName(low) || low.isEmpty() ? null : Long.valueOf(low), isName(high) || high.isEmpty() ? null : Long.valueOf(high),
+                    isName(low) ? low : null, isName(high) ? high : null);
         else if (parse.equals("*"))
             return cInt.of(0L, null);
         else if (parse.equals(",") || parse.equals("**"))
@@ -136,6 +155,34 @@ public class cInt implements C<Long, cInt> {
     }
 
     static final Long LONG_ZERO = 0L;
+
+    /**
+     * Whether a bound is a name: a letter, then letters, digits or underscores.
+     */
+    private static boolean isName(final String bound) {
+        return !bound.isEmpty() && Character.isLetter(bound.charAt(0)) && bound.chars().allMatch(c -> Character.isLetterOrDigit(c) || '_' == c);
+    }
+
+    /**
+     * Whether a bound is named rather than stated ({@link #of(String)}).
+     */
+    public boolean isVariable() {
+        return null != this.minName || null != this.maxName;
+    }
+
+    /**
+     * The name of the minimum, or null when it is stated.
+     */
+    public String minName() {
+        return this.minName;
+    }
+
+    /**
+     * The name of the maximum, or null when it is stated.
+     */
+    public String maxName() {
+        return this.maxName;
+    }
 
     @Override
     public boolean isZero() {
@@ -335,6 +382,10 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public String toString() {
+        if (this.isVariable())
+            return null != this.minName && this.minName.equals(this.maxName) ? this.minName :
+                    (null != this.minName ? this.minName : null == this.min ? "" : "" + this.min) + "," +
+                            (null != this.maxName ? this.maxName : null == this.max ? "" : "" + this.max);
         if (this.isAny()) // "anyMaybeSome"
             return "**";
         else if (this.isMaybe())
@@ -359,13 +410,15 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public int hashCode() {
-        // identical to Objects.hash(min, max) without the Object[] allocation
-        return 31 * (31 + (null == this.min ? 0 : this.min.hashCode())) + (null == this.max ? 0 : this.max.hashCode());
+        // identical to Objects.hash(min, max) without the Object[] allocation; a variable's names count too
+        final int bounds = 31 * (31 + (null == this.min ? 0 : this.min.hashCode())) + (null == this.max ? 0 : this.max.hashCode());
+        return this.isVariable() ? 31 * bounds + Objects.hash(this.minName, this.maxName) : bounds;
     }
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof cInt && Objects.equals(this.min, ((cInt) other).min) && Objects.equals(this.max, ((cInt) other).max);
+        return other instanceof cInt && Objects.equals(this.min, ((cInt) other).min) && Objects.equals(this.max, ((cInt) other).max)
+                && Objects.equals(this.minName, ((cInt) other).minName) && Objects.equals(this.maxName, ((cInt) other).maxName);
     }
 
     /**

@@ -30,11 +30,12 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntPredicate;
+import java.util.function.BiPredicate;
 import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_FROM_INST_TID;
@@ -219,23 +220,23 @@ public interface Call extends Obj {
          * ({@code update?inst<=inst(rec::T)} is this over a run of one).
          */
         public static List<Inst> update(final List<Inst> insts, final Obj rules) {
-            return update(insts, rules, start -> true);
+            return update(insts, rules, (start, length) -> true);
         }
 
         /**
-         * {@link #update(List, Obj)} with a matched run changed only where it begins at a position {@code starts} admits,
-         * indexed into the code its rule scans: what a pattern cannot state, such as the carrier flowing into the run
-         * ({@code derivation_contraction}), which is why it is asked only of a run that matched.
+         * {@link #update(List, Obj)} with a matched run changed only where {@code runs} admits it, by where it begins in the
+         * code its rule scans and how many instructions it holds: what a pattern cannot state, such as the carrier flowing
+         * into the run ({@code derivation_contraction}), which is why it is asked only of a run that matched.
          */
-        public static List<Inst> update(final List<Inst> insts, final Obj rules, final IntPredicate starts) {
-            return update(insts, rules, starts, Map.of());
+        public static List<Inst> update(final List<Inst> insts, final Obj rules, final BiPredicate<Integer, Integer> runs) {
+            return update(insts, rules, runs, Map.of());
         }
 
         /**
          * The update over the names the run that led here bound, which a change's named holes read in Java
          * ({@link #expand}): the rules are code, so matching and changing them evaluates nothing (Marko, 2026-11-08).
          */
-        private static List<Inst> update(final List<Inst> insts, final Obj rules, final IntPredicate starts, final Map<fURI, Obj> names) {
+        private static List<Inst> update(final List<Inst> insts, final Obj rules, final BiPredicate<Integer, Integer> runs, final Map<fURI, Obj> names) {
             if (rules.isCall()) {
                 // the change laid over the run, each of its insts against the run's inst in its place
                 final List<Inst> template = rules.asCall().insts();
@@ -275,24 +276,37 @@ public interface Call extends Obj {
                 if (!rule.first().isCall())
                     throw MTronException.of("a code update matches a code pattern, not %s", rule.first());
                 final List<Inst> pattern = rule.first().asCall().insts();
+                // a SPANNED pattern ({+}#(...)) takes a run of any length its spans allow, so each start tries the lengths
+                // its entries can reach, the longest first; an unspanned pattern's run is its own length
+                final boolean spanned = pattern.stream().anyMatch(element -> !element.tid().b().isOne());
                 final List<Inst> scanned = current;
                 final List<Inst> next = new ArrayList<>(scanned.size());
                 int i = 0;
                 while (i < scanned.size()) {
-                    final List<Inst> run = !pattern.isEmpty() && i + pattern.size() <= scanned.size() ? scanned.subList(i, i + pattern.size()) : List.of();
-                    // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as a
-                    // value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
-                    final Map<fURI, Obj> bound = run.isEmpty() ? null : Code.Helper.bind(run, pattern);
-                    if (null != bound && starts.test(i)) {
-                        // the frame is for a ${...} template, an expression over the names; a named hole reads bound itself
-                        Memory.argStack().push(bound.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
-                        try {
-                            next.addAll(update(run, rule.second(), start -> true, bound));
-                        } finally {
-                            Memory.argStack().pop();
+                    final List<Integer> lengths = pattern.isEmpty() ? List.of() : spanned
+                            ? Type.Helper.runs(scanned.subList(i, scanned.size()), pattern).stream().filter(length -> 0 < length).sorted(Comparator.reverseOrder()).toList()
+                            : i + pattern.size() <= scanned.size() ? List.of(pattern.size()) : List.of();
+                    int taken = 0;
+                    for (final int length : lengths) {
+                        final List<Inst> run = scanned.subList(i, i + length);
+                        // the run binds the pattern as a code binds a code pattern (Code.Helper#bind): it tests the pattern as
+                        // a value tests a type (1.test(int::T)), never the reverse, and the binding is the change's names
+                        final Map<fURI, Obj> bound = Code.Helper.bind(run, pattern);
+                        if (null != bound && runs.test(i, length)) {
+                            // the frame is for a ${...} template, an expression over the names; a named hole reads bound itself
+                            Memory.argStack().push(bound.entrySet().stream().map(e -> rel(uri(e.getKey()), e.getValue())).collect(new CommonUtil.RecCollector()));
+                            try {
+                                next.addAll(update(run, rule.second(), (start, span) -> true, bound));
+                            } finally {
+                                Memory.argStack().pop();
+                            }
+                            taken = length;
+                            break;
                         }
-                        i += pattern.size();
-                    } else
+                    }
+                    if (0 < taken)
+                        i += taken;
+                    else
                         next.add(scanned.get(i++));
                 }
                 current = next;

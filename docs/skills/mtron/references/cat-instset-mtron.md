@@ -258,7 +258,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 | `theory_unit_removal`    | every monoid instance of the operand's type (`monoid_theory`'s rule; `/m`'s rewrite)        | $\mathrm{op}(\mathrm{id}) \leadsto \varepsilon$                                                                                                                                                                                                     |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{involution}$, or the declared `inv` role                          | $f \cdot f \leadsto \varepsilon$                                                                                                                                                                                                                    |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{idempotent}$                                                      | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
-| `law_absorbing`          | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $g \cdot f \leadsto f$ for a pure $g$ handing $f$ one obj per obj: a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj                                                                               |
+| `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{absorbing}$                                                       | $\{+\}\# \cdot f \leadsto f$, a run of one or more instructions before $f$ (a spanned element): each a pure $g$ handing $f$ one obj per obj, a mapper of the carrier, a filter too when $f$'s dom is non-strict, any $g$ when $f$ answers noobj; never the seed |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{monoidic}$ + the `reducer`/`join` form                            | $f \cdot f \leadsto f$                                                                                                                                                                                                                              |
 | `m_rewrite_table` (/m)   | $\mathrm{law} \ni \mathrm{poset}$ + the comparison orders one bound past the other         | $\mathrm{is}(\mathrm{gt}(a)) \cdot \mathrm{is}(\mathrm{gt}(b)) \leadsto \mathrm{is}(\mathrm{gt}(\max(a, b)))$, $\min$ for `lt` — filters only: a bare `gt` answers a bool                                                                           |
 | `inverse_cancellation` (/m) | every group instance of the operand's type (`group_theory`'s rules), gated by `analysis.inverse` | $f(a) \cdot f^{-1}(a) \leadsto \varepsilon$                                                                                                                                                                                                         |
@@ -271,7 +271,7 @@ code *in place*: the local laws below ($\mathrm{op} (\mathrm{id}) \leadsto \vare
 **Most declared laws carry no rule.** Five of them back a rule directly — `involution`, `idempotent`, `absorbing`,
 `monoidic`, `poset` — and `floatable` and `blocked` do not drive a rule of their own but constrain where a
 distribution plan may anchor (its spans). `pure` constrains every rule that moves, drops or replicates code: only a
-declared-pure instruction is swallowed by `law_absorbing` or replicated into `law_shard`'s floatable run, and an
+declared-pure instruction is swallowed by `m_rewrite_table`'s absorbing row or replicated into `law_shard`'s floatable run, and an
 instruction that does not declare it is effectful (`to`, `print`, `side` stay where they are). The remaining labels
 are classification predicates, recorded for the
 rewriter's guards and for reasoning, with no rewrite of their own: `commutative`, `unit`, `magmadic`, `nilpotent`,
@@ -313,6 +313,16 @@ and a take. The poset law is a row too, stated over the bound each rule keeps:
 `poset => [is(op(#::T@a)).is(op(#::T@b)) => is(op(#::T@b)), …]`. Its gate evaluates the comparison, so the bound
 kept is the one the comparison orders past the other ($\max$ under `gt`, $\min$ under `lt`), with no comparison
 named in the rule. The pair is also stated the other way round, and for `filter`.
+
+The absorbing law's row is stated over a *run*, not a pair: `absorbing => [{+}#{*}<=#{*}({*}#::T).op => op]`. Its
+first element is an instruction with a **span**, `{span}inst{point}`, read as a type's span is read over a lst's slots:
+`{+}#({*}#::T)` is one or more instructions of any name and arguments, laid over the chain as a lst type's entries are
+laid over its indices. A rewrite tries the longest run first and shortens it where the gate refuses it. The run never
+holds the seed, and each instruction in it must be declared `pure`, map the carrier to itself, and hand the op one obj
+per obj: a mapper, a filter too when the op's dom is non-strict, anything pure when the op answers noobj. So
+`5.plus(1).zero().plus(2).zero()` is `5.zero()` in one pass, `{1,2,3}.is(gt(1)).zero()` keeps its filter (`{2}0`), and
+`5.plus(1).side(plus(1)).plus(2).zero()` loses only the `plus(2)` after the effectful `side`. A scaled instruction is
+no term of any rule, so `5.plus(3).zero{2}()` stays as written.
 
 ```mtron_pre
 5.plus(0)

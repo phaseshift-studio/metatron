@@ -186,6 +186,50 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         assertEquals(-0, 0);
     }
 
+    /**
+     * A COEFFICIENT VARIABLE names a bound rather than stating it (Marko, 2026-11-09): {@code {a}} names a point, both
+     * bounds alike, {@code {a,b}} a minimum and a maximum, and a stated bound may sit beside a named one. A named bound is
+     * unbounded, and the variable prints as it was written. Each row: the body % its min % its max % the min's name % the
+     * max's name.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a      % null % null % a    % a",
+            "a,b    % null % null % a    % b",
+            "1,b    % 1    % null % null % b",
+            "a,10   % null % 10   % a    % null",
+            "a_2,b3 % null % null % a_2  % b3",
+    }, delimiter = '%', nullValues = "null")
+    public void testVariables(final String body, final Long min, final Long max, final String minName, final String maxName) {
+        final cInt variable = cInt.of(body);
+        assertTrue(variable.isVariable());
+        assertEquals(min, variable.min());
+        assertEquals(max, variable.max());
+        assertEquals(minName, variable.minName());
+        assertEquals(maxName, variable.maxName());
+        assertEquals(body, variable.toString());
+        assertEquals(cInt.of(body), variable);
+        assertEquals(cInt.of(body).hashCode(), variable.hashCode());
+    }
+
+    /**
+     * A variable's names are its identity: equal bounds under other names, or under none ({@code **}, {@code +}), are
+     * another coefficient, whichever side asks.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a   % b",
+            "a   % **",
+            "a,b % b,a",
+            "a,b % a",
+            "1,b % 1,c",
+            "1,b % +",
+    }, delimiter = '%')
+    public void testVariablesAreTheirNames(final String lhs, final String rhs) {
+        assertNotEquals(cInt.of(lhs), cInt.of(rhs));
+        assertNotEquals(cInt.of(rhs), cInt.of(lhs));
+    }
+
     @Test
     public void testInv() {
         assertEquals(cInt.of(0, 0), cInt.of(0, 0).inv());
