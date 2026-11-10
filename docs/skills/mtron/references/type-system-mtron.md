@@ -346,6 +346,8 @@ the fiber's value as if it had been declared top-level.
 
 ### a bracket entry's coefficient: the multiplicity of the value AT that position or vertex
 
+<!-- cast: mini-tensors title="tensors: rank and magnitude lst with coefficient polynomials" speed_rates="0.5,1,1.5,2" speed_default="1" place="both" -->
+
 A bracket entry is a *position* (a tensor position, a path vertex), so a **suffix coefficient is the multiplicity of the
 value at that position** — not another position, and not another hop. `lst[int{2},str]` is a two-position list whose
 FIRST position holds two ints; `rel[int,person{2}]` is a two-vertex chain whose SECOND vertex holds two people

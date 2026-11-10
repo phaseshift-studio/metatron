@@ -1,3 +1,18 @@
+```mtron_pre cast=mini-reference cols=100 rows=16 typing_delay=0.05
+[NO_PROMPT][== clone vs. anchor references ==]
+5.to(a)
+from(a).plus(2)
+from(a)
+at(a).plus(2)
+from(a)
+[NO_PROMPT][== sugar coated ==]
+a -> 5
+*a + 2
+*a
+@a + 2
+*a
+```
+
 ```mtron_pre cast=mini-arithmetic cols=100 rows=16 typing_delay=0.05
 1 + 1
 2 * 21
@@ -8,6 +23,10 @@ int::42@the_answer
 being::[name=>'marko',age=>29]
 ```
 
+```mtron_pre cast=mini-tensors cols=100 rows=35 typing_delay=0.05 speed_rates="0.5,1,1.5,2" speed_default="1"
+
+```
+
 ```mtron_pre cast=mini-fiber-bundle cols=100 rows=35 typing_delay=0.05 speed_rates="0.5,1,1.5,2" speed_default="1"
 [NO_PROMPT][== rec polynomials are called fiber bundles ==]
 [NO_PROMPT][== type definitions ==]
@@ -15,7 +34,7 @@ rec[hp,role]::T[?[name=>str::T,hp=>int::T]]@human                               
 rec::T@warrior                                                                   [-- warrior is a nominal type (no predicate nor constructor) --]
 warrior::T@ninja                                                                 [-- ninja is a subtype of warrior (nominal hiearchies form subtypes) --]
 warrior::T@sumo                                                                  [-- sumo is a subtype of warrior --]
-[NO_PROMPT][NO_PROMPT] [== instruction definitions ==]
+[NO_PROMPT][== instruction definitions ==]
 |inst?int<=int(int::T){-*0}@damage                                               [-- damage maps an int to an int --]
 |inst?human{?}<=human(){.?[hp=>?>0]}@is_dead                                     [-- is_dead maps a human to maybe a human --]
 |inst?warrior<=warrior(){>>=[weapon=>none]}@no_more_war                          [-- no_more_war maps a warrior to a warrior --]

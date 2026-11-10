@@ -573,7 +573,7 @@ under <code>/m/math/+</code> and available via the standard type resolution syst
 </table>
 <h5>construction</h5>
 <pre><code class="language-mtron">mtron&gt; datetime_now()
-==&gt;datetime::&lt;//2026.11:920/30/32/957?tz=-0700&gt;
+==&gt;datetime::&lt;//2026.11:1017/05/58/161?tz=Z&gt;
 mtron&gt; [host=&gt;&lt;2024.12&gt;,port=&gt;25,path=&gt;[&lt;&gt;,&lt;09&gt;,&lt;00&gt;,&lt;00&gt;,&lt;000&gt;],
         c=&gt;[min=&gt;1,max=&gt;1],q=&gt;[tz=&gt;'-0500']].as(uri::T).as(datetime::T)
 ==&gt;datetime::&lt;//2024.12:25/09/00/00/000?tz=-0500&gt;
@@ -1090,9 +1090,13 @@ mtron&gt; yard::7200.0.normalize()
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

@@ -820,13 +820,13 @@ read back from a stack is still uncaught, so <code>catch(_)</code> it to use it 
      {?}state=&gt;union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=&gt;[
+           {?}result=&gt;'the last result produced by the th...',
+           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;,
            code=&gt;&quot;the thread's executing code&quot;,
            {?}time=&gt;'the datetime::T when the thread wa...',
            {?}loop=&gt;'delay to repeat code evaluation (d...',
            {?}timeout=&gt;'how long a read of rhs waits for t...',
-           {?}state=&gt;'current state of the thread',
-           {?}result=&gt;'the last result produced by the th...',
-           {?}runtime=&gt;&quot;computes the thread's current runn...&quot;],
+           {?}state=&gt;'current state of the thread'],
           desc=&gt;'the thread base type']
 </code></pre>
 <p>A machine's work is carried by threads (<code>/m/mach/thread</code>), <code>rec::T</code>s with a lifecycle:</p>
@@ -885,11 +885,11 @@ itself a read — so instruction memory is not re-entered from there.</p>
      {?}prefix=&gt;{?}[uri::T=&gt;uri::T],
      ...(1 more)]][ctor?network&lt;=(#{*}::T){&lt;j&gt;}]@/m/mach/component/network,
           args=&gt;[
-           {?}roster=&gt;'known machines, connectionless: &lt;h...',
-           {?}status=&gt;'the health method — an auto inst c...',
            {?}pattern=&gt;'the branch this network answers as...',
            {?}peer=&gt;&quot;machine's own connections, one per...&quot;,
-           {?}listener=&gt;'the sockets this machine serves th...'],
+           {?}listener=&gt;'the sockets this machine serves th...',
+           {?}roster=&gt;'known machines, connectionless: &lt;h...',
+           {?}status=&gt;'the health method — an auto inst c...'],
           desc=&gt;&quot;a machine's network: the endpoints...&quot;,
           example=&gt;[
            'network::[roster=&gt;[b=&gt;&lt;ws://192.16...',
@@ -1259,7 +1259,7 @@ sum of the round trips. The direction is a virtual thread per route,
 <p><strong>Where am I.</strong> <code>*~/network/host</code> answers the host the current machine runs on — for a result that says where it was
 computed:</p>
 <pre><code class="language-mtron">mtron&gt; *~/network/host       [-- localhost --]
-==&gt;booger
+==&gt;&lt;26869ffd3b00&gt;
 </code></pre>
 <p>Peers forked on one host share it; telling them apart takes their service authority.</p>
 <h3>appendix — the registered types</h3>
@@ -1365,9 +1365,13 @@ rshift, <code>.as(type::T)</code>, coefficients, <code>.explain()</code>.</li>
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

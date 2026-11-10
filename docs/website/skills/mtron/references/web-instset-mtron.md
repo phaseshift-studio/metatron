@@ -65,7 +65,7 @@ mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-m
    Reading the web is a client's: <code>http_client::[host =&gt; &lt;http://#&gt;]</code> (and <code>&lt;https://#&gt;</code>) is the gateway, a peer every
    http(s) read goes through. A read never dials, so a machine with no gateway reads no web.</p>
    <pre><code class="language-mtron">mtron&gt; dckrspace::[pattern =&gt; docker:#, route =&gt; [docker: =&gt; &lt;&gt;]]@/sys/space/docker
-   mtron&gt; [-- a bare one-instruction server, built the way the live profile builds its /basic mount --]
+   mtron&gt; mcp_server::[tool =&gt; [!*eval]]@/sys/space/mcp/web_basic
    ...
 mtron> *<http://metatron.phaseshift.studio/skills/mtron/references/web-instset-mtron.md>.as(html::T).as(rec::T)
 ==>[html=>[head=>[=>],
@@ -89,35 +89,11 @@ blocks are executed by the docs pipeline and inlined with their results; a plain
 ```mtron
 mtron> memspace::[pattern=>/usr/#, q=>[mimeq::[=>]]]@/sys/space/usr
 mtron> person::[name=>'marko',age=>29]@/usr/person/1
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'marko',age=>29]@/usr/person/1
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'marko'=>==>str::T,
-      age=>(==>age)=>29=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'marko',age=>29]@/usr/person/1]
+==>person::[name=>'marko',
+            age=>29]@/usr/person/1
 mtron> person::[name=>'grant',age=>25]@/usr/person/2
-==>fail::[parse error at line 1, col 1: obj does not match person::T
-     [[name=>'grant',age=>25]@/usr/person/2
-         X=>
-     rec[role,position]::T[?[name=>str::T,
-                             age=>int::T[/m/inst/is(/m/inst/gte(0))]@/m/math/nat,
-                             role=>rec::T,
-                             position=>rec::T]]@person
-     ────────────────────────────────────────────────────────────────────────────
-     [name=>(==>name)=>'grant'=>==>str::T,
-      age=>(==>age)=>25=>==>nat::T,
-      noobj=>(X=>role)=>noobj=>X=>rec::T,
-      noobj=>(X=>position)=>noobj=>X=>rec::T]]
-     predicate apply failed on execution
-   	while parsing: person::[name=>'grant',age=>25]@/usr/person/2]
+==>person::[name=>'grant',
+            age=>25]@/usr/person/2
 ```
 ## types
 
@@ -236,9 +212,9 @@ binding step, and a route is debuggable by looking at the request uri.
 
 ```mtron
 mtron> */usr/person/1                                              [-- straight from the space --]
-==>[name=>'marko',age=>29]
+==>person::[name=>'marko',age=>29]
 mtron> *http://localhost:8777/usr/person/1                         [-- the same obj, over the carrier, native rendering --]
-==>"[name=>'marko',age=>29]@/usr/person/1"
+==>"person::[name=>'marko',age=>29]@/usr/person/1"
 mtron> *http://localhost:8777/usr/person/1?mimeq=application/json [-- as JSON --]
 ==>
    json::'{"name":"marko","age":29}'

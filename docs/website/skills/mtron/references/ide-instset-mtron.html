@@ -591,9 +591,9 @@ maven build commands are attached to the <code>project::T</code> for each of acc
      mvn_exec=&gt;!ide:command('mvn -f src/test/resources/scratch ...')]]
 mtron&gt; */dev/scratch/command/mvn_clean
 ==&gt;result::[status=&gt;success,
-            runtime=&gt;millis::850.0,
+            runtime=&gt;millis::796.0,
             command=&gt;'mvn -f src/test/resources/scratch ...',
-            output=&gt;!*/sys/tmp/6600d9e9]
+            output=&gt;!*/sys/tmp/d0c81cd8]
 mtron&gt; */dev/scratch/command/mvn_build&gt;&gt;output
 </code></pre>
 <p>The project's uri subgraph (tree) can be displayed using the <code>tree_widget::T</code> widget.</p>
@@ -1100,9 +1100,13 @@ binding was unreliable, so the boot builds the home space as an explicit
         });
     });
     hljs.highlightAll();
-    /*document.querySelectorAll('code').forEach(block => {
-        hljs.highlightBlock(block);
-    });*/
+    // inline code: markdown backticks render as a bare <code>, which highlightAll() skips
+    // (it selects pre code only) — color them with the mtron grammar like any other fragment.
+    // Classless code only: blocks already carry language-* classes and were highlighted above,
+    // so a blanket querySelectorAll('code') would double-highlight them.
+    document.querySelectorAll('code:not([class])').forEach(function (el) {
+        el.innerHTML = hljs.highlight(el.textContent, { language: 'mtron' }).value;
+    });
 
     // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
     function initTabs() {

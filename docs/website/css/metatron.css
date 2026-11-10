@@ -13,7 +13,7 @@
     --light: #b1abc2;
     --dark: #000000;
     /*------------------------*/
-    --mblue: #4669dd;
+    --mblue: #3864ac;
     --mmagenta: #9f4040; /*#825181;*/
     --mred: #7a2518;
     --mgreen: #457b02;
@@ -1380,6 +1380,17 @@ pre.highlight > code[data-lang] {
         font-weight: bold !important;
     }
 
+    .hljs-mtron-nanorc-blue,
+    .hljs-mtron-nanorc-yellow,
+    .hljs-mtron-nanorc-red,
+    .hljs-mtron-nanorc-green,
+    .hljs-mtron-nanorc-cyan,
+    .hljs-mtron-nanorc-magenta,
+    .hljs-mtron-nanorc-bright-black,
+    .hljs-mtron-nanorc-yellow-underline {
+        color: #000 !important;
+    }
+
     .conum + b {
         background: #000 !important;
         color: #fff !important;
@@ -1665,9 +1676,17 @@ th {
 #header,
 .hljs-punctuation,
 .hljs-mtron-result-prefix,
-.hljs-mtron-type-prefix,
-.hljs-mtron-prompt-end {
+.hljs-mtron-type-prefix {
     color: var(--white);
+}
+
+/* the prompt: mtron in the theme red, > in the palette green */
+.hljs-mtron-prompt-begin {
+    color: var(--mred);
+}
+
+.hljs-mtron-prompt-end {
+    color: var(--mgreen);
 }
 
 .hljs-mtron-noobj,
@@ -1678,7 +1697,6 @@ th {
 .hljs-mtron-rec,
 .hljs-mtron-dom-rng-query,
 .hljs-mtron-sugar-inst,
-.hljs-mtron-prompt-begin,
 .hljs-mtron-pipe,
 .hljs-mtron-log-error,
 .hljs-mtron-match-fail,
@@ -1715,6 +1733,41 @@ th {
 .hljs-mtron-type,
 .hljs-mtron-type-prefix {
     color: #3864ac;
+}
+
+/* ── nanorc-generated rules (conf/nanorc/mtron.nanorc → NanorcToHljs) — one class per nano color ── */
+
+.hljs-mtron-nanorc-blue {
+    color: #3864ac;
+}
+
+.hljs-mtron-nanorc-yellow {
+    color: var(--myellow);
+}
+
+.hljs-mtron-nanorc-red {
+    color: var(--mred);
+}
+
+.hljs-mtron-nanorc-green {
+    color: var(--mgreen);
+}
+
+.hljs-mtron-nanorc-cyan {
+    color: var(--maqua);
+}
+
+.hljs-mtron-nanorc-magenta {
+    color: var(--mmagenta);
+}
+
+.hljs-mtron-nanorc-bright-black {
+    color: #666;
+}
+
+.hljs-mtron-nanorc-yellow-underline {
+    color: var(--myellow);
+    text-decoration: underline;
 }
 
 .colist {
@@ -1984,7 +2037,7 @@ h6:hover .heading-anchor {
     /* never ligate multi-character operators (=> -< >= <= >>= etc.) into single
        look-alike glyphs — mtron source must read back as the exact characters */
     font-variant-ligatures: none;
-    color: var(--codecolor);
+    color: var(--mblue);
     /*background: rgba(70, 105, 221, 0.10);*/
     padding: 0.15em 0.4em;
     border-radius: 3px;
