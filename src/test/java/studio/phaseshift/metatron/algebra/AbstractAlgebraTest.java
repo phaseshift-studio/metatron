@@ -37,6 +37,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static studio.phaseshift.metatron.Tokens.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 
@@ -234,6 +235,111 @@ public abstract class AbstractAlgebraTest extends AbstractObjTest {
     }, delimiter = '%')
     public void testParametricIdentities(final String lhs, final String rhs) {
         this.requires(PLUS_INST_TID, MULT_INST_TID);
+        this.interpret(lhs, rhs);
+    }
+
+    /**
+     * Skip this row unless the carrier declares the operations its {@code needs} column names ({@code -} for none):
+     * the coefficient laws hold for every carrier through {@code id()}, and only the rows that need a real operation
+     * (a run that repeats, a span that stays on its instruction) ask for one.
+     */
+    protected void needs(final String operations) {
+        for (final String operation : operations.trim().split(" +"))
+            if (!"-".equals(operation))
+                this.requires(M_ISA_INST_TID.extend(operation));
+    }
+
+    ///
+    /// coefficients (Marko, 2026-11-10). A POINT, x{p}, is p of x at one address: a scalar on its element, the
+    /// ring's +. A SPAN, {n}x, is x n times in a row, laid along an index axis: the ring's *. Each is tested on
+    /// values (*a in a stream), instructions (id(), and a real operation where a law needs one) and types (what
+    /// type() infers). The last test is how the two compose: the span exponentiates the point.
+    ///
+
+    /**
+     * THE POINT — points add across a sum, multiply along a chain, and are central: a point floats to any place in a
+     * chain (the floating coefficient theorem). A zero point annihilates.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // values: two copies of an obj are one obj with point 2, and points add across a sum (a branch, the ring's +)
+            "*a.branch(id(),id())                            % *a.id{2}()                                  % -",
+            "*a.branch(id{2}(),id{3}())                      % *a.id{5}()                                  % -",
+            "*a.id{1}()                                      % *a                                          % -",
+            // instructions: points multiply along a chain, commute, and float to any place in it
+            "*a.id{2}().id{3}()                              % *a.id{6}()                                  % -",
+            "*a.id{2}().id{3}()                              % *a.id{3}().id{2}()                          % -",
+            "*a.id{3}().id()                                 % *a.id().id{3}()                             % -",
+            "*a.plus{3}(*a)                                  % *a.plus(*a).id{3}()                         % plus",
+            "*a.id{3}().plus(*a)                             % *a.plus{3}(*a)                              % plus",
+            "*a.id{0}()                                      % noobj                                       % -",
+            // types: the inferred type carries the point, and points multiply in it
+            "*a.id{2}().id{3}().type()                       % *a.id{6}().type()                           % -",
+            "*a.branch(id(),id()).type()                     % *a.id{2}().type()                           % -",
+            "*a.id().type()                                  % *a.type()                                   % -",
+    }, delimiter = '%')
+    public void testPointCoefficient(final String lhs, final String rhs, final String needs) {
+        this.needs(needs);
+        this.interpret(lhs, rhs);
+    }
+
+    /**
+     * THE SPAN — a run is its instruction repeated, {0} is no step at all, runs add along a chain, and a span stays on
+     * the instruction it is written on: spans are not central. A value is idempotent ({@code v.v = v}), so a value's
+     * run is the value.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // values: a value applied to a value is the value, so its run is itself. Read left to right and greedy
+            // (Marko), {2}*a is {2}from(a), the run from(a).from(a), not a point on the value
+            "*a.*a                                           % *a                                          % -",
+            "*a.*a.*a                                        % *a                                          % -",
+            "{2}*a                                           % *a                                          % -",
+            "{2}*a                                           % *a.*a                                       % -",
+            // instructions: {0} is no step, {1} is one, and runs add along a chain
+            "*a.{0}id()                                      % *a                                          % -",
+            "*a.{1}id()                                      % *a.id()                                     % -",
+            "*a.{0}plus(*a)                                  % *a                                          % plus",
+            "*a.{3}plus(*a)                                  % *a.plus(*a).plus(*a).plus(*a)               % plus",
+            "*a.{2}plus(*a).{3}plus(*a)                      % *a.{5}plus(*a)                              % plus",
+            // a span stays on its instruction
+            "*a.{2}plus(*a).mult(*a)                         % *a.plus(*a).plus(*a).mult(*a)               % plus mult",
+            "*a.plus(*a).{2}mult(*a)                         % *a.plus(*a).mult(*a).mult(*a)               % plus mult",
+            // types: the inferred type follows the run, and a run of the identity keeps the type
+            "*a.{2}plus(*a).type()                           % *a.plus(*a).plus(*a).type()                 % plus",
+            "*a.{3}id().type()                               % *a.type()                                   % -",
+            "*a.{0}id().type()                               % *a.type()                                   % -",
+    }, delimiter = '%')
+    public void testSpanCoefficient(final String lhs, final String rhs, final String needs) {
+        this.needs(needs);
+        this.interpret(lhs, rhs);
+    }
+
+    /**
+     * THE POINT AND THE SPAN — the span exponentiates the point: {@code {n}x{p} = xⁿ{pⁿ}}, because points are central
+     * and gather to the front. So their order matters (a point on a run is p, a run of a pointed instruction is pⁿ), an
+     * idempotent instruction collapses its span into its point ({@code {n}e{p} = e{pⁿ}}), a zero run is the identity
+     * even of the annihilator, and a span does not distribute over a branch.
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // the span exponentiates the point, on values and in the inferred type
+            "*a.{2}id{3}()                                   % *a.id{9}()                                  % -",
+            "*a.{2}id{3}().type()                            % *a.id{9}().type()                           % -",
+            "*a.{2}plus{3}(*a)                               % *a.plus(*a).plus(*a).id{9}()                % plus",
+            // order matters: a point on the run is p, a run of the pointed instruction is pⁿ
+            "*a.{2}id().id{3}()                              % *a.id{3}()                                  % -",
+            "*a.plus(*a).plus{3}(*a)                         % *a.plus(*a).plus(*a).id{3}()                % plus",
+            // an idempotent instruction collapses its span into its point
+            "*a.{3}id{2}()                                   % *a.id{8}()                                  % -",
+            "*a.{3}id{2}().type()                            % *a.id{8}().type()                           % -",
+            // a zero run of anything is the identity, even a run of the annihilator
+            "*a.{0}id{0}()                                   % *a                                          % -",
+            // a span does not distribute over a branch: the square of a sum keeps its cross terms
+            "*a.{2}branch(plus(*a),id())                     % *a.branch(plus(*a).plus(*a),plus(*a),plus(*a),id())   % plus",
+    }, delimiter = '%')
+    public void testPointSpanCoefficient(final String lhs, final String rhs, final String needs) {
+        this.needs(needs);
         this.interpret(lhs, rhs);
     }
 
