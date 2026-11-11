@@ -450,7 +450,9 @@ public interface Inst extends Call {
                     : domainInst.args();
             if (null == callArgs)
                 return noobj();
-            final Inst resolve2 = resolved2.<Inst>as().args(callArgs).c(domainInst.c()); //.resolve(lhs);
+            // the call's span and point ride on as written: c(count) would fold a span into the point
+            final Inst argued = resolved2.<Inst>as().args(callArgs);
+            final Inst resolve2 = argued.tid(argued.tid().b(domainInst.tid().b()).d(domainInst.tid().d()));
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
     }

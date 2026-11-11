@@ -161,9 +161,11 @@ public class PlanBuilderTest extends AbstractInstSetTest {
      * grammar leaves behind: a bare non-numeric uri ({@code abc}), a list that is not the pair form
      * ({@code [1,2,3]} — the pair {@code [height, arity]} IS a hop, the two arities the coefficient cannot render),
      * a quoted str where a value was required ({@code "ab"}), a backslash value the parser cannot read ({@code \x}),
-     * and a TRAILING coefficient on a number ({@code 4{2}}) — a number takes no trailing coefficient in mtron, so the
-     * projection answers a {@code fail}; the leading {@code {2}4} is the spelling that reads (the row above). Each
-     * row: the chain % the text the refusal must name.
+     * and a TRAILING range on a number ({@code 4{1,2}}) — a number's trailing coefficient is its span (Marko,
+     * 2026-11-10: a value is {point}value{span}), a layout of an exact length, so {@code 4{2}} reads as the pair
+     * {@code [4,4]} until a vid can be a branched uri, and a range there reads as nothing: the projection answers a
+     * {@code fail}. The leading {@code {2}4} is the spelling that reads (the row above). Each row: the chain % the text
+     * the refusal must name.
      */
     @ParameterizedTest
     @CsvSource(value = {
@@ -171,7 +173,7 @@ public class PlanBuilderTest extends AbstractInstSetTest {
             "start?hop=[1,2,3]({1,2,3,4}).plus(1).sum()      % ?hop=[1,2,3]",
             "start?hop=\"ab\"({1,2,3,4}).plus(1).sum()       % ?hop=\"ab\"",
             "start?hop=\\x({1,2,3,4}).plus(1).sum()          % ?hop=\\x",
-            "start?hop=4{2}({1,2,3,4}).plus(1).sum()         % ?hop=4{2}",
+            "start?hop=4{1,2}({1,2,3,4}).plus(1).sum()       % ?hop=4{1,2}",
     }, delimiter = '%')
     public void testHopRefusesAnUnreadableBudget(final String source, final String stated) {
         final Plan shard = PlanRewriter.planOf("law_shard");
