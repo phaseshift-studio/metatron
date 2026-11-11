@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -783,7 +792,7 @@ mtron&gt; 'abbc'&gt;&gt;=['a'=&gt;'A','b{2}'=&gt;'X']=='[A-Z]{2,3}' [-- ['AX'] (
 <code>@</code> anchors a uri to its referent in space</p>
 <pre><code class="language-mtron">*/path/to/obj              [-- read obj at uri (detached) --]
 @/path/to/obj              [-- real obj at uri (attached) --]
-*local:software/           [-- read with trailing --]
+*local:software/           [-- the relation local:software=&gt;obj --]
 *&lt;/pa.th/to/o b .j&gt;        [-- angle-bracket handles special chars --]
 </code></pre>
 <p>uri wildcards:</p>
@@ -1022,6 +1031,9 @@ mtron&gt; [1,2]@a &gt;&gt;= [_,+4]                      [-- [1,6]@a  (second ele
 mtron&gt; [a=&gt;1,b=&gt;2] &gt;&gt;= [b=&gt;none]               [-- [a=&gt;1]  (remove field b) --]
 ==&gt;[a=&gt;1]
 mtron&gt; @&lt;people/+&gt;.&gt;&gt;= [name=&gt;&quot;Micky Mouse&quot;]   [-- wildcard update --]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;architect]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;developer]
+==&gt;[name=&gt;'Micky Mouse',role=&gt;oracle]
 </code></pre>
 <p><code>@</code> means &quot;anchor the write-back to the VID&quot; (persist).  <code>*</code> means &quot;anonymous copy&quot; (no write-back):</p>
 <pre><code class="language-mtron">mtron&gt; @a/b/c&gt;&gt;= +10      [-- modifies *a/b/c and writes back   --]

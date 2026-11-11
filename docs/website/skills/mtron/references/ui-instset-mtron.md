@@ -328,11 +328,11 @@ mtron> board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_righ
      predicate apply failed on execution (at /m/inst/ctor)"""]
    	while parsing: board -> matrix_widget::[grid=>!*/usr/uidoc/g10, style=>[anchor=>top_right,border=>continuous]]@/usr/uidoc/board]
 mtron> @/usr/uidoc/board.display()             [-- pin it once --]
-==>fail::[lhs range does not match inst domain: rec::T => rec::T[?[{?}style=>rec::T[?[{?}border=>str::T,{?}background=>str::T,{?}foreground=>str::T,{?}divider=>str::T,{?}headerDivider=>str::T,{?}pointer=>str::T,{?}leftMargin=>int::T,{?}rightMargin=>int::T,{?}topMargin=>int::T,{?}bottomMargin=>int::T,{?}anchor=>uri::T[?/m/inst/union(top_left,top_middle,top_right,middle,bottom_left,bottom_middle,bottom_right)]@anchor,{?}width=>int::T,{?}height=>int::T,{?}top=>int::T,{?}left=>int::T,{?}zIndex=>int::T,{?}scroll=><#>::T,{?}scrollX=>int::T,{?}scrollY=>int::T,{?}wordWrap=>bool::T]][/m/inst/ctor?/m/sys/ui/style<=(<#{*}>::T)]@style]]@widget [/m/sys/ui/inst/display?{0}<=/m/sys/ui/widget()@<1>]]
+==>fail::[inst apply failure: Cannot invoke "org.jline.terminal.Terminal.output()" because the return value of "studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()" is null (at /m/sys/ui/inst/display@1) [Widget<102>]][Cannot invoke "org.jline.terminal.Terminal.output()" because the return value of "studio.phaseshift.metatron.isa.m.sys.ui.console.Console.getTerminal()" is null [Widget<102>]]
 mtron> @/usr/uidoc/g10/1/0 >>= '@'             [-- one cell of the REFERENT --]
 ==>'@'
 mtron> @/usr/uidoc/g10/+/0 >>= ''             [-- every row's column 0 --]
-==>{10}''
+==>{2}''
 ```
 The referent must be an **absolute** uri. A relative uri is a variable frame on the thread that wrote
 it, and a render pass runs on the surface's render thread — a relative referent does not resolve there,

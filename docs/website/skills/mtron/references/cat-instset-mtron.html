@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -831,7 +840,12 @@ way, so int's <code>add_group</code> gives <code>plus(a)·minus(a)</code> and <c
 carrier derives that inverse. It is <code>/m</code>'s rewrite too, and so is <code>derivation_contraction</code>, whose rules are the
 derivations instructions declare beside themselves: both are data already, so both run on the base path.</p>
 <p>The process laws' rules are <code>/m</code>'s too, one rewrite per rule (Marko, 2026-11-10), so each can be added to or
-removed from the machine's rewrite pool on its own, and <code>path::T</code> draws one edge per rule. A rewrite's declared
+removed from the machine's rewrite pool on its own, and <code>path::T</code> draws one edge per rule. A rule is switched off by
+its shadow, <code>inactive()</code>: the identity on code under the rule's own tid, listed in the pool in the rule's place, and
+<code>active()</code> answers the rule back. The pool is <code>~/instset/rewrite</code>, and a rule is written there by name, in the
+machine's own level: <code>*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)</code> switches it
+off for that machine, and writing back <code>.active()</code>, or <code>-&gt; noobj</code>, switches it on. The rule is written with <code>to</code>, since
+an argument that is an instruction is code, applied to the lhs. A rewrite's declared
 argument <em>is</em> its rules, a value rather than a type, so it resolves with its rules bound and no type resolution takes
 place. A law's rule is stated in the name <code>op</code>, the instruction that claims the law: <code>law_involution</code> carries
 <code>[involution =&gt; [op.op =&gt; ]]</code>, <code>law_idempotent</code> <code>[idempotent =&gt; [op.op =&gt; op]]</code> and <code>law_monoidic</code>
@@ -1076,46 +1090,46 @@ derives its rewrite. The guard reads the laws/forms/theories off the word (<code
 and computes its cut/span/where without consulting the code below; the descent (\(\gamma\)) runs only through
 <code>path::T.obj</code>.</p>
 <pre><code class="language-mtron">mtron&gt; [start(5).plus(0).neg().neg()]==[as(cat:path::T)]==[as(cat:abstraction::T)]
-==&gt;[abstraction::[obj=&gt;[morphism[start?args=[/m/int]]::[
-                         name=&gt;start,
-                         form=&gt;initial,
-                         src=&gt;!λ#(){&lt;j&gt;},
-                         trgt=&gt;!λ#(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;start(5)],
-                        morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
-                         name=&gt;plus,
-                         form=&gt;mapper,
-                         class=&gt;[endo],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;plus(0),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
-                          retraction,
-                          mono,
-                          epi],
-                         src=&gt;!λint(){&lt;j&gt;},
-                         trgt=&gt;!λint(){&lt;j&gt;},
-                         analysis=&gt;!λ(){&lt;j&gt;},
-                         obj=&gt;neg(),
-                         ...(1 more)],
-                        morphism[neg?rng=int&amp;dom=int&amp;args]::[
-                         name=&gt;neg,
-                         form=&gt;mapper,
-                         class=&gt;[
-                          endo,
-                          iso,
-                          auto,
-                          section,
+==&gt;[abstraction::[obj=&gt;[
+                   morphism[start?args=[/m/int]]::[
+                    name=&gt;start,
+                    form=&gt;initial,
+                    src=&gt;!λ#(){&lt;j&gt;},
+                    trgt=&gt;!λ#(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;start(5)],
+                   morphism[plus?rng=int&amp;dom=int&amp;args=[/m/int]]::[
+                    name=&gt;plus,
+                    form=&gt;mapper,
+                    class=&gt;[endo],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;plus(0),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
+                     section,
+                     retraction,
+                     mono,
+                     epi],
+                    src=&gt;!λint(){&lt;j&gt;},
+                    trgt=&gt;!λint(){&lt;j&gt;},
+                    analysis=&gt;!λ(){&lt;j&gt;},
+                    obj=&gt;neg(),
+                    ...(1 more)],
+                   morphism[neg?rng=int&amp;dom=int&amp;args]::[
+                    name=&gt;neg,
+                    form=&gt;mapper,
+                    class=&gt;[
+                     endo,
+                     iso,
+                     auto,
    ...
 </code></pre>
 <h4><code>plan::T</code> — a rewrite rule as a value</h4>
@@ -1167,23 +1181,43 @@ registered rewrite has a <code>cut</code> — so <code>bind</code> is currently 
 machine's dialed peers, and with no peer it matches nothing, so <code>lower</code> is the identity. A <code>ws_client</code> dials and
 self-registers a <code>peer::T</code> into the network; that registration is the condition that turns the rule live:</p>
 <pre><code class="language-mtron">mtron&gt; ws_client::[host=&gt;ws://localhost:8555/mtron]
-==&gt;[host=&gt;ws://localhost:8555/mtron,
-    send=&gt;λ(){&lt;j&gt;},
-    send_recv=&gt;λ(){&lt;j&gt;},
-    inst=&gt;[
-     /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
-     /m/inst/from=&gt;*uri::T,
-     /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
-    status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
-    close=&gt;λ(){&lt;j&gt;},
-    on_message=&gt;print('received ${_}')]
+==&gt;ws_client::[host=&gt;ws://localhost:8555/mtron,
+               send=&gt;λ(){&lt;j&gt;},
+               send_recv=&gt;λ(){&lt;j&gt;},
+               inst=&gt;[
+                /m/inst/eval=&gt;eval?A{*}&lt;=code(uri::T){&lt;j&gt;},
+                /m/inst/from=&gt;*uri::T,
+                /m/inst/to=&gt;to?A{*}&lt;=A{?}(uri::T){&lt;j&gt;}],
+               status=&gt;!λstatus?bool&lt;=(){&lt;j&gt;},
+               close=&gt;λ(){&lt;j&gt;},
+               on_message=&gt;print('received ${_}')]
 mtron&gt; */network
 </code></pre>
 <p><code>*~/network</code> reads back the current machine's network block — the dialed <code>peer::T</code> at the named host. With the
 <code>machine::T</code>
 now holding that <code>peer::T</code>, the <code>path::T</code> lists the distribution plan among its out-edges.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum()]]
+==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum(),
+           law_shard=&gt;plan::[
+            name=&gt;law_shard,
+            cut=&gt;[
+             form=&gt;reducer,
+             law=&gt;[monoidic,commutative]],
+            where=&gt;[
+             [
+              place=&gt;[local],
+              hop=&gt;0,
+              split=&gt;stream,
+              span=&gt;[[span=&gt;at],[span=&gt;post]]],
+             [
+              place=&gt;[peer],
+              hop=&gt;1,
+              split=&gt;stream,
+              span=&gt;[
+               [span=&gt;seed,flags=&gt;[partition]],
+               [span=&gt;pre,flags=&gt;[floatable,no_seed]],
+               [span=&gt;at]],
+              inst=&gt;[/m/inst/eval]]]]]]
 </code></pre>
 <p><code>law_shard</code> is Theorem 19 of the stream-ring algebra (<a href="../../../articles/stream-ring-theory.html">Stream Ring Theory</a>):
 monoidic reducers are <strong>semi-right distributive</strong>,
@@ -1204,13 +1238,15 @@ form a tree. The plan — not its
 application — is data, so the rewrite <em>schedule</em> and the out-edge
 that licenses it are the same value: every rule is <code>lower(plan::T)</code>, and the rewrite table is the category itself.</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5}).plus(10).sum()]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5}).plus(10).sum()]]
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5})./m/inst/plus(10)./m/inst/sum?hop=0()).sum(),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
 </code></pre>
 <p>A keyed fold lowers the same way, its master recombining pointwise: the <code>sum()</code> after the branch deep-merges the partial
 recs and
 <code>select([_=&gt;sum()])</code> folds each key (see <em>the deep merge</em>).</p>
 <pre><code class="language-mtron">mtron&gt; [start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]==[as(cat:path::T)]==[lower(&gt;&gt;law_shard)]
-==&gt;[path::[obj=&gt;start({1,2,3,4,5,6}).group([mod(3)=&gt;sum()])]]
+==&gt;[path::[obj=&gt;branch?&lt;={0}&amp;split=part(ws://localhost:8555=&gt;/m/inst/start({1,2,3,4,5,6})./m/inst/group?hop=0([/m/inst/mod(3)=&gt;/m/inst/sum()])).sum?rec&lt;=rec{*}().select([id()=&gt;sum()]),
+           where=&gt;[[span=&gt;at]=&gt;[//localhost:8555=&gt;1]]]]
 </code></pre>
 <h4>may / must — the fiber modality</h4>
 <p>An abstraction stands for its <strong>fiber</strong> — every concrete chain that lifts to it — so the moves a <code>path::T</code> exposes,
@@ -1244,7 +1280,9 @@ abstraction. The replayed route <em>is</em> the derivation witness.</p>
 map</strong> (who is dialed) — and is not a rewrite projection at all: a place is a machine, a <code>path::T</code> is code.</p>
 <pre><code class="language-mtron">mtron&gt; &lt;//localhost&gt;.as(place::T)
 ==&gt;place::[obj=&gt;//localhost,
-           authority=&gt;[ws://localhost:8555],
+           authority=&gt;[
+            http://localhost:8777,
+            ws://localhost:8555],
            linked_to=&gt;!λ(){&lt;j&gt;},
            linked_from=&gt;!λ(){&lt;j&gt;},
            status=&gt;!λ(){&lt;j&gt;}]

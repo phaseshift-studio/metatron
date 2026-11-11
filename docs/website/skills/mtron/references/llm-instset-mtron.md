@@ -27,11 +27,13 @@ mtron> model::[provider=> ollama,
                protocol=> ollama,
                host    => <http://localhost:11434>,
                llm     => <qwen3.5:4b>]@qwen3
-==>fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl<204>]']['java.net.ConnectException [SocketChannelImpl<204>]']['fail']['fail']['fail']
-   	while parsing: model::[provider=> ollama,
-                  protocol=> ollama,
-                  host    => <http://localhost:11434>,
-                  llm     => <qwen3.5:4b>]@qwen3]
+==>model::[skill=>[completion,vision,tools,thinking],
+           size=>gB::3.1571,
+           context=>262144,
+           provider=>ollama,
+           protocol=>ollama,
+           host=>http://localhost:11434,
+           llm=><qwen3.5:4b>]@qwen3
 ```
 Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:

@@ -343,13 +343,13 @@ mtron> */m/mach/thread?docq
      {?}state=>union(stop,run,pause),
      ...(1 more)]]@/m/mach/thread,
           args=>[
-           {?}result=>'the last result produced by the th...',
            {?}runtime=>"computes the thread's current runn...",
            code=>"the thread's executing code",
            {?}time=>'the datetime::T when the thread wa...',
            {?}loop=>'delay to repeat code evaluation (d...',
            {?}timeout=>'how long a read of rhs waits for t...',
-           {?}state=>'current state of the thread'],
+           {?}state=>'current state of the thread',
+           {?}result=>'the last result produced by the th...'],
           desc=>'the thread base type']
 ```
 A machine's work is carried by threads (`/m/mach/thread`), `rec::T`s with a lifecycle:
@@ -835,7 +835,7 @@ computed:
 
 ```mtron
 mtron> *~/network/host       [-- localhost --]
-==><26869ffd3b00>
+==>booger
 ```
 Peers forked on one host share it; telling them apart takes their service authority.
 

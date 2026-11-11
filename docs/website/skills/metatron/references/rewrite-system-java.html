@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -511,7 +520,7 @@ algebra/rewrite/RewriteBuilder.java ← fluent builder for space-aware native re
 algebra/rewrite/CommonRewrites.java ← shared rewrite utilities
 isa/m/type/InstSet.java             ← InstSet interface, Helper.rewriter() factory
 isa/m/type/Code.java                ← Code.rewrite() — the rewrite loop
-isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, m_rewrite_table, split_merge_collapse, ...)
+isa/m/mInstSet.java                 ← /m rewrites (theory_unit_removal, law_involution, law_absorbing, ..., split_merge_collapse, ...)
 isa/tble/tbleInstSet.java           ← SQL rewrites (sql_count, sql_where, sql_limit, ...)
 isa/grph/grphInstSet.java           ← Gremlin rewrites (gremlin_count, gremlin_where, ...)
 isa/dcmnt/dcmntInstSet.java         ← MongoDB rewrites (mql_count, mql_where, ...)
@@ -536,23 +545,47 @@ Code.resolve(lhs)                       [Code.java:98]
 <p>Rewrites run <strong>before</strong> instruction resolution. This means domains/ranges in the instruction list are still generic
 (<code>#::T</code>) when rewrites fire — call <code>.resolve(noobj())</code> on extracted code if you need concrete types.</p>
 <h3>Registration</h3>
-<p>Rewrites are registered in an <code>InstSet</code> under the <code>uri(REWRITE)</code> key during <code>setup()</code>. Every <code>InstSet</code> space contributes
-its rewrites to the global pool — the <code>Code.rewrite()</code>
-loop iterates all of them:</p>
-<pre><code class="language-java">Router.global().spaces()
-    .elements()
-    .filter(r -&gt; r.second() instanceof InstSet)
-    .flatMap(r -&gt; r.second().&lt;InstSet&gt;as().rewrites().stream())
-    .forEach(r -&gt; {
-        final Obj rewritten = r.apply(rewrittenCode.get());
-        if (rewritten.isCode()) {
-            rewrittenCode.set(rewritten.asCode());
-        }
-    });
+<p>Rewrites are registered in an <code>InstSet</code> under the <code>uri(REWRITE)</code> key during <code>setup()</code>. A machine's pool is its
+instruction set's union, <code>Machine.current().instset().rewrites()</code> (the default of <code>Rewriter.rewrites()</code>): its own
+level first, then the instruction sets it imported, then the enclosing machine's, each rewrite once by its tid, so a
+nearer level SHADOWS the same tid. The default compiler stage, <code>fixpoint_rewriter::T</code>, applies the pool in order to a
+fixpoint (<code>FixPointRewriter.apply</code>):</p>
+<pre><code class="language-java">for (final Inst r : orderedRules(this.rewrites())) {     // analysis rules last, registration order otherwise
+    final Obj rewritten = r.apply(code);
+    if (rewritten.isCode())
+        code = rewritten.asCode();
+}
 </code></pre>
 <p>A rewrite is an <code>Inst</code> whose function takes a <code>Code</code> and returns a <code>Code</code>. If the result is a <code>Code</code>, it replaces the
 current code for the next iteration. If the result is not a
 <code>Code</code> (e.g., <code>noobj</code>, a single <code>Inst</code>), it is discarded and the code is left unchanged.</p>
+<h4>Switching a rewrite off</h4>
+<p>A rewrite is switched off by its <strong>shadow</strong> (Marko, 2026-11-10), so the pool still lists what is off.
+<code>inactive?inst&lt;=inst</code> answers the identity on code under the rewrite's own tid, carrying the rewrite as
+<code>[inactive=&gt;rewrite]</code>. <code>active?inst&lt;=inst</code> answers the rewrite a shadow carries (<code>Inst.Helper.shadowed</code>), and an active
+rewrite as it is. Written into a machine's own level, the shadow is the same identity as the inherited rewrite. So it
+stands in the rewrite's place for that machine and its children, and the fixpoint applies it as the identity, while
+every other machine keeps the rewrite. A <code>noobj</code> write at the rewrite's address deletes the shadow, and the inherited
+rewrite answers again:</p>
+<pre><code class="language-java">final Inst shadow = Processor.Helper.apply(rule, instB(INACTIVE_INST_TID, lst())).asInst();
+child.instset().write(rule.tid(), shadow);       // off in the child, and listed in its pool
+child.instset().write(rule.tid(), noobj());      // on again: the inherited rewrite answers
+</code></pre>
+<p>An instruction written under the tid of a rewrite the set answers IS that rewrite (<code>AbstractInstSet.write</code>). A code dom
+alone makes no rewrite: code's own operations (<code>end</code>, <code>id</code>, <code>update</code>) are instructions.</p>
+<p>From mtron, a machine's rewrites are reached at <code>~/instset/rewrite</code>. A read there answers the effective pool, and
+<code>~/instset/rewrite/&lt;name&gt;</code> a rewrite by its name, walked as a path or projected with <code>&gt;&gt;</code> (<code>AbstractInstSet.at</code>). A
+write at <code>~/instset/rewrite/&lt;name&gt;</code> lands in the machine's own level (<code>MachineSpace</code> routes it to <code>BasicInstSet.write</code>)
+and declares a difference: a shadow overrides the inherited rewrite, while the inherited rewrite itself, or noobj,
+removes the override, so a rewrite read and written back changes nothing. An instruction is written with <code>to</code>, which
+writes the obj flowing in: an argument that is an instruction is code, applied to the lhs, so <code>addr -&gt; inst</code> writes
+what the instruction answers, never the instruction:</p>
+<pre><code class="language-text">*~/instset/rewrite/law_absorbing.inactive().to(~/instset/rewrite/law_absorbing)    off here, and listed
+*~/instset/rewrite/law_absorbing.active().to(~/instset/rewrite/law_absorbing)      on again: the override goes
+~/instset/rewrite/law_absorbing -&gt; noobj                                           on again, the same way
+</code></pre>
+<p>An instruction set's own path walks its rec: what no table holds is the rec's, so <code>*/m/math/cat/rewrite</code> answers what
+<code>*/m/math/cat&gt;&gt;rewrite</code> does, the set's live rewrites.</p>
 <h3>Rewrite styles</h3>
 <h4>1. <code>Rewriter.search().match().rewrite()</code> — fixed-window pattern replacement</h4>
 <p>Matches a concrete sequence of instruction TIDs against a sliding window, then replaces the matched slice with a new
@@ -569,10 +602,10 @@ InstSet.Helper.rewriter(GEO_REWRITE_TID.extend(&quot;native_&quot; + nativeTid.n
                     .toList())).asCode();
 })
 </code></pre>
-<p>A rewrite whose rule is only instructions needs no Java at all. It is a <code>[lhs =&gt; rhs]</code> row of <code>/m</code>'s rewrite table, the
-declared argument of <code>m_rewrite_table</code>, which <code>Call.Helper.update</code> matches and applies:
-<code>[count().else(#::T) =&gt; count()]</code> drops the dead <code>else</code> after a total <code>count</code>. The table and its law rows are described
-in the <code>cat-instset-mtron</code> reference.</p>
+<p>A rewrite whose rule is only instructions needs no Java at all. It is a <code>[lhs =&gt; rhs]</code> row in the declared argument of
+its own <code>/m</code> rewrite (one rewrite per rule), which <code>Call.Helper.update</code> matches and applies: <code>else_after_count</code>'s
+<code>[count().else(#::T) =&gt; count()]</code> drops the dead <code>else</code> after a total <code>count</code>. The rule rewrites and their law rows are
+described in the <code>cat-instset-mtron</code> reference.</p>
 <p><strong><code>match(List&lt;Inst&gt;)</code></strong> — pattern instructions. <code>instA(tid)</code> creates a bare match instruction (no args, no f). Matching
 uses <code>instsMatch()</code>: TIDs must be compatible via <code>tid.test()</code>, args are compared by position, and <code>?.test(source)</code> tests
 unresolved args against source.</p>

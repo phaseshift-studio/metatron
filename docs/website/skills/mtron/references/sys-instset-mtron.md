@@ -71,16 +71,16 @@ mtron> bash('ls')
     'dist',
     ...(17 more)]
 mtron> bash(cmd=>'whoami')
-==>['ubuntu']
+==>['killswitch']
 mtron> bash('df -h')
 ==>['Filesystem      Size  Used Avail U...',
-    'overlay         916G  581G  288G  ...',
-    'tmpfs            64M     0   64M  ...',
-    'shm              64M     0   64M  ...',
-    '/dev/nvme1n1p2  916G  581G  288G  ...',
     'tmpfs           6.1G  6.5M  6.1G  ...',
+    'efivarfs        128K   42K   82K  ...',
+    '/dev/nvme1n1p2  916G  585G  285G  ...',
+    'tmpfs            31G  133M   31G  ...',
+    'tmpfs           5.0M   20K  5.0M  ...',
     'tmpfs            31G     0   31G  ...',
-    ...(4 more)]
+    ...(3 more)]
 ```
 A timeout and a failed exit are both fails, and both are inspectable:
 
@@ -88,10 +88,10 @@ A timeout and a failed exit are both fails, and both are inspectable:
 mtron> bash(cmd=>'sleep 5', timeout=>millis::500.0)  [-- the timeout kills the process --]
 ==>fail::[inst apply failure: Process 'bash -c 'sleep 5'' timed out after 500ms. (at /m/sys/inst/bash@0) [Proc<155>]][Process 'bash -c 'sleep 5'' timed out after 500ms. [Proc<155>]]
 mtron> bash('ls /no/such/directory')                 [-- non-zero exit, stderr in the message --]
-==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 2ms:
+==>fail::[inst apply failure: External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
-    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 2ms:
+    (at /m/sys/inst/bash@0) [ProcBuilder<228>]][External process `bash` terminated with unexpected exit status 2 after 4ms:
      $ bash -c 'ls /no/such/directory'
      STDERR: ls: cannot access '/no/such/directory': No such file or directory
     [ProcBuilder<228>]]
@@ -111,7 +111,7 @@ mtron> {"ls", "whoami"}.-<[_ => _]==[_ => bash(_)]   [-- rec of cmds => rec of r
            'CONTRIBUTING.md',
            'dist',
            ...(17 more)]]
-==>['whoami'=>['ubuntu']]
+==>['whoami'=>['killswitch']]
 mtron> ["ls", "whoami"]==[_ => bash(_)]>>.sum()       [-- lst of cmds => one flat lst --]
 ==>['AGENTS.md',
     'AGENTSWARM.md',
@@ -167,7 +167,7 @@ mtron> bash('ls').>>.bash("stat ${_}")    [-- drain: the full stat per entry --]
     '  Size: 26732     	Blocks: 56     ...',
     'Device: 259,5	Inode: 22826403    L...',
     'Access: (0664/-rw-rw-r--)  Uid: ( ...',
-    'Access: 2026-11-09 22:37:39.118300...',
+    'Access: 2026-11-10 16:13:07.855396...',
    ...
 ```
 ### a shape of its own
@@ -252,15 +252,15 @@ One read each: the environment, the thread count, and the executor's own summary
 
 ```mtron
 mtron> */sys/env/HOME
-==>'/work'
+==>'/home/killswitch'
 mtron> */sys/thread/+.count()
-==>2
+==>73
 mtron> sys_stat()
-==>[total_mem_jvm=>mB::480.0,
-    free_mem_jvm=>mB::328.2238,
+==>[total_mem_jvm=>mB::648.0,
+    free_mem_jvm=>mB::414.4269,
     max_mem_mach=>gB::15.1562,
-    used_mem_jvm=>mB::151.7761,
-    jvm=>'OpenJDK 64-Bit Server VM 25.0.4.1',
+    used_mem_jvm=>mB::233.5730,
+    jvm=>'Java HotSpot(TM) 64-Bit Server VM ...',
     os=>'Linux 7.0.0-42-generic',
     arch=>'amd64',
     ...(4 more)]
@@ -328,12 +328,7 @@ is doing — the sugar is short precisely because it is legible once:
 
 ```mtron
 mtron> *<mfs:README.md?mimeq=text/markdown>                    [-- explicit tag, same referent typed --]
-==>
-   markdown::"""# metatron
-   
-   <a href="http://metatron.phaseshift.studio"><img src="http://metatron.phaseshift.studio/images/metatron-character.png" width="225px" align="right"></a>
-   
-   ...
+==>fail::[inst apply failure: no mimeq query processor attached to mfs:# (at /m/inst/from@0)]
        *<mfs:boot/docs.mtron>                   [-- the doc boot, read as its code --]
 ```
 ## walking the tree
@@ -422,7 +417,7 @@ the shape; it is read here, never run:
 mtron> *<mfs:bin/metatron>
 ...
 mtron> *<mfs:bin/metatron>.tid()
-==>/sys/space/mfs/exec/metatron?rng=#{*}&dom=#{?}&args=[#{*}]
+==>/sys/space/fs/mfs/exec/metatron?rng=#{*}&dom=#{?}&args=[#{*}]
 ```
 ## taking the mounts down
 

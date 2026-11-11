@@ -421,6 +421,15 @@ METATRON_DOCKER_GID=$(stat -c '%g' /var/run/docker.sock) docker compose up -d</c
                     </li>
                     <li class="article-row">
                         <a class="code dropdown-item article-link d-flex align-items-center"
+                           href="../../../articles/span-and-point-coefficient-algebra.html"><i
+                                class="bi bi-three-dots icon-color me-2 isa-row"></i>A Span and Point Coefficient Algebra for Stream Rings</a>
+                        <span class="article-formats">
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.html">html</a>
+                            <a class="article-format" href="../../../articles/span-and-point-coefficient-algebra.md">md</a>
+                        </span>
+                    </li>
+                    <li class="article-row">
+                        <a class="code dropdown-item article-link d-flex align-items-center"
                            href="../../../articles/mm-adt.pdf"><i
                                 class="bi bi-layout-wtf icon-color me-2 isa-row"></i>mm-adt (metatron precursor)</a>
                         <span class="article-formats">
@@ -518,11 +527,13 @@ mtron&gt; model::[provider=&gt; ollama,
                protocol=&gt; ollama,
                host    =&gt; &lt;http://localhost:11434&gt;,
                llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3
-==&gt;fail::[parse error at line 1, col 1: unable to construct model::T: fail::['inst apply failure: java.net.ConnectException (at /m/inst/ctor) [SocketChannelImpl&lt;204&gt;]']['java.net.ConnectException [SocketChannelImpl&lt;204&gt;]']['fail']['fail']['fail']
-   	while parsing: model::[provider=&gt; ollama,
-                  protocol=&gt; ollama,
-                  host    =&gt; &lt;http://localhost:11434&gt;,
-                  llm     =&gt; &lt;qwen3.5:4b&gt;]@qwen3]
+==&gt;model::[skill=&gt;[completion,vision,tools,thinking],
+           size=&gt;gB::3.1571,
+           context=&gt;262144,
+           provider=&gt;ollama,
+           protocol=&gt;ollama,
+           host=&gt;http://localhost:11434,
+           llm=&gt;&lt;qwen3.5:4b&gt;]@qwen3
 </code></pre>
 <p>Create a workspace for the agent. Create a model for the agent to use for chatting. Create the agent by composing
 the workspace and a chat feature. Then:</p>
