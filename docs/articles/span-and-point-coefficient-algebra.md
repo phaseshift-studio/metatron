@@ -306,9 +306,11 @@ a -> 7
 *a.*a
 ```
 
-A span on a value lays the value out along slots. Until a vid can be a branched
-uri, `2{3}` is the lst of its copies, whose slots are the uris 0, 1 and 2, and
-the copies keep the value's point.
+A span on an object lays it out in space: $n$ copies of $x$ at the addresses
+$0, 1, \ldots, n-1$, each copy keeping the point of $x$. In mtron a value
+writes its span after it, `x{n}`, and until an address can be a branched uri
+the layout is the list of the copies, whose slots are those addresses:
+`2{3}` is `[2,2,2]`.
 
 ```mtron_pre
 2{3}
@@ -473,8 +475,8 @@ shares only a map, filter or flatmap.]
 
 # Ranges
 
-A coefficient may be a range $[m,n]$ with $m \leq n$, written `{m,n}`. The range
-`{?}` is $[0,1]$, `{+}` is $[1,\infty)$, and `{*}` is $[0,\infty)$.
+A coefficient may be a range $[m,n]$ with $m \leq n$. In mtron it is written
+`{m,n}`, and `{?}` is $[0,1]$, `{+}` is $[1,\infty)$ and `{*}` is $[0,\infty)$.
 
 ::: definition **Definition 3** (Span range). If $m \leq n$, then
 $$
@@ -482,18 +484,19 @@ $$
 a^{[m,n]} = \sum_{k=m}^{n} a^k = a^m + a^{m+1} + \cdots + a^n.
 \end{equation*}
 $$
-In mtron, `{m,n}a` is the branch of its unrolls: `{2,3}a` is
-`branch(a.a,a.a.a)`, and the zero-step unroll is the unity, so `{?}a` is
-`branch(id(),a)`.
 :::
 
-The unrolls are independent paths, and each yields its own results. They merge
-at noobj, the end of every path: a monad halts when its instruction pointer is
-noobj, and the results of every halted monad sum there, whatever the length of
-the path that led to it. A monad is killed when its object pointer is noobj,
-which is the zero point of Theorem 4. So a range is no uncertainty over its
-unrolls: every unroll is taken, and their multiplicities are not weights that
-sum to one.
+The unrolls $a^k$ are independent terms, and each yields its own results. By
+the split axiom,
+$$
+\begin{equation*}
+\langle x \rangle a^{[m,n]} = \sum_{k=m}^{n} \langle x \rangle a^k,
+\end{equation*}
+$$
+so paths of different lengths meet only in that sum, at the end of every path.
+A range is no uncertainty over its unrolls: every unroll is taken, and the
+multiplicities are not weights that sum to one. The zero-step unroll is the
+unity, $a^0 = 1$, which passes its object on.
 
 ::: corollary **Corollary 6** (Each unroll carries its own power of the point).
 If $c \in \mathcal{C}$ and $m \leq n$, then
@@ -504,14 +507,20 @@ $(ca)^{[m,n]} = \sum_{k=m}^{n} c^k a^k$.
 $(ca)^k = c^k a^k$ by Theorem 7. ◻
 :::
 
-The unrolls are computed, never written into the code: applying `{2,3}plus(1)`
-runs its input two steps of `plus(1)` and, separately, three, and appends the
-results. The code keeps the span, so where code is read as a pattern,
-`{?}neg()` stays a run of none or one `neg()`.
+In mtron, `{2,3}a` answers what the branch of its unrolls, `branch(a.a,a.a.a)`,
+answers, and `{?}a` what `branch(id(),a)` answers. The sum is computed when the
+instruction applies and is never written into the code: a path ends where its
+monad's instruction pointer reaches noobj, and the objects of the halted monads
+sum there. A monad whose object is noobj is killed instead, the zero point of
+Theorem 4. As the code keeps the span, code read as a pattern still matches
+`{?}neg()` as a run of none or one `neg()`.
 
-**Live proof.** A range answers what its branch of unrolls answers, the
-zero-step unroll passes its input through, each unroll carries its own power of
-the point, and a multiplicity on the input counts once.
+**Live proof.** If $a (x) = x + 1$, then
+$\langle 1 \rangle a^{[2,3]} = \langle 1 \rangle (a^2 + a^3) = \langle 3, 4 \rangle$
+and $\langle 1 \rangle a^{[0,1]} = \langle 1, 2 \rangle$. By Corollary 6,
+$\langle 1 \rangle (3a)^{[2,3]} = \langle (9)3, (27)4 \rangle$, and a
+multiplicity on the input counts once:
+$\langle (2)1 \rangle (3a)^{[2,3]} = \langle (18)3, (54)4 \rangle$.
 
 ```mtron_pre
 1.{2,3}plus(1)
@@ -521,19 +530,46 @@ the point, and a multiplicity on the input counts once.
 {2}1.{2,3}plus{3}(1)
 ```
 
-A range on a point is a range of multiplicities at one address:
-`1.plus{?}(2)` is `{?}3`.
+A range on a point is a range of multiplicities: if $b (x) = x + 2$, then
+$\langle 1 \rangle\, [0,1]\, b = \langle ([0,1])3 \rangle$, a three held zero
+or one times.
 
 ```mtron_pre
 1.plus{?}(2)
 ```
 
-An open range is the Kleene star [3], $a^{[0,\infty)} = a^* = 1 + a + a^2 +
-\cdots$. If $a (x) = x + 1$, then `0.{*}plus(1)` is
-`start(0).branch(id(),plus(1),plus(1).plus(1),...)`, and as its paths merge at
-noobj, $\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle$: the
-inductive generation of Corollary 1, every natural at once. A span range on
-running code is a generator.
+**Generation.** If $a (x) = x + 1$, then a range from zero counts. By
+Definition 3 and Corollary 1,
+$$
+\begin{equation*}
+\langle 0 \rangle a^{[0,n]} = \sum_{k=0}^{n} \langle 0 \rangle a^k = \sum_{k=0}^{n} \langle k \rangle = \langle 0, 1, \ldots, n \rangle.
+\end{equation*}
+$$
+A point on the step weighs the natural $k$ by its power, by Corollary 6:
+$$
+\begin{equation*}
+\langle 0 \rangle (2a)^{[0,n]} = \sum_{k=0}^{n} 2^k \langle k \rangle = \langle 0, (2)1, (4)2, \ldots, (2^n)n \rangle,
+\end{equation*}
+$$
+a stream of $\sum_{k=0}^{n} 2^k = 2^{n+1} - 1$ objects. The weights count
+paths: $2a = a + a$ by Definition 1, so $(2a)^k = (a + a)^k$ is the sum of the
+$2^k$ words of length $k$ over two copies of $a$ (Theorem 8), and every one of
+them lands on $k$.
+
+**Live proof.** With $n = 6$: the naturals to six, then the same seven values
+weighted $1, 2, 4, \ldots, 64$, which is $2^7 - 1 = 127$ objects.
+
+```mtron_pre
+0.{0,6}plus(1)
+0.{0,6}plus{2}(1)
+```
+
+An open range is the Kleene star [3],
+$a^{[0,\infty)} = a^* = 1 + a + a^2 + \cdots$. If $a (x) = x + 1$, then
+$\langle 0 \rangle a^* = \langle 0, 1, 2, 3, \ldots \rangle$: every natural at
+once, the bounded generations above being its prefixes. A span range is a
+generator. In mtron it is `0.{*}plus(1)`, which is
+`start(0).branch(id(),plus(1),plus(1).plus(1),...)`.
 
 [For Marko: an open range has no last unroll, so `0.{*}plus(1)` (now `{*}1`)
 needs its unrolls on demand, $a^* = 1 + a \cdot a^*$; `repeat` already runs
