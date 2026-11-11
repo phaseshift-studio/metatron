@@ -762,6 +762,7 @@ public class RecTest extends AbstractAlgebraTest {
             "person -> rec[role]::T[?[name=>?str::T,age=>?int::T,role=>?rec::T]]@person",
             "drifter -> rec::T[?[name=>?str::T,age=>?int::T]]@drifter",
             "ninja -> rec::T@ninja",
+            "guru -> rec::T@guru",
     })
     @CsvSource(value = {
             // value                                                                     % type          % matches
@@ -799,6 +800,7 @@ public class RecTest extends AbstractAlgebraTest {
             "ninja -> rec::T[?[name=>str::T]]@ninja",
             "baker -> rec::T[?[name=>int::T]]@baker",
             "spectre -> rec::T@spectre",
+            "guru -> rec::T@guru",
     })
     @CsvSource(value = {
             // value                                                         % type        % matches

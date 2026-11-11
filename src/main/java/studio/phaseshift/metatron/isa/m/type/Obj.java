@@ -568,7 +568,7 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
         if (this.test(type))
             return type.hasConstructor() ? Obj.Helper.objClone(this, this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
         else
-            throw MTronException.of("%s is not a %s [%s]", this, type, type.isNominal() ? "nominal" : "structural");
+            throw MTronException.of("%s is not a %s [%s]", this, type, type.isForwardReference() ? "ephemeral" : type.isNominal() ? "nominal" : "structural");
     }
 
     default Bool asBool() {
@@ -994,6 +994,13 @@ public interface Obj extends PlatonicObj, Function<Obj, Obj>, Streamable<Obj>, I
                         .filter(at -> !at.isNoObj())
                         .anyMatch(at -> at.c().mult(lhs.c()).within(rhs.c()) && at.test(rhs.c(at.c()))))
                     return true;
+            }
+            // A FORWARD REFERENCE IS TESTED AS THE TYPE STATED SINCE (compiler::T's stage slots name the stages stated
+            // after it); a name still unstated states nothing to hold a value to (a type is stated: rec::T@guru)
+            if (rhs.isType() && rhs.asType().isForwardReference()) {
+                final Type stated = T(rhs.vid());
+                if (!stated.isForwardReference())
+                    return testObjs(lhs, stated);
             }
             // testNominally compares names, and a nominal type's coefficient is on its tid (T(person{2}) is
             // person::T with tid rec{2}), so the coefficient is judged here
